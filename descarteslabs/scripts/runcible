@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
+import os
+import json
+import argparse
+
+from descarteslabs.services import Runcible
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument('command', help='The action to take (e.g. login, etc.)')
+    parser.add_argument('argument', nargs='?')
+    
+    parser.add_argument('--url', help='The url of the service')
+    parser.add_argument('--shape', help='A slug for a named shape')
+    parser.add_argument('--sat_id', help='Satellite ID', nargs='+')
+    parser.add_argument('--const_id', help='Constellation ID', nargs='+')
+    parser.add_argument('--start_time', help='Start of valid date/time range (inclusive)')
+    parser.add_argument('--end_time', help='End of valid date/time range (inclusive)')
+    parser.add_argument('--geom', help='Region of interest as GeoJSON or WKT')
+    parser.add_argument('--params', help='JSON String of additional key/value pairs for searching properties: tile_id, cloud_fraction, etc.')
+    parser.add_argument('--limit', help='Number of items to return (default 100)')
+    parser.add_argument('--offset', help='Number of items to skip (default 0)')
+    parser.add_argument('--bbox', help='Whether or not to use a bounding box filter (default: false)', action='store_true')
+
+    args = parser.parse_args()
+
+    kwargs = {}
+
+    if args.url:
+        kwargs['url'] = args.url
+        
+    runcible = Runcible(**kwargs)
+    
+    kwargs = {}
+    
+    if args.command == 'sources':
+        
+        sources = runcible.sources()
+        
+        print(json.dumps(sources))
+
+    if args.command == 'summary':
+        
+        if args.shape:
+            kwargs['shape'] = args.shape
+        if args.sat_id:
+            kwargs['sat_id'] = args.sat_id
+        if args.const_id:
+            kwargs['const_id'] = args.const_id
+        if args.start_time:
+            kwargs['start_time'] = args.start_time
+        if args.end_time:
+            kwargs['end_time'] = args.end_time
+        if args.geom:
+            kwargs['geom'] = args.geom
+        if args.params:
+            kwargs['params'] = args.params
+        if args.bbox:
+            kwargs['bbox'] = args.bbox
+            
+        summary = runcible.summary(**kwargs)
+        
+        print(json.dumps(summary))
+
+    if args.command == 'search':
+        
+        if args.shape:
+            kwargs['shape'] = args.shape
+        if args.sat_id:
+            kwargs['sat_id'] = args.sat_id
+        if args.const_id:
+            kwargs['const_id'] = args.const_id
+        if args.start_time:
+            kwargs['start_time'] = args.start_time
+        if args.end_time:
+            kwargs['end_time'] = args.end_time
+        if args.geom:
+            kwargs['geom'] = args.geom
+        if args.params:
+            kwargs['params'] = args.params
+        if args.limit:
+            kwargs['limit'] = args.limit
+        if args.offset:
+            kwargs['offset'] = args.offset
+        if args.bbox:
+            kwargs['bbox'] = args.bbox
+            
+        search = runcible.search(**kwargs)
+        
+        print(json.dumps(search))
+
+    if args.command == 'get':
+        
+        get = runcible.get(args.argument)
+        
+        print(json.dumps(get))
+        

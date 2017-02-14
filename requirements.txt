@@ -1,0 +1,4 @@
+requests>=2.11.1
+cachetools
+nose
+six
