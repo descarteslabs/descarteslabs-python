@@ -12,31 +12,31 @@ from descarteslabs.cli_auth import base64url_decode
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    
+
     parser.add_argument('command', help='The action to take (e.g. login, etc.)')
 
     args = parser.parse_args()
 
     if args.command == 'login':
-        
+
         print('https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token')
-        
+
         s = getpass.getpass('token: ')
-        
+
         if s:
-            
+
             token_info = json.loads(base64url_decode(s).decode('utf-8'))
-            
+
             path = os.path.join(os.path.expanduser("~"), '.descarteslabs')
-        
+
             if not os.path.exists(path):
                 os.makedirs(path)
 
             os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
             file = os.path.join(os.path.expanduser("~"), '.descarteslabs', 'token_info.json')
-            
+
             with open(file, 'w+') as fp:
                 json.dump(token_info, fp)
-                
+
             os.chmod(file, stat.S_IRUSR | stat.S_IWUSR)

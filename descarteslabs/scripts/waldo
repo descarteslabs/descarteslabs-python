@@ -10,10 +10,10 @@ from descarteslabs.services import Waldo
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    
+
     parser.add_argument('command', help='The action to take (e.g. find, shape, prefix, etc.)')
     parser.add_argument('argument', nargs='?')
-    
+
     parser.add_argument('--url', help='The url of the service')
     parser.add_argument('--placetype', help='The placetype of the response')
     parser.add_argument('--geom', help='Resolution of shape')
@@ -23,66 +23,66 @@ if __name__ == "__main__":
     parser.add_argument('--metric', help='The metric for the requested data', default='yield')
     parser.add_argument('--year', help='The year')
     parser.add_argument('--doy', help='The day of year')
-    
+
     args = parser.parse_args()
 
     kwargs = {}
 
     if args.url:
         kwargs['url'] = args.url
-        
+
     waldo = Waldo(**kwargs)
-    
+
     kwargs = {}
-    
+
     if args.command == 'placetypes':
-        
+
         placetypes = waldo.placetypes()
-        
+
         print(json.dumps(placetypes))
 
     if args.command == 'models':
-        
+
         sources = waldo.sources()
-        
+
         print(json.dumps(sources))
 
     if args.command == 'categories':
-        
+
         categories = waldo.categories()
-        
+
         print(json.dumps(categories))
 
     if args.command == 'metrics':
-        
+
         metrics = waldo.metrics()
-        
+
         print(json.dumps(metrics))
 
     if args.command == 'triples':
-        
+
         triples = waldo.triples()
-        
+
         print(json.dumps(triples))
-        
+
     if args.command == 'find':
-        
+
         if args.placetype:
             kwargs['placetype'] = args.placetype
-            
+
         find = waldo.find(args.argument, **kwargs)
 
         print(json.dumps(find))
-        
+
     if args.command == 'shape':
-        
+
         if args.geom:
             kwargs['geom'] = args.geom
-            
+
         shape = waldo.shape(args.argument, **kwargs)
 
         print(json.dumps(shape))
-        
+
     if args.command == 'prefix':
 
         if args.geom:
@@ -91,13 +91,13 @@ if __name__ == "__main__":
             kwargs['output'] = args.output
         if args.placetype:
             kwargs['placetype'] = args.placetype
-            
+
         prefix = waldo.prefix(args.argument, **kwargs)
-        
+
         print(json.dumps(prefix))
 
     if args.command == 'data':
-        
+
         if args.source:
             kwargs['source'] = args.source
         if args.category:
@@ -110,13 +110,13 @@ if __name__ == "__main__":
             kwargs['year'] = args.year
         if args.doy:
             kwargs['doy'] = args.doy
-            
+
         data = waldo.data(args.argument, **kwargs)
-        
+
         print(json.dumps(data))
 
     if args.command == 'statistics':
-        
+
         if args.source:
             kwargs['source'] = args.source
         if args.category:
@@ -127,7 +127,7 @@ if __name__ == "__main__":
             kwargs['year'] = args.year
         if args.doy:
             kwargs['doy'] = args.doy
-        
+
         statistics = waldo.statistics(args.argument, **kwargs)
-        
+
         print(json.dumps(statistics))

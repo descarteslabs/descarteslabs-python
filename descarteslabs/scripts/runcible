@@ -10,10 +10,10 @@ from descarteslabs.services import Runcible
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    
+
     parser.add_argument('command', help='The action to take (e.g. login, etc.)')
     parser.add_argument('argument', nargs='?')
-    
+
     parser.add_argument('--url', help='The url of the service')
     parser.add_argument('--shape', help='A slug for a named shape')
     parser.add_argument('--sat_id', help='Satellite ID', nargs='+')
@@ -32,19 +32,19 @@ if __name__ == "__main__":
 
     if args.url:
         kwargs['url'] = args.url
-        
+
     runcible = Runcible(**kwargs)
-    
+
     kwargs = {}
-    
+
     if args.command == 'sources':
-        
+
         sources = runcible.sources()
-        
+
         print(json.dumps(sources))
 
     if args.command == 'summary':
-        
+
         if args.shape:
             kwargs['shape'] = args.shape
         if args.sat_id:
@@ -61,13 +61,13 @@ if __name__ == "__main__":
             kwargs['params'] = args.params
         if args.bbox:
             kwargs['bbox'] = args.bbox
-            
+
         summary = runcible.summary(**kwargs)
-        
+
         print(json.dumps(summary))
 
     if args.command == 'search':
-        
+
         if args.shape:
             kwargs['shape'] = args.shape
         if args.sat_id:
@@ -88,14 +88,14 @@ if __name__ == "__main__":
             kwargs['offset'] = args.offset
         if args.bbox:
             kwargs['bbox'] = args.bbox
-            
+
         search = runcible.search(**kwargs)
-        
+
         print(json.dumps(search))
 
     if args.command == 'get':
-        
+
         get = runcible.get(args.argument)
-        
+
         print(json.dumps(get))
-        
+
