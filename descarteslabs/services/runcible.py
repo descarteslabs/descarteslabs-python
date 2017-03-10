@@ -1,4 +1,5 @@
 from .service import Service
+from itertools import chain
 
 class Runcible(Service):
 
