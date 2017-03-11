@@ -1,5 +1,7 @@
-from .service import Service
+import json
 from itertools import chain
+from .service import Service
+from .waldo import Waldo
 
 class Runcible(Service):
 
