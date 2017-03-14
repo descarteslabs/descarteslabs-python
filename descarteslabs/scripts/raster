@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+from descarteslabs.services import Raster
+import argparse
+import json
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-keys", default="meta_LC80960162016159_v1", type=str, nargs="+" )
+    parser.add_argument("-bands", default="[1, 2, 3, 4]", type=str)
+    parser.add_argument("-scales", default="[[0, 4000], [0, 4000], [0, 4000], [0, 4000]]", type=str)
+    parser.add_argument("-resolution", default=None, type=float)
+    parser.add_argument("-of", default='GTiff', type=str)
+    parser.add_argument("-ot", default='Byte', type=str)
+
+    args = parser.parse_args()
+
+    bands = json.loads(args.bands)
+    scales = json.loads(args.scales)
+
+
+    raster = Raster()
+    params = {
+        'keys': args.keys,
+        'bands': bands,
+        'scales': scales,
+        'resolution': args.resolution,
+        'ot': args.ot,
+        'of': args.of,
+    }
+    raster.raster(**params)

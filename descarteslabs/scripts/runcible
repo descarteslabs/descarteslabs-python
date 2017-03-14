@@ -16,8 +16,8 @@ if __name__ == "__main__":
 
     parser.add_argument('--url', help='The url of the service')
     parser.add_argument('--shape', help='A slug for a named shape')
-    parser.add_argument('--sat_id', help='Satellite ID', nargs='+')
-    parser.add_argument('--const_id', help='Constellation ID', nargs='+')
+    parser.add_argument('--sat_id', default=None, help='Satellite ID', nargs='+')
+    parser.add_argument('--const_id', default=None, help='Constellation ID', nargs='+')
     parser.add_argument('--start_time', help='Start of valid date/time range (inclusive)')
     parser.add_argument('--end_time', help='End of valid date/time range (inclusive)')
     parser.add_argument('--geom', help='Region of interest as GeoJSON or WKT')

@@ -63,7 +63,7 @@ class Runcible(Service):
                 for feature in features['features']:
                     yield feature
 
-    def search(self, const_id=[], shape=None, geom=None, start_time=None, end_time=None, params=None, limit=100, offset=0):
+    def search(self, const_id=None, shape=None, geom=None, start_time=None, end_time=None, params=None, limit=100, offset=0):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -104,7 +104,8 @@ class Runcible(Service):
 
             kwargs = {}
 
-            kwargs['const_id'] = x
+            if x:
+                kwargs['const_id'] = x
             kwargs['limit'] = limit
             kwargs['offset'] = offset
 
@@ -125,6 +126,9 @@ class Runcible(Service):
             return r.json()
 
         result = {'type':'FeatureCollection'}
+
+        if const_id is None:
+            const_id = [None]
 
         result['features'] = list(chain(*map(f, const_id)))
 
