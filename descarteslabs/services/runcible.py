@@ -7,12 +7,12 @@ class Runcible(Service):
 
     """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
 
-    def __init__(self, url='https://services-dev.descarteslabs.com/runcible/v2'):
+    def __init__(self, url='https://platform-services.descarteslabs.com/runcible', token=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
-        Service.__init__(self, url)
+        Service.__init__(self, url, token)
 
     def sources(self):
         """
