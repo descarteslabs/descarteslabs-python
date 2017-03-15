@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    bands = [eval(b) for b in args.bands] if args.bands else None
+    bands = args.bands if args.bands else None
     scales = json.loads(args.scales)
 
     raster = Raster()

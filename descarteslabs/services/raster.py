@@ -1,5 +1,6 @@
 from .service import Service
 from .waldo import Waldo
+from descarteslabs.utilities import backoff
 import base64
 import json
 
@@ -18,6 +19,7 @@ class Raster(Service):
         """
         Service.__init__(self, url)
 
+    @backoff
     def raster(
         self,
         keys=None,
