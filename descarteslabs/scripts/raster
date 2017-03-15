@@ -7,18 +7,18 @@ import json
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-keys", default="meta_LC80960162016159_v1", type=str, nargs="+" )
-    parser.add_argument("-bands", default="[1, 2, 3, 4]", type=str)
+    parser.add_argument("-keys", default="meta_LC80270312016188_v1", type=str, nargs="+" )
+    parser.add_argument("-bands", nargs="+", default=None, type=str)
     parser.add_argument("-scales", default="[[0, 4000], [0, 4000], [0, 4000], [0, 4000]]", type=str)
-    parser.add_argument("-resolution", default=None, type=float)
+    parser.add_argument("-resolution", default=240, type=float)
     parser.add_argument("-of", default='GTiff', type=str)
     parser.add_argument("-ot", default='Byte', type=str)
+    parser.add_argument("-location", default=None, type=str)
 
     args = parser.parse_args()
 
-    bands = json.loads(args.bands)
+    bands = [eval(b) for b in args.bands] if args.bands else None
     scales = json.loads(args.scales)
-
 
     raster = Raster()
     params = {
@@ -28,5 +28,10 @@ if __name__ == "__main__":
         'resolution': args.resolution,
         'ot': args.ot,
         'of': args.of,
+        'location': args.location,
     }
-    raster.raster(**params)
+    response = raster.raster(**params)
+    for filename, data in response['files'].iteritems():
+        with open(filename, "w") as f:
+            f.write(data)
+    print response['metadata']
