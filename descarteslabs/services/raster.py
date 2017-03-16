@@ -11,13 +11,14 @@ class Raster(Service):
 
     def __init__(
         self,
-        url='https://platform-services.descarteslabs.com/raster'
+        url='https://platform-services.descarteslabs.com/raster',
+        token=None
     ):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
-        Service.__init__(self, url)
+        Service.__init__(self, url, token)
 
     def get_bands_by_key(self, key):
         r = self.session.get('%s/bands/key/%s' % (self.url, key))
