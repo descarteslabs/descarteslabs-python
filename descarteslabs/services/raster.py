@@ -19,6 +19,25 @@ class Raster(Service):
         """
         Service.__init__(self, url)
 
+    def get_bands_by_key(self, key):
+        r = self.session.get('%s/bands/key/%s' % (self.url, key))
+
+        if r.status_code != 200:
+            raise RuntimeError("%s: %s" % (r.status_code, r.text))
+
+        jsonresp = r.json()
+        return jsonresp
+
+    def get_bands_by_constellation(self, const):
+        r = self.session.get('%s/bands/constellation/%s' % (self.url, const))
+
+        if r.status_code != 200:
+            raise RuntimeError("%s: %s" % (r.status_code, r.text))
+
+        jsonresp = r.json()
+        return jsonresp
+
+
     @backoff
     def raster(
         self,

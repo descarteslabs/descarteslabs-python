@@ -5,27 +5,40 @@ import argparse
 import json
 import base64
 
+
+def scales(s):
+    try:
+        if s.count(",") == 1:
+            mi, ma = map(float, s.split(","))
+            return [mi, ma]
+        elif s.count(",") == 3:
+            smi, sma, dmi, dma = map(float, s.split(","))
+            return [smi, sma, dmi, dma]
+        else:
+            raise
+    except:
+        raise argparse.ArgumentTypeError(
+                "Scales must be mi,ma or smi,sma,dmi,dma"
+                )
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-keys", default="meta_LC80270312016188_v1", type=str, nargs="+" )
     parser.add_argument("-bands", nargs="+", default=None, type=str)
-    parser.add_argument("-scales", default="[[0, 4000], [0, 4000], [0, 4000], [0, 4000]]", type=str)
+    parser.add_argument("-scales", default=None, type=scales, nargs="+")
     parser.add_argument("-resolution", default=240, type=float)
     parser.add_argument("-of", default='GTiff', type=str)
-    parser.add_argument("-ot", default='Byte', type=str)
+    parser.add_argument("-ot", default='UInt16', type=str)
     parser.add_argument("-location", default=None, type=str)
 
     args = parser.parse_args()
 
-    bands = args.bands if args.bands else None
-    scales = json.loads(args.scales)
-
     raster = Raster()
     params = {
         'keys': args.keys,
-        'bands': bands,
-        'scales': scales,
+        'bands': args.bands,
+        'scales': args.scales,
         'resolution': args.resolution,
         'ot': args.ot,
         'of': args.of,
