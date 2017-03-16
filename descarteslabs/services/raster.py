@@ -134,5 +134,8 @@ class Raster(Service):
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         jsonresp = r.json()
+        # Decode base64
+        for k in jsonresp['files'].keys():
+            jsonresp['files'][k] = base64.b64decode(jsonresp['files'].pop(k))
 
         return jsonresp

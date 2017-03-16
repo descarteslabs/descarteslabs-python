@@ -47,5 +47,5 @@ if __name__ == "__main__":
     response = raster.raster(**params)
     for filename, data in response['files'].iteritems():
         with open(filename, "w") as f:
-            f.write(base64.b64decode(data))
+            f.write(data)
     print response['metadata']
