@@ -15,7 +15,8 @@ class Service:
     def __init__(self, url, token):
         self.auth = descarteslabs.cli_auth.Auth()
         self.url = url
-        self.auth._token = token
+        if token:
+            self.auth._token = token
 
     @property
     def token(self):

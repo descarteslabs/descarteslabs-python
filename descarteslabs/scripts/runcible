@@ -16,7 +16,6 @@ if __name__ == "__main__":
 
     parser.add_argument('--url', help='The url of the service')
     parser.add_argument('--shape', help='A slug for a named shape')
-    parser.add_argument('--sat_id', default=None, help='Satellite ID', nargs='+')
     parser.add_argument('--const_id', default=None, help='Constellation ID', nargs='+')
     parser.add_argument('--start_time', help='Start of valid date/time range (inclusive)')
     parser.add_argument('--end_time', help='End of valid date/time range (inclusive)')
@@ -47,8 +46,6 @@ if __name__ == "__main__":
 
         if args.shape:
             kwargs['shape'] = args.shape
-        if args.sat_id:
-            kwargs['sat_id'] = args.sat_id
         if args.const_id:
             kwargs['const_id'] = args.const_id
         if args.start_time:
@@ -70,8 +67,6 @@ if __name__ == "__main__":
 
         if args.shape:
             kwargs['shape'] = args.shape
-        if args.sat_id:
-            kwargs['sat_id'] = args.sat_id
         if args.const_id:
             kwargs['const_id'] = args.const_id
         if args.start_time:
@@ -93,6 +88,31 @@ if __name__ == "__main__":
 
         print(json.dumps(search))
 
+    if args.command == 'keys':
+
+        if args.shape:
+            kwargs['shape'] = args.shape
+        if args.const_id:
+            kwargs['const_id'] = args.const_id
+        if args.start_time:
+            kwargs['start_time'] = args.start_time
+        if args.end_time:
+            kwargs['end_time'] = args.end_time
+        if args.geom:
+            kwargs['geom'] = args.geom
+        if args.params:
+            kwargs['params'] = args.params
+        if args.limit:
+            kwargs['limit'] = args.limit
+        if args.offset:
+            kwargs['offset'] = args.offset
+        if args.bbox:
+            kwargs['bbox'] = args.bbox
+
+        keys = runcible.keys(**kwargs)
+
+        print(' '.join(keys))
+        
     if args.command == 'get':
 
         get = runcible.get(args.argument)
