@@ -24,6 +24,7 @@ if __name__ == "__main__":
     parser.add_argument('--limit', help='Number of items to return (default 100)')
     parser.add_argument('--offset', help='Number of items to skip (default 0)')
     parser.add_argument('--bbox', help='Whether or not to use a bounding box filter (default: false)', action='store_true')
+    parser.add_argument('--direct', help='Whether or not to use the main metadata table directly (default: false)', action='store_true')
 
     args = parser.parse_args()
 
@@ -83,6 +84,8 @@ if __name__ == "__main__":
             kwargs['offset'] = args.offset
         if args.bbox:
             kwargs['bbox'] = args.bbox
+        if args.direct:
+            kwargs['direct'] = args.direct
 
         search = runcible.search(**kwargs)
 
@@ -108,6 +111,8 @@ if __name__ == "__main__":
             kwargs['offset'] = args.offset
         if args.bbox:
             kwargs['bbox'] = args.bbox
+        if args.direct:
+            kwargs['direct'] = args.direct
 
         keys = runcible.keys(**kwargs)
 
