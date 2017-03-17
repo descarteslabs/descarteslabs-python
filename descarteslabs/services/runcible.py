@@ -113,7 +113,8 @@ class Runcible(Service):
             
         def f(x):
 
-            kwargs['const_id'] = x
+            if x:
+                kwargs['const_id'] = x
 
             r = self.session.post('%s/summary' % self.url, json=kwargs)
 
@@ -124,8 +125,8 @@ class Runcible(Service):
 
         if not const_id:
 
-            const_id = list(set([source['const_id'] for source in self.sources()]))
-
+            const_id = [None]
+            
         result = map(f, const_id)
 
         return result
@@ -186,7 +187,8 @@ class Runcible(Service):
 
         def f(x):
 
-            kwargs['const_id'] = x
+            if x:
+                kwargs['const_id'] = x
 
             r = self.session.post('%s/search' % self.url, json=kwargs)
 
@@ -199,8 +201,8 @@ class Runcible(Service):
 
         if not const_id:
 
-            const_id = list(set([source['const_id'] for source in self.sources()]))
-
+            const_id = [None]
+            
         result['features'] = list(chain(*map(f, const_id)))
 
         return result
