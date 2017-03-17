@@ -70,7 +70,7 @@ class Waldo(Service):
         return r.json()
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'shape'))
-    def shape(self, slug, output='geojson', geom=None):
+    def shape(self, slug, output='geojson', geom='low'):
         """Get the shape for a specified slug
 
         slug: string
