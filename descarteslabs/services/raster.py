@@ -38,6 +38,45 @@ class Raster(Service):
         jsonresp = r.json()
         return jsonresp
 
+    def dlkeys_from_shape(self, resolution, tilesize, pad, shape):
+        params = {
+            'resolution': resolution,
+            'tilesize': tilesize,
+            'pad': pad,
+            'shape': shape,
+        }
+
+        r = self.session.post('%s/dlkeys/from_shape' % (self.url), json=params)
+
+        if r.status_code != 200:
+            raise RuntimeError("%s: %s" % (r.status_code, r.text))
+
+        return r.json()
+
+    def dlkey_from_latlon(self, lat, lon, resolution, tilesize, pad):
+        params = {
+            'resolution': resolution,
+            'tilesize': tilesize,
+            'pad': pad,
+        }
+
+        r = self.session.get('%s/dlkeys/from_latlon/%f/%f' % (self.url, lat, lon),
+                params=params)
+
+        if r.status_code != 200:
+            raise RuntimeError("%s: %s" % (r.status_code, r.text))
+
+        return r.json()
+
+    def dlkey(self, key):
+
+        r = self.session.get('%s/dlkeys/%s' % (self.url, key))
+
+        if r.status_code != 200:
+            raise RuntimeError("%s: %s" % (r.status_code, r.text))
+
+        return r.json()
+
 
     @backoff
     def raster(
