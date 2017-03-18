@@ -180,7 +180,7 @@ class Raster(Service):
 
         return jsonresp
 
-    def featurearray(
+    def ndarray(
         self,
         keys=None,
         bands=None,
