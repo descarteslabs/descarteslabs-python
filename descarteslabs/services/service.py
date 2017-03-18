@@ -29,7 +29,11 @@ class Service:
 
         retries = Retry(total=5,
                         backoff_factor=random.uniform(1, 10),
-                        status_forcelist=[500, 502, 503, 504])
+                        method_whitelist=frozenset([
+                            'HEAD', 'TRACE', 'GET', 'POST',
+                            'PUT', 'OPTIONS', 'DELETE'
+                            ]),
+                        status_forcelist=[429, 500, 502, 503, 504])
 
         s.mount('http://', HTTPAdapter(max_retries=retries))
 
