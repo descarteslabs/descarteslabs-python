@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/descarteslabs/descarteslabs-python/tree/master.svg?style=svg&circle-token=8db9ebe68bc456a689d0e54ad04f9adb5bd6238d)](https://circleci.com/gh/descarteslabs/descarteslabs-python/tree/master)
+
 Descarteslabs
 =============
 
