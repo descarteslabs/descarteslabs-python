@@ -1,6 +1,7 @@
 from .service import Service
 from .waldo import Waldo
 from descarteslabs.addons import FeatureArray
+from descarteslabs.addons import numpy as np
 import base64
 import json
 

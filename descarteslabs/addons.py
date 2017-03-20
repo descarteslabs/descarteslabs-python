@@ -13,3 +13,8 @@ try:
     from features import FeatureArray
 except:
     FeatureArray = ThirdParty("descarteslabs-features")
+
+try:
+    import numpy
+except:
+    numpy = ThirdParty("numpy")
