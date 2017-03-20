@@ -1,4 +1,3 @@
 requests>=2.11.1
-functools32
 cachetools
 six
