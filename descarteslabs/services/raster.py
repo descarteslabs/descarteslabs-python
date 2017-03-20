@@ -277,6 +277,6 @@ class Raster(Service):
         fa = FeatureArray.deserialize(r.content, base64.b64decode)
 
         if order == 'image':
-            return fa.transpose((1, 2, 0))
+            return fa.transpose((1, 2, 0)).view(np.ndarray)
         elif order == 'gdal':
-            return fa
+            return fa.view(np.ndarray)
