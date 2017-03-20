@@ -55,6 +55,10 @@ if __name__ == "__main__":
         
         print(auth.token)
 
+    if args.command == 'payload':
+        
+        print(auth.payload)
+
     if args.command == 'env':
         
         print('%s=%s' % ('CLIENT_ID', auth.client_id))
