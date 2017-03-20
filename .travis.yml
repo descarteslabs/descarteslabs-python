@@ -16,4 +16,3 @@ install:
 script:
  - nosetests --with-coverage --cover-package=descarteslabs
  - flake8
- - coveralls
