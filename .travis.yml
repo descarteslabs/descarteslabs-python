@@ -9,6 +9,11 @@ python:
   - "3.7-dev"
 
 install:
- - pip install tox
+ - pip install .
+ - pip install -r requirements.txt
+ - pip install flake8 coverage nose
 
-script: tox
+script:
+ - nosetests --with-coverage --cover-package=descarteslabs
+ - flake8
+ - coveralls
