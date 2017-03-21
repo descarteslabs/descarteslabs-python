@@ -5,7 +5,7 @@ from .service import Service
 from .waldo import Waldo
 
 class Runcible(Service):
-
+    TIMEOUT = 60
     """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
 
     def __init__(self, url='https://platform-services.descarteslabs.com/runcible', token=None):
@@ -30,7 +30,7 @@ class Runcible(Service):
 
         >>> runcible.sources()
         """
-        r = self.session.get('%s/sources' % self.url)
+        r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -116,7 +116,7 @@ class Runcible(Service):
             if x:
                 kwargs['const_id'] = x
 
-            r = self.session.post('%s/summary' % self.url, json=kwargs)
+            r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
             if r.status_code != 200:
                 raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -190,7 +190,7 @@ class Runcible(Service):
             if x:
                 kwargs['const_id'] = x
 
-            r = self.session.post('%s/search' % self.url, json=kwargs)
+            r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
             if r.status_code != 200:
                 raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -282,7 +282,7 @@ class Runcible(Service):
 
         >>> runcible.get('meta_LC82000452016168_v1')
         """
-        r = self.session.post('%s/get/%s' % (self.url, key))
+        r = self.session.post('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))

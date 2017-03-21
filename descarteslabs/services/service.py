@@ -11,6 +11,7 @@ import descarteslabs.cli_auth
 
 
 class Service:
+    TIMEOUT = 30
 
     def __init__(self, url, token):
         self.auth = descarteslabs.cli_auth.Auth()
@@ -28,7 +29,8 @@ class Service:
         s = requests.Session()
 
         retries = Retry(total=5,
-                        backoff_factor=random.uniform(1, 10),
+                        read=2,
+                        backoff_factor=random.uniform(1, 3),
                         method_whitelist=frozenset([
                             'HEAD', 'TRACE', 'GET', 'POST',
                             'PUT', 'OPTIONS', 'DELETE'
