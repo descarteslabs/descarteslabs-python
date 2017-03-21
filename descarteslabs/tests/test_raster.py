@@ -1,26 +1,24 @@
-import os
-import json
 import unittest
 
 from descarteslabs.services import Raster
 from descarteslabs.services import Waldo
 
+
 class TestRaster(unittest.TestCase):
-    
     raster = None
     waldo = None
-    
+
     @classmethod
-    def setUpClass(self):
-        self.raster = Raster()
-        self.waldo = Waldo()
+    def setUpClass(cls):
+        cls.raster = Raster()
+        cls.waldo = Waldo()
 
     def test_raster(self):
         r = self.raster.raster(
-                keys=['meta_LC80270312016188_v1'],
-                bands=['red', 'green', 'blue', 'alpha'],
-                resolution=960,
-                )
+            keys=['meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            resolution=960,
+        )
         self.assertTrue("metadata" in r)
         self.assertTrue("files" in r)
         self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
@@ -28,30 +26,27 @@ class TestRaster(unittest.TestCase):
 
     def test_thumbnail(self):
         r = self.raster.raster(
-                keys=['meta_LC80270312016188_v1'],
-                bands=['red', 'green', 'blue', 'alpha'],
-                outsize=[256,256],
-                scales=[[0,4000]]*4,
-                of='PNG',
-                ot='Byte',
-                )
+            keys=['meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            outsize=[256, 256],
+            scales=[[0, 4000]] * 4,
+            of='PNG',
+            ot='Byte',
+        )
         self.assertTrue("metadata" in r)
         self.assertTrue("files" in r)
         self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.png'])
 
-
     def test_get_bands_by_key(self):
         r = self.raster.get_bands_by_key('meta_LC80270312016188_v1')
-        for band in [
-                'red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
-                'ndwi', 'evi', 'cirrus']:
+        for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
+                     'ndwi', 'evi', 'cirrus']:
             self.assertTrue(band in r)
 
     def test_landsat8_bands(self):
         r = self.raster.get_bands_by_constellation('L8')
-        for band in [
-                'red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
-                'ndwi', 'evi', 'cirrus']:
+        for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
+                     'ndwi', 'evi', 'cirrus']:
             self.assertTrue(band in r)
 
     def test_dlkeys_from_shape(self):

@@ -11,9 +11,9 @@ class Raster(Service):
     TIMEOUT = 300
 
     def __init__(
-        self,
-        url='https://platform-services.descarteslabs.com/raster',
-        token=None
+            self,
+            url='https://platform-services.descarteslabs.com/raster',
+            token=None
     ):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
@@ -26,8 +26,6 @@ class Raster(Service):
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
-
 
         jsonresp = r.json()
         return jsonresp
@@ -80,23 +78,22 @@ class Raster(Service):
 
         return r.json()
 
-
     def raster(
-        self,
-        keys=None,
-        bands=None,
-        scales=None,
-        ot=None,
-        of='GTiff',
-        srs=None,
-        resolution=None,
-        shape=None,
-        location=None,
-        outputBounds=None,
-        outputBoundsSRS=None,
-        outsize=None,
-        targetAlignedPixels=False,
-        resampleAlg=None,
+            self,
+            keys=None,
+            bands=None,
+            scales=None,
+            ot=None,
+            of='GTiff',
+            srs=None,
+            resolution=None,
+            shape=None,
+            location=None,
+            outputBounds=None,
+            outputBoundsSRS=None,
+            outsize=None,
+            targetAlignedPixels=False,
+            resampleAlg=None,
     ):
         """
         Yield a raster composed from one/many sources
@@ -182,21 +179,21 @@ class Raster(Service):
         return jsonresp
 
     def ndarray(
-        self,
-        keys=None,
-        bands=None,
-        scales=None,
-        ot=None,
-        srs=None,
-        resolution=None,
-        shape=None,
-        location=None,
-        outputBounds=None,
-        outputBoundsSRS=None,
-        outsize=None,
-        targetAlignedPixels=False,
-        resampleAlg=None,
-        order='image',
+            self,
+            keys=None,
+            bands=None,
+            scales=None,
+            ot=None,
+            srs=None,
+            resolution=None,
+            shape=None,
+            location=None,
+            outputBounds=None,
+            outputBoundsSRS=None,
+            outsize=None,
+            targetAlignedPixels=False,
+            resampleAlg=None,
+            order='image',
     ):
         """
         Yield a raster composed from one/many sources
@@ -245,7 +242,7 @@ class Raster(Service):
         resampleAlg: str, optional
             Resampling algorithm to use in the Warp. Default: None
         order: str, optional
-            Order of returned array. 
+            Order of returned array.
             'image' (default) returns arrays in  (row, column, band).
             'gdal' returns arrays in  (band, row, column).
         """

@@ -11,7 +11,6 @@ import six
 import os
 import stat
 
-from os.path import expanduser
 
 def base64url_decode(input):
     """Helper method to base64url_decode a string.
@@ -135,8 +134,8 @@ class Auth:
 
         os.chmod(file, stat.S_IRUSR | stat.S_IWUSR)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     auth = Auth()
 
     print(auth.token)

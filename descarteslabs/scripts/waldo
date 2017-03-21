@@ -36,31 +36,26 @@ if __name__ == "__main__":
     kwargs = {}
 
     if args.command == 'placetypes':
-
         placetypes = waldo.placetypes()
 
         print(json.dumps(placetypes))
 
     if args.command == 'models':
-
         sources = waldo.sources()
 
         print(json.dumps(sources))
 
     if args.command == 'categories':
-
         categories = waldo.categories()
 
         print(json.dumps(categories))
 
     if args.command == 'metrics':
-
         metrics = waldo.metrics()
 
         print(json.dumps(metrics))
 
     if args.command == 'triples':
-
         triples = waldo.triples()
 
         print(json.dumps(triples))

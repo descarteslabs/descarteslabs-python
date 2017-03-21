@@ -1,5 +1,3 @@
-"""
-"""
 import operator
 from functools import partial
 from cachetools import TTLCache, cachedmethod
@@ -84,7 +82,7 @@ class Waldo(Service):
 
         >>> waldo.shape('north-america_united-states_iowa', geom='high')
         """
-        r = self.session.get('%s/shape/%s.%s' % (self.url, slug, output), params={'geom':geom}, timeout=self.TIMEOUT)
+        r = self.session.get('%s/shape/%s.%s' % (self.url, slug, output), params={'geom': geom}, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -245,7 +243,8 @@ class Waldo(Service):
           }
         ]
 
-        >>> waldo.data('north-america_united-states', placetype='county', source='nass', category='corn', metric='yield', year=2015, doy=1)
+        >>> waldo.data('north-america_united-states', placetype='county', source='nass', category='corn',
+                       metric='yield', year=2015, doy=1)
         """
         r = self.session.get('%s/data/%s' % (self.url, slug), params=kwargs, timeout=self.TIMEOUT)
 
@@ -291,7 +290,8 @@ class Waldo(Service):
           }
         ]
 
-        >>> waldo.statistics('north-america_united-states_iowa', source='nass', category='corn', metric='yield', year=2015)
+        >>> waldo.statistics('north-america_united-states_iowa', source='nass', category='corn', metric='yield',
+                              year=2015)
         """
         r = self.session.get('%s/statistics/%s' % (self.url, slug), params=kwargs, timeout=self.TIMEOUT)
 
