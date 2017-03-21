@@ -34,7 +34,7 @@ class TestRuncible(unittest.TestCase):
 
     def test_summary(self):
         r = self.instance.summary(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8'])
-        self.assertEqual(1, len(r))
+        self.assertEqual(1, len(list(r)))
 
 
 if __name__ == '__main__':
