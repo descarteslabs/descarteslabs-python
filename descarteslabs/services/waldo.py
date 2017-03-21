@@ -243,7 +243,8 @@ class Waldo(Service):
           }
         ]
 
-        >>> waldo.data('north-america_united-states', placetype='county', source='nass', category='corn', metric='yield', year=2015, doy=1)
+        >>> waldo.data('north-america_united-states', placetype='county', source='nass', category='corn',
+                       metric='yield', year=2015, doy=1)
         """
         r = self.session.get('%s/data/%s' % (self.url, slug), params=kwargs, timeout=self.TIMEOUT)
 
@@ -289,7 +290,8 @@ class Waldo(Service):
           }
         ]
 
-        >>> waldo.statistics('north-america_united-states_iowa', source='nass', category='corn', metric='yield', year=2015)
+        >>> waldo.statistics('north-america_united-states_iowa', source='nass', category='corn', metric='yield',
+                              year=2015)
         """
         r = self.session.get('%s/statistics/%s' % (self.url, slug), params=kwargs, timeout=self.TIMEOUT)
 
