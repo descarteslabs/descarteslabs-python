@@ -1,5 +1,3 @@
-"""
-"""
 import operator
 from functools import partial
 from cachetools import TTLCache, cachedmethod
@@ -84,7 +82,7 @@ class Waldo(Service):
 
         >>> waldo.shape('north-america_united-states_iowa', geom='high')
         """
-        r = self.session.get('%s/shape/%s.%s' % (self.url, slug, output), params={'geom':geom}, timeout=self.TIMEOUT)
+        r = self.session.get('%s/shape/%s.%s' % (self.url, slug, output), params={'geom': geom}, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))

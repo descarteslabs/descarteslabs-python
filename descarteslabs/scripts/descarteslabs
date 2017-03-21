@@ -21,7 +21,8 @@ if __name__ == "__main__":
 
     if args.command == 'login':
 
-        print('Follow this link to login: https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token')
+        print(
+            'Follow this link to login: https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token')
 
         s = getpass.getpass('...then come back and paste the generated token here: ')
 
@@ -44,22 +45,17 @@ if __name__ == "__main__":
             os.chmod(file, stat.S_IRUSR | stat.S_IWUSR)
 
     if args.command == 'name':
-        
         print(auth.payload['name'])
 
     if args.command == 'groups':
-        
         print(json.dumps(auth.payload['groups']))
-        
+
     if args.command == 'token':
-        
         print(auth.token)
 
     if args.command == 'payload':
-        
         print(auth.payload)
 
     if args.command == 'env':
-        
         print('%s=%s' % ('CLIENT_ID', auth.client_id))
         print('%s=%s' % ('CLIENT_SECRET', auth.client_secret))

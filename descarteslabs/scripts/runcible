@@ -20,11 +20,14 @@ if __name__ == "__main__":
     parser.add_argument('--start_time', help='Start of valid date/time range (inclusive)')
     parser.add_argument('--end_time', help='End of valid date/time range (inclusive)')
     parser.add_argument('--geom', help='Region of interest as GeoJSON or WKT')
-    parser.add_argument('--params', help='JSON String of additional key/value pairs for searching properties: tile_id, cloud_fraction, etc.')
+    parser.add_argument('--params',
+                        help='JSON String of additional key/value pairs for searching properties: tile_id, cloud_fraction, etc.')
     parser.add_argument('--limit', help='Number of items to return (default 100)')
     parser.add_argument('--offset', help='Number of items to skip (default 0)')
-    parser.add_argument('--bbox', help='Whether or not to use a bounding box filter (default: false)', action='store_true')
-    parser.add_argument('--direct', help='Whether or not to use the main metadata table directly (default: false)', action='store_true')
+    parser.add_argument('--bbox', help='Whether or not to use a bounding box filter (default: false)',
+                        action='store_true')
+    parser.add_argument('--direct', help='Whether or not to use the main metadata table directly (default: false)',
+                        action='store_true')
 
     args = parser.parse_args()
 
@@ -38,7 +41,6 @@ if __name__ == "__main__":
     kwargs = {}
 
     if args.command == 'sources':
-
         sources = runcible.sources()
 
         print(json.dumps(sources))
@@ -117,10 +119,8 @@ if __name__ == "__main__":
         keys = runcible.keys(**kwargs)
 
         print(' '.join(keys))
-        
-    if args.command == 'get':
 
+    if args.command == 'get':
         get = runcible.get(args.argument)
 
         print(json.dumps(get))
-
