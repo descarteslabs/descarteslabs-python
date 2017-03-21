@@ -5,7 +5,6 @@ from setuptools import setup, find_packages
 
 
 def do_setup():
-
     src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     old_path = os.getcwd()
     os.chdir(src_path)
@@ -44,6 +43,7 @@ def do_setup():
         os.chdir(old_path)
 
     return
+
 
 if __name__ == "__main__":
     do_setup()
