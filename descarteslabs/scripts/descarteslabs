@@ -62,4 +62,4 @@ if __name__ == "__main__":
     if args.command == 'env':
         
         print('%s=%s' % ('CLIENT_ID', auth.client_id))
-        print('%s=%s' % ('CLIENT_SECRET', auth.refresh_token))
+        print('%s=%s' % ('CLIENT_SECRET', auth.client_secret))

@@ -46,7 +46,7 @@ class Auth:
             pass
 
         self.client_id = os.environ.get('CLIENT_ID', token_info.get('client_id', None))
-        self.refresh_token = os.environ.get('CLIENT_SECRET', token_info.get('client_secret', None))
+        self.client_secret = os.environ.get('CLIENT_SECRET', token_info.get('client_secret', None))
         self._token = os.environ.get('JWT_TOKEN', token_info.get('jwt_token', None))
 
         self.domain = domain
@@ -84,7 +84,7 @@ class Auth:
         if self.client_id is None:
             raise RuntimeError("Could not find CLIENT_ID")
 
-        if self.refresh_token is None:
+        if self.client_secret is None:
             raise RuntimeError("Could not find CLIENT_SECRET")
 
         s = requests.Session()
@@ -100,7 +100,7 @@ class Auth:
             "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
             "target": self.client_id,
             "api_type": "app",
-            "refresh_token": self.refresh_token
+            "refresh_token": self.client_secret
         }
         r = s.post(self.domain + "/delegation", headers=headers, data=json.dumps(params), timeout=timeout)
 
