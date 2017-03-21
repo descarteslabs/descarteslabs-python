@@ -172,7 +172,7 @@ class Raster(Service):
         json_resp = r.json()
         # Decode base64
         for k in json_resp['files'].keys():
-            json_resp['files'][k] = base64.b64decode(json_resp['files'].pop(k) + b"===")
+            json_resp['files'][k] = base64.b64decode(json_resp['files'].pop(k) + '===')
 
         return json_resp
 
