@@ -5,7 +5,7 @@ import os
 import json
 import argparse
 
-from descarteslabs.services import Waldo
+from descarteslabs.services import Places
 
 if __name__ == "__main__":
 
@@ -31,32 +31,32 @@ if __name__ == "__main__":
     if args.url:
         kwargs['url'] = args.url
 
-    waldo = Waldo(**kwargs)
+    places = Places(**kwargs)
 
     kwargs = {}
 
     if args.command == 'placetypes':
-        placetypes = waldo.placetypes()
+        placetypes = places.placetypes()
 
         print(json.dumps(placetypes))
 
     if args.command == 'models':
-        sources = waldo.sources()
+        sources = places.sources()
 
         print(json.dumps(sources))
 
     if args.command == 'categories':
-        categories = waldo.categories()
+        categories = places.categories()
 
         print(json.dumps(categories))
 
     if args.command == 'metrics':
-        metrics = waldo.metrics()
+        metrics = places.metrics()
 
         print(json.dumps(metrics))
 
     if args.command == 'triples':
-        triples = waldo.triples()
+        triples = places.triples()
 
         print(json.dumps(triples))
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         if args.placetype:
             kwargs['placetype'] = args.placetype
 
-        find = waldo.find(args.argument, **kwargs)
+        find = places.find(args.argument, **kwargs)
 
         print(json.dumps(find))
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         if args.geom:
             kwargs['geom'] = args.geom
 
-        shape = waldo.shape(args.argument, **kwargs)
+        shape = places.shape(args.argument, **kwargs)
 
         print(json.dumps(shape))
 
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         if args.placetype:
             kwargs['placetype'] = args.placetype
 
-        prefix = waldo.prefix(args.argument, **kwargs)
+        prefix = places.prefix(args.argument, **kwargs)
 
         print(json.dumps(prefix))
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         if args.doy:
             kwargs['doy'] = args.doy
 
-        data = waldo.data(args.argument, **kwargs)
+        data = places.data(args.argument, **kwargs)
 
         print(json.dumps(data))
 
@@ -123,6 +123,6 @@ if __name__ == "__main__":
         if args.doy:
             kwargs['doy'] = args.doy
 
-        statistics = waldo.statistics(args.argument, **kwargs)
+        statistics = places.statistics(args.argument, **kwargs)
 
         print(json.dumps(statistics))

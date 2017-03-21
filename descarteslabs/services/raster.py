@@ -1,5 +1,5 @@
 from .service import Service
-from .waldo import Waldo
+from .places import Places
 from descarteslabs.addons import FeatureArray
 from descarteslabs.addons import numpy as np
 import base64
@@ -129,7 +129,7 @@ class Raster(Service):
         shape: str, optional
             A GeoJSON string used for a cutline. Default: None
         location: str, optional
-            A named location to be used as a cutline, retrieved via Waldo.
+            A named location to be used as a cutline, retrieved via Places.
             Incompatible with "shape". Default: None
         outputBounds: list, optional
             Output bounds as (minX, minY, maxX, maxY) in target SRS.
@@ -144,8 +144,8 @@ class Raster(Service):
         """
 
         if location is not None:
-            waldo = Waldo()
-            shape = waldo.shape(location, geom='low')
+            places = Places()
+            shape = places.shape(location, geom='low')
             shape = json.dumps(shape['geometry'])
 
         params = {
@@ -227,7 +227,7 @@ class Raster(Service):
         shape: str, optional
             A GeoJSON string used for a cutline. Default: None
         location: str, optional
-            A named location to be used as a cutline, retrieved via Waldo.
+            A named location to be used as a cutline, retrieved via Places.
             Incompatible with "shape". Default: None
         outputBounds: list, optional
             Output bounds as (minX, minY, maxX, maxY) in target SRS.
@@ -246,8 +246,8 @@ class Raster(Service):
         """
 
         if location is not None:
-            waldo = Waldo()
-            shape = waldo.shape(location, geom='low')
+            places = Places()
+            shape = places.shape(location, geom='low')
             shape = json.dumps(shape['geometry'])
 
         params = {
