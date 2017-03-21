@@ -7,8 +7,8 @@ import json
 
 
 class Raster(Service):
-
     """Raster"""
+    TIMEOUT = 300
 
     def __init__(
         self,
@@ -22,7 +22,7 @@ class Raster(Service):
         Service.__init__(self, url, token)
 
     def get_bands_by_key(self, key):
-        r = self.session.get('%s/bands/key/%s' % (self.url, key))
+        r = self.session.get('%s/bands/key/%s' % (self.url, key), timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -33,7 +33,7 @@ class Raster(Service):
         return jsonresp
 
     def get_bands_by_constellation(self, const):
-        r = self.session.get('%s/bands/constellation/%s' % (self.url, const))
+        r = self.session.get('%s/bands/constellation/%s' % (self.url, const), timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -49,7 +49,7 @@ class Raster(Service):
             'shape': shape,
         }
 
-        r = self.session.post('%s/dlkeys/from_shape' % (self.url), json=params)
+        r = self.session.post('%s/dlkeys/from_shape' % (self.url), json=params, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -64,7 +64,7 @@ class Raster(Service):
         }
 
         r = self.session.get('%s/dlkeys/from_latlon/%f/%f' % (self.url, lat, lon),
-                params=params)
+                             params=params, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -73,7 +73,7 @@ class Raster(Service):
 
     def dlkey(self, key):
 
-        r = self.session.get('%s/dlkeys/%s' % (self.url, key))
+        r = self.session.get('%s/dlkeys/%s' % (self.url, key), timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -169,7 +169,7 @@ class Raster(Service):
             'resampleAlg': resampleAlg,
         }
 
-        r = self.session.post('%s/raster' % (self.url), json=params)
+        r = self.session.post('%s/raster' % (self.url), json=params, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -270,7 +270,7 @@ class Raster(Service):
             'resampleAlg': resampleAlg,
         }
 
-        r = self.session.post('%s/featurearray' % (self.url), json=params)
+        r = self.session.post('%s/featurearray' % (self.url), json=params, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))

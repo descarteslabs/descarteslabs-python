@@ -9,7 +9,7 @@ from .service import Service
 
 
 class Waldo(Service):
-
+    TIMEOUT = 120
     """Shapes and statistics service https://iam.descarteslabs.com/service/waldo"""
 
     def __init__(self, url='https://services.descarteslabs.com/waldo/v1', token=None, maxsize=10, ttl=600):
@@ -30,7 +30,7 @@ class Waldo(Service):
 
         >>> waldo.placetypes()
         """
-        r = self.session.get('%s/placetypes' % self.url)
+        r = self.session.get('%s/placetypes' % self.url, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -62,7 +62,7 @@ class Waldo(Service):
 
         >>> waldo.find('iowa_united-states')
         """
-        r = self.session.get('%s/find/%s' % (self.url, path), params=kwargs)
+        r = self.session.get('%s/find/%s' % (self.url, path), params=kwargs, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -84,7 +84,7 @@ class Waldo(Service):
 
         >>> waldo.shape('north-america_united-states_iowa', geom='high')
         """
-        r = self.session.get('%s/shape/%s.%s' % (self.url, slug, output), params={'geom':geom})
+        r = self.session.get('%s/shape/%s.%s' % (self.url, slug, output), params={'geom':geom}, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -108,7 +108,8 @@ class Waldo(Service):
         >>> waldo.prefix('north-america_united-states_iowa', placetype='district', geom='low')
 
         """
-        r = self.session.get('%s/prefix/%s.%s' % (self.url, slug, output), params={'placetype': placetype, 'geom': geom})
+        r = self.session.get('%s/prefix/%s.%s' % (self.url, slug, output),
+                             params={'placetype': placetype, 'geom': geom}, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -133,7 +134,7 @@ class Waldo(Service):
 
         >>> waldo.sources()
         """
-        r = self.session.get('%s/sources' % self.url)
+        r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -158,7 +159,7 @@ class Waldo(Service):
 
         >>> waldo.categories()
         """
-        r = self.session.get('%s/categories' % self.url)
+        r = self.session.get('%s/categories' % self.url, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -184,7 +185,7 @@ class Waldo(Service):
 
         >>> waldo.metrics()
         """
-        r = self.session.get('%s/metrics' % self.url)
+        r = self.session.get('%s/metrics' % self.url, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -212,7 +213,7 @@ class Waldo(Service):
 
         >>> waldo.triples()
         """
-        r = self.session.get('%s/triples' % self.url)
+        r = self.session.get('%s/triples' % self.url, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -246,7 +247,7 @@ class Waldo(Service):
 
         >>> waldo.data('north-america_united-states', placetype='county', source='nass', category='corn', metric='yield', year=2015, doy=1)
         """
-        r = self.session.get('%s/data/%s' % (self.url, slug), params=kwargs)
+        r = self.session.get('%s/data/%s' % (self.url, slug), params=kwargs, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -292,7 +293,7 @@ class Waldo(Service):
 
         >>> waldo.statistics('north-america_united-states_iowa', source='nass', category='corn', metric='yield', year=2015)
         """
-        r = self.session.get('%s/statistics/%s' % (self.url, slug), params=kwargs)
+        r = self.session.get('%s/statistics/%s' % (self.url, slug), params=kwargs, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))

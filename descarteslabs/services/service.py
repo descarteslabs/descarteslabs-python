@@ -11,6 +11,7 @@ import descarteslabs.cli_auth
 
 
 class Service:
+    TIMEOUT = 30
 
     def __init__(self, url, token):
         self.auth = descarteslabs.cli_auth.Auth()
