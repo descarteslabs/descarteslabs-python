@@ -29,6 +29,7 @@ class Service:
         s = requests.Session()
 
         retries = Retry(total=5,
+                        read=2,
                         backoff_factor=random.uniform(1, 10),
                         method_whitelist=frozenset([
                             'HEAD', 'TRACE', 'GET', 'POST',
