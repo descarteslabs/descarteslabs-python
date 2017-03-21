@@ -30,7 +30,7 @@ class Service:
 
         retries = Retry(total=5,
                         read=2,
-                        backoff_factor=random.uniform(1, 10),
+                        backoff_factor=random.uniform(1, 3),
                         method_whitelist=frozenset([
                             'HEAD', 'TRACE', 'GET', 'POST',
                             'PUT', 'OPTIONS', 'DELETE'
