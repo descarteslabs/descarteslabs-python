@@ -27,8 +27,7 @@ class Raster(Service):
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        jsonresp = r.json()
-        return jsonresp
+        return r.json()
 
     def get_bands_by_constellation(self, const):
         r = self.session.get('%s/bands/constellation/%s' % (self.url, const), timeout=self.TIMEOUT)
@@ -36,8 +35,7 @@ class Raster(Service):
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        jsonresp = r.json()
-        return jsonresp
+        return r.json()
 
     def dlkeys_from_shape(self, resolution, tilesize, pad, shape):
         params = {
@@ -171,12 +169,12 @@ class Raster(Service):
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        jsonresp = r.json()
+        json_resp = r.json()
         # Decode base64
-        for k in jsonresp['files'].keys():
-            jsonresp['files'][k] = base64.b64decode(jsonresp['files'].pop(k))
+        for k in json_resp['files'].keys():
+            json_resp['files'][k] = base64.b64decode(json_resp['files'][k])
 
-        return jsonresp
+        return json_resp
 
     def ndarray(
             self,
