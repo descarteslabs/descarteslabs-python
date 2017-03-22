@@ -1,7 +1,6 @@
 import unittest
 
-from descarteslabs.services import Raster
-from descarteslabs.services import Places
+import descarteslabs as dl
 
 
 class TestRaster(unittest.TestCase):
@@ -10,8 +9,8 @@ class TestRaster(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.raster = Raster()
-        cls.places = Places()
+        cls.raster = dl.raster
+        cls.places = dl.places
 
     def test_raster(self):
         r = self.raster.raster(

@@ -21,6 +21,10 @@ class Service:
     def token(self):
         return self.auth.token
 
+    @token.setter
+    def token(self, token):
+        self.auth._token = token
+
     @property
     def session(self):
 
