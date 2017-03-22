@@ -5,14 +5,14 @@ import requests
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
-import descarteslabs.cli_auth
+import descarteslabs.auth
 
 
 class Service:
     TIMEOUT = 30
 
     def __init__(self, url, token):
-        self.auth = descarteslabs.cli_auth.Auth()
+        self.auth = descarteslabs.auth.Auth()
         self.url = url
         if token:
             self.auth._token = token

@@ -1,6 +1,6 @@
 import unittest
 
-from descarteslabs.services import Runcible
+from descarteslabs.services import Metadata
 
 
 class TestRuncible(unittest.TestCase):
@@ -8,7 +8,7 @@ class TestRuncible(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.instance = Runcible()
+        cls.instance = Metadata()
 
     def test_sources(self):
         r = self.instance.sources()

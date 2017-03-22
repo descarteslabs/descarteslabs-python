@@ -1,5 +1,5 @@
 # flake8: noqa
 from .service import Service
-from .runcible import Runcible
-from .waldo import Waldo
+from .metadata import Metadata
+from .places import Places
 from .raster import Raster

@@ -1,5 +1,5 @@
 import unittest
-from descarteslabs.cli_auth import Auth
+from descarteslabs.auth import Auth
 import requests
 import json
 

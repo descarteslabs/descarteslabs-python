@@ -30,9 +30,9 @@ def do_setup():
     kwargs['package_data'] = {'descarteslabs.services': ['gd_bundle-g2-g1.crt']}
     kwargs['scripts'] = [
         'descarteslabs/scripts/descarteslabs',
-        'descarteslabs/scripts/waldo',
+        'descarteslabs/scripts/places',
         'descarteslabs/scripts/raster',
-        'descarteslabs/scripts/runcible',
+        'descarteslabs/scripts/metadata',
     ]
     kwargs['zip_safe'] = False
 
