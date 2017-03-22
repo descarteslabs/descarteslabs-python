@@ -1,10 +1,10 @@
 import json
 from itertools import chain
 from .service import Service
-from .waldo import Waldo
+from .places import Places
 
 
-class Runcible(Service):
+class Metadata(Service):
     TIMEOUT = 60
     """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
 
@@ -28,7 +28,7 @@ class Runcible(Service):
             }
         ]
 
-        >>> runcible.sources()
+        >>> metadata.sources()
         """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
 
@@ -76,10 +76,10 @@ class Runcible(Service):
             }
         ]
 
-        >>> runcible.summary(shape='north-america_united-states_iowa', const_id=['L8'])
+        >>> metadata.summary(shape='north-america_united-states_iowa', const_id=['L8'])
         """
         if shape:
-            waldo = Waldo()
+            waldo = Places()
 
             shape = waldo.shape(shape, geom='low')
 
@@ -158,10 +158,10 @@ class Runcible(Service):
 
         return: GeoJSON FeatureCollection
 
-        >>> runcible.search(shape='north-america_united-states_iowa', const_id=['L8'])
+        >>> metadata.search(shape='north-america_united-states_iowa', const_id=['L8'])
         """
         if shape:
-            waldo = Waldo()
+            waldo = Places()
 
             shape = waldo.shape(shape, geom='low')
 
@@ -234,7 +234,7 @@ class Runcible(Service):
         return: list
             keys
 
-        >>> runcible.keys(shape='north-america_united-states_iowa', const_id=['L8'])
+        >>> metadata.keys(shape='north-america_united-states_iowa', const_id=['L8'])
         """
         result = self.search(const_id, date, shape, geom, start_time, end_time, params, limit, offset, bbox, direct)
 
@@ -250,7 +250,7 @@ class Runcible(Service):
 
         return: GeoJSON Feature(s)
 
-        >>> for feature in runcible.features():
+        >>> for feature in metadata.features():
             ...
         """
         result = self.summary(const_id=const_id, date=date, shape=shape, geom=geom, start_time=start_time,
@@ -283,7 +283,7 @@ class Runcible(Service):
         return: dict
             properties
 
-        >>> runcible.get('meta_LC82000452016168_v1')
+        >>> metadata.get('meta_LC82000452016168_v1')
         """
         r = self.session.post('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
 

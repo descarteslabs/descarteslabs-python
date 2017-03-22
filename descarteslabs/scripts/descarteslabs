@@ -7,7 +7,7 @@ import json
 import argparse
 import getpass
 
-from descarteslabs.cli_auth import Auth, base64url_decode
+from descarteslabs.auth import Auth, base64url_decode
 
 if __name__ == "__main__":
 

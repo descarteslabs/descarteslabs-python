@@ -2,17 +2,17 @@ import unittest
 
 from descarteslabs.addons import numpy as np
 from descarteslabs.services import Raster
-from descarteslabs.services import Waldo
+from descarteslabs.services import Places
 
 
 class TestRaster(unittest.TestCase):
     raster = None
-    waldo = None
+    places = None
 
     @classmethod
     def setUpClass(cls):
         cls.raster = Raster()
-        cls.waldo = Waldo()
+        cls.places = Places()
 
     def test_raster(self):
         r = self.raster.raster(
@@ -64,7 +64,7 @@ class TestRaster(unittest.TestCase):
             self.assertTrue(band in r)
 
     def test_dlkeys_from_shape(self):
-        iowa = self.waldo.shape('north-america_united-states_iowa', geom='low')
+        iowa = self.places.shape('north-america_united-states_iowa', geom='low')
         iowa_geom = iowa['geometry']
         dlkeys_geojson = self.raster.dlkeys_from_shape(30.0, 2048, 16, iowa_geom)
         self.assertEqual(len(dlkeys_geojson['features']), 58)

@@ -6,9 +6,9 @@ from cachetools.keys import hashkey
 from .service import Service
 
 
-class Waldo(Service):
+class Places(Service):
     TIMEOUT = 120
-    """Shapes and statistics service https://iam.descarteslabs.com/service/waldo"""
+    """Places and statistics service https://iam.descarteslabs.com/service/waldo"""
 
     def __init__(self, url='https://services.descarteslabs.com/waldo/v1', token=None, maxsize=10, ttl=600):
         """The parent Service class implements authentication and exponential
@@ -26,7 +26,7 @@ class Waldo(Service):
             "string"
           ]
 
-        >>> waldo.placetypes()
+        >>> places.placetypes()
         """
         r = self.session.get('%s/placetypes' % self.url, timeout=self.TIMEOUT)
 
@@ -58,7 +58,7 @@ class Waldo(Service):
             }
           ]
 
-        >>> waldo.find('iowa_united-states')
+        >>> places.find('iowa_united-states')
         """
         r = self.session.get('%s/find/%s' % (self.url, path), params=kwargs, timeout=self.TIMEOUT)
 
@@ -80,7 +80,7 @@ class Waldo(Service):
 
         return: geojson
 
-        >>> waldo.shape('north-america_united-states_iowa', geom='high')
+        >>> places.shape('north-america_united-states_iowa', geom='high')
         """
         r = self.session.get('%s/shape/%s.%s' % (self.url, slug, output), params={'geom': geom}, timeout=self.TIMEOUT)
 
@@ -91,7 +91,7 @@ class Waldo(Service):
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'prefix'))
     def prefix(self, slug, output='geojson', placetype='county', geom='low'):
-        """Get all the shapes that start with a prefix
+        """Get all the places that start with a prefix
 
         slug: string
             Unique slug for the shape
@@ -103,7 +103,7 @@ class Waldo(Service):
 
         return: geojson|topojson
 
-        >>> waldo.prefix('north-america_united-states_iowa', placetype='district', geom='low')
+        >>> places.prefix('north-america_united-states_iowa', placetype='district', geom='low')
 
         """
         r = self.session.get('%s/prefix/%s.%s' % (self.url, slug, output),
@@ -130,7 +130,7 @@ class Waldo(Service):
           }
         ]
 
-        >>> waldo.sources()
+        >>> places.sources()
         """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
 
@@ -155,7 +155,7 @@ class Waldo(Service):
           }
         ]
 
-        >>> waldo.categories()
+        >>> places.categories()
         """
         r = self.session.get('%s/categories' % self.url, timeout=self.TIMEOUT)
 
@@ -181,7 +181,7 @@ class Waldo(Service):
           }
         ]
 
-        >>> waldo.metrics()
+        >>> places.metrics()
         """
         r = self.session.get('%s/metrics' % self.url, timeout=self.TIMEOUT)
 
@@ -209,7 +209,7 @@ class Waldo(Service):
           }
         ]
 
-        >>> waldo.triples()
+        >>> places.triples()
         """
         r = self.session.get('%s/triples' % self.url, timeout=self.TIMEOUT)
 
@@ -243,7 +243,7 @@ class Waldo(Service):
           }
         ]
 
-        >>> waldo.data('north-america_united-states', placetype='county', source='nass', category='corn',
+        >>> places.data('north-america_united-states', placetype='county', source='nass', category='corn',
                        metric='yield', year=2015, doy=1)
         """
         r = self.session.get('%s/data/%s' % (self.url, slug), params=kwargs, timeout=self.TIMEOUT)
@@ -290,7 +290,7 @@ class Waldo(Service):
           }
         ]
 
-        >>> waldo.statistics('north-america_united-states_iowa', source='nass', category='corn', metric='yield',
+        >>> places.statistics('north-america_united-states_iowa', source='nass', category='corn', metric='yield',
                               year=2015)
         """
         r = self.session.get('%s/statistics/%s' % (self.url, slug), params=kwargs, timeout=self.TIMEOUT)
