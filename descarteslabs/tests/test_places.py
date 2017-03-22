@@ -1,14 +1,14 @@
 import unittest
 
-from descarteslabs.services import Waldo
+from descarteslabs.services import Places
 
 
-class TestWaldo(unittest.TestCase):
+class TestPlaces(unittest.TestCase):
     instance = None
 
     @classmethod
     def setUpClass(cls):
-        cls.instance = Waldo()
+        cls.instance = Places()
 
     def test_placetypes(self):
         data = self.instance.placetypes()

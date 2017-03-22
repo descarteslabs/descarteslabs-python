@@ -2,8 +2,6 @@
 
 from descarteslabs.services import Raster
 import argparse
-import json
-import base64
 
 
 def scales(s):
@@ -49,4 +47,4 @@ if __name__ == "__main__":
     for filename, data in response['files'].iteritems():
         with open(filename, "w") as f:
             f.write(data)
-    print response['metadata']
+    print(response['metadata'])

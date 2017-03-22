@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-import os
 import json
 import argparse
 
-from descarteslabs.services import Runcible
+from descarteslabs.services import Metadata
 
 if __name__ == "__main__":
 
@@ -36,12 +35,12 @@ if __name__ == "__main__":
     if args.url:
         kwargs['url'] = args.url
 
-    runcible = Runcible(**kwargs)
+    metadata = Metadata(**kwargs)
 
     kwargs = {}
 
     if args.command == 'sources':
-        sources = runcible.sources()
+        sources = metadata.sources()
 
         print(json.dumps(sources))
 
@@ -62,7 +61,7 @@ if __name__ == "__main__":
         if args.bbox:
             kwargs['bbox'] = args.bbox
 
-        summary = runcible.summary(**kwargs)
+        summary = metadata.summary(**kwargs)
 
         print(json.dumps(summary))
 
@@ -89,7 +88,7 @@ if __name__ == "__main__":
         if args.direct:
             kwargs['direct'] = args.direct
 
-        search = runcible.search(**kwargs)
+        search = metadata.search(**kwargs)
 
         print(json.dumps(search))
 
@@ -116,11 +115,11 @@ if __name__ == "__main__":
         if args.direct:
             kwargs['direct'] = args.direct
 
-        keys = runcible.keys(**kwargs)
+        keys = metadata.keys(**kwargs)
 
         print(' '.join(keys))
 
     if args.command == 'get':
-        get = runcible.get(args.argument)
+        get = metadata.get(args.argument)
 
         print(json.dumps(get))
