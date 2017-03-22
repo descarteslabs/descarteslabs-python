@@ -11,7 +11,6 @@ import six
 import os
 import stat
 
-from os.path import expanduser
 
 def base64url_decode(input):
     """Helper method to base64url_decode a string.
@@ -45,8 +44,8 @@ class Auth:
         except:
             pass
 
-        self.client_id = os.environ.get('CLIENT_ID', token_info.get('client_id',''))
-        self.refresh_token = os.environ.get('CLIENT_SECRET', token_info.get('client_secret',''))
+        self.client_id = os.environ.get('CLIENT_ID', token_info.get('client_id', None))
+        self.client_secret = os.environ.get('CLIENT_SECRET', token_info.get('client_secret', None))
         self._token = os.environ.get('JWT_TOKEN', token_info.get('jwt_token', None))
 
         self.domain = domain
@@ -81,6 +80,12 @@ class Auth:
         return json.loads(base64url_decode(claims).decode('utf-8'))
 
     def _get_token(self, timeout=100):
+        if self.client_id is None:
+            raise RuntimeError("Could not find CLIENT_ID")
+
+        if self.client_secret is None:
+            raise RuntimeError("Could not find CLIENT_SECRET")
+
         s = requests.Session()
         retries = Retry(total=5,
                         backoff_factor=random.uniform(1, 10),
@@ -94,7 +99,7 @@ class Auth:
             "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
             "target": self.client_id,
             "api_type": "app",
-            "refresh_token": self.refresh_token
+            "refresh_token": self.client_secret
         }
         r = s.post(self.domain + "/delegation", headers=headers, data=json.dumps(params), timeout=timeout)
 
@@ -129,8 +134,8 @@ class Auth:
 
         os.chmod(file, stat.S_IRUSR | stat.S_IWUSR)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     auth = Auth()
 
     print(auth.token)

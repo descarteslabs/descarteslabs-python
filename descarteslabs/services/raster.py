@@ -8,13 +8,13 @@ from descarteslabs.addons import numpy as np
 
 
 class Raster(Service):
-
     """Raster"""
+    TIMEOUT = 300
 
     def __init__(
-        self,
-        url='https://platform-services.descarteslabs.com/raster',
-        token=None
+            self,
+            url='https://platform-services.descarteslabs.com/raster',
+            token=None
     ):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
@@ -23,22 +23,20 @@ class Raster(Service):
         Service.__init__(self, url, token)
 
     def get_bands_by_key(self, key):
-        r = self.session.get('%s/bands/key/%s' % (self.url, key))
+        r = self.session.get('%s/bands/key/%s' % (self.url, key), timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        jsonresp = r.json()
-        return jsonresp
+        return r.json()
 
     def get_bands_by_constellation(self, const):
-        r = self.session.get('%s/bands/constellation/%s' % (self.url, const))
+        r = self.session.get('%s/bands/constellation/%s' % (self.url, const), timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        jsonresp = r.json()
-        return jsonresp
+        return r.json()
 
     def dlkeys_from_shape(self, resolution, tilesize, pad, shape):
         params = {
@@ -48,7 +46,7 @@ class Raster(Service):
             'shape': shape,
         }
 
-        r = self.session.post('%s/dlkeys/from_shape' % (self.url), json=params)
+        r = self.session.post('%s/dlkeys/from_shape' % (self.url), json=params, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -63,7 +61,7 @@ class Raster(Service):
         }
 
         r = self.session.get('%s/dlkeys/from_latlon/%f/%f' % (self.url, lat, lon),
-                params=params)
+                             params=params, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -72,30 +70,29 @@ class Raster(Service):
 
     def dlkey(self, key):
 
-        r = self.session.get('%s/dlkeys/%s' % (self.url, key))
+        r = self.session.get('%s/dlkeys/%s' % (self.url, key), timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
 
-
     def raster(
-        self,
-        keys=None,
-        bands=None,
-        scales=None,
-        ot=None,
-        of='GTiff',
-        srs=None,
-        resolution=None,
-        shape=None,
-        location=None,
-        outputBounds=None,
-        outputBoundsSRS=None,
-        outsize=None,
-        targetAlignedPixels=False,
-        resampleAlg=None,
+            self,
+            keys=None,
+            bands=None,
+            scales=None,
+            ot=None,
+            of='GTiff',
+            srs=None,
+            resolution=None,
+            shape=None,
+            location=None,
+            outputBounds=None,
+            outputBoundsSRS=None,
+            outsize=None,
+            targetAlignedPixels=False,
+            resampleAlg=None,
     ):
         """
         Yield a raster composed from one/many sources
@@ -168,34 +165,34 @@ class Raster(Service):
             'resampleAlg': resampleAlg,
         }
 
-        r = self.session.post('%s/raster' % (self.url), json=params)
+        r = self.session.post('%s/raster' % (self.url), json=params, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        jsonresp = r.json()
+        json_resp = r.json()
         # Decode base64
-        for k in jsonresp['files'].keys():
-            jsonresp['files'][k] = base64.b64decode(jsonresp['files'].pop(k))
+        for k in json_resp['files'].keys():
+            json_resp['files'][k] = base64.b64decode(json_resp['files'][k])
 
-        return jsonresp
+        return json_resp
 
     def ndarray(
-        self,
-        keys=None,
-        bands=None,
-        scales=None,
-        ot=None,
-        srs=None,
-        resolution=None,
-        shape=None,
-        location=None,
-        outputBounds=None,
-        outputBoundsSRS=None,
-        outsize=None,
-        targetAlignedPixels=False,
-        resampleAlg=None,
-        order='image',
+            self,
+            keys=None,
+            bands=None,
+            scales=None,
+            ot=None,
+            srs=None,
+            resolution=None,
+            shape=None,
+            location=None,
+            outputBounds=None,
+            outputBoundsSRS=None,
+            outsize=None,
+            targetAlignedPixels=False,
+            resampleAlg=None,
+            order='image',
     ):
         """
         Return an ndarray and metadata from a list of imagery sources
@@ -241,7 +238,7 @@ class Raster(Service):
         resampleAlg: str, optional
             Resampling algorithm to use in the Warp. Default: None
         order: str, optional
-            Order of returned array. 
+            Order of returned array.
             'image' (default) returns arrays in  (row, column, band).
             'gdal' returns arrays in  (band, row, column).
         """
@@ -266,7 +263,7 @@ class Raster(Service):
             'resampleAlg': resampleAlg,
         }
 
-        r = self.session.post('%s/npz' % (self.url), json=params)
+        r = self.session.post('%s/npz' % (self.url), json=params, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))

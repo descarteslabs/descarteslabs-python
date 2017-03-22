@@ -1,11 +1,11 @@
 import json
 from itertools import chain
-from operator import itemgetter
 from .service import Service
 from .waldo import Waldo
 
-class Runcible(Service):
 
+class Runcible(Service):
+    TIMEOUT = 60
     """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
 
     def __init__(self, url='https://platform-services.descarteslabs.com/runcible', token=None):
@@ -30,14 +30,15 @@ class Runcible(Service):
 
         >>> runcible.sources()
         """
-        r = self.session.get('%s/sources' % self.url)
+        r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
 
-    def summary(self, const_id=None, date='acquired', part='day', shape=None, geom=None, start_time=None, end_time=None, params=None, bbox=False, direct=False):
+    def summary(self, const_id=None, date='acquired', part='day', shape=None, geom=None, start_time=None, end_time=None,
+                params=None, bbox=False, direct=False):
         """Get a summary of results for the specified spatio-temporal query.
 
         const_id: list(string)
@@ -74,11 +75,10 @@ class Runcible(Service):
               ]
             }
         ]
-        
+
         >>> runcible.summary(shape='north-america_united-states_iowa', const_id=['L8'])
         """
         if shape:
-
             waldo = Waldo()
 
             shape = waldo.shape(shape, geom='low')
@@ -89,10 +89,10 @@ class Runcible(Service):
 
         if date:
             kwargs['date'] = date
-            
+
         if part:
             kwargs['part'] = part
-            
+
         if geom:
             kwargs['geom'] = geom
 
@@ -107,16 +107,16 @@ class Runcible(Service):
 
         if bbox:
             kwargs['bbox'] = 'true'
-            
+
         if direct:
             kwargs['direct'] = 'true'
-            
+
         def f(x):
 
             if x:
                 kwargs['const_id'] = x
 
-            r = self.session.post('%s/summary' % self.url, json=kwargs)
+            r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
             if r.status_code != 200:
                 raise RuntimeError("%s: %s" % (r.status_code, r.text))
@@ -124,14 +124,14 @@ class Runcible(Service):
             return r.json()
 
         if not const_id:
-
             const_id = [None]
-            
+
         result = map(f, const_id)
 
         return result
 
-    def search(self, const_id=None, date='acquired', shape=None, geom=None, start_time=None, end_time=None, params=None, limit=100, offset=0, bbox=False, direct=False):
+    def search(self, const_id=None, date='acquired', shape=None, geom=None, start_time=None, end_time=None, params=None,
+               limit=100, offset=0, bbox=False, direct=False):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -161,7 +161,6 @@ class Runcible(Service):
         >>> runcible.search(shape='north-america_united-states_iowa', const_id=['L8'])
         """
         if shape:
-
             waldo = Waldo()
 
             shape = waldo.shape(shape, geom='low')
@@ -190,24 +189,24 @@ class Runcible(Service):
             if x:
                 kwargs['const_id'] = x
 
-            r = self.session.post('%s/search' % self.url, json=kwargs)
+            r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
             if r.status_code != 200:
                 raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
             return r.json()
 
-        result = {'type':'FeatureCollection'}
+        result = {'type': 'FeatureCollection'}
 
         if not const_id:
-
             const_id = [None]
-            
+
         result['features'] = list(chain(*map(f, const_id)))
 
         return result
 
-    def keys(self, const_id=None, date='acquired', shape=None, geom=None, start_time=None, end_time=None, params=None, limit=100, offset=0, bbox=False, direct=False):
+    def keys(self, const_id=None, date='acquired', shape=None, geom=None, start_time=None, end_time=None, params=None,
+             limit=100, offset=0, bbox=False, direct=False):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -238,34 +237,38 @@ class Runcible(Service):
         >>> runcible.keys(shape='north-america_united-states_iowa', const_id=['L8'])
         """
         result = self.search(const_id, date, shape, geom, start_time, end_time, params, limit, offset, bbox, direct)
-        
+
         return [feature['id'] for feature in result['features']]
-        
-    def features(self, const_id=None, date='acquired', shape=None, geom=None, start_time=None, end_time=None, params=None, limit=100, bbox=False, direct=False):
+
+    def features(self, const_id=None, date='acquired', shape=None, geom=None, start_time=None, end_time=None,
+                 params=None, limit=100, bbox=False, direct=False):
         """
         Generator that combines summary and search to page through results.
-        
+
         limit: integer
             Specify a page size
-            
+
         return: GeoJSON Feature(s)
 
         >>> for feature in runcible.features():
             ...
         """
-        result = self.summary(const_id=const_id, date=date, shape=shape, geom=geom, start_time=start_time, end_time=end_time, params=params, bbox=bbox, direct=direct)
-        
+        result = self.summary(const_id=const_id, date=date, shape=shape, geom=geom, start_time=start_time,
+                              end_time=end_time, params=params, bbox=bbox, direct=direct)
+
         for summary in result:
-        
-            offset = 0     
-            
+
+            offset = 0
+
             count = summary['count']
             const_id = summary['const_id']
-            
+
             while offset < count:
-    
-                features = self.search(const_id=[const_id], date=date, shape=shape, geom=geom, start_time=start_time, end_time=end_time, params=params, limit=limit, offset=offset, bbox=bbox, direct=direct)
-    
+
+                features = self.search(const_id=[const_id], date=date, shape=shape, geom=geom, start_time=start_time,
+                                       end_time=end_time, params=params, limit=limit, offset=offset, bbox=bbox,
+                                       direct=direct)
+
                 offset = limit + offset
 
                 for feature in features['features']:
@@ -273,19 +276,18 @@ class Runcible(Service):
 
     def get(self, key):
         """Get a single metadata entry
-        
+
         key: string
             The primary key identifier to get
-            
+
         return: dict
             properties
 
         >>> runcible.get('meta_LC82000452016168_v1')
         """
-        r = self.session.post('%s/get/%s' % (self.url, key))
+        r = self.session.post('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
-
