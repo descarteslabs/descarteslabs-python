@@ -1,9 +1,9 @@
-from .service import Service
-from .places import Places
-from descarteslabs.addons import FeatureArray
-from descarteslabs.addons import numpy as np
 import base64
 import json
+from descarteslabs.addons import FeatureArray
+from descarteslabs.addons import numpy as np
+from .service import Service
+from .places import Places
 
 
 class Raster(Service):
@@ -78,20 +78,20 @@ class Raster(Service):
 
     def raster(
             self,
-            keys=None,
+            inputs,
             bands=None,
             scales=None,
-            ot=None,
-            of='GTiff',
+            data_type=None,
+            output_format='GTiff',
             srs=None,
+            dimensions=None,
             resolution=None,
+            bounds=None,
+            bounds_srs=None,
             shape=None,
             location=None,
-            outputBounds=None,
-            outputBoundsSRS=None,
-            outsize=None,
-            targetAlignedPixels=False,
-            resampleAlg=None,
+            align_pixels=False,
+            resampler=None,
     ):
         """
         Yield a raster composed from one/many sources
@@ -101,7 +101,7 @@ class Raster(Service):
 
         Parameters
         ----------
-        keys: list
+        inputs: list
             list of metadata keys
         bands: list, optional
             A list of bands (1-indexed) that correspond to the source raster
@@ -113,9 +113,9 @@ class Raster(Service):
             pad the list with None entries where appropriate.  If an entry is
             of length 4, the destination scales will be included.  (0, 1, 10,
             100) would scale 0->10 and 1->100. Default: None
-        of: str, optional
+        output_format: str, optional
             Output format ("GTiff", "PNG", ...). Default: "GTiff"
-        ot: str, optional
+        data_type: str, optional
             Output type ('Byte', 'UInt16', etc). Default: None (same as source
             type)
         srs: str, optional
@@ -124,44 +124,44 @@ class Raster(Service):
         resolution: float, optional
             Output resolution, in srs coordinate system. Default: None (native
             resolution).
-        outsize: list of integers, optional
+        dimensions: tuple of integers, optional
             Desired image size of output. Incompatible with resolution.
         shape: str, optional
             A GeoJSON string used for a cutline. Default: None
         location: str, optional
             A named location to be used as a cutline, retrieved via Places.
             Incompatible with "shape". Default: None
-        outputBounds: list, optional
+        bounds: list, optional
             Output bounds as (minX, minY, maxX, maxY) in target SRS.
             Default None.
-        outputBoundsSRS: str, optional
+        bounds_srs: str, optional
             SRS in which outputBounds are expressed, in the case that they are
             not expressed in the output SRS.
-        targetAlignedPixels: bool, optional
+        align_pixels: bool, optional
             Target aligned pixels with the coordinate system. Default: False
-        resampleAlg: str, optional
+        resampler: str, optional
             Resampling algorithm to use in the Warp. Default: None
         """
 
-        if location is not None:
+        if location:
             places = Places()
             shape = places.shape(location, geom='low')
             shape = json.dumps(shape['geometry'])
 
         params = {
-            'keys': keys,
+            'keys': inputs,
             'bands': bands,
             'scales': scales,
-            'ot': ot,
-            'of': of,
+            'ot': data_type,
+            'of': output_format,
             'srs': srs,
             'resolution': resolution,
             'shape': shape,
-            'outputBounds': outputBounds,
-            'outputBoundsSRS': outputBoundsSRS,
-            'outsize': outsize,
-            'targetAlignedPixels': targetAlignedPixels,
-            'resampleAlg': resampleAlg,
+            'outputBounds': bounds,
+            'outputBoundsSRS': bounds_srs,
+            'outsize': dimensions,
+            'targetAlignedPixels': align_pixels,
+            'resampleAlg': resampler,
         }
 
         r = self.session.post('%s/raster' % (self.url), json=params, timeout=self.TIMEOUT)
@@ -178,19 +178,19 @@ class Raster(Service):
 
     def ndarray(
             self,
-            keys=None,
+            inputs,
             bands=None,
             scales=None,
-            ot=None,
+            data_type=None,
             srs=None,
             resolution=None,
+            dimensions=None,
             shape=None,
             location=None,
-            outputBounds=None,
-            outputBoundsSRS=None,
-            outsize=None,
-            targetAlignedPixels=False,
-            resampleAlg=None,
+            bounds=None,
+            bounds_srs=None,
+            align_pixels=False,
+            resampler=None,
             order='image',
     ):
         """
@@ -201,7 +201,7 @@ class Raster(Service):
 
         Parameters
         ----------
-        keys: list
+        inputs: list
             list of metadata keys
         bands: list, optional
             A list of bands (1-indexed) that correspond to the source raster
@@ -213,7 +213,7 @@ class Raster(Service):
             pad the list with None entries where appropriate.  If an entry is
             of length 4, the destination scales will be included.  (0, 1, 10,
             100) would scale 0->10 and 1->100. Default: None
-        ot: str, optional
+        data_type: str, optional
             Output type ('Byte', 'UInt16', etc). Default: None (same as source
             type)
         srs: str, optional
@@ -222,22 +222,22 @@ class Raster(Service):
         resolution: float, optional
             Output resolution, in srs coordinate system. Default: None (native
             resolution).
-        outsize: list of integers, optional
+        dimensions: list of integers, optional
             Desired image size of output. Incompatible with resolution.
         shape: str, optional
             A GeoJSON string used for a cutline. Default: None
         location: str, optional
             A named location to be used as a cutline, retrieved via Places.
             Incompatible with "shape". Default: None
-        outputBounds: list, optional
+        bounds: list, optional
             Output bounds as (minX, minY, maxX, maxY) in target SRS.
             Default None.
-        outputBoundsSRS: str, optional
+        bounds_srs: str, optional
             SRS in which outputBounds are expressed, in the case that they are
             not expressed in the output SRS.
-        targetAlignedPixels: bool, optional
+        align_pixels: bool, optional
             Target aligned pixels with the coordinate system. Default: False
-        resampleAlg: str, optional
+        resampler: str, optional
             Resampling algorithm to use in the Warp. Default: None
         order: str, optional
             Order of returned array.
@@ -251,18 +251,18 @@ class Raster(Service):
             shape = json.dumps(shape['geometry'])
 
         params = {
-            'keys': keys,
+            'keys': inputs,
             'bands': bands,
             'scales': scales,
-            'ot': ot,
+            'ot': data_type,
             'srs': srs,
             'resolution': resolution,
             'shape': shape,
-            'outputBounds': outputBounds,
-            'outputBoundsSRS': outputBoundsSRS,
-            'outsize': outsize,
-            'targetAlignedPixels': targetAlignedPixels,
-            'resampleAlg': resampleAlg,
+            'outputBounds': bounds,
+            'outputBoundsSRS': bounds_srs,
+            'outsize': dimensions,
+            'targetAlignedPixels': align_pixels,
+            'resampleAlg': resampler,
         }
 
         r = self.session.post('%s/featurearray' % (self.url), json=params, timeout=self.TIMEOUT)
