@@ -1,4 +1,4 @@
-from cStringIO import StringIO
+from io import BytesIO
 import base64
 import json
 
@@ -268,7 +268,7 @@ class Raster(Service):
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        io = StringIO(r.content)
+        io = BytesIO(r.content)
         npz = np.load(io)
         array = npz['data']
         metadata = json.loads(str(npz['metadata']))
