@@ -1,9 +1,10 @@
-from .service import Service
-from .waldo import Waldo
-from descarteslabs.addons import FeatureArray
-from descarteslabs.addons import numpy as np
+from cStringIO import StringIO
 import base64
 import json
+
+from .service import Service
+from .waldo import Waldo
+from descarteslabs.addons import numpy as np
 
 
 class Raster(Service):
@@ -26,8 +27,6 @@ class Raster(Service):
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
-
 
         jsonresp = r.json()
         return jsonresp
@@ -199,10 +198,7 @@ class Raster(Service):
         order='image',
     ):
         """
-        Yield a raster composed from one/many sources
-
-        Given a list of filenames, generate a translated and merged mosaic as
-        a new GDAL dataset, and yield it to the user.
+        Return an ndarray and metadata from a list of imagery sources
 
         Parameters
         ----------
@@ -270,14 +266,17 @@ class Raster(Service):
             'resampleAlg': resampleAlg,
         }
 
-        r = self.session.post('%s/featurearray' % (self.url), json=params)
+        r = self.session.post('%s/npz' % (self.url), json=params)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        fa = FeatureArray.deserialize(r.content, base64.b64decode)
+        io = StringIO(r.content)
+        npz = np.load(io)
+        array = npz['data']
+        metadata = json.loads(str(npz['metadata']))
 
         if order == 'image':
-            return fa.transpose((1, 2, 0)).view(np.ndarray)
+            return array.transpose((1, 2, 0)), metadata
         elif order == 'gdal':
-            return fa.view(np.ndarray)
+            return array, metadata

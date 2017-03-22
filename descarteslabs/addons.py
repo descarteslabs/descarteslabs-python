@@ -10,11 +10,6 @@ class ThirdParty(object):
         raise ImportError("Please install the %s package" % self._package)
 
 try:
-    from features import FeatureArray
-except:
-    FeatureArray = ThirdParty("descarteslabs-features")
-
-try:
     import numpy
 except:
     numpy = ThirdParty("numpy")
