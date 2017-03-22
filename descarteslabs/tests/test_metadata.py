@@ -16,7 +16,7 @@ class TestRuncible(unittest.TestCase):
 
     def test_search(self):
         r = self.instance.search()
-        self.assertEqual(len(r['features']), 1000)
+        self.assertGreater(len(r['features']), 0)
 
     @unittest.skip("search by sat_id not currently supported")
     def test_sat_id(self):
