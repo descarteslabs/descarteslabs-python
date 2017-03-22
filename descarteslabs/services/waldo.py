@@ -10,7 +10,7 @@ class Waldo(Service):
     TIMEOUT = 120
     """Shapes and statistics service https://iam.descarteslabs.com/service/waldo"""
 
-    def __init__(self, url='https://services.descarteslabs.com/waldo/v1', token=None, maxsize=10, ttl=600):
+    def __init__(self, url='https://platform-services.descarteslabs.com/waldo', token=None, maxsize=10, ttl=600):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
