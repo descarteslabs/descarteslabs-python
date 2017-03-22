@@ -3,8 +3,8 @@ import base64
 import json
 
 from .service import Service
-from .waldo import Waldo
 from .places import Places
+
 from descarteslabs.addons import numpy as np
 
 
