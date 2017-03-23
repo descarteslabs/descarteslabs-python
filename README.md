@@ -27,3 +27,22 @@ created from the login process or generated fresh through through [IAM](https://
 $ export CLIENT_ID=...
 $ export CLIENT_SECRET=...
 ```
+
+
+FAQ
+---
+
+If you are on older versions of Python 2.7, you may encounter warnings about
+SSL such as:
+
+  InsecurePlatformWarning: A true SSLContext object is not
+  available. This prevents urllib3 from configuring SSL appropriately and 
+  may cause certain SSL connections to fail. For more information, see 
+  https://urllib3.readthedocs.org/en/latest  
+  /security.html#insecureplatformwarning.
+
+Please follow the instructions from
+[stackoverflow](http://stackoverflow.com/questions/29099404/ssl-insecureplatform-error-when-using-requests-package)
+and install the `"requests[security]"` package with, e.g. `pip install
+"requests[security]"`.
+
