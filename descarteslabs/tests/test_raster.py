@@ -28,7 +28,7 @@ class TestRaster(unittest.TestCase):
     def test_ndarray(self):
         try:
             data, metadata = self.raster.ndarray(
-                    keys=['meta_LC80270312016188_v1'],
+                    inputs=['meta_LC80270312016188_v1'],
                     bands=['red', 'green', 'blue', 'alpha'],
                     resolution=960,
                     )
