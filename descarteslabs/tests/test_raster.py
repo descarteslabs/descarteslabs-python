@@ -1,6 +1,7 @@
 import unittest
 
 import descarteslabs as dl
+from descarteslabs.addons import numpy as np
 
 
 class TestRaster(unittest.TestCase):
@@ -22,6 +23,19 @@ class TestRaster(unittest.TestCase):
         self.assertTrue("files" in r)
         self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
         self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.tif'])
+
+    def test_ndarray(self):
+        try:
+            data, metadata = self.raster.ndarray(
+                    keys=['meta_LC80270312016188_v1'],
+                    bands=['red', 'green', 'blue', 'alpha'],
+                    resolution=960,
+                    )
+            self.assertEqual(data.shape, (249, 245, 4))
+            self.assertEqual(data.dtype, np.uint16)
+            self.assertEqual(len(metadata['bands']), 4)
+        except ImportError:
+            pass
 
     def test_thumbnail(self):
         r = self.raster.raster(
