@@ -4,7 +4,7 @@ from __future__ import print_function
 import json
 import argparse
 
-from descarteslabs.services import Metadata
+import descarteslabs as dl
 
 if __name__ == "__main__":
 
@@ -30,12 +30,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    kwargs = {}
+    metadata = dl.metadata
 
     if args.url:
-        kwargs['url'] = args.url
-
-    metadata = Metadata(**kwargs)
+        metadata.url = args.url
 
     kwargs = {}
 
