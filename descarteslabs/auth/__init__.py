@@ -136,6 +136,7 @@ class Auth:
 
         os.chmod(file, stat.S_IRUSR | stat.S_IWUSR)
 
+descartes_auth = Auth()
 
 if __name__ == '__main__':
     auth = Auth()
