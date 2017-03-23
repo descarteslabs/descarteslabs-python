@@ -1,5 +1,6 @@
-__version__ = "0.1.0"
+# flake8: noqa
 
+__version__ = "0.1.0"
 from .auth import descartes_auth
 from .services.metadata import Metadata
 from .services.places import Places
