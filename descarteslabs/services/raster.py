@@ -272,7 +272,7 @@ class Raster(Service):
         io = BytesIO(r.content)
         npz = np.load(io)
         array = npz['data']
-        metadata = json.loads(npz['metadata'].tostring())
+        metadata = json.loads(npz['metadata'].tostring().decode('utf-8'))
 
         if order == 'image':
             return array.transpose((1, 2, 0)), metadata
