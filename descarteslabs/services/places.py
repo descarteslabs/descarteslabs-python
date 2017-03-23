@@ -19,14 +19,14 @@ class Places(Service):
         self.cache = TTLCache(maxsize, ttl)
 
     def placetypes(self):
-        """Get a list of known/available placetypes
+        """Get a list of place types.
 
-        return: array
-          [
-            "string"
-          ]
+        Example::
 
-        >>> places.placetypes()
+            >>> places.placetypes()
+
+            ['country', 'region', 'district', 'mesoregion', 'microregion',
+                'county']
         """
         r = self.session.get('%s/placetypes' % self.url, timeout=self.TIMEOUT)
 
@@ -37,28 +37,21 @@ class Places(Service):
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'find'))
     def find(self, path, **kwargs):
-        """Find candidate slugs based on full or partial path
+        """Find candidate slugs based on full or partial path.
 
-        path: string
-            Candidate underscore separated slug
-        placetype: string
-            Restrict results to a particular placetype (optional)
+        :param str path: Candidate underscore-separated slug.
+        :param placetype: Optional place type for filtering.
 
-        return: array
-          [
-            {
-              "placetype": "string",
-              "path": "string",
-              "slug": "string",
-              "id":	"integer",
-              "name": "string",
-              "bbox": [
-                0
-              ]
-            }
-          ]
+        Example::
 
-        >>> places.find('iowa_united-states')
+          >>> places.find('morocco')
+
+          [{'bbox': [-17.013743, 21.419971, -1.031999, 35.926519],
+            'id': 85632693,
+            'name': 'Morocco',
+            'path': 'continent:africa_country:morocco',
+            'placetype': 'country',
+            'slug': 'africa_morocco'}]
         """
         r = self.session.get('%s/find/%s' % (self.url, path), params=kwargs, timeout=self.TIMEOUT)
 
@@ -69,18 +62,13 @@ class Places(Service):
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'shape'))
     def shape(self, slug, output='geojson', geom='low'):
-        """Get the shape for a specified slug
+        """Get the geometry for a specific slug
 
-        slug: string
-            Unique slug for the shape
-        output: string
-            Return type: geojson (default)
-        geom: string
-            Resolution for the shape [low (default), medium, high]
+        :param slug: Slug identifier.
+        :param str output: Desired geometry format (`GeoJSON`).
+        :param str geom: Desired resolution for the geometry (`low`, `medium`, `high`).
 
-        return: geojson
-
-        >>> places.shape('north-america_united-states_iowa', geom='high')
+        :return: GeoJSON ``Feature``
         """
         r = self.session.get('%s/shape/%s.%s' % (self.url, slug, output), params={'geom': geom}, timeout=self.TIMEOUT)
 
@@ -93,17 +81,19 @@ class Places(Service):
     def prefix(self, slug, output='geojson', placetype='county', geom='low'):
         """Get all the places that start with a prefix
 
-        slug: string
-            Unique slug for the shape
-        placetype: string
-            Restrict results to a particular placetype (optional)
-        geom: string
-            Include the geometry for each shape using the specified resolution
-            (low, medium, high). Default is None, meaning no geometry.
+        :param str slug: Slug identifier.
+        :param str output: Desired geometry format (`GeoJSON`, `TopoJSON`).
+        :param str placetype: Restrict results to a particular place type.
+        :param str geom: Desired resolution for the geometry (`low`, `medium`, `high`).
 
-        return: geojson|topojson
+        :return: GeoJSON or TopoJSON ``FeatureCollection``
 
-        >>> places.prefix('north-america_united-states_iowa', placetype='district', geom='low')
+        Example::
+
+            >>> il_counties = places.prefix('north-america_united-states_illinois', placetype='county')
+            >>> len(il_counties['features'])
+
+            102
 
         """
         r = self.session.get('%s/prefix/%s.%s' % (self.url, slug, output),
@@ -115,23 +105,8 @@ class Places(Service):
         return r.json()
 
     def sources(self):
-        """Get a list of models (sources)
+        """Get a list of models (sources)."""
 
-        return: array
-        [
-          {
-            "model": "string",
-            "pk": 0,
-            "fields": {
-              "name": "string",
-              "label": "string",
-              "properties": "string"
-            }
-          }
-        ]
-
-        >>> places.sources()
-        """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
@@ -140,23 +115,7 @@ class Places(Service):
         return r.json()
 
     def categories(self):
-        """Get a list of categories
-
-        return: array
-        [
-          {
-            "model": "string",
-            "pk": 0,
-            "fields": {
-              "created": "string",
-              "modified": "string",
-              "name": "string"
-            }
-          }
-        ]
-
-        >>> places.categories()
-        """
+        """Get a list of categories."""
         r = self.session.get('%s/categories' % self.url, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
@@ -165,24 +124,7 @@ class Places(Service):
         return r.json()
 
     def metrics(self):
-        """Get a list of metrics
-
-        return: array
-        [
-          {
-            "model": "string",
-            "pk": 0,
-            "fields": {
-              "created": "string",
-              "modified": "string",
-              "name": "string",
-              "units": "string"
-            }
-          }
-        ]
-
-        >>> places.metrics()
-        """
+        """Get a list of metrics."""
         r = self.session.get('%s/metrics' % self.url, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
@@ -191,26 +133,7 @@ class Places(Service):
         return r.json()
 
     def triples(self):
-        """Get a list of triples
-
-        return: array
-        [
-          {
-            "model": "string",
-            "pk": 0,
-            "fields": {
-              "created": "string",
-              "modified": "string",
-              "name": "string",
-              "source": 0,
-              "category": 0,
-              "metric": 0
-            }
-          }
-        ]
-
-        >>> places.triples()
-        """
+        """Get a list of triples."""
         r = self.session.get('%s/triples' % self.url, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
@@ -220,31 +143,20 @@ class Places(Service):
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'data'))
     def data(self, slug, **kwargs):
-        """Get a list of statistics
+        """Get a list of statistics.
 
-        source: string
-            Source
-        category: string
-            Category
-        metric: string
-            Metric
-        slug: string
-            Shape slug
-        year: integer
-            Year
-        doy: integer
-            Day of year
+        :param str slug: slug identifier
+        :param str placetype: place type
+        :param str source: source model
+        :param str category: category
+        :param str metric: metric
+        :param int year: year
+        :param int doy: day of the year
 
-        return: array
-        [
-          {
-            "shape": 0,
-            "value": 0
-          }
-        ]
+        Example::
 
-        >>> places.data('north-america_united-states', placetype='county', source='nass', category='corn',
-                       metric='yield', year=2015, doy=1)
+            >>> places.data('north-america_united-states', placetype='county', source='nass',
+                    category='corn', metric='yield', year=2015, doy=1)
         """
         r = self.session.get('%s/data/%s' % (self.url, slug), params=kwargs, timeout=self.TIMEOUT)
 
@@ -255,43 +167,19 @@ class Places(Service):
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'statistics'))
     def statistics(self, slug, **kwargs):
-        """Get a list of statistics for a specific shape
+        """Get a list of statistics for a specific shape.
 
-        slug: string
-            Shape slug
-        source: string
-            Source
-        category: string
-            Category
-        metric: string
-            Metric
-        year: integer
-            Year
-        doy: integer
-            Day of year
+        :param str slug: slug identifier
+        :param str source: source model
+        :param str category: category
+        :param str metric: metric
+        :param str year: year
+        :param str doy: day of the year
 
-        return: object
-        {
-            "count": 0,
-            "items": [
-                {
-                  "id": 0,
-                  "slug": "string",
-                  "date": "string",
-                  "year": 0,
-                  "doy": 0,
-                  "source": "string",
-                  "category": "string",
-                  "metric": "string",
-                  "value": 0,
-                  "backfill": true,
-                }
-            ]
-          }
-        ]
+        Example::
 
-        >>> places.statistics('north-america_united-states_iowa', source='nass', category='corn', metric='yield',
-                              year=2015)
+            >>> places.statistics('north-america_united-states_iowa', source='nass',
+                    category='corn', metric='yield', year=2015)
         """
         r = self.session.get('%s/statistics/%s' % (self.url, slug), params=kwargs, timeout=self.TIMEOUT)
 

@@ -110,8 +110,7 @@ class Raster(Service):
         :param float resolution: Desired resolution in output SRS units.
         :param tuple outsize: Desired output (width, height) in pixels.
         :param str shape: A GeoJSON feature to be used as a cutline.
-        :param str location: A :class:`Places <descarteslabs.services.Places>` identifier
-            to be used as a cutline.
+        :param str location: A slug identifier to be used as a cutline.
         :param tuple outputBounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
         :param str outputBoundsSRS: Override the coordinate system in which bounds are expressed.
         :param bool targetAlignedPixels: Align pixels to the target coordinate system.
