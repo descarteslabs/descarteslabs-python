@@ -16,7 +16,7 @@ class TestRaster(unittest.TestCase):
 
     def test_raster(self):
         r = self.raster.raster(
-            keys=['meta_LC80270312016188_v1'],
+            inputs=['meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             resolution=960,
         )
@@ -28,7 +28,7 @@ class TestRaster(unittest.TestCase):
     def test_ndarray(self):
         try:
             data, metadata = self.raster.ndarray(
-                    keys=['meta_LC80270312016188_v1'],
+                    inputs=['meta_LC80270312016188_v1'],
                     bands=['red', 'green', 'blue', 'alpha'],
                     resolution=960,
                     )
@@ -40,12 +40,12 @@ class TestRaster(unittest.TestCase):
 
     def test_thumbnail(self):
         r = self.raster.raster(
-            keys=['meta_LC80270312016188_v1'],
+            inputs=['meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
-            outsize=[256, 256],
+            dimensions=[256, 256],
             scales=[[0, 4000]] * 4,
-            of='PNG',
-            ot='Byte',
+            output_format='PNG',
+            data_type='Byte',
         )
         self.assertTrue("metadata" in r)
         self.assertTrue("files" in r)
