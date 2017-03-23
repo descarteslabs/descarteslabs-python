@@ -37,24 +37,26 @@ def scales(s):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-keys", default="meta_LC80270312016188_v1", type=str, nargs="+")
+    parser.add_argument("-inputs", default="meta_LC80270312016188_v1", type=str, nargs="+")
     parser.add_argument("-bands", nargs="+", default=None, type=str)
     parser.add_argument("-scales", default=None, type=scales, nargs="+")
     parser.add_argument("-resolution", default=240, type=float)
-    parser.add_argument("-of", default='GTiff', type=str)
-    parser.add_argument("-ot", default='UInt16', type=str)
+    parser.add_argument("-output_format", default='GTiff', type=str)
+    parser.add_argument("-data_type", default='UInt16', type=str)
+    parser.add_argument("-srs", default=None, type=str)
     parser.add_argument("-location", default=None, type=str)
 
     args = parser.parse_args()
 
     raster = dl.raster
     params = {
-        'keys': args.keys,
+        'inputs': args.inputs,
         'bands': args.bands,
         'scales': args.scales,
         'resolution': args.resolution,
-        'ot': args.ot,
-        'of': args.of,
+        'data_type': args.data_type,
+        'output_format': args.output_format,
+        'srs': args.srs,
         'location': args.location,
     }
     response = raster.raster(**params)
