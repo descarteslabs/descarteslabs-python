@@ -39,7 +39,7 @@ class Service:
                         ]),
                         status_forcelist=[429, 500, 502, 503, 504])
 
-        s.mount('http://', HTTPAdapter(max_retries=retries))
+        s.mount('https://', HTTPAdapter(max_retries=retries))
 
         s.headers.update({"Authorization": self.token})
         s.headers.update({"content-type": "application/json"})

@@ -89,8 +89,10 @@ class Auth:
         s = requests.Session()
         retries = Retry(total=5,
                         backoff_factor=random.uniform(1, 10),
-                        status_forcelist=[500, 502, 503, 504])
-        s.mount('http://', HTTPAdapter(max_retries=retries))
+                        method_whitelist=frozenset(['GET', 'POST']),
+                        status_forcelist=[429, 500, 502, 503, 504])
+
+        s.mount('https://', HTTPAdapter(max_retries=retries))
 
         headers = {"content-type": "application/json"}
         params = {
