@@ -19,11 +19,11 @@ from descarteslabs.utilities import as_json_string
 
 class TestUtilities(unittest.TestCase):
 
-    def test_as_json_str(self):
+    def test_as_json_string(self):
         d = {'a': 'b'}
         truth = json.dumps(d)
 
         self.assertEqual(as_json_string(d), truth)
-        s = '"{\'a\': \'b\'}"'
-        self.assertEqual(as_json_string(d), truth)
+        s = '{"a": "b"}'
+        self.assertEqual(as_json_string(s), truth)
         self.assertEqual(as_json_string(None), None)
