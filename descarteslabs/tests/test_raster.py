@@ -1,7 +1,21 @@
+# Copyright 2017 Descartes Labs.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import unittest
 
-from descarteslabs.services import Raster
-from descarteslabs.services import Places
+import descarteslabs as dl
+from descarteslabs.addons import numpy as np
 
 
 class TestRaster(unittest.TestCase):
@@ -10,12 +24,12 @@ class TestRaster(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.raster = Raster()
-        cls.places = Places()
+        cls.raster = dl.raster
+        cls.places = dl.places
 
     def test_raster(self):
         r = self.raster.raster(
-            keys=['meta_LC80270312016188_v1'],
+            inputs=['meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             resolution=960,
         )
@@ -24,14 +38,27 @@ class TestRaster(unittest.TestCase):
         self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
         self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.tif'])
 
+    def test_ndarray(self):
+        try:
+            data, metadata = self.raster.ndarray(
+                    inputs=['meta_LC80270312016188_v1'],
+                    bands=['red', 'green', 'blue', 'alpha'],
+                    resolution=960,
+                    )
+            self.assertEqual(data.shape, (249, 245, 4))
+            self.assertEqual(data.dtype, np.uint16)
+            self.assertEqual(len(metadata['bands']), 4)
+        except ImportError:
+            pass
+
     def test_thumbnail(self):
         r = self.raster.raster(
-            keys=['meta_LC80270312016188_v1'],
+            inputs=['meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
-            outsize=[256, 256],
+            dimensions=[256, 256],
             scales=[[0, 4000]] * 4,
-            of='PNG',
-            ot='Byte',
+            output_format='PNG',
+            data_type='Byte',
         )
         self.assertTrue("metadata" in r)
         self.assertTrue("files" in r)

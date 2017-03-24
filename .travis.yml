@@ -8,8 +8,8 @@ python:
   - "3.7-dev"
 
 install:
- - pip install .
  - pip install -r requirements.txt
+ - pip install .
  - pip install flake8 coverage nose
 
 script:

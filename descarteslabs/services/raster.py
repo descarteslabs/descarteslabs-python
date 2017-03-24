@@ -1,9 +1,24 @@
+# Copyright 2017 Descartes Labs.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import base64
+from io import BytesIO
+import json
+
+from descarteslabs.addons import numpy as np
 from .service import Service
 from .places import Places
-from descarteslabs.addons import FeatureArray
-from descarteslabs.addons import numpy as np
-import base64
-import json
 
 
 class Raster(Service):
@@ -78,66 +93,65 @@ class Raster(Service):
 
     def raster(
             self,
-            keys=None,
+            inputs,
             bands=None,
             scales=None,
-            ot=None,
-            of='GTiff',
+            data_type=None,
+            output_format='GTiff',
             srs=None,
+            dimensions=None,
             resolution=None,
+            bounds=None,
+            bounds_srs=None,
             shape=None,
             location=None,
-            outputBounds=None,
-            outputBoundsSRS=None,
-            outsize=None,
-            targetAlignedPixels=False,
-            resampleAlg=None,
+            align_pixels=False,
+            resampler=None,
     ):
-        """
-        Given a list of :class:`Metadata <descarteslabs.services.Metadata>` identifiers,
+        """Given a list of :class:`Metadata <descarteslabs.services.Metadata>` identifiers,
         retrieve a translated and warped mosaic.
 
-        :param keys: List of :class:`Metadata` identifiers.
+        :param inputs: List of :class:`Metadata` identifiers.
         :param bands: List of requested bands.
         :param scales: List of tuples specifying the scaling to be applied to each band.
             If no scaling is desired for a band, use ``None`` where appropriate. If a
             tuple contains four elements, the last two will be used as the output range.
             For example, ``(0, 10000, 0, 128)`` would scale the source values 0-10000 to
             be returned as 0-128 in the output.
-        :param str of: Output format (`GTiff`, `PNG`, ...).
-        :param str ot: Output data type (`Byte`, `UInt8`, `UInt16`, `Float32`, etc).
+        :param str output_format: Output format (`GTiff`, `PNG`, ...).
+        :param str data_type: Output data type (`Byte`, `UInt8`, `UInt16`, `Float32`, etc).
         :param str srs: Output spatial reference system definition understood by GDAL.
         :param float resolution: Desired resolution in output SRS units.
         :param tuple outsize: Desired output (width, height) in pixels.
         :param str shape: A GeoJSON feature to be used as a cutline.
         :param str location: A slug identifier to be used as a cutline.
-        :param tuple outputBounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
-        :param str outputBoundsSRS: Override the coordinate system in which bounds are expressed.
-        :param bool targetAlignedPixels: Align pixels to the target coordinate system.
-        :param str resampleAlg: Resampling algorithm to be used during warping (``near``,
+        :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
+        :param str bounds_srs: Override the coordinate system in which bounds are expressed.
+        :param bool align_pixels: Align pixels to the target coordinate system.
+        :param str resampler: Resampling algorithm to be used during warping (``near``,
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
             ``max``, ``min``, ``med``, ``q1``, ``q3``).
         """
 
-        if location is not None:
+        if location:
             places = Places()
             shape = places.shape(location, geom='low')
             shape = json.dumps(shape['geometry'])
 
         params = {
-            'keys': keys,
+            'keys': inputs,
             'bands': bands,
             'scales': scales,
-            'ot': ot,
-            'of': of,
+            'ot': data_type,
+            'of': output_format,
             'srs': srs,
             'resolution': resolution,
             'shape': shape,
-            'outputBounds': outputBounds,
-            'outputBoundsSRS': outputBoundsSRS,
-            'outsize': outsize,
-            'targetAlignedPixels': targetAlignedPixels,
-            'resampleAlg': resampleAlg,
+            'outputBounds': bounds,
+            'outputBoundsSRS': bounds_srs,
+            'outsize': dimensions,
+            'targetAlignedPixels': align_pixels,
+            'resampleAlg': resampler,
         }
 
         r = self.session.post('%s/raster' % (self.url), json=params, timeout=self.TIMEOUT)
@@ -154,23 +168,22 @@ class Raster(Service):
 
     def ndarray(
             self,
-            keys=None,
+            inputs,
             bands=None,
             scales=None,
-            ot=None,
+            data_type=None,
             srs=None,
             resolution=None,
+            dimensions=None,
             shape=None,
             location=None,
-            outputBounds=None,
-            outputBoundsSRS=None,
-            outsize=None,
-            targetAlignedPixels=False,
-            resampleAlg=None,
+            bounds=None,
+            bounds_srs=None,
+            align_pixels=False,
+            resampler=None,
             order='image',
     ):
-        """
-        Retrieve a raster as a NumPy array.
+        """Retrieve a raster as a NumPy array.
 
         See :meth:`raster` for more information.
 
@@ -185,28 +198,31 @@ class Raster(Service):
             shape = json.dumps(shape['geometry'])
 
         params = {
-            'keys': keys,
+            'keys': inputs,
             'bands': bands,
             'scales': scales,
-            'ot': ot,
+            'ot': data_type,
             'srs': srs,
             'resolution': resolution,
             'shape': shape,
-            'outputBounds': outputBounds,
-            'outputBoundsSRS': outputBoundsSRS,
-            'outsize': outsize,
-            'targetAlignedPixels': targetAlignedPixels,
-            'resampleAlg': resampleAlg,
+            'outputBounds': bounds,
+            'outputBoundsSRS': bounds_srs,
+            'outsize': dimensions,
+            'targetAlignedPixels': align_pixels,
+            'resampleAlg': resampler,
         }
 
-        r = self.session.post('%s/featurearray' % (self.url), json=params, timeout=self.TIMEOUT)
+        r = self.session.post('%s/npz' % (self.url), json=params, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        fa = FeatureArray.deserialize(r.content, base64.b64decode)
+        io = BytesIO(r.content)
+        npz = np.load(io)
+        array = npz['data']
+        metadata = json.loads(npz['metadata'].tostring().decode('utf-8'))
 
         if order == 'image':
-            return fa.transpose((1, 2, 0)).view(np.ndarray)
+            return array.transpose((1, 2, 0)), metadata
         elif order == 'gdal':
-            return fa.view(np.ndarray)
+            return array, metadata
