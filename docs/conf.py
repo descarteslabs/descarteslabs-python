@@ -25,7 +25,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     # Manually pull in git-lfs files on RTD
     from git_lfs import fetch
-    fetch(os.path.dirname(__file__))
+    fetch(os.path.dirname(os.path.dirname(__file__)))
 
 # -- General configuration ------------------------------------------------
 
