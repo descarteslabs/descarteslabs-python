@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2017 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/usr/bin/env python
 from __future__ import print_function
 
 import json
@@ -30,12 +30,15 @@ if __name__ == "__main__":
 
     parser.add_argument('-url', help='The url of the service')
     parser.add_argument('-placetype', default=None, help='The placetype of the response')
-    parser.add_argument('-geom', default=None,
-                        choices=['low', 'medium', 'high'],
+    parser.add_argument('-geom', default='low',
+                        choices=['low', 'medium', 'high', "None"],
                         help='Resolution of shape')
     parser.add_argument("-output", default='geojson')
 
     args = parser.parse_args()
+
+    if args.geom == "None":
+        args.geom = None
 
     places = dl.places
 
@@ -47,7 +50,7 @@ if __name__ == "__main__":
     if args.command == 'placetypes':
         placetypes = places.placetypes()
 
-        print(json.dumps(placetypes))
+        print(json.dumps(placetypes, indent=2))
 
     if args.command == 'models':
         sources = places.sources()
@@ -61,26 +64,26 @@ if __name__ == "__main__":
 
         find = places.find(args.argument, **kwargs)
 
-        print(json.dumps(find))
+        print(json.dumps(find, indent=2))
 
     if args.command == 'shape':
 
-        if args.geom:
-            kwargs['geom'] = args.geom
-
+        kwargs['geom'] = args.geom
         shape = places.shape(args.argument, **kwargs)
 
-        print(json.dumps(shape))
+        print(json.dumps(shape, indent=2))
 
     if args.command == 'prefix':
+        if args.argument is None:
+            raise RuntimeError("Please specify location in argument")
 
-        if args.geom:
-            kwargs['geom'] = args.geom
-        if args.output:
-            kwargs['output'] = args.output
-        if args.placetype:
-            kwargs['placetype'] = args.placetype
+        if args.placetype is None:
+            raise RuntimeError("Please specify placetype, e.g. -placetype region")
+
+        kwargs['geom'] = args.geom
+        kwargs['output'] = args.output
+        kwargs['placetype'] = args.placetype
 
         prefix = places.prefix(args.argument, **kwargs)
 
-        print(json.dumps(prefix))
+        print(json.dumps(prefix, indent=2))
