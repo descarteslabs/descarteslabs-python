@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2017 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/usr/bin/env python
 from __future__ import print_function
 
 import json
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument('-geom', help='Region of interest as GeoJSON or WKT')
     parser.add_argument('-params',
                         help='JSON String of additional key/value pairs for searching properties: tile_id, cloud_fraction, etc.')
-    parser.add_argument('-limit', help='Number of items to return (default 100)')
+    parser.add_argument('-limit', default=100, help='Number of items to return (default 100)', type=int)
     parser.add_argument('-offset', help='Number of items to skip (default 0)')
     parser.add_argument('-bbox', help='Whether or not to use a bounding box filter (default: false)',
                         action='store_true')
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     if args.command == 'sources':
         sources = metadata.sources()
 
-        print(json.dumps(sources))
+        print(json.dumps(sources, indent=2))
 
     if args.command == 'summary':
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
         search = metadata.search(**kwargs)
 
-        print(json.dumps(search))
+        print(json.dumps(search, indent=2))
 
     if args.command == 'keys':
 

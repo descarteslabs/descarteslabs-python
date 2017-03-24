@@ -216,6 +216,7 @@ class Metadata(Service):
             const_id = [None]
 
         result['features'] = list(chain(*map(f, const_id)))
+        result['features'] = result['features'][:limit]
 
         return result
 
@@ -252,7 +253,7 @@ class Metadata(Service):
         """
         result = self.search(const_id, date, shape, geom, start_time, end_time, params, limit, offset, bbox, direct)
 
-        return [feature['id'] for feature in result['features']]
+        return [feature['id'] for feature in result['features'][:limit]]
 
     def features(self, const_id=None, date='acquired', shape=None, geom=None, start_time=None, end_time=None,
                  params=None, limit=100, bbox=False, direct=False):
