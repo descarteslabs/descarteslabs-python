@@ -32,7 +32,7 @@ def do_setup():
     kwargs['long_description'] = open('README.md').read()
     kwargs['author'] = 'Descartes Labs'
     kwargs['author_email'] = 'hello@descarteslabs.com'
-    kwargs['url'] = 'https://github.com/descarteslabs/descarteslabs'
+    kwargs['url'] = 'https://github.com/descarteslabs/descarteslabs-python'
 
     clssfrs = [
         "Programming Language :: Python",
@@ -53,6 +53,7 @@ def do_setup():
         'descarteslabs/scripts/raster',
         'descarteslabs/scripts/metadata',
     ]
+    kwargs['license'] = 'Apache 2.0',
     kwargs['zip_safe'] = False
 
     try:
