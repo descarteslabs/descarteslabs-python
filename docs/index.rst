@@ -5,7 +5,7 @@ Welcome to DescartesLabs's platform!
    :maxdepth: 2
    
    quickstart
-   SphinxTest
+   Introduction to Places <places>
 
 API Reference
 -------------
