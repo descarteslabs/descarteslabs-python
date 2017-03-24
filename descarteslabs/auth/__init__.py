@@ -86,9 +86,9 @@ class Auth:
     @property
     def payload(self):
         if isinstance(self._token, six.text_type):
-            token = self._token.encode('utf-8')
+            token = self.token.encode('utf-8')
         else:
-            token = self._token
+            token = self.token
 
         claims = token.split(b'.')[1]
         return json.loads(base64url_decode(claims).decode('utf-8'))
