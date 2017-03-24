@@ -103,7 +103,8 @@ html_sidebars = {
         'localtoc.html',
         'relations.html',
         'sourcelink.html',
-        'searchbox.html'
+        'searchbox.html',
+        'hacks.html'
     ]
 }
 
