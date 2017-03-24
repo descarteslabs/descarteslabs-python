@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/descarteslabs/descarteslabs-python.svg?token=YipS7DfawkkDrdWcjV5k&branch=master)](https://travis-ci.com/descarteslabs/descarteslabs-python)
+[![Build Status](https://travis-ci.org/descarteslabs/descarteslabs-python.svg?branch=master)](https://travis-ci.org/descarteslabs/descarteslabs-python)
 
 Descarteslabs
 =============

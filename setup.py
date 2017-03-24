@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright 2017 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/usr/bin/env python
 import sys
 import os
 from setuptools import setup, find_packages
@@ -32,7 +33,7 @@ def do_setup():
     kwargs['long_description'] = open('README.md').read()
     kwargs['author'] = 'Descartes Labs'
     kwargs['author_email'] = 'hello@descarteslabs.com'
-    kwargs['url'] = 'https://github.com/descarteslabs/descarteslabs'
+    kwargs['url'] = 'https://github.com/descarteslabs/descarteslabs-python'
 
     clssfrs = [
         "Programming Language :: Python",
@@ -53,6 +54,7 @@ def do_setup():
         'descarteslabs/scripts/raster',
         'descarteslabs/scripts/metadata',
     ]
+    kwargs['license'] = 'Apache 2.0',
     kwargs['zip_safe'] = False
 
     try:

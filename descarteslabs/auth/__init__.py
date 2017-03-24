@@ -85,6 +85,9 @@ class Auth:
 
     @property
     def payload(self):
+        if self._token is None:
+            self._get_token()
+
         if isinstance(self._token, six.text_type):
             token = self._token.encode('utf-8')
         else:
