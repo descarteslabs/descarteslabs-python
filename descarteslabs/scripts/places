@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2017 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/usr/bin/env python
 from __future__ import print_function
 
 import json
@@ -24,20 +24,21 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('command', help='The action to take (e.g. find, shape, prefix, etc.)')
+    parser.add_argument('command', choices=['find', 'shape', 'prefix', 'placetypes'],
+                        help='The action to take.')
     parser.add_argument('argument', nargs='?')
 
-    parser.add_argument('--url', help='The url of the service')
-    parser.add_argument('--placetype', help='The placetype of the response')
-    parser.add_argument('--geom', help='Resolution of shape')
-    parser.add_argument('--output', help='Format of response', default='geojson')
-    parser.add_argument('--source', help='The model source of the requested data', default='nass')
-    parser.add_argument('--category', help='The category of the requested data', default='corn')
-    parser.add_argument('--metric', help='The metric for the requested data', default='yield')
-    parser.add_argument('--year', help='The year')
-    parser.add_argument('--doy', help='The day of year')
+    parser.add_argument('-url', help='The url of the service')
+    parser.add_argument('-placetype', default=None, help='The placetype of the response')
+    parser.add_argument('-geom', default='low',
+                        choices=['low', 'medium', 'high', "None"],
+                        help='Resolution of shape')
+    parser.add_argument("-output", default='geojson')
 
     args = parser.parse_args()
+
+    if args.geom == "None":
+        args.geom = None
 
     places = dl.places
 
@@ -49,27 +50,12 @@ if __name__ == "__main__":
     if args.command == 'placetypes':
         placetypes = places.placetypes()
 
-        print(json.dumps(placetypes))
+        print(json.dumps(placetypes, indent=2))
 
     if args.command == 'models':
         sources = places.sources()
 
         print(json.dumps(sources))
-
-    if args.command == 'categories':
-        categories = places.categories()
-
-        print(json.dumps(categories))
-
-    if args.command == 'metrics':
-        metrics = places.metrics()
-
-        print(json.dumps(metrics))
-
-    if args.command == 'triples':
-        triples = places.triples()
-
-        print(json.dumps(triples))
 
     if args.command == 'find':
 
@@ -78,62 +64,26 @@ if __name__ == "__main__":
 
         find = places.find(args.argument, **kwargs)
 
-        print(json.dumps(find))
+        print(json.dumps(find, indent=2))
 
     if args.command == 'shape':
 
-        if args.geom:
-            kwargs['geom'] = args.geom
-
+        kwargs['geom'] = args.geom
         shape = places.shape(args.argument, **kwargs)
 
-        print(json.dumps(shape))
+        print(json.dumps(shape, indent=2))
 
     if args.command == 'prefix':
+        if args.argument is None:
+            raise RuntimeError("Please specify location in argument")
 
-        if args.geom:
-            kwargs['geom'] = args.geom
-        if args.output:
-            kwargs['output'] = args.output
-        if args.placetype:
-            kwargs['placetype'] = args.placetype
+        if args.placetype is None:
+            raise RuntimeError("Please specify placetype, e.g. -placetype region")
+
+        kwargs['geom'] = args.geom
+        kwargs['output'] = args.output
+        kwargs['placetype'] = args.placetype
 
         prefix = places.prefix(args.argument, **kwargs)
 
-        print(json.dumps(prefix))
-
-    if args.command == 'data':
-
-        if args.source:
-            kwargs['source'] = args.source
-        if args.category:
-            kwargs['category'] = args.category
-        if args.metric:
-            kwargs['metric'] = args.metric
-        if args.placetype:
-            kwargs['placetype'] = args.placetype
-        if args.year:
-            kwargs['year'] = args.year
-        if args.doy:
-            kwargs['doy'] = args.doy
-
-        data = places.data(args.argument, **kwargs)
-
-        print(json.dumps(data))
-
-    if args.command == 'statistics':
-
-        if args.source:
-            kwargs['source'] = args.source
-        if args.category:
-            kwargs['category'] = args.category
-        if args.metric:
-            kwargs['metric'] = args.metric
-        if args.year:
-            kwargs['year'] = args.year
-        if args.doy:
-            kwargs['doy'] = args.doy
-
-        statistics = places.statistics(args.argument, **kwargs)
-
-        print(json.dumps(statistics))
+        print(json.dumps(prefix, indent=2))

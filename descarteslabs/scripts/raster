@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2017 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/usr/bin/env python
-
-import descarteslabs as dl
+from __future__ import print_function
 import argparse
-
+import json
+import descarteslabs as dl
 
 def scales(s):
     try:
@@ -33,32 +33,31 @@ def scales(s):
             "Scales must be mi,ma or smi,sma,dmi,dma"
         )
 
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-keys", default="meta_LC80270312016188_v1", type=str, nargs="+")
+    parser.add_argument("inputs", type=str, nargs="+")
     parser.add_argument("-bands", nargs="+", default=None, type=str)
     parser.add_argument("-scales", default=None, type=scales, nargs="+")
     parser.add_argument("-resolution", default=240, type=float)
-    parser.add_argument("-of", default='GTiff', type=str)
-    parser.add_argument("-ot", default='UInt16', type=str)
+    parser.add_argument("-output_format", default='GTiff', type=str)
+    parser.add_argument("-data_type", default='UInt16', type=str)
+    parser.add_argument("-srs", default=None, type=str)
     parser.add_argument("-location", default=None, type=str)
-
     args = parser.parse_args()
 
-    raster = dl.raster
     params = {
-        'keys': args.keys,
+        'inputs': args.inputs,
         'bands': args.bands,
         'scales': args.scales,
         'resolution': args.resolution,
-        'ot': args.ot,
-        'of': args.of,
+        'data_type': args.data_type,
+        'output_format': args.output_format,
+        'srs': args.srs,
         'location': args.location,
     }
-    response = raster.raster(**params)
+    response = dl.raster.raster(**params)
     for filename, data in response['files'].iteritems():
         with open(filename, "w") as f:
             f.write(data)
-    print(response['metadata'])
+    print(json.dumps(response['metadata'], indent=2))

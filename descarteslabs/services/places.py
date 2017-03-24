@@ -104,7 +104,7 @@ class Places(Service):
         return r.json()
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'prefix'))
-    def prefix(self, slug, output='geojson', placetype='county', geom='low'):
+    def prefix(self, slug, output='geojson', placetype=None, geom='low'):
         """Get all the places that start with a prefix
 
         slug: string
@@ -120,8 +120,12 @@ class Places(Service):
         >>> places.prefix('north-america_united-states_iowa', placetype='district', geom='low')
 
         """
+        params = {}
+        if placetype:
+            params['placetype'] = placetype
+        params['geom'] = geom
         r = self.session.get('%s/prefix/%s.%s' % (self.url, slug, output),
-                             params={'placetype': placetype, 'geom': geom}, timeout=self.TIMEOUT)
+                             params=params, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))

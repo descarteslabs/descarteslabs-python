@@ -16,6 +16,7 @@ import unittest
 
 import descarteslabs as dl
 from descarteslabs.addons import numpy as np
+from .helpers import is_external_user
 
 
 class TestRaster(unittest.TestCase):
@@ -27,6 +28,7 @@ class TestRaster(unittest.TestCase):
         cls.raster = dl.raster
         cls.places = dl.places
 
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_raster(self):
         r = self.raster.raster(
             inputs=['meta_LC80270312016188_v1'],
@@ -38,6 +40,7 @@ class TestRaster(unittest.TestCase):
         self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
         self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.tif'])
 
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_ndarray(self):
         try:
             data, metadata = self.raster.ndarray(
@@ -51,6 +54,7 @@ class TestRaster(unittest.TestCase):
         except ImportError:
             pass
 
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_thumbnail(self):
         r = self.raster.raster(
             inputs=['meta_LC80270312016188_v1'],
@@ -64,6 +68,7 @@ class TestRaster(unittest.TestCase):
         self.assertTrue("files" in r)
         self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.png'])
 
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_get_bands_by_key(self):
         r = self.raster.get_bands_by_key('meta_LC80270312016188_v1')
         for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
@@ -76,6 +81,7 @@ class TestRaster(unittest.TestCase):
                      'ndwi', 'evi', 'cirrus']:
             self.assertTrue(band in r)
 
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_dlkeys_from_shape(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')
         iowa_geom = iowa['geometry']

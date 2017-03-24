@@ -43,6 +43,10 @@ class TestRuncible(unittest.TestCase):
         r = self.instance.search(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8'])
         self.assertGreater(len(r['features']), 0)
 
+    def test_multiple_const_id(self):
+        r = self.instance.search(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8', 'L7'])
+        self.assertGreater(len(r['features']), 0)
+
     @unittest.skip("search by shape name not currently supported")
     def test_shape(self):
         r = self.instance.search(shape='north-america_united-states_iowa', limit=1)
