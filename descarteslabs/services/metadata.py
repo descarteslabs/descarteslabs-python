@@ -30,19 +30,17 @@ class Metadata(Service):
         Service.__init__(self, url, token)
 
     def sources(self):
-        """
-        Get a list of Image sources
+        """Get a list of image sources.
 
-        return: list
-        [
-            {
-              "sat_id": "string",
-              "const_id": "string",
-              "value": "integer"
-            }
-        ]
+        Example::
 
-        >>> metadata.sources()
+            >>> metadata.sources()
+
+            [
+                {'const_id': 'RE', 'sat_id': 'RE-2', 'value': 10},
+                {'const_id': 'RE', 'sat_id': 'RE-5', 'value': 11},
+                ...
+            ]
         """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
 
@@ -53,50 +51,51 @@ class Metadata(Service):
 
     def summary(self, const_id=None, date='acquired', part='day', shape=None, geom=None, start_time=None, end_time=None,
                 params=None, bbox=False, direct=False):
-        """Get a summary of results for the specified spatio-temporal query.
+        """Get a summary of the results for the specified spatio-temporal query.
 
-        const_id: list(string)
-            Constellation identifier(s)
-        date: string
-            The date field to search on
-        part: string
-            The date part to aggregate over
-        shape: string
-            An (optional) shape name to use in the spatial filter
-        geom: string
-            Region of interest as GeoJSON or WKT
-        start_time: string
-            Start of valid date/time range (inclusive)
-        end_time: string
-            End of valid date/time range (inclusive)
-        params: string
-            JSON String of additional key/value pairs for searching properties
+        :param list(str) const_id: Constellation identifier(s).
+        :param str date: The date field to use for search (e.g. `acquired`).
+        :param str part: Part of the date to aggregate over (e.g. `day`).
+        :param str shape: A slug identifier to be used as a region of interest.
+        :param str geom: A GeoJSON or WKT region of interest.
+        :param str start_time: Desired starting date and time (inclusive).
+        :param str end_time: Desired ending date and time (inclusive).
+        :param bool bbox: If true, query by the bounding box of the region of interest.
+        :param str params: JSON of additional query parameters.
 
-        return: dict
-        [
-            {
-              "const_id": "L8",
-              "count": 0,
-              "bytes": 0,
-              "pixels": 0,
-              "items: [
-                {
-                  "date": "2016-11-08",
-                  "count": 0,
-                  "bytes": 0,
-                  "pixels": 0
-                }
-              ]
-            }
-        ]
+        Example usage::
 
-        >>> metadata.summary(shape='north-america_united-states_iowa', const_id=['L8'])
+            >>> metadata.summary(shape='north-america_united-states_iowa',
+                    const_id=['L8'], part='year')
+
+            [{'bytes': 187707322653,
+                'const_id': 'L8',
+                'count': 1509,
+                'items': [{'bytes': 31765777640,
+                    'count': 272,
+                    'date': '2013-01-01T00:00:00',
+                    'pixels': 65348414912},
+                {'bytes': 48481543735,
+                    'count': 385,
+                    'date': '2014-01-01T00:00:00',
+                    'pixels': 94197206464},
+                {'bytes': 47936802649,
+                    'count': 387,
+                    'date': '2015-01-01T00:00:00',
+                    'pixels': 94688657728},
+                {'bytes': 49918583944,
+                    'count': 391,
+                    'date': '2016-01-01T00:00:00',
+                    'pixels': 95671624320},
+                {'bytes': 9604614685,
+                    'count': 74,
+                    'date': '2017-01-01T00:00:00',
+                    'pixels': 18087390976}],
+                'pixels': 367993294400}]
         """
         if shape:
             waldo = Places()
-
             shape = waldo.shape(shape, geom='low')
-
             geom = json.dumps(shape['geometry'])
 
         kwargs = {}
@@ -149,30 +148,26 @@ class Metadata(Service):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
-        shape: string
-            An (optional) shape name to use in the spatial filter
-        const_id: list(string)
-            Constellation identifier(s)
-        start_time: string
-            Start of valid date/time range (inclusive)
-        end_time: string
-            End of valid date/time range (inclusive)
-        geom: string
-            Region of interest as GeoJSON or WKT
-        params: string
-            JSON String of additional key/value pairs for searching properties: tile_id, cloud_fraction, etc.
-        limit: integer
-            Number of items to return (default 100)
-        offset: integer
-            Number of items to skip (default 0)
-        bbox: boolean
-            Whether or not to use a bounding box filter (default: false)
-        direct: boolean
-            Whether or not to use the main metadata table directly (default: false)
+        :param list(str) const_id: Constellation identifier(s).
+        :param str date: The date field to use for search (e.g. `acquired`).
+        :param str shape: A slug identifier to be used as a region of interest.
+        :param str geom: A GeoJSON or WKT region of interest.
+        :param str start_time: Desired starting date and time (inclusive).
+        :param str end_time: Desired ending date and time (inclusive).
+        :param bool bbox: If true, query by the bounding box of the region of interest.
+        :param str params: JSON of additional query parameters.
+        :param int limit: Number of items to return.
+        :param int offset: Number of items to skip.
 
-        return: GeoJSON FeatureCollection
+        return: GeoJSON ``FeatureCollection``
 
-        >>> metadata.search(shape='north-america_united-states_iowa', const_id=['L8'])
+        Example::
+
+            >>> scenes = metadata.search(shape='north-america_united-states_iowa', const_id=['L8'],
+                    start_time='2016-07-01', end_time='2016-07-31 23:59:59')
+                len(scenes['features'])
+
+            34
         """
         if shape:
             waldo = Places()
@@ -225,31 +220,30 @@ class Metadata(Service):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
-        shape: string
-            An (optional) shape name to use in the spatial filter
-        const_id: list(string)
-            Constellation identifier(s)
-        start_time: string
-            Start of valid date/time range (inclusive)
-        end_time: string
-            End of valid date/time range (inclusive)
-        geom: string
-            Region of interest as GeoJSON or WKT
-        params: string
-            JSON String of additional key/value pairs for searching properties: tile_id, cloud_fraction, etc.
-        limit: integer
-            Number of items to return (default 100)
-        offset: integer
-            Number of items to skip (default 0)
-        bbox: boolean
-            Whether or not to use a bounding box filter (default: false)
-        direct: boolean
-            Whether or not to use the main metadata table directly (default: false)
+        :param list(str) const_id: Constellation identifier(s).
+        :param str date: The date field to use for search (e.g. `acquired`).
+        :param str shape: A slug identifier to be used as a region of interest.
+        :param str geom: A GeoJSON or WKT region of interest.
+        :param str start_time: Desired starting date and time (inclusive).
+        :param str end_time: Desired ending date and time (inclusive).
+        :param bool bbox: If true, query by the bounding box of the region of interest.
+        :param str params: JSON of additional query parameters.
+        :param int limit: Number of items to return.
+        :param int offset: Number of items to skip.
 
-        return: list
-            keys
+        :return: List of image identifiers.
 
-        >>> metadata.keys(shape='north-america_united-states_iowa', const_id=['L8'])
+        Example::
+
+            >>> metadata.keys(shape='north-america_united-states_iowa', const_id=['L8'],
+                    start_time='2016-07-01', end_time='2016-07-31 23:59:59')
+
+            [
+                'meta_LC80260322016213_v1',
+                'meta_LC80260312016213_v1',
+                'meta_LC80260302016213_v1',
+                ...
+            ]
         """
         result = self.search(const_id, date, shape, geom, start_time, end_time, params, limit, offset, bbox, direct)
 
@@ -257,16 +251,11 @@ class Metadata(Service):
 
     def features(self, const_id=None, date='acquired', shape=None, geom=None, start_time=None, end_time=None,
                  params=None, limit=100, bbox=False, direct=False):
-        """
-        Generator that combines summary and search to page through results.
+        """Generator that combines summary and search to page through results.
 
-        limit: integer
-            Specify a page size
+        :param int limit: Number of features to fetch per request.
 
-        return: GeoJSON Feature(s)
-
-        >>> for feature in metadata.features():
-            ...
+        :return: Generator of GeoJSON ``Feature`` objects.
         """
         result = self.summary(const_id=const_id, date=date, shape=shape, geom=geom, start_time=start_time,
                               end_time=end_time, params=params, bbox=bbox, direct=direct)
@@ -290,15 +279,20 @@ class Metadata(Service):
                     yield feature
 
     def get(self, key):
-        """Get a single metadata entry
+        """Get metadata of a single image.
 
-        key: string
-            The primary key identifier to get
+        :param str key: Image identifier.
 
-        return: dict
-            properties
+        Example::
 
-        >>> metadata.get('meta_LC82000452016168_v1')
+            >>> metadata.get('meta_LC82000452016168_v1')
+
+            {
+                'acquired': '2016-06-16T10:54:16.400121Z',
+                'area': 35518.2,
+                'bits_per_pixel': [0.804, 0.803, 0.636],
+                ...
+            }
         """
         r = self.session.post('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
 
