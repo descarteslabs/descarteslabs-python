@@ -17,6 +17,7 @@ from io import BytesIO
 import json
 
 from descarteslabs.addons import numpy as np
+from descarteslabs.utilities import as_json_string
 from .service import Service
 from .places import Places
 
@@ -53,6 +54,7 @@ class Raster(Service):
         return r.json()
 
     def dlkeys_from_shape(self, resolution, tilesize, pad, shape):
+        shape = as_json_string(shape)
         params = {
             'resolution': resolution,
             'tilesize': tilesize,
@@ -157,6 +159,7 @@ class Raster(Service):
         resampler: str, optional
             Resampling algorithm to use in the Warp. Default: None
         """
+        shape = as_json_string(shape)
 
         if location:
             places = Places()
@@ -256,6 +259,7 @@ class Raster(Service):
             'image' (default) returns arrays in  (row, column, band).
             'gdal' returns arrays in  (band, row, column).
         """
+        shape = as_json_string(shape)
 
         if location is not None:
             places = Places()
