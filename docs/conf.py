@@ -17,10 +17,15 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+on_rtd = os.environ.get('READTHEDOCS'. None) == 'True'
+if on_rtd:
+    # Manually pull in git-lfs files on RTD
+    from git_lfs import fetch
+    fetch(os.path.dirname(__file__))
 
 # -- General configuration ------------------------------------------------
 
