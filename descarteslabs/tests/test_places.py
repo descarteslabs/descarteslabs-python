@@ -15,6 +15,7 @@
 import unittest
 
 import descarteslabs as dl
+from .helpers import is_public_user
 
 
 class TestPlaces(unittest.TestCase):
@@ -44,22 +45,27 @@ class TestPlaces(unittest.TestCase):
         r = self.instance.prefix('north-america_united-states_iowa', placetype='district')
         self.assertEqual(9, len(r['features']))
 
+    @unittest.skipIf(is_public_user(), "requires non public user")
     def test_sources(self):
         r = self.instance.sources()
         self.assertEqual(2, len(r))
 
+    @unittest.skipIf(is_public_user(), "requires non public user")
     def test_categories(self):
         r = self.instance.categories()
         self.assertEqual(2, len(r))
 
+    @unittest.skipIf(is_public_user(), "requires non public user")
     def test_metrics(self):
         r = self.instance.metrics()
         self.assertEqual(3, len(r))
 
+    @unittest.skipIf(is_public_user(), "requires non public user")
     def test_triples(self):
         r = self.instance.triples()
         self.assertEqual(12, len(r))
 
+    @unittest.skipIf(is_public_user(), "requires non public user")
     def test_statistics(self):
         r = self.instance.statistics('north-america_united-states')
         self.assertEqual(782, len(r))

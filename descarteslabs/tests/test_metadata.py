@@ -15,6 +15,7 @@
 import unittest
 
 import descarteslabs as dl
+from .helpers import is_public_user
 
 
 class TestRuncible(unittest.TestCase):
@@ -37,6 +38,7 @@ class TestRuncible(unittest.TestCase):
         r = self.instance.search(start_time='2016-09-01', end_time='2016-09-02', sat_id='LANDSAT_8')
         self.assertEqual(100, len(r['features']))
 
+    @unittest.skipIf(is_public_user(), "requires non public user")
     def test_const_id(self):
         r = self.instance.search(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8'])
         self.assertGreater(len(r['features']), 0)
