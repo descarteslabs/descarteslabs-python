@@ -21,7 +21,7 @@ import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-on_rtd = os.environ.get('READTHEDOCS'. None) == 'True'
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     # Manually pull in git-lfs files on RTD
     from git_lfs import fetch
