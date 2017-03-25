@@ -294,7 +294,7 @@ class Metadata(Service):
                 ...
             }
         """
-        r = self.session.post('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
+        r = self.session.get('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
