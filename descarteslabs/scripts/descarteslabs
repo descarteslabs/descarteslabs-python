@@ -23,6 +23,8 @@ import getpass
 
 from descarteslabs.auth import Auth, base64url_decode
 
+import descarteslabs as dl
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -35,10 +37,9 @@ if __name__ == "__main__":
 
     if args.command == 'login':
 
-        print(
-            'Follow this link to login: https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token')
+        print('Follow this link to login https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token')
 
-        s = getpass.getpass('...then come back and paste the generated token here: ')
+        s = raw_input('...then come back here and paste the generated token: ')
 
         if s:
 
@@ -58,18 +59,36 @@ if __name__ == "__main__":
 
             os.chmod(file, stat.S_IRUSR | stat.S_IWUSR)
 
-    if args.command == 'name':
-        print(auth.payload['name'])
+            keys = dl.metadata.keys()
+            
+            name = auth.payload['name']
+            groups = ', '.join(auth.payload['groups'])
+            
+            if len(keys):
 
-    if args.command == 'groups':
-        print(json.dumps(auth.payload['groups']))
-
+                print('Welcome, %s!' % name)
+            
+            else:
+            
+                print('Welcome, %s! Your %s role(s) do not permit access to any imagery at this time.' % (name, groups))
+                print('Contact support@descarteslabs.com if you believe you received this message in error or have any questions.')
+                
     if args.command == 'token':
         print(auth.token)
 
+    if args.command == 'name':
+        auth.token
+        print(auth.payload['name'])
+
+    if args.command == 'groups':
+        auth.token
+        print(json.dumps(auth.payload['groups']))
+
     if args.command == 'payload':
+        auth.token
         print(auth.payload)
 
     if args.command == 'env':
+        auth.token
         print('%s=%s' % ('CLIENT_ID', auth.client_id))
         print('%s=%s' % ('CLIENT_SECRET', auth.client_secret))
