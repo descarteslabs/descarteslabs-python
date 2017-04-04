@@ -19,13 +19,13 @@ import os
 from setuptools import setup, find_packages
 
 
+__version__ = "0.1.3"
+
 def do_setup():
     src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     old_path = os.getcwd()
     os.chdir(src_path)
     sys.path.insert(0, src_path)
-
-    from descarteslabs import __version__
 
     kwargs = {}
     kwargs['name'] = 'descarteslabs'
