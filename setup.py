@@ -55,6 +55,11 @@ def do_setup():
         'descarteslabs/scripts/raster',
         'descarteslabs/scripts/metadata',
     ]
+    kwargs['install_requires'] = [
+        "requests",
+        "cachetools",
+        "six",
+    ]
     kwargs['license'] = 'Apache 2.0',
     kwargs['zip_safe'] = False
 
