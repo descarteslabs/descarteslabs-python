@@ -226,7 +226,10 @@ class Raster(Service):
         array = npz['data']
         metadata = json.loads(npz['metadata'].tostring().decode('utf-8'))
 
-        if order == 'image':
-            return array.transpose((1, 2, 0)), metadata
-        elif order == 'gdal':
+        if len(array.shape) > 2:
+            if order == 'image':
+                return array.transpose((1, 2, 0)), metadata
+            elif order == 'gdal':
+                return array, metadata
+        else:
             return array, metadata
