@@ -55,6 +55,20 @@ class TestRaster(unittest.TestCase):
             pass
 
     @unittest.skipIf(is_external_user(), "currently requires internal user")
+    def test_ndarray_single_band(self):
+        try:
+            data, metadata = self.raster.ndarray(
+                    inputs=['meta_LC80270312016188_v1'],
+                    bands=['red'],
+                    resolution=960,
+                    )
+            self.assertEqual(data.shape, (249, 245))
+            self.assertEqual(data.dtype, np.uint16)
+            self.assertEqual(len(metadata['bands']), 1)
+        except ImportError:
+            pass
+
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_thumbnail(self):
         r = self.raster.raster(
             inputs=['meta_LC80270312016188_v1'],
