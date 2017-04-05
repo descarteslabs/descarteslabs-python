@@ -21,6 +21,7 @@ from setuptools import setup, find_packages
 
 __version__ = "0.1.4"
 
+
 def do_setup():
     src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     old_path = os.getcwd()
