@@ -137,7 +137,7 @@ class Raster(Service):
         cutline = as_json_string(cutline)
 
         if place:
-            places = Place()
+            places = Places()
             places.auth = self.auth
             shape = places.shape(place, geom='low')
             cutline = json.dumps(shape['geometry'])
@@ -198,7 +198,7 @@ class Raster(Service):
         cutline = as_json_string(cutline)
 
         if place is not None:
-            places = Place()
+            places = Places()
             places.auth = self.auth
             shape = places.shape(place, geom='low')
             cutline = json.dumps(shape['geometry'])

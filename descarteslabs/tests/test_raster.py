@@ -72,10 +72,12 @@ class TestRaster(unittest.TestCase):
     @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_cutline_dict(self):
         shape = {"geometry":
-                 { "type": "Polygon",
-                  "coordinates": [[[ -95.2989209, 42.7999878 ], [ -93.1167728, 42.3858464 ],
-                                   [ -93.7138666, 40.703737 ], [ -95.8364984, 41.1150618 ],
-                                   [ -95.2989209, 42.7999878 ] ] ] }}
+                 {"type": "Polygon",
+                  "coordinates": [[[-95.2989209, 42.7999878], [-93.1167728, 42.3858464],
+                                   [-93.7138666, 40.703737], [-95.8364984, 41.1150618],
+                                   [-95.2989209, 42.7999878]]]
+                  }
+                 }
         try:
             data, metadata = self.raster.ndarray(
                     inputs=['meta_LC80270312016188_v1'],
@@ -92,10 +94,10 @@ class TestRaster(unittest.TestCase):
     @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_cutline_str(self):
         shape = {"geometry":
-                 { "type": "Polygon",
-                  "coordinates": [[[ -95.2989209, 42.7999878 ], [ -93.1167728, 42.3858464 ],
-                                   [ -93.7138666, 40.703737 ], [ -95.8364984, 41.1150618 ],
-                                   [ -95.2989209, 42.7999878 ] ] ] }}
+                 {"type": "Polygon",
+                  "coordinates": [[[-95.2989209, 42.7999878], [-93.1167728, 42.3858464],
+                                   [-93.7138666, 40.703737], [-95.8364984, 41.1150618],
+                                   [-95.2989209, 42.7999878]]]}}
         try:
             data, metadata = self.raster.ndarray(
                     inputs=['meta_LC80270312016188_v1'],
