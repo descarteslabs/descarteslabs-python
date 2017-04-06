@@ -1,17 +1,18 @@
 language: python
 python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "3.7-dev"
-
+- '2.7'
+- '3.3'
+- '3.4'
+- '3.5'
+- '3.6'
+- 3.7-dev
 install:
- - pip install -r requirements.txt
- - pip install .
- - pip install flake8 coverage nose
-
+- pip install -r requirements.txt
+- pip install .
+- pip install flake8 coverage nose
 script:
- - nosetests --with-coverage --cover-package=descarteslabs
- - flake8
+- nosetests --with-coverage --cover-package=descarteslabs
+- flake8
+notifications:
+  slack:
+    secure: mLNfOX4ooyoe4o0LWf55J05kifwk5mP0vvEcuyRWwo8PbvQ5yvG6sCssGj7ZU3uBBQ1d0dVXwrPHvPLPrC/QUSeDFGH6QdF5PyJHN5dBmF6LUiuBcIjffvTg0LYSGfz886OdVzjtqS43q/NLaIEUET8Yt5P58iUWn0UcluRAH7RXAyYM2b4fwhJG+qL4sZS+ib6REF4v6w7hfFboOt6ofpd/lu+TFYZCTsclkwmjuba5ss6Hm5g8Vp3NkmFIfrNgbPQh1KgGdCQDTToAyBQJZ3qes/Fyq/mkLtP3p4+gy51Zxtqs7NsdFjKiXl5MOG3qGt0jGen65r/A8L9vWLYaaKrLzcbQTmPidN0ze/Ig+Lrkv8h6ODN0f6Q8/sRmfc2zjyDP7t4kQG7fOxyxBTH7F4RaFiSwK4/fmCuBOTNwAoDcF+6FZESui4scUIsU4r1zzLqeWINGrfYguv6sdt5vOZYgQ9huBqSqenpJ6UClHIkKRrOtnC79n+HRCAFej1KYYRB/Kmi/mkFADohYkQR1lrzavjbcT8mpB98btGhHhvSwAmmL+HZyqhfhFDB3CW1Fh0Ddz0TilOm0GgCe2SDbqfyn+seRAPfbDSAAX9/8vcniXQWDqlyD6+KEuX2WlH2OIsl0g2TSVxLU9JYkuMaItwE1tQZcwQw6jTTr6jRC8m4=
