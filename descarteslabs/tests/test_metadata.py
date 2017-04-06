@@ -47,6 +47,7 @@ class TestMetadata(unittest.TestCase):
         r = self.instance.search(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8', 'L7'])
         self.assertGreater(len(r['features']), 0)
 
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_place(self):
         r = self.instance.search(const_id=['L8'], place='north-america_united-states_iowa', limit=1)
         self.assertEqual(1, len(r['features']))
