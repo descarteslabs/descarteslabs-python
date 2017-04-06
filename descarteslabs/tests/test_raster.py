@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import unittest
+import json
 
 import descarteslabs as dl
 from descarteslabs.addons import numpy as np
-from .helpers import is_external_user
+from descarteslabs.tests.helpers import is_external_user
 
 
 class TestRaster(unittest.TestCase):
@@ -69,6 +70,46 @@ class TestRaster(unittest.TestCase):
             pass
 
     @unittest.skipIf(is_external_user(), "currently requires internal user")
+    def test_cutline_dict(self):
+        shape = {"geometry":
+                 { "type": "Polygon",
+                  "coordinates": [[[ -95.2989209, 42.7999878 ], [ -93.1167728, 42.3858464 ],
+                                   [ -93.7138666, 40.703737 ], [ -95.8364984, 41.1150618 ],
+                                   [ -95.2989209, 42.7999878 ] ] ] }}
+        try:
+            data, metadata = self.raster.ndarray(
+                    inputs=['meta_LC80270312016188_v1'],
+                    bands=['red'],
+                    resolution=960,
+                    cutline=shape,
+                    )
+            self.assertEqual(data.shape, (245, 238))
+            self.assertEqual(data.dtype, np.uint16)
+            self.assertEqual(len(metadata['bands']), 1)
+        except ImportError:
+            pass
+
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
+    def test_cutline_str(self):
+        shape = {"geometry":
+                 { "type": "Polygon",
+                  "coordinates": [[[ -95.2989209, 42.7999878 ], [ -93.1167728, 42.3858464 ],
+                                   [ -93.7138666, 40.703737 ], [ -95.8364984, 41.1150618 ],
+                                   [ -95.2989209, 42.7999878 ] ] ] }}
+        try:
+            data, metadata = self.raster.ndarray(
+                    inputs=['meta_LC80270312016188_v1'],
+                    bands=['red'],
+                    resolution=960,
+                    cutline=json.dumps(shape),
+                    )
+            self.assertEqual(data.shape, (245, 238))
+            self.assertEqual(data.dtype, np.uint16)
+            self.assertEqual(len(metadata['bands']), 1)
+        except ImportError:
+            pass
+
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_thumbnail(self):
         r = self.raster.raster(
             inputs=['meta_LC80270312016188_v1'],
@@ -96,7 +137,7 @@ class TestRaster(unittest.TestCase):
             self.assertTrue(band in r)
 
     @unittest.skipIf(is_external_user(), "currently requires internal user")
-    def test_dlkeys_from_shape(self):
+    def test_dlkeys_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')
         iowa_geom = iowa['geometry']
         dlkeys_geojson = self.raster.dlkeys_from_shape(30.0, 2048, 16, iowa_geom)

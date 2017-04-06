@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('command', choices=['find', 'shape', 'prefix', 'placetypes'],
+    parser.add_argument('command', choices=['find', 'place', 'prefix', 'placetypes'],
                         help='The action to take.')
     parser.add_argument('argument', nargs='?')
 

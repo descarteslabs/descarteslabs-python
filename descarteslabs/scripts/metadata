@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument('argument', nargs='?')
 
     parser.add_argument('-url', help='The url of the service')
-    parser.add_argument('-shape', help='A slug for a named shape')
+    parser.add_argument('-place', help='A slug for a named place')
     parser.add_argument('-const_id', default=None, help='Constellation ID', nargs='+')
     parser.add_argument('-start_time', help='Start of valid date/time range (inclusive)')
     parser.add_argument('-end_time', help='End of valid date/time range (inclusive)')
@@ -58,8 +58,8 @@ if __name__ == "__main__":
 
     if args.command == 'summary':
 
-        if args.shape:
-            kwargs['shape'] = args.shape
+        if args.place:
+            kwargs['place'] = args.place
         if args.const_id:
             kwargs['const_id'] = args.const_id
         if args.start_time:
@@ -79,8 +79,8 @@ if __name__ == "__main__":
 
     if args.command == 'search':
 
-        if args.shape:
-            kwargs['shape'] = args.shape
+        if args.place:
+            kwargs['place'] = args.place
         if args.const_id:
             kwargs['const_id'] = args.const_id
         if args.start_time:
@@ -104,8 +104,8 @@ if __name__ == "__main__":
 
     if args.command == 'keys':
 
-        if args.shape:
-            kwargs['shape'] = args.shape
+        if args.place:
+            kwargs['place'] = args.place
         if args.const_id:
             kwargs['const_id'] = args.const_id
         if args.start_time:

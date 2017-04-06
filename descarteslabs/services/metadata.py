@@ -49,14 +49,14 @@ class Metadata(Service):
 
         return r.json()
 
-    def summary(self, const_id=None, date='acquired', part='day', shape=None, geom=None, start_time=None, end_time=None,
+    def summary(self, const_id=None, date='acquired', part='day', place=None, geom=None, start_time=None, end_time=None,
                 params=None, bbox=False, direct=False):
         """Get a summary of the results for the specified spatio-temporal query.
 
         :param list(str) const_id: Constellation identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str part: Part of the date to aggregate over (e.g. `day`).
-        :param str shape: A slug identifier to be used as a region of interest.
+        :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
         :param str start_time: Desired starting date and time (inclusive).
         :param str end_time: Desired ending date and time (inclusive).
@@ -65,7 +65,7 @@ class Metadata(Service):
 
         Example usage::
 
-            >>> metadata.summary(shape='north-america_united-states_iowa',
+            >>> metadata.summary(place='north-america_united-states_iowa',
                     const_id=['L8'], part='year')
 
             [{'bytes': 187707322653,
@@ -93,10 +93,14 @@ class Metadata(Service):
                     'pixels': 18087390976}],
                 'pixels': 367993294400}]
         """
-        if shape:
-            waldo = Places()
-            shape = waldo.shape(shape, geom='low')
+        if place:
+            places = Places()
+            places.auth = self.auth
+            shape = places.shape(place, geom='low')
             geom = json.dumps(shape['geometry'])
+
+        if isinstance(geom, dict):
+            geom = json.dumps(geom)
 
         kwargs = {}
 
@@ -143,14 +147,14 @@ class Metadata(Service):
 
         return result
 
-    def search(self, const_id=None, date='acquired', shape=None, geom=None, start_time=None, end_time=None, params=None,
+    def search(self, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None, params=None,
                limit=100, offset=0, bbox=False, direct=False):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
         :param list(str) const_id: Constellation identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
-        :param str shape: A slug identifier to be used as a region of interest.
+        :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
         :param str start_time: Desired starting date and time (inclusive).
         :param str end_time: Desired ending date and time (inclusive).
@@ -163,18 +167,20 @@ class Metadata(Service):
 
         Example::
 
-            >>> scenes = metadata.search(shape='north-america_united-states_iowa', const_id=['L8'],
+            >>> scenes = metadata.search(place='north-america_united-states_iowa', const_id=['L8'],
                     start_time='2016-07-01', end_time='2016-07-31 23:59:59')
                 len(scenes['features'])
 
             34
         """
-        if shape:
-            waldo = Places()
-
-            shape = waldo.shape(shape, geom='low')
-
+        if place:
+            places = Places()
+            places.auth = self.auth
+            shape = places.shape(place, geom='low')
             geom = json.dumps(shape['geometry'])
+
+        if isinstance(geom, dict):
+            geom = json.dumps(geom)
 
         kwargs = {}
 
@@ -215,14 +221,14 @@ class Metadata(Service):
 
         return result
 
-    def keys(self, const_id=None, date='acquired', shape=None, geom=None, start_time=None, end_time=None, params=None,
+    def keys(self, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None, params=None,
              limit=100, offset=0, bbox=False, direct=False):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
         :param list(str) const_id: Constellation identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
-        :param str shape: A slug identifier to be used as a region of interest.
+        :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
         :param str start_time: Desired starting date and time (inclusive).
         :param str end_time: Desired ending date and time (inclusive).
@@ -235,7 +241,7 @@ class Metadata(Service):
 
         Example::
 
-            >>> metadata.keys(shape='north-america_united-states_iowa', const_id=['L8'],
+            >>> metadata.keys(place='north-america_united-states_iowa', const_id=['L8'],
                     start_time='2016-07-01', end_time='2016-07-31 23:59:59')
 
             [
@@ -245,11 +251,11 @@ class Metadata(Service):
                 ...
             ]
         """
-        result = self.search(const_id, date, shape, geom, start_time, end_time, params, limit, offset, bbox, direct)
+        result = self.search(const_id, date, place, geom, start_time, end_time, params, limit, offset, bbox, direct)
 
         return [feature['id'] for feature in result['features'][:limit]]
 
-    def features(self, const_id=None, date='acquired', shape=None, geom=None, start_time=None, end_time=None,
+    def features(self, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None,
                  params=None, limit=100, bbox=False, direct=False):
         """Generator that combines summary and search to page through results.
 
@@ -257,7 +263,7 @@ class Metadata(Service):
 
         :return: Generator of GeoJSON ``Feature`` objects.
         """
-        result = self.summary(const_id=const_id, date=date, shape=shape, geom=geom, start_time=start_time,
+        result = self.summary(const_id=const_id, date=date, place=place, geom=geom, start_time=start_time,
                               end_time=end_time, params=params, bbox=bbox, direct=direct)
 
         for summary in result:
@@ -269,7 +275,7 @@ class Metadata(Service):
 
             while offset < count:
 
-                features = self.search(const_id=[const_id], date=date, shape=shape, geom=geom, start_time=start_time,
+                features = self.search(const_id=[const_id], date=date, place=place, geom=geom, start_time=start_time,
                                        end_time=end_time, params=params, limit=limit, offset=offset, bbox=bbox,
                                        direct=direct)
 
