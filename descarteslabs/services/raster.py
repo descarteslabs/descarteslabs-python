@@ -105,8 +105,8 @@ class Raster(Service):
             resolution=None,
             bounds=None,
             bounds_srs=None,
-            shape=None,
-            location=None,
+            cutline=None,
+            place=None,
             align_pixels=False,
             resampler=None,
     ):
@@ -125,8 +125,8 @@ class Raster(Service):
         :param str srs: Output spatial reference system definition understood by GDAL.
         :param float resolution: Desired resolution in output SRS units.
         :param tuple outsize: Desired output (width, height) in pixels.
-        :param str shape: A GeoJSON feature to be used as a cutline.
-        :param str location: A slug identifier to be used as a cutline.
+        :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
+        :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
         :param str bounds_srs: Override the coordinate system in which bounds are expressed.
         :param bool align_pixels: Align pixels to the target coordinate system.
@@ -134,12 +134,13 @@ class Raster(Service):
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
             ``max``, ``min``, ``med``, ``q1``, ``q3``).
         """
-        shape = as_json_string(shape)
+        cutline = as_json_string(cutline)
 
-        if location:
+        if place:
             places = Places()
-            shape = places.shape(location, geom='low')
-            shape = json.dumps(shape['geometry'])
+            places.auth = self.auth
+            shape = places.shape(place, geom='low')
+            cutline = json.dumps(shape['geometry'])
 
         params = {
             'keys': inputs,
@@ -149,7 +150,7 @@ class Raster(Service):
             'of': output_format,
             'srs': srs,
             'resolution': resolution,
-            'shape': shape,
+            'shape': cutline,
             'outputBounds': bounds,
             'outputBoundsSRS': bounds_srs,
             'outsize': dimensions,
@@ -178,8 +179,8 @@ class Raster(Service):
             srs=None,
             resolution=None,
             dimensions=None,
-            shape=None,
-            location=None,
+            cutline=None,
+            place=None,
             bounds=None,
             bounds_srs=None,
             align_pixels=False,
@@ -194,12 +195,13 @@ class Raster(Service):
             ``(row, column, band)`` while `gdal` returns arrays as ``(band, row, column)``.
 
         """
-        shape = as_json_string(shape)
+        cutline = as_json_string(cutline)
 
-        if location is not None:
+        if place is not None:
             places = Places()
-            shape = places.shape(location, geom='low')
-            shape = json.dumps(shape['geometry'])
+            places.auth = self.auth
+            shape = places.shape(place, geom='low')
+            cutline = json.dumps(shape['geometry'])
 
         params = {
             'keys': inputs,
@@ -208,7 +210,7 @@ class Raster(Service):
             'ot': data_type,
             'srs': srs,
             'resolution': resolution,
-            'shape': shape,
+            'shape': cutline,
             'outputBounds': bounds,
             'outputBoundsSRS': bounds_srs,
             'outsize': dimensions,
