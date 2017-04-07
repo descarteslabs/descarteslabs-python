@@ -49,8 +49,8 @@ class Metadata(Service):
 
         return r.json()
 
-    def summary(self, const_id=None, date='acquired', part='day', place=None, geom=None, start_time=None, end_time=None,
-                params=None, bbox=False, direct=False):
+    def summary(self, sat_id=None, const_id=None, date='acquired', part='day', place=None, geom=None, start_time=None, end_time=None,
+                params=None, bbox=False):
         """Get a summary of the results for the specified spatio-temporal query.
 
         :param list(str) const_id: Constellation identifier(s).
@@ -104,6 +104,20 @@ class Metadata(Service):
 
         kwargs = {}
 
+        if sat_id:
+            
+            if isinstance(sat_id, basestring):
+                sat_id = [sat_id]
+                
+            kwargs['sat_id'] = sat_id
+            
+        if const_id:
+
+            if isinstance(const_id, basestring):
+                const_id = [const_id]
+
+            kwargs['const_id'] = const_id
+
         if date:
             kwargs['date'] = date
 
@@ -125,30 +139,15 @@ class Metadata(Service):
         if bbox:
             kwargs['bbox'] = 'true'
 
-        if direct:
-            kwargs['direct'] = 'true'
+        r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
-        def f(x):
+        if r.status_code != 200:
+            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-            if x:
-                kwargs['const_id'] = x
+        return r.json()
 
-            r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
-
-            if r.status_code != 200:
-                raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
-            return r.json()
-
-        if not const_id:
-            const_id = [None]
-
-        result = map(f, const_id)
-
-        return result
-
-    def search(self, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None, params=None,
-               limit=100, offset=0, bbox=False, direct=False):
+    def search(self, sat_id=None, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None, params=None,
+               limit=100, offset=0, bbox=False):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -187,6 +186,20 @@ class Metadata(Service):
         kwargs['limit'] = limit
         kwargs['offset'] = offset
 
+        if sat_id:
+            
+            if isinstance(sat_id, basestring):
+                sat_id = [sat_id]
+                
+            kwargs['sat_id'] = sat_id
+            
+        if const_id:
+
+            if isinstance(const_id, basestring):
+                const_id = [const_id]
+
+            kwargs['const_id'] = const_id
+
         if geom:
             kwargs['geom'] = geom
 
@@ -199,30 +212,21 @@ class Metadata(Service):
         if params:
             kwargs['params'] = json.dumps(params)
 
-        def f(x):
+        r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
-            if x:
-                kwargs['const_id'] = x
+        if r.status_code != 200:
+            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-            r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
-
-            if r.status_code != 200:
-                raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
-            return r.json()
+        features = r.json()
 
         result = {'type': 'FeatureCollection'}
 
-        if not const_id:
-            const_id = [None]
-
-        result['features'] = list(chain(*map(f, const_id)))
-        result['features'] = result['features'][:limit]
+        result['features'] = features
 
         return result
 
-    def keys(self, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None, params=None,
-             limit=100, offset=0, bbox=False, direct=False):
+    def keys(self, sat_id=None, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None, params=None,
+             limit=100, offset=0, bbox=False):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -251,33 +255,31 @@ class Metadata(Service):
                 ...
             ]
         """
-        result = self.search(const_id, date, place, geom, start_time, end_time, params, limit, offset, bbox, direct)
+        result = self.search(sat_id, const_id, date, place, geom, start_time, end_time, params, limit, offset, bbox)
 
         return [feature['id'] for feature in result['features'][:limit]]
 
-    def features(self, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None,
-                 params=None, limit=100, bbox=False, direct=False):
+    def features(self, sat_id=None, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None,
+                 params=None, limit=100, bbox=False):
         """Generator that combines summary and search to page through results.
 
         :param int limit: Number of features to fetch per request.
 
         :return: Generator of GeoJSON ``Feature`` objects.
         """
-        result = self.summary(const_id=const_id, date=date, place=place, geom=geom, start_time=start_time,
-                              end_time=end_time, params=params, bbox=bbox, direct=direct)
+        result = self.summary(sat_id=sat_id, const_id=const_id, date=date, place=place, geom=geom, start_time=start_time,
+                              end_time=end_time, params=params, bbox=bbox)
 
         for summary in result:
 
             offset = 0
 
             count = summary['count']
-            const_id = summary['const_id']
-
+            
             while offset < count:
 
-                features = self.search(const_id=[const_id], date=date, place=place, geom=geom, start_time=start_time,
-                                       end_time=end_time, params=params, limit=limit, offset=offset, bbox=bbox,
-                                       direct=direct)
+                features = self.search(sat_id=sat_id, const_id=const_id, date=date, place=place, geom=geom, start_time=start_time,
+                                       end_time=end_time, params=params, limit=limit, offset=offset, bbox=bbox)
 
                 offset = limit + offset
 
