@@ -216,7 +216,10 @@ class Metadata(Service):
         if not const_id:
             const_id = [None]
 
-        result['features'] = list(chain(*map(f, const_id)))
+        result['features'] = sorted(
+            list(chain(*map(f, const_id))),
+            key=lambda f: f['properties'].get('acquired', None)
+        )
         result['features'] = result['features'][:limit]
 
         return result
