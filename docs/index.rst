@@ -5,6 +5,7 @@ Welcome to DescartesLabs's platform!
    :maxdepth: 2
    
    quickstart
+   Getting Started <getting_started>
    Introduction to Places <places>
 
 API Reference
