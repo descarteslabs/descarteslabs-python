@@ -15,7 +15,7 @@
 import unittest
 
 import descarteslabs as dl
-from .helpers import is_external_user
+from descarteslabs.tests.helpers import is_external_user
 
 
 class TestMetadata(unittest.TestCase):
@@ -54,7 +54,7 @@ class TestMetadata(unittest.TestCase):
 
     def test_summary(self):
         r = self.instance.summary(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8'])
-        self.assertEqual(1, len(list(r)))
+        self.assertEqual(1, len(list(r['items'])))
 
 
 if __name__ == '__main__':
