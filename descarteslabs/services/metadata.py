@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import json
-from itertools import chain
+from six import string_types
 from .service import Service
 from .places import Places
 
 
 class Metadata(Service):
-    TIMEOUT = 60
+    TIMEOUT = 120
     """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
 
     def __init__(self, url='https://platform-services.descarteslabs.com/runcible', token=None):
@@ -49,11 +49,13 @@ class Metadata(Service):
 
         return r.json()
 
-    def summary(self, const_id=None, date='acquired', part='day', place=None, geom=None, start_time=None, end_time=None,
-                params=None, bbox=False, direct=False):
+    def summary(self, const_id=None, sat_id=None, date='acquired', part='day',
+                place=None, geom=None, start_time=None, end_time=None,
+                params=None, bbox=False):
         """Get a summary of the results for the specified spatio-temporal query.
 
         :param list(str) const_id: Constellation identifier(s).
+        :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str part: Part of the date to aggregate over (e.g. `day`).
         :param str place: A slug identifier to be used as a region of interest.
@@ -104,6 +106,20 @@ class Metadata(Service):
 
         kwargs = {}
 
+        if sat_id:
+
+            if isinstance(sat_id, string_types):
+                sat_id = [sat_id]
+
+            kwargs['sat_id'] = sat_id
+
+        if const_id:
+
+            if isinstance(const_id, string_types):
+                const_id = [const_id]
+
+            kwargs['const_id'] = const_id
+
         if date:
             kwargs['date'] = date
 
@@ -123,36 +139,23 @@ class Metadata(Service):
             kwargs['params'] = json.dumps(params)
 
         if bbox:
-            kwargs['bbox'] = 'true'
+            kwargs['bbox'] = bbox
 
-        if direct:
-            kwargs['direct'] = 'true'
+        r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
-        def f(x):
+        if r.status_code != 200:
+            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-            if x:
-                kwargs['const_id'] = x
+        return r.json()
 
-            r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
-
-            if r.status_code != 200:
-                raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
-            return r.json()
-
-        if not const_id:
-            const_id = [None]
-
-        result = map(f, const_id)
-
-        return result
-
-    def search(self, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None, params=None,
-               limit=100, offset=0, bbox=False, direct=False):
+    def search(self, const_id=None, sat_id=None, date='acquired', place=None,
+               geom=None, start_time=None, end_time=None, params=None,
+               limit=100, offset=0, bbox=True):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
         :param list(str) const_id: Constellation identifier(s).
+        :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
@@ -187,6 +190,20 @@ class Metadata(Service):
         kwargs['limit'] = limit
         kwargs['offset'] = offset
 
+        if sat_id:
+
+            if isinstance(sat_id, string_types):
+                sat_id = [sat_id]
+
+            kwargs['sat_id'] = sat_id
+
+        if const_id:
+
+            if isinstance(const_id, string_types):
+                const_id = [const_id]
+
+            kwargs['const_id'] = const_id
+
         if geom:
             kwargs['geom'] = geom
 
@@ -199,37 +216,30 @@ class Metadata(Service):
         if params:
             kwargs['params'] = json.dumps(params)
 
-        def f(x):
+        if bbox:
+            kwargs['bbox'] = bbox
 
-            if x:
-                kwargs['const_id'] = x
+        r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
-            r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
+        if r.status_code != 200:
+            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-            if r.status_code != 200:
-                raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
-            return r.json()
+        features = r.json()
 
         result = {'type': 'FeatureCollection'}
 
-        if not const_id:
-            const_id = [None]
-
-        result['features'] = sorted(
-            list(chain(*map(f, const_id))),
-            key=lambda f: f['properties'].get('acquired', None)
-        )
-        result['features'] = result['features'][:limit]
+        result['features'] = features
 
         return result
 
-    def keys(self, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None, params=None,
-             limit=100, offset=0, bbox=False, direct=False):
+    def keys(self, const_id=None, sat_id=None, date='acquired', place=None,
+             geom=None, start_time=None, end_time=None, params=None, limit=100,
+             offset=0, bbox=False):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
         :param list(str) const_id: Constellation identifier(s).
+        :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
@@ -254,33 +264,39 @@ class Metadata(Service):
                 ...
             ]
         """
-        result = self.search(const_id, date, place, geom, start_time, end_time, params, limit, offset, bbox, direct)
+        result = self.search(sat_id=sat_id, const_id=const_id, date=date,
+                             place=place, geom=geom, start_time=start_time,
+                             end_time=end_time, params=params, limit=limit,
+                             offset=offset, bbox=bbox)
 
-        return [feature['id'] for feature in result['features'][:limit]]
+        return [feature['id'] for feature in result['features']]
 
-    def features(self, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None,
-                 params=None, limit=100, bbox=False, direct=False):
+    def features(self, const_id=None, sat_id=None, date='acquired', place=None,
+                 geom=None, start_time=None, end_time=None, params=None,
+                 limit=100, bbox=False):
         """Generator that combines summary and search to page through results.
 
         :param int limit: Number of features to fetch per request.
 
         :return: Generator of GeoJSON ``Feature`` objects.
         """
-        result = self.summary(const_id=const_id, date=date, place=place, geom=geom, start_time=start_time,
-                              end_time=end_time, params=params, bbox=bbox, direct=direct)
+        result = self.summary(sat_id=sat_id, const_id=const_id, date=date,
+                              place=place, geom=geom, start_time=start_time,
+                              end_time=end_time, params=params, bbox=bbox)
 
         for summary in result:
 
             offset = 0
 
             count = summary['count']
-            const_id = summary['const_id']
 
             while offset < count:
 
-                features = self.search(const_id=[const_id], date=date, place=place, geom=geom, start_time=start_time,
-                                       end_time=end_time, params=params, limit=limit, offset=offset, bbox=bbox,
-                                       direct=direct)
+                features = self.search(sat_id=sat_id, const_id=const_id,
+                                       date=date, place=place, geom=geom,
+                                       start_time=start_time,
+                                       end_time=end_time, params=params,
+                                       limit=limit, offset=offset, bbox=bbox)
 
                 offset = limit + offset
 
