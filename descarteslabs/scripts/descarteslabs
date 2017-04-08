@@ -59,20 +59,22 @@ if __name__ == "__main__":
 
             os.chmod(file, stat.S_IRUSR | stat.S_IWUSR)
 
-            keys = dl.metadata.keys()
-            
+            # Get a fresh Metadata that forces a new token off the
+            # new token_info.json
+            keys = dl.Metadata().keys()
+
             name = auth.payload['name']
             groups = ', '.join(auth.payload['groups'])
-            
+
             if len(keys):
 
                 print('Welcome, %s!' % name)
-            
+
             else:
-            
+
                 print('Welcome, %s! Your %s role(s) do not permit access to any imagery at this time.' % (name, groups))
                 print('Contact support@descarteslabs.com if you believe you received this message in error or have any questions.')
-                
+
     if args.command == 'token':
         print(auth.token)
 
