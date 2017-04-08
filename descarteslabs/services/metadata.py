@@ -19,7 +19,7 @@ from .places import Places
 
 
 class Metadata(Service):
-    TIMEOUT = 60
+    TIMEOUT = 360
     """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
 
     def __init__(self, url='https://platform-services.descarteslabs.com/runcible', token=None):
@@ -137,7 +137,7 @@ class Metadata(Service):
             kwargs['params'] = json.dumps(params)
 
         if bbox:
-            kwargs['bbox'] = 'true'
+            kwargs['bbox'] = bbox
 
         r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
@@ -147,7 +147,7 @@ class Metadata(Service):
         return r.json()
 
     def search(self, sat_id=None, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None, params=None,
-               limit=100, offset=0, bbox=False):
+               limit=100, offset=0, bbox=True):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -212,6 +212,9 @@ class Metadata(Service):
         if params:
             kwargs['params'] = json.dumps(params)
 
+        if bbox:
+            kwargs['bbox'] = bbox
+            
         r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
@@ -221,7 +224,7 @@ class Metadata(Service):
 
         result = {'type': 'FeatureCollection'}
 
-        result['features'] = features
+        result['features'] = features[:limit]
 
         return result
 
