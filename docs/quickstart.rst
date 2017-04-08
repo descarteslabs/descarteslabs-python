@@ -15,6 +15,9 @@ Install the latest client library via :command:`pip`::
 
    The latest development version can always be found on
    `GitHub <https://github.com/descarteslabs/descarteslabs-python>`_.
+   It can be installed via :command:`pip`::
+
+   $ pip install -U git+https://github.com/descarteslabs/descarteslabs-python.git
 
 Configuration
 -------------
