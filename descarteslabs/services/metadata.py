@@ -19,7 +19,7 @@ from .places import Places
 
 
 class Metadata(Service):
-    TIMEOUT = 360
+    TIMEOUT = 120
     """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
 
     def __init__(self, url='https://platform-services.descarteslabs.com/runcible', token=None):
@@ -224,7 +224,7 @@ class Metadata(Service):
 
         result = {'type': 'FeatureCollection'}
 
-        result['features'] = features[:limit]
+        result['features'] = features
 
         return result
 
@@ -260,7 +260,7 @@ class Metadata(Service):
         """
         result = self.search(sat_id, const_id, date, place, geom, start_time, end_time, params, limit, offset, bbox)
 
-        return [feature['id'] for feature in result['features'][:limit]]
+        return [feature['id'] for feature in result['features']]
 
     def features(self, sat_id=None, const_id=None, date='acquired', place=None, geom=None, start_time=None, end_time=None,
                  params=None, limit=100, bbox=False):
