@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+from six import string_types
 from .service import Service
 from .places import Places
 
@@ -107,14 +108,14 @@ class Metadata(Service):
 
         if sat_id:
 
-            if isinstance(sat_id, basestring):
+            if isinstance(sat_id, string_types):
                 sat_id = [sat_id]
 
             kwargs['sat_id'] = sat_id
 
         if const_id:
 
-            if isinstance(const_id, basestring):
+            if isinstance(const_id, string_types):
                 const_id = [const_id]
 
             kwargs['const_id'] = const_id
@@ -191,14 +192,14 @@ class Metadata(Service):
 
         if sat_id:
 
-            if isinstance(sat_id, basestring):
+            if isinstance(sat_id, string_types):
                 sat_id = [sat_id]
 
             kwargs['sat_id'] = sat_id
 
         if const_id:
 
-            if isinstance(const_id, basestring):
+            if isinstance(const_id, string_types):
                 const_id = [const_id]
 
             kwargs['const_id'] = const_id
