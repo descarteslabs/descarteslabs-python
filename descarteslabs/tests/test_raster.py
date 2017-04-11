@@ -139,6 +139,20 @@ class TestRaster(unittest.TestCase):
             self.assertTrue(band in r)
 
     @unittest.skipIf(is_external_user(), "currently requires internal user")
+    def test_dltiles_from_place(self):
+        iowa = self.places.shape('north-america_united-states_iowa', geom='low')
+        iowa_geom = iowa['geometry']
+        dltiles_feature_collection = self.raster.dltiles_from_shape(30.0, 2048, 16, iowa_geom)
+        self.assertEqual(len(dltiles_feature_collection['features']), 58)
+
+    def test_dltiles_from_latlon(self):
+        dltile_feature = self.raster.dltile_from_latlon(45.0, -90.0, 30.0, 2048, 16)
+        self.assertEqual(dltile_feature['properties']['key'], "2048:16:30.0:16:-4:81")
+
+    def test_dltile(self):
+        dltile_feature = self.raster.dltile("2048:16:30.0:16:-4:81")
+        self.assertEqual(dltile_feature['properties']['key'], "2048:16:30.0:16:-4:81")
+
     def test_dlkeys_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')
         iowa_geom = iowa['geometry']
