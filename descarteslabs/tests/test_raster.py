@@ -153,6 +153,7 @@ class TestRaster(unittest.TestCase):
         dltile_feature = self.raster.dltile("2048:16:30.0:16:-4:81")
         self.assertEqual(dltile_feature['properties']['key'], "2048:16:30.0:16:-4:81")
 
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_dlkeys_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')
         iowa_geom = iowa['geometry']
