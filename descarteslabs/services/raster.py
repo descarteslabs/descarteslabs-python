@@ -262,7 +262,7 @@ class Raster(Service):
 
     def dlkey(self, key):
         """
-        Deprecated. See dlkey
+        Deprecated. See dltile
         """
         warnings.warn("dlkey methods have been renamed to dltile",
                       DeprecationWarning, stacklevel=2)
