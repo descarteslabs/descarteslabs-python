@@ -15,6 +15,7 @@
 import base64
 from io import BytesIO
 import json
+import warnings
 
 from descarteslabs.addons import numpy as np
 from descarteslabs.utilities import as_json_string
@@ -38,6 +39,13 @@ class Raster(Service):
         Service.__init__(self, url, token)
 
     def get_bands_by_key(self, key):
+        """
+        For a given source id, return the available bands.
+
+        :param str key: A :class:`Metadata` identifiers.
+
+        :return: A dictionary of band entries and their metadata.
+        """
         r = self.session.get('%s/bands/key/%s' % (self.url, key), timeout=self.TIMEOUT)
 
         if r.status_code != 200:
@@ -46,14 +54,92 @@ class Raster(Service):
         return r.json()
 
     def get_bands_by_constellation(self, const):
-        r = self.session.get('%s/bands/constellation/%s' % (self.url, const), timeout=self.TIMEOUT)
+        """
+        For a given constellation id, return the available bands.
+
+        :param str const: A constellation name/abbreviation.
+
+        :return: A dictionary of band entries and their metadata.
+        """
+        r = self.session.get('%s/bands/constellation/%s' % (self.url, const),
+                             timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
 
-    def dlkeys_from_shape(self, resolution, tilesize, pad, shape):
+    def dltiles_from_shape(self, resolution, tilesize, pad, shape):
+        """
+        Return a feature collection of DLTile GeoJSONs that intersect
+        a GeoJSON Geometry `shape`.
+
+        :param float resolution: Resolution of DLTile
+        :param int tilesize: Number of valid pixels per DLTile
+        :param int pad: Number of ghost pixels per DLTile
+        :param str shape: A GeoJSON geometry specifying a shape over
+            which to intersect DLTiles.
+
+        :return: GeoJSON FeatureCollection of intersecting DLTile geometries.
+
+        Example::
+
+            >>> import descarteslabs as dl
+            >>> iowa = dl.places.shape("north-america_united-states_iowa")
+            >>> dltiles = dl.raster.dltiles_from_shape(30.0, 2048, 16, iowa)
+
+            {u'features': [{u'geometry': {u'coordinates': [[[-96.81264975325391,
+                                                             41.04520331997488],
+                                                            [-96.07101667769165,
+                                                             41.02873098011615],
+                                                            [-96.04576296033328,
+                                                             41.590072611375206],
+                                                            [-96.79377566762062,
+                                                             41.606871549447824],
+                                                            [-96.81264975325391,
+                                                             41.04520331997488]]],
+                                          u'type': u'Polygon'},
+                            u'properties': {u'cs_code': u'EPSG:32614',
+                                            u'key': u'2048:16:30.0:14:3:74',
+                                            u'outputBounds': [683840.0,
+                                                              4546080.0,
+                                                              746240.0,
+                                                              4608480.0],
+                                            u'pad': 16,
+                                            u'resolution': 30.0,
+                                            u'ti': 3,
+                                            u'tilesize': 2048,
+                                            u'tj': 74,
+                                            u'zone': 14},
+                            u'type': u'Feature'},
+                            ...
+                           {u'geometry': {u'coordinates': [[[-90.77496392262168,
+                                                             42.151198256875574],
+                                                            [-90.02059316072575,
+                                                             42.13407738909369],
+                                                            [-89.99388553227165,
+                                                             42.695284716744936],
+                                                            [-90.75500239840237,
+                                                             42.71274349523935],
+                                                            [-90.77496392262168,
+                                                             42.151198256875574]]],
+                                          u'type': u'Polygon'},
+                            u'properties': {u'cs_code': u'EPSG:32615',
+                                            u'key': u'2048:16:30.0:15:3:76',
+                                            u'outputBounds': [683840.0,
+                                                              4668960.0,
+                                                              746240.0,
+                                                              4731360.0],
+                                            u'pad': 16,
+                                            u'resolution': 30.0,
+                                            u'ti': 3,
+                                            u'tilesize': 2048,
+                                            u'tj': 76,
+                                            u'zone': 15},
+                            u'type': u'Feature'}],
+             u'type': u'FeatureCollection'}
+        """
+
         shape = as_json_string(shape)
         params = {
             'resolution': resolution,
@@ -62,14 +148,49 @@ class Raster(Service):
             'shape': shape,
         }
 
-        r = self.session.post('%s/dlkeys/from_shape' % (self.url), json=params, timeout=self.TIMEOUT)
+        r = self.session.post('%s/dlkeys/from_shape' % (self.url),
+                              json=params, timeout=self.TIMEOUT)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
 
-    def dlkey_from_latlon(self, lat, lon, resolution, tilesize, pad):
+    def dltile_from_latlon(self, lat, lon, resolution, tilesize, pad):
+        """
+        Return a DLTile GeoJSON Feature that covers a latitude/longitude
+
+        :param float lat: Resolution of DLTile
+        :param float resolution: Resolution of DLTile
+        :param int tilesize: Number of valid pixels per DLTile
+        :param int pad: Number of ghost pixels per DLTile
+        :param str shape: A GeoJSON geometry specifying a shape over
+            which to intersect DLTiles.
+
+        :return: A DLTile GeoJSON Feature
+
+        Example::
+
+            >>> import descarteslabs as dl
+            >>> dl.raster.dltile_from_latlon(45, 60, 15.0, 1024, 16)
+
+            {u'geometry': {u'coordinates': [[[59.88428127486957, 44.89851158838881],
+                                            [60.084634558186266, 44.903806716073376],
+                                            [60.07740397456606, 45.04621255053833],
+                                            [59.87655568676388, 45.04089121582091],
+                                            [59.88428127486957, 44.89851158838881]]],
+                        u'type': u'Polygon'},
+            u'properties': {u'cs_code': u'EPSG:32641',
+                            u'key': u'1024:16:15.0:41:-16:324',
+                            u'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
+                            u'pad': 16,
+                            u'resolution': 15.0,
+                            u'ti': -16,
+                            u'tilesize': 1024,
+                            u'tj': 324,
+                            u'zone': 41},
+            u'type': u'Feature'}
+        """
         params = {
             'resolution': resolution,
             'tilesize': tilesize,
@@ -84,7 +205,37 @@ class Raster(Service):
 
         return r.json()
 
-    def dlkey(self, key):
+    def dltile(self, key):
+        """
+        Given a DLTile key, return a DLTile GeoJSON Feature
+
+        :param str key: A DLTile key that identifies a DLTile
+
+        :return: A DLTile GeoJSON Feature
+
+        Example::
+
+            >>> import descarteslabs as dl
+            >>> dl.raster.dltile("1024:16:15.0:41:-16:324")
+
+            {u'geometry': {u'coordinates': [[[59.88428127486957, 44.89851158838881],
+                                             [60.084634558186266, 44.903806716073376],
+                                             [60.07740397456606, 45.04621255053833],
+                                             [59.87655568676388, 45.04089121582091],
+                                             [59.88428127486957, 44.89851158838881]]],
+                           u'type': u'Polygon'},
+             u'properties': {u'cs_code': u'EPSG:32641',
+                             u'key': u'1024:16:15.0:41:-16:324',
+                             u'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
+                             u'pad': 16,
+                             u'resolution': 15.0,
+                             u'ti': -16,
+                             u'tilesize': 1024,
+                             u'tj': 324,
+                             u'zone': 41},
+             u'type': u'Feature'}
+
+        """
 
         r = self.session.get('%s/dlkeys/%s' % (self.url, key), timeout=self.TIMEOUT)
 
@@ -92,6 +243,30 @@ class Raster(Service):
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
+
+    def dlkeys_from_shape(self, resolution, tilesize, pad, shape):
+        """
+        Deprecated. See dltiles_from_shape
+        """
+        warnings.warn("dlkey methods have been renamed to dltile",
+                      DeprecationWarning, stacklevel=2)
+        return self.dltiles_from_shape(resolution, tilesize, pad, shape)
+
+    def dlkey_from_latlon(self, lat, lon, resolution, tilesize, pad):
+        """
+        Deprecated. See dltile_from_latlon
+        """
+        warnings.warn("dlkey methods have been renamed to dltile",
+                      DeprecationWarning, stacklevel=2)
+        return self.dltile_from_latlon(lat, lon, resolution, tilesize, pad)
+
+    def dlkey(self, key):
+        """
+        Deprecated. See dltile
+        """
+        warnings.warn("dlkey methods have been renamed to dltile",
+                      DeprecationWarning, stacklevel=2)
+        return self.dltile(key)
 
     def raster(
             self,
