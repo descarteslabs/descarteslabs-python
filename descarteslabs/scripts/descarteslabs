@@ -94,3 +94,6 @@ if __name__ == "__main__":
         auth.token
         print('%s=%s' % ('CLIENT_ID', auth.client_id))
         print('%s=%s' % ('CLIENT_SECRET', auth.client_secret))
+
+    if args.command == 'version':
+        print(dl.__version__)
