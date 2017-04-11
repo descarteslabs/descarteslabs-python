@@ -253,7 +253,9 @@ class Metadata(Service):
 
         result = {'type': 'FeatureCollection'}
 
-        result['features'] = features
+        result['features'] = sorted(
+            features, key=lambda f: f['properties']['acquired']
+        )
 
         return result
 
