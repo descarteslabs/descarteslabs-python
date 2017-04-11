@@ -50,7 +50,7 @@ class Metadata(Service):
         return r.json()
 
     def summary(self, const_id=None, sat_id=None, date='acquired', part=None,
-                place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None, 
+                place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
                 cloud_fraction_0=None, fill_fraction=None, params=None, bbox=False):
         """Get a summary of the results for the specified spatio-temporal query.
 
@@ -160,9 +160,9 @@ class Metadata(Service):
 
         return r.json()
 
-    def search(self, const_id=None, sat_id=None, date='acquired', place=None, 
-               geom=None, start_time=None, end_time=None, cloud_fraction=None, 
-               cloud_fraction_0=None, fill_fraction=None, params=None, 
+    def search(self, const_id=None, sat_id=None, date='acquired', place=None,
+               geom=None, start_time=None, end_time=None, cloud_fraction=None,
+               cloud_fraction_0=None, fill_fraction=None, params=None,
                limit=100, offset=0, bbox=False):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
@@ -258,7 +258,7 @@ class Metadata(Service):
         return result
 
     def keys(self, const_id=None, sat_id=None, date='acquired', place=None,
-             geom=None, start_time=None, end_time=None, cloud_fraction=None, 
+             geom=None, start_time=None, end_time=None, cloud_fraction=None,
              cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
              offset=0, bbox=False):
         """Search metadata given a spatio-temporal query. All parameters are
@@ -302,7 +302,7 @@ class Metadata(Service):
         return [feature['id'] for feature in result['features']]
 
     def features(self, const_id=None, sat_id=None, date='acquired', place=None,
-                 geom=None, start_time=None, end_time=None, cloud_fraction=None, 
+                 geom=None, start_time=None, end_time=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, params=None,
                  limit=100, bbox=False):
         """Generator that combines summary and search to page through results.
