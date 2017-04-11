@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument("-output_format", default='GTiff', type=str)
     parser.add_argument("-data_type", default='UInt16', type=str)
     parser.add_argument("-srs", default=None, type=str)
-    parser.add_argument("-location", default=None, type=str)
+    parser.add_argument("-place", default=None, type=str)
     args = parser.parse_args()
 
     params = {
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         'data_type': args.data_type,
         'output_format': args.output_format,
         'srs': args.srs,
-        'location': args.location,
+        'place': args.place,
     }
     response = dl.raster.raster(**params)
     for filename, data in response['files'].iteritems():
