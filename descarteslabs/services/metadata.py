@@ -62,6 +62,9 @@ class Metadata(Service):
         :param str geom: A GeoJSON or WKT region of interest.
         :param str start_time: Desired starting date and time (inclusive).
         :param str end_time: Desired ending date and time (inclusive).
+        :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
+        :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
+        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param bool bbox: If true, query by the bounding box of the region of interest.
         :param str params: JSON of additional query parameters.
 
@@ -171,6 +174,9 @@ class Metadata(Service):
         :param str geom: A GeoJSON or WKT region of interest.
         :param str start_time: Desired starting date and time (inclusive).
         :param str end_time: Desired ending date and time (inclusive).
+        :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
+        :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
+        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param bool bbox: If true, query by the bounding box of the region of interest.
         :param str params: JSON of additional query parameters.
         :param int limit: Number of items to return.
@@ -231,7 +237,7 @@ class Metadata(Service):
 
         if fill_fraction:
             kwargs['fill_fraction'] = fill_fraction
-            
+
         if params:
             kwargs['params'] = json.dumps(params)
 
@@ -265,6 +271,9 @@ class Metadata(Service):
         :param str geom: A GeoJSON or WKT region of interest.
         :param str start_time: Desired starting date and time (inclusive).
         :param str end_time: Desired ending date and time (inclusive).
+        :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
+        :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
+        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param bool bbox: If true, query by the bounding box of the region of interest.
         :param str params: JSON of additional query parameters.
         :param int limit: Number of items to return.
@@ -287,7 +296,7 @@ class Metadata(Service):
         result = self.search(sat_id=sat_id, const_id=const_id, date=date,
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
-                             cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction, 
+                             cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
                              params=params, limit=limit, offset=offset, bbox=bbox)
 
         return [feature['id'] for feature in result['features']]
@@ -305,7 +314,7 @@ class Metadata(Service):
         result = self.summary(sat_id=sat_id, const_id=const_id, date=date,
                               place=place, geom=geom, start_time=start_time,
                               end_time=end_time, cloud_fraction=cloud_fraction,
-                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction, 
+                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
                               params=params, bbox=bbox)
 
         for summary in result:
@@ -318,9 +327,9 @@ class Metadata(Service):
 
                 features = self.search(sat_id=sat_id, const_id=const_id,
                                        date=date, place=place, geom=geom,
-                                       start_time=start_time, end_time=end_time, 
+                                       start_time=start_time, end_time=end_time,
                                        cloud_fraction=cloud_fraction,
-                                       cloud_fraction_0=cloud_fraction_0, 
+                                       cloud_fraction_0=cloud_fraction_0,
                                        fill_fraction=fill_fraction, params=params,
                                        limit=limit, offset=offset, bbox=bbox)
 

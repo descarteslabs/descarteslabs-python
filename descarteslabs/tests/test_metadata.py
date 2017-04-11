@@ -41,6 +41,13 @@ class TestMetadata(unittest.TestCase):
         self.assertEqual(100, len(r['features']))
 
     @unittest.skipIf(is_external_user(), "currently requires internal user")
+    def test_cloud_fraction(self):
+        r = self.instance.search(start_time='2016-09-01', end_time='2016-09-02', sat_id='LANDSAT_8',
+                                 cloud_fraction=0.5)
+        for feature in r['features']:
+            self.assertLess(feature['properties']['cloud_fraction'], 0.5)
+
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_const_id(self):
         r = self.instance.search(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8'])
         self.assertGreater(len(r['features']), 0)
@@ -58,7 +65,22 @@ class TestMetadata(unittest.TestCase):
     @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_summary(self):
         r = self.instance.summary(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8'])
-        self.assertEqual(1, len(list(r['items'])))
+        self.assertIn('const_id', r)
+        self.assertIn('count', r)
+        self.assertIn('pixels', r)
+        self.assertIn('bytes', r)
+        self.assertGreater(r['count'], 0)
+
+    @unittest.skipIf(is_external_user(), "currently requires internal user")
+    def test_summary_part(self):
+        r = self.instance.summary(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8'], part='year')
+        self.assertIn('const_id', r)
+        self.assertIn('count', r)
+        self.assertIn('pixels', r)
+        self.assertIn('bytes', r)
+        self.assertIn('items', r)
+        self.assertEqual(len(r['items']), 1)
+
 
 
 if __name__ == '__main__':
