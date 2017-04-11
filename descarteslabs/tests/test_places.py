@@ -15,7 +15,6 @@
 import unittest
 
 import descarteslabs as dl
-from .helpers import is_external_user
 
 
 class TestPlaces(unittest.TestCase):

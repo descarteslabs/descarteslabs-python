@@ -17,7 +17,6 @@ import json
 
 import descarteslabs as dl
 from descarteslabs.addons import numpy as np
-from descarteslabs.tests.helpers import is_external_user
 
 
 class TestRaster(unittest.TestCase):

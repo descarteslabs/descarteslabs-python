@@ -15,7 +15,6 @@
 import unittest
 
 import descarteslabs as dl
-from descarteslabs.tests.helpers import is_external_user
 
 
 class TestMetadata(unittest.TestCase):
