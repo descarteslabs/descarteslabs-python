@@ -15,7 +15,6 @@
 import unittest
 
 import descarteslabs as dl
-from descarteslabs.tests.helpers import is_external_user
 
 
 class TestMetadata(unittest.TestCase):
@@ -25,17 +24,14 @@ class TestMetadata(unittest.TestCase):
     def setUpClass(cls):
         cls.instance = dl.metadata
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_sources(self):
         r = self.instance.sources()
         self.assertGreater(len(r), 0)
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_search(self):
         r = self.instance.search()
         self.assertGreater(len(r['features']), 0)
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_sat_id(self):
         r = self.instance.search(start_time='2016-09-01', end_time='2016-09-02', sat_id='LANDSAT_8')
         self.assertEqual(100, len(r['features']))
@@ -52,17 +48,14 @@ class TestMetadata(unittest.TestCase):
         r = self.instance.search(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8'])
         self.assertGreater(len(r['features']), 0)
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_multiple_const_id(self):
         r = self.instance.search(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8', 'L7'])
         self.assertGreater(len(r['features']), 0)
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_place(self):
         r = self.instance.search(const_id=['L8'], place='north-america_united-states_iowa', limit=1)
         self.assertEqual(1, len(r['features']))
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_summary(self):
         r = self.instance.summary(start_time='2016-09-01', end_time='2016-09-02', const_id=['L8'])
         self.assertIn('const_id', r)
