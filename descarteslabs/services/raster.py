@@ -71,8 +71,8 @@ class Raster(Service):
 
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
-        Return a feature collection of DLTile GeoJSONs that overlap
-        a GeoJSON shape.
+        Return a feature collection of DLTile GeoJSONs that intersect
+        a GeoJSON Geometry `shape`.
 
         :param float resolution: Resolution of DLTile
         :param int tilesize: Number of valid pixels per DLTile
@@ -262,7 +262,7 @@ class Raster(Service):
 
     def dlkey(self, key):
         """
-        Deprecated. See dlkey
+        Deprecated. See dltile
         """
         warnings.warn("dlkey methods have been renamed to dltile",
                       DeprecationWarning, stacklevel=2)
