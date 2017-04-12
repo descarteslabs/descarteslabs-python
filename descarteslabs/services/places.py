@@ -16,7 +16,6 @@ import operator
 from functools import partial
 from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
-
 from .service import Service
 
 
@@ -36,9 +35,8 @@ class Places(Service):
         """Get a list of place types.
 
         Example::
-
-            >>> places.placetypes()
-
+            >>> import descarteslabs as dl
+            >>> dl.places.placetypes()
             ['country', 'region', 'district', 'mesoregion', 'microregion',
                 'county']
         """
@@ -58,14 +56,16 @@ class Places(Service):
 
         Example::
 
-          >>> places.find('morocco')
-
-          [{'bbox': [-17.013743, 21.419971, -1.031999, 35.926519],
-            'id': 85632693,
-            'name': 'Morocco',
-            'path': 'continent:africa_country:morocco',
-            'placetype': 'country',
-            'slug': 'africa_morocco'}]
+            >>> import descarteslabs as dl
+            >>> from pprint import pprint
+            >>> results = dl.places.find('morocco')
+            >>> pprint(results)
+            [{'bbox': [-17.013743, 21.419971, -1.031999, 35.926519],
+              'id': 85632693,
+              'name': 'Morocco',
+              'path': 'continent:africa_country:morocco',
+              'placetype': 'country',
+              'slug': 'africa_morocco'}]
         """
         r = self.session.get('%s/find/%s' % (self.url, path), params=kwargs, timeout=self.TIMEOUT)
 
@@ -83,6 +83,24 @@ class Places(Service):
         :param str geom: Desired resolution for the geometry (`low`, `medium`, `high`).
 
         :return: GeoJSON ``Feature``
+
+        Example::
+            >>> import descarteslabs as dl
+            >>> from pprint import pprint
+            >>> kansas = dl.places.shape('north-america_united-states_kansas')
+            >>> kansas['bbox']
+            [-102.051744, 36.993016, -94.588658, 40.003078]
+
+            >>> kansas['geometry']['type']
+            'Polygon'
+
+            >>> pprint(kansas['properties'])
+            {'name': 'Kansas',
+             'parent_id': 85633793,
+             'path': 'continent:north-america_country:united-states_region:kansas',
+             'placetype': 'region',
+             'slug': 'north-america_united-states_kansas'}
+
         """
         r = self.session.get('%s/shape/%s.%s' % (self.url, slug, output), params={'geom': geom}, timeout=self.TIMEOUT)
 
@@ -103,10 +121,9 @@ class Places(Service):
         :return: GeoJSON or TopoJSON ``FeatureCollection``
 
         Example::
-
-            >>> il_counties = places.prefix('north-america_united-states_illinois', placetype='county')
+            >>> import descarteslabs as dl
+            >>> il_counties = dl.places.prefix('north-america_united-states_illinois', placetype='county')
             >>> len(il_counties['features'])
-
             102
 
         """
