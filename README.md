@@ -28,6 +28,8 @@ $ export CLIENT_ID=...
 $ export CLIENT_SECRET=...
 ```
 
+Documentation
+-------------
 The latest build of the documentation can be found on [readthedocs](http://descartes-labs-python.readthedocs.io/en/latest/)
 
 FAQ
