@@ -15,6 +15,7 @@
 import unittest
 import mock
 import os
+from six import StringIO
 from descarteslabs.scripts.parser import parser, handle
 import base64
 import json
@@ -26,12 +27,40 @@ token = base64.b64encode(
         'utf-8'))
 
 
-class TestAuth(unittest.TestCase):
-    def test_login(self):
+class TestScripts(unittest.TestCase):
+    def test_auth_login(self):
         with mock.patch('descarteslabs.scripts.parser.auth.input', return_value=token):
             handle(parser.parse_args(["auth", "login"]))
 
-        handle(parser.parse_args(["auth", "env"]))
+        with mock.patch('sys.stdout', new_callable=StringIO) as out:
+            handle(parser.parse_args(["auth", "groups"]))
+            self.assertEqual(out.getvalue().strip(), '["public"]')
+
+    def test_places_find(self):
+        with mock.patch('sys.stdout', new_callable=StringIO) as out:
+            handle(parser.parse_args(["places", "find", "iowa"]))
+            iowa = [
+                {
+                    "name": "Iowa",
+                    "bbox": [
+                        - 96.639468,
+                        40.37544,
+                        -90.140061,
+                        43.501128
+                    ],
+                    "id": 85688713,
+                    "path": "continent:north-america_country:united-states_region:iowa",
+                    "slug": "north-america_united-states_iowa",
+                    "placetype": "region"
+                }
+            ]
+            self.assertEqual(json.loads(out.getvalue().strip()), iowa)
+
+    def test_metadata_sources(self):
+        with mock.patch('sys.stdout', new_callable=StringIO) as out:
+            handle(parser.parse_args(["metadata", "sources"]))
+            sources = [{'value': 5, 'sat_id': 'LANDSAT_8', 'const_id': 'L8'}]
+            self.assertEqual(json.loads(out.getvalue().strip()), sources)
 
 
 if __name__ == '__main__':
