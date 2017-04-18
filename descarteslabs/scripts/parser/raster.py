@@ -18,6 +18,7 @@ import argparse
 import json
 import descarteslabs as dl
 
+
 def scales(s):
     try:
         if s.count(",") == 1:
@@ -33,19 +34,8 @@ def scales(s):
             "Scales must be mi,ma or smi,sma,dmi,dma"
         )
 
-if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("inputs", type=str, nargs="+")
-    parser.add_argument("-bands", nargs="+", default=None, type=str)
-    parser.add_argument("-scales", default=None, type=scales, nargs="+")
-    parser.add_argument("-resolution", default=240, type=float)
-    parser.add_argument("-output_format", default='GTiff', type=str)
-    parser.add_argument("-data_type", default='UInt16', type=str)
-    parser.add_argument("-srs", default=None, type=str)
-    parser.add_argument("-place", default=None, type=str)
-    args = parser.parse_args()
-
+def raster_handler(args):
     params = {
         'inputs': args.inputs,
         'bands': args.bands,

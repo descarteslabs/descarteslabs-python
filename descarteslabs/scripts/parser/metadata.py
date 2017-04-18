@@ -14,36 +14,12 @@
 # limitations under the License.
 
 from __future__ import print_function
-
 import json
-import argparse
 
 import descarteslabs as dl
 
-if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('command', choices=['sources', 'summary', 'search', 'keys', 'get'],
-                        help='The action to take')
-
-    parser.add_argument('argument', nargs='?')
-
-    parser.add_argument('-url', help='The url of the service')
-    parser.add_argument('-place', help='A slug for a named place')
-    parser.add_argument('-const_id', default=None, help='Constellation ID', nargs='+')
-    parser.add_argument('-start_time', help='Start of valid date/time range (inclusive)')
-    parser.add_argument('-end_time', help='End of valid date/time range (inclusive)')
-    parser.add_argument('-geom', help='Region of interest as GeoJSON or WKT')
-    parser.add_argument('-params',
-                        help='JSON String of additional key/value pairs for searching properties: tile_id, cloud_fraction, etc.')
-    parser.add_argument('-limit', default=100, help='Number of items to return (default 100)', type=int)
-    parser.add_argument('-offset', help='Number of items to skip (default 0)')
-    parser.add_argument('-bbox', help='Whether or not to use a bounding box filter (default: false)',
-                        action='store_true')
-
-    args = parser.parse_args()
-
+def metadata_handler(args):
     metadata = dl.metadata
 
     if args.url:

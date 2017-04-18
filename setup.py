@@ -52,9 +52,6 @@ def do_setup():
     kwargs['package_data'] = {'descarteslabs.services': ['gd_bundle-g2-g1.crt']}
     kwargs['scripts'] = [
         'descarteslabs/scripts/descarteslabs',
-        'descarteslabs/scripts/places',
-        'descarteslabs/scripts/raster',
-        'descarteslabs/scripts/metadata',
     ]
     kwargs['install_requires'] = [
         "requests",

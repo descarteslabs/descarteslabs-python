@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2017 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
+import mock
+import os
 from descarteslabs.scripts.parser import parser, handle
+import base64
+import json
 
-if __name__ == "__main__":
-    handle(parser.parse_args())
+
+token = base64.b64encode(json.dumps({"client_id": os.environ.get("CLIENT_ID"),"client_secret": os.environ.get("CLIENT_SECRET")}).encode('utf-8'))
+
+
+class TestAuth(unittest.TestCase):
+    def test_login(self):
+        with mock.patch('descarteslabs.scripts.parser.auth.input', return_value=token):
+            handle(parser.parse_args(["auth", "login"]))
+
+        handle(parser.parse_args(["auth", "env"]))
+
+
+if __name__ == '__main__':
+    unittest.main()
