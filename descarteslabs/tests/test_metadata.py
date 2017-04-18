@@ -47,7 +47,7 @@ class TestMetadata(unittest.TestCase):
         self.assertGreater(len(r['features']), 0)
 
     def test_multiple_const_id(self):
-        r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07',const_id=['L8', 'L7'])
+        r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', const_id=['L8', 'L7'])
         self.assertGreater(len(r['features']), 0)
 
     def test_place(self):
@@ -55,7 +55,7 @@ class TestMetadata(unittest.TestCase):
         self.assertEqual(1, len(r['features']))
 
     def test_summary(self):
-        r = self.instance.summary(start_time='2016-07-06', end_time='2016-07-07',const_id=['L8'])
+        r = self.instance.summary(start_time='2016-07-06', end_time='2016-07-07', const_id=['L8'])
         self.assertIn('const_id', r)
         self.assertIn('count', r)
         self.assertIn('pixels', r)
@@ -63,7 +63,7 @@ class TestMetadata(unittest.TestCase):
         self.assertGreater(r['count'], 0)
 
     def test_summary_part(self):
-        r = self.instance.summary(start_time='2016-07-06', end_time='2016-07-07',const_id=['L8'], part='year')
+        r = self.instance.summary(start_time='2016-07-06', end_time='2016-07-07', const_id=['L8'], part='year')
         self.assertIn('const_id', r)
         self.assertIn('count', r)
         self.assertIn('pixels', r)
