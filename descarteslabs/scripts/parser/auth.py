@@ -30,7 +30,7 @@ def auth_handler(args):
     if args.command == 'login':
 
         print(
-            'Follow this link to login https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token')
+            'Follow this link to login https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token')   # NOQA
 
         s = input('...then come back here and paste the generated token: ')
 
@@ -67,7 +67,7 @@ def auth_handler(args):
 
                 print('Welcome, %s! Your %s role(s) do not permit access to any imagery at this time.' % (name, groups))
                 print(
-                    'Contact support@descarteslabs.com if you believe you received this message in error or have any questions.')
+                    'Contact support@descarteslabs.com if you believe you received this message in error or have any questions.')  # NOQA
 
     if args.command == 'token':
         print(auth.token)

@@ -19,8 +19,11 @@ from descarteslabs.scripts.parser import parser, handle
 import base64
 import json
 
-
-token = base64.b64encode(json.dumps({"client_id": os.environ.get("CLIENT_ID"),"client_secret": os.environ.get("CLIENT_SECRET")}).encode('utf-8'))
+token = base64.b64encode(
+    json.dumps({
+        "client_id": os.environ.get("CLIENT_ID"),
+        "client_secret": os.environ.get("CLIENT_SECRET")}).encode(
+        'utf-8'))
 
 
 class TestAuth(unittest.TestCase):

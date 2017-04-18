@@ -45,7 +45,7 @@ metadata_parser.add_argument('-start_time', help='Start of valid date/time range
 metadata_parser.add_argument('-end_time', help='End of valid date/time range (inclusive)')
 metadata_parser.add_argument('-geom', help='Region of interest as GeoJSON or WKT')
 metadata_parser.add_argument('-params',
-                             help='JSON String of additional key/value pairs for searching properties: tile_id, cloud_fraction, etc.')
+                             help='JSON String of additional key/value pairs for searching properties: tile_id, cloud_fraction, etc.')  # NOQA
 metadata_parser.add_argument('-limit', default=100, help='Number of items to return (default 100)', type=int)
 metadata_parser.add_argument('-offset', help='Number of items to skip (default 0)')
 metadata_parser.add_argument('-bbox', help='Whether or not to use a bounding box filter (default: false)',
