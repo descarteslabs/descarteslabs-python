@@ -36,8 +36,8 @@ class Metadata(Service):
             >>> import descarteslabs as dl
             >>> from pprint import pprint
             >>> sources = dl.metadata.sources()
-            >>> pprint(sources[0:2])
-            [{'const_id': 'L7', 'sat_id': 'LANDSAT_7', 'value': 1}, {'const_id': 'L5', 'sat_id': 'LANDSAT_5', 'value': 2}]
+            >>> pprint(sources)
+            [{'const_id': 'L8', 'sat_id': 'LANDSAT_8', 'value': 5}]
 
         """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
@@ -71,31 +71,14 @@ class Metadata(Service):
             >>> import descarteslabs as dl
             >>> from pprint import  pprint
             >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', const_id=['L8'], part='year'))
-            {'bytes': 189530695768,
+            {'bytes': 93298309,
              'const_id': ['L8'],
-             'count': 1528,
-             'items': [{'bytes': 31765777640,
-                        'count': 272,
-                        'date': '2013-01-01T00:00:00',
-                        'pixels': 65348414912},
-                       {'bytes': 48481543735,
-                        'count': 385,
-                        'date': '2014-01-01T00:00:00',
-                        'pixels': 94197206464},
-                       {'bytes': 47763448018,
-                        'count': 385,
-                        'date': '2015-01-01T00:00:00',
-                        'pixels': 94187641408},
-                       {'bytes': 49918583944,
-                        'count': 391,
-                        'date': '2016-01-01T00:00:00',
-                        'pixels': 95671624320},
-                       {'bytes': 11601342431,
-                        'count': 95,
-                        'date': '2017-01-01T00:00:00',
-                        'pixels': 23214862336}],
-             'pixels': 372619749440}
-
+             'count': 1,
+             'items': [{'bytes': 93298309,
+                'count': 1,
+                'date': '2016-01-01T00:00:00',
+                'pixels': 250508160}],
+             'pixels': 250508160}
         """
         if place:
             places = Places()
@@ -191,7 +174,7 @@ class Metadata(Service):
                                          start_time='2016-07-01', \
                                          end_time='2016-07-31 23:59:59')
             >>> len(scenes['features'])
-            34
+            1
         """
         if place:
             places = Places()
@@ -292,10 +275,11 @@ class Metadata(Service):
                                  start_time='2016-07-01', \
                                  end_time='2016-07-31 23:59:59')
             >>> len(keys)
-            34
+            1
 
-            >>> keys[0:3]
-            ['meta_LC80240302016183_v1', 'meta_LC80240312016183_v1', 'meta_LC80240322016183_v1']
+            >>> keys
+            ['meta_LC80270312016188_v1']
+
         """
         result = self.search(sat_id=sat_id, const_id=const_id, date=date,
                              place=place, geom=geom, start_time=start_time,
@@ -350,7 +334,7 @@ class Metadata(Service):
         Example::
 
             >>> import descarteslabs as dl
-            >>> meta = dl.metadata.get('meta_LC82000452016168_v1')
+            >>> meta = dl.metadata.get('meta_LC80270312016188_v1')
             >>> keys = list(meta.keys())
             >>> keys.sort()
             >>> keys
