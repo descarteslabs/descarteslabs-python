@@ -29,7 +29,6 @@ class TestRaster(unittest.TestCase):
         cls.raster = dl.raster
         cls.places = dl.places
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_raster(self):
         r = self.raster.raster(
             inputs=['meta_LC80270312016188_v1'],
@@ -41,7 +40,6 @@ class TestRaster(unittest.TestCase):
         self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
         self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.tif'])
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_ndarray(self):
         try:
             data, metadata = self.raster.ndarray(
@@ -55,7 +53,6 @@ class TestRaster(unittest.TestCase):
         except ImportError:
             pass
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_ndarray_single_band(self):
         try:
             data, metadata = self.raster.ndarray(
@@ -69,7 +66,6 @@ class TestRaster(unittest.TestCase):
         except ImportError:
             pass
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_cutline_dict(self):
         shape = {"geometry":
                  {"type": "Polygon",
@@ -91,7 +87,6 @@ class TestRaster(unittest.TestCase):
         except ImportError:
             pass
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_cutline_str(self):
         shape = {"geometry":
                  {"type": "Polygon",
@@ -111,7 +106,6 @@ class TestRaster(unittest.TestCase):
         except ImportError:
             pass
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_thumbnail(self):
         r = self.raster.raster(
             inputs=['meta_LC80270312016188_v1'],
@@ -125,7 +119,6 @@ class TestRaster(unittest.TestCase):
         self.assertTrue("files" in r)
         self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.png'])
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_get_bands_by_key(self):
         r = self.raster.get_bands_by_key('meta_LC80270312016188_v1')
         for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
@@ -138,7 +131,6 @@ class TestRaster(unittest.TestCase):
                      'ndwi', 'evi', 'cirrus']:
             self.assertTrue(band in r)
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_dltiles_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')
         iowa_geom = iowa['geometry']
@@ -153,7 +145,6 @@ class TestRaster(unittest.TestCase):
         dltile_feature = self.raster.dltile("2048:16:30.0:16:-4:81")
         self.assertEqual(dltile_feature['properties']['key'], "2048:16:30.0:16:-4:81")
 
-    @unittest.skipIf(is_external_user(), "currently requires internal user")
     def test_dlkeys_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')
         iowa_geom = iowa['geometry']
