@@ -44,10 +44,5 @@ class TestPlaces(unittest.TestCase):
         r = self.instance.prefix('north-america_united-states_iowa', placetype='district')
         self.assertEqual(9, len(r['features']))
 
-    def test_sources(self):
-        r = self.instance.sources()
-        self.assertEqual(2, len(r))
-
-
 if __name__ == '__main__':
     unittest.main()
