@@ -48,7 +48,7 @@ class Metadata(Service):
         return r.json()
 
     def summary(self, const_id=None, sat_id=None, date='acquired', part=None,
-                place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
+                place=None, shape=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
                 cloud_fraction_0=None, fill_fraction=None, params=None, bbox=False):
         """Get a summary of the results for the specified spatio-temporal query.
 
@@ -57,7 +57,8 @@ class Metadata(Service):
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str part: Part of the date to aggregate over (e.g. `day`).
         :param str place: A slug identifier to be used as a region of interest.
-        :param str geom: A GeoJSON or WKT region of interest.
+        :param str shape: A GeoJSON region of interest (Feature).
+        :param str geom: A GeoJSON or WKT region of interest (just the geometry).
         :param str start_time: Desired starting date and time (inclusive).
         :param str end_time: Desired ending date and time (inclusive).
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
@@ -84,7 +85,9 @@ class Metadata(Service):
             places = Places()
             places.auth = self.auth
             shape = places.shape(place, geom='low')
-            geom = json.dumps(shape['geometry'])
+            
+        if shape:
+            geom = shape['geometry']
 
         if isinstance(geom, dict):
             geom = json.dumps(geom)
@@ -143,7 +146,7 @@ class Metadata(Service):
         return r.json()
 
     def search(self, const_id=None, sat_id=None, date='acquired', place=None,
-               geom=None, start_time=None, end_time=None, cloud_fraction=None,
+               shape=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, params=None,
                limit=100, offset=0, bbox=False):
         """Search metadata given a spatio-temporal query. All parameters are
@@ -153,7 +156,8 @@ class Metadata(Service):
         :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
-        :param str geom: A GeoJSON or WKT region of interest.
+        :param str shape: A GeoJSON region of interest (Feature).
+        :param str geom: A GeoJSON or WKT region of interest (just the geometry).
         :param str start_time: Desired starting date and time (inclusive).
         :param str end_time: Desired ending date and time (inclusive).
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
@@ -180,8 +184,10 @@ class Metadata(Service):
             places = Places()
             places.auth = self.auth
             shape = places.shape(place, geom='low')
-            geom = json.dumps(shape['geometry'])
-
+            
+        if shape:
+            geom = shape['geometry']
+            
         if isinstance(geom, dict):
             geom = json.dumps(geom)
 
