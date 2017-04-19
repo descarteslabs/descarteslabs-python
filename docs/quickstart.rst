@@ -24,7 +24,7 @@ Configuration
 Before you can begin using the services provided by the platform, you need to set up authentication credentials. The
 easiest way is to use the CLI helper::
 
-    $ descarteslabs login
+    $ descarteslabs auth login
 
 For non-interactive environments, one needs to set the CLIENT_ID and CLIENT_SECRET 
 environment variables. These can be retrieved from the ~/.descarteslabs/token_info.json
