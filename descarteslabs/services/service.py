@@ -20,6 +20,21 @@ from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
 from descarteslabs import descartes_auth
+from descarteslabs.exceptions import ServerError, BadRequestError, RateLimitError
+
+
+class WrappedSession(requests.Session):
+    def request(self, method, url, **kwargs):
+        resp = super(WrappedSession, self).request(method, url, **kwargs)
+
+        if resp.status_code == 200:
+            return resp
+        elif resp.status_code == 400:
+            raise BadRequestError(resp.text)
+        elif resp.status_code == 429:
+            raise RateLimitError(resp.text)
+        else:
+            raise ServerError(resp.text)
 
 
 class Service:
@@ -42,7 +57,7 @@ class Service:
     @property
     def session(self):
 
-        s = requests.Session()
+        s = WrappedSession()
 
         retries = Retry(total=5,
                         read=2,

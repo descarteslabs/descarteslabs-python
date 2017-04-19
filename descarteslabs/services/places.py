@@ -42,9 +42,6 @@ class Places(Service):
         """
         r = self.session.get('%s/placetypes' % self.url, timeout=self.TIMEOUT)
 
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
         return r.json()
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'find'))
@@ -68,9 +65,6 @@ class Places(Service):
               'slug': 'africa_morocco'}]
         """
         r = self.session.get('%s/find/%s' % (self.url, path), params=kwargs, timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
 
@@ -104,9 +98,6 @@ class Places(Service):
         """
         r = self.session.get('%s/shape/%s.%s' % (self.url, slug, output), params={'geom': geom}, timeout=self.TIMEOUT)
 
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
         return r.json()
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'prefix'))
@@ -133,8 +124,5 @@ class Places(Service):
         params['geom'] = geom
         r = self.session.get('%s/prefix/%s.%s' % (self.url, slug, output),
                              params=params, timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
