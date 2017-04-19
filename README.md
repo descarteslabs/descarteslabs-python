@@ -16,7 +16,7 @@ convenience script to help you log in.
 ```bash
 $ python setup.py install
 $ pip install -r requirements.txt
-$ descarteslabs login
+$ descarteslabs auth login
 ```
 
 For non-interactive environments, one needs to set the CLIENT_ID and CLIENT_SECRET 
