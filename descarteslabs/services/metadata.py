@@ -42,9 +42,6 @@ class Metadata(Service):
         """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
 
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
         return r.json()
 
     def summary(self, const_id=None, sat_id=None, date='acquired', part=None,
@@ -71,14 +68,18 @@ class Metadata(Service):
             >>> import descarteslabs as dl
             >>> from pprint import  pprint
             >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', const_id=['L8'], part='year'))
-            {'bytes': 93298309,
+            {'bytes': 755354655,
              'const_id': ['L8'],
-             'count': 1,
+             'count': 6,
              'items': [{'bytes': 93298309,
                 'count': 1,
                 'date': '2016-01-01T00:00:00',
-                'pixels': 250508160}],
-             'pixels': 250508160}
+                'pixels': 250508160},
+               {'bytes': 662056346,
+                'count': 5,
+                'date': '2017-01-01T00:00:00',
+                'pixels': 1230729728}],
+             'pixels': 1481237888}
         """
         if place:
             places = Places()
@@ -136,9 +137,6 @@ class Metadata(Service):
             kwargs['bbox'] = bbox
 
         r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
 
@@ -229,9 +227,6 @@ class Metadata(Service):
             kwargs['bbox'] = bbox
 
         r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         features = r.json()
 
@@ -345,8 +340,5 @@ class Metadata(Service):
              'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction', 'tile_id']
         """
         r = self.session.get('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()

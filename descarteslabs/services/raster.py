@@ -168,9 +168,6 @@ class Raster(Service):
         r = self.session.get('%s/dlkeys/from_latlon/%f/%f' % (self.url, lat, lon),
                              params=params, timeout=self.TIMEOUT)
 
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
         return r.json()
 
     def dltile(self, key):
@@ -205,9 +202,6 @@ class Raster(Service):
         """
 
         r = self.session.get('%s/dlkeys/%s' % (self.url, key), timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
 
@@ -361,9 +355,6 @@ class Raster(Service):
         }
 
         r = self.session.post('%s/npz' % (self.url), json=params, timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         io = BytesIO(r.content)
         npz = np.load(io)
