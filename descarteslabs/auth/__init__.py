@@ -25,6 +25,8 @@ import six
 import os
 import stat
 
+from descarteslabs.exceptions import AuthError, OauthError
+
 
 def base64url_decode(input):
     """Helper method to base64url_decode a string.
@@ -98,10 +100,10 @@ class Auth:
 
     def _get_token(self, timeout=100):
         if self.client_id is None:
-            raise RuntimeError("Could not find CLIENT_ID")
+            raise AuthError("Could not find CLIENT_ID")
 
         if self.client_secret is None:
-            raise RuntimeError("Could not find CLIENT_SECRET")
+            raise AuthError("Could not find CLIENT_SECRET")
 
         s = requests.Session()
         retries = Retry(total=5,
@@ -123,7 +125,7 @@ class Auth:
         r = s.post(self.domain + "/delegation", headers=headers, data=json.dumps(params), timeout=timeout)
 
         if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
+            raise OauthError("%s: %s" % (r.status_code, r.text))
 
         data = r.json()
 
