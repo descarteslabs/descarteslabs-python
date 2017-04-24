@@ -42,9 +42,6 @@ class Metadata(Service):
         """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
 
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
         return r.json()
 
     def summary(self, const_id=None, sat_id=None, date='acquired', part=None,
@@ -141,9 +138,6 @@ class Metadata(Service):
 
         r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
         return r.json()
 
     def search(self, const_id=None, sat_id=None, date='acquired', place=None,
@@ -233,9 +227,6 @@ class Metadata(Service):
             kwargs['bbox'] = bbox
 
         r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         features = r.json()
 
@@ -349,8 +340,5 @@ class Metadata(Service):
              'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction', 'tile_id']
         """
         r = self.session.get('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
