@@ -14,7 +14,7 @@ Example Use Cases
 .. toctree::
    :maxdepth: 1
 
-   Land Cover <land_cover_demo.ipynb>
+   Land Cover <land_cover_demo>
 
 API Reference
 -------------
