@@ -19,7 +19,7 @@ import os
 import stat
 import json
 import argparse
-import getpass
+from six.moves import input
 
 from descarteslabs.auth import Auth, base64url_decode
 
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
         print('Follow this link to login https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token')
 
-        s = raw_input('...then come back here and paste the generated token: ')
+        s = input('...then come back here and paste the generated token: ')
 
         if s:
 

@@ -33,19 +33,14 @@ class Metadata(Service):
         """Get a list of image sources.
 
         Example::
+            >>> import descarteslabs as dl
+            >>> from pprint import pprint
+            >>> sources = dl.metadata.sources()
+            >>> pprint(sources)
+            [{'const_id': 'L8', 'sat_id': 'LANDSAT_8', 'value': 5}]
 
-            >>> metadata.sources()
-
-            [
-                {'const_id': 'RE', 'sat_id': 'RE-2', 'value': 10},
-                {'const_id': 'RE', 'sat_id': 'RE-5', 'value': 11},
-                ...
-            ]
         """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
 
@@ -70,33 +65,21 @@ class Metadata(Service):
 
         Example usage::
 
-            >>> metadata.summary(place='north-america_united-states_iowa',
-                    const_id=['L8'], part='year')
-
-            [{'bytes': 187707322653,
-                'const_id': 'L8',
-                'count': 1509,
-                'items': [{'bytes': 31765777640,
-                    'count': 272,
-                    'date': '2013-01-01T00:00:00',
-                    'pixels': 65348414912},
-                {'bytes': 48481543735,
-                    'count': 385,
-                    'date': '2014-01-01T00:00:00',
-                    'pixels': 94197206464},
-                {'bytes': 47936802649,
-                    'count': 387,
-                    'date': '2015-01-01T00:00:00',
-                    'pixels': 94688657728},
-                {'bytes': 49918583944,
-                    'count': 391,
-                    'date': '2016-01-01T00:00:00',
-                    'pixels': 95671624320},
-                {'bytes': 9604614685,
-                    'count': 74,
-                    'date': '2017-01-01T00:00:00',
-                    'pixels': 18087390976}],
-                'pixels': 367993294400}]
+            >>> import descarteslabs as dl
+            >>> from pprint import  pprint
+            >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', const_id=['L8'], part='year'))
+            {'bytes': 755354655,
+             'const_id': ['L8'],
+             'count': 6,
+             'items': [{'bytes': 93298309,
+                'count': 1,
+                'date': '2016-01-01T00:00:00',
+                'pixels': 250508160},
+               {'bytes': 662056346,
+                'count': 5,
+                'date': '2017-01-01T00:00:00',
+                'pixels': 1230729728}],
+             'pixels': 1481237888}
         """
         if place:
             places = Places()
@@ -155,9 +138,6 @@ class Metadata(Service):
 
         r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
         return r.json()
 
     def search(self, const_id=None, sat_id=None, date='acquired', place=None,
@@ -186,11 +166,13 @@ class Metadata(Service):
 
         Example::
 
-            >>> scenes = metadata.search(place='north-america_united-states_iowa', const_id=['L8'],
-                    start_time='2016-07-01', end_time='2016-07-31 23:59:59')
-                len(scenes['features'])
-
-            34
+            >>> import descarteslabs as dl
+            >>> scenes = dl.metadata.search(place='north-america_united-states_iowa', \
+                                         const_id=['L8'], \
+                                         start_time='2016-07-01', \
+                                         end_time='2016-07-31 23:59:59')
+            >>> len(scenes['features'])
+            1
         """
         if place:
             places = Places()
@@ -246,9 +228,6 @@ class Metadata(Service):
 
         r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
-
         features = r.json()
 
         result = {'type': 'FeatureCollection'}
@@ -285,15 +264,17 @@ class Metadata(Service):
 
         Example::
 
-            >>> metadata.keys(place='north-america_united-states_iowa', const_id=['L8'],
-                    start_time='2016-07-01', end_time='2016-07-31 23:59:59')
+            >>> import descarteslabs as dl
+            >>> keys = dl.metadata.keys(place='north-america_united-states_iowa', \
+                                 const_id=['L8'], \
+                                 start_time='2016-07-01', \
+                                 end_time='2016-07-31 23:59:59')
+            >>> len(keys)
+            1
 
-            [
-                'meta_LC80260322016213_v1',
-                'meta_LC80260312016213_v1',
-                'meta_LC80260302016213_v1',
-                ...
-            ]
+            >>> keys
+            ['meta_LC80270312016188_v1']
+
         """
         result = self.search(sat_id=sat_id, const_id=const_id, date=date,
                              place=place, geom=geom, start_time=start_time,
@@ -347,18 +328,17 @@ class Metadata(Service):
 
         Example::
 
-            >>> metadata.get('meta_LC82000452016168_v1')
-
-            {
-                'acquired': '2016-06-16T10:54:16.400121Z',
-                'area': 35518.2,
-                'bits_per_pixel': [0.804, 0.803, 0.636],
-                ...
-            }
+            >>> import descarteslabs as dl
+            >>> meta = dl.metadata.get('meta_LC80270312016188_v1')
+            >>> keys = list(meta.keys())
+            >>> keys.sort()
+            >>> keys
+            ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket', 'cloud_fraction',
+             'cloud_fraction_0', 'cs_code', 'descartes_version', 'file_md5s', 'file_sizes', 'files',
+             'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'identifier', 'processed',
+             'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id',
+             'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction', 'tile_id']
         """
         r = self.session.get('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()

@@ -85,59 +85,27 @@ class Raster(Service):
         Example::
 
             >>> import descarteslabs as dl
+            >>> from pprint import pprint
             >>> iowa = dl.places.shape("north-america_united-states_iowa")
-            >>> dltiles = dl.raster.dltiles_from_shape(30.0, 2048, 16, iowa)
+            >>> tiles = dl.raster.dltiles_from_shape(30.0, 2048, 16, iowa)
+            >>> pprint(tiles['features'][0])
+            {'geometry': {'coordinates': [[[-96.81264975325391, 41.04520331997488],
+                                           [-96.07101667769165, 41.02873098011615],
+                                           [-96.04576296033328, 41.590072611375206],
+                                           [-96.79377566762062, 41.606871549447824],
+                                           [-96.81264975325391, 41.04520331997488]]],
+                          'type': 'Polygon'},
+             'properties': {'cs_code': 'EPSG:32614',
+                            'key': '2048:16:30.0:14:3:74',
+                            'outputBounds': [683840.0, 4546080.0, 746240.0, 4608480.0],
+                            'pad': 16,
+                            'resolution': 30.0,
+                            'ti': 3,
+                            'tilesize': 2048,
+                            'tj': 74,
+                            'zone': 14},
+             'type': 'Feature'}
 
-            {u'features': [{u'geometry': {u'coordinates': [[[-96.81264975325391,
-                                                             41.04520331997488],
-                                                            [-96.07101667769165,
-                                                             41.02873098011615],
-                                                            [-96.04576296033328,
-                                                             41.590072611375206],
-                                                            [-96.79377566762062,
-                                                             41.606871549447824],
-                                                            [-96.81264975325391,
-                                                             41.04520331997488]]],
-                                          u'type': u'Polygon'},
-                            u'properties': {u'cs_code': u'EPSG:32614',
-                                            u'key': u'2048:16:30.0:14:3:74',
-                                            u'outputBounds': [683840.0,
-                                                              4546080.0,
-                                                              746240.0,
-                                                              4608480.0],
-                                            u'pad': 16,
-                                            u'resolution': 30.0,
-                                            u'ti': 3,
-                                            u'tilesize': 2048,
-                                            u'tj': 74,
-                                            u'zone': 14},
-                            u'type': u'Feature'},
-                            ...
-                           {u'geometry': {u'coordinates': [[[-90.77496392262168,
-                                                             42.151198256875574],
-                                                            [-90.02059316072575,
-                                                             42.13407738909369],
-                                                            [-89.99388553227165,
-                                                             42.695284716744936],
-                                                            [-90.75500239840237,
-                                                             42.71274349523935],
-                                                            [-90.77496392262168,
-                                                             42.151198256875574]]],
-                                          u'type': u'Polygon'},
-                            u'properties': {u'cs_code': u'EPSG:32615',
-                                            u'key': u'2048:16:30.0:15:3:76',
-                                            u'outputBounds': [683840.0,
-                                                              4668960.0,
-                                                              746240.0,
-                                                              4731360.0],
-                                            u'pad': 16,
-                                            u'resolution': 30.0,
-                                            u'ti': 3,
-                                            u'tilesize': 2048,
-                                            u'tj': 76,
-                                            u'zone': 15},
-                            u'type': u'Feature'}],
-             u'type': u'FeatureCollection'}
         """
 
         shape = as_json_string(shape)
@@ -172,24 +140,24 @@ class Raster(Service):
         Example::
 
             >>> import descarteslabs as dl
-            >>> dl.raster.dltile_from_latlon(45, 60, 15.0, 1024, 16)
-
-            {u'geometry': {u'coordinates': [[[59.88428127486957, 44.89851158838881],
-                                            [60.084634558186266, 44.903806716073376],
-                                            [60.07740397456606, 45.04621255053833],
-                                            [59.87655568676388, 45.04089121582091],
-                                            [59.88428127486957, 44.89851158838881]]],
-                        u'type': u'Polygon'},
-            u'properties': {u'cs_code': u'EPSG:32641',
-                            u'key': u'1024:16:15.0:41:-16:324',
-                            u'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
-                            u'pad': 16,
-                            u'resolution': 15.0,
-                            u'ti': -16,
-                            u'tilesize': 1024,
-                            u'tj': 324,
-                            u'zone': 41},
-            u'type': u'Feature'}
+            >>> from pprint import pprint
+            >>> pprint(dl.raster.dltile_from_latlon(45, 60, 15.0, 1024, 16))
+            {'geometry': {'coordinates': [[[59.88428127486957, 44.89851158838881],
+                                           [60.084634558186266, 44.903806716073376],
+                                           [60.07740397456606, 45.04621255053833],
+                                           [59.87655568676388, 45.04089121582091],
+                                           [59.88428127486957, 44.89851158838881]]],
+                          'type': 'Polygon'},
+            'properties': {'cs_code': 'EPSG:32641',
+                           'key': '1024:16:15.0:41:-16:324',
+                           'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
+                           'pad': 16,
+                           'resolution': 15.0,
+                           'ti': -16,
+                           'tilesize': 1024,
+                           'tj': 324,
+                           'zone': 41},
+            'type': 'Feature'}
         """
         params = {
             'resolution': resolution,
@@ -199,9 +167,6 @@ class Raster(Service):
 
         r = self.session.get('%s/dlkeys/from_latlon/%f/%f' % (self.url, lat, lon),
                              params=params, timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
 
@@ -216,31 +181,27 @@ class Raster(Service):
         Example::
 
             >>> import descarteslabs as dl
-            >>> dl.raster.dltile("1024:16:15.0:41:-16:324")
-
-            {u'geometry': {u'coordinates': [[[59.88428127486957, 44.89851158838881],
-                                             [60.084634558186266, 44.903806716073376],
-                                             [60.07740397456606, 45.04621255053833],
-                                             [59.87655568676388, 45.04089121582091],
-                                             [59.88428127486957, 44.89851158838881]]],
-                           u'type': u'Polygon'},
-             u'properties': {u'cs_code': u'EPSG:32641',
-                             u'key': u'1024:16:15.0:41:-16:324',
-                             u'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
-                             u'pad': 16,
-                             u'resolution': 15.0,
-                             u'ti': -16,
-                             u'tilesize': 1024,
-                             u'tj': 324,
-                             u'zone': 41},
-             u'type': u'Feature'}
-
+            >>> from pprint import pprint
+            >>> pprint(dl.raster.dltile("1024:16:15.0:41:-16:324"))
+            {'geometry': {'coordinates': [[[59.88428127486957, 44.89851158838881],
+                                           [60.084634558186266, 44.903806716073376],
+                                           [60.07740397456606, 45.04621255053833],
+                                           [59.87655568676388, 45.04089121582091],
+                                           [59.88428127486957, 44.89851158838881]]],
+                          'type': 'Polygon'},
+             'properties': {'cs_code': 'EPSG:32641',
+                            'key': '1024:16:15.0:41:-16:324',
+                            'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
+                            'pad': 16,
+                            'resolution': 15.0,
+                            'ti': -16,
+                            'tilesize': 1024,
+                            'tj': 324,
+                            'zone': 41},
+             'type': 'Feature'}
         """
 
         r = self.session.get('%s/dlkeys/%s' % (self.url, key), timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return r.json()
 
@@ -394,9 +355,6 @@ class Raster(Service):
         }
 
         r = self.session.post('%s/npz' % (self.url), json=params, timeout=self.TIMEOUT)
-
-        if r.status_code != 200:
-            raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         io = BytesIO(r.content)
         npz = np.load(io)
