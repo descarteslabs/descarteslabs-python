@@ -8,6 +8,14 @@ Welcome to DescartesLabs's platform!
    Getting Started <getting_started>
    Introduction to Places <places>
 
+Example Use Cases
+-----------------
+
+.. toctree::
+   :maxdepth: 1
+
+   Land Cover <land_cover_demo>
+
 API Reference
 -------------
 
@@ -18,6 +26,7 @@ method, this part of the documentation is for you.
    :maxdepth: 2
 
    api
+
 
 Indices and tables
 ==================
