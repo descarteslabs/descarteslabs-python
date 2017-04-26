@@ -42,6 +42,11 @@ class TestMetadata(unittest.TestCase):
         for feature in r['features']:
             self.assertLess(feature['properties']['cloud_fraction'], 0.5)
 
+        r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', sat_id='LANDSAT_8',
+                                 cloud_fraction=0.0)
+        for feature in r['features']:
+            self.assertEqual(feature['properties']['cloud_fraction'], 0.0)
+
     def test_const_id(self):
         r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', const_id=['L8'])
         self.assertGreater(len(r['features']), 0)
