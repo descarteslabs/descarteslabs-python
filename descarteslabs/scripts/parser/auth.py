@@ -55,7 +55,6 @@ def auth_handler(args):
             # Get a fresh Auth token
             auth = dl.Auth()
             dl.metadata.auth = auth
-            
             keys = dl.metadata.keys()
 
             name = auth.payload['name']
