@@ -19,7 +19,7 @@ import os
 from setuptools import setup, find_packages
 
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 
 def do_setup():
@@ -54,10 +54,16 @@ def do_setup():
         'descarteslabs/scripts/descarteslabs',
     ]
     kwargs['install_requires'] = [
-        "requests",
         "cachetools",
         "six",
     ]
+
+    # Python < 2.7.9 needs requests[security] to avoid SSL issues
+    if sys.version_info[0:3] >= (2, 7, 9):
+        kwargs["install_requires"].append('requests')
+    else:
+        kwargs["install_requires"].append('requests[security]')
+
     kwargs['license'] = 'Apache 2.0',
     kwargs['zip_safe'] = False
 
