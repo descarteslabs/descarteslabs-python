@@ -57,10 +57,16 @@ def do_setup():
         'descarteslabs/scripts/metadata',
     ]
     kwargs['install_requires'] = [
-        "requests",
         "cachetools",
         "six",
     ]
+
+    # Python < 2.7.9 needs requests[security] to avoid SSL issues
+    if sys.version_info[0:3] >= (2, 7, 9):
+        kwargs["install_requires"].append('requests')
+    else:
+        kwargs["install_requires"].append('requests[security]')
+
     kwargs['license'] = 'Apache 2.0',
     kwargs['zip_safe'] = False
 
