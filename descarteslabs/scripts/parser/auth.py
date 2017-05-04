@@ -52,9 +52,11 @@ def auth_handler(args):
 
             os.chmod(file, stat.S_IRUSR | stat.S_IWUSR)
 
-            # Get a fresh Metadata that forces a new token off the
-            # new token_info.json
-            keys = dl.Metadata().keys()
+            # Get a fresh Auth token
+            auth = dl.Auth()
+            dl.metadata.auth = auth
+            
+            keys = dl.metadata.keys()
 
             name = auth.payload['name']
             groups = ', '.join(auth.payload['groups'])
