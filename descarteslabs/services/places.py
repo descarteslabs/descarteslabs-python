@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import operator
+import os
 from functools import partial
 from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
@@ -23,11 +24,14 @@ class Places(Service):
     TIMEOUT = 120
     """Places and statistics service https://iam.descarteslabs.com/service/waldo"""
 
-    def __init__(self, url='https://platform-services.descarteslabs.com/waldo', token=None, maxsize=10, ttl=600):
+    def __init__(self, url=None, token=None, maxsize=10, ttl=600):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        if url is None:
+            url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform-services.descarteslabs.com/waldo")
+
         Service.__init__(self, url, token)
         self.cache = TTLCache(maxsize, ttl)
 

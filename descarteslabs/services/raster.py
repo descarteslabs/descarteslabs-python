@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import base64
+import os
 from io import BytesIO
 import json
 import warnings
@@ -27,15 +28,14 @@ class Raster(Service):
     """Raster"""
     TIMEOUT = 300
 
-    def __init__(
-            self,
-            url='https://platform-services.descarteslabs.com/raster',
-            token=None
-    ):
+    def __init__(self, url=None, token=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        if url is None:
+            url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform-services.descarteslabs.com/raster")
+
         Service.__init__(self, url, token)
 
     def get_bands_by_key(self, key):
