@@ -26,7 +26,7 @@ from .places import Places
 
 class Raster(Service):
     """Raster"""
-    TIMEOUT = 300
+    TIMEOUT = (9.5, 300)
 
     def __init__(self, url=None, token=None):
         """The parent Service class implements authentication and exponential

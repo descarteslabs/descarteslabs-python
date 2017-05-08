@@ -38,7 +38,7 @@ class WrappedSession(requests.Session):
 
 
 class Service:
-    TIMEOUT = 30
+    TIMEOUT = (9.5, 30)
 
     def __init__(self, url, token):
         self.auth = descartes_auth
