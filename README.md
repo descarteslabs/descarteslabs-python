@@ -33,7 +33,7 @@ Documentation
 The latest build of the documentation can be found on [readthedocs](http://descartes-labs-python.readthedocs.io/en/latest/)
 
 Changelog
----------
+=========
 
 ## [Unreleased]
 ### Added
