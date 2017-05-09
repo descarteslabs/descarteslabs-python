@@ -34,7 +34,7 @@ class Raster(Service):
         of the backing service.
         """
         if url is None:
-            url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform-services.descarteslabs.com/raster")
+            url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform-services.descarteslabs.com/raster/v1")
 
         Service.__init__(self, url, token)
 
@@ -76,7 +76,7 @@ class Raster(Service):
 
         :param float resolution: Resolution of DLTile
         :param int tilesize: Number of valid pixels per DLTile
-        :param int pad: Number of ghost pixels per DLTile
+        :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
         :param str shape: A GeoJSON geometry specifying a shape over
             which to intersect DLTiles.
 
@@ -128,12 +128,11 @@ class Raster(Service):
         """
         Return a DLTile GeoJSON Feature that covers a latitude/longitude
 
-        :param float lat: Resolution of DLTile
+        :param float lat: Requested latitude
+        :param float lon: Requested longitude
         :param float resolution: Resolution of DLTile
         :param int tilesize: Number of valid pixels per DLTile
-        :param int pad: Number of ghost pixels per DLTile
-        :param str shape: A GeoJSON geometry specifying a shape over
-            which to intersect DLTiles.
+        :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
 
         :return: A DLTile GeoJSON Feature
 
@@ -259,8 +258,10 @@ class Raster(Service):
         :param str output_format: Output format (`GTiff`, `PNG`, ...).
         :param str data_type: Output data type (`Byte`, `UInt8`, `UInt16`, `Float32`, etc).
         :param str srs: Output spatial reference system definition understood by GDAL.
-        :param float resolution: Desired resolution in output SRS units.
-        :param tuple outsize: Desired output (width, height) in pixels.
+        :param float resolution: Desired resolution in output SRS units. Incompatible with
+            `dimensions`
+        :param tuple dimensions: Desired output (width, height) in pixels. Incompatible with
+            `resolution`
         :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
@@ -325,8 +326,27 @@ class Raster(Service):
     ):
         """Retrieve a raster as a NumPy array.
 
-        See :meth:`raster` for more information.
-
+        :param inputs: List of :class:`Metadata` identifiers.
+        :param bands: List of requested bands.
+        :param scales: List of tuples specifying the scaling to be applied to each band.
+            If no scaling is desired for a band, use ``None`` where appropriate. If a
+            tuple contains four elements, the last two will be used as the output range.
+            For example, ``(0, 10000, 0, 128)`` would scale the source values 0-10000 to
+            be returned as 0-128 in the output.
+        :param str data_type: Output data type (`Byte`, `UInt8`, `UInt16`, `Float32`, etc).
+        :param str srs: Output spatial reference system definition understood by GDAL.
+        :param float resolution: Desired resolution in output SRS units. Incompatible with
+            `dimensions`
+        :param tuple dimensions: Desired output (width, height) in pixels. Incompatible with
+            `resolution`
+        :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
+        :param str place: A slug identifier to be used as a cutline.
+        :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
+        :param str bounds_srs: Override the coordinate system in which bounds are expressed.
+        :param bool align_pixels: Align pixels to the target coordinate system.
+        :param str resampler: Resampling algorithm to be used during warping (``near``,
+            ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
+            ``max``, ``min``, ``med``, ``q1``, ``q3``).
         :param str order: Order of the returned array. `image` returns arrays as
             ``(row, column, band)`` while `gdal` returns arrays as ``(band, row, column)``.
 
