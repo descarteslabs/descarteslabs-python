@@ -29,7 +29,8 @@ class Metadata(Service):
         of the backing service.
         """
         if url is None:
-            url = os.environ.get("DESCARTESLABS_METADATA_URL", "https://platform-services.descarteslabs.com/runcible/v1")
+            url = os.environ.get("DESCARTESLABS_METADATA_URL",
+                                 "https://platform-services.descarteslabs.com/runcible/v1")
 
         Service.__init__(self, url, token)
 
