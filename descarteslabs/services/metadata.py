@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import os
 from six import string_types
 from .service import Service
 from .places import Places
@@ -22,11 +23,14 @@ class Metadata(Service):
     TIMEOUT = 120
     """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
 
-    def __init__(self, url='https://platform-services.descarteslabs.com/runcible', token=None):
+    def __init__(self, url=None, token=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        if url is None:
+            url = os.environ.get("DESCARTESLABS_METADATA_URL", "https://platform-services.descarteslabs.com/runcible")
+
         Service.__init__(self, url, token)
 
     def sources(self):
@@ -121,13 +125,13 @@ class Metadata(Service):
         if end_time:
             kwargs['end_time'] = end_time
 
-        if cloud_fraction:
+        if cloud_fraction is not None:
             kwargs['cloud_fraction'] = cloud_fraction
 
-        if cloud_fraction_0:
+        if cloud_fraction_0 is not None:
             kwargs['cloud_fraction_0'] = cloud_fraction_0
 
-        if fill_fraction:
+        if fill_fraction is not None:
             kwargs['fill_fraction'] = fill_fraction
 
         if params:
@@ -211,13 +215,13 @@ class Metadata(Service):
         if end_time:
             kwargs['end_time'] = end_time
 
-        if cloud_fraction:
+        if cloud_fraction is not None:
             kwargs['cloud_fraction'] = cloud_fraction
 
-        if cloud_fraction_0:
+        if cloud_fraction_0 is not None:
             kwargs['cloud_fraction_0'] = cloud_fraction_0
 
-        if fill_fraction:
+        if fill_fraction is not None:
             kwargs['fill_fraction'] = fill_fraction
 
         if params:

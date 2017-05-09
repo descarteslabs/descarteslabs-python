@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import base64
+import os
 from io import BytesIO
 import json
 import warnings
@@ -27,15 +28,14 @@ class Raster(Service):
     """Raster"""
     TIMEOUT = 300
 
-    def __init__(
-            self,
-            url='https://platform-services.descarteslabs.com/raster',
-            token=None
-    ):
+    def __init__(self, url=None, token=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        if url is None:
+            url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform-services.descarteslabs.com/raster")
+
         Service.__init__(self, url, token)
 
     def get_bands_by_key(self, key):
@@ -76,7 +76,7 @@ class Raster(Service):
 
         :param float resolution: Resolution of DLTile
         :param int tilesize: Number of valid pixels per DLTile
-        :param int pad: Number of ghost pixels per DLTile
+        :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
         :param str shape: A GeoJSON geometry specifying a shape over
             which to intersect DLTiles.
 
@@ -128,12 +128,11 @@ class Raster(Service):
         """
         Return a DLTile GeoJSON Feature that covers a latitude/longitude
 
-        :param float lat: Resolution of DLTile
+        :param float lat: Requested latitude
+        :param float lon: Requested longitude
         :param float resolution: Resolution of DLTile
         :param int tilesize: Number of valid pixels per DLTile
-        :param int pad: Number of ghost pixels per DLTile
-        :param str shape: A GeoJSON geometry specifying a shape over
-            which to intersect DLTiles.
+        :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
 
         :return: A DLTile GeoJSON Feature
 
