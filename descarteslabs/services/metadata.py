@@ -125,13 +125,13 @@ class Metadata(Service):
         if end_time:
             kwargs['end_time'] = end_time
 
-        if cloud_fraction:
+        if cloud_fraction is not None:
             kwargs['cloud_fraction'] = cloud_fraction
 
-        if cloud_fraction_0:
+        if cloud_fraction_0 is not None:
             kwargs['cloud_fraction_0'] = cloud_fraction_0
 
-        if fill_fraction:
+        if fill_fraction is not None:
             kwargs['fill_fraction'] = fill_fraction
 
         if params:
@@ -215,13 +215,13 @@ class Metadata(Service):
         if end_time:
             kwargs['end_time'] = end_time
 
-        if cloud_fraction:
+        if cloud_fraction is not None:
             kwargs['cloud_fraction'] = cloud_fraction
 
-        if cloud_fraction_0:
+        if cloud_fraction_0 is not None:
             kwargs['cloud_fraction_0'] = cloud_fraction_0
 
-        if fill_fraction:
+        if fill_fraction is not None:
             kwargs['fill_fraction'] = fill_fraction
 
         if params:
