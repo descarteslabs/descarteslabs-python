@@ -16,7 +16,7 @@ convenience script to help you log in.
 ```bash
 $ python setup.py install
 $ pip install -r requirements.txt
-$ descarteslabs login
+$ descarteslabs auth login
 ```
 
 For non-interactive environments, one needs to set the CLIENT_ID and CLIENT_SECRET 
@@ -31,6 +31,49 @@ $ export CLIENT_SECRET=...
 Documentation
 -------------
 The latest build of the documentation can be found on [readthedocs](http://descartes-labs-python.readthedocs.io/en/latest/)
+
+Changelog
+=========
+
+## [Unreleased]
+### Added
+- A Changelog
+- Testing around command-line scripts
+
+### Changed
+- API Change `descarteslabs`, `raster`, `metadata` have all been merged into
+ '`descarteslabs`'. '`descarteslabs login`' is now '`descarteslabs auth
+ login`', '`raster`'' is now '`descarteslabs raster`', etc.
+
+### Fixes
+- Searching with cloud\_fraction = 0
+- dltile API documentation
+
+## [0.2.2] - 2017-05-04
+### Fixes
+- Fix login bug
+- Installation of "requests\[security\]" for python < 2.7.9
+
+## [0.2.1] - 2017-04-18
+### Added
+- Doctests
+
+### Fixes
+- Python 3 login bug
+
+## [0.2.0] - 2017-04-11
+### Added
+- Search by Fractions
+
+## [0.1.0] - 2017-03-24
+### Added
+- Initial release of client library
+
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/descarteslabs/descarteslabs-python/releases/tag/v0.1.0
 
 FAQ
 ---

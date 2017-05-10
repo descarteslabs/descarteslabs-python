@@ -14,29 +14,12 @@
 # limitations under the License.
 
 from __future__ import print_function
-
 import json
-import argparse
 
 import descarteslabs as dl
 
-if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('command', choices=['find', 'shape', 'prefix', 'placetypes'],
-                        help='The action to take.')
-    parser.add_argument('argument', nargs='?')
-
-    parser.add_argument('-url', help='The url of the service')
-    parser.add_argument('-placetype', default=None, help='The placetype of the response')
-    parser.add_argument('-geom', default='low',
-                        choices=['low', 'medium', 'high', "None"],
-                        help='Resolution of shape')
-    parser.add_argument("-output", default='geojson')
-
-    args = parser.parse_args()
-
+def places_handler(args):
     if args.geom == "None":
         args.geom = None
 
@@ -67,7 +50,6 @@ if __name__ == "__main__":
         print(json.dumps(find, indent=2))
 
     if args.command == 'shape':
-
         kwargs['geom'] = args.geom
         shape = places.shape(args.argument, **kwargs)
 
