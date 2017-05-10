@@ -20,7 +20,7 @@ from .places import Places
 
 
 class Metadata(Service):
-    TIMEOUT = 120
+    TIMEOUT = (9.5, 120)
     """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
 
     def __init__(self, url=None, token=None):
