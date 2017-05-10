@@ -21,7 +21,7 @@ from .service import Service
 
 
 class Places(Service):
-    TIMEOUT = 120
+    TIMEOUT = (9.5, 120)
     """Places and statistics service https://iam.descarteslabs.com/service/waldo"""
 
     def __init__(self, url=None, token=None, maxsize=10, ttl=600):
@@ -30,7 +30,7 @@ class Places(Service):
         of the backing service.
         """
         if url is None:
-            url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform-services.descarteslabs.com/waldo")
+            url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform-services.descarteslabs.com/waldo/v1")
 
         Service.__init__(self, url, token)
         self.cache = TTLCache(maxsize, ttl)

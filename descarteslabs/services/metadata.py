@@ -20,7 +20,7 @@ from .places import Places
 
 
 class Metadata(Service):
-    TIMEOUT = 120
+    TIMEOUT = (9.5, 120)
     """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
 
     def __init__(self, url=None, token=None):
@@ -29,7 +29,8 @@ class Metadata(Service):
         of the backing service.
         """
         if url is None:
-            url = os.environ.get("DESCARTESLABS_METADATA_URL", "https://platform-services.descarteslabs.com/runcible")
+            url = os.environ.get("DESCARTESLABS_METADATA_URL",
+                                 "https://platform-services.descarteslabs.com/runcible/v1")
 
         Service.__init__(self, url, token)
 
