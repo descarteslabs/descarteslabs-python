@@ -36,14 +36,16 @@ Changelog
 =========
 
 ## [Unreleased]
-### Added
-- A Changelog
-- Testing around command-line scripts
 
+## [0.3.0] - 2017-05-15
 ### Changed
 - API Change `descarteslabs`, `raster`, `metadata` have all been merged into
  '`descarteslabs`'. '`descarteslabs login`' is now '`descarteslabs auth
  login`', '`raster`'' is now '`descarteslabs raster`', etc.
+
+### Added
+- A Changelog
+- Testing around command-line scripts
 
 ### Fixes
 - Searching with cloud\_fraction = 0
