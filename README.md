@@ -37,6 +37,11 @@ Changelog
 
 ## [Unreleased]
 
+## [0.3.1] - 2017-05-17
+### Fixes
+- Fix python 3 command line compatibility
+
+
 ## [0.3.0] - 2017-05-15
 ### Changed
 - API Change `descarteslabs`, `raster`, `metadata` have all been merged into
@@ -71,7 +76,8 @@ Changelog
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.3.2...v0.3.1
 [0.3.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.2.0...v0.2.1
