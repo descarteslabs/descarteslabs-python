@@ -17,6 +17,7 @@ from __future__ import print_function
 import os
 import stat
 import json
+import six
 from six.moves import input
 
 from descarteslabs.auth import Auth, base64url_decode
@@ -33,6 +34,8 @@ def auth_handler(args):
             'Follow this link to login https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token')   # NOQA
 
         s = input('...then come back here and paste the generated token: ')
+        if isinstance(s, six.text_type):
+            s = s.encode('utf-8')
 
         if s:
 
