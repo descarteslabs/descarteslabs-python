@@ -72,7 +72,8 @@ class Metadata(Service):
 
             >>> import descarteslabs as dl
             >>> from pprint import  pprint
-            >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', const_id=['L8'], start_time='2016-07-06', end_time='2016-07-07', part='hour'))
+            >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', const_id=['L8'], 
+                    start_time='2016-07-06', end_time='2016-07-07', part='hour'))
             {'bytes': 93298309,
              'const_id': ['L8'],
              'count': 1,
