@@ -32,6 +32,13 @@ class TestMetadata(unittest.TestCase):
         r = self.instance.search()
         self.assertGreater(len(r['features']), 0)
 
+    def test_search_dltile(self):
+        dltile = "256:16:30.0:15:-11:591"
+        r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07',
+                                 const_id=['L8'], dltile=dltile)
+        ids = [f['id'] for f in r['features']]
+        self.assertTrue('meta_LC80270312016188_v1' in ids)
+
     def test_sat_id(self):
         r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', sat_id='LANDSAT_8')
         self.assertGreater(len(r['features']), 0)
