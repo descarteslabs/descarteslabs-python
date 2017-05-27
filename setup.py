@@ -40,7 +40,7 @@ def do_setup():
     kwargs['author'] = 'Descartes Labs'
     kwargs['author_email'] = 'hello@descarteslabs.com'
     kwargs['url'] = 'https://github.com/descarteslabs/descarteslabs-python'
-    kwargs['download_url'] = "https://github.com/descarteslabs/descarteslabs-python/archive/v%s.tar.gz" % __version__
+    kwargs['download_url'] = "https://github.com/descarteslabs/descarteslabs-python/archive/v%s.tar.gz" % version
 
     clssfrs = [
         "Programming Language :: Python",
