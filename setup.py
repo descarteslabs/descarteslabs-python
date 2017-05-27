@@ -14,13 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
 import sys
 import os
+import re
 from setuptools import setup, find_packages
 
-
-__version__ = "0.3.1"
-
+# Parse version out of descarteslabs/__init__.py
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+with open('descarteslabs/__init__.py', 'rb') as f:
+    version = str(ast.literal_eval(_version_re.search(
+        f.read().decode('utf-8')).group(1))
+    )
 
 def do_setup():
     src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -47,7 +52,7 @@ def do_setup():
         "Programming Language :: Python :: 3.6",
     ]
     kwargs['classifiers'] = clssfrs
-    kwargs['version'] = __version__
+    kwargs['version'] = version
     kwargs['packages'] = find_packages('.')
     kwargs['package_data'] = {'descarteslabs.services': ['gd_bundle-g2-g1.crt']}
     kwargs['scripts'] = [
