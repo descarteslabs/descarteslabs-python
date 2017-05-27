@@ -27,6 +27,7 @@ with open('descarteslabs/__init__.py', 'rb') as f:
         f.read().decode('utf-8')).group(1))
     )
 
+
 def do_setup():
     src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     old_path = os.getcwd()
