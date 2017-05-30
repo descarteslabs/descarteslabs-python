@@ -6,7 +6,7 @@ python:
 before_install:
 - pip install --upgrade pip
 install:
-- pip install -r requirements.txt
+- pip install --upgrade -r requirements.txt
 - pip install .
 - pip install flake8 coverage nose mock
 script:
