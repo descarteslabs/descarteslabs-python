@@ -19,5 +19,9 @@ class BadRequestError(ServerError):
     status = 400
 
 
+class NotFoundError(ServerError):
+    status = 404
+
+
 class RateLimitError(ServerError):
     status = 429
