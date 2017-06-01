@@ -1,5 +1,5 @@
-Welcome to DescartesLabs's platform!
-====================================
+Welcome to the Descartes Labs Platform
+======================================
 
 .. toctree::
    :maxdepth: 2
@@ -15,6 +15,8 @@ Example Use Cases
    :maxdepth: 1
 
    Land Cover <land_cover_demo>
+   Tracking Wildfires <http://nbviewer.jupyter.org/urls/storage.googleapis.com/dl-public-notebooks/wildfire_assessment_demo.ipynb>
+
 
 API Reference
 -------------
@@ -34,3 +36,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
