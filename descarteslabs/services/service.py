@@ -20,7 +20,7 @@ from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
 from descarteslabs import descartes_auth
-from descarteslabs.exceptions import ServerError, BadRequestError, RateLimitError
+from descarteslabs.exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError
 
 
 class WrappedSession(requests.Session):
@@ -31,6 +31,8 @@ class WrappedSession(requests.Session):
             return resp
         elif resp.status_code == 400:
             raise BadRequestError(resp.text)
+        elif resp.status_code == 404:
+            raise NotFoundError(resp.text)
         elif resp.status_code == 429:
             raise RateLimitError(resp.text)
         else:
