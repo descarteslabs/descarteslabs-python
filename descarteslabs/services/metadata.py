@@ -297,10 +297,10 @@ class Metadata(Service):
         :return: Generator of GeoJSON ``Feature`` objects.
         """
         summary = self.summary(sat_id=sat_id, const_id=const_id, date=date,
-                              place=place, geom=geom, start_time=start_time,
-                              end_time=end_time, cloud_fraction=cloud_fraction,
-                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                              params=params, bbox=bbox)
+                               place=place, geom=geom, start_time=start_time,
+                               end_time=end_time, cloud_fraction=cloud_fraction,
+                               cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
+                               params=params, bbox=bbox)
 
         offset = 0
 
