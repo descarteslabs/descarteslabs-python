@@ -76,6 +76,12 @@ class TestMetadata(unittest.TestCase):
         self.assertIn('items', r)
         self.assertEqual(len(r['items']), 1)
 
+    def test_features(self):
+        r = self.instance.features(start_time='2016-07-06', end_time='2016-07-07', sat_id='LANDSAT_8',
+                                 place='europe', limit=20)
+        self.assertGreater(len(list(r)), 0)
+
+
 
 if __name__ == '__main__':
     unittest.main()
