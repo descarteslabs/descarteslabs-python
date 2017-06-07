@@ -296,32 +296,30 @@ class Metadata(Service):
 
         :return: Generator of GeoJSON ``Feature`` objects.
         """
-        result = self.summary(sat_id=sat_id, const_id=const_id, date=date,
-                              place=place, geom=geom, start_time=start_time,
-                              end_time=end_time, cloud_fraction=cloud_fraction,
-                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                              params=params, bbox=bbox)
+        summary = self.summary(sat_id=sat_id, const_id=const_id, date=date,
+                               place=place, geom=geom, start_time=start_time,
+                               end_time=end_time, cloud_fraction=cloud_fraction,
+                               cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
+                               params=params, bbox=bbox)
 
-        for summary in result:
+        offset = 0
 
-            offset = 0
+        count = summary['count']
 
-            count = summary['count']
+        while offset < count:
 
-            while offset < count:
+            features = self.search(sat_id=sat_id, const_id=const_id,
+                                   date=date, place=place, geom=geom,
+                                   start_time=start_time, end_time=end_time,
+                                   cloud_fraction=cloud_fraction,
+                                   cloud_fraction_0=cloud_fraction_0,
+                                   fill_fraction=fill_fraction, params=params,
+                                   limit=limit, offset=offset, bbox=bbox)
 
-                features = self.search(sat_id=sat_id, const_id=const_id,
-                                       date=date, place=place, geom=geom,
-                                       start_time=start_time, end_time=end_time,
-                                       cloud_fraction=cloud_fraction,
-                                       cloud_fraction_0=cloud_fraction_0,
-                                       fill_fraction=fill_fraction, params=params,
-                                       limit=limit, offset=offset, bbox=bbox)
+            offset = limit + offset
 
-                offset = limit + offset
-
-                for feature in features['features']:
-                    yield feature
+            for feature in features['features']:
+                yield feature
 
     def get(self, key):
         """Get metadata of a single image.
