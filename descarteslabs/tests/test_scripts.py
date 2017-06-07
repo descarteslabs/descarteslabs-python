@@ -59,7 +59,7 @@ class TestScripts(unittest.TestCase):
     def test_metadata_sources(self):
         with mock.patch('sys.stdout', new_callable=StringIO) as out:
             handle(parser.parse_args(["metadata", "sources"]))
-            sources = [{'value': 5, 'sat_id': 'LANDSAT_8', 'const_id': 'L8'}]
+            sources = [{'value': 89, 'sat_id': 'LANDSAT_8', 'const_id': 'L8'}]
             self.assertEqual(json.loads(out.getvalue().strip()), sources)
 
 
