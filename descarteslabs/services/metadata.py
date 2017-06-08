@@ -42,7 +42,7 @@ class Metadata(Service):
             >>> from pprint import pprint
             >>> sources = dl.metadata.sources()
             >>> pprint(sources)
-            [{'const_id': 'L8', 'sat_id': 'LANDSAT_8', 'value': 5}]
+            [{'const_id': 'L8', 'sat_id': 'LANDSAT_8', 'value': 89}]
 
         """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
