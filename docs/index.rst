@@ -1,5 +1,5 @@
-Welcome to DescartesLabs's platform!
-====================================
+Welcome to the Descartes Labs Platform
+======================================
 
 .. toctree::
    :maxdepth: 2
@@ -7,6 +7,7 @@ Welcome to DescartesLabs's platform!
    quickstart
    Getting Started <getting_started>
    Introduction to Places <places>
+   Using DLTiles to analyze large areas <DLTiles>
 
 Example Use Cases
 -----------------
@@ -15,6 +16,8 @@ Example Use Cases
    :maxdepth: 1
 
    Land Cover <land_cover_demo>
+   Tracking Wildfires <wildfire_assessment_demo>
+
 
 API Reference
 -------------
