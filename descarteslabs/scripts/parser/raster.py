@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from __future__ import print_function
+import os
 import argparse
 import json
 import descarteslabs as dl
@@ -49,6 +50,10 @@ def raster_handler(args):
     }
     response = dl.raster.raster(**params)
     for filename, data in six.iteritems(response['files']):
-        with open(filename, "wb") as f:
+        if args.outfile_basename:
+            outfilename = args.outfile_basename + os.path.splitext(filename)[1]
+        else:
+            outfilename = args.outfile_basename
+        with open(outfilename, "wb") as f:
             f.write(data)
     print(json.dumps(response['metadata'], indent=2))
