@@ -53,7 +53,7 @@ def raster_handler(args):
         if args.outfile_basename:
             outfilename = args.outfile_basename + os.path.splitext(filename)[1]
         else:
-            outfilename = args.outfile_basename
+            outfilename = filename
         with open(outfilename, "wb") as f:
             f.write(data)
     print(json.dumps(response['metadata'], indent=2))

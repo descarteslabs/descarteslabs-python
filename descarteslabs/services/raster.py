@@ -316,7 +316,7 @@ class Raster(Service):
                 if outfile_basename:
                     outfilename = outfile_basename + os.path.splitext(filename)[1]
                 else:
-                    outfilename = outfile_basename
+                    outfilename = filename
                 with open(outfilename, "wb") as f:
                     f.write(data)
 
