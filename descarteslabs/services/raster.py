@@ -314,9 +314,9 @@ class Raster(Service):
         if save:
             for filename, data in six.iteritems(json_resp['files']):
                 if outfile_basename:
-                    outfilename = args.outfile_basename + os.path.splitext(filename)[1]
+                    outfilename = outfile_basename + os.path.splitext(filename)[1]
                 else:
-                    outfilename = args.outfile_basename
+                    outfilename = outfile_basename
                 with open(outfilename, "wb") as f:
                     f.write(data)
 
