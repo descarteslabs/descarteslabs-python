@@ -96,7 +96,7 @@ class Metadata(Service):
                         'count': 1,
                         'date': '2016-07-06T16:00:00',
                         'pixels': 250508160,
-                        'timestamp': 1467820800}]
+                        'timestamp': 1467820800}],
              'pixels': 250508160,
              'products': ['landsat:LC08:PRE:TOAR']}
         """
@@ -345,10 +345,10 @@ class Metadata(Service):
             >>> keys = list(meta.keys())
             >>> keys.sort()
             >>> keys
-            ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket', 'cloud_fraction',
-             'cloud_fraction_0', 'cs_code', 'descartes_version', 'file_md5s', 'file_sizes', 'files',
-             'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'identifier', 'processed',
-             'product', 'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id',
+            ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket', 'cloud_fraction', \
+             'cloud_fraction_0', 'cs_code', 'descartes_version', 'file_md5s', 'file_sizes', 'files', \
+             'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'identifier', 'key', 'processed', \
+             'product', 'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id', \
              'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction', 'tile_id']
         """
         r = self.session.get('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
