@@ -29,6 +29,10 @@ class TestMetadata(unittest.TestCase):
         r = self.instance.sources()
         self.assertGreater(len(r), 0)
 
+    def test_products(self):
+        r = self.instance.products()
+        self.assertGreater(len(r), 0)
+
     def test_search(self):
         r = self.instance.search()
         self.assertGreater(len(r['features']), 0)
@@ -48,29 +52,34 @@ class TestMetadata(unittest.TestCase):
         for feature in r['features']:
             self.assertEqual(feature['properties']['cloud_fraction'], 0.0)
 
-    def test_const_id(self):
-        r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', const_id=['L8'])
+    def test_products_search(self):
+        r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', products=['landsat:LC08:PRE:TOAR'])
         self.assertGreater(len(r['features']), 0)
 
-    def test_multiple_const_id(self):
-        r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', const_id=['L8', 'L7'])
+    def test_multiple_products_search(self):
+        r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', products=['landsat:LE07:PRE:TOAR', 'landsat:LC08:PRE:TOAR'])
         self.assertGreater(len(r['features']), 0)
 
     def test_place(self):
-        r = self.instance.search(const_id=['L8'], place='north-america_united-states_iowa', limit=1)
+        r = self.instance.search(products=['landsat:LC08:PRE:TOAR'], place='north-america_united-states_iowa', limit=1)
         self.assertEqual(1, len(r['features']))
 
     def test_summary(self):
-        r = self.instance.summary(start_time='2016-07-06', end_time='2016-07-07', const_id=['L8'])
-        self.assertIn('const_id', r)
+        r = self.instance.summary(start_time='2016-07-06', end_time='2016-07-07', products=['landsat:LC08:PRE:TOAR'], pixels=True)
+        self.assertIn('products', r)
         self.assertIn('count', r)
         self.assertIn('pixels', r)
         self.assertIn('bytes', r)
         self.assertGreater(r['count'], 0)
 
     def test_summary_part(self):
-        r = self.instance.summary(start_time='2016-07-06', end_time='2016-07-07', const_id=['L8'], part='year')
-        self.assertIn('const_id', r)
+        r = self.instance.summary(
+                start_time='2016-07-06',
+                end_time='2016-07-07',
+                products=['landsat:LC08:PRE:TOAR'],
+                part='year',
+                pixels=True
+            )
         self.assertIn('count', r)
         self.assertIn('pixels', r)
         self.assertIn('bytes', r)

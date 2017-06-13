@@ -30,7 +30,7 @@ class Metadata(Service):
         """
         if url is None:
             url = os.environ.get("DESCARTESLABS_METADATA_URL",
-                                 "https://platform-services.descarteslabs.com/runcible/v1")
+                                 "https://platform-services-dev.descarteslabs.com/metadata/dev")
 
         Service.__init__(self, url, token)
 
@@ -42,19 +42,34 @@ class Metadata(Service):
             >>> from pprint import pprint
             >>> sources = dl.metadata.sources()
             >>> pprint(sources)
-            [{'const_id': 'L8', 'sat_id': 'LANDSAT_8', 'value': 89}]
+            [{'product': 'landsat:LC08:PRE:TOAR', 'sat_id': 'LANDSAT_8'}]
 
         """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
 
         return r.json()
 
-    def summary(self, const_id=None, sat_id=None, date='acquired', part=None,
+    def products(self):
+        """Get the list of product identifiers you have access to.
+
+        Example::
+            >>> import descarteslabs as dl
+            >>> from pprint import pprint
+            >>> products = dl.metadata.products()
+            >>> pprint(products)
+            ['landsat:LC08:PRE:TOAR']
+
+        """
+        r = self.session.get('%s/products/all' % self.url, timeout=self.TIMEOUT)
+
+        return r.json()
+
+    def summary(self, products=None, sat_id=None, date='acquired', part=None,
                 place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
-                cloud_fraction_0=None, fill_fraction=None, params=None, bbox=False):
+                cloud_fraction_0=None, fill_fraction=None, pixels=None, params=None):
         """Get a summary of the results for the specified spatio-temporal query.
 
-        :param list(str) const_id: Constellation identifier(s).
+        :param list(str) products: Product identifier(s).
         :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str part: Part of the date to aggregate over (e.g. `day`).
@@ -65,17 +80,17 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
-        :param bool bbox: If true, query by the bounding box of the region of interest.
+        :param bool pixels: Whether to include pixel counts in summary calculations.
         :param str params: JSON of additional query parameters.
 
         Example usage::
 
             >>> import descarteslabs as dl
             >>> from pprint import  pprint
-            >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', const_id=['L8'], \
-                    start_time='2016-07-06', end_time='2016-07-07', part='hour'))
+            >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', products=['landsat:LC08:PRE:TOAR'], \
+                    start_time='2016-07-06', end_time='2016-07-07', part='hour', pixels=True))
             {'bytes': 93298309,
-             'const_id': ['L8'],
+             'products': ['landsat:LC08:PRE:TOAR'],
              'count': 1,
              'items': [{'bytes': 93298309,
                         'count': 1,
@@ -101,12 +116,12 @@ class Metadata(Service):
 
             kwargs['sat_id'] = sat_id
 
-        if const_id:
+        if products:
 
-            if isinstance(const_id, string_types):
-                const_id = [const_id]
+            if isinstance(products, string_types):
+                products = [products]
 
-            kwargs['const_id'] = const_id
+            kwargs['products'] = products
 
         if date:
             kwargs['date'] = date
@@ -132,24 +147,24 @@ class Metadata(Service):
         if fill_fraction is not None:
             kwargs['fill_fraction'] = fill_fraction
 
+        if pixels:
+            kwargs['pixels'] = pixels
+
         if params:
             kwargs['params'] = json.dumps(params)
-
-        if bbox:
-            kwargs['bbox'] = bbox
 
         r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
         return r.json()
 
-    def search(self, const_id=None, sat_id=None, date='acquired', place=None,
+    def search(self, products=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, params=None,
-               limit=100, offset=0, bbox=False):
+               limit=100, offset=0):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
-        :param list(str) const_id: Constellation identifier(s).
+        :param list(str) products: Product Identifier(s).
         :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
@@ -159,7 +174,6 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
-        :param bool bbox: If true, query by the bounding box of the region of interest.
         :param str params: JSON of additional query parameters.
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
@@ -170,7 +184,7 @@ class Metadata(Service):
 
             >>> import descarteslabs as dl
             >>> scenes = dl.metadata.search(place='north-america_united-states_iowa', \
-                                         const_id=['L8'], \
+                                         products=['landsat:LC08:PRE:TOAR'], \
                                          start_time='2016-07-01', \
                                          end_time='2016-07-31 23:59:59')
             >>> len(scenes['features'])
@@ -197,12 +211,12 @@ class Metadata(Service):
 
             kwargs['sat_id'] = sat_id
 
-        if const_id:
+        if products:
 
-            if isinstance(const_id, string_types):
-                const_id = [const_id]
+            if isinstance(products, string_types):
+                products = [products]
 
-            kwargs['const_id'] = const_id
+            kwargs['products'] = products
 
         if geom:
             kwargs['geom'] = geom
@@ -225,9 +239,6 @@ class Metadata(Service):
         if params:
             kwargs['params'] = json.dumps(params)
 
-        if bbox:
-            kwargs['bbox'] = bbox
-
         r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
         features = r.json()
@@ -240,14 +251,14 @@ class Metadata(Service):
 
         return result
 
-    def keys(self, const_id=None, sat_id=None, date='acquired', place=None,
+    def keys(self, products=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
              cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
-             offset=0, bbox=False):
+             offset=0):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
-        :param list(str) const_id: Constellation identifier(s).
+        :param list(str) products: Products identifier(s).
         :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
@@ -257,7 +268,6 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
-        :param bool bbox: If true, query by the bounding box of the region of interest.
         :param str params: JSON of additional query parameters.
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
@@ -268,7 +278,7 @@ class Metadata(Service):
 
             >>> import descarteslabs as dl
             >>> keys = dl.metadata.keys(place='north-america_united-states_iowa', \
-                                 const_id=['L8'], \
+                                 products=['landsat:LC08:PRE:TOAR'], \
                                  start_time='2016-07-01', \
                                  end_time='2016-07-31 23:59:59')
             >>> len(keys)
@@ -278,29 +288,29 @@ class Metadata(Service):
             ['meta_LC80270312016188_v1']
 
         """
-        result = self.search(sat_id=sat_id, const_id=const_id, date=date,
+        result = self.search(sat_id=sat_id, products=products, date=date,
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             params=params, limit=limit, offset=offset, bbox=bbox)
+                             params=params, limit=limit, offset=offset)
 
         return [feature['id'] for feature in result['features']]
 
-    def features(self, const_id=None, sat_id=None, date='acquired', place=None,
+    def features(self, products=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, params=None,
-                 limit=100, bbox=False):
+                 limit=100):
         """Generator that combines summary and search to page through results.
 
         :param int limit: Number of features to fetch per request.
 
         :return: Generator of GeoJSON ``Feature`` objects.
         """
-        summary = self.summary(sat_id=sat_id, const_id=const_id, date=date,
+        summary = self.summary(sat_id=sat_id, products=products, date=date,
                                place=place, geom=geom, start_time=start_time,
                                end_time=end_time, cloud_fraction=cloud_fraction,
                                cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                               params=params, bbox=bbox)
+                               params=params)
 
         offset = 0
 
@@ -308,13 +318,13 @@ class Metadata(Service):
 
         while offset < count:
 
-            features = self.search(sat_id=sat_id, const_id=const_id,
+            features = self.search(sat_id=sat_id, products=products,
                                    date=date, place=place, geom=geom,
                                    start_time=start_time, end_time=end_time,
                                    cloud_fraction=cloud_fraction,
                                    cloud_fraction_0=cloud_fraction_0,
                                    fill_fraction=fill_fraction, params=params,
-                                   limit=limit, offset=offset, bbox=bbox)
+                                   limit=limit, offset=offset)
 
             offset = limit + offset
 
