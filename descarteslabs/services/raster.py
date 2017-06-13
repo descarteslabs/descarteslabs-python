@@ -308,7 +308,7 @@ class Raster(Service):
 
         json_resp = r.json()
         # Decode base64
-        for k in json_resp['files'].keys():
+        for k in list(json_resp['files'].keys()):
             if outfile_basename:
                 outfilename = "{}.{}".format(
                     outfile_basename,
