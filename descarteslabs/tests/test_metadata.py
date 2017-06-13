@@ -57,7 +57,11 @@ class TestMetadata(unittest.TestCase):
         self.assertGreater(len(r['features']), 0)
 
     def test_multiple_products_search(self):
-        r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', products=['landsat:LE07:PRE:TOAR', 'landsat:LC08:PRE:TOAR'])
+        r = self.instance.search(
+            start_time='2016-07-06',
+            end_time='2016-07-07',
+            products=['landsat:LE07:PRE:TOAR', 'landsat:LC08:PRE:TOAR']
+        )
         self.assertGreater(len(r['features']), 0)
 
     def test_place(self):
@@ -65,7 +69,12 @@ class TestMetadata(unittest.TestCase):
         self.assertEqual(1, len(r['features']))
 
     def test_summary(self):
-        r = self.instance.summary(start_time='2016-07-06', end_time='2016-07-07', products=['landsat:LC08:PRE:TOAR'], pixels=True)
+        r = self.instance.summary(
+            start_time='2016-07-06',
+            end_time='2016-07-07',
+            products=['landsat:LC08:PRE:TOAR'],
+            pixels=True
+        )
         self.assertIn('products', r)
         self.assertIn('count', r)
         self.assertIn('pixels', r)
