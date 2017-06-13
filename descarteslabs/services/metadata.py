@@ -87,19 +87,18 @@ class Metadata(Service):
 
             >>> import descarteslabs as dl
             >>> from pprint import  pprint
-            >>> pprint(dl.metadata.summary(
-                    place='north-america_united-states_iowa', products=['landsat:LC08:PRE:TOAR'], \
-                    start_time='2016-07-06', end_time='2016-07-07', part='hour', pixels=True
-                ))
+            >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', \
+                    products=['landsat:LC08:PRE:TOAR'], start_time='2016-07-06', \
+                    end_time='2016-07-07', part='hour', pixels=True))
             {'bytes': 93298309,
-             'products': ['landsat:LC08:PRE:TOAR'],
              'count': 1,
              'items': [{'bytes': 93298309,
                         'count': 1,
                         'date': '2016-07-06T16:00:00',
                         'pixels': 250508160,
                         'timestamp': 1467820800}]
-             'pixels': 250508160}
+             'pixels': 250508160,
+             'products': ['landsat:LC08:PRE:TOAR']}
         """
         if place:
             places = Places()
@@ -189,7 +188,7 @@ class Metadata(Service):
             >>> scenes = dl.metadata.search(place='north-america_united-states_iowa', \
                                          products=['landsat:LC08:PRE:TOAR'], \
                                          start_time='2016-07-01', \
-                                         end_time='2016-07-31 23:59:59')
+                                         end_time='2016-07-31T23:59:59')
             >>> len(scenes['features'])
             1
         """
@@ -283,7 +282,7 @@ class Metadata(Service):
             >>> keys = dl.metadata.keys(place='north-america_united-states_iowa', \
                                  products=['landsat:LC08:PRE:TOAR'], \
                                  start_time='2016-07-01', \
-                                 end_time='2016-07-31 23:59:59')
+                                 end_time='2016-07-31T23:59:59')
             >>> len(keys)
             1
 
@@ -349,7 +348,7 @@ class Metadata(Service):
             ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket', 'cloud_fraction',
              'cloud_fraction_0', 'cs_code', 'descartes_version', 'file_md5s', 'file_sizes', 'files',
              'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'identifier', 'processed',
-             'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id',
+             'product', 'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id',
              'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction', 'tile_id']
         """
         r = self.session.get('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
