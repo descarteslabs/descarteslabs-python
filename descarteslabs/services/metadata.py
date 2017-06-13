@@ -87,15 +87,18 @@ class Metadata(Service):
 
             >>> import descarteslabs as dl
             >>> from pprint import  pprint
-            >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', products=['landsat:LC08:PRE:TOAR'], \
-                    start_time='2016-07-06', end_time='2016-07-07', part='hour', pixels=True))
+            >>> pprint(dl.metadata.summary(
+                    place='north-america_united-states_iowa', products=['landsat:LC08:PRE:TOAR'], \
+                    start_time='2016-07-06', end_time='2016-07-07', part='hour', pixels=True
+                ))
             {'bytes': 93298309,
              'products': ['landsat:LC08:PRE:TOAR'],
              'count': 1,
              'items': [{'bytes': 93298309,
                         'count': 1,
                         'date': '2016-07-06T16:00:00',
-                        'pixels': 250508160}],
+                        'pixels': 250508160,
+                        'timestamp': 1467820800}]
              'pixels': 250508160}
         """
         if place:
