@@ -309,15 +309,19 @@ class Raster(Service):
         json_resp = r.json()
         # Decode base64
         for k in json_resp['files'].keys():
-            json_resp['files'][k] = base64.b64decode(json_resp['files'][k])
+            if outfile_basename:
+                outfilename = "{}.{}".format(
+                    outfile_basename,
+                    ".".join(os.path.basename(k).split(".")[1:])
+                )
+                print "outfilename: {}".format(outfilename)
+            else:
+                outfilename = k
+            json_resp['files'][outfilename] = base64.b64decode(json_resp['files'][k])
 
         if save:
             for filename, data in six.iteritems(json_resp['files']):
-                if outfile_basename:
-                    outfilename = outfile_basename + os.path.splitext(filename)[1]
-                else:
-                    outfilename = filename
-                with open(outfilename, "wb") as f:
+                with open(filename, "wb") as f:
                     f.write(data)
 
         return json_resp

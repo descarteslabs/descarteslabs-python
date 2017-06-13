@@ -47,13 +47,8 @@ def raster_handler(args):
         'output_format': args.output_format,
         'srs': args.srs,
         'place': args.place,
+        'save': True,
+        'outfile_basename': args.outfile_basename,
     }
     response = dl.raster.raster(**params)
-    for filename, data in six.iteritems(response['files']):
-        if args.outfile_basename:
-            outfilename = args.outfile_basename + os.path.splitext(filename)[1]
-        else:
-            outfilename = filename
-        with open(outfilename, "wb") as f:
-            f.write(data)
     print(json.dumps(response['metadata'], indent=2))
