@@ -14,11 +14,9 @@
 # limitations under the License.
 
 from __future__ import print_function
-import os
 import argparse
 import json
 import descarteslabs as dl
-import six
 
 
 def scales(s):
