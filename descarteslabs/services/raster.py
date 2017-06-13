@@ -314,7 +314,6 @@ class Raster(Service):
                     outfile_basename,
                     ".".join(os.path.basename(k).split(".")[1:])
                 )
-                print "outfilename: {}".format(outfilename)
             else:
                 outfilename = k
             json_resp['files'][outfilename] = base64.b64decode(json_resp['files'][k])
