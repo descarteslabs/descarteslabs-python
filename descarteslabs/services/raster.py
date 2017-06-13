@@ -316,7 +316,9 @@ class Raster(Service):
                 )
             else:
                 outfilename = k
-            json_resp['files'][outfilename] = base64.b64decode(json_resp['files'][k])
+            json_resp['files'][outfilename] = base64.b64decode(
+                json_resp['files'].pop(k)
+            )
 
         if save:
             for filename, data in six.iteritems(json_resp['files']):
