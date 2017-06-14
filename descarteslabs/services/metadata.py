@@ -14,7 +14,7 @@
 
 import json
 import os
-from warning import warn, simplefilter
+from warnings import warn, simplefilter
 from six import string_types
 from .service import Service
 from .places import Places

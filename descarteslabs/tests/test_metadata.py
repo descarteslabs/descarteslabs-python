@@ -14,6 +14,7 @@
 
 import itertools
 import unittest
+from warnings import catch_warnings
 
 import descarteslabs as dl
 
@@ -56,6 +57,13 @@ class TestMetadata(unittest.TestCase):
         r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', products=['landsat:LC08:PRE:TOAR'])
         self.assertGreater(len(r['features']), 0)
 
+    def test_const_id_search_deprecation(self):
+        with catch_warnings(record=True) as w:
+            r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', const_id=['l8'])
+            self.assertGreater(len(r['features']), 0)
+            self.assertEqual(len(w), 1)
+            self.assertIn('deprecated', str(w[0].message))
+
     def test_multiple_products_search(self):
         r = self.instance.search(
             start_time='2016-07-06',
@@ -80,6 +88,23 @@ class TestMetadata(unittest.TestCase):
         self.assertIn('pixels', r)
         self.assertIn('bytes', r)
         self.assertGreater(r['count'], 0)
+
+    def test_const_id_summary_deprecation(self):
+        with catch_warnings(record=True) as w:
+            r = self.instance.summary(
+                start_time='2016-07-06',
+                end_time='2016-07-07',
+                const_id=['l8'],
+                pixels=True
+            )
+            self.assertEqual(len(w), 1)
+            self.assertIn('deprecated', str(w[0].message))
+
+            self.assertIn('products', r)
+            self.assertIn('count', r)
+            self.assertIn('pixels', r)
+            self.assertIn('bytes', r)
+            self.assertGreater(r['count'], 0)
 
     def test_summary_part(self):
         r = self.instance.summary(
