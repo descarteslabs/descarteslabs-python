@@ -14,9 +14,17 @@
 
 import json
 import os
+from warning import warn, simplefilter
 from six import string_types
 from .service import Service
 from .places import Places
+
+CONST_ID_DEPRECATION_MESSAGE = (
+        "Keyword arg `const_id' has been deprecated and will be removed in "
+        "future versions of this software. Use the `products` "
+        "argument instead. Product identifiers can be found with the "
+        " products() method."
+    )
 
 
 class Metadata(Service):
@@ -28,6 +36,7 @@ class Metadata(Service):
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        simplefilter('always', DeprecationWarning)
         if url is None:
             url = os.environ.get("DESCARTESLABS_METADATA_URL",
                                  "https://platform-services-dev.descarteslabs.com/metadata/dev")
@@ -64,12 +73,13 @@ class Metadata(Service):
 
         return r.json()
 
-    def summary(self, products=None, sat_id=None, date='acquired', part=None,
+    def summary(self, products=None, const_id=None, sat_id=None, date='acquired', part=None,
                 place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
                 cloud_fraction_0=None, fill_fraction=None, pixels=None, params=None):
         """Get a summary of the results for the specified spatio-temporal query.
 
         :param list(str) products: Product identifier(s).
+        :param list(str) const_id: Constellation identifier(s).
         :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str part: Part of the date to aggregate over (e.g. `day`).
@@ -125,6 +135,13 @@ class Metadata(Service):
 
             kwargs['products'] = products
 
+        if const_id:
+            warn(CONST_ID_DEPRECATION_MESSAGE, DeprecationWarning)
+            if isinstance(const_id, string_types):
+                const_id = [const_id]
+
+            kwargs['const_id'] = const_id
+
         if date:
             kwargs['date'] = date
 
@@ -159,7 +176,7 @@ class Metadata(Service):
 
         return r.json()
 
-    def search(self, products=None, sat_id=None, date='acquired', place=None,
+    def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, params=None,
                limit=100, offset=0):
@@ -167,6 +184,7 @@ class Metadata(Service):
         optional. Results are paged using limit/offset.
 
         :param list(str) products: Product Identifier(s).
+        :param list(str) const_id: Constellation Identifier(s).
         :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
@@ -220,6 +238,14 @@ class Metadata(Service):
 
             kwargs['products'] = products
 
+        if const_id:
+            warn(CONST_ID_DEPRECATION_MESSAGE, DeprecationWarning)
+
+            if isinstance(const_id, string_types):
+                const_id = [const_id]
+
+            kwargs['const_id'] = const_id
+
         if geom:
             kwargs['geom'] = geom
 
@@ -253,7 +279,7 @@ class Metadata(Service):
 
         return result
 
-    def keys(self, products=None, sat_id=None, date='acquired', place=None,
+    def keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
              cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
              offset=0):
@@ -261,6 +287,7 @@ class Metadata(Service):
         optional. Results are paged using limit/offset.
 
         :param list(str) products: Products identifier(s).
+        :param list(str) const_id: Constellation identifier(s).
         :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
@@ -290,7 +317,7 @@ class Metadata(Service):
             ['meta_LC80270312016188_v1']
 
         """
-        result = self.search(sat_id=sat_id, products=products, date=date,
+        result = self.search(sat_id=sat_id, products=products, const_id=const_id, date=date,
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
@@ -298,7 +325,7 @@ class Metadata(Service):
 
         return [feature['id'] for feature in result['features']]
 
-    def features(self, products=None, sat_id=None, date='acquired', place=None,
+    def features(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, params=None,
                  limit=100):
@@ -308,7 +335,7 @@ class Metadata(Service):
 
         :return: Generator of GeoJSON ``Feature`` objects.
         """
-        summary = self.summary(sat_id=sat_id, products=products, date=date,
+        summary = self.summary(sat_id=sat_id, products=products, const_id=None, date=date,
                                place=place, geom=geom, start_time=start_time,
                                end_time=end_time, cloud_fraction=cloud_fraction,
                                cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
@@ -320,7 +347,7 @@ class Metadata(Service):
 
         while offset < count:
 
-            features = self.search(sat_id=sat_id, products=products,
+            features = self.search(sat_id=sat_id, products=products, const_id=None,
                                    date=date, place=place, geom=geom,
                                    start_time=start_time, end_time=end_time,
                                    cloud_fraction=cloud_fraction,
