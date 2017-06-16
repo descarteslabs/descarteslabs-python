@@ -26,7 +26,7 @@ class TestPlaces(unittest.TestCase):
 
     def test_placetypes(self):
         data = self.instance.placetypes()
-        self.assertEqual(6, len(data))
+        self.assertEqual(9, len(data))
 
     def test_find(self):
         r = self.instance.find('united-states_iowa')
