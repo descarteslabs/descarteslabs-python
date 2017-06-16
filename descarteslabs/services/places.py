@@ -20,6 +20,7 @@ from cachetools.keys import hashkey
 from .service import Service
 from six import string_types
 
+
 class Places(Service):
     TIMEOUT = (9.5, 120)
     """Places and statistics service https://iam.descarteslabs.com/service/waldo"""
@@ -41,8 +42,8 @@ class Places(Service):
         Example::
             >>> import descarteslabs as dl
             >>> dl.places.placetypes()
-            ['continent', 'country', 'dependency', 'macroregion', 'region', 'district', 'mesoregion', 'microregion', 'county']
-            
+            ['continent', 'country', 'dependency', 'macroregion', 'region',
+                'district', 'mesoregion', 'microregion', 'county']
         """
         r = self.session.get('%s/placetypes' % self.url, timeout=self.TIMEOUT)
 
@@ -50,26 +51,27 @@ class Places(Service):
 
     def random(self, geom='low', placetype=None):
         """Get a random location
-        
+
         geom: string
             Resolution for the shape [low (default), medium, high]
 
         return: geojson
         """
         params = {}
-        
+
         if geom:
             params['geom'] = geom
-    
+
         if placetype:
             params['placetype'] = placetype
-        
+
         r = self.session.get('%s/random' % self.url, params=params)
-        
+
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        return r.json()        
+        return r.json()
+
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'find'))
     def find(self, path, **kwargs):
         """Find candidate slugs based on full or partial path.
@@ -206,7 +208,7 @@ class Places(Service):
                              params=params, timeout=self.TIMEOUT)
 
         return r.json()
-        
+
     def statistics(self, slug, source=None, category=None, metric=None):
         """Get a time series for a specific place
 
@@ -232,7 +234,7 @@ class Places(Service):
                              params=params, timeout=self.TIMEOUT)
 
         return r.json()
-        
+
     def value(self, slug, source=None, category=None, metric=None, date=None):
         """Get point values for a specific place
 
@@ -241,8 +243,6 @@ class Places(Service):
         :param list(str) category: Category(s)
         :param list(str) metric: Metric(s)
         :param str date: Date
-
-        
         """
         params = {}
 
