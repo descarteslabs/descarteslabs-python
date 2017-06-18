@@ -178,6 +178,19 @@ class TestRaster(unittest.TestCase):
         self.assertEqual(arr.shape[1], 256 + 2 * 16)
         self.assertEqual(arr.shape[2], 4)
 
+    def test_raster_dltile_dict(self):
+        dltile_feature = self.raster.dltile_from_latlon(41.0, -94.0, 30.0, 256, 16)
+        print dltile_feature
+        arr, meta = self.raster.ndarray(
+            inputs=['meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            dltile=dltile_feature,
+        )
+        self.assertEqual(arr.shape[0], 256 + 2 * 16)
+        self.assertEqual(arr.shape[1], 256 + 2 * 16)
+        self.assertEqual(arr.shape[2], 4)
+
+
     def test_dlkeys_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')
         iowa_geom = iowa['geometry']
