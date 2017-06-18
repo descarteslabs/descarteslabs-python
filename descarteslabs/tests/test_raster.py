@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import tempfile
+import shutil
 import unittest
 import json
 
@@ -38,6 +41,25 @@ class TestRaster(unittest.TestCase):
         self.assertTrue("files" in r)
         self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
         self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.tif'])
+
+    def test_raster_save(self):
+        tmpdir = tempfile.mkdtemp()
+        try:
+            response = self.raster.raster(
+                inputs=['meta_LC80270312016188_v1'],
+                bands=['red', 'green', 'blue', 'alpha'],
+                resolution=960, save=True,
+                outfile_basename="{}/my-raster".format(tmpdir)
+            )
+            with open("{}/my-raster.tif".format(tmpdir), "rb") as f:
+                f.seek(0, os.SEEK_END)
+                length = f.tell()
+            self.assertEqual(
+                length,
+                len(response['files']["{}/my-raster.tif".format(tmpdir)])
+            )
+        finally:
+            shutil.rmtree(tmpdir)
 
     def test_ndarray(self):
         try:

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
 import unittest
 
 import descarteslabs as dl
@@ -82,6 +83,11 @@ class TestMetadata(unittest.TestCase):
         self.assertIn('bytes', r)
         self.assertIn('items', r)
         self.assertEqual(len(r['items']), 1)
+
+    def test_features(self):
+        r = self.instance.features(start_time='2016-07-06', end_time='2016-07-07', sat_id='LANDSAT_8', limit=20)
+        first_21 = itertools.islice(r, 21)
+        self.assertGreater(len(list(first_21)), 0)
 
 
 if __name__ == '__main__':

@@ -43,7 +43,7 @@ class Metadata(Service):
             >>> from pprint import pprint
             >>> sources = dl.metadata.sources()
             >>> pprint(sources)
-            [{'const_id': 'L8', 'sat_id': 'LANDSAT_8', 'value': 5}]
+            [{'const_id': 'L8', 'sat_id': 'LANDSAT_8', 'value': 89}]
 
         """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
@@ -314,33 +314,31 @@ class Metadata(Service):
 
         :return: Generator of GeoJSON ``Feature`` objects.
         """
-        result = self.summary(sat_id=sat_id, const_id=const_id, date=date,
-                              place=place, geom=geom, start_time=start_time,
-                              end_time=end_time, cloud_fraction=cloud_fraction,
-                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                              params=params, bbox=bbox, dltile=dltile)
+        summary = self.summary(sat_id=sat_id, const_id=const_id, date=date,
+                               place=place, geom=geom, start_time=start_time,
+                               end_time=end_time, cloud_fraction=cloud_fraction,
+                               cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
+                               params=params, bbox=bbox, dltile=dltile)
 
-        for summary in result:
+        offset = 0
 
-            offset = 0
+        count = summary['count']
 
-            count = summary['count']
+        while offset < count:
 
-            while offset < count:
+            features = self.search(sat_id=sat_id, const_id=const_id,
+                                   date=date, place=place, geom=geom,
+                                   start_time=start_time, end_time=end_time,
+                                   cloud_fraction=cloud_fraction,
+                                   cloud_fraction_0=cloud_fraction_0,
+                                   fill_fraction=fill_fraction, params=params,
+                                   limit=limit, offset=offset, bbox=bbox,
+                                   dltile=dltile)
 
-                features = self.search(sat_id=sat_id, const_id=const_id,
-                                       date=date, place=place, geom=geom,
-                                       start_time=start_time, end_time=end_time,
-                                       cloud_fraction=cloud_fraction,
-                                       cloud_fraction_0=cloud_fraction_0,
-                                       fill_fraction=fill_fraction, params=params,
-                                       limit=limit, offset=offset, bbox=bbox,
-                                       dltile=dltile)
+            offset = limit + offset
 
-                offset = limit + offset
-
-                for feature in features['features']:
-                    yield feature
+            for feature in features['features']:
+                yield feature
 
     def get(self, key):
         """Get metadata of a single image.

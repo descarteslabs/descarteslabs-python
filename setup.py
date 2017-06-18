@@ -14,12 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
 import sys
 import os
+import re
 from setuptools import setup, find_packages
 
-
-__version__ = "0.3.1"
+# Parse version out of descarteslabs/__init__.py
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+with open('descarteslabs/__init__.py', 'rb') as f:
+    version = str(ast.literal_eval(_version_re.search(
+        f.read().decode('utf-8')).group(1))
+    )
 
 
 def do_setup():
@@ -35,7 +41,7 @@ def do_setup():
     kwargs['author'] = 'Descartes Labs'
     kwargs['author_email'] = 'hello@descarteslabs.com'
     kwargs['url'] = 'https://github.com/descarteslabs/descarteslabs-python'
-    kwargs['download_url'] = "https://github.com/descarteslabs/descarteslabs-python/archive/v%s.tar.gz" % __version__
+    kwargs['download_url'] = "https://github.com/descarteslabs/descarteslabs-python/archive/v%s.tar.gz" % version
 
     clssfrs = [
         "Programming Language :: Python",
@@ -47,7 +53,7 @@ def do_setup():
         "Programming Language :: Python :: 3.6",
     ]
     kwargs['classifiers'] = clssfrs
-    kwargs['version'] = __version__
+    kwargs['version'] = version
     kwargs['packages'] = find_packages('.')
     kwargs['package_data'] = {'descarteslabs.services': ['gd_bundle-g2-g1.crt']}
     kwargs['scripts'] = [
@@ -55,14 +61,14 @@ def do_setup():
     ]
     kwargs['install_requires'] = [
         "cachetools",
-        "six",
+        "six"
     ]
 
     # Python < 2.7.9 needs requests[security] to avoid SSL issues
     if sys.version_info[0:3] >= (2, 7, 9):
-        kwargs["install_requires"].append('requests')
+        kwargs["install_requires"].append('requests>=2.11.1,<=2.14.2')
     else:
-        kwargs["install_requires"].append('requests[security]')
+        kwargs["install_requires"].append('requests[security]>=2.11.1,<=2.14.2')
 
     kwargs['license'] = 'Apache 2.0',
     kwargs['zip_safe'] = False
