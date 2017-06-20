@@ -69,7 +69,7 @@ class Metadata(Service):
             ['landsat:LC08:PRE:TOAR']
 
         """
-        r = self.session.get('%s/products/all' % self.url, timeout=self.TIMEOUT)
+        r = self.session.get('%s/products' % self.url, timeout=self.TIMEOUT)
 
         return r.json()
 
