@@ -323,7 +323,7 @@ class Metadata(Service):
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
                              params=params, limit=limit, offset=offset)
 
-        return [feature['id'] for feature in result['features']]
+        return [feature['key'] for feature in result['features']]
 
     def features(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
