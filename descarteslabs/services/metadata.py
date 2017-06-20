@@ -20,11 +20,11 @@ from .service import Service
 from .places import Places
 
 CONST_ID_DEPRECATION_MESSAGE = (
-        "Keyword arg `const_id' has been deprecated and will be removed in "
-        "future versions of this software. Use the `products` "
-        "argument instead. Product identifiers can be found with the "
-        " products() method."
-    )
+    "Keyword arg `const_id' has been deprecated and will be removed in "
+    "future versions of this software. Use the `products` "
+    "argument instead. Product identifiers can be found with the "
+    " products() method."
+)
 
 
 class Metadata(Service):
@@ -273,15 +273,7 @@ class Metadata(Service):
 
         r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
-        features = r.json()
-
-        result = {'type': 'FeatureCollection'}
-
-        result['features'] = sorted(
-            features, key=lambda f: f['properties']['acquired']
-        )
-
-        return result
+        return {'type': 'FeatureCollection', "features": r.json()}
 
     def keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
