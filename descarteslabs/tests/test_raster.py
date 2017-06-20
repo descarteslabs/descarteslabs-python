@@ -38,7 +38,6 @@ class TestRaster(unittest.TestCase):
         self.assertTrue("metadata" in r)
         self.assertTrue("files" in r)
         self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
-        self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.tif'])
 
         # test with product id
         r = self.raster.raster(
@@ -48,8 +47,7 @@ class TestRaster(unittest.TestCase):
         )
         self.assertTrue("metadata" in r)
         self.assertTrue("files" in r)
-        self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
-        self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.tif'])
+        self.assertTrue("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
 
     def test_ndarray(self):
         try:
