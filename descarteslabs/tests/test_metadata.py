@@ -59,6 +59,7 @@ class TestMetadata(unittest.TestCase):
 
     def test_fields(self):
         cases = [
+            [],
             ["id", "key"],  # ["id", "key"]
             ["key"],  # ["id", "key"]
             ["geometry"],  # ["geometry", "id", "type"]
