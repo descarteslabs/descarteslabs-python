@@ -62,7 +62,6 @@ class TestMetadata(unittest.TestCase):
             ["id", "key"],  # ["id", "key"]
             ["key"],  # ["id", "key"]
             ["geometry"],  # ["geometry", "id", "type"]
-            ["id", "cloud_fraction", "fill_fraction"]  # ["id", "cloud_fraction", "fill_fraction"]
         ]
 
         for fields in cases:
@@ -75,6 +74,11 @@ class TestMetadata(unittest.TestCase):
                     fields.append("type")
 
                 self.assertEqual(sorted(feature.keys()), sorted(fields))
+
+        fields = ["cloud_fraction", "fill_fraction"]
+        r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', fields=fields)
+        for feature in r['features']:
+            self.assertEqual(sorted(feature['properties'].keys()), sorted(fields))
 
     def test_const_id_search_deprecation(self):
         with catch_warnings(record=True) as w:
