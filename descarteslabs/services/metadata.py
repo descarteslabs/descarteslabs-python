@@ -179,7 +179,7 @@ class Metadata(Service):
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, params=None,
-               limit=100, offset=0):
+               limit=100, offset=0, fields=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -197,6 +197,7 @@ class Metadata(Service):
         :param str params: JSON of additional query parameters.
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
+        :param list(str) fields: Properties to return.
 
         return: GeoJSON ``FeatureCollection``
 
@@ -267,6 +268,9 @@ class Metadata(Service):
         if params:
             kwargs['params'] = json.dumps(params)
 
+        if fields is not None:
+            kwargs['fields'] = fields
+
         r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
         features = r.json()
@@ -321,7 +325,7 @@ class Metadata(Service):
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             params=params, limit=limit, offset=offset)
+                             params=params, limit=limit, offset=offset, fields=["key"])
 
         return [feature['key'] for feature in result['features']]
 
