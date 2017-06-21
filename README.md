@@ -36,6 +36,19 @@ Changelog
 =========
 
 ## [Unreleased]
+### Changes
+- Major refactor of metadata.search
+  * Introduction of "Products" through dl.metadata.products()
+  * metadata entries id now concatenate the product id and the old metadata
+    keys. The original metadata keys are available through entry['key'].
+  * Additional sorting available.
+
+### Added
+- Search & Raster using DLTile Feature GeoJSON or key. Uses output bounds,
+  resolution, and srs to ease searching and rasterizing imagery over tiles.
+
+### Fixes
+- Better Error messaging
 
 ## [0.3.3] - 2017-06-20
 ### Added
