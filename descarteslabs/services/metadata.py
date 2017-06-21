@@ -30,7 +30,7 @@ CONST_ID_DEPRECATION_MESSAGE = (
 
 class Metadata(Service):
     TIMEOUT = (9.5, 120)
-    """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
+    """Image Metadata Service"""
 
     def __init__(self, url=None, token=None):
         """The parent Service class implements authentication and exponential
@@ -40,7 +40,7 @@ class Metadata(Service):
         simplefilter('always', DeprecationWarning)
         if url is None:
             url = os.environ.get("DESCARTESLABS_METADATA_URL",
-                                 "https://platform-services-dev.descarteslabs.com/metadata/v1")
+                                 "https://platform-services.descarteslabs.com/metadata/v1")
 
         Service.__init__(self, url, token)
 
