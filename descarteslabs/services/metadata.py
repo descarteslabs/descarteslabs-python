@@ -18,6 +18,7 @@ from warnings import warn, simplefilter
 from six import string_types
 from .service import Service
 from .places import Places
+import descarteslabs as dl
 
 CONST_ID_DEPRECATION_MESSAGE = (
         "Keyword arg `const_id' has been deprecated and will be removed in "
@@ -75,7 +76,8 @@ class Metadata(Service):
 
     def summary(self, products=None, const_id=None, sat_id=None, date='acquired', part=None,
                 place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
-                cloud_fraction_0=None, fill_fraction=None, pixels=None, params=None):
+                cloud_fraction_0=None, fill_fraction=None, pixels=None, params=None,
+                dltile=None):
         """Get a summary of the results for the specified spatio-temporal query.
 
         :param list(str) products: Product identifier(s).
@@ -92,6 +94,7 @@ class Metadata(Service):
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param bool pixels: Whether to include pixel counts in summary calculations.
         :param str params: JSON of additional query parameters.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
 
         Example usage::
 
@@ -115,6 +118,12 @@ class Metadata(Service):
             places.auth = self.auth
             shape = places.shape(place, geom='low')
             geom = json.dumps(shape['geometry'])
+
+        if dltile is not None:
+            if isinstance(dltile, string_types):
+                dltile = dl.raster.dltile(dltile)
+            if isinstance(dltile, dict):
+                geom = dltile['geometry']
 
         if isinstance(geom, dict):
             geom = json.dumps(geom)
@@ -179,7 +188,7 @@ class Metadata(Service):
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, params=None,
-               limit=100, offset=0, fields=None):
+               limit=100, offset=0, fields=None, dltile=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -198,6 +207,7 @@ class Metadata(Service):
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
         :param list(str) fields: Properties to return.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
 
         return: GeoJSON ``FeatureCollection``
 
@@ -216,6 +226,12 @@ class Metadata(Service):
             places.auth = self.auth
             shape = places.shape(place, geom='low')
             geom = json.dumps(shape['geometry'])
+
+        if dltile is not None:
+            if isinstance(dltile, string_types):
+                dltile = dl.raster.dltile(dltile)
+            if isinstance(dltile, dict):
+                geom = dltile['geometry']
 
         if isinstance(geom, dict):
             geom = json.dumps(geom)
@@ -286,7 +302,7 @@ class Metadata(Service):
     def keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
              cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
-             offset=0):
+             offset=0, dltile=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -304,6 +320,7 @@ class Metadata(Service):
         :param str params: JSON of additional query parameters.
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
 
         :return: List of image identifiers.
 
@@ -325,14 +342,15 @@ class Metadata(Service):
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             params=params, limit=limit, offset=offset, fields=["key"])
+                             params=params, limit=limit, offset=offset, fields=["key"],
+                             dltile=dltile)
 
         return [feature['key'] for feature in result['features']]
 
     def features(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, params=None,
-                 limit=100):
+                 limit=100, dltile=None):
         """Generator that combines summary and search to page through results.
 
         :param int limit: Number of features to fetch per request.
@@ -343,7 +361,7 @@ class Metadata(Service):
                                place=place, geom=geom, start_time=start_time,
                                end_time=end_time, cloud_fraction=cloud_fraction,
                                cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                               params=params)
+                               params=params, dltile=dltile)
 
         offset = 0
 
@@ -357,7 +375,8 @@ class Metadata(Service):
                                    cloud_fraction=cloud_fraction,
                                    cloud_fraction_0=cloud_fraction_0,
                                    fill_fraction=fill_fraction, params=params,
-                                   limit=limit, offset=offset)
+                                   limit=limit, offset=offset,
+                                   dltile=dltile)
 
             offset = limit + offset
 

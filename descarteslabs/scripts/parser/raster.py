@@ -17,7 +17,6 @@ from __future__ import print_function
 import argparse
 import json
 import descarteslabs as dl
-import six
 
 
 def scales(s):
@@ -46,9 +45,8 @@ def raster_handler(args):
         'output_format': args.output_format,
         'srs': args.srs,
         'place': args.place,
+        'save': True,
+        'outfile_basename': args.outfile_basename,
     }
     response = dl.raster.raster(**params)
-    for filename, data in six.iteritems(response['files']):
-        with open(filename, "wb") as f:
-            f.write(data)
     print(json.dumps(response['metadata'], indent=2))
