@@ -81,7 +81,7 @@ class TestMetadata(unittest.TestCase):
                 if "geometry" in fields:
                     fields.append("type")
 
-                if "key" in fields:
+                if "key" in fields or "geometry" in fields:
                     fields.append("properties")
 
                 self.assertEqual(sorted(feature.keys()), sorted(fields))
