@@ -18,6 +18,7 @@ from warnings import warn, simplefilter
 from six import string_types
 from .service import Service
 from .places import Places
+import descarteslabs as dl
 
 CONST_ID_DEPRECATION_MESSAGE = (
     "Keyword arg `const_id' has been deprecated and will be removed in "
@@ -75,7 +76,8 @@ class Metadata(Service):
 
     def summary(self, products=None, const_id=None, sat_id=None, date='acquired', part=None,
                 place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
-                cloud_fraction_0=None, fill_fraction=None, pixels=None, params=None):
+                cloud_fraction_0=None, fill_fraction=None, pixels=None, params=None,
+                dltile=None):
         """Get a summary of the results for the specified spatio-temporal query.
 
         :param list(str) products: Product identifier(s).
@@ -92,6 +94,7 @@ class Metadata(Service):
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param bool pixels: Whether to include pixel counts in summary calculations.
         :param str params: JSON of additional query parameters.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
 
         Example usage::
 
@@ -115,6 +118,12 @@ class Metadata(Service):
             places.auth = self.auth
             shape = places.shape(place, geom='low')
             geom = json.dumps(shape['geometry'])
+
+        if dltile is not None:
+            if isinstance(dltile, string_types):
+                dltile = dl.raster.dltile(dltile)
+            if isinstance(dltile, dict):
+                geom = dltile['geometry']
 
         if isinstance(geom, dict):
             geom = json.dumps(geom)
@@ -179,7 +188,7 @@ class Metadata(Service):
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, params=None,
-               limit=100, offset=0, fields=None, sort_field=None, sort_order="asc"):
+               limit=100, offset=0, fields=None, dltile=None, sort_field=None, sort_order="asc"):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -198,6 +207,7 @@ class Metadata(Service):
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
         :param list(str) fields: Properties to return.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str sort_field: Properties to sort on.
         :param str sort_order: Order of sort.
 
@@ -218,6 +228,12 @@ class Metadata(Service):
             places.auth = self.auth
             shape = places.shape(place, geom='low')
             geom = json.dumps(shape['geometry'])
+
+        if dltile is not None:
+            if isinstance(dltile, string_types):
+                dltile = dl.raster.dltile(dltile)
+            if isinstance(dltile, dict):
+                geom = dltile['geometry']
 
         if isinstance(geom, dict):
             geom = json.dumps(geom)
@@ -287,7 +303,7 @@ class Metadata(Service):
     def keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
              cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
-             offset=0, sort_field=None, sort_order='asc'):
+             offset=0, dltile=None, sort_field=None, sort_order='asc'):      
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -305,6 +321,7 @@ class Metadata(Service):
         :param str params: JSON of additional query parameters.
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str sort_field: Properties to sort on.
         :param str sort_order: Order of sort.
 
@@ -328,15 +345,17 @@ class Metadata(Service):
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             params=params, limit=limit, offset=offset, fields=["key"],
+                             params=params, limit=limit, offset=offset, fields=["key"], dltile=dltile,
                              sort_field=sort_field, sort_order=sort_order)
+                             
 
         return [feature['key'] for feature in result['features']]
 
     def features(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, params=None,
-                 limit=100, sort_field=None, sort_order='asc'):
+                 limit=100, dltile=None, sort_field=None, sort_order='asc'):
+      
         """Generator that combines summary and search to page through results.
 
         :param int limit: Number of features to fetch per request.
@@ -347,7 +366,7 @@ class Metadata(Service):
                                place=place, geom=geom, start_time=start_time,
                                end_time=end_time, cloud_fraction=cloud_fraction,
                                cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                               params=params)
+                               params=params, dltile=dltile)
 
         offset = 0
 
@@ -362,8 +381,8 @@ class Metadata(Service):
                                    cloud_fraction_0=cloud_fraction_0,
                                    fill_fraction=fill_fraction, params=params,
                                    limit=limit, offset=offset,
-                                   sort_field=sort_field, sort_order=sort_order)
-
+                                   dltile=dltile, sort_field=sort_field, 
+                                   sort_order=sort_order)
 
             offset = limit + offset
 
@@ -384,9 +403,10 @@ class Metadata(Service):
             >>> keys
             ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket', 'cloud_fraction',
              'cloud_fraction_0', 'cs_code', 'descartes_version', 'file_md5s', 'file_sizes', 'files',
-             'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'identifier', 'key', 'processed',
-             'product', 'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id',
-             'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction', 'tile_id']
+             'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'id', 'identifier', 'key', 
+             'processed', 'product', 'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle', 
+             'sat_id', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction', 
+             'tile_id']
         """
         r = self.session.get('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
 
