@@ -330,7 +330,7 @@ class Metadata(Service):
         Example::
 
             >>> import descarteslabs as dl
-            >>> ids = dl.metadata.keys(place='north-america_united-states_iowa', \
+            >>> ids = dl.metadata.ids(place='north-america_united-states_iowa', \
                                  products=['landsat:LC08:PRE:TOAR'], \
                                  start_time='2016-07-01', \
                                  end_time='2016-07-31T23:59:59')
