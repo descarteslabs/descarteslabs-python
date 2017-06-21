@@ -301,9 +301,9 @@ class Metadata(Service):
         return {'type': 'FeatureCollection', "features": r.json()}
 
     def ids(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
-             geom=None, start_time=None, end_time=None, cloud_fraction=None,
-             cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
-             offset=0, dltile=None, sort_field=None, sort_order='asc'):
+            geom=None, start_time=None, end_time=None, cloud_fraction=None,
+            cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
+            offset=0, dltile=None, sort_field=None, sort_order='asc'):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
