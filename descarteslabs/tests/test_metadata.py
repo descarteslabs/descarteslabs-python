@@ -74,6 +74,9 @@ class TestMetadata(unittest.TestCase):
                 if "geometry" in fields:
                     fields.append("type")
 
+                if "key" in fields:
+                    fields.append("properties")
+
                 self.assertEqual(sorted(feature.keys()), sorted(fields))
 
         fields = ["cloud_fraction", "fill_fraction"]
