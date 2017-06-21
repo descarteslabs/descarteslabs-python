@@ -32,7 +32,7 @@ class WrappedSession(requests.Session):
         elif resp.status_code == 400:
             raise BadRequestError(resp.text)
         elif resp.status_code == 404:
-            raise NotFoundError(resp.text)
+            raise NotFoundError("404 %s %s" % (method, url))
         elif resp.status_code == 429:
             raise RateLimitError(resp.text)
         else:
