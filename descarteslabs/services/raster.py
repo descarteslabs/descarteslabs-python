@@ -245,6 +245,7 @@ class Raster(Service):
             place=None,
             align_pixels=False,
             resampler=None,
+            dltile=None,
             save=False,
             outfile_basename=None,
     ):
@@ -273,6 +274,7 @@ class Raster(Service):
         :param str resampler: Resampling algorithm to be used during warping (``near``,
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
             ``max``, ``min``, ``med``, ``q1``, ``q3``).
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param bool save: Write resulting files to disk. Default: False
         :param str outfile_basename: If 'save' is True, override default filename using
             this string as a base.
@@ -300,6 +302,12 @@ class Raster(Service):
             'targetAlignedPixels': align_pixels,
             'resampleAlg': resampler,
         }
+
+        if dltile is not None:
+            if isinstance(dltile, dict):
+                params['dltile'] = dltile['properties']['key']
+            else:
+                params['dltile'] = dltile
 
         r = self.session.post('%s/raster' % (self.url), json=params, timeout=self.TIMEOUT)
 
@@ -343,6 +351,7 @@ class Raster(Service):
             align_pixels=False,
             resampler=None,
             order='image',
+            dltile=None,
     ):
         """Retrieve a raster as a NumPy array.
 
@@ -369,6 +378,7 @@ class Raster(Service):
             ``max``, ``min``, ``med``, ``q1``, ``q3``).
         :param str order: Order of the returned array. `image` returns arrays as
             ``(row, column, band)`` while `gdal` returns arrays as ``(band, row, column)``.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
 
         """
         cutline = as_json_string(cutline)
@@ -393,6 +403,12 @@ class Raster(Service):
             'targetAlignedPixels': align_pixels,
             'resampleAlg': resampler,
         }
+
+        if dltile is not None:
+            if isinstance(dltile, dict):
+                params['dltile'] = dltile['properties']['key']
+            else:
+                params['dltile'] = dltile
 
         r = self.session.post('%s/npz' % (self.url), json=params, timeout=self.TIMEOUT)
 
