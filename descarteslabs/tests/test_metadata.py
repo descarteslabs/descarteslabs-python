@@ -159,6 +159,20 @@ class TestMetadata(unittest.TestCase):
         first_21 = itertools.islice(r, 21)
         self.assertGreater(len(list(first_21)), 0)
 
+    def test_products_search_sort(self):
+        r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', products=['landsat:LC08:PRE:TOAR'],
+                                 sort_field="cloud_fraction", sort_order="desc")
+        self.assertGreater(len(r['features']), 0)
+
+        last = None
+        for feature in r['features']:
+            current = feature['properties']['cloud_fraction']
+            if last is None:
+                last = current
+                continue
+
+            self.assertLessEqual(current, last)
+
 
 if __name__ == '__main__':
     unittest.main()
