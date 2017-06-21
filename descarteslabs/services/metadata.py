@@ -300,6 +300,56 @@ class Metadata(Service):
 
         return {'type': 'FeatureCollection', "features": r.json()}
 
+    def ids(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
+             geom=None, start_time=None, end_time=None, cloud_fraction=None,
+             cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
+             offset=0, dltile=None, sort_field=None, sort_order='asc'):
+        """Search metadata given a spatio-temporal query. All parameters are
+        optional. Results are paged using limit/offset.
+
+        :param list(str) products: Products identifier(s).
+        :param list(str) const_id: Constellation identifier(s).
+        :param list(str) sat_id: Satellite identifier(s).
+        :param str date: The date field to use for search (e.g. `acquired`).
+        :param str place: A slug identifier to be used as a region of interest.
+        :param str geom: A GeoJSON or WKT region of interest.
+        :param str start_time: Desired starting date and time (inclusive).
+        :param str end_time: Desired ending date and time (inclusive).
+        :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
+        :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
+        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param str params: JSON of additional query parameters.
+        :param int limit: Number of items to return.
+        :param int offset: Number of items to skip.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str sort_field: Property to sort on.
+        :param str sort_order: Order of sort.
+
+        :return: List of image identifiers.
+
+        Example::
+
+            >>> import descarteslabs as dl
+            >>> ids = dl.metadata.keys(place='north-america_united-states_iowa', \
+                                 products=['landsat:LC08:PRE:TOAR'], \
+                                 start_time='2016-07-01', \
+                                 end_time='2016-07-31T23:59:59')
+            >>> len(ids)
+            1
+
+            >>> ids
+            ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
+
+        """
+        result = self.search(sat_id=sat_id, products=products, const_id=const_id, date=date,
+                             place=place, geom=geom, start_time=start_time,
+                             end_time=end_time, cloud_fraction=cloud_fraction,
+                             cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
+                             params=params, limit=limit, offset=offset, fields=[], dltile=dltile,
+                             sort_field=sort_field, sort_order=sort_order)
+
+        return [feature['id'] for feature in result['features']]
+
     def keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
              cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
