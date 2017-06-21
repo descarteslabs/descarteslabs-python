@@ -21,11 +21,11 @@ from .places import Places
 import descarteslabs as dl
 
 CONST_ID_DEPRECATION_MESSAGE = (
-        "Keyword arg `const_id' has been deprecated and will be removed in "
-        "future versions of this software. Use the `products` "
-        "argument instead. Product identifiers can be found with the "
-        " products() method."
-    )
+    "Keyword arg `const_id' has been deprecated and will be removed in "
+    "future versions of this software. Use the `products` "
+    "argument instead. Product identifiers can be found with the "
+    " products() method."
+)
 
 
 class Metadata(Service):
@@ -188,7 +188,7 @@ class Metadata(Service):
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, params=None,
-               limit=100, offset=0, fields=None, dltile=None):
+               limit=100, offset=0, fields=None, dltile=None, sort_field=None, sort_order="asc"):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -208,6 +208,8 @@ class Metadata(Service):
         :param int offset: Number of items to skip.
         :param list(str) fields: Properties to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str sort_field: Property to sort on.
+        :param str sort_order: Order of sort.
 
         return: GeoJSON ``FeatureCollection``
 
@@ -287,22 +289,21 @@ class Metadata(Service):
         if fields is not None:
             kwargs['fields'] = fields
 
+        if sort_field is not None:
+            kwargs['sort_field'] = sort_field
+
+            if sort_order is not None:
+                assert sort_order in ['asc', 'desc'], "invalid sort_order, %s not in ['asc', 'desc']" % sort_order
+                kwargs['sort_order'] = sort_order
+
         r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
-        features = r.json()
-
-        result = {'type': 'FeatureCollection'}
-
-        result['features'] = sorted(
-            features, key=lambda f: f['properties']['acquired']
-        )
-
-        return result
+        return {'type': 'FeatureCollection', "features": r.json()}
 
     def keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
              cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
-             offset=0, dltile=None):
+             offset=0, dltile=None, sort_field=None, sort_order='asc'):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -321,6 +322,8 @@ class Metadata(Service):
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str sort_field: Property to sort on.
+        :param str sort_order: Order of sort.
 
         :return: List of image identifiers.
 
@@ -342,15 +345,16 @@ class Metadata(Service):
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             params=params, limit=limit, offset=offset, fields=["key"],
-                             dltile=dltile)
+                             params=params, limit=limit, offset=offset, fields=["key"], dltile=dltile,
+                             sort_field=sort_field, sort_order=sort_order)
 
         return [feature['key'] for feature in result['features']]
 
     def features(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, params=None,
-                 limit=100, dltile=None):
+                 limit=100, dltile=None, sort_field=None, sort_order='asc'):
+
         """Generator that combines summary and search to page through results.
 
         :param int limit: Number of features to fetch per request.
@@ -376,7 +380,8 @@ class Metadata(Service):
                                    cloud_fraction_0=cloud_fraction_0,
                                    fill_fraction=fill_fraction, params=params,
                                    limit=limit, offset=offset,
-                                   dltile=dltile)
+                                   dltile=dltile, sort_field=sort_field,
+                                   sort_order=sort_order)
 
             offset = limit + offset
 
@@ -397,9 +402,9 @@ class Metadata(Service):
             >>> keys
             ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket', 'cloud_fraction',
              'cloud_fraction_0', 'cs_code', 'descartes_version', 'file_md5s', 'file_sizes', 'files',
-             'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'id', 'identifier', 'key', 
-             'processed', 'product', 'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle', 
-             'sat_id', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction', 
+             'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'id', 'identifier', 'key',
+             'processed', 'product', 'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle',
+             'sat_id', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction',
              'tile_id']
         """
         r = self.session.get('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
