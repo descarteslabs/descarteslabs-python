@@ -179,7 +179,7 @@ class Metadata(Service):
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, params=None,
-               limit=100, offset=0, fields=None):
+               limit=100, offset=0, fields=None, sort_field=None, sort_order="asc"):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -198,6 +198,8 @@ class Metadata(Service):
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
         :param list(str) fields: Properties to return.
+        :param str sort_field: Properties to sort on.
+        :param str sort_order: Order of sort.
 
         return: GeoJSON ``FeatureCollection``
 
@@ -271,6 +273,13 @@ class Metadata(Service):
         if fields is not None:
             kwargs['fields'] = fields
 
+        if sort_field is not None:
+            kwargs['sort_field'] = sort_field
+
+            if sort_order is not None:
+                assert sort_order in ['asc', 'desc'], "invalid sort_order, %s not in ['asc', 'desc']" % sort_order
+                kwargs['sort_order'] = sort_order
+
         r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
         return {'type': 'FeatureCollection', "features": r.json()}
@@ -278,7 +287,7 @@ class Metadata(Service):
     def keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
              cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
-             offset=0):
+             offset=0, sort_field=None, sort_order='asc'):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -296,6 +305,8 @@ class Metadata(Service):
         :param str params: JSON of additional query parameters.
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
+        :param str sort_field: Properties to sort on.
+        :param str sort_order: Order of sort.
 
         :return: List of image identifiers.
 
@@ -317,14 +328,15 @@ class Metadata(Service):
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             params=params, limit=limit, offset=offset, fields=["key"])
+                             params=params, limit=limit, offset=offset, fields=["key"],
+                             sort_field=sort_field, sort_order=sort_order)
 
         return [feature['key'] for feature in result['features']]
 
     def features(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, params=None,
-                 limit=100):
+                 limit=100, sort_field=None, sort_order='asc'):
         """Generator that combines summary and search to page through results.
 
         :param int limit: Number of features to fetch per request.
@@ -349,7 +361,9 @@ class Metadata(Service):
                                    cloud_fraction=cloud_fraction,
                                    cloud_fraction_0=cloud_fraction_0,
                                    fill_fraction=fill_fraction, params=params,
-                                   limit=limit, offset=offset)
+                                   limit=limit, offset=offset,
+                                   sort_field=sort_field, sort_order=sort_order)
+
 
             offset = limit + offset
 
