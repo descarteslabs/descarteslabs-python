@@ -190,7 +190,7 @@ class Metadata(Service):
                cloud_fraction_0=None, fill_fraction=None, params=None,
                limit=100, offset=0, fields=None, dltile=None, sort_field=None, sort_order="asc"):
         """Search metadata given a spatio-temporal query. All parameters are
-        optional. Results are paged using limit and offset. Please note offset 
+        optional. Results are paged using limit and offset. Please note offset
         plus limit cannot exceed 10000.
 
         :param list(str) products: Product Identifier(s).
