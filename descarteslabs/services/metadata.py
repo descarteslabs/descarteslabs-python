@@ -14,24 +14,33 @@
 
 import json
 import os
+from warnings import warn, simplefilter
 from six import string_types
 from .service import Service
 from .places import Places
 import descarteslabs as dl
 
+CONST_ID_DEPRECATION_MESSAGE = (
+    "Keyword arg `const_id' has been deprecated and will be removed in "
+    "future versions of this software. Use the `products` "
+    "argument instead. Product identifiers can be found with the "
+    " products() method."
+)
+
 
 class Metadata(Service):
     TIMEOUT = (9.5, 120)
-    """Image Metadata Service https://iam.descarteslabs.com/service/runcible"""
+    """Image Metadata Service"""
 
     def __init__(self, url=None, token=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        simplefilter('always', DeprecationWarning)
         if url is None:
             url = os.environ.get("DESCARTESLABS_METADATA_URL",
-                                 "https://platform-services.descarteslabs.com/runcible/v1")
+                                 "https://platform-services.descarteslabs.com/metadata/v1")
 
         Service.__init__(self, url, token)
 
@@ -43,19 +52,35 @@ class Metadata(Service):
             >>> from pprint import pprint
             >>> sources = dl.metadata.sources()
             >>> pprint(sources)
-            [{'const_id': 'L8', 'sat_id': 'LANDSAT_8', 'value': 89}]
+            [{'product': 'landsat:LC08:PRE:TOAR', 'sat_id': 'LANDSAT_8'}]
 
         """
         r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
 
         return r.json()
 
-    def summary(self, const_id=None, sat_id=None, date='acquired', part=None,
+    def products(self):
+        """Get the list of product identifiers you have access to.
+
+        Example::
+            >>> import descarteslabs as dl
+            >>> from pprint import pprint
+            >>> products = dl.metadata.products()
+            >>> pprint(products)
+            ['landsat:LC08:PRE:TOAR']
+
+        """
+        r = self.session.get('%s/products' % self.url, timeout=self.TIMEOUT)
+
+        return r.json()
+
+    def summary(self, products=None, const_id=None, sat_id=None, date='acquired', part=None,
                 place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
-                cloud_fraction_0=None, fill_fraction=None, params=None, bbox=False,
+                cloud_fraction_0=None, fill_fraction=None, pixels=None, params=None,
                 dltile=None):
         """Get a summary of the results for the specified spatio-temporal query.
 
+        :param list(str) products: Product identifier(s).
         :param list(str) const_id: Constellation identifier(s).
         :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
@@ -67,7 +92,7 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
-        :param bool bbox: If true, query by the bounding box of the region of interest.
+        :param bool pixels: Whether to include pixel counts in summary calculations.
         :param str params: JSON of additional query parameters.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
 
@@ -75,16 +100,18 @@ class Metadata(Service):
 
             >>> import descarteslabs as dl
             >>> from pprint import  pprint
-            >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', const_id=['L8'], \
-                    start_time='2016-07-06', end_time='2016-07-07', part='hour'))
+            >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', \
+                    products=['landsat:LC08:PRE:TOAR'], start_time='2016-07-06', \
+                    end_time='2016-07-07', part='hour', pixels=True))
             {'bytes': 93298309,
-             'const_id': ['L8'],
              'count': 1,
              'items': [{'bytes': 93298309,
                         'count': 1,
                         'date': '2016-07-06T16:00:00',
-                        'pixels': 250508160}],
-             'pixels': 250508160}
+                        'pixels': 250508160,
+                        'timestamp': 1467820800}],
+             'pixels': 250508160,
+             'products': ['landsat:LC08:PRE:TOAR']}
         """
         if place:
             places = Places()
@@ -110,8 +137,15 @@ class Metadata(Service):
 
             kwargs['sat_id'] = sat_id
 
-        if const_id:
+        if products:
 
+            if isinstance(products, string_types):
+                products = [products]
+
+            kwargs['products'] = products
+
+        if const_id:
+            warn(CONST_ID_DEPRECATION_MESSAGE, DeprecationWarning)
             if isinstance(const_id, string_types):
                 const_id = [const_id]
 
@@ -141,24 +175,25 @@ class Metadata(Service):
         if fill_fraction is not None:
             kwargs['fill_fraction'] = fill_fraction
 
+        if pixels:
+            kwargs['pixels'] = pixels
+
         if params:
             kwargs['params'] = json.dumps(params)
-
-        if bbox:
-            kwargs['bbox'] = bbox
 
         r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
         return r.json()
 
-    def search(self, const_id=None, sat_id=None, date='acquired', place=None,
+    def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, params=None,
-               limit=100, offset=0, bbox=False, dltile=None):
+               limit=100, offset=0, fields=None, dltile=None, sort_field=None, sort_order="asc"):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
-        :param list(str) const_id: Constellation identifier(s).
+        :param list(str) products: Product Identifier(s).
+        :param list(str) const_id: Constellation Identifier(s).
         :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
@@ -168,11 +203,13 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
-        :param bool bbox: If true, query by the bounding box of the region of interest.
         :param str params: JSON of additional query parameters.
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
+        :param list(str) fields: Properties to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str sort_field: Property to sort on.
+        :param str sort_order: Order of sort.
 
         return: GeoJSON ``FeatureCollection``
 
@@ -180,9 +217,9 @@ class Metadata(Service):
 
             >>> import descarteslabs as dl
             >>> scenes = dl.metadata.search(place='north-america_united-states_iowa', \
-                                         const_id=['L8'], \
+                                         products=['landsat:LC08:PRE:TOAR'], \
                                          start_time='2016-07-01', \
-                                         end_time='2016-07-31 23:59:59')
+                                         end_time='2016-07-31T23:59:59')
             >>> len(scenes['features'])
             1
         """
@@ -213,7 +250,15 @@ class Metadata(Service):
 
             kwargs['sat_id'] = sat_id
 
+        if products:
+
+            if isinstance(products, string_types):
+                products = [products]
+
+            kwargs['products'] = products
+
         if const_id:
+            warn(CONST_ID_DEPRECATION_MESSAGE, DeprecationWarning)
 
             if isinstance(const_id, string_types):
                 const_id = [const_id]
@@ -241,28 +286,28 @@ class Metadata(Service):
         if params:
             kwargs['params'] = json.dumps(params)
 
-        if bbox:
-            kwargs['bbox'] = bbox
+        if fields is not None:
+            kwargs['fields'] = fields
+
+        if sort_field is not None:
+            kwargs['sort_field'] = sort_field
+
+            if sort_order is not None:
+                assert sort_order in ['asc', 'desc'], "invalid sort_order, %s not in ['asc', 'desc']" % sort_order
+                kwargs['sort_order'] = sort_order
 
         r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
-        features = r.json()
+        return {'type': 'FeatureCollection', "features": r.json()}
 
-        result = {'type': 'FeatureCollection'}
-
-        result['features'] = sorted(
-            features, key=lambda f: f['properties']['acquired']
-        )
-
-        return result
-
-    def keys(self, const_id=None, sat_id=None, date='acquired', place=None,
-             geom=None, start_time=None, end_time=None, cloud_fraction=None,
-             cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
-             offset=0, bbox=False, dltile=None):
+    def ids(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
+            geom=None, start_time=None, end_time=None, cloud_fraction=None,
+            cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
+            offset=0, dltile=None, sort_field=None, sort_order='asc'):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
+        :param list(str) products: Products identifier(s).
         :param list(str) const_id: Constellation identifier(s).
         :param list(str) sat_id: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
@@ -273,11 +318,62 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
-        :param bool bbox: If true, query by the bounding box of the region of interest.
         :param str params: JSON of additional query parameters.
         :param int limit: Number of items to return.
         :param int offset: Number of items to skip.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str sort_field: Property to sort on.
+        :param str sort_order: Order of sort.
+
+        :return: List of image identifiers.
+
+        Example::
+
+            >>> import descarteslabs as dl
+            >>> ids = dl.metadata.ids(place='north-america_united-states_iowa', \
+                                 products=['landsat:LC08:PRE:TOAR'], \
+                                 start_time='2016-07-01', \
+                                 end_time='2016-07-31T23:59:59')
+            >>> len(ids)
+            1
+
+            >>> ids
+            ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
+
+        """
+        result = self.search(sat_id=sat_id, products=products, const_id=const_id, date=date,
+                             place=place, geom=geom, start_time=start_time,
+                             end_time=end_time, cloud_fraction=cloud_fraction,
+                             cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
+                             params=params, limit=limit, offset=offset, fields=[], dltile=dltile,
+                             sort_field=sort_field, sort_order=sort_order)
+
+        return [feature['id'] for feature in result['features']]
+
+    def keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
+             geom=None, start_time=None, end_time=None, cloud_fraction=None,
+             cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
+             offset=0, dltile=None, sort_field=None, sort_order='asc'):
+        """Search metadata given a spatio-temporal query. All parameters are
+        optional. Results are paged using limit/offset.
+
+        :param list(str) products: Products identifier(s).
+        :param list(str) const_id: Constellation identifier(s).
+        :param list(str) sat_id: Satellite identifier(s).
+        :param str date: The date field to use for search (e.g. `acquired`).
+        :param str place: A slug identifier to be used as a region of interest.
+        :param str geom: A GeoJSON or WKT region of interest.
+        :param str start_time: Desired starting date and time (inclusive).
+        :param str end_time: Desired ending date and time (inclusive).
+        :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
+        :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
+        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param str params: JSON of additional query parameters.
+        :param int limit: Number of items to return.
+        :param int offset: Number of items to skip.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str sort_field: Property to sort on.
+        :param str sort_order: Order of sort.
 
         :return: List of image identifiers.
 
@@ -285,9 +381,9 @@ class Metadata(Service):
 
             >>> import descarteslabs as dl
             >>> keys = dl.metadata.keys(place='north-america_united-states_iowa', \
-                                 const_id=['L8'], \
+                                 products=['landsat:LC08:PRE:TOAR'], \
                                  start_time='2016-07-01', \
-                                 end_time='2016-07-31 23:59:59')
+                                 end_time='2016-07-31T23:59:59')
             >>> len(keys)
             1
 
@@ -295,30 +391,31 @@ class Metadata(Service):
             ['meta_LC80270312016188_v1']
 
         """
-        result = self.search(sat_id=sat_id, const_id=const_id, date=date,
+        result = self.search(sat_id=sat_id, products=products, const_id=const_id, date=date,
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             params=params, limit=limit, offset=offset, bbox=bbox,
-                             dltile=dltile)
+                             params=params, limit=limit, offset=offset, fields=["key"], dltile=dltile,
+                             sort_field=sort_field, sort_order=sort_order)
 
-        return [feature['id'] for feature in result['features']]
+        return [feature['key'] for feature in result['features']]
 
-    def features(self, const_id=None, sat_id=None, date='acquired', place=None,
+    def features(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, params=None,
-                 limit=100, bbox=False, dltile=None):
+                 limit=100, dltile=None, sort_field=None, sort_order='asc'):
+
         """Generator that combines summary and search to page through results.
 
         :param int limit: Number of features to fetch per request.
 
         :return: Generator of GeoJSON ``Feature`` objects.
         """
-        summary = self.summary(sat_id=sat_id, const_id=const_id, date=date,
+        summary = self.summary(sat_id=sat_id, products=products, const_id=None, date=date,
                                place=place, geom=geom, start_time=start_time,
                                end_time=end_time, cloud_fraction=cloud_fraction,
                                cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                               params=params, bbox=bbox, dltile=dltile)
+                               params=params, dltile=dltile)
 
         offset = 0
 
@@ -326,14 +423,15 @@ class Metadata(Service):
 
         while offset < count:
 
-            features = self.search(sat_id=sat_id, const_id=const_id,
+            features = self.search(sat_id=sat_id, products=products, const_id=None,
                                    date=date, place=place, geom=geom,
                                    start_time=start_time, end_time=end_time,
                                    cloud_fraction=cloud_fraction,
                                    cloud_fraction_0=cloud_fraction_0,
                                    fill_fraction=fill_fraction, params=params,
-                                   limit=limit, offset=offset, bbox=bbox,
-                                   dltile=dltile)
+                                   limit=limit, offset=offset,
+                                   dltile=dltile, sort_field=sort_field,
+                                   sort_order=sort_order)
 
             offset = limit + offset
 
@@ -354,9 +452,10 @@ class Metadata(Service):
             >>> keys
             ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket', 'cloud_fraction',
              'cloud_fraction_0', 'cs_code', 'descartes_version', 'file_md5s', 'file_sizes', 'files',
-             'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'identifier', 'processed',
-             'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id',
-             'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction', 'tile_id']
+             'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'id', 'identifier', 'key',
+             'processed', 'product', 'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle',
+             'sat_id', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction',
+             'tile_id']
         """
         r = self.session.get('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
 

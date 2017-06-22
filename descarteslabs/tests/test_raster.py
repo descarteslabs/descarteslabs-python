@@ -32,6 +32,7 @@ class TestRaster(unittest.TestCase):
         cls.places = dl.places
 
     def test_raster(self):
+        # test with product key
         r = self.raster.raster(
             inputs=['meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
@@ -40,7 +41,16 @@ class TestRaster(unittest.TestCase):
         self.assertTrue("metadata" in r)
         self.assertTrue("files" in r)
         self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
-        self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.tif'])
+
+        # test with product id
+        r = self.raster.raster(
+            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            resolution=960,
+        )
+        self.assertTrue("metadata" in r)
+        self.assertTrue("files" in r)
+        self.assertTrue("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
 
     def test_raster_save(self):
         tmpdir = tempfile.mkdtemp()
