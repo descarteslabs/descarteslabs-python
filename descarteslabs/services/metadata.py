@@ -288,7 +288,7 @@ class Metadata(Service):
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, params=None,
-               limit=100, offset=0, fields=None, dltile=None, sort_field=None, sort_order="asc"):
+               limit=100, offset=0, fields=None, dltile=None, scroll_pages=None, sort_field=None, sort_order="asc"):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit and offset. Please note offset
         plus limit cannot exceed 10000.
@@ -393,9 +393,22 @@ class Metadata(Service):
             if sort_order is not None:
                 kwargs['sort_order'] = sort_order
 
-        r = self.session.post('/search', json=kwargs)
+        if scroll_pages:
 
-        return {'type': 'FeatureCollection', "features": r.json()}
+            def scrolled_search_iterator():
+                kwargs['scroll'] = True
+                r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
+                del kwargs['scroll']
+                while int(r.headers.get('X-COUNT')):
+                    yield {'type': 'FeatureCollection', "features": r.json()}
+                    kwargs['next'] = r.headers.get('X-NEXT')
+                    r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
+
+            return scrolled_search_iterator()
+        else:
+            r = self.session.post('/search', json=kwargs)
+
+            return {'type': 'FeatureCollection', "features": r.json()}
 
     def ids(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
             geom=None, start_time=None, end_time=None, cloud_fraction=None,

@@ -219,6 +219,20 @@ class TestMetadata(unittest.TestCase):
     def test_get_bands_by_const(self):
         self.instance.get_bands_by_constellation('L8')
 
+    def test_search_scrolled_pages(self):
+        page_size = 5
+        pages = self.instance.search(
+                start_time='2016-07-06',
+                end_time='2016-07-07',
+                products=['landsat:LC08:PRE:TOAR'],
+                limit=page_size,
+                scroll_pages=True
+            )
+        for page in pages:
+            print(page)
+            self.assertGreater(len(page['features']), 0)
+            self.assertLessEqual(len(page['features']), page_size)
+
 
 if __name__ == '__main__':
     unittest.main()
