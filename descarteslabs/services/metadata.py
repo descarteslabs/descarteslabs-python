@@ -190,7 +190,8 @@ class Metadata(Service):
                cloud_fraction_0=None, fill_fraction=None, params=None,
                limit=100, offset=0, fields=None, dltile=None, sort_field=None, sort_order="asc"):
         """Search metadata given a spatio-temporal query. All parameters are
-        optional. Results are paged using limit/offset.
+        optional. Results are paged using limit and offset. Please note offset 
+        plus limit cannot exceed 10000.
 
         :param list(str) products: Product Identifier(s).
         :param list(str) const_id: Constellation Identifier(s).
@@ -204,7 +205,7 @@ class Metadata(Service):
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param str params: JSON of additional query parameters.
-        :param int limit: Number of items to return.
+        :param int limit: Number of items to return. (max of 10000)
         :param int offset: Number of items to skip.
         :param list(str) fields: Properties to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
@@ -238,10 +239,7 @@ class Metadata(Service):
         if isinstance(geom, dict):
             geom = json.dumps(geom)
 
-        kwargs = {}
-
-        kwargs['limit'] = limit
-        kwargs['offset'] = offset
+        kwargs = {'date': date, 'limit': limit, 'offset': offset}
 
         if sat_id:
 
