@@ -291,7 +291,6 @@ class Metadata(Service):
             kwargs['sort_field'] = sort_field
 
             if sort_order is not None:
-                assert sort_order in ['asc', 'desc'], "invalid sort_order, %s not in ['asc', 'desc']" % sort_order
                 kwargs['sort_order'] = sort_order
 
         r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
