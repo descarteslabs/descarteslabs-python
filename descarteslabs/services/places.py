@@ -60,7 +60,8 @@ class Places(Service):
             >>> import descarteslabs as dl
             >>> from pprint import pprint
             >>> results = dl.places.find('morocco')
-            >>> pprint(results.pop('bbox'))
+            >>> results.pop('bbox')
+            >>> pprint(results)
             [{'id': 85632693,
               'name': 'Morocco',
               'path': 'continent:africa_country:morocco',
