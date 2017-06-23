@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import random
 import os
+import random
 
 import requests
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
-from descarteslabs import descartes_auth
-from descarteslabs.exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError
+import descarteslabs
+from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError
 
 
 class WrappedSession(requests.Session):
@@ -43,7 +43,7 @@ class Service:
     TIMEOUT = (9.5, 30)
 
     def __init__(self, url, token):
-        self.auth = descartes_auth
+        self.auth = descarteslabs.descartes_auth
         self.url = url
         if token:
             self.auth._token = token
@@ -58,7 +58,6 @@ class Service:
 
     @property
     def session(self):
-
         s = WrappedSession()
 
         retries = Retry(total=5,
@@ -72,8 +71,11 @@ class Service:
 
         s.mount('https://', HTTPAdapter(max_retries=retries))
 
-        s.headers.update({"Authorization": self.token})
-        s.headers.update({"content-type": "application/json"})
+        s.headers.update({
+            "Authorization": self.token,
+            "Content-Type": "application/json",
+            "User-Agent": "dl-python/{}".format(descarteslabs.__version__)
+        })
 
         here = os.path.dirname(__file__)
 
