@@ -221,19 +221,22 @@ class TestMetadata(unittest.TestCase):
 
     def test_search_scrolled_pages(self):
         # This test will run until killed without the new version of metadata service released.
+        # I'm aborting it until then.
         self.assertTrue(False)
+# =============================================================================
         page_size = 5
-        pages = self.instance.search(
+        feature_generator = self.instance.search(
                 start_time='2016-07-06',
                 end_time='2016-07-07',
                 products=['landsat:LC08:PRE:TOAR'],
                 limit=page_size,
                 scroll_pages=True
             )
-        for page in pages:
-            print(page)
-            self.assertGreater(len(page['features']), 0)
-            self.assertLessEqual(len(page['features']), page_size)
+        features = 0
+        for feature in feature_generator:
+            self.assertIn('geometry', feature)
+            features += 1
+        self.assertGreater(features, 0)
 
 
 if __name__ == '__main__':

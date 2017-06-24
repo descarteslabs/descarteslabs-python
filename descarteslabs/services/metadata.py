@@ -400,7 +400,8 @@ class Metadata(Service):
                 r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
                 del kwargs['scroll']
                 while int(r.headers.get('X-COUNT')):
-                    yield {'type': 'FeatureCollection', "features": r.json()}
+                    for feature in r.json():
+                        yield feature
                     kwargs['next'] = r.headers.get('X-NEXT')
                     r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
