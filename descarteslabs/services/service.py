@@ -20,7 +20,7 @@ from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
 import descarteslabs
-from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError
+from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, GatewayTimeoutError
 
 
 class WrappedSession(requests.Session):
@@ -35,6 +35,10 @@ class WrappedSession(requests.Session):
             raise NotFoundError("404 %s %s" % (method, url))
         elif resp.status_code == 429:
             raise RateLimitError(resp.text)
+        elif resp.status_code == 504:
+            raise GatewayTimeoutError(
+                "Your request timed out on the server. "
+                "Consider reducing the complexity of your request.")
         else:
             raise ServerError(resp.text)
 
@@ -67,7 +71,7 @@ class Service:
                             'HEAD', 'TRACE', 'GET', 'POST',
                             'PUT', 'OPTIONS', 'DELETE'
                         ]),
-                        status_forcelist=[429, 500, 502, 503, 504])
+                        status_forcelist=[429, 500, 502, 503])
 
         s.mount('https://', HTTPAdapter(max_retries=retries))
 

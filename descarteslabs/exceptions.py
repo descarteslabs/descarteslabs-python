@@ -25,3 +25,7 @@ class NotFoundError(ServerError):
 
 class RateLimitError(ServerError):
     status = 429
+
+
+class GatewayTimeoutError(ServerError):
+    status = 504
