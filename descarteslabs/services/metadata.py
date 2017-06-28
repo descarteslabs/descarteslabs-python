@@ -281,7 +281,7 @@ class Metadata(Service):
         if filter is not None:
             if not isinstance(filter, list):
                 filter = [filter]
-            kwargs['filter'] = filtering.AndExpression(filter).serialize()
+            kwargs['filter_expr'] = filtering.AndExpression(filter).serialize()
 
         if pixels:
             kwargs['pixels'] = pixels
@@ -389,7 +389,7 @@ class Metadata(Service):
         if filter is not None:
             if not isinstance(filter, list):
                 filter = [filter]
-            kwargs['filter'] = filtering.AndExpression(filter).serialize()
+            kwargs['filter_expr'] = filtering.AndExpression(filter).serialize()
 
         if sort_field is not None:
             kwargs['sort_field'] = sort_field
