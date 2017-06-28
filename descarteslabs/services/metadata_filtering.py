@@ -59,7 +59,7 @@ class AndExpression(object):
         if isinstance(other, AndExpression):
             self.parts.extend(other.parts)
             return self
-        if any(isinstance(other, ty) for ty in [OrExpression, Expression]):
+        if isinstance(other, (OrExpression, Expression)):
             self.parts.append(other)
             return self
         else:
@@ -82,7 +82,7 @@ class OrExpression(object):
         if isinstance(other, OrExpression):
             self.parts.extend(other.parts)
             return self
-        if any(isinstance(other, ty) for ty in [AndExpression, Expression]):
+        if isinstance(other, (AndExpression, Expression)):
             self.parts.append(other)
             return self
         else:
