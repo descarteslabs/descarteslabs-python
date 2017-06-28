@@ -74,6 +74,7 @@ raster_parser.add_argument("-output_format", default='GTiff', type=str)
 raster_parser.add_argument("-data_type", default='UInt16', type=str)
 raster_parser.add_argument("-srs", default=None, type=str)
 raster_parser.add_argument("-place", default=None, type=str)
+raster_parser.add_argument("-outfile_basename", default=None, type=str)
 
 
 def handle(args):

@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import tempfile
+import shutil
 import unittest
 import json
 
@@ -29,6 +32,7 @@ class TestRaster(unittest.TestCase):
         cls.places = dl.places
 
     def test_raster(self):
+        # test with product key
         r = self.raster.raster(
             inputs=['meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
@@ -37,7 +41,35 @@ class TestRaster(unittest.TestCase):
         self.assertTrue("metadata" in r)
         self.assertTrue("files" in r)
         self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
-        self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.tif'])
+
+        # test with product id
+        r = self.raster.raster(
+            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            resolution=960,
+        )
+        self.assertTrue("metadata" in r)
+        self.assertTrue("files" in r)
+        self.assertTrue("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
+
+    def test_raster_save(self):
+        tmpdir = tempfile.mkdtemp()
+        try:
+            response = self.raster.raster(
+                inputs=['meta_LC80270312016188_v1'],
+                bands=['red', 'green', 'blue', 'alpha'],
+                resolution=960, save=True,
+                outfile_basename="{}/my-raster".format(tmpdir)
+            )
+            with open("{}/my-raster.tif".format(tmpdir), "rb") as f:
+                f.seek(0, os.SEEK_END)
+                length = f.tell()
+            self.assertEqual(
+                length,
+                len(response['files']["{}/my-raster.tif".format(tmpdir)])
+            )
+        finally:
+            shutil.rmtree(tmpdir)
 
     def test_ndarray(self):
         try:
@@ -143,6 +175,28 @@ class TestRaster(unittest.TestCase):
     def test_dltile(self):
         dltile_feature = self.raster.dltile("2048:16:30.0:16:-4:81")
         self.assertEqual(dltile_feature['properties']['key'], "2048:16:30.0:16:-4:81")
+
+    def test_raster_dltile(self):
+        dltile_feature = self.raster.dltile_from_latlon(41.0, -94.0, 30.0, 256, 16)
+        arr, meta = self.raster.ndarray(
+            inputs=['meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            dltile=dltile_feature['properties']['key'],
+        )
+        self.assertEqual(arr.shape[0], 256 + 2 * 16)
+        self.assertEqual(arr.shape[1], 256 + 2 * 16)
+        self.assertEqual(arr.shape[2], 4)
+
+    def test_raster_dltile_dict(self):
+        dltile_feature = self.raster.dltile_from_latlon(41.0, -94.0, 30.0, 256, 16)
+        arr, meta = self.raster.ndarray(
+            inputs=['meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            dltile=dltile_feature,
+        )
+        self.assertEqual(arr.shape[0], 256 + 2 * 16)
+        self.assertEqual(arr.shape[1], 256 + 2 * 16)
+        self.assertEqual(arr.shape[2], 4)
 
     def test_dlkeys_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')

@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import random
 import os
+import random
 
 import requests
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
-from descarteslabs import descartes_auth
-from descarteslabs.exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError
+import descarteslabs
+from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, GatewayTimeoutError
 
 
 class WrappedSession(requests.Session):
@@ -32,9 +32,13 @@ class WrappedSession(requests.Session):
         elif resp.status_code == 400:
             raise BadRequestError(resp.text)
         elif resp.status_code == 404:
-            raise NotFoundError(resp.text)
+            raise NotFoundError("404 %s %s" % (method, url))
         elif resp.status_code == 429:
             raise RateLimitError(resp.text)
+        elif resp.status_code == 504:
+            raise GatewayTimeoutError(
+                "Your request timed out on the server. "
+                "Consider reducing the complexity of your request.")
         else:
             raise ServerError(resp.text)
 
@@ -43,7 +47,7 @@ class Service:
     TIMEOUT = (9.5, 30)
 
     def __init__(self, url, token):
-        self.auth = descartes_auth
+        self.auth = descarteslabs.descartes_auth
         self.url = url
         if token:
             self.auth._token = token
@@ -58,7 +62,6 @@ class Service:
 
     @property
     def session(self):
-
         s = WrappedSession()
 
         retries = Retry(total=5,
@@ -68,12 +71,15 @@ class Service:
                             'HEAD', 'TRACE', 'GET', 'POST',
                             'PUT', 'OPTIONS', 'DELETE'
                         ]),
-                        status_forcelist=[429, 500, 502, 503, 504])
+                        status_forcelist=[429, 500, 502, 503])
 
         s.mount('https://', HTTPAdapter(max_retries=retries))
 
-        s.headers.update({"Authorization": self.token})
-        s.headers.update({"content-type": "application/json"})
+        s.headers.update({
+            "Authorization": self.token,
+            "Content-Type": "application/json",
+            "User-Agent": "dl-python/{}".format(descarteslabs.__version__)
+        })
 
         here = os.path.dirname(__file__)
 

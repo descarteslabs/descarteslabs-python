@@ -1,3 +1,4 @@
 requests>=2.11.1,<=2.14.2
 cachetools
 six
+mock
