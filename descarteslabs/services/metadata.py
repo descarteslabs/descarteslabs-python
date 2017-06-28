@@ -20,6 +20,8 @@ from .service import Service
 from .places import Places
 import descarteslabs as dl
 
+from . import metadata_filtering as filtering
+
 CONST_ID_DEPRECATION_MESSAGE = (
     "Keyword arg `const_id' has been deprecated and will be removed in "
     "future versions of this software. Use the `products` "
@@ -179,7 +181,7 @@ class Metadata(Service):
 
     def summary(self, products=None, const_id=None, sat_id=None, date='acquired', part=None,
                 place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
-                cloud_fraction_0=None, fill_fraction=None, pixels=None, params=None,
+                cloud_fraction_0=None, fill_fraction=None, filter=None, pixels=None,
                 dltile=None):
         """Get a summary of the results for the specified spatio-temporal query.
 
@@ -276,18 +278,20 @@ class Metadata(Service):
         if fill_fraction is not None:
             kwargs['fill_fraction'] = fill_fraction
 
+        if filter is not None:
+            if not isinstance(filter, list):
+                filter = [filter]
+            kwargs['filter'] = filtering.AndExpression(filter).serialize()
+
         if pixels:
             kwargs['pixels'] = pixels
-
-        if params:
-            kwargs['params'] = json.dumps(params)
 
         r = self.session.post('/summary', json=kwargs)
         return r.json()
 
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
-               cloud_fraction_0=None, fill_fraction=None, params=None,
+               cloud_fraction_0=None, fill_fraction=None, filter=None,
                limit=100, offset=0, fields=None, dltile=None, sort_field=None, sort_order="asc"):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit and offset. Please note offset
@@ -342,14 +346,12 @@ class Metadata(Service):
         kwargs = {'date': date, 'limit': limit, 'offset': offset}
 
         if sat_id:
-
             if isinstance(sat_id, string_types):
                 sat_id = [sat_id]
 
             kwargs['sat_id'] = sat_id
 
         if products:
-
             if isinstance(products, string_types):
                 products = [products]
 
@@ -381,17 +383,19 @@ class Metadata(Service):
         if fill_fraction is not None:
             kwargs['fill_fraction'] = fill_fraction
 
-        if params:
-            kwargs['params'] = json.dumps(params)
-
         if fields is not None:
             kwargs['fields'] = fields
+
+        if filter is not None:
+            if not isinstance(filter, list):
+                filter = [filter]
+            kwargs['filter'] = filtering.AndExpression(filter).serialize()
 
         if sort_field is not None:
             kwargs['sort_field'] = sort_field
 
-            if sort_order is not None:
-                kwargs['sort_order'] = sort_order
+        if sort_order is not None:
+            kwargs['sort_order'] = sort_order
 
         r = self.session.post('/search', json=kwargs)
 
@@ -449,7 +453,7 @@ class Metadata(Service):
 
     def keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
-             cloud_fraction_0=None, fill_fraction=None, params=None, limit=100,
+             cloud_fraction_0=None, fill_fraction=None, filter=None, limit=100,
              offset=0, dltile=None, sort_field=None, sort_order='asc'):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
@@ -492,14 +496,14 @@ class Metadata(Service):
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             params=params, limit=limit, offset=offset, fields=["key"], dltile=dltile,
-                             sort_field=sort_field, sort_order=sort_order)
+                             filter=filter, limit=limit, offset=offset, fields=["key"],
+                             dltile=dltile, sort_field=sort_field, sort_order=sort_order)
 
         return [feature['key'] for feature in result['features']]
 
     def features(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
-                 cloud_fraction_0=None, fill_fraction=None, params=None,
+                 cloud_fraction_0=None, fill_fraction=None, filter=None,
                  limit=100, dltile=None, sort_field=None, sort_order='asc'):
 
         """Generator that combines summary and search to page through results.
@@ -512,7 +516,7 @@ class Metadata(Service):
                                place=place, geom=geom, start_time=start_time,
                                end_time=end_time, cloud_fraction=cloud_fraction,
                                cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                               params=params, dltile=dltile)
+                               filter=filter, dltile=dltile)
 
         offset = 0
         count = summary['count']
@@ -523,7 +527,7 @@ class Metadata(Service):
                                    start_time=start_time, end_time=end_time,
                                    cloud_fraction=cloud_fraction,
                                    cloud_fraction_0=cloud_fraction_0,
-                                   fill_fraction=fill_fraction, params=params,
+                                   fill_fraction=fill_fraction, filter=filter,
                                    limit=limit, offset=offset,
                                    dltile=dltile, sort_field=sort_field,
                                    sort_order=sort_order)
