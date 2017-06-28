@@ -220,10 +220,6 @@ class TestMetadata(unittest.TestCase):
         self.instance.get_bands_by_constellation('L8')
 
     def test_search_scrolled_pages(self):
-        # This test will run until killed without the new version of metadata service released.
-        # I'm aborting it until then.
-        self.assertTrue(False)
-# =============================================================================
         page_size = 5
         feature_generator = self.instance.search(
                 start_time='2016-07-06',
