@@ -223,11 +223,11 @@ class TestMetadata(unittest.TestCase):
     def test_expr_serialization(self):
         q = ((0.1 < f.cloud_fraction <= 0.2) & (f.sat_id == "f00b")) | (f.sat_id == "usa-245")
         expected_q = {"or": [
-            {"eq": {"sat_id": "usa-245"}},
             {"and": [
                 {"range": {"cloud_fraction": {"gt": 0.1, "lte": 0.2}}},
                 {"eq": {"sat_id": "f00b"}}
-            ]}
+            ]},
+            {"eq": {"sat_id": "usa-245"}},
         ]}
 
         self.assertEqual(q.serialize(), expected_q)

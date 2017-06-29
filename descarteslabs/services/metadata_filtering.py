@@ -20,9 +20,11 @@ class Expression(object):
     def __or__(self, other):
         return OrExpression([self]) | other
 
-    __rand__ = __and__
-    __ror__ = __or__
+    def __rand__(self, other):
+        return AndExpression([other]) & self
 
+    def __ror__(self, other):
+        return OrExpression([other]) | self
 
 class EqExpression(Expression):
     def __init__(self, name, value):
