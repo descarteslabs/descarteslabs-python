@@ -18,7 +18,7 @@ from warnings import catch_warnings
 
 import descarteslabs as dl
 from descarteslabs.exceptions import NotFoundError
-from descarteslabs.services.metadata_filtering import fields as f
+from descarteslabs.utilities import properties as p
 
 
 class TestMetadata(unittest.TestCase):
@@ -221,7 +221,7 @@ class TestMetadata(unittest.TestCase):
         self.instance.get_bands_by_constellation('L8')
 
     def test_expr_serialization(self):
-        q = ((0.1 < f.cloud_fraction <= 0.2) & (f.sat_id == "f00b")) | (f.sat_id == "usa-245")
+        q = ((0.1 < p.cloud_fraction <= 0.2) & (p.sat_id == "f00b")) | (p.sat_id == "usa-245")
         expected_q = {"or": [
             {"and": [
                 {"range": {"cloud_fraction": {"gt": 0.1, "lte": 0.2}}},

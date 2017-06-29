@@ -26,6 +26,7 @@ class Expression(object):
     def __ror__(self, other):
         return OrExpression([other]) | self
 
+
 class EqExpression(Expression):
     def __init__(self, name, value):
         self.name = name
@@ -108,7 +109,7 @@ def range_expr(op):
     return f
 
 
-class Variable(object):
+class Property(object):
     def __init__(self, name, parts=None):
         self.name = name
         self.parts = parts or {}
@@ -125,26 +126,16 @@ class Variable(object):
         return NeExpression(self.name, other)
 
     def __repr__(self):
-        return '<Variable {}>'.format(self.name)
+        return '<Property {}>'.format(self.name)
 
 
-class Fields(object):
+class Properties(object):
     def __init__(self, *args):
-        self.fields = args
+        self.props = args
 
     def __getattr__(self, attr):
-        if attr in self.fields:
-            return Variable(attr)
+        if attr in self.props:
+            return Property(attr)
 
         raise AttributeError(
-            "'Fields' object has no attribute '{}'".format(attr))
-
-
-fields = Fields("absolute_orbit", "acquired", "archived", "area", "azimuth_angle",
-                "bright_fraction", "cirrus_fraction", "cloud_fraction", "cloud_fraction_0",
-                "cloud_fraction_1", "descartes_version", "earth_sun_distance",
-                "fill_fraction", "geolocation_accuracy", "opaque_fraction", "product", "processed",
-                "published", "relative_orbit", "roll_angle", "sat_id", "solar_azimuth_angle",
-                "solar_azimuth_angle_0", "solar_elevation_angle", "solar_elevation_angle_0",
-                "sw_version", "terrain_correction", "tile_id",
-                "view_angle", "view_angle_0", "view_angle_1")
+            "'Properties' object has no attribute '{}'".format(attr))
