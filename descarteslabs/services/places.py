@@ -111,11 +111,11 @@ class Places(Service):
             >>> from pprint import pprint
             >>> results = dl.places.search('texas')
             >>> pprint(results[0])
-            {u'bbox': [-106.645584, 25.837395, -93.508039, 36.50035],
-             u'id': 85688753,
-             u'name': u'Texas',
-             u'placetype': u'region',
-             u'slug': u'north-america_united-states_texas'}
+            {'bbox': [-106.645584, 25.837395, -93.508039, 36.50035],
+             'id': 85688753,
+             'name': 'Texas',
+             'placetype': 'region',
+             'slug': 'north-america_united-states_texas'}
         """
         params = {}
 
