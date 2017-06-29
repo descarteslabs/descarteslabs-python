@@ -42,7 +42,7 @@ class Places(Service):
             >>> import descarteslabs as dl
             >>> dl.places.placetypes()
             ['continent', 'country', 'dependency', 'macroregion', 'region',
-                'district', 'mesoregion', 'microregion', 'county']
+                'district', 'mesoregion', 'microregion', 'county', 'locality']
         """
         r = self.session.get('%s/placetypes' % self.url, timeout=self.TIMEOUT)
 
