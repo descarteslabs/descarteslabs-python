@@ -35,7 +35,7 @@ class Places(Service):
 
         Service.__init__(self, url, token)
         self.cache = TTLCache(maxsize, ttl)
-
+        
     def placetypes(self):
         """Get a list of place types.
 
@@ -93,6 +93,45 @@ class Places(Service):
               'slug': 'africa_morocco'}]
         """
         r = self.session.get('%s/find/%s' % (self.url, path), params=kwargs, timeout=self.TIMEOUT)
+
+        return r.json()
+
+    def search(self, q, country=None, region=None, placetype=None):
+        """Search for shapes
+
+        :param q: A query string.
+        :param str country: Restrict search to a specific country
+        :param str region: Restrict search to a specific region
+        :param str placetype: Restrict search to a specific placetype
+
+        :return: list of candidates
+
+        Example::
+            >>> import descarteslabs as dl
+            >>> from pprint import pprint
+            >>> results = dl.places.search('texas')
+            >>> pprint(results[0])
+            {u'bbox': [-106.645584, 25.837395, -93.508039, 36.50035],
+             u'id': 85688753,
+             u'name': u'Texas',
+             u'placetype': u'region',
+             u'slug': u'north-america_united-states_texas'}
+        """
+        params = {}
+
+        if q:
+            params['q'] = q
+            
+        if country:
+            params['country'] = country
+
+        if region:
+            params['region'] = region
+
+        if placetype:
+            params['placetype'] = placetype
+
+        r = self.session.get('%s/search' % self.url, params=params, timeout=self.TIMEOUT)
 
         return r.json()
 
