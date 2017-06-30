@@ -59,7 +59,7 @@ class Metadata(Service):
 
         return r.json()
 
-    def bands(self, limit=None, offset=None, wavelength=None, resolution=None, tags=None):
+    def bands(self, limit=None, products=None, offset=None, wavelength=None, resolution=None, tags=None):
         """Seach for imagery data bands that you have access to.
 
         :param int limit: Number of results to return.
@@ -70,7 +70,7 @@ class Metadata(Service):
 
 
         """
-        params = ['limit', 'offset', 'wavelength', 'resolution', 'tags']
+        params = ['limit', 'offset', 'products', 'wavelength', 'resolution', 'tags']
 
         args = locals()
         kwargs = {
