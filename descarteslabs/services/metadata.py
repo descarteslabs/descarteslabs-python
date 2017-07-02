@@ -82,10 +82,11 @@ class Metadata(Service):
 
         return r.json()
 
-    def products(self, band=None, limit=None, offset=None):
+    def products(self, bands=None, limit=None, offset=None):
         """Search products that are available on the platform.
 
-        :param list(str) band: Band name e.g "red" to filter products by.
+        :param list(str) bands: Band name(s) e.g ["red", "nir"] to filter products by.
+                                Note that products must match all bands that are passed.
         :param int limit: Number of results to return.
         :param int offset: Index to start at when returning results.
 
