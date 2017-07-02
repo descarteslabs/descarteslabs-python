@@ -132,7 +132,7 @@ class Metadata(Service):
                     'swath': '185km',
                     'title': 'Landsat 5'}]
         """
-        params = ['limit', 'offset', 'band']
+        params = ['limit', 'offset', 'bands']
 
         args = locals()
         kwargs = {
