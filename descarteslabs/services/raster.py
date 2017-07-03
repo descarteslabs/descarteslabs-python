@@ -18,8 +18,8 @@ from io import BytesIO
 import json
 import warnings
 
-from descarteslabs.addons import numpy as np
-from descarteslabs.utilities import as_json_string
+from descarteslabs.addons import ThirdParty, blosc, numpy as np
+from descarteslabs.utilities import as_json_string, read_blosc_array, read_blosc_string
 from .service import Service
 from .places import Places
 import six
@@ -242,7 +242,7 @@ class Raster(Service):
             resampler=None,
             dltile=None,
             save=False,
-            outfile_basename=None,
+            outfile_basename=None
     ):
         """Given a list of :class:`Metadata <descarteslabs.services.Metadata>` identifiers,
         retrieve a translated and warped mosaic.
@@ -282,6 +282,8 @@ class Raster(Service):
             shape = places.shape(place, geom='low')
             cutline = json.dumps(shape['geometry'])
 
+        can_blosc = not isinstance(blosc, ThirdParty)
+
         params = {
             'keys': inputs,
             'bands': bands,
@@ -296,6 +298,7 @@ class Raster(Service):
             'outsize': dimensions,
             'targetAlignedPixels': align_pixels,
             'resampleAlg': resampler,
+            'blosc': can_blosc
         }
 
         if dltile is not None:
@@ -306,19 +309,44 @@ class Raster(Service):
 
         r = self.session.post('/raster', json=params)
 
-        json_resp = r.json()
-        # Decode base64
-        for k in list(json_resp['files'].keys()):
-            if outfile_basename:
-                outfilename = "{}.{}".format(
-                    outfile_basename,
-                    ".".join(os.path.basename(k).split(".")[1:])
+        if can_blosc:
+            raw = BytesIO(r.content)
+
+            json_resp = json.loads(raw.readline().decode('utf-8').strip())
+
+            num_files = json_resp['files']
+            json_resp['files'] = {}
+
+            for _ in range(num_files):
+                file_meta = json.loads(raw.readline().decode('utf-8').strip())
+                data = read_blosc_string(file_meta, raw)
+
+                fn = file_meta['filename']
+
+                if outfile_basename:
+                    outfilename = "{}.{}".format(
+                        outfile_basename,
+                        ".".join(os.path.basename(fn).split(".")[1:])
+                    )
+                else:
+                    outfilename = fn
+
+                json_resp['files'][outfilename] = data
+        else:
+            json_resp = r.json()
+
+            # Decode base64
+            for fn in list(json_resp['files'].keys()):
+                if outfile_basename:
+                    outfilename = "{}.{}".format(
+                        outfile_basename,
+                        ".".join(os.path.basename(fn).split(".")[1:])
+                    )
+                else:
+                    outfilename = fn
+                json_resp['files'][outfilename] = base64.b64decode(
+                    json_resp['files'].pop(fn)
                 )
-            else:
-                outfilename = k
-            json_resp['files'][outfilename] = base64.b64decode(
-                json_resp['files'].pop(k)
-            )
 
         if save:
             for filename, data in six.iteritems(json_resp['files']):
@@ -381,6 +409,8 @@ class Raster(Service):
             shape = places.shape(place, geom='low')
             cutline = json.dumps(shape['geometry'])
 
+        can_blosc = not isinstance(blosc, ThirdParty)
+
         params = {
             'keys': inputs,
             'bands': bands,
@@ -394,6 +424,7 @@ class Raster(Service):
             'outsize': dimensions,
             'targetAlignedPixels': align_pixels,
             'resampleAlg': resampler,
+            'blosc': can_blosc
         }
 
         if dltile is not None:
@@ -402,12 +433,16 @@ class Raster(Service):
             else:
                 params['dltile'] = dltile
 
-        r = self.session.post('/npz', json=params)
+        r = self.session.post('/npz', json=params, stream=True)
 
-        io = BytesIO(r.content)
-        npz = np.load(io)
-        array = npz['data']
-        metadata = json.loads(npz['metadata'].tostring().decode('utf-8'))
+        if can_blosc:
+            metadata = json.loads(r.raw.readline().decode('utf-8').strip())
+            array_meta = json.loads(r.raw.readline().decode('utf-8').strip())
+            array = read_blosc_array(array_meta, r.raw)
+        else:
+            npz = np.load(BytesIO(r.content))
+            array = npz['data']
+            metadata = json.loads(npz['metadata'].tostring().decode('utf-8'))
 
         if len(array.shape) > 2:
             if order == 'image':

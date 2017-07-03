@@ -98,6 +98,49 @@ class TestRaster(unittest.TestCase):
         except ImportError:
             pass
 
+    def test_raster_blosc(self):
+        r = self.raster.raster(
+            inputs=['meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            resolution=960,
+        )
+
+        old_blosc = dl.addons.blosc
+        dl.addons.blosc = dl.addons.ThirdParty("blosc")
+
+        r2 = self.raster.raster(
+            inputs=['meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            resolution=960,
+        )
+
+        dl.addons.blosc = old_blosc
+
+        self.assertEqual(r, r2)
+
+    def test_ndarray_blosc(self):
+        r, meta = self.raster.ndarray(
+            inputs=['meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            resolution=960,
+            align_pixels=True
+        )
+
+        old_blosc = dl.addons.blosc
+        dl.addons.blosc = dl.addons.ThirdParty("blosc")
+
+        r2, meta2 = self.raster.ndarray(
+            inputs=['meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            resolution=960,
+            align_pixels=True
+        )
+
+        dl.addons.blosc = old_blosc
+
+        self.assertTrue((r == r2).all())
+        self.assertEqual(meta, meta2)
+
     def test_cutline_dict(self):
         shape = {"geometry":
                  {"type": "Polygon",
