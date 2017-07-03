@@ -60,6 +60,8 @@ class Service:
         if token:
             self.auth._token = token
 
+        self.session = self.build_session()
+
     @property
     def token(self):
         return self.auth.token
@@ -68,8 +70,7 @@ class Service:
     def token(self, token):
         self.auth._token = token
 
-    @property
-    def session(self):
+    def build_session(self):
         s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
 
         retries = Retry(total=5,
