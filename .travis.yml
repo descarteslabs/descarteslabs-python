@@ -4,7 +4,7 @@ python:
 - '3.5'
 - '3.6'
 before_install:
-- pip install --upgrade pip
+- pip install --upgrade pip setuptools
 install:
 - pip install --upgrade -r requirements.txt
 - pip install .
