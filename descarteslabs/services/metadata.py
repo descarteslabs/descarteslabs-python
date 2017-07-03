@@ -40,7 +40,7 @@ class Metadata(Service):
         simplefilter('always', DeprecationWarning)
         if url is None:
             url = os.environ.get("DESCARTESLABS_METADATA_URL",
-                                 "https://platform-services.descarteslabs.com/metadata/v1")
+                                 "https://platform-services.descarteslabs.com/metadata/v1/")
 
         Service.__init__(self, url, token)
 
@@ -55,8 +55,7 @@ class Metadata(Service):
             [{'product': 'landsat:LC08:PRE:TOAR', 'sat_id': 'LANDSAT_8'}]
 
         """
-        r = self.session.get('%s/sources' % self.url, timeout=self.TIMEOUT)
-
+        r = self.session.get('sources')
         return r.json()
 
     def bands(self, limit=None, products=None, offset=None, wavelength=None, resolution=None, tags=None):
@@ -156,7 +155,7 @@ class Metadata(Service):
             ['landsat:LC08:PRE:TOAR']
 
         """
-        r = self.session.get('%s/products' % self.url, timeout=self.TIMEOUT)
+        r = self.session.get('products')
 
         return r.json()
 
@@ -217,14 +216,12 @@ class Metadata(Service):
         kwargs = {}
 
         if sat_id:
-
             if isinstance(sat_id, string_types):
                 sat_id = [sat_id]
 
             kwargs['sat_id'] = sat_id
 
         if products:
-
             if isinstance(products, string_types):
                 products = [products]
 
@@ -267,8 +264,7 @@ class Metadata(Service):
         if params:
             kwargs['params'] = json.dumps(params)
 
-        r = self.session.post('%s/summary' % self.url, json=kwargs, timeout=self.TIMEOUT)
-
+        r = self.session.post('summary', json=kwargs)
         return r.json()
 
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
@@ -379,7 +375,7 @@ class Metadata(Service):
             if sort_order is not None:
                 kwargs['sort_order'] = sort_order
 
-        r = self.session.post('%s/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
+        r = self.session.post('search', json=kwargs)
 
         return {'type': 'FeatureCollection', "features": r.json()}
 
@@ -501,11 +497,9 @@ class Metadata(Service):
                                params=params, dltile=dltile)
 
         offset = 0
-
         count = summary['count']
 
         while offset < count:
-
             features = self.search(sat_id=sat_id, products=products, const_id=None,
                                    date=date, place=place, geom=geom,
                                    start_time=start_time, end_time=end_time,
@@ -540,8 +534,7 @@ class Metadata(Service):
              'sat_id', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction',
              'tile_id']
         """
-        r = self.session.get('%s/get/%s' % (self.url, key), timeout=self.TIMEOUT)
-
+        r = self.session.get('get/%s' % key)
         return r.json()
 
     def get_product(self, product_id):

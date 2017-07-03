@@ -24,8 +24,16 @@ from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitE
 
 
 class WrappedSession(requests.Session):
+    def __init__(self, base_url, timeout=None):
+        self.base_url = base_url
+        self.timeout = timeout
+        super(WrappedSession, self).__init__()
+
     def request(self, method, url, **kwargs):
-        resp = super(WrappedSession, self).request(method, url, **kwargs)
+        if self.timeout and 'timeout' not in kwargs:
+            kwargs['timeout'] = self.timeout
+
+        resp = super(WrappedSession, self).request(method, self.base_url + url, **kwargs)
 
         if resp.status_code == 200:
             return resp
@@ -48,7 +56,7 @@ class Service:
 
     def __init__(self, url, token):
         self.auth = descarteslabs.descartes_auth
-        self.url = url
+        self.base_url = url
         if token:
             self.auth._token = token
 
@@ -62,7 +70,7 @@ class Service:
 
     @property
     def session(self):
-        s = WrappedSession()
+        s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
 
         retries = Retry(total=5,
                         read=2,
