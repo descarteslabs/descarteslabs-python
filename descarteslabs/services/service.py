@@ -16,8 +16,8 @@ import os
 import random
 
 import requests
-from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 import descarteslabs
 from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, GatewayTimeoutError
