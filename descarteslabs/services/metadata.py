@@ -77,8 +77,8 @@ class Metadata(Service):
             for param in params
             if args[param] is not None
         }
-        r = self.session.post('%s/bands/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
 
+        r = self.session.post('bands/search', json=kwargs)
         return r.json()
 
     def products(self, bands=None, limit=None, offset=None):
@@ -140,7 +140,7 @@ class Metadata(Service):
             if args[param] is not None
         }
 
-        r = self.session.post('%s/products/search' % self.url, json=kwargs, timeout=self.TIMEOUT)
+        r = self.session.post('products/search', json=kwargs)
 
         return r.json()
 
@@ -607,8 +607,7 @@ class Metadata(Service):
                 'title': 'Landsat 8'}
 
         """
-        r = self.session.get('%s/products/%s' % (self.url, product_id), timeout=self.TIMEOUT)
-
+        r = self.session.get('products/%s' % product_id)
         return r.json()
 
     def get_band(self, band_id):
@@ -617,6 +616,5 @@ class Metadata(Service):
         :param str band_id: Band Identifier.
 
         """
-        r = self.session.get('%s/bands/%s' % (self.url, band_id), timeout=self.TIMEOUT)
-
+        r = self.session.get('bands/%s' % band_id)
         return r.json()
