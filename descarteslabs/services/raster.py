@@ -35,7 +35,7 @@ class Raster(Service):
         of the backing service.
         """
         if url is None:
-            url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform-services.descarteslabs.com/raster/v1/")
+            url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform-services.descarteslabs.com/raster/v1")
 
         Service.__init__(self, url, token)
 
@@ -47,7 +47,7 @@ class Raster(Service):
 
         :return: A dictionary of band entries and their metadata.
         """
-        r = self.session.get('bands/key/%s' % key)
+        r = self.session.get('/bands/key/%s' % key)
 
         return r.json()
 
@@ -59,7 +59,7 @@ class Raster(Service):
 
         :return: A dictionary of band entries and their metadata.
         """
-        r = self.session.get('bands/constellation/%s' % const)
+        r = self.session.get('/bands/constellation/%s' % const)
         return r.json()
 
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
@@ -109,7 +109,7 @@ class Raster(Service):
             'shape': shape,
         }
 
-        r = self.session.post('dlkeys/from_shape', json=params)
+        r = self.session.post('/dlkeys/from_shape', json=params)
         return r.json()
 
     def dltile_from_latlon(self, lat, lon, resolution, tilesize, pad):
@@ -152,7 +152,7 @@ class Raster(Service):
             'pad': pad,
         }
 
-        r = self.session.get('dlkeys/from_latlon/%f/%f' % (lat, lon), params=params)
+        r = self.session.get('/dlkeys/from_latlon/%f/%f' % (lat, lon), params=params)
 
         return r.json()
 
@@ -187,7 +187,7 @@ class Raster(Service):
              'type': 'Feature'}
         """
 
-        r = self.session.get('dlkeys/%s' % key)
+        r = self.session.get('/dlkeys/%s' % key)
 
         return r.json()
 
@@ -295,7 +295,7 @@ class Raster(Service):
             else:
                 params['dltile'] = dltile
 
-        r = self.session.post('raster', json=params)
+        r = self.session.post('/raster', json=params)
 
         json_resp = r.json()
         # Decode base64
@@ -393,7 +393,7 @@ class Raster(Service):
             else:
                 params['dltile'] = dltile
 
-        r = self.session.post('npz', json=params)
+        r = self.session.post('/npz', json=params)
 
         io = BytesIO(r.content)
         npz = np.load(io)

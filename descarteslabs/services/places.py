@@ -30,7 +30,7 @@ class Places(Service):
         of the backing service.
         """
         if url is None:
-            url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform-services.descarteslabs.com/waldo/v1/")
+            url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform-services.descarteslabs.com/waldo/v1")
 
         Service.__init__(self, url, token)
         self.cache = TTLCache(maxsize, ttl)
@@ -44,7 +44,7 @@ class Places(Service):
             ['continent', 'country', 'dependency', 'macroregion', 'region',
                 'district', 'mesoregion', 'microregion', 'county', 'locality']
         """
-        r = self.session.get('placetypes')
+        r = self.session.get('/placetypes')
         return r.json()
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'find'))
@@ -67,7 +67,7 @@ class Places(Service):
               'placetype': 'country',
               'slug': 'africa_morocco'}]
         """
-        r = self.session.get('find/%s' % path, params=kwargs)
+        r = self.session.get('/find/%s' % path, params=kwargs)
         return r.json()
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'shape'))
@@ -98,7 +98,7 @@ class Places(Service):
              'slug': 'north-america_united-states_kansas'}
 
         """
-        r = self.session.get('shape/%s.%s' % (slug, output), params={'geom': geom})
+        r = self.session.get('/shape/%s.%s' % (slug, output), params={'geom': geom})
         return r.json()
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'prefix'))
@@ -123,6 +123,6 @@ class Places(Service):
         if placetype:
             params['placetype'] = placetype
         params['geom'] = geom
-        r = self.session.get('prefix/%s.%s' % (slug, output), params=params)
+        r = self.session.get('/prefix/%s.%s' % (slug, output), params=params)
 
         return r.json()

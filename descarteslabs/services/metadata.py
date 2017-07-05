@@ -40,7 +40,7 @@ class Metadata(Service):
         simplefilter('always', DeprecationWarning)
         if url is None:
             url = os.environ.get("DESCARTESLABS_METADATA_URL",
-                                 "https://platform-services.descarteslabs.com/metadata/v1/")
+                                 "https://platform-services.descarteslabs.com/metadata/v1")
 
         Service.__init__(self, url, token)
 
@@ -55,7 +55,7 @@ class Metadata(Service):
             [{'product': 'landsat:LC08:PRE:TOAR', 'sat_id': 'LANDSAT_8'}]
 
         """
-        r = self.session.get('sources')
+        r = self.session.get('/sources')
         return r.json()
 
     def bands(self, limit=None, products=None, offset=None, wavelength=None, resolution=None, tags=None):
@@ -78,7 +78,7 @@ class Metadata(Service):
             if args[param] is not None
         }
 
-        r = self.session.post('bands/search', json=kwargs)
+        r = self.session.post('/bands/search', json=kwargs)
         return r.json()
 
     def products(self, bands=None, limit=None, offset=None):
@@ -140,7 +140,7 @@ class Metadata(Service):
             if args[param] is not None
         }
 
-        r = self.session.post('products/search', json=kwargs)
+        r = self.session.post('/products/search', json=kwargs)
 
         return r.json()
 
@@ -155,7 +155,7 @@ class Metadata(Service):
             ['landsat:LC08:PRE:TOAR']
 
         """
-        r = self.session.get('products')
+        r = self.session.get('/products')
 
         return r.json()
 
@@ -264,7 +264,7 @@ class Metadata(Service):
         if params:
             kwargs['params'] = json.dumps(params)
 
-        r = self.session.post('summary', json=kwargs)
+        r = self.session.post('/summary', json=kwargs)
         return r.json()
 
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
@@ -375,7 +375,7 @@ class Metadata(Service):
             if sort_order is not None:
                 kwargs['sort_order'] = sort_order
 
-        r = self.session.post('search', json=kwargs)
+        r = self.session.post('/search', json=kwargs)
 
         return {'type': 'FeatureCollection', "features": r.json()}
 
@@ -534,7 +534,7 @@ class Metadata(Service):
              'sat_id', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction',
              'tile_id']
         """
-        r = self.session.get('get/%s' % key)
+        r = self.session.get('/get/%s' % key)
         return r.json()
 
     def get_product(self, product_id):
@@ -607,7 +607,7 @@ class Metadata(Service):
                 'title': 'Landsat 8'}
 
         """
-        r = self.session.get('products/%s' % product_id)
+        r = self.session.get('/products/%s' % product_id)
         return r.json()
 
     def get_band(self, band_id):
@@ -616,5 +616,5 @@ class Metadata(Service):
         :param str band_id: Band Identifier.
 
         """
-        r = self.session.get('bands/%s' % band_id)
+        r = self.session.get('/bands/%s' % band_id)
         return r.json()
