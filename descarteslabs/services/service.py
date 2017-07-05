@@ -60,7 +60,8 @@ class Service:
         if token:
             self.auth._token = token
 
-        self.session = self.build_session()
+        self.current_session = None
+        self.session_token = None
 
     @property
     def token(self):
@@ -69,6 +70,17 @@ class Service:
     @token.setter
     def token(self, token):
         self.auth._token = token
+
+    @property
+    def session(self):
+        if self.session_token != self.token:
+            self.current_session = None
+
+        if not self.current_session:
+            self.current_session = self.build_session()
+            self.session_token = self.token
+
+        return self.current_session
 
     def build_session(self):
         s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
