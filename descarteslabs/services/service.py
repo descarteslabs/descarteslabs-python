@@ -16,16 +16,24 @@ import os
 import random
 
 import requests
-from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 import descarteslabs
 from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, GatewayTimeoutError
 
 
 class WrappedSession(requests.Session):
+    def __init__(self, base_url, timeout=None):
+        self.base_url = base_url
+        self.timeout = timeout
+        super(WrappedSession, self).__init__()
+
     def request(self, method, url, **kwargs):
-        resp = super(WrappedSession, self).request(method, url, **kwargs)
+        if self.timeout and 'timeout' not in kwargs:
+            kwargs['timeout'] = self.timeout
+
+        resp = super(WrappedSession, self).request(method, self.base_url + url, **kwargs)
 
         if resp.status_code == 200:
             return resp
@@ -48,9 +56,12 @@ class Service:
 
     def __init__(self, url, token):
         self.auth = descarteslabs.descartes_auth
-        self.url = url
+        self.base_url = url
         if token:
             self.auth._token = token
+
+        self.current_session = None
+        self.session_token = None
 
     @property
     def token(self):
@@ -62,7 +73,17 @@ class Service:
 
     @property
     def session(self):
-        s = WrappedSession()
+        if self.session_token != self.token:
+            self.current_session = None
+
+        if not self.current_session:
+            self.current_session = self.build_session()
+            self.session_token = self.token
+
+        return self.current_session
+
+    def build_session(self):
+        s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
 
         retries = Retry(total=5,
                         read=2,

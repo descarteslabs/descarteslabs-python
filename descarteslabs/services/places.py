@@ -45,8 +45,7 @@ class Places(Service):
             ['continent', 'country', 'dependency', 'macroregion', 'region',
                 'district', 'mesoregion', 'microregion', 'county', 'locality']
         """
-        r = self.session.get('%s/placetypes' % self.url, timeout=self.TIMEOUT)
-
+        r = self.session.get('/placetypes')
         return r.json()
 
     def random(self, geom='low', placetype=None):
@@ -92,8 +91,7 @@ class Places(Service):
               'placetype': 'country',
               'slug': 'africa_morocco'}]
         """
-        r = self.session.get('%s/find/%s' % (self.url, path), params=kwargs, timeout=self.TIMEOUT)
-
+        r = self.session.get('/find/%s' % path, params=kwargs)
         return r.json()
 
     def search(self, q, country=None, region=None, placetype=None):
@@ -163,8 +161,7 @@ class Places(Service):
              'slug': 'north-america_united-states_kansas'}
 
         """
-        r = self.session.get('%s/shape/%s.%s' % (self.url, slug, output), params={'geom': geom}, timeout=self.TIMEOUT)
-
+        r = self.session.get('/shape/%s.%s' % (slug, output), params={'geom': geom})
         return r.json()
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'prefix'))
@@ -189,8 +186,7 @@ class Places(Service):
         if placetype:
             params['placetype'] = placetype
         params['geom'] = geom
-        r = self.session.get('%s/prefix/%s.%s' % (self.url, slug, output),
-                             params=params, timeout=self.TIMEOUT)
+        r = self.session.get('/prefix/%s.%s' % (slug, output), params=params)
 
         return r.json()
 

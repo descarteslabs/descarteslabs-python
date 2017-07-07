@@ -17,6 +17,7 @@ import unittest
 from warnings import catch_warnings
 
 import descarteslabs as dl
+from descarteslabs.exceptions import NotFoundError
 
 
 class TestMetadata(unittest.TestCase):
@@ -30,8 +31,8 @@ class TestMetadata(unittest.TestCase):
         r = self.instance.sources()
         self.assertGreater(len(r), 0)
 
-    def test_products(self):
-        r = self.instance.products()
+    def test_available_products(self):
+        r = self.instance.available_products()
         self.assertGreater(len(r), 0)
 
     def test_search(self):
@@ -60,7 +61,7 @@ class TestMetadata(unittest.TestCase):
         for feature in r['features']:
             self.assertEqual(feature['properties']['cloud_fraction'], 0.0)
 
-    def test_products_search(self):
+    def test_search_by_product(self):
         r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', products=['landsat:LC08:PRE:TOAR'])
         self.assertGreater(len(r['features']), 0)
 
@@ -172,6 +173,27 @@ class TestMetadata(unittest.TestCase):
                 continue
 
             self.assertLessEqual(current, last)
+
+    def test_search_products(self):
+        r = self.instance.products(limit=1)
+        self.assertEqual(len(r), 1)
+
+    def test_search_bands(self):
+        r = self.instance.bands()
+        # no bands are publicly available.
+        self.assertEqual(len(r), 0)
+
+    def test_products_get(self):
+        product_id = 'landsat:LC08:PRE:TOAR'
+        r = self.instance.get_product(product_id)
+        self.assertEqual(r['product'], product_id)
+
+    def test_bands_get(self):
+        band_id = 'landsat:LC08:PRE:TOAR:red'
+        try:
+            self.instance.get_product(band_id)
+        except NotFoundError:
+            pass
 
 
 if __name__ == '__main__':
