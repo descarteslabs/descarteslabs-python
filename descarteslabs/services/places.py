@@ -35,7 +35,7 @@ class Places(Service):
 
         Service.__init__(self, url, token)
         self.cache = TTLCache(maxsize, ttl)
-        
+
     def placetypes(self):
         """Get a list of place types.
 
@@ -119,7 +119,7 @@ class Places(Service):
 
         if q:
             params['q'] = q
-            
+
         if country:
             params['country'] = country
 
