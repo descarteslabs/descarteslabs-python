@@ -129,7 +129,7 @@ class Places(Service):
         if placetype:
             params['placetype'] = placetype
 
-        r = self.session.get('%s/search' % self.url, params=params, timeout=self.TIMEOUT)
+        r = self.session.get('/search', params=params, timeout=self.TIMEOUT)
 
         return r.json()
 
