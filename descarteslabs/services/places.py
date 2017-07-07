@@ -22,7 +22,7 @@ from six import string_types
 
 
 class Places(Service):
-    TIMEOUT = (9.5, 120)
+    TIMEOUT = (9.5, 360)
     """Places and statistics service https://iam.descarteslabs.com/service/waldo"""
 
     def __init__(self, url=None, token=None, maxsize=10, ttl=600):
