@@ -193,21 +193,21 @@ class Places(Service):
     def sources(self):
         """Get a list of sources
         """
-        r = self.session.get('%s/sources' % (self.url), timeout=self.TIMEOUT)
+        r = self.session.get('/sources', timeout=self.TIMEOUT)
 
         return r.json()
 
     def categories(self):
         """Get a list of categories
         """
-        r = self.session.get('%s/categories' % (self.url), timeout=self.TIMEOUT)
+        r = self.session.get('/categories', timeout=self.TIMEOUT)
 
         return r.json()
 
     def metrics(self):
         """Get a list of metrics
         """
-        r = self.session.get('%s/metrics' % (self.url), timeout=self.TIMEOUT)
+        r = self.session.get('/metrics', timeout=self.TIMEOUT)
 
         return r.json()
 
@@ -239,7 +239,7 @@ class Places(Service):
         if placetype:
             params['placetype'] = placetype
 
-        r = self.session.get('%s/data/%s' % (self.url, slug),
+        r = self.session.get('/data/%s' % (slug),
                              params=params, timeout=self.TIMEOUT)
 
         return r.json()
@@ -265,7 +265,7 @@ class Places(Service):
         if metric:
             params['metric'] = metric
 
-        r = self.session.get('%s/statistics/%s' % (self.url, slug),
+        r = self.session.get('/statistics/%s' % (slug),
                              params=params, timeout=self.TIMEOUT)
 
         return r.json()
@@ -305,7 +305,7 @@ class Places(Service):
         if date:
             params['date'] = date
 
-        r = self.session.get('%s/value/%s' % (self.url, slug),
+        r = self.session.get('/value/%s' % (slug),
                              params=params, timeout=self.TIMEOUT)
 
         return r.json()
