@@ -31,7 +31,7 @@ class Places(Service):
         of the backing service.
         """
         if url is None:
-            url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform-services.descarteslabs.com/waldo/dev")
+            url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform-services.descarteslabs.com/waldo/v1")
 
         Service.__init__(self, url, token)
         self.cache = TTLCache(maxsize, ttl)
