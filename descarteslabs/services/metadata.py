@@ -58,9 +58,10 @@ class Metadata(Service):
         r = self.session.get('/sources')
         return r.json()
 
-    def bands(self, limit=None, products=None, offset=None, wavelength=None, resolution=None, tags=None):
+    def bands(self, products=None, limit=None, offset=None, wavelength=None, resolution=None, tags=None):
         """Seach for imagery data bands that you have access to.
 
+        :param list(str) products: A list of product(s) to return bands for.
         :param int limit: Number of results to return.
         :param int offset: Index to start at when returning results.
         :param float wavelenth: A wavelength in nm e.g 700 that the band sensor must measure.
@@ -115,6 +116,17 @@ class Metadata(Service):
 
         """
         r = self.session.get('/products')
+
+        return r.json()
+
+    def translate(const_id):
+        """Translate a deprecated constellation identifier
+        into a new-style product identifier.
+
+        :param string const_id: The constellation identifier to translate.
+        """
+
+        r = self.session.get('/products/translate/{}'.format(const_id))
 
         return r.json()
 
