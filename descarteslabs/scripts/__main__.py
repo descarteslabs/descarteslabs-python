@@ -18,4 +18,3 @@ from descarteslabs.scripts.parser import parser, handle
 
 def main():
     handle(parser.parse_args())
-
