@@ -59,7 +59,7 @@ class Metadata(Service):
         return r.json()
 
     def bands(self, products=None, limit=None, offset=None, wavelength=None, resolution=None, tags=None):
-        """Seach for imagery data bands that you have access to.
+        """Search for imagery data bands that you have access to.
 
         :param list(str) products: A list of product(s) to return bands for.
         :param int limit: Number of results to return.
@@ -80,6 +80,26 @@ class Metadata(Service):
         }
 
         r = self.session.post('/bands/search', json=kwargs)
+        return r.json()
+
+    def derived_bands(self, bands=None, limit=None, offset=None):
+        """Search for predefined derived bands that you have access to.
+
+        :param list(str) bands: A list of source bands that must be part of
+                                the derived band i.e ["nir"]
+        :param int limit: Number of results to return.
+        :param int offset: Index to start at when returning results.
+        """
+        params = ['bands', 'limit', 'offset']
+
+        args = locals()
+        kwargs = {
+            param: args[param]
+            for param in params
+            if args[param] is not None
+        }
+
+        r = self.session.post('/bands/derived/search', json=kwargs)
         return r.json()
 
     def products(self, bands=None, limit=None, offset=None):
@@ -119,7 +139,7 @@ class Metadata(Service):
 
         return r.json()
 
-    def translate(const_id):
+    def translate(self, const_id):
         """Translate a deprecated constellation identifier
         into a new-style product identifier.
 
@@ -524,4 +544,13 @@ class Metadata(Service):
 
         """
         r = self.session.get('/bands/%s' % band_id)
+        return r.json()
+
+    def get_derived_band(self, derived_band_id):
+        """Get information about a single product.
+
+        :param str derived_band_id: Derived band identifier.
+
+        """
+        r = self.session.get('/bands/derived/%s' % derived_band_id)
         return r.json()
