@@ -37,6 +37,14 @@ Changelog
 
 ## [Unreleased]
 
+## [0.4.3] - 2017-07-18
+### Added
+- Support for derived bands endpoints.
+- Direct access to `const_id` to `product` translation.
+
+### Fixes
+- `descarteslabs` scripts on windows OS.
+
 ## [0.4.2] - 2017-07-05
 ### Fixes
 - Fix auth login
@@ -119,7 +127,8 @@ Changelog
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.3.3...v0.4.0
