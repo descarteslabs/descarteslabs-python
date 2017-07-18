@@ -15,5 +15,6 @@
 
 from descarteslabs.scripts.parser import parser, handle
 
-if __name__ == "__main__":
+
+def main():
     handle(parser.parse_args())
