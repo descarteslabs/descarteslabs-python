@@ -190,9 +190,22 @@ class TestMetadata(unittest.TestCase):
     def test_bands_get(self):
         band_id = 'landsat:LC08:PRE:TOAR:red'
         try:
-            self.instance.get_band(band_id)
+            band = self.instance.get_band(band_id)
+            self.assertEqual(band_id, band['id'])
         except NotFoundError:
             pass
+
+    def test_derived_bands_get(self):
+        band_id = 'derived:ndvi'
+        try:
+            d_band = self.instance.get_derived_band(band_id)
+            self.assertIn('bands', d_band)
+        except NotFoundError:
+            pass
+
+    def test_derived_bands_search(self):
+        bands = ['red', 'nir']
+        bands = self.instance.derived_bands(bands=bands)
 
 
 if __name__ == '__main__':
