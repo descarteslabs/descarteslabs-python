@@ -61,6 +61,10 @@ class TestMetadata(unittest.TestCase):
         for feature in r['features']:
             self.assertEqual(feature['properties']['cloud_fraction'], 0.0)
 
+    def translate_to_product(self):
+        r = self.instance.translate('l8')
+        self.assertEqual(r['product'], 'landsat:LC08:PRE:TOAR')
+
     def test_search_by_product(self):
         r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', products=['landsat:LC08:PRE:TOAR'])
         self.assertGreater(len(r['features']), 0)
@@ -178,11 +182,6 @@ class TestMetadata(unittest.TestCase):
         r = self.instance.products(limit=1)
         self.assertEqual(len(r), 1)
 
-    def test_search_bands(self):
-        r = self.instance.bands()
-        # no bands are publicly available.
-        self.assertEqual(len(r), 0)
-
     def test_products_get(self):
         product_id = 'landsat:LC08:PRE:TOAR'
         r = self.instance.get_product(product_id)
@@ -191,9 +190,22 @@ class TestMetadata(unittest.TestCase):
     def test_bands_get(self):
         band_id = 'landsat:LC08:PRE:TOAR:red'
         try:
-            self.instance.get_product(band_id)
+            band = self.instance.get_band(band_id)
+            self.assertEqual(band_id, band['id'])
         except NotFoundError:
             pass
+
+    def test_derived_bands_get(self):
+        band_id = 'derived:ndvi'
+        try:
+            d_band = self.instance.get_derived_band(band_id)
+            self.assertIn('bands', d_band)
+        except NotFoundError:
+            pass
+
+    def test_derived_bands_search(self):
+        bands = ['red', 'nir']
+        bands = self.instance.derived_bands(bands=bands)
 
 
 if __name__ == '__main__':
