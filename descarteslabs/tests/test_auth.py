@@ -25,10 +25,8 @@ class TestAuth(unittest.TestCase):
         self.assertIsNotNone(auth.token)
 
         # validate the jwt
-        url = auth.domain + "/tokeninfo"
-        params = {"id_token": auth.token}
-        headers = {"content-type": "application/json"}
-        r = requests.post(url, data=json.dumps(params), headers=headers)
+        url = auth.domain + "/users/self"
+        r = requests.get(url)
         self.assertEqual(200, r.status_code)
 
 
