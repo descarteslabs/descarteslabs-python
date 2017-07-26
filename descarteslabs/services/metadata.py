@@ -47,8 +47,7 @@ class Metadata(Service):
         """
         simplefilter('always', DeprecationWarning)
         if url is None:
-            url = os.environ.get("DESCARTESLABS_METADATA_URL",
-                                 "https://platform-services.descarteslabs.com/metadata/v1")
+            url = os.environ.get("DESCARTESLABS_METADATA_URL", "https://platform.descarteslabs.com/metadata/v1")
 
         Service.__init__(self, url, token, auth)
 
