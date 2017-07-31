@@ -54,14 +54,24 @@ class WrappedSession(requests.Session):
 class Service:
     TIMEOUT = (9.5, 30)
 
+    RETRY_CONFIG = Retry(total=5,
+                         read=2,
+                         backoff_factor=random.uniform(1, 3),
+                         method_whitelist=frozenset([
+                             'HEAD', 'TRACE', 'GET', 'POST',
+                             'PUT', 'OPTIONS', 'DELETE'
+                         ]),
+                         status_forcelist=[429, 500, 502, 503])
+
+    ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
+
     def __init__(self, url, token):
         self.auth = descarteslabs.descartes_auth
         self.base_url = url
         if token:
             self.auth._token = token
 
-        self.current_session = None
-        self.session_token = None
+        self._session = self.build_session()
 
     @property
     def token(self):
@@ -73,31 +83,16 @@ class Service:
 
     @property
     def session(self):
-        if self.session_token != self.token:
-            self.current_session = None
+        if self._session.headers.get('Authorization') != self.token:
+            self._session.headers['Authorization'] = self.token
 
-        if not self.current_session:
-            self.current_session = self.build_session()
-            self.session_token = self.token
-
-        return self.current_session
+        return self._session
 
     def build_session(self):
         s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
-
-        retries = Retry(total=5,
-                        read=2,
-                        backoff_factor=random.uniform(1, 3),
-                        method_whitelist=frozenset([
-                            'HEAD', 'TRACE', 'GET', 'POST',
-                            'PUT', 'OPTIONS', 'DELETE'
-                        ]),
-                        status_forcelist=[429, 500, 502, 503])
-
-        s.mount('https://', HTTPAdapter(max_retries=retries))
+        s.mount('https://', self.ADAPTER)
 
         s.headers.update({
-            "Authorization": self.token,
             "Content-Type": "application/json",
             "User-Agent": "dl-python/{}".format(descarteslabs.__version__)
         })
