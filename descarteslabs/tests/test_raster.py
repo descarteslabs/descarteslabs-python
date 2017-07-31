@@ -211,3 +211,16 @@ class TestRaster(unittest.TestCase):
     def test_dlkey(self):
         dlkey_geojson = self.raster.dlkey("2048:16:30.0:16:-4:81")
         self.assertEqual(dlkey_geojson['properties']['key'], "2048:16:30.0:16:-4:81")
+
+    def test_raster_repr(self):
+        scene = dl.raster.raster(
+            inputs=['meta_LC80270312016188_v1'],
+            resolution=860,
+        )
+        self.assertEqual(
+                repr(scene), '<{} {} object at {}>'.format(
+                    scene.__module__,
+                    scene.__class__.__name__,
+                    hex(id(scene))
+                )
+            )

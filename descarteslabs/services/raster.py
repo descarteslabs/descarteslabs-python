@@ -19,7 +19,7 @@ import json
 import warnings
 
 from descarteslabs.addons import numpy as np
-from descarteslabs.utilities import as_json_string
+from descarteslabs.utilities import as_json_string, RasterResponse
 from .service import Service
 from .places import Places
 import six
@@ -297,7 +297,7 @@ class Raster(Service):
 
         r = self.session.post('/raster', json=params)
 
-        json_resp = r.json()
+        json_resp = RasterResponse(r.json())
         # Decode base64
         for k in list(json_resp['files'].keys()):
             if outfile_basename:

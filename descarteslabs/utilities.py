@@ -22,3 +22,16 @@ def as_json_string(str_or_dict):
         return json.dumps(str_or_dict)
     else:
         return str_or_dict
+
+
+class RasterResponse(dict):
+    """Represent a :meth: descarteslabs.raster.raster response
+    with a sensible command line representation.
+    """
+
+    def __repr__(self):
+        return '<{} {} object at {}>'.format(
+                    self.__module__,
+                    self.__class__.__name__,
+                    hex(id(self))
+                )
