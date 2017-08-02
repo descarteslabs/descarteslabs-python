@@ -61,7 +61,7 @@ class TestMetadata(unittest.TestCase):
         for feature in r['features']:
             self.assertEqual(feature['properties']['cloud_fraction'], 0.0)
 
-    def translate_to_product(self):
+    def test_translate_to_product(self):
         r = self.instance.translate('l8')
         self.assertEqual(r['product'], 'landsat:LC08:PRE:TOAR')
 
@@ -78,7 +78,13 @@ class TestMetadata(unittest.TestCase):
         ]
 
         for fields in cases:
-            r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', fields=fields)
+            r = self.instance.search(
+                    start_time='2016-07-06',
+                    end_time='2016-07-07',
+                    products="landsat:LC08:PRE:TOAR",
+                    limit=1,
+                    fields=fields
+                )
             for feature in r['features']:
                 if "id" not in fields:
                     fields.append("id")
