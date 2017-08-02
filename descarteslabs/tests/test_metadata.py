@@ -61,7 +61,7 @@ class TestMetadata(unittest.TestCase):
         for feature in r['features']:
             self.assertEqual(feature['properties']['cloud_fraction'], 0.0)
 
-    def translate_to_product(self):
+    def test_translate_to_product(self):
         r = self.instance.translate('l8')
         self.assertEqual(r['product'], 'landsat:LC08:PRE:TOAR')
 
