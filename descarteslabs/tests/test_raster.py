@@ -152,16 +152,20 @@ class TestRaster(unittest.TestCase):
         self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.png'])
 
     def test_get_bands_by_key(self):
-        r = self.raster.get_bands_by_key('meta_LC80270312016188_v1')
-        for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
-                     'ndwi', 'evi', 'cirrus']:
-            self.assertTrue(band in r)
+        with catch_warnings(record=True) as w:
+            r = self.raster.get_bands_by_key('meta_LC80270312016188_v1')
+            self.assertEqual(len(w), 1)
+            for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
+                         'ndwi', 'evi', 'cirrus']:
+                self.assertTrue(band in r)
 
     def test_landsat8_bands(self):
-        r = self.raster.get_bands_by_constellation('L8')
-        for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
-                     'ndwi', 'evi', 'cirrus']:
-            self.assertTrue(band in r)
+        with catch_warnings(record=True) as w:
+            r = self.raster.get_bands_by_constellation('L8')
+            self.assertEqual(len(w), 1)
+            for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
+                         'ndwi', 'evi', 'cirrus']:
+                self.assertTrue(band in r)
 
     def test_dltiles_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')

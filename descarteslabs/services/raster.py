@@ -25,6 +25,12 @@ from .places import Places
 import six
 
 
+RASTER_BANDS_WARNING = """
+Band retrieval through the raster service is deprecated, and will be
+removed eventually. Use the corresponding methods on the metadata
+service instead."""
+
+
 class Raster(Service):
     """Raster"""
     TIMEOUT = (9.5, 300)
@@ -34,6 +40,7 @@ class Raster(Service):
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        warnings.simplefilter('always', DeprecationWarning)
         if url is None:
             url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform-services.descarteslabs.com/raster/v1")
 
@@ -47,6 +54,7 @@ class Raster(Service):
 
         :return: A dictionary of band entries and their metadata.
         """
+        warnings.warn(RASTER_BANDS_WARNING, DeprecationWarning)
         r = self.session.get('/bands/key/%s' % key)
 
         return r.json()
@@ -59,6 +67,7 @@ class Raster(Service):
 
         :return: A dictionary of band entries and their metadata.
         """
+        warnings.warn(RASTER_BANDS_WARNING, DeprecationWarning)
         r = self.session.get('/bands/constellation/%s' % const)
         return r.json()
 
