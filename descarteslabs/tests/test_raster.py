@@ -156,7 +156,7 @@ class TestRaster(unittest.TestCase):
             r = self.raster.get_bands_by_key('meta_LC80270312016188_v1')
             self.assertEqual(len(w), 1)
             for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
-                        'ndwi', 'evi', 'cirrus']:
+                         'ndwi', 'evi', 'cirrus']:
                 self.assertTrue(band in r)
 
     def test_landsat8_bands(self):
@@ -164,7 +164,7 @@ class TestRaster(unittest.TestCase):
             r = self.raster.get_bands_by_constellation('L8')
             self.assertEqual(len(w), 1)
             for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
-                        'ndwi', 'evi', 'cirrus']:
+                         'ndwi', 'evi', 'cirrus']:
                 self.assertTrue(band in r)
 
     def test_dltiles_from_place(self):
