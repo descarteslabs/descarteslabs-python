@@ -213,6 +213,12 @@ class TestMetadata(unittest.TestCase):
         bands = ['red', 'nir']
         bands = self.instance.derived_bands(bands=bands)
 
+    def test_get_bands_by_key(self):
+        self.instance.get_bands_by_key('meta_LC80270312016188_v1')
+
+    def test_get_bands_by_const(self):
+        self.instance.get_bands_by_constellation('L8')
+
 
 if __name__ == '__main__':
     unittest.main()
