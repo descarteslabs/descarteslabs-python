@@ -37,6 +37,15 @@ Changelog
 
 ## [Unreleased]
 
+## [0.4.4] - 2017-08-03
+### Added
+- Add raster bands methods to metadata service.
+- Deprecate raster band methods.
+- Add `require_bands` param to derived bands search method.
+
+### Fixes
+- Test suite replaces original token when finished running script tests.
+
 ## [0.4.3] - 2017-07-18
 ### Added
 - Support for derived bands endpoints.
