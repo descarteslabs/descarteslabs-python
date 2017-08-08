@@ -316,7 +316,7 @@ class Raster(Service):
         for _ in range(num_files):
             file_meta = json.loads(raw.readline().decode('utf-8').strip())
 
-            fn = file_meta['filename']
+            fn = file_meta['name']
             data = raw.read(file_meta['length'])
 
             if outfile_basename:
