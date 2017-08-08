@@ -20,16 +20,35 @@ from descarteslabs.scripts.parser import parser, handle
 import base64
 import json
 
-token = base64.b64encode(
-    json.dumps({
-        "client_id": os.environ.get("CLIENT_ID"),
-        "client_secret": os.environ.get("CLIENT_SECRET")}).encode(
-        'utf-8'))
-
 
 class TestScripts(unittest.TestCase):
+    old_token = None
+    token_path = os.path.join(os.path.expanduser("~"), '.descarteslabs', 'token_info.json')
+
+    @classmethod
+    def setUpClass(cls):
+        client_id = os.environ.get("CLIENT_ID")
+        client_secret = os.environ.get("CLIENT_SECRET")
+        if os.path.exists(cls.token_path):
+            cls.old_token = json.load(open(cls.token_path))
+            client_id = client_id or cls.old_token.get('client_id')
+            client_secret = client_secret or cls.old_token.get('client_secret')
+
+        cls.token = base64.b64encode(
+            json.dumps({
+                "client_id": client_id,
+                "client_secret": client_secret}).encode(
+                'utf-8'))
+
+    @classmethod
+    def tearDownClass(cls):
+        # Put old token back if it existed.
+        if cls.old_token:
+            with open(cls.token_path, 'w+') as f:
+                json.dump(cls.old_token, f)
+
     def test_auth_login(self):
-        with mock.patch('descarteslabs.scripts.parser.auth.input', return_value=token):
+        with mock.patch('descarteslabs.scripts.parser.auth.input', return_value=self.token):
             handle(parser.parse_args(["auth", "login"]))
 
         with mock.patch('sys.stdout', new_callable=StringIO) as out:

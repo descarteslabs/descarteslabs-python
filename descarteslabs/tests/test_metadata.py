@@ -42,7 +42,7 @@ class TestMetadata(unittest.TestCase):
     def test_search_dltile(self):
         dltile = "256:16:30.0:15:-11:591"
         r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07',
-                                 const_id=['L8'], dltile=dltile)
+                                 products=['landsat:LC08:PRE:TOAR'], dltile=dltile)
         keys = [f['key'] for f in r['features']]
         self.assertTrue('meta_LC80270312016188_v1' in keys)
 
@@ -61,7 +61,7 @@ class TestMetadata(unittest.TestCase):
         for feature in r['features']:
             self.assertEqual(feature['properties']['cloud_fraction'], 0.0)
 
-    def translate_to_product(self):
+    def test_translate_to_product(self):
         r = self.instance.translate('l8')
         self.assertEqual(r['product'], 'landsat:LC08:PRE:TOAR')
 
@@ -78,7 +78,13 @@ class TestMetadata(unittest.TestCase):
         ]
 
         for fields in cases:
-            r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', fields=fields)
+            r = self.instance.search(
+                    start_time='2016-07-06',
+                    end_time='2016-07-07',
+                    products="landsat:LC08:PRE:TOAR",
+                    limit=1,
+                    fields=fields
+                )
             for feature in r['features']:
                 if "id" not in fields:
                     fields.append("id")
@@ -206,6 +212,12 @@ class TestMetadata(unittest.TestCase):
     def test_derived_bands_search(self):
         bands = ['red', 'nir']
         bands = self.instance.derived_bands(bands=bands)
+
+    def test_get_bands_by_key(self):
+        self.instance.get_bands_by_key('meta_LC80270312016188_v1')
+
+    def test_get_bands_by_const(self):
+        self.instance.get_bands_by_constellation('L8')
 
 
 if __name__ == '__main__':

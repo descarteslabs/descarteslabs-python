@@ -82,11 +82,15 @@ class Metadata(Service):
         r = self.session.post('/bands/search', json=kwargs)
         return r.json()
 
-    def derived_bands(self, bands=None, limit=None, offset=None):
+    def derived_bands(self, bands=None, require_bands=None, limit=None, offset=None):
         """Search for predefined derived bands that you have access to.
 
-        :param list(str) bands: A list of source bands that must be part of
-                                the derived band i.e ["nir"]
+        :param list(str) bands: Limit the derived bands to ones that can be
+                                computed using this list of spectral bands.
+                                e.g ["red", "nir", "swir1"]
+        :param bool require_bands: Control whether searched bands must contain
+                                   all the spectral bands passed in the bands param.
+                                   Defaults to False.
         :param int limit: Number of results to return.
         :param int offset: Index to start at when returning results.
         """
@@ -100,6 +104,29 @@ class Metadata(Service):
         }
 
         r = self.session.post('/bands/derived/search', json=kwargs)
+        return r.json()
+
+    def get_bands_by_key(self, key):
+        """
+        For a given source id, return the available bands.
+
+        :param str key: A :class:`Metadata` identifiers.
+
+        :return: A dictionary of band entries and their metadata.
+        """
+        r = self.session.get('/bands/key/%s' % key)
+
+        return r.json()
+
+    def get_bands_by_constellation(self, const):
+        """
+        For a given constellation id, return the available bands.
+
+        :param str const: A constellation name/abbreviation.
+
+        :return: A dictionary of band entries and their metadata.
+        """
+        r = self.session.get('/bands/constellation/%s' % const)
         return r.json()
 
     def products(self, bands=None, limit=None, offset=None):
