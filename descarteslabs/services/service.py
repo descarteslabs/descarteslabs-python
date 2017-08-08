@@ -71,7 +71,7 @@ class Service:
         if token:
             self.auth._token = token
 
-        self._session = self.build_session()
+        self._session = None
 
     @property
     def token(self):
@@ -83,6 +83,9 @@ class Service:
 
     @property
     def session(self):
+        if self._session is None:
+            self._session = self.build_session()
+
         if self._session.headers.get('Authorization') != self.token:
             self._session.headers['Authorization'] = self.token
 
