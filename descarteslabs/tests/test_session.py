@@ -18,8 +18,9 @@ import descarteslabs as dl
 
 class TestSession(unittest.TestCase):
     def test_override_url(self):
-        dl.raster.base_url = "http://www.descarteslabs.com"
-        self.assertEqual(dl.raster.base_url, dl.raster.session.base_url)
+        raster = dl.Raster()
+        raster.base_url = "http://www.descarteslabs.com"
+        self.assertEqual(raster.base_url, raster.session.base_url)
 
 
 if __name__ == '__main__':
