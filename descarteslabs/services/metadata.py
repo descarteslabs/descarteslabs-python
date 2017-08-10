@@ -585,9 +585,6 @@ class Metadata(Service):
                                  products=['landsat:LC08:PRE:TOAR'], \
                                  start_time='2016-07-01', \
                                  end_time='2016-07-31T23:59:59')
-            >>> len([_id for _id in ids])
-            1
-
             >>> [_id for _id in ids]
             ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
 
@@ -631,9 +628,6 @@ class Metadata(Service):
                                  products=['landsat:LC08:PRE:TOAR'], \
                                  start_time='2016-07-01', \
                                  end_time='2016-07-31T23:59:59')
-            >>> len([key for key in keys])
-            1
-
             >>> [key for key in keys]
             ['meta_LC80270312016188_v1']
 
