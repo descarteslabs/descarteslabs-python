@@ -44,6 +44,29 @@ class TestPlaces(unittest.TestCase):
         r = self.instance.prefix('north-america_united-states_iowa', placetype='district')
         self.assertEqual(9, len(r['features']))
 
+    def test_sources(self):
+        r = self.instance.sources()
+        self.assertIn('nass', r)
+
+    def test_categories(self):
+        r = self.instance.categories()
+        self.assertIn('corn', r)
+
+    def test_metrics(self):
+        r = self.instance.metrics()
+        self.assertIn('yield', r)
+
+    def test_value(self):
+        r = self.instance.value('north-america_united-states', source='nass', category='corn', metric='yield')
+        self.assertEqual(1, len(r))
+
+    def test_statistics(self):
+        r = self.instance.statistics('north-america_united-states', source='nass', category='corn', metric='yield')
+        self.assertEqual(36, len(r))
+
+    def test_data(self):
+        r = self.instance.data('north-america_united-states', source='nass', category='corn', metric='yield', date='2015-01-01')
+        self.assertEqual(1439, len(r))
 
 if __name__ == '__main__':
     unittest.main()
