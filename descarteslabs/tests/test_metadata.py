@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import itertools
+import six
 import unittest
 from warnings import catch_warnings
 
@@ -219,20 +220,47 @@ class TestMetadata(unittest.TestCase):
     def test_get_bands_by_const(self):
         self.instance.get_bands_by_constellation('L8')
 
-    def test_search_scrolled_pages(self):
+    def test_iter_search(self):
         page_size = 5
-        feature_generator = self.instance.search(
+        feature_generator = self.instance.iter_search(
                 start_time='2016-07-06',
                 end_time='2016-07-07',
                 products=['landsat:LC08:PRE:TOAR'],
                 limit=page_size,
-                scroll_pages=True
             )
         features = 0
         for feature in feature_generator:
             self.assertIn('geometry', feature)
             features += 1
         self.assertGreater(features, 0)
+
+    def test_iter_keys(self):
+        page_size = 5
+        keys_generator = self.instance.iter_keys(
+                start_time='2016-07-06',
+                end_time='2016-07-07',
+                products=['landsat:LC08:PRE:TOAR'],
+                limit=page_size,
+            )
+        keys = 0
+        for key in keys_generator:
+            self.assertTrue(isinstance(key, six.string_types))
+            keys += 1
+        self.assertGreater(keys, 0)
+
+    def test_iter_ids(self):
+        page_size = 5
+        ids_generator = self.instance.iter_ids(
+                start_time='2016-07-06',
+                end_time='2016-07-07',
+                products=['landsat:LC08:PRE:TOAR'],
+                limit=page_size,
+            )
+        ids = 0
+        for _id in ids_generator:
+            self.assertTrue(isinstance(_id, six.string_types))
+            ids += 1
+        self.assertGreater(ids, 0)
 
 
 if __name__ == '__main__':
