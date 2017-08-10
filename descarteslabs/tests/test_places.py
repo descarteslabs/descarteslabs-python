@@ -69,5 +69,6 @@ class TestPlaces(unittest.TestCase):
                                date='2015-01-01')
         self.assertEqual(1439, len(r))
 
+
 if __name__ == '__main__':
     unittest.main()
