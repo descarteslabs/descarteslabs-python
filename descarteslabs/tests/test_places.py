@@ -65,7 +65,8 @@ class TestPlaces(unittest.TestCase):
         self.assertEqual(36, len(r))
 
     def test_data(self):
-        r = self.instance.data('north-america_united-states', source='nass', category='corn', metric='yield', date='2015-01-01')
+        r = self.instance.data('north-america_united-states', source='nass', category='corn', metric='yield',
+                               date='2015-01-01')
         self.assertEqual(1439, len(r))
 
 if __name__ == '__main__':
