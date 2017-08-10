@@ -32,6 +32,19 @@ class TestPlaces(unittest.TestCase):
         r = self.instance.find('united-states_iowa')
         self.assertEqual(1, len(r))
 
+    def test_search(self):
+        r = self.instance.search('texas')
+        self.assertEqual(8, len(r))
+
+        r = self.instance.search('texas', country='united-states')
+        self.assertEqual(7, len(r))
+
+        r = self.instance.search('texas', country='united-states', placetype='county')
+        self.assertEqual(2, len(r))
+
+        r = self.instance.search('texas', country='united-states', region='oklahoma', placetype='county')
+        self.assertEqual(1, len(r))
+
     def test_shape(self):
         r = self.instance.shape('north-america_united-states_iowa')
         self.assertEqual(85688713, r['id'])
