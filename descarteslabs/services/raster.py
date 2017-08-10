@@ -248,7 +248,13 @@ class Raster(Service):
         retrieve a translated and warped mosaic.
 
         :param inputs: List of :class:`Metadata` identifiers.
-        :param bands: List of requested bands.
+        :param bands: List of requested bands. If the last item in the list is an alpha
+            band (with data range `[0, 1]`) it affects rastering of all other bands:
+            When rastering multiple images, they are combined image-by-image only where
+            each respective image's alpha band is `1` (pixels where the alpha band is not
+            `1` are "transparent" in the overlap between images). If a pixel is fully
+            masked considering all combined alpha bands it will be `0` in all non-alpha
+            bands.
         :param scales: List of tuples specifying the scaling to be applied to each band.
             If no scaling is desired for a band, use ``None`` where appropriate. If a
             tuple contains four elements, the last two will be used as the output range.
@@ -348,7 +354,13 @@ class Raster(Service):
         """Retrieve a raster as a NumPy array.
 
         :param inputs: List of :class:`Metadata` identifiers.
-        :param bands: List of requested bands.
+        :param bands: List of requested bands. If the last item in the list is an alpha
+            band (with data range `[0, 1]`) it affects rastering of all other bands:
+            When rastering multiple images, they are combined image-by-image only where
+            each respective image's alpha band is `1` (pixels where the alpha band is not
+            `1` are "transparent" in the overlap between images). If a pixel is fully
+            masked considering all combined alpha bands it will be `0` in all non-alpha
+            bands.
         :param scales: List of tuples specifying the scaling to be applied to each band.
             If no scaling is desired for a band, use ``None`` where appropriate. If a
             tuple contains four elements, the last two will be used as the output range.

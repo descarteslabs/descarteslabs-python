@@ -41,7 +41,7 @@ def base64url_decode(input):
 
 
 class Auth:
-    def __init__(self, domain="https://descarteslabs.auth0.com",
+    def __init__(self, domain="https://iam.descarteslabs.com",
                  scope=None, leeway=500):
         """
         Helps retrieve JWT from a client id and refresh token for cli usage.
@@ -122,7 +122,7 @@ class Auth:
             "api_type": "app",
             "refresh_token": self.client_secret
         }
-        r = s.post(self.domain + "/delegation", headers=headers, data=json.dumps(params), timeout=timeout)
+        r = s.post(self.domain + "/auth/delegation", headers=headers, data=json.dumps(params), timeout=timeout)
 
         if r.status_code != 200:
             raise OauthError("%s: %s" % (r.status_code, r.text))
