@@ -17,6 +17,7 @@ import tempfile
 import shutil
 import unittest
 import json
+from warnings import catch_warnings
 
 import descarteslabs as dl
 from descarteslabs.addons import numpy as np
@@ -151,16 +152,20 @@ class TestRaster(unittest.TestCase):
         self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.png'])
 
     def test_get_bands_by_key(self):
-        r = self.raster.get_bands_by_key('meta_LC80270312016188_v1')
-        for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
-                     'ndwi', 'evi', 'cirrus']:
-            self.assertTrue(band in r)
+        with catch_warnings(record=True) as w:
+            r = self.raster.get_bands_by_key('meta_LC80270312016188_v1')
+            self.assertEqual(len(w), 1)
+            for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
+                         'ndwi', 'evi', 'cirrus']:
+                self.assertTrue(band in r)
 
     def test_landsat8_bands(self):
-        r = self.raster.get_bands_by_constellation('L8')
-        for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
-                     'ndwi', 'evi', 'cirrus']:
-            self.assertTrue(band in r)
+        with catch_warnings(record=True) as w:
+            r = self.raster.get_bands_by_constellation('L8')
+            self.assertEqual(len(w), 1)
+            for band in ['red', 'green', 'blue', 'alpha', 'swir1', 'swir2', 'ndvi',
+                         'ndwi', 'evi', 'cirrus']:
+                self.assertTrue(band in r)
 
     def test_dltiles_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')
@@ -201,13 +206,19 @@ class TestRaster(unittest.TestCase):
     def test_dlkeys_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')
         iowa_geom = iowa['geometry']
-        dlkeys_geojson = self.raster.dlkeys_from_shape(30.0, 2048, 16, iowa_geom)
-        self.assertEqual(len(dlkeys_geojson['features']), 58)
+        with catch_warnings(record=True) as w:
+            dlkeys_geojson = self.raster.dlkeys_from_shape(30.0, 2048, 16, iowa_geom)
+            self.assertEqual(len(dlkeys_geojson['features']), 58)
+            self.assertEqual(DeprecationWarning, w[0].category)
 
     def test_dlkeys_from_latlon(self):
-        dlkey_geojson = self.raster.dlkey_from_latlon(45.0, -90.0, 30.0, 2048, 16)
-        self.assertEqual(dlkey_geojson['properties']['key'], "2048:16:30.0:16:-4:81")
+        with catch_warnings(record=True) as w:
+            dlkey_geojson = self.raster.dlkey_from_latlon(45.0, -90.0, 30.0, 2048, 16)
+            self.assertEqual(dlkey_geojson['properties']['key'], "2048:16:30.0:16:-4:81")
+            self.assertEqual(DeprecationWarning, w[0].category)
 
     def test_dlkey(self):
-        dlkey_geojson = self.raster.dlkey("2048:16:30.0:16:-4:81")
-        self.assertEqual(dlkey_geojson['properties']['key'], "2048:16:30.0:16:-4:81")
+        with catch_warnings(record=True) as w:
+            dlkey_geojson = self.raster.dlkey("2048:16:30.0:16:-4:81")
+            self.assertEqual(dlkey_geojson['properties']['key'], "2048:16:30.0:16:-4:81")
+            self.assertEqual(DeprecationWarning, w[0].category)

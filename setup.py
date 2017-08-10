@@ -56,9 +56,11 @@ def do_setup():
     kwargs['version'] = version
     kwargs['packages'] = find_packages('.')
     kwargs['package_data'] = {'descarteslabs.services': ['gd_bundle-g2-g1.crt']}
-    kwargs['scripts'] = [
-        'descarteslabs/scripts/descarteslabs',
-    ]
+    kwargs['entry_points'] = {
+        'console_scripts': [
+            'descarteslabs = descarteslabs.scripts.__main__:main'
+        ]
+    }
     kwargs['install_requires'] = [
         "cachetools",
         "six"
