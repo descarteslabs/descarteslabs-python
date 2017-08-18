@@ -19,6 +19,7 @@ import stat
 import json
 import six
 from six.moves import input
+import datetime
 
 from descarteslabs.auth import Auth, base64url_decode
 
@@ -30,8 +31,12 @@ def auth_handler(args):
 
     if args.command == 'login':
 
-        print(
-            'Follow this link to login https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token')   # NOQA
+        link = 'https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token'
+        link += '&device=dl-python-client-%d' % int(
+            (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds())
+
+        print('Follow this link to login:')
+        print(link)
 
         s = input('...then come back here and paste the generated token: ')
         if isinstance(s, six.text_type):
