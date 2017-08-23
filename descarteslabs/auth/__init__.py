@@ -71,7 +71,8 @@ class Auth:
 
     @classmethod
     def from_environment_or_token_json(cls, domain="https://iam.descarteslabs.com",
-            scope=None, leeway=500, token_info_path=DEFAULT_TOKEN_INFO_PATH):
+                                       scope=None, leeway=500,
+                                       token_info_path=DEFAULT_TOKEN_INFO_PATH):
         """
         Creates an Auth object from environment variables CLIENT_ID, CLIENT_SECRET,
         JWT_TOKEN if they are set, or else from a JSON file at the given path.
@@ -92,7 +93,7 @@ class Auth:
         jwt_token = os.environ.get('JWT_TOKEN', token_info.get('jwt_token', None))
 
         return cls(domain=domain, scope=scope, leeway=leeway, token_info_path=token_info_path,
-            client_id=client_id, client_secret=client_secret, jwt_token=jwt_token)
+                   client_id=client_id, client_secret=client_secret, jwt_token=jwt_token)
 
     @property
     def token(self):
