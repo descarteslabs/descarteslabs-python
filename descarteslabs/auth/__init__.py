@@ -80,6 +80,7 @@ class Auth:
         :param leeway: JWT expiration leeway
         :param token_info_path: path to a JSON file optionally holding auth information
         """
+        token_info = {}
         try:
             with open(token_info_path) as fp:
                 token_info = json.load(fp)
