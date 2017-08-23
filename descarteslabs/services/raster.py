@@ -18,6 +18,7 @@ from io import BytesIO
 import json
 import warnings
 
+import descarteslabs
 from descarteslabs.addons import numpy as np
 from descarteslabs.utilities import as_json_string
 from .service import Service
@@ -35,7 +36,7 @@ class Raster(Service):
     """Raster"""
     TIMEOUT = (9.5, 300)
 
-    def __init__(self, url=None, token=None):
+    def __init__(self, url=None, token=None, auth=descarteslabs.descartes_auth):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
@@ -44,7 +45,7 @@ class Raster(Service):
         if url is None:
             url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform-services.descarteslabs.com/raster/v1")
 
-        Service.__init__(self, url, token)
+        Service.__init__(self, url, token, auth)
 
     def get_bands_by_key(self, key):
         """

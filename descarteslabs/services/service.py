@@ -65,8 +65,8 @@ class Service:
 
     ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
 
-    def __init__(self, url, token):
-        self.auth = descarteslabs.descartes_auth
+    def __init__(self, url, token, auth):
+        self.auth = auth
         self.base_url = url
         if token:
             self.auth._token = token

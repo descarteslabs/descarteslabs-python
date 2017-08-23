@@ -27,6 +27,9 @@ import stat
 
 from descarteslabs.exceptions import AuthError, OauthError
 
+DEFAULT_TOKEN_INFO_PATH = os.path.join(
+    os.path.expanduser("~"), '.descarteslabs', 'token_info.json')
+
 
 def base64url_decode(input):
     """Helper method to base64url_decode a string.
@@ -42,27 +45,22 @@ def base64url_decode(input):
 
 class Auth:
     def __init__(self, domain="https://iam.descarteslabs.com",
-                 scope=None, leeway=500):
+                 scope=None, leeway=500, token_info_path=DEFAULT_TOKEN_INFO_PATH,
+                 client_id=None, client_secret=None, jwt_token=None):
         """
         Helps retrieve JWT from a client id and refresh token for cli usage.
-        :param client_id: str
-        :param refresh_token: str generated through IAM interface
-        :param url: endpoint for auth0
+        :param domain: endpoint for auth0
         :param scope: the JWT fields to be included
         :param leeway: JWT expiration leeway
+        :param token_info_path: path to a JSON file optionally holding auth information
+        :param client_id: JWT client id
+        :param client_secret: JWT client secret
+        :param jwt_token: the JWT token, if we already have one
         """
-
-        token_info = {}
-
-        try:
-            with open(os.path.join(os.path.expanduser("~"), '.descarteslabs', 'token_info.json')) as fp:
-                token_info = json.load(fp)
-        except:
-            pass
-
-        self.client_id = os.environ.get('CLIENT_ID', token_info.get('client_id', None))
-        self.client_secret = os.environ.get('CLIENT_SECRET', token_info.get('client_secret', None))
-        self._token = os.environ.get('JWT_TOKEN', token_info.get('jwt_token', None))
+        self.token_info_path = token_info_path
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self._token = jwt_token
 
         self.domain = domain
         self.scope = scope
@@ -70,6 +68,30 @@ class Auth:
 
         if self.scope is None:
             self.scope = ['openid', 'name', 'groups']
+
+    @classmethod
+    def from_environment_or_token_json(cls, domain="https://iam.descarteslabs.com",
+            scope=None, leeway=500, token_info_path=DEFAULT_TOKEN_INFO_PATH):
+        """
+        Creates an Auth object from environment variables CLIENT_ID, CLIENT_SECRET,
+        JWT_TOKEN if they are set, or else from a JSON file at the given path.
+        :param domain: endpoint for auth0
+        :param scope: the JWT fields to be included
+        :param leeway: JWT expiration leeway
+        :param token_info_path: path to a JSON file optionally holding auth information
+        """
+        try:
+            with open(token_info_path) as fp:
+                token_info = json.load(fp)
+        except:
+            pass
+
+        client_id = os.environ.get('CLIENT_ID', token_info.get('client_id', None))
+        client_secret = os.environ.get('CLIENT_SECRET', token_info.get('client_secret', None))
+        jwt_token = os.environ.get('JWT_TOKEN', token_info.get('jwt_token', None))
+
+        return cls(domain=domain, scope=scope, leeway=leeway, token_info_path=token_info_path,
+            client_id=client_id, client_secret=client_secret, jwt_token=jwt_token)
 
     @property
     def token(self):
@@ -134,7 +156,7 @@ class Auth:
         token_info = {}
 
         try:
-            with open(os.path.join(os.path.expanduser("~"), '.descarteslabs', 'token_info.json')) as fp:
+            with open(self.token_info_path) as fp:
                 token_info = json.load(fp)
         except:
             pass
@@ -148,12 +170,10 @@ class Auth:
 
         os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
-        file = os.path.join(os.path.expanduser("~"), '.descarteslabs', 'token_info.json')
-
-        with open(file, 'w+') as fp:
+        with open(self.token_info_path, 'w+') as fp:
             json.dump(token_info, fp)
 
-        os.chmod(file, stat.S_IRUSR | stat.S_IWUSR)
+        os.chmod(self.token_info_path, stat.S_IRUSR | stat.S_IWUSR)
 
 
 if __name__ == '__main__':
