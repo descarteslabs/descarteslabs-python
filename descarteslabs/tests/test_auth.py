@@ -21,7 +21,7 @@ import json
 class TestAuth(unittest.TestCase):
     def test_get_token(self):
         # get a jwt
-        auth = Auth()
+        auth = Auth.from_environment_or_token_json()
         self.assertIsNotNone(auth.token)
 
         # validate the jwt
