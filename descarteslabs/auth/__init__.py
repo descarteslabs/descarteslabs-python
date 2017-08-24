@@ -179,6 +179,6 @@ class Auth:
 
 
 if __name__ == '__main__':
-    auth = Auth()
+    auth = Auth.from_environment_or_token_json()
 
     print(auth.token)
