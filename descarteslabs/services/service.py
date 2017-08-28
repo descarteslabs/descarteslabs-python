@@ -61,7 +61,7 @@ class Service:
                              'HEAD', 'TRACE', 'GET', 'POST',
                              'PUT', 'OPTIONS', 'DELETE'
                          ]),
-                         status_forcelist=[429, 500, 502, 503, 504])
+                         status_forcelist=[500, 502, 503, 504])
 
     ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
 
