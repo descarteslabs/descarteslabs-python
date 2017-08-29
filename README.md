@@ -40,7 +40,7 @@ Changelog
 ## [0.4.5] - 2017-08-29
 ### Fixes
 - Automatic retry on 504
-- Internal API refactoring / improvments for Auth
+- Internal API refactoring / improvements for Auth
 
 ## [0.4.4] - 2017-08-03
 ### Added
