@@ -20,13 +20,13 @@ import json
 import six
 from six.moves import input
 
-from descarteslabs.auth import Auth, base64url_decode
+from descarteslabs.auth import Auth, base64url_decode, DEFAULT_TOKEN_INFO_PATH
 
 import descarteslabs as dl
 
 
 def auth_handler(args):
-    auth = Auth()
+    auth = Auth.from_environment_or_token_json()
 
     if args.command == 'login':
 
@@ -41,22 +41,20 @@ def auth_handler(args):
 
             token_info = json.loads(base64url_decode(s).decode('utf-8'))
 
-            path = os.path.join(os.path.expanduser("~"), '.descarteslabs')
+            path = os.path.dirname(DEFAULT_TOKEN_INFO_PATH)
 
             if not os.path.exists(path):
                 os.makedirs(path)
 
             os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
-            file = os.path.join(os.path.expanduser("~"), '.descarteslabs', 'token_info.json')
-
-            with open(file, 'w+') as fp:
+            with open(DEFAULT_TOKEN_INFO_PATH, 'w+') as fp:
                 json.dump(token_info, fp)
 
-            os.chmod(file, stat.S_IRUSR | stat.S_IWUSR)
+            os.chmod(DEFAULT_TOKEN_INFO_PATH, stat.S_IRUSR | stat.S_IWUSR)
 
             # Get a fresh Auth token
-            auth = dl.Auth()
+            auth = dl.Auth.from_environment_or_token_json()
             dl.metadata.auth = auth
             keys = dl.metadata.keys()
 

@@ -18,13 +18,15 @@ from functools import partial
 from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
 from .service import Service
+from six import string_types
+import descarteslabs
 
 
 class Places(Service):
-    TIMEOUT = (9.5, 120)
+    TIMEOUT = (9.5, 360)
     """Places and statistics service"""
 
-    def __init__(self, url=None, token=None, maxsize=10, ttl=600):
+    def __init__(self, url=None, token=None, auth=descarteslabs.descartes_auth, maxsize=10, ttl=600):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
@@ -32,7 +34,7 @@ class Places(Service):
         if url is None:
             url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform-services.descarteslabs.com/waldo/v1")
 
-        Service.__init__(self, url, token)
+        Service.__init__(self, url, token, auth)
         self.cache = TTLCache(maxsize, ttl)
 
     def placetypes(self):
@@ -45,6 +47,29 @@ class Places(Service):
                 'district', 'mesoregion', 'microregion', 'county', 'locality']
         """
         r = self.session.get('/placetypes')
+        return r.json()
+
+    def random(self, geom='low', placetype=None):
+        """Get a random location
+
+        geom: string
+            Resolution for the shape [low (default), medium, high]
+
+        return: geojson
+        """
+        params = {}
+
+        if geom:
+            params['geom'] = geom
+
+        if placetype:
+            params['placetype'] = placetype
+
+        r = self.session.get('%s/random' % self.url, params=params)
+
+        if r.status_code != 200:
+            raise RuntimeError("%s: %s" % (r.status_code, r.text))
+
         return r.json()
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'find'))
@@ -68,6 +93,45 @@ class Places(Service):
               'slug': 'africa_morocco'}]
         """
         r = self.session.get('/find/%s' % path, params=kwargs)
+        return r.json()
+
+    def search(self, q, country=None, region=None, placetype=None):
+        """Search for shapes
+
+        :param q: A query string.
+        :param str country: Restrict search to a specific country
+        :param str region: Restrict search to a specific region
+        :param str placetype: Restrict search to a specific placetype
+
+        :return: list of candidates
+
+        Example::
+            >>> import descarteslabs as dl
+            >>> from pprint import pprint
+            >>> results = dl.places.search('texas')
+            >>> pprint(results[0])
+            {'bbox': [-106.645584, 25.837395, -93.508039, 36.50035],
+             'id': 85688753,
+             'name': 'Texas',
+             'placetype': 'region',
+             'slug': 'north-america_united-states_texas'}
+        """
+        params = {}
+
+        if q:
+            params['q'] = q
+
+        if country:
+            params['country'] = country
+
+        if region:
+            params['region'] = region
+
+        if placetype:
+            params['placetype'] = placetype
+
+        r = self.session.get('/search', params=params, timeout=self.TIMEOUT)
+
         return r.json()
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'shape'))
@@ -124,5 +188,125 @@ class Places(Service):
             params['placetype'] = placetype
         params['geom'] = geom
         r = self.session.get('/prefix/%s.%s' % (slug, output), params=params)
+
+        return r.json()
+
+    def sources(self):
+        """Get a list of sources
+        """
+        r = self.session.get('/sources', timeout=self.TIMEOUT)
+
+        return r.json()
+
+    def categories(self):
+        """Get a list of categories
+        """
+        r = self.session.get('/categories', timeout=self.TIMEOUT)
+
+        return r.json()
+
+    def metrics(self):
+        """Get a list of metrics
+        """
+        r = self.session.get('/metrics', timeout=self.TIMEOUT)
+
+        return r.json()
+
+    def data(self, slug, source=None, category=None, metric=None, date=None, placetype='county'):
+        """Get all values for a prefix search and point in time
+
+        :param str slug: Slug identifier (or shape id).
+        :param str source: Source
+        :param str category: Category
+        :param str metric: Metric
+        :param str date: Date
+        :param str placetype: Restrict results to a particular place type.
+
+        """
+        params = {}
+
+        if source:
+            params['source'] = source
+
+        if category:
+            params['category'] = category
+
+        if metric:
+            params['metric'] = metric
+
+        if date:
+            params['date'] = date
+
+        if placetype:
+            params['placetype'] = placetype
+
+        r = self.session.get('/data/%s' % (slug),
+                             params=params, timeout=self.TIMEOUT)
+
+        return r.json()
+
+    def statistics(self, slug, source=None, category=None, metric=None):
+        """Get a time series for a specific place
+
+        :param str slug: Slug identifier (or shape id).
+        :param str slug: Slug identifier (or shape id).
+        :param str source: Source
+        :param str category: Category
+        :param str metric: Metric
+
+        """
+        params = {}
+
+        if source:
+            params['source'] = source
+
+        if category:
+            params['category'] = category
+
+        if metric:
+            params['metric'] = metric
+
+        r = self.session.get('/statistics/%s' % (slug),
+                             params=params, timeout=self.TIMEOUT)
+
+        return r.json()
+
+    def value(self, slug, source=None, category=None, metric=None, date=None):
+        """Get point values for a specific place
+
+        :param str slug: Slug identifier (or shape id).
+        :param list(str) source: Source(s)
+        :param list(str) category: Category(s)
+        :param list(str) metric: Metric(s)
+        :param str date: Date
+        """
+        params = {}
+
+        if source:
+
+            if isinstance(source, string_types):
+                source = [source]
+
+            params['source'] = source
+
+        if category:
+
+            if isinstance(category, string_types):
+                category = [category]
+
+            params['category'] = category
+
+        if metric:
+
+            if isinstance(metric, string_types):
+                metric = [metric]
+
+            params['metric'] = metric
+
+        if date:
+            params['date'] = date
+
+        r = self.session.get('/value/%s' % (slug),
+                             params=params, timeout=self.TIMEOUT)
 
         return r.json()

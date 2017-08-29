@@ -35,7 +35,7 @@ class Metadata(Service):
 
     TIMEOUT = (9.5, 120)
 
-    def __init__(self, url=None, token=None):
+    def __init__(self, url=None, token=None, auth=dl.descartes_auth):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
@@ -45,7 +45,7 @@ class Metadata(Service):
             url = os.environ.get("DESCARTESLABS_METADATA_URL",
                                  "https://platform-services.descarteslabs.com/metadata/v1")
 
-        Service.__init__(self, url, token)
+        Service.__init__(self, url, token, auth)
 
     def sources(self):
         """Get a list of image sources.
