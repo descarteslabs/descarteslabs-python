@@ -37,6 +37,11 @@ Changelog
 
 ## [Unreleased]
 
+## [0.4.5] - 2017-08-29
+### Fixes
+- Automatic retry on 504
+- Internal API refactoring / improvments for Auth
+
 ## [0.4.4] - 2017-08-03
 ### Added
 - Add raster bands methods to metadata service.
@@ -136,7 +141,8 @@ Changelog
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.4...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.5...HEAD
+[0.4.5]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.1...v0.4.2
