@@ -555,6 +555,16 @@ class Metadata(Service):
         r = self.session.get('/get/%s' % key)
         return r.json()
 
+    def get_by_ids(self, ids):
+        """Get metadata for multiple images by id. The response contains found images in the
+        order of the given ids. If no image exists for an id, that id is ignored.
+
+        :param list(str) ids: Image identifiers.
+        :return: List of image metadata.
+        """
+        r = self.session.post('/batch/images', json={'ids': ids})
+        return r.json()
+
     def get_product(self, product_id):
         """Get information about a single product.
 
