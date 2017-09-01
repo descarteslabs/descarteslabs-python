@@ -244,6 +244,7 @@ class Raster(Service):
             dltile=None,
             save=False,
             outfile_basename=None,
+            **pass_through_params
     ):
         """Given a list of :class:`Metadata <descarteslabs.services.Metadata>` identifiers,
         retrieve a translated and warped mosaic.
@@ -304,6 +305,7 @@ class Raster(Service):
             'targetAlignedPixels': align_pixels,
             'resampleAlg': resampler,
         }
+        params.update(pass_through_params)
 
         if dltile is not None:
             if isinstance(dltile, dict):
@@ -351,6 +353,7 @@ class Raster(Service):
             resampler=None,
             order='image',
             dltile=None,
+            **pass_through_params
     ):
         """Retrieve a raster as a NumPy array.
 
@@ -408,6 +411,7 @@ class Raster(Service):
             'targetAlignedPixels': align_pixels,
             'resampleAlg': resampler,
         }
+        params.update(pass_through_params)
 
         if dltile is not None:
             if isinstance(dltile, dict):
