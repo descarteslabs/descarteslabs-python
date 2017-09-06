@@ -200,7 +200,6 @@ class Metadata(Service):
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param expr q: Expression for filtering the results. See :py:attr:`descarteslabs.utilities.properties`.
         :param bool pixels: Whether to include pixel counts in summary calculations.
-        :param str params: JSON of additional query parameters.
         :param str dltile: A dltile key used to specify the resolution, bounds, and srs.
 
         Example usage::
@@ -293,9 +292,8 @@ class Metadata(Service):
 
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
-               cloud_fraction_0=None, fill_fraction=None, q=None, params=None,
-               limit=100, offset=0, fields=None, dltile=None, sort_field=None,
-               sort_order="asc", randomize=None):
+               cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=0,
+               fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit and offset. Please note offset
         plus limit cannot exceed 10000.
@@ -410,8 +408,8 @@ class Metadata(Service):
 
     def ids(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
             geom=None, start_time=None, end_time=None, cloud_fraction=None,
-            cloud_fraction_0=None, fill_fraction=None, q=None, params=None, limit=100,
-            offset=None, dltile=None, sort_field=None, sort_order=None, randomize=None):
+            cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=None,
+            dltile=None, sort_field=None, sort_order=None, randomize=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -454,16 +452,15 @@ class Metadata(Service):
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             q=q, params=params, limit=limit,
-                             offset=offset, fields=[], dltile=dltile,
+                             q=q, limit=limit, offset=offset, fields=[], dltile=dltile,
                              sort_field=sort_field, sort_order=sort_order, randomize=randomize)
 
         return [feature['id'] for feature in result['features']]
 
     def keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
-             cloud_fraction_0=None, fill_fraction=None, q=None, params=None, limit=100,
-             offset=0, dltile=None, sort_field=None, sort_order='asc', randomize=None):
+             cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=0,
+             dltile=None, sort_field=None, sort_order='asc', randomize=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -506,7 +503,7 @@ class Metadata(Service):
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             q=q, params=params, limit=limit, offset=offset, fields=["key"],
+                             q=q, limit=limit, offset=offset, fields=["key"],
                              dltile=dltile, sort_field=sort_field,
                              sort_order=sort_order, randomize=randomize)
 
