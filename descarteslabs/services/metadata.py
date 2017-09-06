@@ -294,8 +294,8 @@ class Metadata(Service):
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, q=None, params=None,
-               limit=100, offset=0, fields=None, dltile=None, sort_field=None, sort_order="asc",
-               randomize=None):
+               limit=100, offset=0, fields=None, dltile=None, sort_field=None,
+               sort_order="asc", randomize=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit and offset. Please note offset
         plus limit cannot exceed 10000.
@@ -411,7 +411,7 @@ class Metadata(Service):
     def ids(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
             geom=None, start_time=None, end_time=None, cloud_fraction=None,
             cloud_fraction_0=None, fill_fraction=None, q=None, params=None, limit=100,
-            randomize=None):
+            offset=None, dltile=None, sort_field=None, sort_order=None, randomize=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -506,9 +506,9 @@ class Metadata(Service):
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             q=q, params=params, limit=limit, offset=offset, fields=["key"], 
-                             dltile=dltile,
-                             sort_field=sort_field, sort_order=sort_order, randomize=randomize)
+                             q=q, params=params, limit=limit, offset=offset, fields=["key"],
+                             dltile=dltile, sort_field=sort_field,
+                             sort_order=sort_order, randomize=randomize)
 
         return [feature['key'] for feature in result['features']]
 
@@ -526,8 +526,8 @@ class Metadata(Service):
         summary = self.summary(sat_id=sat_id, products=products, const_id=None, date=date,
                                place=place, geom=geom, start_time=start_time,
                                end_time=end_time, cloud_fraction=cloud_fraction,
-                               cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                               q=q, dltile=dltile)
+                               cloud_fraction_0=cloud_fraction_0,
+                               fill_fraction=fill_fraction, q=q, dltile=dltile)
 
         offset = 0
         count = summary['count']
