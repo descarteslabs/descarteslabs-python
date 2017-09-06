@@ -293,8 +293,9 @@ class Metadata(Service):
 
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
-               cloud_fraction_0=None, fill_fraction=None, q=None,
-               limit=100, offset=0, fields=None, dltile=None, sort_field=None, sort_order="asc"):
+               cloud_fraction_0=None, fill_fraction=None, q=None, params=None,
+               limit=100, offset=0, fields=None, dltile=None, sort_field=None, sort_order="asc",
+               randomize=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit and offset. Please note offset
         plus limit cannot exceed 10000.
@@ -317,6 +318,7 @@ class Metadata(Service):
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str sort_field: Property to sort on.
         :param str sort_order: Order of sort.
+        :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
 
         return: GeoJSON ``FeatureCollection``
 
@@ -399,14 +401,17 @@ class Metadata(Service):
         if sort_order is not None:
             kwargs['sort_order'] = sort_order
 
+        if randomize is not None:
+            kwargs['random_seed'] = randomize
+
         r = self.session.post('/search', json=kwargs)
 
         return {'type': 'FeatureCollection', "features": r.json()}
 
     def ids(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
             geom=None, start_time=None, end_time=None, cloud_fraction=None,
-            cloud_fraction_0=None, fill_fraction=None, q=None, limit=100,
-            offset=0, dltile=None, sort_field=None, sort_order='asc'):
+            cloud_fraction_0=None, fill_fraction=None, q=None, params=None, limit=100,
+            randomize=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -427,6 +432,7 @@ class Metadata(Service):
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str sort_field: Property to sort on.
         :param str sort_order: Order of sort.
+        :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
 
         :return: List of image identifiers.
 
@@ -448,15 +454,16 @@ class Metadata(Service):
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             q=q, limit=limit, offset=offset, fields=[], dltile=dltile,
-                             sort_field=sort_field, sort_order=sort_order)
+                             q=q, params=params, limit=limit,
+                             offset=offset, fields=[], dltile=dltile,
+                             sort_field=sort_field, sort_order=sort_order, randomize=randomize)
 
         return [feature['id'] for feature in result['features']]
 
     def keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
-             cloud_fraction_0=None, fill_fraction=None, q=None, limit=100,
-             offset=0, dltile=None, sort_field=None, sort_order='asc'):
+             cloud_fraction_0=None, fill_fraction=None, q=None, params=None, limit=100,
+             offset=0, dltile=None, sort_field=None, sort_order='asc', randomize=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -477,6 +484,7 @@ class Metadata(Service):
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str sort_field: Property to sort on.
         :param str sort_order: Order of sort.
+        :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
 
         :return: List of image identifiers.
 
@@ -498,8 +506,9 @@ class Metadata(Service):
                              place=place, geom=geom, start_time=start_time,
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             q=q, limit=limit, offset=offset, fields=["key"],
-                             dltile=dltile, sort_field=sort_field, sort_order=sort_order)
+                             q=q, params=params, limit=limit, offset=offset, fields=["key"], 
+                             dltile=dltile,
+                             sort_field=sort_field, sort_order=sort_order, randomize=randomize)
 
         return [feature['key'] for feature in result['features']]
 
@@ -559,6 +568,16 @@ class Metadata(Service):
              'tile_id']
         """
         r = self.session.get('/get/%s' % key)
+        return r.json()
+
+    def get_by_ids(self, ids):
+        """Get metadata for multiple images by id. The response contains found images in the
+        order of the given ids. If no image exists for an id, that id is ignored.
+
+        :param list(str) ids: Image identifiers.
+        :return: List of image metadata.
+        """
+        r = self.session.post('/batch/images', json={'ids': ids})
         return r.json()
 
     def get_product(self, product_id):
