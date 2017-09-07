@@ -14,9 +14,9 @@
 
 # flake8: noqa
 
-__version__ = "0.4.4"
+__version__ = "0.4.5"
 from .auth import Auth
-descartes_auth = Auth()
+descartes_auth = Auth.from_environment_or_token_json()
 
 from .services.metadata import Metadata
 from .services.places import Places

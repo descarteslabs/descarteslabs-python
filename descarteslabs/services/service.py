@@ -35,7 +35,7 @@ class WrappedSession(requests.Session):
 
         resp = super(WrappedSession, self).request(method, self.base_url + url, **kwargs)
 
-        if resp.status_code == 200:
+        if resp.status_code >= 200 and resp.status_code < 400:
             return resp
         elif resp.status_code == 400:
             raise BadRequestError(resp.text)
@@ -61,12 +61,12 @@ class Service:
                              'HEAD', 'TRACE', 'GET', 'POST',
                              'PUT', 'OPTIONS', 'DELETE'
                          ]),
-                         status_forcelist=[429, 500, 502, 503])
+                         status_forcelist=[500, 502, 503, 504])
 
     ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
 
-    def __init__(self, url, token):
-        self.auth = descarteslabs.descartes_auth
+    def __init__(self, url, token, auth):
+        self.auth = auth
         self.base_url = url
         if token:
             self.auth._token = token

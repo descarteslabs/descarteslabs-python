@@ -21,11 +21,11 @@ import json
 class TestAuth(unittest.TestCase):
     def test_get_token(self):
         # get a jwt
-        auth = Auth()
+        auth = Auth.from_environment_or_token_json()
         self.assertIsNotNone(auth.token)
 
         # validate the jwt
-        url = auth.domain + "/tokeninfo"
+        url = "https://descarteslabs.auth0.com" + "/tokeninfo"
         params = {"id_token": auth.token}
         headers = {"content-type": "application/json"}
         r = requests.post(url, data=json.dumps(params), headers=headers)

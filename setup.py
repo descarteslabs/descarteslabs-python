@@ -77,7 +77,8 @@ def do_setup():
     ]
 
     # Python < 2.7.9 needs requests[security] to avoid SSL issues
-    if sys.version_info[0:3] >= (2, 7, 9):
+    # macOS ships with ancient OpenSSL which causes different SSL issues
+    if sys.version_info[0:3] >= (2, 7, 9) and sys.platform != 'darwin':
         kwargs["install_requires"].append('requests>=2.16.0')
     else:
         kwargs["install_requires"].append('requests[security]>=2.16.0')

@@ -20,6 +20,7 @@ import warnings
 
 from descarteslabs.addons import ThirdParty, blosc, numpy as np
 from descarteslabs.utilities import as_json_string, read_blosc_array, read_blosc_string
+import descarteslabs
 from .service import Service
 from .places import Places
 import six
@@ -35,7 +36,7 @@ class Raster(Service):
     """Raster"""
     TIMEOUT = (9.5, 300)
 
-    def __init__(self, url=None, token=None):
+    def __init__(self, url=None, token=None, auth=descarteslabs.descartes_auth):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
@@ -44,7 +45,7 @@ class Raster(Service):
         if url is None:
             url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform-services.descarteslabs.com/raster/v2")
 
-        Service.__init__(self, url, token)
+        Service.__init__(self, url, token, auth)
 
     def get_bands_by_key(self, key):
         """
@@ -243,12 +244,20 @@ class Raster(Service):
             dltile=None,
             save=False,
             outfile_basename=None
+            outfile_basename=None,
+            **pass_through_params
     ):
         """Given a list of :class:`Metadata <descarteslabs.services.Metadata>` identifiers,
         retrieve a translated and warped mosaic.
 
         :param inputs: List of :class:`Metadata` identifiers.
-        :param bands: List of requested bands.
+        :param bands: List of requested bands. If the last item in the list is an alpha
+            band (with data range `[0, 1]`) it affects rastering of all other bands:
+            When rastering multiple images, they are combined image-by-image only where
+            each respective image's alpha band is `1` (pixels where the alpha band is not
+            `1` are "transparent" in the overlap between images). If a pixel is fully
+            masked considering all combined alpha bands it will be `0` in all non-alpha
+            bands.
         :param scales: List of tuples specifying the scaling to be applied to each band.
             If no scaling is desired for a band, use ``None`` where appropriate. If a
             tuple contains four elements, the last two will be used as the output range.
@@ -297,6 +306,7 @@ class Raster(Service):
             'targetAlignedPixels': align_pixels,
             'resampleAlg': resampler,
         }
+        params.update(pass_through_params)
 
         if dltile is not None:
             if isinstance(dltile, dict):
@@ -353,11 +363,18 @@ class Raster(Service):
             resampler=None,
             order='image',
             dltile=None,
+            **pass_through_params
     ):
         """Retrieve a raster as a NumPy array.
 
         :param inputs: List of :class:`Metadata` identifiers.
-        :param bands: List of requested bands.
+        :param bands: List of requested bands. If the last item in the list is an alpha
+            band (with data range `[0, 1]`) it affects rastering of all other bands:
+            When rastering multiple images, they are combined image-by-image only where
+            each respective image's alpha band is `1` (pixels where the alpha band is not
+            `1` are "transparent" in the overlap between images). If a pixel is fully
+            masked considering all combined alpha bands it will be `0` in all non-alpha
+            bands.
         :param scales: List of tuples specifying the scaling to be applied to each band.
             If no scaling is desired for a band, use ``None`` where appropriate. If a
             tuple contains four elements, the last two will be used as the output range.
@@ -404,6 +421,7 @@ class Raster(Service):
             'targetAlignedPixels': align_pixels,
             'resampleAlg': resampler,
         }
+        params.update(pass_through_params)
 
         if dltile is not None:
             if isinstance(dltile, dict):
