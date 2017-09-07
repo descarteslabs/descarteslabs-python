@@ -243,7 +243,6 @@ class Raster(Service):
             resampler=None,
             dltile=None,
             save=False,
-            outfile_basename=None
             outfile_basename=None,
             **pass_through_params
     ):
