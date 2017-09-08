@@ -3,6 +3,8 @@ python:
 - '2.7'
 - '3.5'
 - '3.6'
+git:
+  lfs_skip_smudge: true
 before_install:
 - pip install --upgrade pip
 install:
