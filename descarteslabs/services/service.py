@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import random
 
 import requests
@@ -96,14 +95,5 @@ class Service:
             "Content-Type": "application/json",
             "User-Agent": "dl-python/{}".format(descarteslabs.__version__)
         })
-
-        here = os.path.dirname(__file__)
-
-        try:
-            file = os.path.join(here, 'gd_bundle-g2-g1.crt')
-            with open(file):
-                s.verify = file
-        except:
-            s.verify = False
 
         return s
