@@ -14,7 +14,7 @@
 
 # flake8: noqa
 
-__version__ = "0.4.5"
+__version__ = "0.4.6"
 from .auth import Auth
 descartes_auth = Auth.from_environment_or_token_json()
 

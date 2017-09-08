@@ -37,6 +37,14 @@ Changelog
 
 ## [Unreleased]
 
+## [0.4.6] - 2017-09-08
+### Added
+- Added ext namespace
+- Metadata multi-get
+
+### Fixes
+- Fix OpenSSL install on OSX
+
 ## [0.4.5] - 2017-08-29
 ### Fixes
 - Automatic retry on 504
@@ -141,7 +149,8 @@ Changelog
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.5...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.6...HEAD
+[0.4.6]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.2...v0.4.3
