@@ -19,7 +19,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 import descarteslabs
-from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, GatewayTimeoutError
+from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, GatewayTimeoutError,\
+        ConflictError
 
 
 class WrappedSession(requests.Session):
@@ -40,6 +41,8 @@ class WrappedSession(requests.Session):
             raise BadRequestError(resp.text)
         elif resp.status_code == 404:
             raise NotFoundError("404 %s %s" % (method, url))
+        elif resp.status_code == 409:
+            raise ConflictError(resp.text)
         elif resp.status_code == 429:
             raise RateLimitError(resp.text)
         elif resp.status_code == 504:
