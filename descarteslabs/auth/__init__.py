@@ -107,7 +107,7 @@ class Auth:
             if now + self.leeway > exp:
                 try:
                     self._get_token()
-                except AuthError, e:
+                except AuthError as e:
                     # Unable to refresh, raise if now > exp
                     if now > exp:
                         raise e
