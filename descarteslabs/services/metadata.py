@@ -61,7 +61,17 @@ class Metadata(Service):
         r = self.session.get('/sources')
         return r.json()
 
-    def bands(self, products=None, limit=None, offset=None, wavelength=None, resolution=None, tags=None):
+    def bands(
+        self,
+        products=None,
+        limit=None,
+        offset=None,
+        wavelength=None,
+        resolution=None,
+        tags=None,
+        bands=None,
+        **kwargs
+    ):
         """Search for imagery data bands that you have access to.
 
         :param list(str) products: A list of product(s) to return bands for.
@@ -76,16 +86,16 @@ class Metadata(Service):
         params = ['limit', 'offset', 'products', 'wavelength', 'resolution', 'tags']
 
         args = locals()
-        kwargs = {
+        kwargs = dict(kwargs, **{
             param: args[param]
             for param in params
             if args[param] is not None
-        }
+        })
 
         r = self.session.post('/bands/search', json=kwargs)
         return r.json()
 
-    def derived_bands(self, bands=None, require_bands=None, limit=None, offset=None):
+    def derived_bands(self, bands=None, require_bands=None, limit=None, offset=None, **kwargs):
         """Search for predefined derived bands that you have access to.
 
         :param list(str) bands: Limit the derived bands to ones that can be
@@ -100,11 +110,11 @@ class Metadata(Service):
         params = ['bands', 'limit', 'offset']
 
         args = locals()
-        kwargs = {
+        kwargs = dict(kwargs, **{
             param: args[param]
             for param in params
             if args[param] is not None
-        }
+        })
 
         r = self.session.post('/bands/derived/search', json=kwargs)
         return r.json()
@@ -132,23 +142,24 @@ class Metadata(Service):
         r = self.session.get('/bands/constellation/%s' % const)
         return r.json()
 
-    def products(self, bands=None, limit=None, offset=None):
+    def products(self, bands=None, limit=None, offset=None, owner=None, **kwargs):
         """Search products that are available on the platform.
 
         :param list(str) bands: Band name(s) e.g ["red", "nir"] to filter products by.
                                 Note that products must match all bands that are passed.
         :param int limit: Number of results to return.
         :param int offset: Index to start at when returning results.
+        :param str owner: Filter products by the owner's uuid.
 
         """
-        params = ['limit', 'offset', 'bands']
+        params = ['limit', 'offset', 'bands', 'owner']
 
         args = locals()
-        kwargs = {
+        kwargs = dict(kwargs, **{
             param: args[param]
             for param in params
             if args[param] is not None
-        }
+        })
 
         r = self.session.post('/products/search', json=kwargs)
 
