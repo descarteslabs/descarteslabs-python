@@ -117,7 +117,12 @@ class Auth:
         if exp is not None:
             now = (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds()
             if now + self.leeway > exp:
-                self._get_token()
+                try:
+                    self._get_token()
+                except AuthError as e:
+                    # Unable to refresh, raise if now > exp
+                    if now > exp:
+                        raise e
 
         return self._token
 
