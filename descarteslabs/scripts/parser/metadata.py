@@ -33,7 +33,6 @@ def metadata_handler(args):
         print(json.dumps(sources, indent=2))
 
     if args.command == 'summary':
-
         if args.place:
             kwargs['place'] = args.place
         if args.const_id:
@@ -44,8 +43,6 @@ def metadata_handler(args):
             kwargs['end_time'] = args.end_time
         if args.geom:
             kwargs['geom'] = args.geom
-        if args.params:
-            kwargs['params'] = args.params
         if args.bbox:
             kwargs['bbox'] = args.bbox
 
@@ -54,7 +51,6 @@ def metadata_handler(args):
         print(json.dumps(summary))
 
     if args.command == 'search':
-
         if args.place:
             kwargs['place'] = args.place
         if args.const_id:
@@ -65,8 +61,6 @@ def metadata_handler(args):
             kwargs['end_time'] = args.end_time
         if args.geom:
             kwargs['geom'] = args.geom
-        if args.params:
-            kwargs['params'] = args.params
         if args.limit:
             kwargs['limit'] = args.limit
         if args.offset:
@@ -79,7 +73,6 @@ def metadata_handler(args):
         print(json.dumps(search, indent=2))
 
     if args.command == 'keys':
-
         if args.place:
             kwargs['place'] = args.place
         if args.const_id:
@@ -90,8 +83,6 @@ def metadata_handler(args):
             kwargs['end_time'] = args.end_time
         if args.geom:
             kwargs['geom'] = args.geom
-        if args.params:
-            kwargs['params'] = args.params
         if args.limit:
             kwargs['limit'] = args.limit
         if args.offset:

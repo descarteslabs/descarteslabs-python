@@ -20,7 +20,7 @@ import json
 import six
 from six.moves import input
 
-from descarteslabs.auth import Auth, base64url_decode, DEFAULT_TOKEN_INFO_PATH
+from descarteslabs.auth import Auth, base64url_decode, makedirs_if_not_exists, DEFAULT_TOKEN_INFO_PATH
 
 import descarteslabs as dl
 
@@ -41,12 +41,10 @@ def auth_handler(args):
 
             token_info = json.loads(base64url_decode(s).decode('utf-8'))
 
-            path = os.path.dirname(DEFAULT_TOKEN_INFO_PATH)
+            token_info_directory = os.path.dirname(DEFAULT_TOKEN_INFO_PATH)
+            makedirs_if_not_exists(token_info_directory)
 
-            if not os.path.exists(path):
-                os.makedirs(path)
-
-            os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+            os.chmod(token_info_directory, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
             with open(DEFAULT_TOKEN_INFO_PATH, 'w+') as fp:
                 json.dump(token_info, fp)
