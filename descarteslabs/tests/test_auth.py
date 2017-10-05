@@ -31,6 +31,10 @@ class TestAuth(unittest.TestCase):
         r = requests.post(url, data=json.dumps(params), headers=headers)
         self.assertEqual(200, r.status_code)
 
+    def test_get_namespace(self):
+        auth = Auth.from_environment_or_token_json()
+        self.assertIsNotNone(auth.namespace)
+
 
 if __name__ == '__main__':
     unittest.main()

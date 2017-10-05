@@ -17,13 +17,15 @@ import requests
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
-import random
 import base64
-import json
 import datetime
-import six
+import errno
+import json
 import os
+import random
+import six
 import stat
+from hashlib import sha1
 
 from descarteslabs.exceptions import AuthError, OauthError
 
@@ -41,6 +43,17 @@ def base64url_decode(input):
         input += b'=' * (4 - rem)
 
     return base64.urlsafe_b64decode(input)
+
+
+def makedirs_if_not_exists(path):
+    if not os.path.exists(path):
+        try:
+            os.makedirs(path)
+        except OSError as ex:
+            if ex.errno == errno.EEXIST:
+                pass
+            else:
+                raise
 
 
 class Auth:
@@ -61,6 +74,7 @@ class Auth:
         self.client_id = client_id
         self.client_secret = client_secret
         self._token = jwt_token
+        self._namespace = None
 
         self.domain = domain
         self.scope = scope
@@ -105,7 +119,12 @@ class Auth:
         if exp is not None:
             now = (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds()
             if now + self.leeway > exp:
-                self._get_token()
+                try:
+                    self._get_token()
+                except AuthError as e:
+                    # Unable to refresh, raise if now > exp
+                    if now > exp:
+                        raise e
 
         return self._token
 
@@ -165,17 +184,21 @@ class Auth:
 
         token_info['jwt_token'] = self._token
 
-        path = os.path.join(os.path.expanduser("~"), '.descarteslabs')
+        token_info_directory = os.path.dirname(self.token_info_path)
+        makedirs_if_not_exists(token_info_directory)
 
-        if not os.path.exists(path):
-            os.makedirs(path)
-
-        os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+        os.chmod(token_info_directory, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
         with open(self.token_info_path, 'w+') as fp:
             json.dump(token_info, fp)
 
         os.chmod(self.token_info_path, stat.S_IRUSR | stat.S_IWUSR)
+
+    @property
+    def namespace(self):
+        if self._namespace is None:
+            self._namespace = sha1(self.payload['sub'].encode('utf-8')).hexdigest()
+        return self._namespace
 
 
 if __name__ == '__main__':
