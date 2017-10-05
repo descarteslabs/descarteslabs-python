@@ -25,6 +25,7 @@ import os
 import random
 import six
 import stat
+from hashlib import sha1
 
 from descarteslabs.exceptions import AuthError, OauthError
 
@@ -73,6 +74,7 @@ class Auth:
         self.client_id = client_id
         self.client_secret = client_secret
         self._token = jwt_token
+        self._namespace = None
 
         self.domain = domain
         self.scope = scope
@@ -191,6 +193,12 @@ class Auth:
             json.dump(token_info, fp)
 
         os.chmod(self.token_info_path, stat.S_IRUSR | stat.S_IWUSR)
+
+    @property
+    def namespace(self):
+        if self._namespace is None:
+            self._namespace = sha1(self.payload['sub'].encode('utf-8')).hexdigest()
+        return self._namespace
 
 
 if __name__ == '__main__':
