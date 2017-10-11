@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
 import os
 from io import BytesIO
 import json
 import warnings
 
 from descarteslabs.addons import ThirdParty, blosc, numpy as np
-from descarteslabs.utilities import as_json_string, read_blosc_array, read_blosc_string
+from descarteslabs.utilities import as_json_string, read_blosc_array
 import descarteslabs
 from .service import Service
 from .places import Places
