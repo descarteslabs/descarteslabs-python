@@ -23,6 +23,10 @@ class NotFoundError(ServerError):
     status = 404
 
 
+class ConflictError(ServerError):
+    status = 409
+
+
 class RateLimitError(ServerError):
     status = 429
 

@@ -30,12 +30,29 @@ $ export CLIENT_SECRET=...
 
 Documentation
 -------------
-The latest build of the documentation can be found on [readthedocs](http://descartes-labs-python.readthedocs.io/en/latest/)
+The documentation for the latest release can be found on [readthedocs](http://descartes-labs-python.readthedocs.io/)
 
 Changelog
 =========
 
 ## [Unreleased]
+
+## [0.4.7] - 2017-10-09
+### Added
+- Complex filtering expressions for image attributes
+
+### Fixes
+- Raise explicitly on 409 response
+- Keep retrying token refresh until token fully expired
+- Fixed race condition when creating `.descarteslabs` directory
+
+## [0.4.6] - 2017-09-08
+### Added
+- Added ext namespace
+- Metadata multi-get
+
+### Fixes
+- Fix OpenSSL install on OSX
 
 ## [0.4.5] - 2017-08-29
 ### Fixes
@@ -141,7 +158,9 @@ Changelog
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.5...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.7...HEAD
+[0.4.7]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.6...v0.4.7
+[0.4.6]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.2...v0.4.3

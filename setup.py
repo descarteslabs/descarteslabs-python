@@ -55,7 +55,6 @@ def do_setup():
     kwargs['classifiers'] = clssfrs
     kwargs['version'] = version
     kwargs['packages'] = find_packages('.')
-    kwargs['package_data'] = {'descarteslabs.services': ['gd_bundle-g2-g1.crt']}
     kwargs['entry_points'] = {
         'console_scripts': [
             'descarteslabs = descarteslabs.scripts.__main__:main'
@@ -67,7 +66,8 @@ def do_setup():
     ]
 
     # Python < 2.7.9 needs requests[security] to avoid SSL issues
-    if sys.version_info[0:3] >= (2, 7, 9):
+    # macOS ships with ancient OpenSSL which causes different SSL issues
+    if sys.version_info[0:3] >= (2, 7, 9) and sys.platform != 'darwin':
         kwargs["install_requires"].append('requests>=2.16.0')
     else:
         kwargs["install_requires"].append('requests[security]>=2.16.0')

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import random
 
 import requests
@@ -20,7 +19,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 import descarteslabs
-from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, GatewayTimeoutError
+from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, GatewayTimeoutError,\
+        ConflictError
 
 
 class WrappedSession(requests.Session):
@@ -41,6 +41,8 @@ class WrappedSession(requests.Session):
             raise BadRequestError(resp.text)
         elif resp.status_code == 404:
             raise NotFoundError("404 %s %s" % (method, url))
+        elif resp.status_code == 409:
+            raise ConflictError(resp.text)
         elif resp.status_code == 429:
             raise RateLimitError(resp.text)
         elif resp.status_code == 504:
@@ -96,14 +98,5 @@ class Service:
             "Content-Type": "application/json",
             "User-Agent": "dl-python/{}".format(descarteslabs.__version__)
         })
-
-        here = os.path.dirname(__file__)
-
-        try:
-            file = os.path.join(here, 'gd_bundle-g2-g1.crt')
-            with open(file):
-                s.verify = file
-        except:
-            s.verify = False
 
         return s
