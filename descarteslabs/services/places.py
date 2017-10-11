@@ -93,11 +93,11 @@ class Places(Service):
         r = self.session.get('/find/%s' % path, params=kwargs)
         return r.json()
 
-    def search(self, q, n=10, country=None, region=None, placetype=None):
+    def search(self, q, limit=10, country=None, region=None, placetype=None):
         """Search for shapes
 
-        :param q: A query string.
-        :param n: Max number of matches to return
+        :param str q: A query string.
+        :param int limit: Max number of matches to return
         :param str country: Restrict search to a specific country
         :param str region: Restrict search to a specific region
         :param str placetype: Restrict search to a specific placetype
@@ -129,8 +129,8 @@ class Places(Service):
         if placetype:
             params['placetype'] = placetype
 
-        if n:
-            params['n'] = n
+        if limit:
+            params['n'] = limit
 
         r = self.session.get('/search', params=params, timeout=self.TIMEOUT)
 
