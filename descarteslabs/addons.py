@@ -31,10 +31,10 @@ class ThirdParty(object):
 
 try:
     import numpy
-except:
+except ImportError:
     numpy = ThirdParty("numpy")
 
 try:
     import blosc
-except:
+except ImportError:
     blosc = ThirdParty("blosc")
