@@ -13,6 +13,10 @@
 # limitations under the License.
 
 import json
+import struct
+
+from .addons import blosc, numpy as np
+from .exceptions import ServerError
 from .services.metadata_filtering import Properties
 
 properties = Properties("absolute_orbit", "acquired", "archived", "area", "azimuth_angle",
@@ -32,3 +36,40 @@ def as_json_string(str_or_dict):
         return json.dumps(str_or_dict)
     else:
         return str_or_dict
+
+
+def read_blosc_buffer(data):
+    header = data.read(16)
+
+    _, size, _, compressed_size = struct.unpack('<IIII', header)
+    body = data.read(compressed_size - 16)
+
+    return size, header + body
+
+
+def read_blosc_array(metadata, data):
+    output = np.empty(metadata['shape'], dtype=np.dtype(metadata['dtype']))
+    ptr = output.__array_interface__['data'][0]
+
+    for _ in metadata['chunks']:
+        raw_size, buffer = read_blosc_buffer(data)
+        blosc.decompress_ptr(buffer, ptr)
+        ptr += raw_size
+
+    bytes_received = ptr - output.__array_interface__['data'][0]
+
+    if bytes_received != output.nbytes:
+        raise ServerError("Did not receive complete array (got {}, expected {})".format(
+            bytes_received, output.nbytes))
+
+    return output
+
+
+def read_blosc_string(metadata, data):
+    output = b''
+
+    for _ in metadata['chunks']:
+        _, buffer = read_blosc_buffer(data)
+        output += blosc.decompress(buffer)
+
+    return output

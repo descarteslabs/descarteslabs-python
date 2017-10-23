@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
 import os
 from io import BytesIO
 import json
 import warnings
 
+from descarteslabs.addons import ThirdParty, blosc, numpy as np
+from descarteslabs.utilities import as_json_string, read_blosc_array
 import descarteslabs
-from descarteslabs.addons import numpy as np
-from descarteslabs.utilities import as_json_string
 from .service import Service
 from .places import Places
 import six
@@ -43,7 +42,7 @@ class Raster(Service):
         """
         warnings.simplefilter('always', DeprecationWarning)
         if url is None:
-            url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform-services.descarteslabs.com/raster/v1")
+            url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform-services.descarteslabs.com/raster/v2")
 
         Service.__init__(self, url, token, auth)
 
@@ -315,19 +314,28 @@ class Raster(Service):
 
         r = self.session.post('/raster', json=params)
 
-        json_resp = r.json()
-        # Decode base64
-        for k in list(json_resp['files'].keys()):
+        raw = BytesIO(r.content)
+
+        json_resp = json.loads(raw.readline().decode('utf-8').strip())
+
+        num_files = json_resp['files']
+        json_resp['files'] = {}
+
+        for _ in range(num_files):
+            file_meta = json.loads(raw.readline().decode('utf-8').strip())
+
+            fn = file_meta['name']
+            data = raw.read(file_meta['length'])
+
             if outfile_basename:
                 outfilename = "{}.{}".format(
                     outfile_basename,
-                    ".".join(os.path.basename(k).split(".")[1:])
+                    ".".join(os.path.basename(fn).split(".")[1:])
                 )
             else:
-                outfilename = k
-            json_resp['files'][outfilename] = base64.b64decode(
-                json_resp['files'].pop(k)
-            )
+                outfilename = fn
+
+            json_resp['files'][outfilename] = data
 
         if save:
             for filename, data in six.iteritems(json_resp['files']):
@@ -419,12 +427,23 @@ class Raster(Service):
             else:
                 params['dltile'] = dltile
 
-        r = self.session.post('/npz', json=params)
+        can_blosc = not isinstance(blosc, ThirdParty)
 
-        io = BytesIO(r.content)
-        npz = np.load(io)
-        array = npz['data']
-        metadata = json.loads(npz['metadata'].tostring().decode('utf-8'))
+        if can_blosc:
+            params['of'] = 'blosc'
+        else:
+            params['of'] = 'npz'
+
+        r = self.session.post('/npz', json=params, stream=True)
+
+        if can_blosc:
+            metadata = json.loads(r.raw.readline().decode('utf-8').strip())
+            array_meta = json.loads(r.raw.readline().decode('utf-8').strip())
+            array = read_blosc_array(array_meta, r.raw)
+        else:
+            npz = np.load(BytesIO(r.content))
+            array = npz['data']
+            metadata = json.loads(npz['metadata'].tostring().decode('utf-8'))
 
         if len(array.shape) > 2:
             if order == 'image':

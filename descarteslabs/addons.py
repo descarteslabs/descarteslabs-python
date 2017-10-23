@@ -33,3 +33,8 @@ try:
     import numpy
 except:
     numpy = ThirdParty("numpy")
+
+try:
+    import blosc
+except:
+    blosc = ThirdParty("blosc")

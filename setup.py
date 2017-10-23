@@ -28,6 +28,15 @@ with open('descarteslabs/__init__.py', 'rb') as f:
     )
 
 
+def check_setuptools():
+    import pkg_resources
+    try:
+        list(pkg_resources.parse_requirements('foo;platform_system!="Windows"'))
+    except:
+        exit('Your Python is using an outdated version of `setuptools`. Please '
+             'run `pip install -U setuptools` and try again.')
+
+
 def do_setup():
     src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     old_path = os.getcwd()
@@ -61,8 +70,9 @@ def do_setup():
         ]
     }
     kwargs['install_requires'] = [
-        "cachetools",
-        "six"
+        'cachetools',
+        'six',
+        'blosc;platform_system!="Windows"'
     ]
 
     # Python < 2.7.9 needs requests[security] to avoid SSL issues
@@ -81,8 +91,7 @@ def do_setup():
         del sys.path[0]
         os.chdir(old_path)
 
-    return
-
 
 if __name__ == "__main__":
+    check_setuptools()
     do_setup()
