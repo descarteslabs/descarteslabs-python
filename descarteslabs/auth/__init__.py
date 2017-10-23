@@ -99,7 +99,7 @@ class Auth:
         try:
             with open(token_info_path) as fp:
                 token_info = json.load(fp)
-        except:
+        except (IOError, ValueError):
             pass
 
         client_id = os.environ.get('CLIENT_ID', token_info.get('client_id', None))
@@ -179,7 +179,7 @@ class Auth:
         try:
             with open(self.token_info_path) as fp:
                 token_info = json.load(fp)
-        except:
+        except (IOError, ValueError):
             pass
 
         token_info['jwt_token'] = self._token

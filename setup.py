@@ -32,7 +32,7 @@ def check_setuptools():
     import pkg_resources
     try:
         list(pkg_resources.parse_requirements('foo;platform_system!="Windows"'))
-    except:
+    except pkg_resources.RequirementParseError:
         exit('Your Python is using an outdated version of `setuptools`. Please '
              'run `pip install -U setuptools` and try again.')
 

@@ -20,16 +20,13 @@ import descarteslabs as dl
 
 
 def scales(s):
-    try:
-        if s.count(",") == 1:
-            mi, ma = map(float, s.split(","))
-            return [mi, ma]
-        elif s.count(",") == 3:
-            smi, sma, dmi, dma = map(float, s.split(","))
-            return [smi, sma, dmi, dma]
-        else:
-            raise
-    except:
+    if s.count(",") == 1:
+        mi, ma = map(float, s.split(","))
+        return [mi, ma]
+    elif s.count(",") == 3:
+        smi, sma, dmi, dma = map(float, s.split(","))
+        return [smi, sma, dmi, dma]
+    else:
         raise argparse.ArgumentTypeError(
             "Scales must be mi,ma or smi,sma,dmi,dma"
         )
