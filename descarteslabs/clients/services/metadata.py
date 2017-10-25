@@ -19,7 +19,6 @@ from six import string_types
 from .service import Service
 from .places import Places
 import descarteslabs as dl
-
 from . import metadata_filtering as filtering
 
 CONST_ID_DEPRECATION_MESSAGE = (

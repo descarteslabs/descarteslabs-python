@@ -19,14 +19,13 @@ from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
 from .service import Service
 from six import string_types
-import descarteslabs
-
+from ... import descartes_auth
 
 class Places(Service):
     TIMEOUT = (9.5, 360)
     """Places and statistics service"""
 
-    def __init__(self, url=None, token=None, auth=descarteslabs.descartes_auth, maxsize=10, ttl=600):
+    def __init__(self, url=None, token=None, auth=descartes_auth, maxsize=10, ttl=600):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.

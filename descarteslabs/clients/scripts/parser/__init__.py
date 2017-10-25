@@ -17,10 +17,10 @@ from __future__ import print_function
 
 import argparse
 
-from descarteslabs.scripts.parser.auth import auth_handler
-from descarteslabs.scripts.parser.metadata import metadata_handler
-from descarteslabs.scripts.parser.raster import scales, raster_handler
-from descarteslabs.scripts.parser.places import places_handler
+from ..parser.auth import auth_handler
+from ..parser.metadata import metadata_handler
+from ..parser.raster import scales, raster_handler
+from ..parser.places import places_handler
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(dest='group', )

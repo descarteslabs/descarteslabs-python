@@ -27,7 +27,7 @@ import six
 import stat
 from hashlib import sha1
 
-from descarteslabs.exceptions import AuthError, OauthError
+from ..exceptions import AuthError, OauthError
 
 DEFAULT_TOKEN_INFO_PATH = os.path.join(
     os.path.expanduser("~"), '.descarteslabs', 'token_info.json')

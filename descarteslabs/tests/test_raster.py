@@ -20,7 +20,7 @@ import json
 from warnings import catch_warnings
 
 import descarteslabs as dl
-from descarteslabs.addons import numpy as np
+from ..clients.addons import numpy as np, blosc, ThirdParty
 
 
 class TestRaster(unittest.TestCase):
@@ -105,8 +105,8 @@ class TestRaster(unittest.TestCase):
             resolution=960,
         )
 
-        old_blosc = dl.addons.blosc
-        dl.addons.blosc = dl.addons.ThirdParty("blosc")
+        old_blosc = blosc
+        dl.addons.blosc = ThirdParty("blosc")
 
         r2 = self.raster.raster(
             inputs=['meta_LC80270312016188_v1'],
