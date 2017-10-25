@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from descarteslabs.scripts.parser import parser, handle
+from descarteslabs.clients.scripts.parser import parser, handle
 
 
 def main():

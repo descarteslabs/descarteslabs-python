@@ -14,7 +14,7 @@
 
 import json
 import unittest
-from descarteslabs.utilities import as_json_string
+from ..clients.utilities import as_json_string
 
 
 class TestUtilities(unittest.TestCase):

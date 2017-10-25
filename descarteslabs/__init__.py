@@ -16,12 +16,12 @@
 
 __version__ = "0.5.0"
 
-from .auth import Auth
+from .clients.auth import Auth
 descartes_auth = Auth.from_environment_or_token_json()
 
-from .services.metadata import Metadata
-from .services.places import Places
-from .services.raster import Raster
+from .clients.services.metadata import Metadata
+from .clients.services.places import Places
+from .clients.services.raster import Raster
 
 metadata = Metadata()
 places = Places()

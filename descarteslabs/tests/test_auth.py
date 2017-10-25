@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-from descarteslabs.auth import Auth
+from ..clients.auth import Auth
 import requests
 import json
 

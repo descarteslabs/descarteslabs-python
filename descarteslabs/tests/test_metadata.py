@@ -17,8 +17,8 @@ import unittest
 from warnings import catch_warnings
 
 import descarteslabs as dl
-from descarteslabs.exceptions import NotFoundError
-from descarteslabs.utilities import properties as p
+from ..clients.exceptions import NotFoundError
+from ..clients.utilities import properties as p
 
 
 class TestMetadata(unittest.TestCase):

@@ -20,7 +20,7 @@ import json
 import six
 from six.moves import input
 
-from descarteslabs.auth import Auth, base64url_decode, makedirs_if_not_exists, DEFAULT_TOKEN_INFO_PATH
+from descarteslabs.clients.auth import Auth, base64url_decode, makedirs_if_not_exists, DEFAULT_TOKEN_INFO_PATH
 
 import descarteslabs as dl
 
