@@ -24,11 +24,15 @@ from . import metadata_filtering as filtering
 
 CONST_ID_DEPRECATION_MESSAGE = (
     "Keyword arg `const_id' has been deprecated and will be removed in "
-    "future versions of this software. Use the `products` "
+    "future versions of the library. Use the `products` "
     "argument instead. Product identifiers can be found with the "
     " products() method."
 )
 
+OFFSET_DEPRECATION_MESSAGE = (
+    "Keyword arg `offset` has been deprecated and will be removed in "
+    "future versions of the library. "
+)
 
 class Metadata(Service):
     """Image Metadata Service"""
@@ -357,7 +361,11 @@ class Metadata(Service):
         if isinstance(geom, dict):
             geom = json.dumps(geom)
 
-        kwargs = {'date': date, 'limit': limit, 'offset': offset}
+        kwargs = {'date': date, 'limit': limit}
+
+        if offset:
+            warn(OFFSET_DEPRECATION_MESSAGE, DeprecationWarning)
+            kwargs['offset'] = offset
 
         if sat_id:
             if isinstance(sat_id, string_types):
