@@ -311,8 +311,7 @@ class Metadata(Service):
                fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None,
                continuation_token=None):
         """Search metadata given a spatio-temporal query. All parameters are
-        optional. Results are paged using limit and offset. Please note offset
-        plus limit cannot exceed 10000.
+        optional. For accessing more than 10000 results, see :py:func:`features`.
 
         :param list(str) products: Product Identifier(s).
         :param list(str) const_id: Constellation Identifier(s).
@@ -326,7 +325,7 @@ class Metadata(Service):
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param expr q: Expression for filtering the results. See :py:attr:`descarteslabs.utilities.properties`.
-        :param int limit: Number of items to return. (max of 10000)
+        :param int limit: Number of items to return up to the maximum of 10000.
         :param int offset: Number of items to skip.
         :param list(str) fields: Properties to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
@@ -439,7 +438,7 @@ class Metadata(Service):
             cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=None,
             dltile=None, sort_field=None, sort_order=None, randomize=None):
         """Search metadata given a spatio-temporal query. All parameters are
-        optional. Results are paged using limit/offset.
+        optional.
 
         :param list(str) products: Products identifier(s).
         :param list(str) const_id: Constellation identifier(s).
@@ -542,11 +541,24 @@ class Metadata(Service):
                  cloud_fraction_0=None, fill_fraction=None, q=None, fields=None,
                  batch_size=1000, dltile=None, sort_field=None, sort_order='asc',
                  randomize=None):
-        """Generator that efficiently scrolls through search results.
+        """Generator that efficiently scrolls through the search results.
 
         :param int batch_size: Number of features to fetch per request.
 
         :return: Generator of GeoJSON ``Feature`` objects.
+
+        Example::
+
+            >>> import descarteslabs as dl
+            >>> features = dl.metadata.features("landsat:LC08:PRE:TOAR",
+                            start_time='2016-01-01',
+                            end_time="2016-03-01")
+            >>> total = 0
+            >>> for f in features:
+            >>>     total += 1
+
+            >>> total
+            31898
         """
 
         continuation_token = None
