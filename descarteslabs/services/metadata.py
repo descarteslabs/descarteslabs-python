@@ -34,6 +34,7 @@ OFFSET_DEPRECATION_MESSAGE = (
     "future versions of the library. "
 )
 
+
 class Metadata(Service):
     """Image Metadata Service"""
 
@@ -550,14 +551,14 @@ class Metadata(Service):
         Example::
 
             >>> import descarteslabs as dl
-            >>> features = dl.metadata.features("landsat:LC08:PRE:TOAR",
-                            start_time='2016-01-01',
+            >>> features = dl.metadata.features("landsat:LC08:PRE:TOAR", \
+                            start_time='2016-01-01', \
                             end_time="2016-03-01")
             >>> total = 0
-            >>> for f in features:
-            >>>     total += 1
+            >>> for f in features: \
+                    total += 1
 
-            >>> total
+            >>> total # doctest: +SKIP
             31898
         """
 
@@ -565,14 +566,14 @@ class Metadata(Service):
 
         while True:
             result = self.search(sat_id=sat_id, products=products, const_id=None,
-                                   date=date, place=place, geom=geom,
-                                   start_time=start_time, end_time=end_time,
-                                   cloud_fraction=cloud_fraction,
-                                   cloud_fraction_0=cloud_fraction_0,
-                                   fill_fraction=fill_fraction, q=q,
-                                   fields=fields, limit=batch_size, dltile=dltile,
-                                   sort_field=sort_field, sort_order=sort_order,
-                                   randomize=randomize, continuation_token=continuation_token)
+                                 date=date, place=place, geom=geom,
+                                 start_time=start_time, end_time=end_time,
+                                 cloud_fraction=cloud_fraction,
+                                 cloud_fraction_0=cloud_fraction_0,
+                                 fill_fraction=fill_fraction, q=q,
+                                 fields=fields, limit=batch_size, dltile=dltile,
+                                 sort_field=sort_field, sort_order=sort_order,
+                                 randomize=randomize, continuation_token=continuation_token)
 
             if not result['features']:
                 break
