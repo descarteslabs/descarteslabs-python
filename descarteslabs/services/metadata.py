@@ -304,7 +304,8 @@ class Metadata(Service):
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=0,
-               fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None):
+               fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None,
+               continuation_token=None):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit and offset. Please note offset
         plus limit cannot exceed 10000.
@@ -413,9 +414,17 @@ class Metadata(Service):
         if randomize is not None:
             kwargs['random_seed'] = randomize
 
+        if continuation_token is not None:
+            kwargs['continuation_token'] = continuation_token
+
         r = self.session.post('/search', json=kwargs)
 
-        return {'type': 'FeatureCollection', "features": r.json()}
+        fc = {'type': 'FeatureCollection', "features": r.json()}
+
+        if 'x-continuation-token' in r.headers:
+            fc['properties'] = {'continuation_token': r.headers['x-continuation-token']}
+
+        return fc
 
     def ids(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
             geom=None, start_time=None, end_time=None, cloud_fraction=None,
@@ -522,39 +531,38 @@ class Metadata(Service):
 
     def features(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
-                 cloud_fraction_0=None, fill_fraction=None, q=None,
-                 limit=100, dltile=None, sort_field=None, sort_order='asc'):
+                 cloud_fraction_0=None, fill_fraction=None, q=None, fields=None,
+                 batch_size=1000, dltile=None, sort_field=None, sort_order='asc',
+                 randomize=None):
+        """Generator that efficiently scrolls through search results.
 
-        """Generator that combines summary and search to page through results.
-
-        :param int limit: Number of features to fetch per request.
+        :param int batch_size: Number of features to fetch per request.
 
         :return: Generator of GeoJSON ``Feature`` objects.
         """
-        summary = self.summary(sat_id=sat_id, products=products, const_id=None, date=date,
-                               place=place, geom=geom, start_time=start_time,
-                               end_time=end_time, cloud_fraction=cloud_fraction,
-                               cloud_fraction_0=cloud_fraction_0,
-                               fill_fraction=fill_fraction, q=q, dltile=dltile)
 
-        offset = 0
-        count = summary['count']
+        continuation_token = None
 
-        while offset < count:
-            features = self.search(sat_id=sat_id, products=products, const_id=None,
+        while True:
+            result = self.search(sat_id=sat_id, products=products, const_id=None,
                                    date=date, place=place, geom=geom,
                                    start_time=start_time, end_time=end_time,
                                    cloud_fraction=cloud_fraction,
                                    cloud_fraction_0=cloud_fraction_0,
                                    fill_fraction=fill_fraction, q=q,
-                                   limit=limit, offset=offset,
-                                   dltile=dltile, sort_field=sort_field,
-                                   sort_order=sort_order)
+                                   fields=fields, limit=batch_size, dltile=dltile,
+                                   sort_field=sort_field, sort_order=sort_order,
+                                   randomize=randomize, continuation_token=continuation_token)
 
-            offset = limit + offset
+            if not result['features']:
+                break
 
-            for feature in features['features']:
+            for feature in result['features']:
                 yield feature
+
+            continuation_token = result['properties'].get('continuation_token')
+            if not continuation_token:
+                break
 
     def get(self, key):
         """Get metadata of a single image.
