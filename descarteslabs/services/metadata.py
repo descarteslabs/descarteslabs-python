@@ -24,9 +24,14 @@ from . import metadata_filtering as filtering
 
 CONST_ID_DEPRECATION_MESSAGE = (
     "Keyword arg `const_id' has been deprecated and will be removed in "
-    "future versions of this software. Use the `products` "
+    "future versions of the library. Use the `products` "
     "argument instead. Product identifiers can be found with the "
     " products() method."
+)
+
+OFFSET_DEPRECATION_MESSAGE = (
+    "Keyword arg `offset` has been deprecated and will be removed in "
+    "future versions of the library. "
 )
 
 
@@ -304,10 +309,10 @@ class Metadata(Service):
     def search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=0,
-               fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None):
+               fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None,
+               continuation_token=None):
         """Search metadata given a spatio-temporal query. All parameters are
-        optional. Results are paged using limit and offset. Please note offset
-        plus limit cannot exceed 10000.
+        optional. For accessing more than 10000 results, see :py:func:`features`.
 
         :param list(str) products: Product Identifier(s).
         :param list(str) const_id: Constellation Identifier(s).
@@ -321,7 +326,7 @@ class Metadata(Service):
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param expr q: Expression for filtering the results. See :py:attr:`descarteslabs.utilities.properties`.
-        :param int limit: Number of items to return. (max of 10000)
+        :param int limit: Number of items to return up to the maximum of 10000.
         :param int offset: Number of items to skip.
         :param list(str) fields: Properties to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
@@ -356,7 +361,11 @@ class Metadata(Service):
         if isinstance(geom, dict):
             geom = json.dumps(geom)
 
-        kwargs = {'date': date, 'limit': limit, 'offset': offset}
+        kwargs = {'date': date, 'limit': limit}
+
+        if offset:
+            warn(OFFSET_DEPRECATION_MESSAGE, DeprecationWarning)
+            kwargs['offset'] = offset
 
         if sat_id:
             if isinstance(sat_id, string_types):
@@ -413,16 +422,24 @@ class Metadata(Service):
         if randomize is not None:
             kwargs['random_seed'] = randomize
 
+        if continuation_token is not None:
+            kwargs['continuation_token'] = continuation_token
+
         r = self.session.post('/search', json=kwargs)
 
-        return {'type': 'FeatureCollection', "features": r.json()}
+        fc = {'type': 'FeatureCollection', "features": r.json()}
+
+        if 'x-continuation-token' in r.headers:
+            fc['properties'] = {'continuation_token': r.headers['x-continuation-token']}
+
+        return fc
 
     def ids(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
             geom=None, start_time=None, end_time=None, cloud_fraction=None,
             cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=None,
             dltile=None, sort_field=None, sort_order=None, randomize=None):
         """Search metadata given a spatio-temporal query. All parameters are
-        optional. Results are paged using limit/offset.
+        optional.
 
         :param list(str) products: Products identifier(s).
         :param list(str) const_id: Constellation identifier(s).
@@ -522,39 +539,51 @@ class Metadata(Service):
 
     def features(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
-                 cloud_fraction_0=None, fill_fraction=None, q=None,
-                 limit=100, dltile=None, sort_field=None, sort_order='asc'):
+                 cloud_fraction_0=None, fill_fraction=None, q=None, fields=None,
+                 batch_size=1000, dltile=None, sort_field=None, sort_order='asc',
+                 randomize=None):
+        """Generator that efficiently scrolls through the search results.
 
-        """Generator that combines summary and search to page through results.
-
-        :param int limit: Number of features to fetch per request.
+        :param int batch_size: Number of features to fetch per request.
 
         :return: Generator of GeoJSON ``Feature`` objects.
+
+        Example::
+
+            >>> import descarteslabs as dl
+            >>> features = dl.metadata.features("landsat:LC08:PRE:TOAR", \
+                            start_time='2016-01-01', \
+                            end_time="2016-03-01")
+            >>> total = 0
+            >>> for f in features: \
+                    total += 1
+
+            >>> total # doctest: +SKIP
+            31898
         """
-        summary = self.summary(sat_id=sat_id, products=products, const_id=None, date=date,
-                               place=place, geom=geom, start_time=start_time,
-                               end_time=end_time, cloud_fraction=cloud_fraction,
-                               cloud_fraction_0=cloud_fraction_0,
-                               fill_fraction=fill_fraction, q=q, dltile=dltile)
 
-        offset = 0
-        count = summary['count']
+        continuation_token = None
 
-        while offset < count:
-            features = self.search(sat_id=sat_id, products=products, const_id=None,
-                                   date=date, place=place, geom=geom,
-                                   start_time=start_time, end_time=end_time,
-                                   cloud_fraction=cloud_fraction,
-                                   cloud_fraction_0=cloud_fraction_0,
-                                   fill_fraction=fill_fraction, q=q,
-                                   limit=limit, offset=offset,
-                                   dltile=dltile, sort_field=sort_field,
-                                   sort_order=sort_order)
+        while True:
+            result = self.search(sat_id=sat_id, products=products, const_id=None,
+                                 date=date, place=place, geom=geom,
+                                 start_time=start_time, end_time=end_time,
+                                 cloud_fraction=cloud_fraction,
+                                 cloud_fraction_0=cloud_fraction_0,
+                                 fill_fraction=fill_fraction, q=q,
+                                 fields=fields, limit=batch_size, dltile=dltile,
+                                 sort_field=sort_field, sort_order=sort_order,
+                                 randomize=randomize, continuation_token=continuation_token)
 
-            offset = limit + offset
+            if not result['features']:
+                break
 
-            for feature in features['features']:
+            for feature in result['features']:
                 yield feature
+
+            continuation_token = result['properties'].get('continuation_token')
+            if not continuation_token:
+                break
 
     def get(self, key):
         """Get metadata of a single image.

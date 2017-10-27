@@ -167,7 +167,7 @@ class TestMetadata(unittest.TestCase):
         self.assertEqual(len(r['items']), 1)
 
     def test_features(self):
-        r = self.instance.features(start_time='2016-07-06', end_time='2016-07-07', sat_id='LANDSAT_8', limit=20)
+        r = self.instance.features(start_time='2016-07-06', end_time='2016-07-07', sat_id='LANDSAT_8', batch_size=10)
         first_21 = itertools.islice(r, 21)
         self.assertGreater(len(list(first_21)), 0)
 
