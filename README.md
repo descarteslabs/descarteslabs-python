@@ -9,9 +9,9 @@ Services
 This package includes service wrappers for Descartes Labs application services that 
 do require additional dependencies (included in requirements.txt) and are thus not 
 implicitly included in the root package (see above). Service wrappers include, 
-primarily, Metadata (image metadata) and Places (named shapes and statistics). 
-These services are authenticated and in order to setup authentication there is a 
-convenience script to help you log in.
+primarily, Raster (image access), Metadata (image metadata) and Places (named
+shapes and statistics).  These services are authenticated and in order to setup
+authentication there is a convenience script to help you log in.
 
 ```bash
 $ python setup.py install
@@ -36,6 +36,15 @@ Changelog
 =========
 
 ## [Unreleased]
+
+## [0.5.0] - 2017-10-31
+### Added
+- Blosc Support for raster array compression transport
+- Scrolling support for large metadata searches
+
+### Changes
+- Offset keyword argument in metadata.search is deprecated. Please use the
+metadata.features for iterating over large search results
 
 ## [0.4.7] - 2017-10-09
 ### Added
@@ -158,7 +167,8 @@ Changelog
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.7...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.5.0...v0.5.0
 [0.4.7]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.6...v0.4.7
 [0.4.6]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.4...v0.4.5
