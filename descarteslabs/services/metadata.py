@@ -311,7 +311,7 @@ class Metadata(Service):
                fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None,
                continuation_token=None):
         """Search metadata given a spatio-temporal query. All parameters are
-        optional. For accessing more than 10000 results, see :py:func:`features`.
+        optional. For accessing more than 10000 results, see :py:func:`iter_search`.
 
         :param list(str) products: Product Identifier(s).
         :param list(str) const_id: Constellation Identifier(s).
@@ -536,12 +536,12 @@ class Metadata(Service):
 
         return [feature['key'] for feature in result['features']]
 
-    def features(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
-                 geom=None, start_time=None, end_time=None, cloud_fraction=None,
-                 cloud_fraction_0=None, fill_fraction=None, q=None, fields=None,
-                 batch_size=1000, dltile=None, sort_field=None, sort_order='asc',
-                 randomize=None):
-        """Generator that efficiently scrolls through the search results.
+    def iter_search(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
+                    geom=None, start_time=None, end_time=None, cloud_fraction=None,
+                    cloud_fraction_0=None, fill_fraction=None, q=None, fields=None,
+                    batch_size=1000, dltile=None, sort_field=None, sort_order='asc',
+                    randomize=None):
+        """Iterates efficiently over an unrestricted number of results.
 
         :param int batch_size: Number of features to fetch per request.
 
@@ -550,7 +550,7 @@ class Metadata(Service):
         Example::
 
             >>> import descarteslabs as dl
-            >>> features = dl.metadata.features("landsat:LC08:PRE:TOAR", \
+            >>> features = dl.metadata.iter_search("landsat:LC08:PRE:TOAR", \
                             start_time='2016-01-01', \
                             end_time="2016-03-01")
             >>> total = 0
@@ -583,6 +583,44 @@ class Metadata(Service):
             continuation_token = result['properties'].get('continuation_token')
             if not continuation_token:
                 break
+
+    features = iter_search
+
+    def iter_ids(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
+                 geom=None, start_time=None, end_time=None, cloud_fraction=None,
+                 cloud_fraction_0=None, fill_fraction=None, q=None, batch_size=1000,
+                 dltile=None, sort_field=None, sort_order=None, randomize=None):
+        """Equivalent to :py:func:`ids` but returns a generator efficiently
+        iterating over an unrestricted number of results.
+
+        :return: Generator yielding image identifiers.
+        """
+        result = self.iter_search(sat_id=sat_id, products=products, const_id=const_id, date=date,
+                                  place=place, geom=geom, start_time=start_time,
+                                  end_time=end_time, cloud_fraction=cloud_fraction,
+                                  cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
+                                  q=q, batch_size=batch_size, fields=[], dltile=dltile,
+                                  sort_field=sort_field, sort_order=sort_order, randomize=randomize)
+        for r in result:
+            yield r['id']
+
+    def iter_keys(self, products=None, const_id=None, sat_id=None, date='acquired', place=None,
+                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
+                  cloud_fraction_0=None, fill_fraction=None, q=None, batch_size=1000,
+                  dltile=None, sort_field=None, sort_order=None, randomize=None):
+        """Equivalent to :py:func:`iter_keys` but returns a generator efficiently
+        iterating over an unrestricted number of results.
+
+        :return: Generator yielding image identifiers.
+        """
+        result = self.iter_search(sat_id=sat_id, products=products, const_id=const_id, date=date,
+                                  place=place, geom=geom, start_time=start_time,
+                                  end_time=end_time, cloud_fraction=cloud_fraction,
+                                  cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
+                                  q=q, batch_size=batch_size, fields=["key"], dltile=dltile,
+                                  sort_field=sort_field, sort_order=sort_order, randomize=randomize)
+        for r in result:
+            yield r['key']
 
     def get(self, key):
         """Get metadata of a single image.
