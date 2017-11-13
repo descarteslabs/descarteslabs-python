@@ -59,15 +59,15 @@ class TestPlaces(unittest.TestCase):
 
     def test_sources(self):
         r = self.instance.sources()
-        self.assertIn('nass', r)
+        self.assertIn({'name': 'nass'}, r)
 
     def test_categories(self):
         r = self.instance.categories()
-        self.assertIn('corn', r)
+        self.assertIn({'name': 'corn'}, r)
 
     def test_metrics(self):
         r = self.instance.metrics()
-        self.assertIn('yield', r)
+        self.assertIn({'name': 'yield', 'units': 'bu/ac'}, r)
 
     def test_value(self):
         r = self.instance.value('north-america_united-states', source='nass', category='corn', metric='yield')
