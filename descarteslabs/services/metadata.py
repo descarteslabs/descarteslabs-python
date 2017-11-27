@@ -309,7 +309,7 @@ class Metadata(Service):
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=0,
                fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None,
-               continuation_token=None):
+               continuation_token=None, **kwargs):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. For accessing more than 10000 results, see :py:func:`features`.
 
@@ -360,7 +360,7 @@ class Metadata(Service):
         if isinstance(geom, dict):
             geom = json.dumps(geom)
 
-        kwargs = {'date': date, 'limit': limit}
+        kwargs.update({'date': date, 'limit': limit})
 
         if offset:
             warn(OFFSET_DEPRECATION_MESSAGE, DeprecationWarning)
