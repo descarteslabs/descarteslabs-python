@@ -17,10 +17,9 @@ import random
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-
-import descarteslabs
-from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, GatewayTimeoutError,\
-        ConflictError
+from descarteslabs.version import __version__
+from descarteslabs.exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, \
+    GatewayTimeoutError, ConflictError
 
 
 class WrappedSession(requests.Session):
@@ -53,7 +52,7 @@ class WrappedSession(requests.Session):
             raise ServerError(resp.text)
 
 
-class Service:
+class Service(object):
     TIMEOUT = (9.5, 30)
 
     RETRY_CONFIG = Retry(total=5,
@@ -96,7 +95,7 @@ class Service:
 
         s.headers.update({
             "Content-Type": "application/json",
-            "User-Agent": "dl-python/{}".format(descarteslabs.__version__)
+            "User-Agent": "dl-python/{}".format(__version__)
         })
 
         return s

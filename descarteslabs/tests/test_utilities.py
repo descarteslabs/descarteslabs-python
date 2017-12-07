@@ -27,3 +27,7 @@ class TestUtilities(unittest.TestCase):
         s = '{"a": "b"}'
         self.assertEqual(as_json_string(s), truth)
         self.assertEqual(as_json_string(None), None)
+
+
+if __name__ == "__main__":
+    unittest.main()
