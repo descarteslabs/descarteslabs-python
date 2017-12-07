@@ -262,12 +262,14 @@ class Raster(Service):
             to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
             ``(src_min, src_max)`` is also allowed, in which case the output range
             defaults to ``(0, 255)`` (a useful default for the common output type
-            ``Byte``).  If no scaling is desired for a band, use ``None``.
+            ``Byte``).  If no scaling is desired for a band, use ``None``.  This tuple
+            format and behaviour is identical to GDAL's scales during translation.
             Example argument: ``[(0, 10000, 0, 127), None, (0, 10000)]`` - the first
             band will have source values 0-10000 scaled to 0-127, the second band will
             not be scaled, the third band will have 0-10000 scaled to 0-255.
-        :param str output_format: Output format (`GTiff`, `PNG`, ...).
-        :param str data_type: Output data type (`Byte`, `UInt8`, `UInt16`, `Float32`, etc).
+        :param str output_format: Output format (one of ``GTiff``, ``PNG``, ``JPEG``).
+        :param str data_type: Output data type (one of ``Byte``, ``UInt16``, ``Int16``,
+            ``UInt32``, ``Int32``, ``Float32``, ``Float64``).
         :param str srs: Output spatial reference system definition understood by GDAL.
         :param float resolution: Desired resolution in output SRS units. Incompatible with
             `dimensions`
@@ -384,11 +386,13 @@ class Raster(Service):
             to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
             ``(src_min, src_max)`` is also allowed, in which case the output range
             defaults to ``(0, 255)`` (a useful default for the common output type
-            ``Byte``).  If no scaling is desired for a band, use ``None``.
+            ``Byte``).  If no scaling is desired for a band, use ``None``. This tuple
+            format and behaviour is identical to GDAL's scales during translation.
             Example argument: ``[(0, 10000, 0, 127), None, (0, 10000)]`` - the first
             band will have source values 0-10000 scaled to 0-127, the second band will
             not be scaled, the third band will have 0-10000 scaled to 0-255.
-        :param str data_type: Output data type (`Byte`, `UInt8`, `UInt16`, `Float32`, etc).
+        :param str data_type: Output data type (one of ``Byte``, ``UInt16``, ``Int16``,
+            ``UInt32``, ``Int32``, ``Float32``, ``Float64``).
         :param str srs: Output spatial reference system definition understood by GDAL.
         :param float resolution: Desired resolution in output SRS units. Incompatible with
             `dimensions`
