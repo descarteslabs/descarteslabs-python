@@ -257,10 +257,15 @@ class Raster(Service):
             masked considering all combined alpha bands it will be `0` in all non-alpha
             bands.
         :param scales: List of tuples specifying the scaling to be applied to each band.
-            If no scaling is desired for a band, use ``None`` where appropriate. If a
-            tuple contains four elements, the last two will be used as the output range.
-            For example, ``(0, 10000, 0, 128)`` would scale the source values 0-10000 to
-            be returned as 0-128 in the output.
+            A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
+            meaning values in the source range ``src_min`` to ``src_max`` will be scaled
+            to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
+            ``(src_min, src_max)`` is also allowed, in which case the output range
+            defaults to ``(0, 255)`` (a useful default for the common output type
+            ``Byte``).  If no scaling is desired for a band, use ``None``.
+            Example argument: ``[(0, 10000, 0, 127), None, (0, 10000)]`` - the first
+            band will have source values 0-10000 scaled to 0-127, the second band will
+            not be scaled, the third band will have 0-10000 scaled to 0-255.
         :param str output_format: Output format (`GTiff`, `PNG`, ...).
         :param str data_type: Output data type (`Byte`, `UInt8`, `UInt16`, `Float32`, etc).
         :param str srs: Output spatial reference system definition understood by GDAL.
@@ -374,10 +379,15 @@ class Raster(Service):
             masked considering all combined alpha bands it will be `0` in all non-alpha
             bands.
         :param scales: List of tuples specifying the scaling to be applied to each band.
-            If no scaling is desired for a band, use ``None`` where appropriate. If a
-            tuple contains four elements, the last two will be used as the output range.
-            For example, ``(0, 10000, 0, 128)`` would scale the source values 0-10000 to
-            be returned as 0-128 in the output.
+            A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
+            meaning values in the source range ``src_min`` to ``src_max`` will be scaled
+            to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
+            ``(src_min, src_max)`` is also allowed, in which case the output range
+            defaults to ``(0, 255)`` (a useful default for the common output type
+            ``Byte``).  If no scaling is desired for a band, use ``None``.
+            Example argument: ``[(0, 10000, 0, 127), None, (0, 10000)]`` - the first
+            band will have source values 0-10000 scaled to 0-127, the second band will
+            not be scaled, the third band will have 0-10000 scaled to 0-255.
         :param str data_type: Output data type (`Byte`, `UInt8`, `UInt16`, `Float32`, etc).
         :param str srs: Output spatial reference system definition understood by GDAL.
         :param float resolution: Desired resolution in output SRS units. Incompatible with
