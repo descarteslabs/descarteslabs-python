@@ -19,8 +19,10 @@ import unittest
 import json
 from warnings import catch_warnings
 
-import descarteslabs as dl
+import descarteslabs.addons as addons
 from descarteslabs.addons import numpy as np
+from descarteslabs.services.raster import Raster
+from descarteslabs.services.places import Places
 
 
 class TestRaster(unittest.TestCase):
@@ -29,8 +31,8 @@ class TestRaster(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.raster = dl.raster
-        cls.places = dl.places
+        cls.raster = Raster()
+        cls.places = Places()
 
     def test_raster(self):
         # test with product key
@@ -75,10 +77,10 @@ class TestRaster(unittest.TestCase):
     def test_ndarray(self):
         try:
             data, metadata = self.raster.ndarray(
-                    inputs=['meta_LC80270312016188_v1'],
-                    bands=['red', 'green', 'blue', 'alpha'],
-                    resolution=960,
-                    )
+                inputs=['meta_LC80270312016188_v1'],
+                bands=['red', 'green', 'blue', 'alpha'],
+                resolution=960,
+            )
             self.assertEqual(data.shape, (249, 245, 4))
             self.assertEqual(data.dtype, np.uint16)
             self.assertEqual(len(metadata['bands']), 4)
@@ -88,10 +90,10 @@ class TestRaster(unittest.TestCase):
     def test_ndarray_single_band(self):
         try:
             data, metadata = self.raster.ndarray(
-                    inputs=['meta_LC80270312016188_v1'],
-                    bands=['red'],
-                    resolution=960,
-                    )
+                inputs=['meta_LC80270312016188_v1'],
+                bands=['red'],
+                resolution=960,
+            )
             self.assertEqual(data.shape, (249, 245))
             self.assertEqual(data.dtype, np.uint16)
             self.assertEqual(len(metadata['bands']), 1)
@@ -105,8 +107,8 @@ class TestRaster(unittest.TestCase):
             resolution=960,
         )
 
-        old_blosc = dl.addons.blosc
-        dl.addons.blosc = dl.addons.ThirdParty("blosc")
+        old_blosc = addons.blosc
+        addons.blosc = addons.ThirdParty("blosc")
 
         r2 = self.raster.raster(
             inputs=['meta_LC80270312016188_v1'],
@@ -114,7 +116,7 @@ class TestRaster(unittest.TestCase):
             resolution=960,
         )
 
-        dl.addons.blosc = old_blosc
+        addons.blosc = old_blosc
 
         self.assertEqual(r, r2)
 
@@ -126,8 +128,8 @@ class TestRaster(unittest.TestCase):
             align_pixels=True
         )
 
-        old_blosc = dl.addons.blosc
-        dl.addons.blosc = dl.addons.ThirdParty("blosc")
+        old_blosc = addons.blosc
+        addons.blosc = addons.ThirdParty("blosc")
 
         r2, meta2 = self.raster.ndarray(
             inputs=['meta_LC80270312016188_v1'],
@@ -136,26 +138,25 @@ class TestRaster(unittest.TestCase):
             align_pixels=True
         )
 
-        dl.addons.blosc = old_blosc
+        addons.blosc = old_blosc
 
         self.assertTrue((r == r2).all())
         self.assertEqual(meta, meta2)
 
     def test_cutline_dict(self):
-        shape = {"geometry":
-                 {"type": "Polygon",
-                  "coordinates": [[[-95.2989209, 42.7999878], [-93.1167728, 42.3858464],
-                                   [-93.7138666, 40.703737], [-95.8364984, 41.1150618],
-                                   [-95.2989209, 42.7999878]]]
-                  }
+        shape = {"geometry": {"type": "Polygon",
+                              "coordinates": [[[-95.2989209, 42.7999878], [-93.1167728, 42.3858464],
+                                               [-93.7138666, 40.703737], [-95.8364984, 41.1150618],
+                                               [-95.2989209, 42.7999878]]]
+                              }
                  }
         try:
             data, metadata = self.raster.ndarray(
-                    inputs=['meta_LC80270312016188_v1'],
-                    bands=['red'],
-                    resolution=960,
-                    cutline=shape,
-                    )
+                inputs=['meta_LC80270312016188_v1'],
+                bands=['red'],
+                resolution=960,
+                cutline=shape,
+            )
             self.assertEqual(data.shape, (245, 238))
             self.assertEqual(data.dtype, np.uint16)
             self.assertEqual(len(metadata['bands']), 1)
@@ -163,18 +164,17 @@ class TestRaster(unittest.TestCase):
             pass
 
     def test_cutline_str(self):
-        shape = {"geometry":
-                 {"type": "Polygon",
-                  "coordinates": [[[-95.2989209, 42.7999878], [-93.1167728, 42.3858464],
-                                   [-93.7138666, 40.703737], [-95.8364984, 41.1150618],
-                                   [-95.2989209, 42.7999878]]]}}
+        shape = {"geometry": {"type": "Polygon",
+                              "coordinates": [[[-95.2989209, 42.7999878], [-93.1167728, 42.3858464],
+                                               [-93.7138666, 40.703737], [-95.8364984, 41.1150618],
+                                               [-95.2989209, 42.7999878]]]}}
         try:
             data, metadata = self.raster.ndarray(
-                    inputs=['meta_LC80270312016188_v1'],
-                    bands=['red'],
-                    resolution=960,
-                    cutline=json.dumps(shape),
-                    )
+                inputs=['meta_LC80270312016188_v1'],
+                bands=['red'],
+                resolution=960,
+                cutline=json.dumps(shape),
+            )
             self.assertEqual(data.shape, (245, 238))
             self.assertEqual(data.dtype, np.uint16)
             self.assertEqual(len(metadata['bands']), 1)

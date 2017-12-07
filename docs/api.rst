@@ -8,31 +8,31 @@ API
 Places
 ------
 
-.. autoclass:: descarteslabs.services.Places
+.. autoclass:: descarteslabs.places.Places
     :members:
 
 Metadata
 --------
 
-.. autoclass:: descarteslabs.services.Metadata
+.. autoclass:: descarteslabs.metadata.Metadata
     :members:
 
 Raster
 ------
 
-.. autoclass:: descarteslabs.services.Raster
+.. autoclass:: descarteslabs.raster.Raster
     :members:
 
 Utilities
 ---------
 
-.. py:module:: descarteslabs.utilities
-.. py:attribute:: properties
+.. py:module:: descarteslabs.base.utilities
+.. py:attribute:: descarteslabs.metadata.properties
 
     Most of the metadata searching functions allow for flexible filtering on scene metadata.
 
         >>> import descarteslabs as dl
-        >>> from descarteslabs.utilities import properties as p
+        >>> from descarteslabs.metadata import properties as p
 
         >>> dl.metadata.search(products=["sentinel-2:L1C"], q=[p.acquired > "2017", p.cloud_fraction < 0.25])
         {'bytes': 28174123929918, 'count': 330034, 'products': ['sentinel-2:L1C']}

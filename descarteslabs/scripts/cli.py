@@ -16,11 +16,11 @@
 from __future__ import print_function
 
 import argparse
+from descarteslabs.auth.cli import auth_handler
+from descarteslabs.services.metadata.cli import metadata_handler
+from descarteslabs.services.raster.cli import scales, raster_handler
+from descarteslabs.services.places.cli import places_handler
 
-from descarteslabs.scripts.parser.auth import auth_handler
-from descarteslabs.scripts.parser.metadata import metadata_handler
-from descarteslabs.scripts.parser.raster import scales, raster_handler
-from descarteslabs.scripts.parser.places import places_handler
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(dest='group', )
@@ -75,6 +75,8 @@ raster_parser.add_argument("-data_type", default='UInt16', type=str)
 raster_parser.add_argument("-srs", default=None, type=str)
 raster_parser.add_argument("-place", default=None, type=str)
 raster_parser.add_argument("-outfile_basename", default=None, type=str)
+
+
 
 
 def handle(args):

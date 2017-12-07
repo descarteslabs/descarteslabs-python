@@ -16,14 +16,14 @@
 from __future__ import print_function
 import json
 
-import descarteslabs as dl
+from .places import Places
 
 
 def places_handler(args):
     if args.geom == "None":
         args.geom = None
 
-    places = dl.places
+    places = Places()
 
     if args.url:
         places.url = args.url
