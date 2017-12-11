@@ -16,11 +16,11 @@
 from __future__ import print_function
 import json
 
-import descarteslabs as dl
+from .metadata import Metadata
 
 
 def metadata_handler(args):
-    metadata = dl.metadata
+    metadata = Metadata()
 
     if args.url:
         metadata.url = args.url

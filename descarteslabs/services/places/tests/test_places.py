@@ -14,7 +14,7 @@
 
 import unittest
 
-import descarteslabs as dl
+from descarteslabs.services.places import Places
 
 
 class TestPlaces(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestPlaces(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.instance = dl.places
+        cls.instance = Places()
 
     def test_placetypes(self):
         data = self.instance.placetypes()

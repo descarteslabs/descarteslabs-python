@@ -19,9 +19,9 @@ import warnings
 
 from descarteslabs.addons import ThirdParty, blosc, numpy as np
 from descarteslabs.utilities import as_json_string, read_blosc_array
-import descarteslabs
-from .service import Service
-from .places import Places
+from descarteslabs.auth import Auth
+from descarteslabs.services.base.service import Service
+from descarteslabs.services.places import Places
 import six
 
 
@@ -35,7 +35,7 @@ class Raster(Service):
     """Raster"""
     TIMEOUT = (9.5, 300)
 
-    def __init__(self, url=None, token=None, auth=descarteslabs.descartes_auth):
+    def __init__(self, url=None, token=None, auth=Auth()):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.

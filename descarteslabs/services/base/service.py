@@ -17,10 +17,9 @@ import random
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-
-import descarteslabs
-from ..exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, GatewayTimeoutError,\
-        ConflictError
+from descarteslabs import __version__
+from descarteslabs.exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, \
+    GatewayTimeoutError, ConflictError
 
 
 class WrappedSession(requests.Session):
@@ -96,7 +95,7 @@ class Service:
 
         s.headers.update({
             "Content-Type": "application/json",
-            "User-Agent": "dl-python/{}".format(descarteslabs.__version__)
+            "User-Agent": "dl-python/{}".format(__version__)
         })
 
         return s

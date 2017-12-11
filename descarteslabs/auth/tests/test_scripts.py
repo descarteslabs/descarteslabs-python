@@ -16,7 +16,7 @@ import unittest
 import mock
 import os
 from six import StringIO
-from descarteslabs.scripts.parser import parser, handle
+from descarteslabs.scripts.cli import parser, handle
 import base64
 import json
 

@@ -20,13 +20,13 @@ import json
 import six
 from six.moves import input
 
-from descarteslabs.auth import Auth, base64url_decode, makedirs_if_not_exists, DEFAULT_TOKEN_INFO_PATH
-
-import descarteslabs as dl
+from .auth import Auth, base64url_decode, makedirs_if_not_exists, DEFAULT_TOKEN_INFO_PATH
+from descarteslabs.services.metadata import Metadata
+from descarteslabs import __version__
 
 
 def auth_handler(args):
-    auth = Auth.from_environment_or_token_json()
+    auth = Auth()
 
     if args.command == 'login':
 
@@ -52,9 +52,8 @@ def auth_handler(args):
             os.chmod(DEFAULT_TOKEN_INFO_PATH, stat.S_IRUSR | stat.S_IWUSR)
 
             # Get a fresh Auth token
-            auth = dl.Auth.from_environment_or_token_json()
-            dl.metadata.auth = auth
-            keys = dl.metadata.keys()
+            auth = Auth()
+            keys = Metadata(auth=auth).keys()
 
             name = auth.payload['name']
             groups = ', '.join(auth.payload['groups'])
@@ -90,4 +89,4 @@ def auth_handler(args):
         print('%s=%s' % ('CLIENT_SECRET', auth.client_secret))
 
     if args.command == 'version':
-        print(dl.__version__)
+        print(__version__)
