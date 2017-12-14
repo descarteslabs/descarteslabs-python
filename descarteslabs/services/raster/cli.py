@@ -16,7 +16,7 @@
 from __future__ import print_function
 import argparse
 import json
-import descarteslabs as dl
+from .raster import Raster
 
 
 def scales(s):
@@ -45,5 +45,5 @@ def raster_handler(args):
         'save': True,
         'outfile_basename': args.outfile_basename,
     }
-    response = dl.raster.raster(**params)
+    response = Raster().raster(**params)
     print(json.dumps(response['metadata'], indent=2))

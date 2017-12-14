@@ -13,17 +13,13 @@
 # limitations under the License.
 
 # flake8: noqa
-
-__path__ = __import__('pkgutil').extend_path(__path__, __name__)
-__version__ = "0.5.0"
-
+from .version import __version__
 from .auth import Auth
-descartes_auth = Auth.from_environment_or_token_json()
-
 from .services.metadata import Metadata
 from .services.places import Places
 from .services.raster import Raster
 
-metadata = Metadata()
-places = Places()
-raster = Raster()
+descartes_auth = Auth.from_environment_or_token_json()
+metadata = Metadata(auth=descartes_auth)
+places = Places(auth=descartes_auth)
+raster = Raster(auth=descartes_auth)

@@ -19,9 +19,9 @@ import warnings
 
 from descarteslabs.addons import ThirdParty, blosc, numpy as np
 from descarteslabs.utilities import as_json_string, read_blosc_array
-import descarteslabs
-from .service import Service
-from .places import Places
+from descarteslabs.auth import Auth
+from descarteslabs.services.base.service import Service
+from descarteslabs.services.places import Places
 import six
 
 
@@ -35,7 +35,7 @@ class Raster(Service):
     """Raster"""
     TIMEOUT = (9.5, 300)
 
-    def __init__(self, url=None, token=None, auth=descarteslabs.descartes_auth):
+    def __init__(self, url=None, token=None, auth=Auth()):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
@@ -86,10 +86,10 @@ class Raster(Service):
 
         Example::
 
-            >>> import descarteslabs as dl
+            >>> from descarteslabs.services import Raster, Places
             >>> from pprint import pprint
-            >>> iowa = dl.places.shape("north-america_united-states_iowa")
-            >>> tiles = dl.raster.dltiles_from_shape(30.0, 2048, 16, iowa)
+            >>> iowa = Places().shape("north-america_united-states_iowa")
+            >>> tiles = Raster().dltiles_from_shape(30.0, 2048, 16, iowa)
             >>> pprint(tiles['features'][0])
             {'geometry': {'coordinates': [[[-96.81264975325391, 41.04520331997488],
                                            [-96.07101667769165, 41.02873098011615],
@@ -135,9 +135,9 @@ class Raster(Service):
 
         Example::
 
-            >>> import descarteslabs as dl
+            >>> from descarteslabs.services import Raster
             >>> from pprint import pprint
-            >>> pprint(dl.raster.dltile_from_latlon(45, 60, 15.0, 1024, 16))
+            >>> pprint(Raster().dltile_from_latlon(45, 60, 15.0, 1024, 16))
             {'geometry': {'coordinates': [[[59.88428127486957, 44.89851158838881],
                                            [60.084634558186266, 44.903806716073376],
                                            [60.07740397456606, 45.04621255053833],
@@ -175,9 +175,9 @@ class Raster(Service):
 
         Example::
 
-            >>> import descarteslabs as dl
+            >>> from descarteslabs.services import Raster
             >>> from pprint import pprint
-            >>> pprint(dl.raster.dltile("1024:16:15.0:41:-16:324"))
+            >>> pprint(Raster().dltile("1024:16:15.0:41:-16:324"))
             {'geometry': {'coordinates': [[[59.88428127486957, 44.89851158838881],
                                            [60.084634558186266, 44.903806716073376],
                                            [60.07740397456606, 45.04621255053833],
@@ -414,8 +414,7 @@ class Raster(Service):
         cutline = as_json_string(cutline)
 
         if place is not None:
-            places = Places()
-            places.auth = self.auth
+            places = Places(auth=self.auth)
             shape = places.shape(place, geom='low')
             cutline = json.dumps(shape['geometry'])
 

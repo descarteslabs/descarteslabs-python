@@ -13,14 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# flake8: noqa
 from __future__ import print_function
 
 import argparse
-
-from descarteslabs.scripts.parser.auth import auth_handler
-from descarteslabs.scripts.parser.metadata import metadata_handler
-from descarteslabs.scripts.parser.raster import scales, raster_handler
-from descarteslabs.scripts.parser.places import places_handler
+from descarteslabs.auth.cli import auth_handler
+from descarteslabs.services.metadata.cli import metadata_handler
+from descarteslabs.services.raster.cli import scales, raster_handler
+from descarteslabs.services.places.cli import places_handler
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(dest='group', )

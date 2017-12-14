@@ -13,8 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from descarteslabs.scripts.parser import parser, handle
+from descarteslabs.scripts.cli import parser, handle
 
 
 def main():
     handle(parser.parse_args())
+
+
+if __name__ == "__main__":
+    main()

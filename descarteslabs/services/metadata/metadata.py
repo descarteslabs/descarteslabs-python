@@ -16,11 +16,11 @@ import json
 import os
 from warnings import warn, simplefilter
 from six import string_types
-from .service import Service
-from .places import Places
-import descarteslabs as dl
-
-from . import metadata_filtering as filtering
+from descarteslabs.services.base import Service
+from descarteslabs.services.places import Places
+from descarteslabs.auth import Auth
+from descarteslabs.services.raster import Raster
+from descarteslabs.services.metadata.metadata_filtering import AndExpression
 
 CONST_ID_DEPRECATION_MESSAGE = (
     "Keyword arg `const_id' has been deprecated and will be removed in "
@@ -47,24 +47,26 @@ class Metadata(Service):
 
     TIMEOUT = (9.5, 120)
 
-    def __init__(self, url=None, token=None, auth=dl.descartes_auth):
+    def __init__(self, url=None, token=None, auth=Auth()):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
         simplefilter('always', DeprecationWarning)
         if url is None:
-            url = os.environ.get("DESCARTESLABS_METADATA_URL", "https://platform.descarteslabs.com/metadata/v1")
+            url = os.environ.get("DESCARTESLABS_METADATA_URL",
+                                 "https://platform.descarteslabs.com/metadata/v1")
 
         Service.__init__(self, url, token, auth)
+        self._raster = Raster(auth=self.auth)
 
     def sources(self):
         """Get a list of image sources.
 
         Example::
-            >>> import descarteslabs as dl
+            >>> from descarteslabs.services import Metadata
             >>> from pprint import pprint
-            >>> sources = dl.metadata.sources()
+            >>> sources = Metadata().sources()
             >>> pprint(sources)
             [{'product': 'landsat:LC08:PRE:TOAR', 'sat_id': 'LANDSAT_8'}]
 
@@ -94,7 +96,8 @@ class Metadata(Service):
 
 
         """
-        params = ['limit', 'offset', 'products', 'wavelength', 'resolution', 'tags']
+        params = ['limit', 'offset', 'products',
+                  'wavelength', 'resolution', 'tags']
 
         args = locals()
         kwargs = dict(kwargs, **{
@@ -180,9 +183,9 @@ class Metadata(Service):
         """Get the list of product identifiers you have access to.
 
         Example::
-            >>> import descarteslabs as dl
+            >>> from descarteslabs.services import Metadata
             >>> from pprint import pprint
-            >>> products = dl.metadata.available_products()
+            >>> products = Metadata().available_products()
             >>> pprint(products)
             ['landsat:LC08:PRE:TOAR']
 
@@ -226,9 +229,9 @@ class Metadata(Service):
 
         Example usage::
 
-            >>> import descarteslabs as dl
+            >>> from descarteslabs.services import Metadata
             >>> from pprint import  pprint
-            >>> pprint(dl.metadata.summary(place='north-america_united-states_iowa', \
+            >>> pprint(Metadata().summary(place='north-america_united-states_iowa', \
                     products=['landsat:LC08:PRE:TOAR'], start_time='2016-07-06', \
                     end_time='2016-07-07', part='hour', pixels=True))
             {'bytes': 93298309,
@@ -249,7 +252,7 @@ class Metadata(Service):
 
         if dltile is not None:
             if isinstance(dltile, string_types):
-                dltile = dl.raster.dltile(dltile)
+                dltile = self._raster.dltile(dltile)
             if isinstance(dltile, dict):
                 geom = dltile['geometry']
 
@@ -304,7 +307,7 @@ class Metadata(Service):
         if q is not None:
             if not isinstance(q, list):
                 q = [q]
-            kwargs['query_expr'] = filtering.AndExpression(q).serialize()
+            kwargs['query_expr'] = AndExpression(q).serialize()
 
         if pixels:
             kwargs['pixels'] = pixels
@@ -344,8 +347,8 @@ class Metadata(Service):
 
         Example::
 
-            >>> import descarteslabs as dl
-            >>> scenes = dl.metadata.search(place='north-america_united-states_iowa', \
+            >>> from descarteslabs.services import Metadata
+            >>> scenes = Metadata().search(place='north-america_united-states_iowa', \
                                          products=['landsat:LC08:PRE:TOAR'], \
                                          start_time='2016-07-01', \
                                          end_time='2016-07-31T23:59:59')
@@ -360,7 +363,7 @@ class Metadata(Service):
 
         if dltile is not None:
             if isinstance(dltile, string_types):
-                dltile = dl.raster.dltile(dltile)
+                dltile = self._raster.dltile(dltile)
             if isinstance(dltile, dict):
                 geom = dltile['geometry']
 
@@ -417,7 +420,7 @@ class Metadata(Service):
         if q is not None:
             if not isinstance(q, list):
                 q = [q]
-            kwargs['query_expr'] = filtering.AndExpression(q).serialize()
+            kwargs['query_expr'] = AndExpression(q).serialize()
 
         if sort_field is not None:
             kwargs['sort_field'] = sort_field
@@ -436,7 +439,8 @@ class Metadata(Service):
         fc = {'type': 'FeatureCollection', "features": r.json()}
 
         if 'x-continuation-token' in r.headers:
-            fc['properties'] = {'continuation_token': r.headers['x-continuation-token']}
+            fc['properties'] = {
+                'continuation_token': r.headers['x-continuation-token']}
 
         return fc
 
@@ -470,8 +474,8 @@ class Metadata(Service):
 
         Example::
 
-            >>> import descarteslabs as dl
-            >>> ids = dl.metadata.ids(place='north-america_united-states_iowa', \
+            >>> from descarteslabs.services import Metadata
+            >>> ids = Metadata().ids(place='north-america_united-states_iowa', \
                                  products=['landsat:LC08:PRE:TOAR'], \
                                  start_time='2016-07-01', \
                                  end_time='2016-07-31T23:59:59')
@@ -521,8 +525,8 @@ class Metadata(Service):
 
         Example::
 
-            >>> import descarteslabs as dl
-            >>> keys = dl.metadata.keys(place='north-america_united-states_iowa', \
+            >>> from descarteslabs.services import Metadata
+            >>> keys = Metadata().keys(place='north-america_united-states_iowa', \
                                  products=['landsat:LC08:PRE:TOAR'], \
                                  start_time='2016-07-01', \
                                  end_time='2016-07-31T23:59:59')
@@ -556,8 +560,8 @@ class Metadata(Service):
 
         Example::
 
-            >>> import descarteslabs as dl
-            >>> features = dl.metadata.features("landsat:LC08:PRE:TOAR", \
+            >>> from descarteslabs.services import Metadata
+            >>> features = Metadata().features("landsat:LC08:PRE:TOAR", \
                             start_time='2016-01-01', \
                             end_time="2016-03-01")
             >>> total = 0
@@ -598,8 +602,8 @@ class Metadata(Service):
 
         Example::
 
-            >>> import descarteslabs as dl
-            >>> meta = dl.metadata.get('meta_LC80270312016188_v1')
+            >>> from descarteslabs.services import Metadata
+            >>> meta = Metadata().get('meta_LC80270312016188_v1')
             >>> keys = list(meta.keys())
             >>> keys.sort()
             >>> keys
