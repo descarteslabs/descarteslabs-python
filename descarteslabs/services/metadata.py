@@ -36,7 +36,14 @@ OFFSET_DEPRECATION_MESSAGE = (
 
 
 class Metadata(Service):
-    """Image Metadata Service"""
+    """
+    Image Metadata Service
+
+    Any methods that take start and end timestamps accept most common date/time
+    formats as a string. If no explicit timezone is given, the timestamp is assumed
+    to be in UTC. For example ``'2012-06-01'`` means June 1st 2012 00:00 in UTC,
+    ``'2012-06-01 00:00+02:00'`` means June 1st 2012 00:00 in GMT+2.
+    """
 
     TIMEOUT = (9.5, 120)
 
@@ -208,8 +215,8 @@ class Metadata(Service):
         :param str part: Part of the date to aggregate over (e.g. `day`).
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
-        :param str start_time: Desired starting date and time (inclusive).
-        :param str end_time: Desired ending date and time (inclusive).
+        :param str start_time: Desired starting timestamp, in any common format.
+        :param str end_time: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
@@ -309,7 +316,7 @@ class Metadata(Service):
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=0,
                fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None,
-               continuation_token=None):
+               continuation_token=None, **kwargs):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. For accessing more than 10000 results, see :py:func:`features`.
 
@@ -319,8 +326,8 @@ class Metadata(Service):
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
-        :param str start_time: Desired starting date and time (inclusive).
-        :param str end_time: Desired ending date and time (inclusive).
+        :param str start_time: Desired starting timestamp, in any common format.
+        :param str end_time: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
@@ -360,7 +367,7 @@ class Metadata(Service):
         if isinstance(geom, dict):
             geom = json.dumps(geom)
 
-        kwargs = {'date': date, 'limit': limit}
+        kwargs.update({'date': date, 'limit': limit})
 
         if offset:
             warn(OFFSET_DEPRECATION_MESSAGE, DeprecationWarning)
@@ -446,8 +453,8 @@ class Metadata(Service):
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
-        :param str start_time: Desired starting date and time (inclusive).
-        :param str end_time: Desired ending date and time (inclusive).
+        :param str start_time: Desired starting timestamp, in any common format.
+        :param str end_time: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
@@ -497,8 +504,8 @@ class Metadata(Service):
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
-        :param str start_time: Desired starting date and time (inclusive).
-        :param str end_time: Desired ending date and time (inclusive).
+        :param str start_time: Desired starting timestamp, in any common format.
+        :param str end_time: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
