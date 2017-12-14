@@ -16,9 +16,8 @@ import itertools
 import unittest
 from warnings import catch_warnings
 
-import descarteslabs as dl
+from descarteslabs.services.metadata import Metadata, properties as p
 from descarteslabs.exceptions import NotFoundError
-from descarteslabs.utilities import properties as p
 
 
 class TestMetadata(unittest.TestCase):
@@ -26,7 +25,7 @@ class TestMetadata(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.instance = dl.metadata
+        cls.instance = Metadata()
 
     def test_sources(self):
         r = self.instance.sources()
@@ -80,12 +79,12 @@ class TestMetadata(unittest.TestCase):
 
         for fields in cases:
             r = self.instance.search(
-                    start_time='2016-07-06',
-                    end_time='2016-07-07',
-                    products="landsat:LC08:PRE:TOAR",
-                    limit=1,
-                    fields=fields
-                )
+                start_time='2016-07-06',
+                end_time='2016-07-07',
+                products="landsat:LC08:PRE:TOAR",
+                limit=1,
+                fields=fields
+            )
             for feature in r['features']:
                 if "id" not in fields:
                     fields.append("id")

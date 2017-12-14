@@ -17,16 +17,16 @@ import os
 from functools import partial
 from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
-from .service import Service
+from descarteslabs.services.base import Service
+from descarteslabs.auth import Auth
 from six import string_types
-import descarteslabs
 
 
 class Places(Service):
     TIMEOUT = (9.5, 360)
     """Places and statistics service"""
 
-    def __init__(self, url=None, token=None, auth=descarteslabs.descartes_auth, maxsize=10, ttl=600):
+    def __init__(self, url=None, token=None, auth=Auth(), maxsize=10, ttl=600):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
@@ -79,9 +79,9 @@ class Places(Service):
 
         Example::
 
-            >>> import descarteslabs as dl
+            >>> from descarteslabs.services import Places
             >>> from pprint import pprint
-            >>> results = dl.places.find('morocco')
+            >>> results = Places().find('morocco')
             >>> _ = results[0].pop('bbox')
             >>> pprint(results)
             [{'id': 85632693,
@@ -105,9 +105,9 @@ class Places(Service):
         :return: list of candidates
 
         Example::
-            >>> import descarteslabs as dl
+            >>> from descarteslabs.services import Places
             >>> from pprint import pprint
-            >>> results = dl.places.search('texas')
+            >>> results = Places().search('texas')
             >>> pprint(results[0])
             {'bbox': [-106.645584, 25.837395, -93.508039, 36.50035],
              'id': 85688753,
@@ -147,9 +147,9 @@ class Places(Service):
         :return: GeoJSON ``Feature``
 
         Example::
-            >>> import descarteslabs as dl
+            >>> from descarteslabs.services import Places
             >>> from pprint import pprint
-            >>> kansas = dl.places.shape('north-america_united-states_kansas')
+            >>> kansas = Places().shape('north-america_united-states_kansas')
             >>> kansas['bbox']
             [-102.051744, 36.993016, -94.588658, 40.003078]
 
@@ -179,8 +179,8 @@ class Places(Service):
         :return: GeoJSON or TopoJSON ``FeatureCollection``
 
         Example::
-            >>> import descarteslabs as dl
-            >>> il_counties = dl.places.prefix('north-america_united-states_illinois', placetype='county')
+            >>> from descarteslabs.services import Places
+            >>> il_counties = Places().prefix('north-america_united-states_illinois', placetype='county')
             >>> len(il_counties['features'])
             102
 

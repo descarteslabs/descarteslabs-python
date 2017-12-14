@@ -27,23 +27,23 @@ Utilities
 ---------
 
 .. py:module:: descarteslabs.utilities
-.. py:attribute:: properties
+.. py:attribute:: descarteslabs.metadata.properties
 
     Most of the metadata searching functions allow for flexible filtering on scene metadata.
 
-        >>> import descarteslabs as dl
-        >>> from descarteslabs.utilities import properties as p
+        >>> from descarteslabs.metadata import Metadata, properties as p
+        >>> metadata = Metadata()
 
-        >>> dl.metadata.search(products=["sentinel-2:L1C"], q=[p.acquired > "2017", p.cloud_fraction < 0.25])
+        >>> metadata.search(products=["sentinel-2:L1C"], q=[p.acquired > "2017", p.cloud_fraction < 0.25])
         {'bytes': 28174123929918, 'count': 330034, 'products': ['sentinel-2:L1C']}
 
-        >>> dl.metadata.summary(products=["sentinel-2:L1C"], q=[p.acquired > "2017", p.cloud_fraction < 0.5, 150 < p.azimuth_angle < 160])
+        >>> metadata.summary(products=["sentinel-2:L1C"], q=[p.acquired > "2017", p.cloud_fraction < 0.5, 150 < p.azimuth_angle < 160])
         {'bytes': 747678539408, 'count': 5979, 'products': ['sentinel-2:L1C']}
 
-        >>> dl.metadata.summary(products=['modis:09:CREFL'], q=[p.sat_id == 'Aqua'])
+        >>> metadata.summary(products=['modis:09:CREFL'], q=[p.sat_id == 'Aqua'])
         {'bytes': 68425075256895, 'count': 7162652, 'products': ['modis:09:CREFL']}
 
-        >>> dl.metadata.summary(products=['modis:09:CREFL'], q=[p.sat_id == 'Terra'])
+        >>> metadata.summary(products=['modis:09:CREFL'], q=[p.sat_id == 'Terra'])
         {'bytes': 71211948012243, 'count': 7421542, 'products': ['modis:09:CREFL']}
 
     :var absolute_orbit:

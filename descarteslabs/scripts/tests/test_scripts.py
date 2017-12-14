@@ -16,7 +16,7 @@ import unittest
 import mock
 import os
 from six import StringIO
-from descarteslabs.scripts.parser import parser, handle
+from descarteslabs.scripts.cli import parser, handle
 import base64
 import json
 
@@ -48,7 +48,7 @@ class TestScripts(unittest.TestCase):
                 json.dump(cls.old_token, f)
 
     def test_auth_login(self):
-        with mock.patch('descarteslabs.scripts.parser.auth.input', return_value=self.token):
+        with mock.patch('descarteslabs.auth.cli.input', return_value=self.token):
             handle(parser.parse_args(["auth", "login"]))
 
         with mock.patch('sys.stdout', new_callable=StringIO) as out:
