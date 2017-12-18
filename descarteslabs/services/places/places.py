@@ -32,7 +32,7 @@ class Places(Service):
         of the backing service.
         """
         if url is None:
-            url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform.descarteslabs.com/waldo/v2")
+            url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform.descarteslabs.com/waldo/v1")
 
         Service.__init__(self, url, token, auth)
         self.cache = TTLCache(maxsize, ttl)
@@ -214,14 +214,13 @@ class Places(Service):
 
         return r.json()
 
-    def data(self, slug, source=None, category=None, metric=None, units=None, date=None, placetype='county'):
+    def data(self, slug, source=None, category=None, metric=None, date=None, placetype='county'):
         """Get all values for a prefix search and point in time
 
         :param str slug: Slug identifier (or shape id).
         :param str source: Source
         :param str category: Category
         :param str metric: Metric
-        :param str units: Units
         :param str date: Date
         :param str placetype: Restrict results to a particular place type.
 
@@ -237,9 +236,6 @@ class Places(Service):
         if metric:
             params['metric'] = metric
 
-        if units:
-            params['units'] = units
-
         if date:
             params['date'] = date
 
@@ -251,7 +247,7 @@ class Places(Service):
 
         return r.json()
 
-    def statistics(self, slug, source=None, category=None, metric=None, units=None):
+    def statistics(self, slug, source=None, category=None, metric=None):
         """Get a time series for a specific place
 
         :param str slug: Slug identifier (or shape id).
@@ -259,7 +255,6 @@ class Places(Service):
         :param str source: Source
         :param str category: Category
         :param str metric: Metric
-        :param str units: Units
 
         """
         params = {}
@@ -272,9 +267,6 @@ class Places(Service):
 
         if metric:
             params['metric'] = metric
-
-        if units:
-            params['units'] = units
 
         r = self.session.get('/statistics/%s' % (slug),
                              params=params, timeout=self.TIMEOUT)
