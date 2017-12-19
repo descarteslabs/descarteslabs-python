@@ -74,12 +74,13 @@ class TestPlaces(unittest.TestCase):
         self.assertEqual(1, len(r))
 
     def test_statistics(self):
-        r = self.instance.statistics('north-america_united-states', source='nass', category='corn', metric='yield')
+        r = self.instance.statistics('north-america_united-states', source='nass', category='corn', metric='yield',
+                                     units='bu/ac')
         self.assertEqual(36, len(r))
 
     def test_data(self):
         r = self.instance.data('north-america_united-states', source='nass', category='corn', metric='yield',
-                               date='2015-01-01')
+                               date='2015-01-01', units='bu/ac')
         self.assertEqual(1439, len(r))
 
 
