@@ -7,7 +7,7 @@ Services
 --------
 
 This package includes service wrappers for Descartes Labs application services that 
-do require additional dependencies (included in requirements.txt) and are thus not 
+do require additional dependencies (included in `requirements.txt`) and are thus not 
 implicitly included in the root package (see above). Service wrappers include, 
 primarily, Raster (image access), Metadata (image metadata) and Places (named
 shapes and statistics).  These services are authenticated and in order to setup
@@ -19,9 +19,9 @@ $ pip install -r requirements.txt
 $ descarteslabs auth login
 ```
 
-For non-interactive environments, one needs to set the CLIENT_ID and CLIENT_SECRET 
-environment variables. These can be retrieved from the ~/.descarteslabs/token_info.json
-created from the login process or generated fresh through through [IAM](https://iam.descarteslabs.com).
+For non-interactive environments, one needs to set the `CLIENT_ID` and `CLIENT_SECRET` 
+environment variables. These can be retrieved from the `~/.descarteslabs/token_info.json`
+created from the login process or generated fresh through [IAM](https://iam.descarteslabs.com).
 
 ```bash
 $ export CLIENT_ID=...
