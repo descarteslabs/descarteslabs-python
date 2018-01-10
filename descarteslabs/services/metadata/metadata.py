@@ -16,7 +16,7 @@ import json
 import os
 from warnings import warn, simplefilter
 from six import string_types
-from descarteslabs.services.base import Service
+from descarteslabs.services.service import Service
 from descarteslabs.services.places import Places
 from descarteslabs.auth import Auth
 from descarteslabs.services.raster import Raster

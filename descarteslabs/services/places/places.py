@@ -17,7 +17,7 @@ import os
 from functools import partial
 from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
-from descarteslabs.services.base import Service
+from descarteslabs.services.service import Service
 from descarteslabs.auth import Auth
 from six import string_types
 

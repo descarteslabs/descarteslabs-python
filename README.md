@@ -36,7 +36,10 @@ Changelog
 =========
 
 ## [Unreleased]
-
+## [0.6.1] - 2018-01-09
+### Changed
+- Reverted `descarteslabs.services.base` to `descarteslabs.services.service`
+  
 ## [0.6.0] - 2018-01-08
 ### Changed
 - Reorganization of services
@@ -177,7 +180,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.7...v0.5.0
 [0.4.7]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.6...v0.4.7

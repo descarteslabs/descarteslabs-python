@@ -20,7 +20,7 @@ import warnings
 from descarteslabs.addons import ThirdParty, blosc, numpy as np
 from descarteslabs.utilities import as_json_string, read_blosc_array
 from descarteslabs.auth import Auth
-from descarteslabs.services.base.service import Service
+from descarteslabs.services.service.service import Service
 from descarteslabs.services.places import Places
 import six
 
