@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .service import Service
+from .service import Service, NotFoundError
 
-__all__ = ["Service"]
+__all__ = ["Service", "NotFoundError"]
