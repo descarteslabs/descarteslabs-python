@@ -12,15 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# flake8: noqa
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.services.metadata import Metadata
-from descarteslabs.client.services.places import Places
-from descarteslabs.client.services.raster import Raster
+import json
+import unittest
 
-descartes_auth = Auth.from_environment_or_token_json()
-metadata = Metadata(auth=descartes_auth)
-places = Places(auth=descartes_auth)
-raster = Raster(auth=descartes_auth)
+from descarteslabs.client.services.raster.raster import as_json_string
 
-__all__ = ["descartes_auth", "metadata", "places", "raster"]
+
+class TestUtilities(unittest.TestCase):
+
+    def test_as_json_string(self):
+        d = {'a': 'b'}
+        truth = json.dumps(d)
+
+        self.assertEqual(as_json_string(d), truth)
+        s = '{"a": "b"}'
+        self.assertEqual(as_json_string(s), truth)
+        self.assertEqual(as_json_string(None), None)
+
+
+if __name__ == "__main__":
+    unittest.main()
