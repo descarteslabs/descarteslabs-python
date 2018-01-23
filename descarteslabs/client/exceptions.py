@@ -12,15 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# flake8: noqa
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.services.metadata import Metadata
-from descarteslabs.client.services.places import Places
-from descarteslabs.client.services.raster import Raster
 
-descartes_auth = Auth.from_environment_or_token_json()
-metadata = Metadata(auth=descartes_auth)
-places = Places(auth=descartes_auth)
-raster = Raster(auth=descartes_auth)
+class ClientError(Exception):
+    """ Base class """
+    pass
 
-__all__ = ["descartes_auth", "metadata", "places", "raster"]
+
+class AuthError(ClientError):
+    pass
+
+
+class OauthError(AuthError):
+    pass
+
+
+class ServerError(Exception):
+    status = 500
+
+
+class BadRequestError(ServerError):
+    status = 400
+
+
+class NotFoundError(ServerError):
+    status = 404
+
+
+class ConflictError(ServerError):
+    status = 409
+
+
+class RateLimitError(ServerError):
+    status = 429
+
+
+class GatewayTimeoutError(ServerError):
+    status = 504

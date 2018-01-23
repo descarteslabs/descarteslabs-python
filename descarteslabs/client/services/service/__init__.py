@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# flake8: noqa
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.services.metadata import Metadata
-from descarteslabs.client.services.places import Places
-from descarteslabs.client.services.raster import Raster
+from .service import Service, NotFoundError
 
-descartes_auth = Auth.from_environment_or_token_json()
-metadata = Metadata(auth=descartes_auth)
-places = Places(auth=descartes_auth)
-raster = Raster(auth=descartes_auth)
-
-__all__ = ["descartes_auth", "metadata", "places", "raster"]
+__all__ = ["Service", "NotFoundError"]

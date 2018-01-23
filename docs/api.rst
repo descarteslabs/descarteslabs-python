@@ -31,7 +31,7 @@ Utilities
 
     Most of the metadata searching functions allow for flexible filtering on scene metadata.
 
-        >>> from descarteslabs.metadata import Metadata, properties as p
+        >>> from descarteslabs.client.metadata import Metadata, properties as p
         >>> metadata = Metadata()
 
         >>> metadata.search(products=["sentinel-2:L1C"], q=[p.acquired > "2017", p.cloud_fraction < 0.25])
