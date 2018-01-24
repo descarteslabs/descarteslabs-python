@@ -1,4 +1,4 @@
-# Copyright 2017 Descartes Labs.
+# Copyright 2018 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +13,14 @@
 # limitations under the License.
 
 # flake8: noqa
-from .version import __version__
-from .auth import Auth
-from .services.metadata import Metadata
-from .services.places import Places
-from .services.raster import Raster
+from descarteslabs.client.auth import Auth
+from descarteslabs.client.services.metadata import Metadata
+from descarteslabs.client.services.places import Places
+from descarteslabs.client.services.raster import Raster
 
 descartes_auth = Auth.from_environment_or_token_json()
 metadata = Metadata(auth=descartes_auth)
 places = Places(auth=descartes_auth)
 raster = Raster(auth=descartes_auth)
+
+__all__ = ["descartes_auth", "metadata", "places", "raster"]

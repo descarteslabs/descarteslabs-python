@@ -39,6 +39,6 @@ Using the services
 ------------------
 After the credentials are correctly configured, you should be able to easily access the services available to you::
 
-    >>> from descarteslabs.services import Places
+    >>> from descarteslabs.client.services import Places
     >>> Places().find('illinois')
     [{'name': 'Illinois', 'placetype': 'region', ...}]
