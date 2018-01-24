@@ -66,7 +66,7 @@ def do_setup():
     kwargs['packages'] = find_packages('.')
     kwargs['entry_points'] = {
         'console_scripts': [
-            'descarteslabs = descarteslabs.scripts.__main__:main'
+            'descarteslabs = descarteslabs.client.scripts.__main__:main'
         ]
     }
     kwargs['install_requires'] = [
