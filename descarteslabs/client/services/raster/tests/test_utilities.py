@@ -12,4 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__path__ = __import__('pkgutil').extend_path(__path__, __name__)
+import json
+import unittest
+
+from descarteslabs.client.services.raster.raster import as_json_string
+
+
+class TestUtilities(unittest.TestCase):
+
+    def test_as_json_string(self):
+        d = {'a': 'b'}
+        truth = json.dumps(d)
+
+        self.assertEqual(as_json_string(d), truth)
+        s = '{"a": "b"}'
+        self.assertEqual(as_json_string(s), truth)
+        self.assertEqual(as_json_string(None), None)
+
+
+if __name__ == "__main__":
+    unittest.main()

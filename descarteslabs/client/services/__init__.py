@@ -12,4 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__path__ = __import__('pkgutil').extend_path(__path__, __name__)
+# flake8: noqa
+from descarteslabs.client.services.metadata import Metadata
+from descarteslabs.client.services.places import Places
+from descarteslabs.client.services.raster import Raster

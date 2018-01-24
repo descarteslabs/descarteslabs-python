@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2017 Descartes Labs.
+# Copyright 2018 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ from setuptools import setup, find_packages
 
 # Parse version out of descarteslabs/__init__.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
-with open('descarteslabs/version.py', 'rb') as f:
+with open('descarteslabs/client/version.py', 'rb') as f:
     version = str(ast.literal_eval(_version_re.search(
         f.read().decode('utf-8')).group(1))
     )
@@ -66,7 +66,7 @@ def do_setup():
     kwargs['packages'] = find_packages('.')
     kwargs['entry_points'] = {
         'console_scripts': [
-            'descarteslabs = descarteslabs.scripts.__main__:main'
+            'descarteslabs = descarteslabs.client.scripts.__main__:main'
         ]
     }
     kwargs['install_requires'] = [

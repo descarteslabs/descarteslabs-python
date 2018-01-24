@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2018 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,4 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__path__ = __import__('pkgutil').extend_path(__path__, __name__)
+from descarteslabs.client.scripts.cli import parser, handle
+
+
+def main():
+    handle(parser.parse_args())
+
+
+if __name__ == "__main__":
+    main()

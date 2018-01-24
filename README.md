@@ -36,6 +36,10 @@ Changelog
 =========
 
 ## [Unreleased]
+## [0.7.0] - 2018-01-2
+### Changed
+- Reorganization into a client submodule
+
 ## [0.6.2] - 2018-01-10
 ### Changed
 - Fix regression for `NotFoundError`
@@ -184,7 +188,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.2...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.2...v0.7.0
 [0.6.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.5.0...v0.6.0
