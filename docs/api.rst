@@ -8,19 +8,19 @@ API
 Places
 ------
 
-.. autoclass:: descarteslabs.services.Places
+.. autoclass:: descarteslabs.client.services.Places
     :members:
 
 Metadata
 --------
 
-.. autoclass:: descarteslabs.services.Metadata
+.. autoclass:: descarteslabs.client.services.Metadata
     :members:
 
 Raster
 ------
 
-.. autoclass:: descarteslabs.services.Raster
+.. autoclass:: descarteslabs.client.services.Raster
     :members:
 
 Utilities
