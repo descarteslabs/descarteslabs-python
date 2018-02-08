@@ -55,7 +55,7 @@ Retreive imagery
 
     # Check for imagery before the start date of July 22nd
 
-    feature_collection = dl.metadata.search(const_id='L8', start_time='2016-07-22', end_time='2016-07-31',
+    feature_collection = dl.metadata.search(products=['landsat:LC08:PRE:TOAR'], start_time='2016-07-22', end_time='2016-07-31',
                                             limit=10, place=aoi['slug'])
     # As the variable name implies, this returns a FeatureCollection GeoJSON dictionary.
     # Its 'features' are the available scenes.
@@ -66,7 +66,7 @@ Retreive imagery
     print([f['id'] for f in feature_collection['features']])
 
     # Now check for imagery in late October, i.e., towards the end of the fire
-    feature_collection = dl.metadata.search(const_id='L8', start_time='2016-10-15', end_time='2016-10-31',
+    feature_collection = dl.metadata.search(products=['landsat:LC08:PRE:TOAR'], start_time='2016-10-15', end_time='2016-10-31',
                                             limit=10, place=aoi['slug'])
 
     print(len(feature_collection['features']))
@@ -167,7 +167,7 @@ Retreive imagery
         iax.get_yaxis().set_ticks([])
 
     for i, timewindow in enumerate(times):
-        feature_collection = dl.metadata.search(const_id='L8', start_time=timewindow[0], end_time=timewindow[1],
+        feature_collection = dl.metadata.search(products=['landsat:LC08:PRE:TOAR'], start_time=timewindow[0], end_time=timewindow[1],
                                             limit=10, place=aoi['slug'])
         ids = [f['id'] for f in feature_collection['features']]
         arr, meta = dl.raster.ndarray(
@@ -201,7 +201,7 @@ Obtain the Delta Normalized Burn Ratio
     # We will request the raw band rasters scaled now to 10000 (100% TOAR) to obtain a correct analytic value
 
     # Get pre-fire NBR
-    feature_collection = dl.metadata.search(const_id='L8', start_time='2016-07-01', end_time='2016-07-20',
+    feature_collection = dl.metadata.search(products=['landsat:LC08:PRE:TOAR'], start_time='2016-07-01', end_time='2016-07-20',
                                             limit=10, place=aoi['slug'])
     ids = [f['id'] for f in feature_collection['features']]
     arr, meta = dl.raster.ndarray(
@@ -217,7 +217,7 @@ Obtain the Delta Normalized Burn Ratio
     prenbr = (arr[:,:,1]-arr[:,:,0])/(arr[:,:,1]+arr[:,:,0]+1e-9)
 
     # Get post-fire NBR
-    feature_collection = dl.metadata.search(const_id='L8', start_time='2016-10-15', end_time='2016-10-31',
+    feature_collection = dl.metadata.search(products=['landsat:LC08:PRE:TOAR'], start_time='2016-10-15', end_time='2016-10-31',
                                             limit=10, place=aoi['slug'])
     ids = [f['id'] for f in feature_collection['features']]
     arr, meta = dl.raster.ndarray(

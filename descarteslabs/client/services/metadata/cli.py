@@ -35,8 +35,6 @@ def metadata_handler(args):
     if args.command == 'summary':
         if args.place:
             kwargs['place'] = args.place
-        if args.const_id:
-            kwargs['const_id'] = args.const_id
         if args.start_time:
             kwargs['start_time'] = args.start_time
         if args.end_time:
@@ -53,8 +51,6 @@ def metadata_handler(args):
     if args.command == 'search':
         if args.place:
             kwargs['place'] = args.place
-        if args.const_id:
-            kwargs['const_id'] = args.const_id
         if args.start_time:
             kwargs['start_time'] = args.start_time
         if args.end_time:
@@ -75,8 +71,6 @@ def metadata_handler(args):
     if args.command == 'keys':
         if args.place:
             kwargs['place'] = args.place
-        if args.const_id:
-            kwargs['const_id'] = args.const_id
         if args.start_time:
             kwargs['start_time'] = args.start_time
         if args.end_time:

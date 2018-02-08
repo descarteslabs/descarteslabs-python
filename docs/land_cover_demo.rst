@@ -138,11 +138,11 @@ any data from MODIS acquired over 2016 as long as the scene is less than
 
 .. code:: ipython2
 
-    # use const_id, start_time, end_time, geom, and cloud_fraction
+    # use products, start_time, end_time, geom, and cloud_fraction
     # parameters to limit our imagery search to
 
     images = dl.metadata.search(
-                                    const_id=["MO", "MY"],
+                                    products=["modis:09:CREFL"],
                                     start_time='2016-01-01',
                                     end_time='2016-12-31',
                                     geom=dltile['geometry'],

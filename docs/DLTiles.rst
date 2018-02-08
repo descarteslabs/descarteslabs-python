@@ -68,7 +68,7 @@ unmasked pixels giving us a total number of pixels that are land.
     # get the shape of Newport County
     shape = dl.places.shape(aoi['slug'], geom='low')
     # get ids for imagery
-    feature_collection = dl.metadata.search(const_id='L8', start_time='2016-06-01',
+    feature_collection = dl.metadata.search(products=['landsat:LC08:PRE:TOAR'], start_time='2016-06-01',
                                             end_time='2016-06-30', limit=10, place=aoi['slug'])
     ids = [f['id'] for f in feature_collection['features']]
 
@@ -214,7 +214,7 @@ the area of Rhode Island.
         counter = 0;
         for tile in tiles['features']:
             images = dl.metadata.search(
-                                    const_id=["L8"],
+                                    products=["landsat:LC08:PRE:TOAR"],
                                     start_time=date[0],
                                     end_time=date[1],
                                     geom=json.dumps(tile['geometry']),
@@ -367,7 +367,7 @@ with 60 meter resolution instead if 30.
         counter = 0;
         for tile in tiles['features']:
             images = dl.metadata.search(
-                                    const_id=["L8"],
+                                    products=["landsat:LC08:PRE:TOAR"],
                                     start_time=date[0],
                                     end_time=date[1],
                                     geom=json.dumps(tile['geometry']),
