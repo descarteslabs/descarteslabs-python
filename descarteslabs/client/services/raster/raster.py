@@ -15,7 +15,6 @@
 import json
 import os
 import struct
-import warnings
 from io import BytesIO
 
 import six
@@ -25,11 +24,6 @@ from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.service.service import Service
 from descarteslabs.client.exceptions import ServerError
-
-RASTER_BANDS_WARNING = """
-Band retrieval through the raster service is deprecated, and will be
-removed eventually. Use the corresponding methods on the metadata
-service instead."""
 
 
 def as_json_string(str_or_dict):
@@ -87,36 +81,10 @@ class Raster(Service):
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
-        warnings.simplefilter('always', DeprecationWarning)
         if url is None:
             url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform.descarteslabs.com/raster/v1")
 
         Service.__init__(self, url, token, auth)
-
-    def get_bands_by_key(self, key):
-        """
-        For a given source id, return the available bands.
-
-        :param str key: A :class:`Metadata` identifiers.
-
-        :return: A dictionary of band entries and their metadata.
-        """
-        warnings.warn(RASTER_BANDS_WARNING, DeprecationWarning)
-        r = self.session.get('/bands/key/%s' % key)
-
-        return r.json()
-
-    def get_bands_by_constellation(self, const):
-        """
-        For a given constellation id, return the available bands.
-
-        :param str const: A constellation name/abbreviation.
-
-        :return: A dictionary of band entries and their metadata.
-        """
-        warnings.warn(RASTER_BANDS_WARNING, DeprecationWarning)
-        r = self.session.get('/bands/constellation/%s' % const)
-        return r.json()
 
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
@@ -138,11 +106,11 @@ class Raster(Service):
             >>> iowa = Places().shape("north-america_united-states_iowa")
             >>> tiles = Raster().dltiles_from_shape(30.0, 2048, 16, iowa)
             >>> pprint(tiles['features'][0])
-            {'geometry': {'coordinates': [[[-96.81264975325391, 41.04520331997488],
-                                           [-96.07101667769165, 41.02873098011615],
-                                           [-96.04576296033328, 41.590072611375206],
-                                           [-96.79377566762062, 41.606871549447824],
-                                           [-96.81264975325391, 41.04520331997488]]],
+            {'geometry': {'coordinates': [[[-96.81264975325402, 41.045203319986356],
+                                           [-96.07101667769108, 41.02873098016475],
+                                           [-96.04576296033223, 41.59007261142797],
+                                           [-96.79377566762066, 41.60687154946031],
+                                           [-96.81264975325402, 41.045203319986356]]],
                           'type': 'Polygon'},
              'properties': {'cs_code': 'EPSG:32614',
                             'key': '2048:16:30.0:14:3:74',
@@ -185,11 +153,11 @@ class Raster(Service):
             >>> from descarteslabs.client.services import Raster
             >>> from pprint import pprint
             >>> pprint(Raster().dltile_from_latlon(45, 60, 15.0, 1024, 16))
-            {'geometry': {'coordinates': [[[59.88428127486957, 44.89851158838881],
-                                           [60.084634558186266, 44.903806716073376],
-                                           [60.07740397456606, 45.04621255053833],
-                                           [59.87655568676388, 45.04089121582091],
-                                           [59.88428127486957, 44.89851158838881]]],
+            {'geometry': {'coordinates': [[[59.88428127486419, 44.89851158847289],
+                                           [60.08463455818353, 44.90380671613201],
+                                           [60.077403974563175, 45.046212550598135],
+                                           [59.87655568675822, 45.040891215906676],
+                                           [59.88428127486419, 44.89851158847289]]],
                           'type': 'Polygon'},
             'properties': {'cs_code': 'EPSG:32641',
                            'key': '1024:16:15.0:41:-16:324',
@@ -225,11 +193,11 @@ class Raster(Service):
             >>> from descarteslabs.client.services import Raster
             >>> from pprint import pprint
             >>> pprint(Raster().dltile("1024:16:15.0:41:-16:324"))
-            {'geometry': {'coordinates': [[[59.88428127486957, 44.89851158838881],
-                                           [60.084634558186266, 44.903806716073376],
-                                           [60.07740397456606, 45.04621255053833],
-                                           [59.87655568676388, 45.04089121582091],
-                                           [59.88428127486957, 44.89851158838881]]],
+            {'geometry': {'coordinates': [[[59.88428127486419, 44.89851158847289],
+                                           [60.08463455818353, 44.90380671613201],
+                                           [60.077403974563175, 45.046212550598135],
+                                           [59.87655568675822, 45.040891215906676],
+                                           [59.88428127486419, 44.89851158847289]]],
                           'type': 'Polygon'},
              'properties': {'cs_code': 'EPSG:32641',
                             'key': '1024:16:15.0:41:-16:324',
@@ -246,30 +214,6 @@ class Raster(Service):
         r = self.session.get('/dlkeys/%s' % key)
 
         return r.json()
-
-    def dlkeys_from_shape(self, resolution, tilesize, pad, shape):
-        """
-        Deprecated. See dltiles_from_shape
-        """
-        warnings.warn("dlkey methods have been renamed to dltile",
-                      DeprecationWarning, stacklevel=2)
-        return self.dltiles_from_shape(resolution, tilesize, pad, shape)
-
-    def dlkey_from_latlon(self, lat, lon, resolution, tilesize, pad):
-        """
-        Deprecated. See dltile_from_latlon
-        """
-        warnings.warn("dlkey methods have been renamed to dltile",
-                      DeprecationWarning, stacklevel=2)
-        return self.dltile_from_latlon(lat, lon, resolution, tilesize, pad)
-
-    def dlkey(self, key):
-        """
-        Deprecated. See dltile
-        """
-        warnings.warn("dlkey methods have been renamed to dltile",
-                      DeprecationWarning, stacklevel=2)
-        return self.dltile(key)
 
     def raster(
             self,

@@ -18,6 +18,10 @@ import requests
 import json
 
 
+# flake8: noqa
+anon_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0sImlzcyI6Imh0dHBzOi8vZGVzY2FydGVzbGFicy5hdXRoMC5jb20vIiwic3ViIjoiZGVzY2FydGVzfGFub24tdG9rZW4iLCJhdWQiOiJaT0JBaTRVUk9sNWdLWklweHhsd09FZng4S3BxWGYyYyIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNDc4MjAxNDE5fQ.QL9zq5SkpO7skIy0niIxI0B92uOzZT5t1abuiJaspRI"
+
+
 class TestAuth(unittest.TestCase):
     def test_get_token(self):
         # get a jwt
@@ -34,6 +38,10 @@ class TestAuth(unittest.TestCase):
     def test_get_namespace(self):
         auth = Auth.from_environment_or_token_json()
         self.assertIsNotNone(auth.namespace)
+
+    def test_init_token_no_path(self):
+        auth = Auth(jwt_token=anon_token, token_info_path=None, client_id="foo")
+        self.assertEquals(anon_token, auth._token)
 
 
 if __name__ == '__main__':

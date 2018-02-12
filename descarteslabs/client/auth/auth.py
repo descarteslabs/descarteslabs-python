@@ -74,23 +74,26 @@ class Auth:
         self.token_info_path = token_info_path
 
         token_info = {}
-        try:
-            if self.token_info_path:
+        if self.token_info_path:
+            try:
                 with open(self.token_info_path) as fp:
                     token_info = json.load(fp)
-        except (IOError, ValueError):
-            pass
+            except (IOError, ValueError):
+                pass
 
         self.client_id = client_id if client_id else os.environ.get('CLIENT_ID', token_info.get('client_id', None))
         self.client_secret = client_secret if client_secret else os.environ.get('CLIENT_SECRET', token_info.get(
             'client_secret', None))
         self._token = jwt_token if jwt_token else os.environ.get('JWT_TOKEN', token_info.get('jwt_token', None))
 
-        client_id_changed = token_info.get('client_id', None) != self.client_id
-        client_secret_changed = token_info.get('client_secret', None) != self.client_secret
+        if token_info:
+            # If the token was read from a path but environment variables were set, we may need
+            # to reset the token.
+            client_id_changed = token_info.get('client_id', None) != self.client_id
+            client_secret_changed = token_info.get('client_secret', None) != self.client_secret
 
-        if client_id_changed or client_secret_changed:
-            self._token = None
+            if client_id_changed or client_secret_changed:
+                self._token = None
 
         self._namespace = None
 

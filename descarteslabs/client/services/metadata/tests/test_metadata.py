@@ -14,7 +14,6 @@
 
 import itertools
 import unittest
-from warnings import catch_warnings
 
 from descarteslabs.client.services.metadata import Metadata, properties as p
 from descarteslabs.client.exceptions import NotFoundError
@@ -61,10 +60,6 @@ class TestMetadata(unittest.TestCase):
         for feature in r['features']:
             self.assertEqual(feature['properties']['cloud_fraction'], 0.0)
 
-    def test_translate_to_product(self):
-        r = self.instance.translate('l8')
-        self.assertEqual(r['product'], 'landsat:LC08:PRE:TOAR')
-
     def test_search_by_product(self):
         r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', products=['landsat:LC08:PRE:TOAR'])
         self.assertGreater(len(r['features']), 0)
@@ -102,13 +97,6 @@ class TestMetadata(unittest.TestCase):
         for feature in r['features']:
             self.assertEqual(sorted(feature['properties'].keys()), sorted(fields))
 
-    def test_const_id_search_deprecation(self):
-        with catch_warnings(record=True) as w:
-            r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', const_id=['l8'])
-            self.assertGreater(len(r['features']), 0)
-            self.assertEqual(len(w), 1)
-            self.assertIn('deprecated', str(w[0].message))
-
     def test_multiple_products_search(self):
         r = self.instance.search(
             start_time='2016-07-06',
@@ -133,23 +121,6 @@ class TestMetadata(unittest.TestCase):
         self.assertIn('pixels', r)
         self.assertIn('bytes', r)
         self.assertGreater(r['count'], 0)
-
-    def test_const_id_summary_deprecation(self):
-        with catch_warnings(record=True) as w:
-            r = self.instance.summary(
-                start_time='2016-07-06',
-                end_time='2016-07-07',
-                const_id=['l8'],
-                pixels=True
-            )
-            self.assertEqual(len(w), 1)
-            self.assertIn('deprecated', str(w[0].message))
-
-            self.assertIn('products', r)
-            self.assertIn('count', r)
-            self.assertIn('pixels', r)
-            self.assertIn('bytes', r)
-            self.assertGreater(r['count'], 0)
 
     def test_summary_part(self):
         r = self.instance.summary(
@@ -215,9 +186,6 @@ class TestMetadata(unittest.TestCase):
 
     def test_get_bands_by_key(self):
         self.instance.get_bands_by_key('meta_LC80270312016188_v1')
-
-    def test_get_bands_by_const(self):
-        self.instance.get_bands_by_constellation('L8')
 
     def test_expr_serialization(self):
         q = ((0.1 < p.cloud_fraction <= 0.2) & (p.sat_id == "f00b")) | (p.sat_id == "usa-245")
