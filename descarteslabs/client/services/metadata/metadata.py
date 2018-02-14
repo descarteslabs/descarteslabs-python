@@ -20,7 +20,9 @@ from descarteslabs.client.services.service import Service
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.raster import Raster
-from descarteslabs.client.services.metadata.metadata_filtering import AndExpression
+from descarteslabs.client.services.metadata.metadata_filtering import \
+    AndExpression, GLOBAL_PROPERTIES
+
 
 
 OFFSET_DEPRECATION_MESSAGE = (
@@ -40,6 +42,8 @@ class Metadata(Service):
     """
 
     TIMEOUT = (9.5, 120)
+
+    properties = GLOBAL_PROPERTIES
 
     def __init__(self, url=None, token=None, auth=Auth()):
         """The parent Service class implements authentication and exponential

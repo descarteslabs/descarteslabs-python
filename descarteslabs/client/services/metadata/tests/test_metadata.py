@@ -15,7 +15,7 @@
 import itertools
 import unittest
 
-from descarteslabs.client.services.metadata import Metadata, properties as p
+from descarteslabs.client.services.metadata import Metadata
 from descarteslabs.client.exceptions import NotFoundError
 
 
@@ -188,6 +188,7 @@ class TestMetadata(unittest.TestCase):
         self.instance.get_bands_by_key('meta_LC80270312016188_v1')
 
     def test_expr_serialization(self):
+        p = self.instance.properties
         q = ((0.1 < p.cloud_fraction <= 0.2) & (p.sat_id == "f00b")) | (p.sat_id == "usa-245")
         expected_q = {"or": [
             {"and": [
