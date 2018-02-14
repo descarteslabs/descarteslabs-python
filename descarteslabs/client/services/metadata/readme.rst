@@ -1,33 +1,14 @@
-.. _api:
-
-API
-===
-
-.. module:: descarteslabs
-
-Places
-------
-
-.. autoclass:: descarteslabs.client.services.Places
-    :members:
-
 Metadata
 --------
 
-.. autoclass:: descarteslabs.client.services.Metadata
+.. automodule:: descarteslabs.client.services.metadata
     :members:
 
-Raster
-------
 
-.. autoclass:: descarteslabs.client.services.Raster
-    :members:
-
-Utilities
+Filtering
 ---------
 
-.. py:module:: descarteslabs.utilities
-.. py:attribute:: descarteslabs.metadata.properties
+.. py:attribute:: descarteslabs.client.services.metadata.properties
 
     Most of the metadata searching functions allow for flexible filtering on scene metadata.
 
