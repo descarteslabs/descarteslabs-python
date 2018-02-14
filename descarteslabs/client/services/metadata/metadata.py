@@ -24,7 +24,6 @@ from descarteslabs.client.services.metadata.metadata_filtering import \
     AndExpression, GLOBAL_PROPERTIES
 
 
-
 OFFSET_DEPRECATION_MESSAGE = (
     "Keyword arg `offset` has been deprecated and will be removed in "
     "future versions of the library. "
