@@ -63,7 +63,7 @@ class Places(Service):
         if placetype:
             params['placetype'] = placetype
 
-        r = self.session.get('%s/random' % self.url, params=params)
+        r = self.session.get('/random', params=params)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
