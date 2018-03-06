@@ -6,7 +6,7 @@ from itertools import islice
 class DotDict(dict):
     """
     Subclass of dict, with "dot" (attribute) access to keys,
-    a pretty-printed repr, which indents and truncates long lists,
+    a pretty-printed repr, which indents and truncates large containers,
     and a JSON repr for Jupyter Lab.
 
     Any dicts stored in DotDict are returned as DotDicts, to allow chained attribute access.
@@ -33,25 +33,31 @@ class DotDict(dict):
     def _repr_json_(self):
         return self, {'expanded': False}
 
+    def __getitem__(self, key):
+        try:
+            v = dict.__getitem__(self, key)
+        except KeyError:
+            six.raise_from(KeyError(key), None)
+
+        if type(v) is dict:
+            v = DotDict(v)
+            self[key] = v
+            return v
+        elif type(v) is list:
+            v = DotList(v)
+            self[key] = v
+            return v
+        else:
+            return v
+
     def __getattr__(self, attr):
         try:
-            v = self[attr]
+            return self[attr]
         except KeyError:
             try:
                 return object.__getattribute__(self, attr)
             except AttributeError:
                 six.raise_from(AttributeError(attr), None)
-
-        if type(v) is dict:
-            v = DotDict(v)
-            self[attr] = v
-            return v
-        elif type(v) is list:
-            v = DotList(v)
-            self[attr] = v
-            return v
-        else:
-            return v
 
     def __setattr__(self, attr, val):
         self[attr] = val
@@ -136,11 +142,11 @@ class IndentedRepr(reprlib.Repr, object):
         newlevel = level - 1
         repr1 = self.repr1
         pieces = []
-        for key in islice(_possibly_sorted(x), self.maxdict if depth > 0 else None):
+        for key in islice(_possibly_sorted(x), self.maxdict if self.maxdict is not None and depth > 0 else None):
             keyrepr = repr1(key, newlevel)
             valrepr = repr1(x[key], newlevel)
             pieces.append('%s: %s' % (keyrepr, valrepr))
-        if self.maxdict and n > self.maxdict and depth > 0:
+        if self.maxdict is not None and n > self.maxdict and depth > 0:
             pieces.append('...')
 
         outer_indent = ' ' * (self.indent * depth)
@@ -158,8 +164,10 @@ class IndentedRepr(reprlib.Repr, object):
         else:
             newlevel = level - 1
             repr1 = self.repr1
-            pieces = [repr1(elem, newlevel) for elem in islice(x, maxiter if depth > 0 else None)]
-            if n > maxiter and depth > 0:
+            pieces = [repr1(elem, newlevel)
+                      for elem in islice(x, maxiter if maxiter is not None and depth > 0 else None)]
+
+            if maxiter is not None and n > maxiter and depth > 0:
                 pieces.append('...')
 
             s = (',\n%s' % inner_indent).join(pieces)
