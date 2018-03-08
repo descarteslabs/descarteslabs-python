@@ -24,6 +24,7 @@ from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.service.service import Service
 from descarteslabs.client.exceptions import ServerError
+from descarteslabs.common.dotdict import DotDict
 
 
 def as_json_string(str_or_dict):
@@ -134,7 +135,7 @@ class Raster(Service):
         }
 
         r = self.session.post('/dlkeys/from_shape', json=params)
-        return r.json()
+        return DotDict(r.json())
 
     def dltile_from_latlon(self, lat, lon, resolution, tilesize, pad):
         """
@@ -178,7 +179,7 @@ class Raster(Service):
 
         r = self.session.get('/dlkeys/from_latlon/%f/%f' % (lat, lon), params=params)
 
-        return r.json()
+        return DotDict(r.json())
 
     def dltile(self, key):
         """
@@ -213,7 +214,7 @@ class Raster(Service):
 
         r = self.session.get('/dlkeys/%s' % key)
 
-        return r.json()
+        return DotDict(r.json())
 
     def raster(
             self,
@@ -348,7 +349,7 @@ class Raster(Service):
                 with open(filename, "wb") as f:
                     f.write(data)
 
-        return json_resp
+        return DotDict(json_resp)
 
     def ndarray(
             self,
@@ -468,4 +469,4 @@ class Raster(Service):
             elif order == 'gdal':
                 return array, metadata
         else:
-            return array, metadata
+            return array, DotDict(metadata)

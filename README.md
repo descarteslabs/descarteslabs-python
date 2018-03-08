@@ -30,7 +30,7 @@ $ export CLIENT_SECRET=...
 
 Documentation
 -------------
-The documentation for the latest release can be found on [readthedocs](http://descartes-labs-python.readthedocs.io/)
+The documentation for the latest release can be found at [https://docs.descarteslabs.com](https://docs.descarteslabs.com)
 
 Changelog
 =========
@@ -40,6 +40,9 @@ Changelog
 ### Changed
 - Removed deprecated searching by const_id
 - Removed deprecated raster band methods
+
+### Added
+- Dot notation access to dictionaries returned by services
 
 ## [0.7.0] - 2018-01-24
 ### Changed

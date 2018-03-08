@@ -20,6 +20,7 @@ from cachetools.keys import hashkey
 from descarteslabs.client.services.service import Service
 from descarteslabs.client.auth import Auth
 from six import string_types
+from descarteslabs.common.dotdict import DotDict, DotList
 
 
 class Places(Service):
@@ -63,12 +64,12 @@ class Places(Service):
         if placetype:
             params['placetype'] = placetype
 
-        r = self.session.get('%s/random' % self.url, params=params)
+        r = self.session.get('/random', params=params)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        return r.json()
+        return DotDict(r.json())
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'find'))
     def find(self, path, **kwargs):
@@ -91,7 +92,7 @@ class Places(Service):
               'slug': 'africa_morocco'}]
         """
         r = self.session.get('/find/%s' % path, params=kwargs)
-        return r.json()
+        return DotList(r.json())
 
     def search(self, q, limit=10, country=None, region=None, placetype=None):
         """Search for shapes
@@ -134,7 +135,7 @@ class Places(Service):
 
         r = self.session.get('/search', params=params, timeout=self.TIMEOUT)
 
-        return r.json()
+        return DotList(r.json())
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'shape'))
     def shape(self, slug, output='geojson', geom='low'):
@@ -165,7 +166,7 @@ class Places(Service):
 
         """
         r = self.session.get('/shape/%s.%s' % (slug, output), params={'geom': geom})
-        return r.json()
+        return DotDict(r.json())
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'prefix'))
     def prefix(self, slug, output='geojson', placetype=None, geom='low'):
@@ -191,28 +192,28 @@ class Places(Service):
         params['geom'] = geom
         r = self.session.get('/prefix/%s.%s' % (slug, output), params=params)
 
-        return r.json()
+        return DotDict(r.json())
 
     def sources(self):
         """Get a list of sources
         """
         r = self.session.get('/sources', timeout=self.TIMEOUT)
 
-        return r.json()
+        return DotList(r.json())
 
     def categories(self):
         """Get a list of categories
         """
         r = self.session.get('/categories', timeout=self.TIMEOUT)
 
-        return r.json()
+        return DotList(r.json())
 
     def metrics(self):
         """Get a list of metrics
         """
         r = self.session.get('/metrics', timeout=self.TIMEOUT)
 
-        return r.json()
+        return DotList(r.json())
 
     def data(self, slug, source=None, category=None, metric=None, units=None, date=None, placetype='county'):
         """Get all values for a prefix search and point in time

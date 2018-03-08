@@ -20,7 +20,9 @@ from descarteslabs.client.services.service import Service
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.raster import Raster
-from descarteslabs.client.services.metadata.metadata_filtering import AndExpression
+from descarteslabs.client.services.metadata.metadata_filtering import \
+    AndExpression, GLOBAL_PROPERTIES
+from descarteslabs.common.dotdict import DotDict, DotList
 
 
 OFFSET_DEPRECATION_MESSAGE = (
@@ -40,6 +42,8 @@ class Metadata(Service):
     """
 
     TIMEOUT = (9.5, 120)
+
+    properties = GLOBAL_PROPERTIES
 
     def __init__(self, url=None, token=None, auth=Auth()):
         """The parent Service class implements authentication and exponential
@@ -66,7 +70,7 @@ class Metadata(Service):
 
         """
         r = self.session.get('/sources')
-        return r.json()
+        return DotList(r.json())
 
     def bands(
         self,
@@ -101,7 +105,7 @@ class Metadata(Service):
         })
 
         r = self.session.post('/bands/search', json=kwargs)
-        return r.json()
+        return DotList(r.json())
 
     def derived_bands(self, bands=None, require_bands=None, limit=None, offset=None, **kwargs):
         """Search for predefined derived bands that you have access to.
@@ -125,7 +129,7 @@ class Metadata(Service):
         })
 
         r = self.session.post('/bands/derived/search', json=kwargs)
-        return r.json()
+        return DotList(r.json())
 
     def get_bands_by_key(self, key):
         """
@@ -137,7 +141,7 @@ class Metadata(Service):
         """
         r = self.session.get('/bands/key/%s' % key)
 
-        return r.json()
+        return DotDict(r.json())
 
     def products(self, bands=None, limit=None, offset=None, owner=None, text=None, **kwargs):
         """Search products that are available on the platform.
@@ -161,7 +165,7 @@ class Metadata(Service):
 
         r = self.session.post('/products/search', json=kwargs)
 
-        return r.json()
+        return DotList(r.json())
 
     def available_products(self):
         """Get the list of product identifiers you have access to.
@@ -176,7 +180,7 @@ class Metadata(Service):
         """
         r = self.session.get('/products')
 
-        return r.json()
+        return DotList(r.json())
 
     def summary(self, products=None, sat_id=None, date='acquired', part=None,
                 place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
@@ -278,7 +282,7 @@ class Metadata(Service):
             kwargs['pixels'] = pixels
 
         r = self.session.post('/summary', json=kwargs)
-        return r.json()
+        return DotDict(r.json())
 
     def search(self, products=None, sat_id=None, date='acquired', place=None,
                geom=None, start_time=None, end_time=None, cloud_fraction=None,
@@ -398,7 +402,7 @@ class Metadata(Service):
             fc['properties'] = {
                 'continuation_token': r.headers['x-continuation-token']}
 
-        return fc
+        return DotDict(fc)
 
     def ids(self, products=None, sat_id=None, date='acquired', place=None,
             geom=None, start_time=None, end_time=None, cloud_fraction=None,
@@ -448,7 +452,7 @@ class Metadata(Service):
                              q=q, limit=limit, offset=offset, fields=[], dltile=dltile,
                              sort_field=sort_field, sort_order=sort_order, randomize=randomize)
 
-        return [feature['id'] for feature in result['features']]
+        return DotList(feature['id'] for feature in result['features'])
 
     def keys(self, products=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
@@ -499,7 +503,7 @@ class Metadata(Service):
                              dltile=dltile, sort_field=sort_field,
                              sort_order=sort_order, randomize=randomize)
 
-        return [feature['key'] for feature in result['features']]
+        return DotList(feature['key'] for feature in result['features'])
 
     def features(self, products=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
@@ -569,7 +573,7 @@ class Metadata(Service):
              'tile_id']
         """
         r = self.session.get('/get/%s' % key)
-        return r.json()
+        return DotDict(r.json())
 
     def get_by_ids(self, ids):
         """Get metadata for multiple images by id. The response contains found images in the
@@ -579,7 +583,7 @@ class Metadata(Service):
         :return: List of image metadata.
         """
         r = self.session.post('/batch/images', json={'ids': ids})
-        return r.json()
+        return DotList(r.json())
 
     def get_product(self, product_id):
         """Get information about a single product.
@@ -588,7 +592,7 @@ class Metadata(Service):
 
         """
         r = self.session.get('/products/%s' % product_id)
-        return r.json()
+        return DotDict(r.json())
 
     def get_band(self, band_id):
         """Get information about a single product.
@@ -597,7 +601,7 @@ class Metadata(Service):
 
         """
         r = self.session.get('/bands/%s' % band_id)
-        return r.json()
+        return DotDict(r.json())
 
     def get_derived_band(self, derived_band_id):
         """Get information about a single product.
@@ -606,4 +610,4 @@ class Metadata(Service):
 
         """
         r = self.session.get('/bands/derived/%s' % derived_band_id)
-        return r.json()
+        return DotDict(r.json())

@@ -21,7 +21,6 @@ import six
 from six.moves import input
 
 from descarteslabs.client.auth.auth import Auth, base64url_decode, makedirs_if_not_exists, DEFAULT_TOKEN_INFO_PATH
-from descarteslabs.client.services.metadata import Metadata
 from descarteslabs.client.version import __version__
 
 
@@ -53,20 +52,10 @@ def auth_handler(args):
 
             # Get a fresh Auth token
             auth = Auth()
-            keys = Metadata(auth=auth).keys()
 
             name = auth.payload['name']
-            groups = ', '.join(auth.payload['groups'])
 
-            if len(keys):
-
-                print('Welcome, %s!' % name)
-
-            else:
-
-                print('Welcome, %s! Your %s role(s) do not permit access to any imagery at this time.' % (name, groups))
-                print(
-                    'Contact support@descarteslabs.com if you believe you received this message in error or have any questions.')  # NOQA
+            print('Welcome, %s!' % name)
 
     if args.command == 'token':
         print(auth.token)
