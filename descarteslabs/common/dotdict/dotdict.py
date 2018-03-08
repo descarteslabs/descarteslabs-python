@@ -100,6 +100,9 @@ class DotList(list):
         else:
             return item
 
+    def __repr__(self):
+        return idr.repr(self)
+
 
 def _possibly_sorted(x):
     # Since not all sequences of items can be sorted and comparison
