@@ -24,9 +24,11 @@ class DotDict(dict):
     >>> d["a"]
         1
     >>> d.b
-        [{
+        [
+          {
             'foo': 'bar'
-        }]
+          }
+        ]
     >>> d.b[0].foo
         'bar'
     """
@@ -100,6 +102,9 @@ class DotList(list):
         else:
             return item
 
+    def __getslice__(self, i, j):
+        return self.__getitem__(slice(i, j))
+
     def __repr__(self):
         return idr.repr(self)
 
@@ -120,9 +125,9 @@ class IndentedRepr(reprlib.Repr, object):
         super(IndentedRepr, self).__init__()
 
         self.maxstring = 90  # about the maximum width of a Jupyter Notebook
-        self.maxlevel = 4
+        self.maxlevel = 6
         self.maxlist = 4
-        self.maxdict = 40
+        self.maxdict = None
 
         self.indent = 2
 
@@ -170,11 +175,18 @@ class IndentedRepr(reprlib.Repr, object):
             pieces = [repr1(elem, newlevel)
                       for elem in islice(x, maxiter if maxiter is not None and depth > 0 else None)]
 
+            has_multiline_pieces = any('\n' in piece for piece in pieces)
+
             if maxiter is not None and n > maxiter and depth > 0:
                 pieces.append('...')
 
-            s = (',\n%s' % inner_indent).join(pieces)
-            s = '\n%s%s\n%s' % (inner_indent, s, outer_indent)
+            if has_multiline_pieces or maxiter is not None and n > maxiter:
+                # multiline if long list, or components have line breaks (prevents weird closing bracket indentation)
+                s = (',\n%s' % inner_indent).join(pieces)
+                s = '\n%s%s\n%s' % (inner_indent, s, outer_indent)
+            else:
+                # single line if short
+                s = ', '.join(pieces)
 
             if n == 1 and trail:
                 right = trail + right

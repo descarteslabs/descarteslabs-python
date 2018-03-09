@@ -85,11 +85,15 @@ class Places(Service):
             >>> results = Places().find('morocco')
             >>> _ = results[0].pop('bbox')
             >>> pprint(results)
-            [{'id': 85632693,
-              'name': 'Morocco',
-              'path': 'continent:africa_country:morocco',
-              'placetype': 'country',
-              'slug': 'africa_morocco'}]
+            [
+              {
+                'id': 85632693,
+                'name': 'Morocco',
+                'path': 'continent:africa_country:morocco',
+                'placetype': 'country',
+                'slug': 'africa_morocco'
+              }
+            ]
         """
         r = self.session.get('/find/%s' % path, params=kwargs)
         return DotList(r.json())
@@ -110,11 +114,13 @@ class Places(Service):
             >>> from pprint import pprint
             >>> results = Places().search('texas')
             >>> pprint(results[0])
-            {'bbox': [-106.645584, 25.837395, -93.508039, 36.50035],
-             'id': 85688753,
-             'name': 'Texas',
-             'placetype': 'region',
-             'slug': 'north-america_united-states_texas'}
+            {
+              u'bbox': [-106.645584, 25.837395, -93.508039, 36.50035],
+              u'id': 85688753,
+              u'name': u'Texas',
+              u'placetype': u'region',
+              u'slug': u'north-america_united-states_texas'
+            }
         """
         params = {}
 
@@ -158,11 +164,13 @@ class Places(Service):
             'Polygon'
 
             >>> pprint(kansas['properties'])
-            {'name': 'Kansas',
-             'parent_id': 85633793,
-             'path': 'continent:north-america_country:united-states_region:kansas',
-             'placetype': 'region',
-             'slug': 'north-america_united-states_kansas'}
+            {
+              'name': 'Kansas',
+              'parent_id': 85633793,
+              'path': 'continent:north-america_country:united-states_region:kansas',
+              'placetype': 'region',
+              'slug': 'north-america_united-states_kansas'
+            }
 
         """
         r = self.session.get('/shape/%s.%s' % (slug, output), params={'geom': geom})

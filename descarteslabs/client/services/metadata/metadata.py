@@ -66,7 +66,12 @@ class Metadata(Service):
             >>> from pprint import pprint
             >>> sources = Metadata().sources()
             >>> pprint(sources)
-            [{'product': 'landsat:LC08:PRE:TOAR', 'sat_id': 'LANDSAT_8'}]
+            [
+              {
+                'product': 'landsat:LC08:PRE:TOAR',
+                'sat_id': 'LANDSAT_8'
+              }
+            ]
 
         """
         r = self.session.get('/sources')
@@ -210,15 +215,21 @@ class Metadata(Service):
             >>> pprint(Metadata().summary(place='north-america_united-states_iowa', \
                     products=['landsat:LC08:PRE:TOAR'], start_time='2016-07-06', \
                     end_time='2016-07-07', part='hour', pixels=True))
-            {'bytes': 93298309,
-             'count': 1,
-             'items': [{'bytes': 93298309,
-                        'count': 1,
-                        'date': '2016-07-06T16:00:00',
-                        'pixels': 250508160,
-                        'timestamp': 1467820800}],
-             'pixels': 250508160,
-             'products': ['landsat:LC08:PRE:TOAR']}
+            {
+              'bytes': 93298309,
+              'count': 1,
+              'items': [
+                {
+                  'bytes': 93298309,
+                  'count': 1,
+                  'date': '2016-07-06T16:00:00',
+                  'pixels': 250508160,
+                  'timestamp': 1467820800
+                }
+              ],
+              'pixels': 250508160,
+              'products': ['landsat:LC08:PRE:TOAR']
+            }
         """
         if place:
             places = Places()

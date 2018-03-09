@@ -107,23 +107,32 @@ class Raster(Service):
             >>> iowa = Places().shape("north-america_united-states_iowa")
             >>> tiles = Raster().dltiles_from_shape(30.0, 2048, 16, iowa)
             >>> pprint(tiles['features'][0])
-            {'geometry': {'coordinates': [[[-96.81264975325402, 41.045203319986356],
-                                           [-96.07101667769108, 41.02873098016475],
-                                           [-96.04576296033223, 41.59007261142797],
-                                           [-96.79377566762066, 41.60687154946031],
-                                           [-96.81264975325402, 41.045203319986356]]],
-                          'type': 'Polygon'},
-             'properties': {'cs_code': 'EPSG:32614',
-                            'key': '2048:16:30.0:14:3:74',
-                            'outputBounds': [683840.0, 4546080.0, 746240.0, 4608480.0],
-                            'pad': 16,
-                            'resolution': 30.0,
-                            'ti': 3,
-                            'tilesize': 2048,
-                            'tj': 74,
-                            'zone': 14},
-             'type': 'Feature'}
-
+            {
+              'geometry': {
+                'coordinates': [
+                  [
+                    [-96.81264975325402, 41.045203319986356],
+                    [-96.07101667769108, 41.02873098016475],
+                    [-96.04576296033223, 41.59007261142797],
+                    [-96.79377566762066, 41.60687154946031],
+                    ...
+                  ]
+                ],
+                'type': 'Polygon'
+              },
+              'properties': {
+                'cs_code': 'EPSG:32614',
+                'key': '2048:16:30.0:14:3:74',
+                'outputBounds': [683840.0, 4546080.0, 746240.0, 4608480.0],
+                'pad': 16,
+                'resolution': 30.0,
+                'ti': 3,
+                'tilesize': 2048,
+                'tj': 74,
+                'zone': 14
+              },
+              'type': 'Feature'
+            }
         """
 
         shape = as_json_string(shape)
@@ -154,22 +163,32 @@ class Raster(Service):
             >>> from descarteslabs.client.services import Raster
             >>> from pprint import pprint
             >>> pprint(Raster().dltile_from_latlon(45, 60, 15.0, 1024, 16))
-            {'geometry': {'coordinates': [[[59.88428127486419, 44.89851158847289],
-                                           [60.08463455818353, 44.90380671613201],
-                                           [60.077403974563175, 45.046212550598135],
-                                           [59.87655568675822, 45.040891215906676],
-                                           [59.88428127486419, 44.89851158847289]]],
-                          'type': 'Polygon'},
-            'properties': {'cs_code': 'EPSG:32641',
-                           'key': '1024:16:15.0:41:-16:324',
-                           'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
-                           'pad': 16,
-                           'resolution': 15.0,
-                           'ti': -16,
-                           'tilesize': 1024,
-                           'tj': 324,
-                           'zone': 41},
-            'type': 'Feature'}
+            {
+              'geometry': {
+                'coordinates': [
+                  [
+                    [59.88428127486419, 44.89851158847289],
+                    [60.08463455818353, 44.90380671613201],
+                    [60.077403974563175, 45.046212550598135],
+                    [59.87655568675822, 45.040891215906676],
+                    ...
+                  ]
+                ],
+                'type': 'Polygon'
+              },
+              'properties': {
+                'cs_code': 'EPSG:32641',
+                'key': '1024:16:15.0:41:-16:324',
+                'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
+                'pad': 16,
+                'resolution': 15.0,
+                'ti': -16,
+                'tilesize': 1024,
+                'tj': 324,
+                'zone': 41
+              },
+              'type': 'Feature'
+            }
         """
         params = {
             'resolution': resolution,
@@ -194,22 +213,32 @@ class Raster(Service):
             >>> from descarteslabs.client.services import Raster
             >>> from pprint import pprint
             >>> pprint(Raster().dltile("1024:16:15.0:41:-16:324"))
-            {'geometry': {'coordinates': [[[59.88428127486419, 44.89851158847289],
-                                           [60.08463455818353, 44.90380671613201],
-                                           [60.077403974563175, 45.046212550598135],
-                                           [59.87655568675822, 45.040891215906676],
-                                           [59.88428127486419, 44.89851158847289]]],
-                          'type': 'Polygon'},
-             'properties': {'cs_code': 'EPSG:32641',
-                            'key': '1024:16:15.0:41:-16:324',
-                            'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
-                            'pad': 16,
-                            'resolution': 15.0,
-                            'ti': -16,
-                            'tilesize': 1024,
-                            'tj': 324,
-                            'zone': 41},
-             'type': 'Feature'}
+            {
+              'geometry': {
+                'coordinates': [
+                  [
+                    [59.88428127486419, 44.89851158847289],
+                    [60.08463455818353, 44.90380671613201],
+                    [60.077403974563175, 45.046212550598135],
+                    [59.87655568675822, 45.040891215906676],
+                    ...
+                  ]
+                ],
+                'type': 'Polygon'
+              },
+              'properties': {
+                'cs_code': 'EPSG:32641',
+                'key': '1024:16:15.0:41:-16:324',
+                'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
+                'pad': 16,
+                'resolution': 15.0,
+                'ti': -16,
+                'tilesize': 1024,
+                'tj': 324,
+                'zone': 41
+              },
+              'type': 'Feature'
+            }
         """
 
         r = self.session.get('/dlkeys/%s' % key)
