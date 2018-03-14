@@ -63,9 +63,8 @@ class Metadata(Service):
 
         Example::
             >>> from descarteslabs.client.services import Metadata
-            >>> from pprint import pprint
             >>> sources = Metadata().sources()
-            >>> pprint(sources)
+            >>> sources
             [
               {
                 'product': 'landsat:LC08:PRE:TOAR',
@@ -177,9 +176,8 @@ class Metadata(Service):
 
         Example::
             >>> from descarteslabs.client.services import Metadata
-            >>> from pprint import pprint
             >>> products = Metadata().available_products()
-            >>> pprint(products)
+            >>> products
             ['landsat:LC08:PRE:TOAR']
 
         """
@@ -211,8 +209,7 @@ class Metadata(Service):
         Example usage::
 
             >>> from descarteslabs.client.services import Metadata
-            >>> from pprint import  pprint
-            >>> pprint(Metadata().summary(place='north-america_united-states_iowa', \
+            >>> Metadata().summary(place='north-america_united-states_iowa', \
                     products=['landsat:LC08:PRE:TOAR'], start_time='2016-07-06', \
                     end_time='2016-07-07', part='hour', pixels=True))
             {

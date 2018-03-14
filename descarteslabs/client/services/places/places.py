@@ -81,10 +81,9 @@ class Places(Service):
         Example::
 
             >>> from descarteslabs.client.services import Places
-            >>> from pprint import pprint
             >>> results = Places().find('morocco')
             >>> _ = results[0].pop('bbox')
-            >>> pprint(results)
+            >>> results
             [
               {
                 'id': 85632693,
@@ -111,9 +110,8 @@ class Places(Service):
 
         Example::
             >>> from descarteslabs.client.services import Places
-            >>> from pprint import pprint
             >>> results = Places().search('texas')
-            >>> pprint(results[0])
+            >>> results[0]
             {
               u'bbox': [-106.645584, 25.837395, -93.508039, 36.50035],
               u'id': 85688753,
@@ -155,7 +153,6 @@ class Places(Service):
 
         Example::
             >>> from descarteslabs.client.services import Places
-            >>> from pprint import pprint
             >>> kansas = Places().shape('north-america_united-states_kansas')
             >>> kansas['bbox']
             [-102.051744, 36.993016, -94.588658, 40.003078]
@@ -163,7 +160,7 @@ class Places(Service):
             >>> kansas['geometry']['type']
             'Polygon'
 
-            >>> pprint(kansas['properties'])
+            >>> kansas['properties']
             {
               'name': 'Kansas',
               'parent_id': 85633793,

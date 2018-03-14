@@ -103,10 +103,9 @@ class Raster(Service):
         Example::
 
             >>> from descarteslabs.client.services import Raster, Places
-            >>> from pprint import pprint
             >>> iowa = Places().shape("north-america_united-states_iowa")
             >>> tiles = Raster().dltiles_from_shape(30.0, 2048, 16, iowa)
-            >>> pprint(tiles['features'][0])
+            >>> tiles['features'][0]
             {
               'geometry': {
                 'coordinates': [
@@ -161,8 +160,7 @@ class Raster(Service):
         Example::
 
             >>> from descarteslabs.client.services import Raster
-            >>> from pprint import pprint
-            >>> pprint(Raster().dltile_from_latlon(45, 60, 15.0, 1024, 16))
+            >>> Raster().dltile_from_latlon(45, 60, 15.0, 1024, 16)
             {
               'geometry': {
                 'coordinates': [
@@ -211,8 +209,7 @@ class Raster(Service):
         Example::
 
             >>> from descarteslabs.client.services import Raster
-            >>> from pprint import pprint
-            >>> pprint(Raster().dltile("1024:16:15.0:41:-16:324"))
+            >>> Raster().dltile("1024:16:15.0:41:-16:324")
             {
               'geometry': {
                 'coordinates': [
