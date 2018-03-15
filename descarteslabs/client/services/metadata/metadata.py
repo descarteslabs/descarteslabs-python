@@ -211,7 +211,7 @@ class Metadata(Service):
             >>> from descarteslabs.client.services import Metadata
             >>> Metadata().summary(place='north-america_united-states_iowa', \
                     products=['landsat:LC08:PRE:TOAR'], start_time='2016-07-06', \
-                    end_time='2016-07-07', part='hour', pixels=True))
+                    end_time='2016-07-07', part='hour', pixels=True)
             {
               'bytes': 93298309,
               'count': 1,
