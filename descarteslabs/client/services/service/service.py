@@ -66,11 +66,9 @@ class Service(object):
 
     ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
 
-    def __init__(self, url, token, auth):
+    def __init__(self, url, auth):
         self.auth = auth
         self.base_url = url
-        if token:
-            self.auth._token = token
 
         self._session = self.build_session()
 

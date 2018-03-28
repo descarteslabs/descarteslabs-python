@@ -45,17 +45,20 @@ class Metadata(Service):
 
     properties = GLOBAL_PROPERTIES
 
-    def __init__(self, url=None, token=None, auth=Auth()):
+    def __init__(self, url=None, auth=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        if auth is None:
+            auth = Auth()
+
         simplefilter('always', DeprecationWarning)
         if url is None:
             url = os.environ.get("DESCARTESLABS_METADATA_URL",
                                  "https://platform.descarteslabs.com/metadata/v1")
 
-        Service.__init__(self, url, token, auth)
+        super(Metadata, self).__init__(url, auth)
         self._raster = Raster(auth=self.auth)
 
     def sources(self):

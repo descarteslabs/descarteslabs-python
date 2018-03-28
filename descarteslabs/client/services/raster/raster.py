@@ -77,15 +77,18 @@ class Raster(Service):
     """Raster"""
     TIMEOUT = (9.5, 300)
 
-    def __init__(self, url=None, token=None, auth=Auth()):
+    def __init__(self, url=None, auth=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        if auth is None:
+            auth = Auth()
+
         if url is None:
             url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform.descarteslabs.com/raster/v1")
 
-        Service.__init__(self, url, token, auth)
+        super(Raster, self).__init__(url, auth)
 
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """

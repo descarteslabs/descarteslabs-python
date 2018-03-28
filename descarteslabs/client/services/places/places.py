@@ -27,15 +27,18 @@ class Places(Service):
     TIMEOUT = (9.5, 360)
     """Places and statistics service"""
 
-    def __init__(self, url=None, token=None, auth=Auth(), maxsize=10, ttl=600):
+    def __init__(self, url=None, auth=None, maxsize=10, ttl=600):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        if auth is None:
+            auth = Auth()
+
         if url is None:
             url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform.descarteslabs.com/waldo/v2")
 
-        Service.__init__(self, url, token, auth)
+        super(Places, self).__init__(url, auth)
         self.cache = TTLCache(maxsize, ttl)
 
     def placetypes(self):
