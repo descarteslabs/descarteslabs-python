@@ -118,9 +118,9 @@ class Places(Service):
             {
               'bbox': [-106.645584, 25.837395, -93.508039, 36.50035],
               'id': 85688753,
-              'name': u'Texas',
-              'placetype': u'region',
-              'slug': u'north-america_united-states_texas'
+              'name': 'Texas',
+              'placetype': 'region',
+              'slug': 'north-america_united-states_texas'
             }
         """
         params = {}
