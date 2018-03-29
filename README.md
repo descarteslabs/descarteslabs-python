@@ -36,10 +36,12 @@ Changelog
 =========
 
 ## [Unreleased]
-## [0.8.0] - 2018-02-08
+## [0.8.0] - 2018-03-29
 ### Changed
-- Removed deprecated searching by const_id
+- Removed deprecated searching by `const_id`
 - Removed deprecated raster band methods
+- Deprecated `sat_id` parameter for metadata searches
+- Changed documentation from readthedocs to https://docs.descarteslabs.com
 
 ### Added
 - Dot notation access to dictionaries returned by services
