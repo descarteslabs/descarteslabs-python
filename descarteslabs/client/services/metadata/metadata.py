@@ -30,6 +30,17 @@ OFFSET_DEPRECATION_MESSAGE = (
     "future versions of the library. "
 )
 
+SAT_ID_DEPRECATION_MESSAGE = (
+    "Keyword arg `sat_id` has been deprecated and will be removed in "
+    "future versions of the library. "
+)
+
+SOURCES_DEPRECATION_MESSAGE = (
+    "Metadata.sources() has been deprecated and will be removed in "
+    "future versions of the library. Please use "
+    "Metadata.available_products() or Metadata.products() instead. "
+)
+
 
 class Metadata(Service):
     """
@@ -62,20 +73,8 @@ class Metadata(Service):
         self._raster = Raster(auth=self.auth)
 
     def sources(self):
-        """Get a list of image sources.
+        warn(SOURCES_DEPRECATION_MESSAGE, DeprecationWarning)
 
-        Example::
-            >>> from descarteslabs.client.services import Metadata
-            >>> sources = Metadata().sources()
-            >>> sources
-            [
-              {
-                'product': 'landsat:LC08:PRE:TOAR',
-                'sat_id': 'LANDSAT_8'
-              }
-            ]
-
-        """
         r = self.session.get('/sources')
         return DotList(r.json())
 
@@ -195,7 +194,7 @@ class Metadata(Service):
         """Get a summary of the results for the specified spatio-temporal query.
 
         :param list(str) products: Product identifier(s).
-        :param list(str) sat_id: Satellite identifier(s).
+        :param list(str) sat_id: Satellite identifier(s). *Deprecated*
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str part: Part of the date to aggregate over (e.g. `day`).
         :param str place: A slug identifier to be used as a region of interest.
@@ -249,6 +248,8 @@ class Metadata(Service):
         kwargs = {}
 
         if sat_id:
+            warn(SAT_ID_DEPRECATION_MESSAGE, DeprecationWarning)
+
             if isinstance(sat_id, string_types):
                 sat_id = [sat_id]
 
@@ -356,6 +357,8 @@ class Metadata(Service):
             kwargs['offset'] = offset
 
         if sat_id:
+            warn(SAT_ID_DEPRECATION_MESSAGE, DeprecationWarning)
+
             if isinstance(sat_id, string_types):
                 sat_id = [sat_id]
 
