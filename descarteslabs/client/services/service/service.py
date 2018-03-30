@@ -66,11 +66,9 @@ class Service(object):
 
     ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
 
-    def __init__(self, url, token, auth):
+    def __init__(self, url, auth):
         self.auth = auth
         self.base_url = url
-        if token:
-            self.auth._token = token
 
         self._session = self.build_session()
 
@@ -95,6 +93,41 @@ class Service(object):
 
         s.headers.update({
             "Content-Type": "application/json",
+            "User-Agent": "dl-python/{}".format(__version__)
+        })
+
+        return s
+
+
+class ThirdPartyService(object):
+    TIMEOUT = (9.5, 30)
+
+    RETRY_CONFIG = Retry(total=10,
+                         read=2,
+                         backoff_factor=random.uniform(1, 3),
+                         method_whitelist=frozenset([
+                             'HEAD', 'TRACE', 'GET', 'POST',
+                             'PUT', 'OPTIONS', 'DELETE'
+                         ]),
+                         status_forcelist=[429, 500, 502, 503, 504])
+
+    ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
+
+    def __init__(self, url=''):
+        self.base_url = url
+
+        self._session = self.build_session()
+
+    @property
+    def session(self):
+        return self._session
+
+    def build_session(self):
+        s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
+        s.mount('https://', self.ADAPTER)
+
+        s.headers.update({
+            "Content-Type": "application/octet-stream",
             "User-Agent": "dl-python/{}".format(__version__)
         })
 

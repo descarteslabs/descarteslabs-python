@@ -20,21 +20,25 @@ from cachetools.keys import hashkey
 from descarteslabs.client.services.service import Service
 from descarteslabs.client.auth import Auth
 from six import string_types
+from descarteslabs.common.dotdict import DotDict, DotList
 
 
 class Places(Service):
     TIMEOUT = (9.5, 360)
     """Places and statistics service"""
 
-    def __init__(self, url=None, token=None, auth=Auth(), maxsize=10, ttl=600):
+    def __init__(self, url=None, auth=None, maxsize=10, ttl=600):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        if auth is None:
+            auth = Auth()
+
         if url is None:
             url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform.descarteslabs.com/waldo/v2")
 
-        Service.__init__(self, url, token, auth)
+        super(Places, self).__init__(url, auth)
         self.cache = TTLCache(maxsize, ttl)
 
     def placetypes(self):
@@ -63,12 +67,12 @@ class Places(Service):
         if placetype:
             params['placetype'] = placetype
 
-        r = self.session.get('%s/random' % self.url, params=params)
+        r = self.session.get('/random', params=params)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
-        return r.json()
+        return DotDict(r.json())
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'find'))
     def find(self, path, **kwargs):
@@ -80,18 +84,21 @@ class Places(Service):
         Example::
 
             >>> from descarteslabs.client.services import Places
-            >>> from pprint import pprint
             >>> results = Places().find('morocco')
             >>> _ = results[0].pop('bbox')
-            >>> pprint(results)
-            [{'id': 85632693,
-              'name': 'Morocco',
-              'path': 'continent:africa_country:morocco',
-              'placetype': 'country',
-              'slug': 'africa_morocco'}]
+            >>> results
+            [
+              {
+                'id': 85632693,
+                'name': 'Morocco',
+                'path': 'continent:africa_country:morocco',
+                'placetype': 'country',
+                'slug': 'africa_morocco'
+              }
+            ]
         """
         r = self.session.get('/find/%s' % path, params=kwargs)
-        return r.json()
+        return DotList(r.json())
 
     def search(self, q, limit=10, country=None, region=None, placetype=None):
         """Search for shapes
@@ -106,14 +113,15 @@ class Places(Service):
 
         Example::
             >>> from descarteslabs.client.services import Places
-            >>> from pprint import pprint
             >>> results = Places().search('texas')
-            >>> pprint(results[0])
-            {'bbox': [-106.645584, 25.837395, -93.508039, 36.50035],
-             'id': 85688753,
-             'name': 'Texas',
-             'placetype': 'region',
-             'slug': 'north-america_united-states_texas'}
+            >>> results[0]
+            {
+              'bbox': [-106.645584, 25.837395, -93.508039, 36.50035],
+              'id': 85688753,
+              'name': 'Texas',
+              'placetype': 'region',
+              'slug': 'north-america_united-states_texas'
+            }
         """
         params = {}
 
@@ -134,7 +142,7 @@ class Places(Service):
 
         r = self.session.get('/search', params=params, timeout=self.TIMEOUT)
 
-        return r.json()
+        return DotList(r.json())
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'shape'))
     def shape(self, slug, output='geojson', geom='low'):
@@ -148,7 +156,6 @@ class Places(Service):
 
         Example::
             >>> from descarteslabs.client.services import Places
-            >>> from pprint import pprint
             >>> kansas = Places().shape('north-america_united-states_kansas')
             >>> kansas['bbox']
             [-102.051744, 36.993016, -94.588658, 40.003078]
@@ -156,16 +163,18 @@ class Places(Service):
             >>> kansas['geometry']['type']
             'Polygon'
 
-            >>> pprint(kansas['properties'])
-            {'name': 'Kansas',
-             'parent_id': 85633793,
-             'path': 'continent:north-america_country:united-states_region:kansas',
-             'placetype': 'region',
-             'slug': 'north-america_united-states_kansas'}
+            >>> kansas['properties']
+            {
+              'name': 'Kansas',
+              'parent_id': 85633793,
+              'path': 'continent:north-america_country:united-states_region:kansas',
+              'placetype': 'region',
+              'slug': 'north-america_united-states_kansas'
+            }
 
         """
         r = self.session.get('/shape/%s.%s' % (slug, output), params={'geom': geom})
-        return r.json()
+        return DotDict(r.json())
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'prefix'))
     def prefix(self, slug, output='geojson', placetype=None, geom='low'):
@@ -191,28 +200,28 @@ class Places(Service):
         params['geom'] = geom
         r = self.session.get('/prefix/%s.%s' % (slug, output), params=params)
 
-        return r.json()
+        return DotDict(r.json())
 
     def sources(self):
         """Get a list of sources
         """
         r = self.session.get('/sources', timeout=self.TIMEOUT)
 
-        return r.json()
+        return DotList(r.json())
 
     def categories(self):
         """Get a list of categories
         """
         r = self.session.get('/categories', timeout=self.TIMEOUT)
 
-        return r.json()
+        return DotList(r.json())
 
     def metrics(self):
         """Get a list of metrics
         """
         r = self.session.get('/metrics', timeout=self.TIMEOUT)
 
-        return r.json()
+        return DotList(r.json())
 
     def data(self, slug, source=None, category=None, metric=None, units=None, date=None, placetype='county'):
         """Get all values for a prefix search and point in time

@@ -24,6 +24,7 @@ from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.service.service import Service
 from descarteslabs.client.exceptions import ServerError
+from descarteslabs.common.dotdict import DotDict
 
 
 def as_json_string(str_or_dict):
@@ -76,15 +77,18 @@ class Raster(Service):
     """Raster"""
     TIMEOUT = (9.5, 300)
 
-    def __init__(self, url=None, token=None, auth=Auth()):
+    def __init__(self, url=None, auth=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
         """
+        if auth is None:
+            auth = Auth()
+
         if url is None:
             url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform.descarteslabs.com/raster/v1")
 
-        Service.__init__(self, url, token, auth)
+        super(Raster, self).__init__(url, auth)
 
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
@@ -102,27 +106,35 @@ class Raster(Service):
         Example::
 
             >>> from descarteslabs.client.services import Raster, Places
-            >>> from pprint import pprint
             >>> iowa = Places().shape("north-america_united-states_iowa")
             >>> tiles = Raster().dltiles_from_shape(30.0, 2048, 16, iowa)
-            >>> pprint(tiles['features'][0])
-            {'geometry': {'coordinates': [[[-96.81264975325402, 41.045203319986356],
-                                           [-96.07101667769108, 41.02873098016475],
-                                           [-96.04576296033223, 41.59007261142797],
-                                           [-96.79377566762066, 41.60687154946031],
-                                           [-96.81264975325402, 41.045203319986356]]],
-                          'type': 'Polygon'},
-             'properties': {'cs_code': 'EPSG:32614',
-                            'key': '2048:16:30.0:14:3:74',
-                            'outputBounds': [683840.0, 4546080.0, 746240.0, 4608480.0],
-                            'pad': 16,
-                            'resolution': 30.0,
-                            'ti': 3,
-                            'tilesize': 2048,
-                            'tj': 74,
-                            'zone': 14},
-             'type': 'Feature'}
-
+            >>> tiles['features'][0]
+            {
+              'geometry': {
+                'coordinates': [
+                  [
+                    [-96.81264975325402, 41.045203319986356],
+                    [-96.07101667769108, 41.02873098016475],
+                    [-96.04576296033223, 41.59007261142797],
+                    [-96.79377566762066, 41.60687154946031],
+                    ...
+                  ]
+                ],
+                'type': 'Polygon'
+              },
+              'properties': {
+                'cs_code': 'EPSG:32614',
+                'key': '2048:16:30.0:14:3:74',
+                'outputBounds': [683840.0, 4546080.0, 746240.0, 4608480.0],
+                'pad': 16,
+                'resolution': 30.0,
+                'ti': 3,
+                'tilesize': 2048,
+                'tj': 74,
+                'zone': 14
+              },
+              'type': 'Feature'
+            }
         """
 
         shape = as_json_string(shape)
@@ -134,7 +146,7 @@ class Raster(Service):
         }
 
         r = self.session.post('/dlkeys/from_shape', json=params)
-        return r.json()
+        return DotDict(r.json())
 
     def dltile_from_latlon(self, lat, lon, resolution, tilesize, pad):
         """
@@ -151,24 +163,33 @@ class Raster(Service):
         Example::
 
             >>> from descarteslabs.client.services import Raster
-            >>> from pprint import pprint
-            >>> pprint(Raster().dltile_from_latlon(45, 60, 15.0, 1024, 16))
-            {'geometry': {'coordinates': [[[59.88428127486419, 44.89851158847289],
-                                           [60.08463455818353, 44.90380671613201],
-                                           [60.077403974563175, 45.046212550598135],
-                                           [59.87655568675822, 45.040891215906676],
-                                           [59.88428127486419, 44.89851158847289]]],
-                          'type': 'Polygon'},
-            'properties': {'cs_code': 'EPSG:32641',
-                           'key': '1024:16:15.0:41:-16:324',
-                           'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
-                           'pad': 16,
-                           'resolution': 15.0,
-                           'ti': -16,
-                           'tilesize': 1024,
-                           'tj': 324,
-                           'zone': 41},
-            'type': 'Feature'}
+            >>> Raster().dltile_from_latlon(45, 60, 15.0, 1024, 16)
+            {
+              'geometry': {
+                'coordinates': [
+                  [
+                    [59.88428127486419, 44.89851158847289],
+                    [60.08463455818353, 44.90380671613201],
+                    [60.077403974563175, 45.046212550598135],
+                    [59.87655568675822, 45.040891215906676],
+                    ...
+                  ]
+                ],
+                'type': 'Polygon'
+              },
+              'properties': {
+                'cs_code': 'EPSG:32641',
+                'key': '1024:16:15.0:41:-16:324',
+                'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
+                'pad': 16,
+                'resolution': 15.0,
+                'ti': -16,
+                'tilesize': 1024,
+                'tj': 324,
+                'zone': 41
+              },
+              'type': 'Feature'
+            }
         """
         params = {
             'resolution': resolution,
@@ -178,7 +199,7 @@ class Raster(Service):
 
         r = self.session.get('/dlkeys/from_latlon/%f/%f' % (lat, lon), params=params)
 
-        return r.json()
+        return DotDict(r.json())
 
     def dltile(self, key):
         """
@@ -191,29 +212,38 @@ class Raster(Service):
         Example::
 
             >>> from descarteslabs.client.services import Raster
-            >>> from pprint import pprint
-            >>> pprint(Raster().dltile("1024:16:15.0:41:-16:324"))
-            {'geometry': {'coordinates': [[[59.88428127486419, 44.89851158847289],
-                                           [60.08463455818353, 44.90380671613201],
-                                           [60.077403974563175, 45.046212550598135],
-                                           [59.87655568675822, 45.040891215906676],
-                                           [59.88428127486419, 44.89851158847289]]],
-                          'type': 'Polygon'},
-             'properties': {'cs_code': 'EPSG:32641',
-                            'key': '1024:16:15.0:41:-16:324',
-                            'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
-                            'pad': 16,
-                            'resolution': 15.0,
-                            'ti': -16,
-                            'tilesize': 1024,
-                            'tj': 324,
-                            'zone': 41},
-             'type': 'Feature'}
+            >>> Raster().dltile("1024:16:15.0:41:-16:324")
+            {
+              'geometry': {
+                'coordinates': [
+                  [
+                    [59.88428127486419, 44.89851158847289],
+                    [60.08463455818353, 44.90380671613201],
+                    [60.077403974563175, 45.046212550598135],
+                    [59.87655568675822, 45.040891215906676],
+                    ...
+                  ]
+                ],
+                'type': 'Polygon'
+              },
+              'properties': {
+                'cs_code': 'EPSG:32641',
+                'key': '1024:16:15.0:41:-16:324',
+                'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
+                'pad': 16,
+                'resolution': 15.0,
+                'ti': -16,
+                'tilesize': 1024,
+                'tj': 324,
+                'zone': 41
+              },
+              'type': 'Feature'
+            }
         """
 
         r = self.session.get('/dlkeys/%s' % key)
 
-        return r.json()
+        return DotDict(r.json())
 
     def raster(
             self,
@@ -348,7 +378,7 @@ class Raster(Service):
                 with open(filename, "wb") as f:
                     f.write(data)
 
-        return json_resp
+        return DotDict(json_resp)
 
     def ndarray(
             self,
@@ -468,4 +498,4 @@ class Raster(Service):
             elif order == 'gdal':
                 return array, metadata
         else:
-            return array, metadata
+            return array, DotDict(metadata)
