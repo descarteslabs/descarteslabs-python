@@ -142,6 +142,150 @@ class TestRaster(unittest.TestCase):
         self.assertTrue((r == r2).all())
         self.assertEqual(meta, meta2)
 
+    def test_stack_dltile(self):
+        dltile = '128:16:960.0:15:-2:37'
+        keys = ['meta_LC80270312016188_v1',
+                'meta_LC80260322016197_v1']
+
+        stack = self.raster.stack(
+            keys,
+            dltile=dltile,
+            bands=['red', 'green', 'blue', 'alpha'],
+        )
+        self.assertEqual(stack.shape, (2, 160, 160, 4))
+        self.assertEqual(stack.dtype, np.uint16)
+
+    def test_stack_dltile_gdal_order(self):
+        dltile = '128:16:960.0:15:-2:37'
+        keys = ['meta_LC80270312016188_v1',
+                'meta_LC80260322016197_v1']
+
+        stack = self.raster.stack(
+            keys,
+            dltile=dltile,
+            bands=['red', 'green', 'blue', 'alpha'],
+            order="gdal"
+        )
+        self.assertEqual(stack.shape, (2, 4, 160, 160))
+        self.assertEqual(stack.dtype, np.uint16)
+
+    def test_stack_one_image(self):
+        dltile = '128:16:960.0:15:-2:37'
+        keys = ['meta_LC80270312016188_v1']
+
+        stack = self.raster.stack(
+            keys,
+            dltile=dltile,
+            bands=['red', 'green', 'blue', 'alpha'],
+        )
+        self.assertEqual(stack.shape, (1, 160, 160, 4))
+        self.assertEqual(stack.dtype, np.uint16)
+
+    def test_stack_one_band(self):
+        dltile = '128:16:960.0:15:-2:37'
+        keys = ['meta_LC80270312016188_v1']
+
+        stack = self.raster.stack(
+            keys,
+            dltile=dltile,
+            bands=['red'],
+        )
+        self.assertEqual(stack.shape, (1, 160, 160, 1))
+        self.assertEqual(stack.dtype, np.uint16)
+
+    def test_stack_one_band_gdal_order(self):
+        dltile = '128:16:960.0:15:-2:37'
+        keys = ['meta_LC80270312016188_v1']
+
+        stack = self.raster.stack(
+            keys,
+            dltile=dltile,
+            bands=['red'],
+            order="gdal"
+        )
+        self.assertEqual(stack.shape, (1, 1, 160, 160))
+        self.assertEqual(stack.dtype, np.uint16)
+
+    def test_stack_res_cutline_utm(self):
+        geom = {
+            'coordinates': ((
+                (-95.66055514862535, 41.24469400862013),
+                (-94.74931826062456, 41.26199387228942),
+                (-94.76311013534223, 41.95357639323731),
+                (-95.69397431605952, 41.93542085595837),
+                (-95.66055514862535, 41.24469400862013)
+            ),),
+            'type': 'Polygon'
+        }
+        keys = ['meta_LC80270312016188_v1',
+                'meta_LC80260322016197_v1']
+        resolution = 960
+        stack = self.raster.stack(
+            keys,
+            resolution=resolution,
+            cutline=geom,
+            bounds=(277280.0, 4569600.0, 354080.0, 4646400.0),
+            bounds_srs="EPSG:32615",
+            bands=['red', 'green', 'blue', 'alpha']
+        )
+        self.assertEqual(stack.shape, (2, 80, 80, 4))
+        self.assertEqual(stack.dtype, np.uint16)
+
+    def test_stack_res_cutline_wgs84(self):
+        geom = {
+            'coordinates': ((
+                (-95.66055514862535, 41.24469400862013),
+                (-94.74931826062456, 41.26199387228942),
+                (-94.76311013534223, 41.95357639323731),
+                (-95.69397431605952, 41.93542085595837),
+                (-95.66055514862535, 41.24469400862013)
+            ),),
+            'type': 'Polygon'
+        }
+        keys = ['meta_LC80270312016188_v1',
+                'meta_LC80260322016197_v1']
+        resolution = 960
+        stack = self.raster.stack(
+            keys,
+            resolution=resolution,
+            cutline=geom,
+            bounds=(-95.69397431605952, 41.24469400862013, -94.74931826062456, 41.95357639323731),
+            bounds_srs="EPSG:4326",
+            bands=['red', 'green', 'blue', 'alpha']
+        )
+        self.assertEqual(stack.shape, (2, 80, 84, 4))
+        self.assertEqual(stack.dtype, np.uint16)
+
+    def test_stack_underspecified(self):
+        keys = ['meta_LC80270312016188_v1']
+        cutline = {
+            'coordinates': ((
+                (-95.66055514862535, 41.24469400862013),
+                (-94.74931826062456, 41.26199387228942),
+                (-94.76311013534223, 41.95357639323731),
+                (-95.69397431605952, 41.93542085595837),
+                (-95.66055514862535, 41.24469400862013)
+            ),),
+            'type': 'Polygon'
+        }
+        place = "north-america_united-states_iowa"
+        bounds = (-95.69397431605952, 41.24469400862013, -94.74931826062456, 41.95357639323731)
+        resolution = 960
+        dimensions = (128, 128)
+
+        with self.assertRaises(ValueError):
+            self.raster.stack(keys)
+        with self.assertRaises(ValueError):
+            self.raster.stack(keys, resolution=resolution)
+        with self.assertRaises(ValueError):
+            self.raster.stack(keys, dimensions=dimensions)
+        with self.assertRaises(ValueError):
+            self.raster.stack(keys, bounds=bounds)
+        with self.assertRaises(ValueError):
+            self.raster.stack(keys, resolution=resolution, cutline=cutline)
+        with self.assertRaises(ValueError):
+            self.raster.stack(keys, resolution=resolution, place=place)
+
     def test_cutline_dict(self):
         shape = {
             "geometry": {
