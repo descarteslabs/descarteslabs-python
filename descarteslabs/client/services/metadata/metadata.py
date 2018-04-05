@@ -69,7 +69,7 @@ class Metadata(Service):
             url = os.environ.get("DESCARTESLABS_METADATA_URL",
                                  "https://platform.descarteslabs.com/metadata/v1")
 
-        super(Metadata, self).__init__(url, auth)
+        super(Metadata, self).__init__(url, auth=auth)
         self._raster = Raster(auth=self.auth)
 
     def sources(self):
