@@ -94,7 +94,7 @@ class Metadata(Service):
         :param list(str) products: A list of product(s) to return bands for.
         :param int limit: Number of results to return.
         :param int offset: Index to start at when returning results.
-        :param float wavelenth: A wavelength in nm e.g 700 that the band sensor must measure.
+        :param float wavelength: A wavelength in nm e.g 700 that the band sensor must measure.
         :param int resolution: The resolution in meters per pixel e.g 30 of the data available in this band.
         :param list(str) tags: A list of tags that the band must have in its own tag list.
 
