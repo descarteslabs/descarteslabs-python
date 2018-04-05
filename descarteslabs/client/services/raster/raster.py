@@ -88,7 +88,7 @@ class Raster(Service):
         if url is None:
             url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform.descarteslabs.com/raster/v1")
 
-        super(Raster, self).__init__(url, auth)
+        super(Raster, self).__init__(url, auth=auth)
 
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
