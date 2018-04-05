@@ -224,6 +224,7 @@ class TestRaster(unittest.TestCase):
             keys,
             resolution=resolution,
             cutline=geom,
+            srs="EPSG:32615",
             bounds=(277280.0, 4569600.0, 354080.0, 4646400.0),
             bounds_srs="EPSG:32615",
             bands=['red', 'green', 'blue', 'alpha']
@@ -249,6 +250,7 @@ class TestRaster(unittest.TestCase):
             keys,
             resolution=resolution,
             cutline=geom,
+            srs="EPSG:32615",
             bounds=(-95.69397431605952, 41.24469400862013, -94.74931826062456, 41.95357639323731),
             bounds_srs="EPSG:4326",
             bands=['red', 'green', 'blue', 'alpha']
@@ -272,6 +274,7 @@ class TestRaster(unittest.TestCase):
         bounds = (-95.69397431605952, 41.24469400862013, -94.74931826062456, 41.95357639323731)
         resolution = 960
         dimensions = (128, 128)
+        srs = "EPSG:32615"
 
         with self.assertRaises(ValueError):
             self.raster.stack(keys)
@@ -283,6 +286,10 @@ class TestRaster(unittest.TestCase):
             self.raster.stack(keys, bounds=bounds)
         with self.assertRaises(ValueError):
             self.raster.stack(keys, resolution=resolution, cutline=cutline)
+        with self.assertRaises(ValueError):
+            self.raster.stack(keys, resolution=resolution, cutline=cutline, bounds=bounds)
+        with self.assertRaises(ValueError):
+            self.raster.stack(keys, resolution=resolution, cutline=cutline, srs=srs)
         with self.assertRaises(ValueError):
             self.raster.stack(keys, resolution=resolution, place=place)
 

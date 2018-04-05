@@ -505,7 +505,7 @@ class Raster(Service):
             inputs,
             bands=None,
             scales=None,
-            data_type=None,
+            data_type="UInt16",
             srs=None,
             resolution=None,
             dimensions=None,
@@ -524,7 +524,7 @@ class Raster(Service):
         To ensure every raster in the stack has the same shape and covers the same
         spatial extent, you must either:
         - set ``dltile``, or
-        - set [``resolution`` or ``dimensions``], ``bounds``, and ``bounds_srs``
+        - set [``resolution`` or ``dimensions``], ``srs``, ``bounds``, and ``bounds_srs``
 
         :param inputs: List of :class:`Metadata` identifiers.
             The stack will follow the same order as this list.
@@ -593,6 +593,8 @@ class Raster(Service):
         if dltile is None:
             if resolution is None and dimensions is None:
                 raise ValueError("Must set `resolution` or `dimensions`")
+            if srs is None:
+                raise ValueError("Must set `srs`")
             if bounds is None:
                 raise ValueError("Must set `bounds`")
             if bounds_srs is None:
