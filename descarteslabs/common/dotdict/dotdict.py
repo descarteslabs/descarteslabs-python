@@ -105,6 +105,10 @@ class DotList(list):
     def __getslice__(self, i, j):
         return self.__getitem__(slice(i, j))
 
+    def __iter__(self):
+        for i in range(0, len(self)):
+            yield self[i]
+
     def __repr__(self):
         return idr.repr(self)
 
