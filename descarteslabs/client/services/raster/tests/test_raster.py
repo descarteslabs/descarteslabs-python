@@ -226,7 +226,6 @@ class TestRaster(unittest.TestCase):
             cutline=geom,
             srs="EPSG:32615",
             bounds=(277280.0, 4569600.0, 354080.0, 4646400.0),
-            bounds_srs="EPSG:32615",
             bands=['red', 'green', 'blue', 'alpha']
         )
         self.assertEqual(stack.shape, (2, 80, 80, 4))

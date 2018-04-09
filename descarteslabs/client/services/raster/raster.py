@@ -299,7 +299,9 @@ class Raster(Service):
         :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
-        :param str bounds_srs: Override the coordinate system in which bounds are expressed.
+        :param str bounds_srs:
+            Override the coordinate system in which bounds are expressed.
+            If not given, bounds are assumed to be expressed in the output SRS.
         :param bool align_pixels: Align pixels to the target coordinate system.
         :param str resampler: Resampling algorithm to be used during warping (``near``,
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
@@ -430,7 +432,9 @@ class Raster(Service):
         :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
-        :param str bounds_srs: Override the coordinate system in which bounds are expressed.
+        :param str bounds_srs:
+            Override the coordinate system in which bounds are expressed.
+            If not given, bounds are assumed to be expressed in the output SRS.
         :param bool align_pixels: Align pixels to the target coordinate system.
         :param str resampler: Resampling algorithm to be used during warping (``near``,
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
@@ -524,10 +528,13 @@ class Raster(Service):
         To ensure every raster in the stack has the same shape and covers the same
         spatial extent, you must either:
         - set ``dltile``, or
-        - set [``resolution`` or ``dimensions``], ``srs``, ``bounds``, and ``bounds_srs``
+        - set [``resolution`` or ``dimensions``], ``srs``, and ``bounds``
 
-        :param inputs: List of :class:`Metadata` identifiers.
+        :param inputs: List, or list of lists, of :class:`Metadata` identifiers.
             The stack will follow the same order as this list.
+            Each element in the list is treated as a separate input to ``raster.ndarray``,
+            so if a list of lists is given, each sublist's identifiers will be mosaiced together
+            to become a single level in the stack.
         :param bands: List of requested bands. If the last item in the list is an alpha
             band (with data range `[0, 1]`) it affects rastering of all other bands:
             When rastering multiple images, they are combined image-by-image only where
@@ -556,18 +563,20 @@ class Raster(Service):
         :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
-        :param str bounds_srs: Override the coordinate system in which bounds are expressed.
+        :param str bounds_srs:
+            Override the coordinate system in which bounds are expressed.
+            If not given, bounds are assumed to be expressed in the output SRS.
         :param bool align_pixels: Align pixels to the target coordinate system.
         :param str resampler: Resampling algorithm to be used during warping (``near``,
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
             ``max``, ``min``, ``med``, ``q1``, ``q3``).
         :param str order: Order of the returned array. `image` returns arrays as
-            ``(row, column, band)`` while `gdal` returns arrays as ``(band, row, column)``.
+            ``(scene, row, column, band)`` while `gdal` returns arrays as ``(scene, band, row, column)``.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
 
         :return: 4D ndarray ``stack``. The axes are ordered ``(scene, band, y, x)``
             (or ``(scene, y, x, band)`` if ``order="gdal"``). The scenes in the outermost
-            axis are in the same order as the list of scenes given as ``inputs``.
+            axis are in the same order as the list of identifiers given as ``inputs``.
         """
         if not isinstance(inputs, (list, tuple)):
             raise TypeError("Inputs must be a list or tuple, instead got '{}'".format(type(inputs)))
@@ -597,8 +606,6 @@ class Raster(Service):
                 raise ValueError("Must set `srs`")
             if bounds is None:
                 raise ValueError("Must set `bounds`")
-            if bounds_srs is None:
-                raise ValueError("Must set `bounds_srs`")
 
         full_stack = None
         for i, input in enumerate(inputs):
