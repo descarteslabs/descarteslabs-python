@@ -38,3 +38,8 @@ try:
     import blosc
 except ImportError:
     blosc = ThirdParty("blosc")
+
+try:
+    import shapely.geometry
+except ImportError:
+    shapely = ThirdParty("shapely")
