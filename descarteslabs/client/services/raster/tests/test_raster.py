@@ -36,13 +36,13 @@ class TestRaster(unittest.TestCase):
     def test_raster(self):
         # test with product key
         r = self.raster.raster(
-            inputs=['meta_LC80270312016188_v1'],
+            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             resolution=960,
         )
         self.assertTrue("metadata" in r)
         self.assertTrue("files" in r)
-        self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
+        self.assertTrue("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
 
         # test with product id
         r = self.raster.raster(
@@ -58,7 +58,7 @@ class TestRaster(unittest.TestCase):
         tmpdir = tempfile.mkdtemp()
         try:
             response = self.raster.raster(
-                inputs=['meta_LC80270312016188_v1'],
+                inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
                 bands=['red', 'green', 'blue', 'alpha'],
                 resolution=960, save=True,
                 outfile_basename="{}/my-raster".format(tmpdir)
@@ -76,7 +76,7 @@ class TestRaster(unittest.TestCase):
     def test_ndarray(self):
         try:
             data, metadata = self.raster.ndarray(
-                inputs=['meta_LC80270312016188_v1'],
+                inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
                 bands=['red', 'green', 'blue', 'alpha'],
                 resolution=960,
             )
@@ -89,7 +89,7 @@ class TestRaster(unittest.TestCase):
     def test_ndarray_single_band(self):
         try:
             data, metadata = self.raster.ndarray(
-                inputs=['meta_LC80270312016188_v1'],
+                inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
                 bands=['red'],
                 resolution=960,
             )
@@ -101,7 +101,7 @@ class TestRaster(unittest.TestCase):
 
     def test_raster_blosc(self):
         r = self.raster.raster(
-            inputs=['meta_LC80270312016188_v1'],
+            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             resolution=960,
         )
@@ -110,7 +110,7 @@ class TestRaster(unittest.TestCase):
         addons.blosc = addons.ThirdParty("blosc")
 
         r2 = self.raster.raster(
-            inputs=['meta_LC80270312016188_v1'],
+            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             resolution=960,
         )
@@ -121,7 +121,7 @@ class TestRaster(unittest.TestCase):
 
     def test_ndarray_blosc(self):
         r, meta = self.raster.ndarray(
-            inputs=['meta_LC80270312016188_v1'],
+            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             resolution=960,
             align_pixels=True
@@ -131,7 +131,7 @@ class TestRaster(unittest.TestCase):
         addons.blosc = addons.ThirdParty("blosc")
 
         r2, meta2 = self.raster.ndarray(
-            inputs=['meta_LC80270312016188_v1'],
+            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             resolution=960,
             align_pixels=True
@@ -144,8 +144,8 @@ class TestRaster(unittest.TestCase):
 
     def test_stack_dltile(self):
         dltile = '128:16:960.0:15:-2:37'
-        keys = ['meta_LC80270312016188_v1',
-                'meta_LC80260322016197_v1']
+        keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1',
+                'landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1']
 
         stack = self.raster.stack(
             keys,
@@ -157,8 +157,8 @@ class TestRaster(unittest.TestCase):
 
     def test_stack_dltile_gdal_order(self):
         dltile = '128:16:960.0:15:-2:37'
-        keys = ['meta_LC80270312016188_v1',
-                'meta_LC80260322016197_v1']
+        keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1',
+                'landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1']
 
         stack = self.raster.stack(
             keys,
@@ -171,7 +171,7 @@ class TestRaster(unittest.TestCase):
 
     def test_stack_one_image(self):
         dltile = '128:16:960.0:15:-2:37'
-        keys = ['meta_LC80270312016188_v1']
+        keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
 
         stack = self.raster.stack(
             keys,
@@ -183,7 +183,7 @@ class TestRaster(unittest.TestCase):
 
     def test_stack_one_band(self):
         dltile = '128:16:960.0:15:-2:37'
-        keys = ['meta_LC80270312016188_v1']
+        keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
 
         stack = self.raster.stack(
             keys,
@@ -195,7 +195,7 @@ class TestRaster(unittest.TestCase):
 
     def test_stack_one_band_gdal_order(self):
         dltile = '128:16:960.0:15:-2:37'
-        keys = ['meta_LC80270312016188_v1']
+        keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
 
         stack = self.raster.stack(
             keys,
@@ -217,8 +217,8 @@ class TestRaster(unittest.TestCase):
             ),),
             'type': 'Polygon'
         }
-        keys = ['meta_LC80270312016188_v1',
-                'meta_LC80260322016197_v1']
+        keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1',
+                'landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1']
         resolution = 960
         stack = self.raster.stack(
             keys,
@@ -242,8 +242,8 @@ class TestRaster(unittest.TestCase):
             ),),
             'type': 'Polygon'
         }
-        keys = ['meta_LC80270312016188_v1',
-                'meta_LC80260322016197_v1']
+        keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1',
+                'landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1']
         resolution = 960
         stack = self.raster.stack(
             keys,
@@ -258,7 +258,7 @@ class TestRaster(unittest.TestCase):
         self.assertEqual(stack.dtype, np.uint16)
 
     def test_stack_underspecified(self):
-        keys = ['meta_LC80270312016188_v1']
+        keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
         cutline = {
             'coordinates': ((
                 (-95.66055514862535, 41.24469400862013),
@@ -303,7 +303,7 @@ class TestRaster(unittest.TestCase):
         }
         try:
             data, metadata = self.raster.ndarray(
-                inputs=['meta_LC80270312016188_v1'],
+                inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
                 bands=['red'],
                 resolution=960,
                 cutline=shape,
@@ -325,7 +325,7 @@ class TestRaster(unittest.TestCase):
         }
         try:
             data, metadata = self.raster.ndarray(
-                inputs=['meta_LC80270312016188_v1'],
+                inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
                 bands=['red'],
                 resolution=960,
                 cutline=json.dumps(shape),
@@ -338,7 +338,7 @@ class TestRaster(unittest.TestCase):
 
     def test_thumbnail(self):
         r = self.raster.raster(
-            inputs=['meta_LC80270312016188_v1'],
+            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             dimensions=[256, 256],
             scales=[[0, 4000]] * 4,
@@ -347,7 +347,7 @@ class TestRaster(unittest.TestCase):
         )
         self.assertTrue("metadata" in r)
         self.assertTrue("files" in r)
-        self.assertIsNotNone(r['files']['meta_LC80270312016188_v1_red-green-blue-alpha.png'])
+        self.assertIsNotNone(r['files']['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.png'])
 
     def test_dltiles_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')
@@ -366,7 +366,7 @@ class TestRaster(unittest.TestCase):
     def test_raster_dltile(self):
         dltile_feature = self.raster.dltile_from_latlon(41.0, -94.0, 30.0, 256, 16)
         arr, meta = self.raster.ndarray(
-            inputs=['meta_LC80270312016188_v1'],
+            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             dltile=dltile_feature['properties']['key'],
         )
@@ -377,7 +377,7 @@ class TestRaster(unittest.TestCase):
     def test_raster_dltile_dict(self):
         dltile_feature = self.raster.dltile_from_latlon(41.0, -94.0, 30.0, 256, 16)
         arr, meta = self.raster.ndarray(
-            inputs=['meta_LC80270312016188_v1'],
+            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             dltile=dltile_feature,
         )
