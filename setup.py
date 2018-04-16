@@ -72,7 +72,8 @@ def do_setup():
     kwargs['install_requires'] = [
         'cachetools',
         'six',
-        'blosc;platform_system!="Windows"'
+        'blosc;platform_system!="Windows"',
+        'futures;python_version=="2.7"'
     ]
 
     # Python < 2.7.9 needs requests[security] to avoid SSL issues

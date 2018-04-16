@@ -16,15 +16,19 @@ import json
 import os
 import struct
 from io import BytesIO
+import logging
 
 import six
 
-from descarteslabs.client.addons import ThirdParty, blosc, numpy as np
+from descarteslabs.client.addons import ThirdParty, blosc, concurrent, numpy as np
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.service.service import Service
 from descarteslabs.client.exceptions import ServerError
 from descarteslabs.common.dotdict import DotDict
+
+
+DEFAULT_MAX_WORKERS = 8
 
 
 def as_json_string(str_or_dict):
@@ -504,6 +508,43 @@ class Raster(Service):
         else:
             return array, DotDict(metadata)
 
+    def _serial_ndarray(self, id_groups, *args, **kwargs):
+        for i, id_group in enumerate(id_groups):
+            arr, meta = self.ndarray(id_group, *args, **kwargs)
+            yield i, arr, meta
+
+    def _threaded_ndarray(self, id_groups, *args, **kwargs):
+        """
+        Thread ndarray calls by id group, keeping the same `args` and
+        `kwargs` for each raster.ndarray call.
+        """
+        max_workers = kwargs.pop(
+            "max_workers",
+            min(len(id_groups), DEFAULT_MAX_WORKERS)
+        )
+        try:
+            futures = concurrent.futures
+        except ImportError:
+            logging.warning(
+                "Failed to import concurrent.futures. ndarray calls will be serial"
+            )
+            # Fallback to serial execution
+            for i, arr, meta in self._serial_ndarray(id_groups, *args, **kwargs):
+                yield i, arr, meta
+            return
+
+        with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_ndarrays = {}
+            for i, id_group in enumerate(id_groups):
+                future_ndarrays[executor.submit(
+                    self.ndarray, id_group, *args, **kwargs)
+                ] = i
+
+            for future in futures.as_completed(future_ndarrays):
+                i = future_ndarrays[future]
+                arr, meta = future.result()
+                yield i, arr, meta
+
     def stack(
             self,
             inputs,
@@ -521,6 +562,7 @@ class Raster(Service):
             resampler=None,
             order='image',
             dltile=None,
+            max_workers=None,
             **pass_through_params
     ):
         """Retrieve a stack of rasters as a 4-D NumPy array.
@@ -573,6 +615,9 @@ class Raster(Service):
         :param str order: Order of the returned array. `image` returns arrays as
             ``(scene, row, column, band)`` while `gdal` returns arrays as ``(scene, band, row, column)``.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param int max_workers: Maximum number of threads over which to
+            parallelize individual ndarray calls. If `None`, will be set to the minimum
+            of the number of inputs and `DEFAULT_MAX_WORKERS`.
 
         :return: 4D ndarray ``stack``. The axes are ordered ``(scene, band, y, x)``
             (or ``(scene, y, x, band)`` if ``order="gdal"``). The scenes in the outermost
@@ -596,6 +641,7 @@ class Raster(Service):
             resampler=resampler,
             order=order,
             dltile=dltile,
+            max_workers=max_workers,
             **pass_through_params
         )
 
@@ -608,8 +654,7 @@ class Raster(Service):
                 raise ValueError("Must set `bounds`")
 
         full_stack = None
-        for i, input in enumerate(inputs):
-            arr, meta = self.ndarray(input, **params)
+        for i, arr, meta in self._threaded_ndarray(inputs, **params):
             if len(arr.shape) == 2:
                 if order == "image":
                     arr = np.expand_dims(arr, -1)

@@ -43,3 +43,8 @@ try:
     import shapely.geometry
 except ImportError:
     shapely = ThirdParty("shapely")
+
+try:
+    import concurrent.futures
+except ImportError:
+    concurrent = ThirdParty("futures")

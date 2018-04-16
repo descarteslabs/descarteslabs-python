@@ -1,6 +1,7 @@
-requests>=2.16.0
-cachetools
-six
 blosc;platform_system!="Windows"
+cachetools
+futures;python_version=="2.7"
 mock
+requests>=2.16.0
 responses
+six
