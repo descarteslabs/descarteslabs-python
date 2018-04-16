@@ -147,20 +147,22 @@ class TestRaster(unittest.TestCase):
         keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1',
                 'landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1']
 
-        stack = self.raster.stack(
+        stack, metadata = self.raster.stack(
             keys,
             dltile=dltile,
             bands=['red', 'green', 'blue', 'alpha'],
         )
         self.assertEqual(stack.shape, (2, 160, 160, 4))
         self.assertEqual(stack.dtype, np.uint16)
+        self.assertEqual(len(metadata), 2)
+        self.assertNotEqual(metadata[0], metadata[1])
 
     def test_stack_dltile_gdal_order(self):
         dltile = '128:16:960.0:15:-2:37'
         keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1',
                 'landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1']
 
-        stack = self.raster.stack(
+        stack, metadata = self.raster.stack(
             keys,
             dltile=dltile,
             bands=['red', 'green', 'blue', 'alpha'],
@@ -168,36 +170,40 @@ class TestRaster(unittest.TestCase):
         )
         self.assertEqual(stack.shape, (2, 4, 160, 160))
         self.assertEqual(stack.dtype, np.uint16)
+        self.assertEqual(len(metadata), 2)
+        self.assertNotEqual(metadata[0], metadata[1])
 
     def test_stack_one_image(self):
         dltile = '128:16:960.0:15:-2:37'
         keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
 
-        stack = self.raster.stack(
+        stack, metadata = self.raster.stack(
             keys,
             dltile=dltile,
             bands=['red', 'green', 'blue', 'alpha'],
         )
         self.assertEqual(stack.shape, (1, 160, 160, 4))
         self.assertEqual(stack.dtype, np.uint16)
+        self.assertEqual(len(metadata), 1)
 
     def test_stack_one_band(self):
         dltile = '128:16:960.0:15:-2:37'
         keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
 
-        stack = self.raster.stack(
+        stack, metadata = self.raster.stack(
             keys,
             dltile=dltile,
             bands=['red'],
         )
         self.assertEqual(stack.shape, (1, 160, 160, 1))
         self.assertEqual(stack.dtype, np.uint16)
+        self.assertEqual(len(metadata), 1)
 
     def test_stack_one_band_gdal_order(self):
         dltile = '128:16:960.0:15:-2:37'
         keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
 
-        stack = self.raster.stack(
+        stack, metadata = self.raster.stack(
             keys,
             dltile=dltile,
             bands=['red'],
@@ -220,7 +226,7 @@ class TestRaster(unittest.TestCase):
         keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1',
                 'landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1']
         resolution = 960
-        stack = self.raster.stack(
+        stack, metadata = self.raster.stack(
             keys,
             resolution=resolution,
             cutline=geom,
@@ -245,7 +251,7 @@ class TestRaster(unittest.TestCase):
         keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1',
                 'landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1']
         resolution = 960
-        stack = self.raster.stack(
+        stack, metadata = self.raster.stack(
             keys,
             resolution=resolution,
             cutline=geom,

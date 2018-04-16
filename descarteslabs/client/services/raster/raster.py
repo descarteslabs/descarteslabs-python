@@ -619,9 +619,14 @@ class Raster(Service):
             parallelize individual ndarray calls. If `None`, will be set to the minimum
             of the number of inputs and `DEFAULT_MAX_WORKERS`.
 
-        :return: 4D ndarray ``stack``. The axes are ordered ``(scene, band, y, x)``
+        :return: A tuple of ``(stack, metadata)``.
+            ``stack``: 4D ndarray. The axes are ordered ``(scene, band, y, x)``
             (or ``(scene, y, x, band)`` if ``order="gdal"``). The scenes in the outermost
             axis are in the same order as the list of identifiers given as ``inputs``.
+            ``metadata``: List[dict] of the rasterization metadata for each element in ``inputs``.
+            As with the metadata returned by :meth:`ndarray` and :meth:`raster`, these dictionaries
+            contain useful information about the raster, such as its geotransform matrix and WKT
+            of its coordinate system, but there are no guarantees that certain keys will be present.
         """
         if not isinstance(inputs, (list, tuple)):
             raise TypeError("Inputs must be a list or tuple, instead got '{}'".format(type(inputs)))
@@ -654,6 +659,7 @@ class Raster(Service):
                 raise ValueError("Must set `bounds`")
 
         full_stack = None
+        metadata = [None] * len(inputs)
         for i, arr, meta in self._threaded_ndarray(inputs, **params):
             if len(arr.shape) == 2:
                 if order == "image":
@@ -666,5 +672,6 @@ class Raster(Service):
                 stack_shape = (len(inputs),) + arr.shape
                 full_stack = np.empty(stack_shape, dtype=arr.dtype)
             full_stack[i] = arr
+            metadata[i] = meta
 
-        return full_stack
+        return full_stack, metadata
