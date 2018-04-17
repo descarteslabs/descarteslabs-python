@@ -68,7 +68,7 @@ class TestAuth(unittest.TestCase):
 
     def test_init_token_no_path(self):
         auth = Auth(jwt_token="token", token_info_path=None, client_id="foo")
-        self.assertEquals("token", auth._token)
+        self.assertEqual("token", auth._token)
 
     @responses.activate
     def test_get_token_schema_internal_only(self):
