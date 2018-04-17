@@ -569,8 +569,8 @@ class Raster(Service):
 
         To ensure every raster in the stack has the same shape and covers the same
         spatial extent, you must either:
-        - set ``dltile``, or
-        - set [``resolution`` or ``dimensions``], ``srs``, and ``bounds``
+        * set ``dltile``, or
+        * set [``resolution`` or ``dimensions``], ``srs``, and ``bounds``
 
         :param inputs: List, or list of lists, of :class:`Metadata` identifiers.
             The stack will follow the same order as this list.
