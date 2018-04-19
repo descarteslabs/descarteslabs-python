@@ -190,7 +190,7 @@ class Metadata(Service):
     def summary(self, products=None, sat_id=None, date='acquired', part=None,
                 place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
                 cloud_fraction_0=None, fill_fraction=None, q=None, pixels=None,
-                dltile=None):
+                dltile=None, **kwargs):
         """Get a summary of the results for the specified spatio-temporal query.
 
         :param list(str) products: Product identifier(s).
@@ -244,8 +244,6 @@ class Metadata(Service):
 
         if isinstance(geom, dict):
             geom = json.dumps(geom)
-
-        kwargs = {}
 
         if sat_id:
             warn(SAT_ID_DEPRECATION_MESSAGE, DeprecationWarning)
@@ -421,7 +419,7 @@ class Metadata(Service):
     def ids(self, products=None, sat_id=None, date='acquired', place=None,
             geom=None, start_time=None, end_time=None, cloud_fraction=None,
             cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=None,
-            dltile=None, sort_field=None, sort_order=None, randomize=None):
+            dltile=None, sort_field=None, sort_order=None, randomize=None, **kwargs):
         """Search metadata given a spatio-temporal query. All parameters are
         optional.
 
@@ -464,14 +462,14 @@ class Metadata(Service):
                              end_time=end_time, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
                              q=q, limit=limit, offset=offset, fields=[], dltile=dltile,
-                             sort_field=sort_field, sort_order=sort_order, randomize=randomize)
+                             sort_field=sort_field, sort_order=sort_order, randomize=randomize, **kwargs)
 
         return DotList(feature['id'] for feature in result['features'])
 
     def keys(self, products=None, sat_id=None, date='acquired', place=None,
              geom=None, start_time=None, end_time=None, cloud_fraction=None,
              cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=0,
-             dltile=None, sort_field=None, sort_order='asc', randomize=None):
+             dltile=None, sort_field=None, sort_order='asc', randomize=None, **kwargs):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. Results are paged using limit/offset.
 
@@ -515,7 +513,7 @@ class Metadata(Service):
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
                              q=q, limit=limit, offset=offset, fields=["key"],
                              dltile=dltile, sort_field=sort_field,
-                             sort_order=sort_order, randomize=randomize)
+                             sort_order=sort_order, randomize=randomize, **kwargs)
 
         return DotList(feature['key'] for feature in result['features'])
 
@@ -523,7 +521,7 @@ class Metadata(Service):
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, q=None, fields=None,
                  batch_size=1000, dltile=None, sort_field=None, sort_order='asc',
-                 randomize=None):
+                 randomize=None, **kwargs):
         """Generator that efficiently scrolls through the search results.
 
         :param int batch_size: Number of features to fetch per request.
@@ -555,7 +553,7 @@ class Metadata(Service):
                                  fill_fraction=fill_fraction, q=q,
                                  fields=fields, limit=batch_size, dltile=dltile,
                                  sort_field=sort_field, sort_order=sort_order,
-                                 randomize=randomize, continuation_token=continuation_token)
+                                 randomize=randomize, continuation_token=continuation_token, **kwargs)
 
             if not result['features']:
                 break
