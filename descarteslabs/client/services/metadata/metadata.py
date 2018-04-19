@@ -333,7 +333,7 @@ class Metadata(Service):
                                          start_time='2016-07-01', \
                                          end_time='2016-07-31T23:59:59')
             >>> len(scenes['features'])
-            1
+            2
         """
         if place:
             places = Places()
@@ -456,7 +456,7 @@ class Metadata(Service):
             1
 
             >>> ids
-            ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
+            ['landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1', 'landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
 
         """
         result = self.search(sat_id=sat_id, products=products, date=date,
@@ -503,10 +503,10 @@ class Metadata(Service):
                                  start_time='2016-07-01', \
                                  end_time='2016-07-31T23:59:59')
             >>> len(keys)
-            1
+            2
 
             >>> keys
-            ['meta_LC80270312016188_v1']
+            ['meta_LC80260322016197_v1', 'meta_LC80270312016188_v1']
 
         """
         result = self.search(sat_id=sat_id, products=products, date=date,
