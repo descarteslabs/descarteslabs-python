@@ -466,57 +466,6 @@ class Metadata(Service):
 
         return DotList(feature['id'] for feature in result['features'])
 
-    def keys(self, products=None, sat_id=None, date='acquired', place=None,
-             geom=None, start_time=None, end_time=None, cloud_fraction=None,
-             cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=0,
-             dltile=None, sort_field=None, sort_order='asc', randomize=None, **kwargs):
-        """Search metadata given a spatio-temporal query. All parameters are
-        optional. Results are paged using limit/offset.
-
-        :param list(str) products: Products identifier(s).
-        :param list(str) sat_id: Satellite identifier(s).
-        :param str date: The date field to use for search (e.g. `acquired`).
-        :param str place: A slug identifier to be used as a region of interest.
-        :param str geom: A GeoJSON or WKT region of interest.
-        :param str start_time: Desired starting timestamp, in any common format.
-        :param str end_time: Desired ending timestamp, in any common format.
-        :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
-        :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
-        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
-        :param expr q: Expression for filtering the results. See :py:attr:`descarteslabs.utilities.properties`.
-        :param int limit: Number of items to return.
-        :param int offset: Number of items to skip.
-        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
-        :param str sort_field: Property to sort on.
-        :param str sort_order: Order of sort.
-        :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
-
-        :return: List of image identifiers.
-
-        Example::
-
-            >>> from descarteslabs.client.services import Metadata
-            >>> keys = Metadata().keys(place='north-america_united-states_iowa', \
-                                 products=['landsat:LC08:PRE:TOAR'], \
-                                 start_time='2016-07-01', \
-                                 end_time='2016-07-31T23:59:59')
-            >>> len(keys)
-            2
-
-            >>> keys
-            ['meta_LC80260322016197_v1', 'meta_LC80270312016188_v1']
-
-        """
-        result = self.search(sat_id=sat_id, products=products, date=date,
-                             place=place, geom=geom, start_time=start_time,
-                             end_time=end_time, cloud_fraction=cloud_fraction,
-                             cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             q=q, limit=limit, offset=offset, fields=["key"],
-                             dltile=dltile, sort_field=sort_field,
-                             sort_order=sort_order, randomize=randomize, **kwargs)
-
-        return DotList(feature['key'] for feature in result['features'])
-
     def features(self, products=None, sat_id=None, date='acquired', place=None,
                  geom=None, start_time=None, end_time=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, q=None, fields=None,
@@ -565,15 +514,15 @@ class Metadata(Service):
             if not continuation_token:
                 break
 
-    def get(self, key):
+    def get(self, image_id):
         """Get metadata of a single image.
 
-        :param str key: Image identifier.
+        :param str image_id: Image identifier.
 
         Example::
 
             >>> from descarteslabs.client.services import Metadata
-            >>> meta = Metadata().get('meta_LC80270312016188_v1')
+            >>> meta = Metadata().get('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1')
             >>> keys = list(meta.keys())
             >>> keys.sort()
             >>> keys
@@ -584,7 +533,7 @@ class Metadata(Service):
              'sat_id', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction',
              'tile_id']
         """
-        r = self.session.get('/get/%s' % key)
+        r = self.session.get('/get/{}'.format(image_id))
         return DotDict(r.json())
 
     def get_by_ids(self, ids):
@@ -603,7 +552,7 @@ class Metadata(Service):
         :param str product_id: Product Identifier.
 
         """
-        r = self.session.get('/products/%s' % product_id)
+        r = self.session.get('/products/{}'.format(product_id))
         return DotDict(r.json())
 
     def get_band(self, band_id):
@@ -612,7 +561,7 @@ class Metadata(Service):
         :param str band_id: Band Identifier.
 
         """
-        r = self.session.get('/bands/%s' % band_id)
+        r = self.session.get('/bands/{}'.format(band_id))
         return DotDict(r.json())
 
     def get_derived_band(self, derived_band_id):
@@ -621,5 +570,5 @@ class Metadata(Service):
         :param str derived_band_id: Derived band identifier.
 
         """
-        r = self.session.get('/bands/derived/%s' % derived_band_id)
+        r = self.session.get('/bands/derived/{}'.format(derived_band_id))
         return DotDict(r.json())

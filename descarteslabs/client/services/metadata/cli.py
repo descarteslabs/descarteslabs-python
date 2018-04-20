@@ -67,7 +67,7 @@ def metadata_handler(args):
 
         print(json.dumps(search, indent=2))
 
-    if args.command == 'keys':
+    if args.command == 'ids':
         if args.place:
             kwargs['place'] = args.place
         if args.start_time:
@@ -83,9 +83,9 @@ def metadata_handler(args):
         if args.bbox:
             kwargs['bbox'] = args.bbox
 
-        keys = metadata.keys(**kwargs)
+        ids = metadata.ids(**kwargs)
 
-        print(' '.join(keys))
+        print(' '.join(ids))
 
     if args.command == 'get':
         get = metadata.get(args.argument)

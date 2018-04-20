@@ -42,8 +42,8 @@ class TestMetadata(unittest.TestCase):
         dltile = "256:16:30.0:15:-11:591"
         r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07',
                                  products=['landsat:LC08:PRE:TOAR'], dltile=dltile)
-        keys = [f['id'] for f in r['features']]
-        self.assertTrue('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1' in keys)
+        ids = [f['id'] for f in r['features']]
+        self.assertTrue('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1' in ids)
 
     def test_sat_id(self):
         r = self.instance.search(start_time='2016-07-06', end_time='2016-07-07', sat_id='LANDSAT_8')
