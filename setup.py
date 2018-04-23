@@ -69,7 +69,7 @@ def do_setup():
         ]
     }
     kwargs['install_requires'] = [
-        "cloudpickle",
+        "cloudpickle==0.4.0",
         "six",
         "cachetools>=2.0.1",
         'futures;python_version=="2.7"',
