@@ -188,7 +188,7 @@ class Metadata(Service):
         return DotList(r.json())
 
     def summary(self, products=None, sat_id=None, date='acquired', part=None,
-                place=None, geom=None, start_time=None, end_time=None, cloud_fraction=None,
+                place=None, geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
                 cloud_fraction_0=None, fill_fraction=None, q=None, pixels=None,
                 dltile=None, **kwargs):
         """Get a summary of the results for the specified spatio-temporal query.
@@ -199,8 +199,8 @@ class Metadata(Service):
         :param str part: Part of the date to aggregate over (e.g. `day`).
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
-        :param str start_time: Desired starting timestamp, in any common format.
-        :param str end_time: Desired ending timestamp, in any common format.
+        :param str start_datetime: Desired starting timestamp, in any common format.
+        :param str end_datetime: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
@@ -212,8 +212,8 @@ class Metadata(Service):
 
             >>> from descarteslabs.client.services import Metadata
             >>> Metadata().summary(place='north-america_united-states_iowa', \
-                    products=['landsat:LC08:PRE:TOAR'], start_time='2016-07-06', \
-                    end_time='2016-07-07', part='hour', pixels=True)
+                    products=['landsat:LC08:PRE:TOAR'], start_datetime='2016-07-06', \
+                    end_datetime='2016-07-07', part='hour', pixels=True)
             {
               'bytes': 93298309,
               'count': 1,
@@ -268,11 +268,11 @@ class Metadata(Service):
         if geom:
             kwargs['geom'] = geom
 
-        if start_time:
-            kwargs['start_time'] = start_time
+        if start_datetime:
+            kwargs['start_datetime'] = start_datetime
 
-        if end_time:
-            kwargs['end_time'] = end_time
+        if end_datetime:
+            kwargs['end_datetime'] = end_datetime
 
         if cloud_fraction is not None:
             kwargs['cloud_fraction'] = cloud_fraction
@@ -295,7 +295,7 @@ class Metadata(Service):
         return DotDict(r.json())
 
     def search(self, products=None, sat_id=None, date='acquired', place=None,
-               geom=None, start_time=None, end_time=None, cloud_fraction=None,
+               geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
                cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=0,
                fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None,
                continuation_token=None, **kwargs):
@@ -307,8 +307,8 @@ class Metadata(Service):
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
-        :param str start_time: Desired starting timestamp, in any common format.
-        :param str end_time: Desired ending timestamp, in any common format.
+        :param str start_datetime: Desired starting timestamp, in any common format.
+        :param str end_datetime: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
@@ -328,8 +328,8 @@ class Metadata(Service):
             >>> from descarteslabs.client.services import Metadata
             >>> scenes = Metadata().search(place='north-america_united-states_iowa', \
                                          products=['landsat:LC08:PRE:TOAR'], \
-                                         start_time='2016-07-01', \
-                                         end_time='2016-07-31T23:59:59')
+                                         start_datetime='2016-07-01', \
+                                         end_datetime='2016-07-31T23:59:59')
             >>> len(scenes['features'])
             2
         """
@@ -371,11 +371,11 @@ class Metadata(Service):
         if geom:
             kwargs['geom'] = geom
 
-        if start_time:
-            kwargs['start_time'] = start_time
+        if start_datetime:
+            kwargs['start_datetime'] = start_datetime
 
-        if end_time:
-            kwargs['end_time'] = end_time
+        if end_datetime:
+            kwargs['end_datetime'] = end_datetime
 
         if cloud_fraction is not None:
             kwargs['cloud_fraction'] = cloud_fraction
@@ -417,7 +417,7 @@ class Metadata(Service):
         return DotDict(fc)
 
     def ids(self, products=None, sat_id=None, date='acquired', place=None,
-            geom=None, start_time=None, end_time=None, cloud_fraction=None,
+            geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
             cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=None,
             dltile=None, sort_field=None, sort_order=None, randomize=None, **kwargs):
         """Search metadata given a spatio-temporal query. All parameters are
@@ -428,8 +428,8 @@ class Metadata(Service):
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
-        :param str start_time: Desired starting timestamp, in any common format.
-        :param str end_time: Desired ending timestamp, in any common format.
+        :param str start_datetime: Desired starting timestamp, in any common format.
+        :param str end_datetime: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
@@ -448,8 +448,8 @@ class Metadata(Service):
             >>> from descarteslabs.client.services import Metadata
             >>> ids = Metadata().ids(place='north-america_united-states_iowa', \
                                  products=['landsat:LC08:PRE:TOAR'], \
-                                 start_time='2016-07-01', \
-                                 end_time='2016-07-31T23:59:59')
+                                 start_datetime='2016-07-01', \
+                                 end_datetime='2016-07-31T23:59:59')
             >>> len(ids)
             1
 
@@ -458,8 +458,8 @@ class Metadata(Service):
 
         """
         result = self.search(sat_id=sat_id, products=products, date=date,
-                             place=place, geom=geom, start_time=start_time,
-                             end_time=end_time, cloud_fraction=cloud_fraction,
+                             place=place, geom=geom, start_datetime=start_datetime,
+                             end_datetime=end_datetime, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
                              q=q, limit=limit, offset=offset, fields=[], dltile=dltile,
                              sort_field=sort_field, sort_order=sort_order, randomize=randomize, **kwargs)
@@ -467,7 +467,7 @@ class Metadata(Service):
         return DotList(feature['id'] for feature in result['features'])
 
     def features(self, products=None, sat_id=None, date='acquired', place=None,
-                 geom=None, start_time=None, end_time=None, cloud_fraction=None,
+                 geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, q=None, fields=None,
                  batch_size=1000, dltile=None, sort_field=None, sort_order='asc',
                  randomize=None, **kwargs):
@@ -481,8 +481,8 @@ class Metadata(Service):
 
             >>> from descarteslabs.client.services import Metadata
             >>> features = Metadata().features("landsat:LC08:PRE:TOAR", \
-                            start_time='2016-01-01', \
-                            end_time="2016-03-01")
+                            start_datetime='2016-01-01', \
+                            end_datetime="2016-03-01")
             >>> total = 0
             >>> for f in features: \
                     total += 1
@@ -496,7 +496,7 @@ class Metadata(Service):
         while True:
             result = self.search(sat_id=sat_id, products=products,
                                  date=date, place=place, geom=geom,
-                                 start_time=start_time, end_time=end_time,
+                                 start_datetime=start_datetime, end_datetime=end_datetime,
                                  cloud_fraction=cloud_fraction,
                                  cloud_fraction_0=cloud_fraction_0,
                                  fill_fraction=fill_fraction, q=q,
