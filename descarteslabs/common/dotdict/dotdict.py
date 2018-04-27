@@ -396,6 +396,18 @@ class IndentedRepr(reprlib.Repr, object):
     def repr_unicode(self, x, level):
         return self.repr_str(x, level)
 
+    def repr1(self, x, level):
+        # repr1 is explicity defined rather than inherited,
+        # because py2 and py3 have different implementations---py2 inlines repr_instance, basically
+        typename = type(x).__name__
+        if ' ' in typename:
+            parts = typename.split()
+            typename = '_'.join(parts)
+        if hasattr(self, 'repr_' + typename):
+            return getattr(self, 'repr_' + typename)(x, level)
+        else:
+            return self.repr_instance(x, level)
+
     def repr_dict(self, x, level):
         n = len(x)
         if n == 0:
