@@ -102,7 +102,7 @@ class DotDict(dict):
         if six.PY2:
             return list(self.iteritems())
         else:
-            return DotDict_items(dict.items(self))
+            return DotDict_items(self)
 
     def iteritems(self):
         """
@@ -127,7 +127,7 @@ class DotDict(dict):
         if six.PY2:
             return list(self.itervalues())
         else:
-            return DotDict_values(dict.values(self))
+            return DotDict_values(self)
 
     def itervalues(self):
         """
@@ -211,9 +211,9 @@ class DotDict_view(object):
     """Wrapper around a dictionary view object that yields dicts and lists as DotDicts and DotLists when iterated."""
     __slots__ = ("_view",)
 
-    def __init__(self, dict):
-        self._view = dict.items()
-        self._dict = dict
+    def __init__(self, dotdict):
+        self._view = dict.items(dotdict)
+        self._dict = dotdict
 
     def __iter__(self):
         """Implement iter(self)."""
@@ -236,7 +236,7 @@ class DotDict_values(DotDict_view):
     """Wrapper around a dict_values object that yields dicts and lists as DotDicts and DotLists when iterated."""
 
     def __iter__(self):
-        for k, v in iter(self):
+        for k, v in super(DotDict_values, self).__iter__():
             yield v
 
 
