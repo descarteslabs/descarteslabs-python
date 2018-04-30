@@ -16,15 +16,19 @@ import json
 import os
 import struct
 from io import BytesIO
+import logging
 
 import six
 
-from descarteslabs.client.addons import ThirdParty, blosc, numpy as np
+from descarteslabs.client.addons import ThirdParty, blosc, concurrent, numpy as np
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.service.service import Service
 from descarteslabs.client.exceptions import ServerError
 from descarteslabs.common.dotdict import DotDict
+
+
+DEFAULT_MAX_WORKERS = 8
 
 
 def as_json_string(str_or_dict):
@@ -88,7 +92,7 @@ class Raster(Service):
         if url is None:
             url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform.descarteslabs.com/raster/v1")
 
-        super(Raster, self).__init__(url, auth)
+        super(Raster, self).__init__(url, auth=auth)
 
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
@@ -299,7 +303,9 @@ class Raster(Service):
         :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
-        :param str bounds_srs: Override the coordinate system in which bounds are expressed.
+        :param str bounds_srs:
+            Override the coordinate system in which bounds are expressed.
+            If not given, bounds are assumed to be expressed in the output SRS.
         :param bool align_pixels: Align pixels to the target coordinate system.
         :param str resampler: Resampling algorithm to be used during warping (``near``,
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
@@ -430,7 +436,9 @@ class Raster(Service):
         :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
-        :param str bounds_srs: Override the coordinate system in which bounds are expressed.
+        :param str bounds_srs:
+            Override the coordinate system in which bounds are expressed.
+            If not given, bounds are assumed to be expressed in the output SRS.
         :param bool align_pixels: Align pixels to the target coordinate system.
         :param str resampler: Resampling algorithm to be used during warping (``near``,
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
@@ -499,3 +507,171 @@ class Raster(Service):
                 return array, metadata
         else:
             return array, DotDict(metadata)
+
+    def _serial_ndarray(self, id_groups, *args, **kwargs):
+        for i, id_group in enumerate(id_groups):
+            arr, meta = self.ndarray(id_group, *args, **kwargs)
+            yield i, arr, meta
+
+    def _threaded_ndarray(self, id_groups, *args, **kwargs):
+        """
+        Thread ndarray calls by id group, keeping the same `args` and
+        `kwargs` for each raster.ndarray call.
+        """
+        max_workers = kwargs.pop(
+            "max_workers",
+            min(len(id_groups), DEFAULT_MAX_WORKERS)
+        )
+        try:
+            futures = concurrent.futures
+        except ImportError:
+            logging.warning(
+                "Failed to import concurrent.futures. ndarray calls will be serial"
+            )
+            # Fallback to serial execution
+            for i, arr, meta in self._serial_ndarray(id_groups, *args, **kwargs):
+                yield i, arr, meta
+            return
+
+        with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_ndarrays = {}
+            for i, id_group in enumerate(id_groups):
+                future_ndarrays[executor.submit(
+                    self.ndarray, id_group, *args, **kwargs)
+                ] = i
+
+            for future in futures.as_completed(future_ndarrays):
+                i = future_ndarrays[future]
+                arr, meta = future.result()
+                yield i, arr, meta
+
+    def stack(
+            self,
+            inputs,
+            bands=None,
+            scales=None,
+            data_type="UInt16",
+            srs=None,
+            resolution=None,
+            dimensions=None,
+            cutline=None,
+            place=None,
+            bounds=None,
+            bounds_srs=None,
+            align_pixels=False,
+            resampler=None,
+            order='image',
+            dltile=None,
+            max_workers=None,
+            **pass_through_params
+    ):
+        """Retrieve a stack of rasters as a 4-D NumPy array.
+
+        To ensure every raster in the stack has the same shape and covers the same
+        spatial extent, you must either:
+        * set ``dltile``, or
+        * set [``resolution`` or ``dimensions``], ``srs``, and ``bounds``
+
+        :param inputs: List, or list of lists, of :class:`Metadata` identifiers.
+            The stack will follow the same order as this list.
+            Each element in the list is treated as a separate input to ``raster.ndarray``,
+            so if a list of lists is given, each sublist's identifiers will be mosaiced together
+            to become a single level in the stack.
+        :param bands: List of requested bands. If the last item in the list is an alpha
+            band (with data range `[0, 1]`) it affects rastering of all other bands:
+            When rastering multiple images, they are combined image-by-image only where
+            each respective image's alpha band is `1` (pixels where the alpha band is not
+            `1` are "transparent" in the overlap between images). If a pixel is fully
+            masked considering all combined alpha bands it will be `0` in all non-alpha
+            bands.
+        :param scales: List of tuples specifying the scaling to be applied to each band.
+            A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
+            meaning values in the source range ``src_min`` to ``src_max`` will be scaled
+            to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
+            ``(src_min, src_max)`` is also allowed, in which case the output range
+            defaults to ``(0, 255)`` (a useful default for the common output type
+            ``Byte``).  If no scaling is desired for a band, use ``None``. This tuple
+            format and behaviour is identical to GDAL's scales during translation.
+            Example argument: ``[(0, 10000, 0, 127), None, (0, 10000)]`` - the first
+            band will have source values 0-10000 scaled to 0-127, the second band will
+            not be scaled, the third band will have 0-10000 scaled to 0-255.
+        :param str data_type: Output data type (one of ``Byte``, ``UInt16``, ``Int16``,
+            ``UInt32``, ``Int32``, ``Float32``, ``Float64``).
+        :param str srs: Output spatial reference system definition understood by GDAL.
+        :param float resolution: Desired resolution in output SRS units. Incompatible with
+            `dimensions`
+        :param tuple dimensions: Desired output (width, height) in pixels. Incompatible with
+            `resolution`
+        :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
+        :param str place: A slug identifier to be used as a cutline.
+        :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
+        :param str bounds_srs:
+            Override the coordinate system in which bounds are expressed.
+            If not given, bounds are assumed to be expressed in the output SRS.
+        :param bool align_pixels: Align pixels to the target coordinate system.
+        :param str resampler: Resampling algorithm to be used during warping (``near``,
+            ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
+            ``max``, ``min``, ``med``, ``q1``, ``q3``).
+        :param str order: Order of the returned array. `image` returns arrays as
+            ``(scene, row, column, band)`` while `gdal` returns arrays as ``(scene, band, row, column)``.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param int max_workers: Maximum number of threads over which to
+            parallelize individual ndarray calls. If `None`, will be set to the minimum
+            of the number of inputs and `DEFAULT_MAX_WORKERS`.
+
+        :return: A tuple of ``(stack, metadata)``.
+            ``stack``: 4D ndarray. The axes are ordered ``(scene, band, y, x)``
+            (or ``(scene, y, x, band)`` if ``order="gdal"``). The scenes in the outermost
+            axis are in the same order as the list of identifiers given as ``inputs``.
+            ``metadata``: List[dict] of the rasterization metadata for each element in ``inputs``.
+            As with the metadata returned by :meth:`ndarray` and :meth:`raster`, these dictionaries
+            contain useful information about the raster, such as its geotransform matrix and WKT
+            of its coordinate system, but there are no guarantees that certain keys will be present.
+        """
+        if not isinstance(inputs, (list, tuple)):
+            raise TypeError("Inputs must be a list or tuple, instead got '{}'".format(type(inputs)))
+
+        params = dict(
+            bands=bands,
+            scales=scales,
+            data_type=data_type,
+            srs=srs,
+            resolution=resolution,
+            dimensions=dimensions,
+            cutline=cutline,
+            place=place,
+            bounds=bounds,
+            bounds_srs=bounds_srs,
+            align_pixels=align_pixels,
+            resampler=resampler,
+            order=order,
+            dltile=dltile,
+            max_workers=max_workers,
+            **pass_through_params
+        )
+
+        if dltile is None:
+            if resolution is None and dimensions is None:
+                raise ValueError("Must set `resolution` or `dimensions`")
+            if srs is None:
+                raise ValueError("Must set `srs`")
+            if bounds is None:
+                raise ValueError("Must set `bounds`")
+
+        full_stack = None
+        metadata = [None] * len(inputs)
+        for i, arr, meta in self._threaded_ndarray(inputs, **params):
+            if len(arr.shape) == 2:
+                if order == "image":
+                    arr = np.expand_dims(arr, -1)
+                elif order == "gdal":
+                    arr = np.expand_dims(arr, 0)
+                else:
+                    raise ValueError("Unknown order '{}'; should be one of 'image' or 'gdal'".format(order))
+            if full_stack is None:
+                stack_shape = (len(inputs),) + arr.shape
+                full_stack = np.empty(stack_shape, dtype=arr.dtype)
+            full_stack[i] = arr
+            metadata[i] = meta
+
+        return full_stack, metadata

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
 import json
 
 from .metadata import Metadata
@@ -35,10 +34,10 @@ def metadata_handler(args):
     if args.command == 'summary':
         if args.place:
             kwargs['place'] = args.place
-        if args.start_time:
-            kwargs['start_time'] = args.start_time
-        if args.end_time:
-            kwargs['end_time'] = args.end_time
+        if args.start_datetime:
+            kwargs['start_datetime'] = args.start_datetime
+        if args.end_datetime:
+            kwargs['end_datetime'] = args.end_datetime
         if args.geom:
             kwargs['geom'] = args.geom
         if args.bbox:
@@ -51,10 +50,10 @@ def metadata_handler(args):
     if args.command == 'search':
         if args.place:
             kwargs['place'] = args.place
-        if args.start_time:
-            kwargs['start_time'] = args.start_time
-        if args.end_time:
-            kwargs['end_time'] = args.end_time
+        if args.start_datetime:
+            kwargs['start_datetime'] = args.start_datetime
+        if args.end_datetime:
+            kwargs['end_datetime'] = args.end_datetime
         if args.geom:
             kwargs['geom'] = args.geom
         if args.limit:
@@ -68,13 +67,13 @@ def metadata_handler(args):
 
         print(json.dumps(search, indent=2))
 
-    if args.command == 'keys':
+    if args.command == 'ids':
         if args.place:
             kwargs['place'] = args.place
-        if args.start_time:
-            kwargs['start_time'] = args.start_time
-        if args.end_time:
-            kwargs['end_time'] = args.end_time
+        if args.start_datetime:
+            kwargs['start_datetime'] = args.start_datetime
+        if args.end_datetime:
+            kwargs['end_datetime'] = args.end_datetime
         if args.geom:
             kwargs['geom'] = args.geom
         if args.limit:
@@ -84,9 +83,9 @@ def metadata_handler(args):
         if args.bbox:
             kwargs['bbox'] = args.bbox
 
-        keys = metadata.keys(**kwargs)
+        ids = metadata.ids(**kwargs)
 
-        print(' '.join(keys))
+        print(' '.join(ids))
 
     if args.command == 'get':
         get = metadata.get(args.argument)
