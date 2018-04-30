@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
 
 import os
 import stat
@@ -39,6 +38,8 @@ def auth_handler(args):
         if s:
 
             token_info = json.loads(base64url_decode(s).decode('utf-8'))
+            if "refresh_token" not in token_info:  # TODO(justin) legacy for previous IDP
+                token_info['refresh_token'] = token_info.get("client_secret")
 
             token_info_directory = os.path.dirname(DEFAULT_TOKEN_INFO_PATH)
             makedirs_if_not_exists(token_info_directory)
@@ -76,6 +77,7 @@ def auth_handler(args):
         auth.token
         print('%s=%s' % ('CLIENT_ID', auth.client_id))
         print('%s=%s' % ('CLIENT_SECRET', auth.client_secret))
+        print('%s=%s' % ('REFRESH_TOKEN', auth.refresh_token))
 
     if args.command == 'version':
         print(__version__)

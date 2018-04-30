@@ -16,7 +16,9 @@ import random
 
 import requests
 from requests.adapters import HTTPAdapter
+from warnings import warn
 from urllib3.util.retry import Retry
+from descarteslabs.client.auth import Auth
 from descarteslabs.client.version import __version__
 from descarteslabs.client.exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, \
     GatewayTimeoutError, ConflictError
@@ -66,8 +68,16 @@ class Service(object):
 
     ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
 
-    def __init__(self, url, auth):
+    def __init__(self, url, token=None, auth=None):
+        if auth is None:
+            auth = Auth()
+
+        if token is not None:
+            warn("setting token at service level will be removed in future", DeprecationWarning)
+            auth._token = token
+
         self.auth = auth
+
         self.base_url = url
 
         self._session = self.build_session()

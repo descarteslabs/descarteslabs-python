@@ -16,3 +16,12 @@
 from descarteslabs.client.services.metadata import Metadata
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.raster import Raster
+# BEGIN-ALPHA
+try:
+    from descarteslabs.client.services.tasks import AsyncTasks, Tasks, FutureTask, CloudFunction
+    from descarteslabs.client.services.storage import Storage, cached
+    from descarteslabs.client.services.catalog import Catalog
+except ImportError as e:
+    import warnings
+    warnings.warn("{}".format(e))
+# END-ALPHA
