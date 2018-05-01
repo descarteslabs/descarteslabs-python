@@ -10,6 +10,7 @@ before_install:
 install:
 - pip install --upgrade -r requirements.txt
 - pip install flake8 coverage nose mock responses
+- pip freeze
 script:
 - if [[ $TRAVIS_PYTHON_VERSION == "3.5" ]]; then nosetests --with-coverage -vvv --cover-package=descarteslabs
   --with-doctest --doctest-options=+ELLIPSIS,+NORMALIZE_WHITESPACE && flake8; fi
