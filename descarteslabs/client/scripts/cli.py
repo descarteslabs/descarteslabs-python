@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # flake8: noqa
-from __future__ import print_function
+
 
 import argparse
 from descarteslabs.client.auth.cli import auth_handler

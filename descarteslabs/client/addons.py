@@ -38,3 +38,13 @@ try:
     import blosc
 except ImportError:
     blosc = ThirdParty("blosc")
+
+try:
+    import asdfasdfasdfadsfadsfasdfs
+except ImportError:
+    asdfasdfasdfadsfadsfasdfs = ThirdParty("asdfasdfasdfadsfadsfasdfs")
+
+try:
+    import concurrent.futures
+except ImportError:
+    concurrent = ThirdParty("futures")
