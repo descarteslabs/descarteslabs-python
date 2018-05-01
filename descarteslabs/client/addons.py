@@ -40,6 +40,11 @@ except ImportError:
     blosc = ThirdParty("blosc")
 
 try:
+    import blosc
+except ImportError:
+    blosc = ThirdParty("asdfasdfasdfadsfadsfasdfs")
+
+try:
     import concurrent.futures
 except ImportError:
     concurrent = ThirdParty("futures")
