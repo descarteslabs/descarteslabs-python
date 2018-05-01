@@ -15,17 +15,16 @@
 # limitations under the License.
 
 import ast
-import sys
 import os
 import re
-from setuptools import setup, find_packages
+import sys
+
+from setuptools import find_packages, setup
 
 # Parse version out of descarteslabs/__init__.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
 with open('descarteslabs/client/version.py', 'rb') as f:
-    version = str(ast.literal_eval(_version_re.search(
-        f.read().decode('utf-8')).group(1))
-    )
+    version = str(ast.literal_eval(_version_re.search(f.read().decode('utf-8')).group(1)))
 
 
 def check_setuptools():
@@ -70,9 +69,10 @@ def do_setup():
         ]
     }
     kwargs['install_requires'] = [
-        'cachetools',
-        'six',
-        'blosc;platform_system!="Windows"'
+        "cloudpickle==0.4.0",
+        "six",
+        "cachetools>=2.0.1",
+        'futures;python_version=="2.7"',
     ]
 
     # Python < 2.7.9 needs requests[security] to avoid SSL issues
@@ -82,7 +82,8 @@ def do_setup():
     else:
         kwargs["install_requires"].append('requests[security]>=2.16.0')
 
-    kwargs['license'] = 'Apache 2.0',
+    kwargs['extras_require'] = {"complete": ['blosc;platform_system!="Windows"', "numpy>=1.10.0", "shapely>=1.5.0"]}
+    kwargs['license'] = 'Apache 2.0'
     kwargs['zip_safe'] = False
 
     try:
