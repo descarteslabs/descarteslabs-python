@@ -88,7 +88,7 @@ class Raster(Service):
         if url is None:
             url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform.descarteslabs.com/raster/v1")
 
-        super(Raster, self).__init__(url, auth)
+        super(Raster, self).__init__(url, auth=auth)
 
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
@@ -499,3 +499,120 @@ class Raster(Service):
                 return array, metadata
         else:
             return array, DotDict(metadata)
+
+    def stack(
+            self,
+            inputs,
+            bands=None,
+            scales=None,
+            data_type="UInt16",
+            srs=None,
+            resolution=None,
+            dimensions=None,
+            cutline=None,
+            place=None,
+            bounds=None,
+            bounds_srs=None,
+            align_pixels=False,
+            resampler=None,
+            order='image',
+            dltile=None,
+            **pass_through_params
+    ):
+        """Retrieve a stack of rasters as a 4-D NumPy array.
+
+        To ensure every raster in the stack has the same shape and covers the same
+        spatial extent, you must either:
+        - set ``dltile``, or
+        - set [``resolution`` or ``dimensions``], ``srs``, ``bounds``, and ``bounds_srs``
+
+        :param inputs: List of :class:`Metadata` identifiers.
+            The stack will follow the same order as this list.
+        :param bands: List of requested bands. If the last item in the list is an alpha
+            band (with data range `[0, 1]`) it affects rastering of all other bands:
+            When rastering multiple images, they are combined image-by-image only where
+            each respective image's alpha band is `1` (pixels where the alpha band is not
+            `1` are "transparent" in the overlap between images). If a pixel is fully
+            masked considering all combined alpha bands it will be `0` in all non-alpha
+            bands.
+        :param scales: List of tuples specifying the scaling to be applied to each band.
+            A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
+            meaning values in the source range ``src_min`` to ``src_max`` will be scaled
+            to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
+            ``(src_min, src_max)`` is also allowed, in which case the output range
+            defaults to ``(0, 255)`` (a useful default for the common output type
+            ``Byte``).  If no scaling is desired for a band, use ``None``. This tuple
+            format and behaviour is identical to GDAL's scales during translation.
+            Example argument: ``[(0, 10000, 0, 127), None, (0, 10000)]`` - the first
+            band will have source values 0-10000 scaled to 0-127, the second band will
+            not be scaled, the third band will have 0-10000 scaled to 0-255.
+        :param str data_type: Output data type (one of ``Byte``, ``UInt16``, ``Int16``,
+            ``UInt32``, ``Int32``, ``Float32``, ``Float64``).
+        :param str srs: Output spatial reference system definition understood by GDAL.
+        :param float resolution: Desired resolution in output SRS units. Incompatible with
+            `dimensions`
+        :param tuple dimensions: Desired output (width, height) in pixels. Incompatible with
+            `resolution`
+        :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
+        :param str place: A slug identifier to be used as a cutline.
+        :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
+        :param str bounds_srs: Override the coordinate system in which bounds are expressed.
+        :param bool align_pixels: Align pixels to the target coordinate system.
+        :param str resampler: Resampling algorithm to be used during warping (``near``,
+            ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
+            ``max``, ``min``, ``med``, ``q1``, ``q3``).
+        :param str order: Order of the returned array. `image` returns arrays as
+            ``(row, column, band)`` while `gdal` returns arrays as ``(band, row, column)``.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+
+        :return: 4D ndarray ``stack``. The axes are ordered ``(scene, band, y, x)``
+            (or ``(scene, y, x, band)`` if ``order="gdal"``). The scenes in the outermost
+            axis are in the same order as the list of scenes given as ``inputs``.
+        """
+        if not isinstance(inputs, (list, tuple)):
+            raise TypeError("Inputs must be a list or tuple, instead got '{}'".format(type(inputs)))
+
+        params = dict(
+            bands=bands,
+            scales=scales,
+            data_type=data_type,
+            srs=srs,
+            resolution=resolution,
+            dimensions=dimensions,
+            cutline=cutline,
+            place=place,
+            bounds=bounds,
+            bounds_srs=bounds_srs,
+            align_pixels=align_pixels,
+            resampler=resampler,
+            order=order,
+            dltile=dltile,
+            **pass_through_params
+        )
+
+        if dltile is None:
+            if resolution is None and dimensions is None:
+                raise ValueError("Must set `resolution` or `dimensions`")
+            if srs is None:
+                raise ValueError("Must set `srs`")
+            if bounds is None:
+                raise ValueError("Must set `bounds`")
+            if bounds_srs is None:
+                raise ValueError("Must set `bounds_srs`")
+
+        full_stack = None
+        for i, input in enumerate(inputs):
+            arr, meta = self.ndarray(input, **params)
+            if len(arr.shape) == 2:
+                if order == "image":
+                    arr = np.expand_dims(arr, -1)
+                elif order == "gdal":
+                    arr = np.expand_dims(arr, 0)
+                else:
+                    raise ValueError("Unknown order '{}'; should be one of 'image' or 'gdal'".format(order))
+            if full_stack is None:
+                stack_shape = (len(inputs),) + arr.shape
+                full_stack = np.empty(stack_shape, dtype=arr.dtype)
+            full_stack[i] = arr
+
+        return full_stack

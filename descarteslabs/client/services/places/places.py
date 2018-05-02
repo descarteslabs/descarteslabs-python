@@ -38,7 +38,7 @@ class Places(Service):
         if url is None:
             url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform.descarteslabs.com/waldo/v2")
 
-        super(Places, self).__init__(url, auth)
+        super(Places, self).__init__(url, auth=auth)
         self.cache = TTLCache(maxsize, ttl)
 
     def placetypes(self):
