@@ -36,6 +36,15 @@ Changelog
 =========
 
 ## [Unreleased]
+## [0.8.1] - 2018-05-03
+### Changed
+- Switched to `start_datetime` argument pattern instead of `start_date`
+- Fixed minor regression with `descarteslabs.ext` clients
+- Deprecated token param for `Service` class
+
+### Added
+- Raster stack method
+
 ## [0.8.0] - 2018-03-29
 ### Changed
 - Removed deprecated searching by `const_id`
@@ -198,7 +207,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.2...v0.7.0
 [0.6.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.1...v0.6.2

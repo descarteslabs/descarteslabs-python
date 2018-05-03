@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests
-from urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
-
 import base64
 import datetime
 import errno
 import json
 import os
 import random
-import six
 import stat
-from hashlib import sha1
 import warnings
+from hashlib import sha1
+
+import requests
+import six
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from descarteslabs.client.exceptions import AuthError, OauthError
 
@@ -58,9 +58,9 @@ def makedirs_if_not_exists(path):
 
 
 class Auth:
-    def __init__(self, domain="https://iam.descarteslabs.com",
+    def __init__(self, domain="https://accounts.descarteslabs.com",
                  scope=None, leeway=500, token_info_path=DEFAULT_TOKEN_INFO_PATH,
-                 client_id=None, client_secret=None, jwt_token=None):
+                 client_id=None, client_secret=None, jwt_token=None, refresh_token=None):
         """
         Helps retrieve JWT from a client id and refresh token for cli usage.
         :param domain: endpoint for auth0
@@ -70,6 +70,7 @@ class Auth:
         :param client_id: JWT client id
         :param client_secret: JWT client secret
         :param jwt_token: the JWT token, if we already have one
+        :param refresh_token: the refresh token
         """
         self.token_info_path = token_info_path
 
@@ -84,6 +85,9 @@ class Auth:
         self.client_id = client_id if client_id else os.environ.get('CLIENT_ID', token_info.get('client_id', None))
         self.client_secret = client_secret if client_secret else os.environ.get('CLIENT_SECRET', token_info.get(
             'client_secret', None))
+        self.refresh_token = refresh_token if refresh_token \
+            else os.environ.get('DESCARTESLABS_REFRESH_TOKEN', token_info.get('refresh_token', None))
+        self.scope = scope if scope else token_info.get('scope')
         self._token = jwt_token if jwt_token else os.environ.get('JWT_TOKEN', token_info.get('jwt_token', None))
 
         if token_info:
@@ -91,18 +95,15 @@ class Auth:
             # to reset the token.
             client_id_changed = token_info.get('client_id', None) != self.client_id
             client_secret_changed = token_info.get('client_secret', None) != self.client_secret
+            refresh_token_changed = token_info.get('refresh_token', None) != self.refresh_token
 
-            if client_id_changed or client_secret_changed:
+            if client_id_changed or client_secret_changed or refresh_token_changed:
                 self._token = None
 
         self._namespace = None
-
+        self._session = None
         self.domain = domain
-        self.scope = scope
         self.leeway = leeway
-
-        if self.scope is None:
-            self.scope = ['openid', 'name', 'groups']
 
     @classmethod
     def from_environment_or_token_json(cls, **kwargs):
@@ -120,18 +121,18 @@ class Auth:
     def token(self):
         if self._token is None:
             self._get_token()
+        else:  # might have token but could be close to expiration
+            exp = self.payload.get('exp')
 
-        exp = self.payload.get('exp')
-
-        if exp is not None:
-            now = (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds()
-            if now + self.leeway > exp:
-                try:
-                    self._get_token()
-                except AuthError as e:
-                    # Unable to refresh, raise if now > exp
-                    if now > exp:
-                        raise e
+            if exp is not None:
+                now = (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds()
+                if now + self.leeway > exp:
+                    try:
+                        self._get_token()
+                    except AuthError as e:
+                        # Unable to refresh, raise if now > exp
+                        if now > exp:
+                            raise e
 
         return self._token
 
@@ -148,38 +149,65 @@ class Auth:
         claims = token.split(b'.')[1]
         return json.loads(base64url_decode(claims).decode('utf-8'))
 
+    @property
+    def session(self):
+        if self._session is None:
+            self._session = requests.Session()
+            retries = Retry(total=5,
+                            backoff_factor=random.uniform(1, 10),
+                            method_whitelist=frozenset(['GET', 'POST']),
+                            status_forcelist=[429, 500, 502, 503, 504])
+
+            self._session.mount('https://', HTTPAdapter(max_retries=retries))
+
+        return self._session
+
     def _get_token(self, timeout=100):
         if self.client_id is None:
-            raise AuthError("Could not find CLIENT_ID")
+            raise AuthError("Could not find client_id")
 
-        if self.client_secret is None:
-            raise AuthError("Could not find CLIENT_SECRET")
+        if self.client_secret is None and self.refresh_token is None:
+            raise AuthError("Could not find client_secret or refresh token")
 
-        s = requests.Session()
-        retries = Retry(total=5,
-                        backoff_factor=random.uniform(1, 10),
-                        method_whitelist=frozenset(['GET', 'POST']),
-                        status_forcelist=[429, 500, 502, 503, 504])
+        if self.client_id in ["ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c"]:  # TODO(justin) remove legacy handling
+            # TODO (justin) insert deprecation warning
+            if self.scope is None:
+                scope = ['openid', 'name', 'groups']
+            else:
+                scope = self.scope
+            params = {
+                "scope": " ".join(scope),
+                "client_id": self.client_id,
+                "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                "target": self.client_id,
+                "api_type": "app",
+                "refresh_token": self.refresh_token if self.refresh_token is not None else self.client_secret
+            }
+        else:
+            params = {
+                "client_id": self.client_id,
+                "grant_type": "refresh_token",
+                "refresh_token": self.refresh_token if self.refresh_token is not None else self.client_secret
+            }
 
-        s.mount('https://', HTTPAdapter(max_retries=retries))
+            if self.scope is not None:
+                params["scope"] = " ".join(self.scope)
 
-        headers = {"content-type": "application/json"}
-        params = {
-            "scope": " ".join(self.scope),
-            "client_id": self.client_id,
-            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
-            "target": self.client_id,
-            "api_type": "app",
-            "refresh_token": self.client_secret
-        }
-        r = s.post(self.domain + "/auth/delegation", headers=headers, data=json.dumps(params), timeout=timeout)
+        r = self.session.post(self.domain + "/token", json=params, timeout=timeout)
 
         if r.status_code != 200:
             raise OauthError("%s: %s" % (r.status_code, r.text))
 
         data = r.json()
-        self._token = data['id_token']
+        access_token = data.get('access_token')
+        id_token = data.get('id_token')  # TODO(justin) remove legacy id_token usage
 
+        if access_token is not None:
+            self._token = access_token
+        elif id_token is not None:
+            self._token = id_token
+        else:
+            raise OauthError("could not retrieve token")
         token_info = {}
 
         if self.token_info_path:
