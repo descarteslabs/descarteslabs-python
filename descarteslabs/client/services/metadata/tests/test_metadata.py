@@ -195,6 +195,10 @@ class TestMetadata(unittest.TestCase):
         bands = ['red', 'nir']
         bands = self.instance.derived_bands(bands=bands)
 
+    def test_get_bands_by_id(self):
+        self.instance.get_bands_by_id('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1')
+
+    # TODO: Remove this test once get_bands_by_key method is deprecated and removed.
     def test_get_bands_by_key(self):
         self.instance.get_bands_by_key('meta_LC80270312016188_v1')
 

@@ -34,17 +34,18 @@ class TestRaster(unittest.TestCase):
         cls.places = Places()
 
     def test_raster(self):
-        # test with product key
+        # TODO: Remove key test once keys are deprecated and removed.
+        # test with scene key
         r = self.raster.raster(
-            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
+            inputs=['meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             resolution=960,
         )
         self.assertTrue("metadata" in r)
         self.assertTrue("files" in r)
-        self.assertTrue("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
+        self.assertTrue("meta_LC80270312016188_v1_red-green-blue-alpha.tif" in r['files'])
 
-        # test with product id
+        # test with scene id
         r = self.raster.raster(
             inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
