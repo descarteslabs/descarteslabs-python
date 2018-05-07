@@ -36,6 +36,11 @@ Changelog
 =========
 
 ## [Unreleased]
+## [0.9.0]
+### Added
+- Catalog service
+- Storage service
+
 ## [0.8.1] - 2018-05-03
 ### Changed
 - Switched to `start_datetime` argument pattern instead of `start_date`
