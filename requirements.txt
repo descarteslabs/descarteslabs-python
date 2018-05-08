@@ -5,3 +5,4 @@ mock
 requests>=2.16.0
 responses
 six
+cloudpickle==0.4.0
