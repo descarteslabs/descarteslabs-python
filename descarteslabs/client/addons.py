@@ -48,3 +48,8 @@ try:
     import concurrent.futures
 except ImportError:
     concurrent = ThirdParty("futures")
+
+try:
+    import matplotlib
+except ImportError:
+    matplotlib = ThirdParty("matplotlib")

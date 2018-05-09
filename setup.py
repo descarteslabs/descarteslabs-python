@@ -82,7 +82,13 @@ def do_setup():
     else:
         kwargs["install_requires"].append('requests[security]>=2.16.0')
 
-    kwargs['extras_require'] = {"complete": ['blosc;platform_system!="Windows"', "numpy>=1.10.0", "shapely>=1.5.0"]}
+    kwargs['extras_require'] = {
+        "complete": [
+            'blosc;platform_system!="Windows"',
+            "numpy>=1.10.0",
+            "shapely>=1.5.0",
+        ]
+    }
     kwargs['license'] = 'Apache 2.0'
     kwargs['zip_safe'] = False
 
