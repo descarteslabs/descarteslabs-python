@@ -151,8 +151,7 @@ class Metadata(Service):
 
         :return: A dictionary of band entries and their metadata.
         """
-        # TODO: Change to '/bands/id' endpoint once updated metadata service is deployed.
-        r = self.session.get('/bands/key/{}'.format(id_))
+        r = self.session.get('/bands/id/{}'.format(id_))
 
         return DotDict(r.json())
 
@@ -160,13 +159,13 @@ class Metadata(Service):
         """
         For a given source id, return the available bands.
 
-        :param str key: A :class:`Metadata` identifiers.
+        :param str key: A :class:`Metadata` identifier.
 
         :return: A dictionary of band entries and their metadata.
         """
         warn(BANDS_BY_KEY_DEPRECATION_MESSAGE, DeprecationWarning)
 
-        r = self.session.get('/bands/key/%s' % key)
+        r = self.session.get('/bands/key/{}'.format(key))
 
         return DotDict(r.json())
 

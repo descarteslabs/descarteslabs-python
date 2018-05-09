@@ -332,7 +332,7 @@ class Raster(Service):
             cutline = json.dumps(shape['geometry'])
 
         params = {
-            'keys': inputs,
+            'ids': inputs,
             'bands': bands,
             'scales': scales,
             'ot': data_type,
@@ -461,7 +461,7 @@ class Raster(Service):
             cutline = json.dumps(shape['geometry'])
 
         params = {
-            'keys': inputs,
+            'ids': inputs,
             'bands': bands,
             'scales': scales,
             'ot': data_type,
