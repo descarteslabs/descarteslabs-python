@@ -545,7 +545,7 @@ class Catalog(Service):
         :param float degraded_fraction_0:
         :param str descartes_version:
         :param str directory: Subdirectory location.
-        :param float duration:
+        :param float duration: duration of the scan in seconds
         :param int duration_days:
         :param float earth_sun_distance: Earth sun distance at time of image capture.
         :param list(str) files: Names of the files this image is stored in.
