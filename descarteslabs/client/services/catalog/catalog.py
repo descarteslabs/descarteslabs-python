@@ -933,7 +933,7 @@ class Catalog(Service):
             metadata = {}
         metadata.setdefault('process_controls', {'upload_type': 'file'})
 
-        if isinstance(file_ish, FileIO):
+        if hasattr(file_ish, 'read'):
             if file_ish.mode not in ['rb', 'w+b']:
                 file_ish = open(file_ish.name, 'rb')
             fd = file_ish
