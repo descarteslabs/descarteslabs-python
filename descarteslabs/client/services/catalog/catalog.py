@@ -1,7 +1,7 @@
 import os
 import six
+import io
 
-from io import FileIO
 from tempfile import NamedTemporaryFile
 from requests.exceptions import RequestException
 
@@ -825,6 +825,9 @@ class Catalog(Service):
             if locals()[arg] is not None:
                 kwargs[arg] = locals()[arg]
         with NamedTemporaryFile() as tmp:
+            # Py 2-3 compatibility with FileIO objects.
+            if not isinstance(tmp.file, io.FileIO):
+                tmp.file = io.open(tmp.name, tmp.mode)
             np.save(tmp, ndarray, allow_pickle=False)
             tmp.seek(0)
             upload = self._do_upload(tmp.file, product_id, metadata=metadata)
@@ -933,14 +936,16 @@ class Catalog(Service):
             metadata = {}
         metadata.setdefault('process_controls', {'upload_type': 'file'})
 
-        if hasattr(file_ish, 'read'):
+        if isinstance(file_ish, io.FileIO):
             if file_ish.mode not in ['rb', 'w+b']:
-                file_ish = open(file_ish.name, 'rb')
+                file_ish = io.open(file_ish.name, 'rb')
             fd = file_ish
         elif isinstance(file_ish, six.string_types) and os.path.exists(file_ish):
-            fd = open(file_ish, 'rb')
+            fd = io.open(file_ish, 'rb')
         else:
-            return 1, file_ish, Exception('Could not handle file: {}'.format(file_ish))
+            return 1, file_ish, Exception(
+                'Could not handle file: `{}` pass a valid path or open FileIO instance'.format(file_ish)
+            )
         try:
             r = self.session.post(
                 '/products/{}/images/upload/{}'.format(
