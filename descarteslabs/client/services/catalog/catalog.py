@@ -826,7 +826,7 @@ class Catalog(Service):
                 kwargs[arg] = locals()[arg]
         with NamedTemporaryFile() as tmp:
             # Py 2-3 compatibility with FileIO objects.
-            if not isinstance(tmp.file, io.FileIO):
+            if not isinstance(tmp.file, io.IOBase):
                 tmp.file = io.open(tmp.name, tmp.mode)
             np.save(tmp, ndarray, allow_pickle=False)
             tmp.seek(0)
@@ -936,7 +936,7 @@ class Catalog(Service):
             metadata = {}
         metadata.setdefault('process_controls', {'upload_type': 'file'})
 
-        if isinstance(file_ish, io.FileIO):
+        if isinstance(file_ish, io.IOBase):
             if file_ish.mode not in ['rb', 'w+b']:
                 file_ish = io.open(file_ish.name, 'rb')
             fd = file_ish
@@ -944,7 +944,7 @@ class Catalog(Service):
             fd = io.open(file_ish, 'rb')
         else:
             return 1, file_ish, Exception(
-                'Could not handle file: `{}` pass a valid path or open FileIO instance'.format(file_ish)
+                'Could not handle file: `{}` pass a valid path or open IOBase instance'.format(file_ish)
             )
         try:
             r = self.session.post(
