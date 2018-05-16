@@ -14,11 +14,14 @@
 
 import numpy as np
 import unittest
+import sys
 from copy import deepcopy
 from time import sleep
 from random import randint
 from hashlib import md5
 from mock import patch
+from tempfile import NamedTemporaryFile
+import responses
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.catalog import Catalog
@@ -26,6 +29,8 @@ from descarteslabs.client.services.catalog import Catalog
 descartes_auth = Auth()
 
 
+@patch.object(Auth, 'token', 'token')
+@patch.object(Auth, 'namespace', 'foo')
 class TestCatalog(unittest.TestCase):
     instance = None
 
@@ -180,6 +185,65 @@ class TestCatalog(unittest.TestCase):
 
         for dtype in Catalog.UPLOAD_NDARRAY_SUPPORTED_DTYPES:
             self.instance.upload_ndarray(np.zeros((10, 10), dtype=dtype), 'product', 'key')
+
+    @unittest.skipIf(sys.version_info.major == 3, "Test only makes sense in py2")
+    def test_upload_image_deprecated_file_type(self):
+        with NamedTemporaryFile() as tmp:
+            self.assertRaises(
+                Exception,
+                self.instance.upload_image, tmp, 'product'
+            )
+
+    def test_upload_image_bad_path(self):
+        name = None
+        with NamedTemporaryFile() as tmp:
+            name = tmp.file
+        self.assertRaises(
+            Exception,
+            self.instance.upload_image, name, 'product'
+        )
+
+    def test_upload_image_multi_file_no_list(self):
+        with NamedTemporaryFile() as tmp:
+            self.assertRaises(
+                ValueError,
+                self.instance.upload_image, tmp.name, 'product', multi=True
+            )
+
+    def test_upload_image_multi_file_no_image_id(self):
+        with NamedTemporaryFile() as tmp:
+            self.assertRaises(
+                ValueError,
+                self.instance.upload_image, [tmp.name, tmp.name], 'product', multi=True
+            )
+
+    @responses.activate
+    def test_upload_image(self):
+        product = 'foo:product_id'
+        gcs_upload_url = 'https://gcs_upload_url.com'
+        upload_url = 'https://platform.descarteslabs.com/metadata/v1/catalog/products/{}/images/upload/{}'
+        with NamedTemporaryFile() as tmp:
+            tmp.write('foo')
+            responses.add(
+                responses.POST,
+                upload_url.format(product, tmp.name.split('/')[-1]),
+                body=gcs_upload_url
+            )
+            responses.add(responses.PUT, gcs_upload_url)
+            self.instance.upload_image(tmp.name, product)
+
+    @responses.activate
+    def test_upload_ndarray(self):
+        product = 'foo:product_id'
+        gcs_upload_url = 'https://gcs_upload_url.com'
+        upload_url = 'https://platform.descarteslabs.com/metadata/v1/catalog/products/{}/images/upload/key'
+        responses.add(
+            responses.POST,
+            upload_url.format(product),
+            body=gcs_upload_url,
+        )
+        responses.add(responses.PUT, gcs_upload_url)
+        self.instance.upload_ndarray(np.zeros((10, 10)), product, 'key')
 
     @unittest.skip('integration test')
     def test_datetime_backwards_compatibile(self):
