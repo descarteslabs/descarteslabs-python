@@ -825,12 +825,18 @@ class Catalog(Service):
             if locals()[arg] is not None:
                 kwargs[arg] = locals()[arg]
         with NamedTemporaryFile() as tmp:
-            # Py 2-3 compatibility with FileIO objects.
-            if not isinstance(tmp.file, io.IOBase):
-                tmp.file = io.open(tmp.name, tmp.mode)
             np.save(tmp, ndarray, allow_pickle=False)
-            tmp.seek(0)
-            upload = self._do_upload(tmp.file, product_id, metadata=metadata)
+            # From tempfile docs:
+            # Whether the name can be used to open the file a second time, while
+            # the named temporary file is still open, varies across platforms
+            # (it can be so used on Unix; it cannot on Windows NT or later)
+            #
+            # We close the underlying file object so _do_upload can open the path again
+            # in a cross platform compatible way.
+            # When leaving the context manager the tempfile wrapper will still cleanup
+            # and unlink the file descriptor.
+            tmp.file.close()
+            upload = self._do_upload(tmp.name, product_id, metadata=metadata)
             if upload[0]:
                 raise upload[2]
 
@@ -937,7 +943,7 @@ class Catalog(Service):
         metadata.setdefault('process_controls', {'upload_type': 'file'})
 
         if isinstance(file_ish, io.IOBase):
-            if file_ish.mode not in ['rb', 'w+b']:
+            if 'b' not in file_ish.mode:
                 file_ish = io.open(file_ish.name, 'rb')
             fd = file_ish
         elif isinstance(file_ish, six.string_types) and os.path.exists(file_ish):
