@@ -3,40 +3,17 @@
 Descarteslabs
 =============
 
-Services
---------
-
-This package includes service wrappers for Descartes Labs application services that 
-do require additional dependencies (included in `requirements.txt`) and are thus not 
-implicitly included in the root package (see above). Service wrappers include, 
-primarily, Raster (image access), Metadata (image metadata) and Places (named
-shapes and statistics).  These services are authenticated and in order to setup
-authentication there is a convenience script to help you log in.
-
-```bash
-$ python setup.py install
-$ pip install -r requirements.txt
-$ descarteslabs auth login
-```
-
-For non-interactive environments, one needs to set the `CLIENT_ID` and `CLIENT_SECRET` 
-environment variables. These can be retrieved from the `~/.descarteslabs/token_info.json`
-created from the login process or generated fresh through [IAM](https://iam.descarteslabs.com).
-
-```bash
-$ export CLIENT_ID=...
-$ export CLIENT_SECRET=...
-```
-
-Documentation
--------------
 The documentation for the latest release can be found at [https://docs.descarteslabs.com](https://docs.descarteslabs.com)
 
 Changelog
 =========
 
 ## [Unreleased]
-## [0.9.0]
+## [0.9.1] - 2018-05-17
+### Changed
+- Patched bug in catalog service for py3
+
+## [0.9.0] - 2018-05-11
 ### Added
 - Catalog service
 - Storage service
@@ -212,7 +189,9 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.2...v0.7.0
@@ -237,20 +216,4 @@ metadata.features for iterating over large search results
 [0.2.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/descarteslabs/descarteslabs-python/releases/tag/v0.1.0
 
-FAQ
----
-
-If you are on older versions of Python 2.7, you may encounter warnings about
-SSL such as:
-
-  InsecurePlatformWarning: A true SSLContext object is not
-  available. This prevents urllib3 from configuring SSL appropriately and 
-  may cause certain SSL connections to fail. For more information, see 
-  https://urllib3.readthedocs.org/en/latest  
-  /security.html#insecureplatformwarning.
-
-Please follow the instructions from
-[stackoverflow](http://stackoverflow.com/questions/29099404/ssl-insecureplatform-error-when-using-requests-package)
-and install the `"requests[security]"` package with, e.g. `pip install
-"requests[security]"`.
 
