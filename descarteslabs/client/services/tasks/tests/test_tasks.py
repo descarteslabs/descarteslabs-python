@@ -116,8 +116,8 @@ class FutureTaskTest(ClientTestCase):
         self.mock_response(responses.POST, {'results': response1})
         self.mock_response(responses.POST, {'results': response2})
         completed_tasks = list(as_completed(tasks, show_progress=False))
-        self.assertEquals(5, len(completed_tasks))
-        self.assertEquals(range(5), [int(r._task_result['id']) for r in completed_tasks])
+        self.assertEqual(5, len(completed_tasks))
+        self.assertEqual(list(range(5)), [int(r._task_result['id']) for r in completed_tasks])
 
 
 if __name__ == "__main__":
