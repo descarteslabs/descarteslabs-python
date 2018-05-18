@@ -19,3 +19,10 @@ from descarteslabs.client.services.raster import Raster
 from descarteslabs.client.services.storage import Storage, cached
 from descarteslabs.client.services.catalog import Catalog
 
+# BEGIN-ALPHA
+try:
+    from descarteslabs.client.services.tasks import AsyncTasks, Tasks, FutureTask, CloudFunction
+except ImportError as e:
+    import warnings
+    warnings.warn("{}".format(e))
+# END-ALPHA
