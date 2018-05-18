@@ -18,11 +18,6 @@ from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.raster import Raster
 from descarteslabs.client.services.storage import Storage, cached
 from descarteslabs.client.services.catalog import Catalog
+from descarteslabs.client.services.tasks import AsyncTasks, Tasks, FutureTask, CloudFunction
 
-# BEGIN-ALPHA
-try:
-    from descarteslabs.client.services.tasks import AsyncTasks, Tasks, FutureTask, CloudFunction
-except ImportError as e:
-    import warnings
-    warnings.warn("{}".format(e))
-# END-ALPHA
+__all__ = ["Raster", "Metadata", "Places", "Storage", "Catalog", "AsyncTasks", "Tasks", "FutureTask", "CloudFunction"]
