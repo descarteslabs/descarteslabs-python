@@ -198,10 +198,6 @@ class TestMetadata(unittest.TestCase):
     def test_get_bands_by_id(self):
         self.instance.get_bands_by_id('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1')
 
-    # TODO: Remove this test once get_bands_by_key method is deprecated and removed.
-    def test_get_bands_by_key(self):
-        self.instance.get_bands_by_key('meta_LC80270312016188_v1')
-
     def test_expr_serialization(self):
         p = self.instance.properties
         q = ((0.1 < p.cloud_fraction <= 0.2) & (p.sat_id == "f00b")) | (p.sat_id == "usa-245")

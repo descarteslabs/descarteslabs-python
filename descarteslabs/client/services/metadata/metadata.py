@@ -41,12 +41,6 @@ SOURCES_DEPRECATION_MESSAGE = (
     "Metadata.available_products() or Metadata.products() instead. "
 )
 
-BANDS_BY_KEY_DEPRECATION_MESSAGE = (
-    "get_bands_by_key has been deprecated and will be removed in "
-    "future versions of the library.  Please use "
-    "get_bands_by_id and a Metadata `id` arg instead. "
-)
-
 
 class Metadata(Service):
     """
@@ -152,20 +146,6 @@ class Metadata(Service):
         :return: A dictionary of band entries and their metadata.
         """
         r = self.session.get('/bands/id/{}'.format(id_))
-
-        return DotDict(r.json())
-
-    def get_bands_by_key(self, key):
-        """
-        For a given source id, return the available bands.
-
-        :param str key: A :class:`Metadata` identifier.
-
-        :return: A dictionary of band entries and their metadata.
-        """
-        warn(BANDS_BY_KEY_DEPRECATION_MESSAGE, DeprecationWarning)
-
-        r = self.session.get('/bands/key/{}'.format(key))
 
         return DotDict(r.json())
 
