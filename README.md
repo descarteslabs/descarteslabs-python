@@ -9,6 +9,11 @@ Changelog
 =========
 
 ## [Unreleased]
+## [0.10.1] - 2018-05-30
+### Changed
+- Added org to token scope
+- Removed deprecated key usage
+
 ## [0.10.0] - 2018-05-17
 ### Added
 - Tasks service
@@ -193,7 +198,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.8.1...v0.9.0
