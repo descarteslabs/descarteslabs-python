@@ -109,6 +109,15 @@ class Service(object):
         return s
 
 
+class JsonApiService(Service):
+    def build_session(self):
+        s = super(JsonApiService, self).build_session()
+        s.headers.update({
+            "Content-Type": "application/vnd.api+json",
+            "Accept": "application/vnd.api+json"
+        })
+
+
 class ThirdPartyService(object):
     TIMEOUT = (9.5, 30)
 
