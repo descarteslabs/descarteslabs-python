@@ -172,7 +172,7 @@ class Auth:
         if self.client_id in ["ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c"]:  # TODO(justin) remove legacy handling
             # TODO (justin) insert deprecation warning
             if self.scope is None:
-                scope = ['openid', 'name', 'groups', 'org']
+                scope = ['openid', 'name', 'groups', 'org', 'email']
             else:
                 scope = self.scope
             params = {
