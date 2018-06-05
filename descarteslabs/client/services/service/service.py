@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import random
+import itertools
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -116,6 +117,40 @@ class JsonApiService(Service):
             "Content-Type": "application/vnd.api+json",
             "Accept": "application/vnd.api+json"
         })
+
+    @staticmethod
+    def jsonapi_document(type, attributes, id=None):
+        resource = {
+            "data": {
+                "type": type,
+                "attributes": attributes
+            }
+        }
+        if id is not None:
+            resource["data"]["id"] = id
+        return resource
+
+    @staticmethod
+    def jsonapi_collection(type, attributes_list, ids_list=None):
+        if ids_list is None:
+            ids_list = itertools.repeat(None)
+        else:
+            if len(ids_list) != len(attributes_list):
+                raise ValueError(
+                    "Different number of resources given than IDs: {} vs {}".foramt(len(attributes_list), len(ids_list))
+                )
+        resources = []
+        for attributes, id in zip(attributes_list, ids_list):
+            resource = {
+                "type": type,
+                "attributes": attributes
+            }
+            if id is not None:
+                resource["id"] = id
+            resources.append(resource)
+        return {
+            "data": resources
+        }
 
 
 class ThirdPartyService(object):
