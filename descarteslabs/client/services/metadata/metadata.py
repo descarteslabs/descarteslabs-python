@@ -536,14 +536,24 @@ class Metadata(Service):
         r = self.session.get('/get/{}'.format(image_id))
         return DotDict(r.json())
 
-    def get_by_ids(self, ids):
+    def get_by_ids(self, ids, fields=None, ignore_not_found=True, **kwargs):
         """Get metadata for multiple images by id. The response contains found images in the
-        order of the given ids. If no image exists for an id, that id is ignored.
+        order of the given ids.
 
         :param list(str) ids: Image identifiers.
+        :param list(str) fields: Properties to return.
+        :param bool ignore_not_found: For image id lookups that fail: if :py:obj:`True`, ignore;
+                                      if :py:obj:`False`, raise :py:exc:`NotFoundError`. Default is :py:obj:`True`.
+
         :return: List of image metadata.
+        :rtype: list(dict)
         """
-        r = self.session.post('/batch/images', json={'ids': ids})
+        kwargs['ids'] = ids
+        kwargs['ignore_not_found'] = ignore_not_found
+        if fields is not None:
+            kwargs['fields'] = fields
+
+        r = self.session.post('/batch/images', json=kwargs)
         return DotList(r.json())
 
     def get_product(self, product_id):
