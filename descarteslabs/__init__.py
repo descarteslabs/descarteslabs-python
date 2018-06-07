@@ -17,6 +17,10 @@ from .client.auth import Auth
 from .client import services
 from .client.services import *
 
+try:
+    from . import scenes
+except ImportError:
+    pass
 
 descartes_auth = Auth.from_environment_or_token_json()
 metadata = Metadata(auth=descartes_auth)

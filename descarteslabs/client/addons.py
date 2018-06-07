@@ -49,7 +49,24 @@ try:
 except ImportError:
     concurrent = ThirdParty("futures")
 
-try:
-    import matplotlib
-except ImportError:
-    matplotlib = ThirdParty("matplotlib")
+
+def import_matplotlib_pyplot():
+    try:
+        import matplotlib
+    except ImportError:
+        raise ImportError("The matplotlib package is required for displaying images.")
+    try:
+        import matplotlib.pyplot
+    except RuntimeError as e:
+        if matplotlib.get_backend() == "MacOSX":
+            raise RuntimeError(
+                "Python is not installed as a framework; the Mac OS X backend will not work.\n"
+                "To resolve this, *before* calling dl.scenes.display(), execute this code:\n\n"
+                "import matplotlib\n"
+                "matplotlib.use('TkAgg')\n"
+                "import matplotlib.pyplot as plt\n\n"
+                "In an interactive session, you'll have to restart your Python interpreter first."
+            )
+        else:
+            raise e
+    return matplotlib

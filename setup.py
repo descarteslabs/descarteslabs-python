@@ -87,6 +87,7 @@ def do_setup():
             'blosc;platform_system!="Windows"',
             "numpy>=1.10.0",
             "shapely>=1.5.0",
+            "matplotlib>=2.1.0"
         ]
     }
     kwargs['license'] = 'Apache 2.0'
