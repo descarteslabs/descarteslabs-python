@@ -49,6 +49,7 @@ class TestScenesSearch(unittest.TestCase):
         self.assertEqual(len(sc), 2)  # test client only has 2 scenes available
         self.assertEqual(ctx, tile)
 
+    @unittest.skip("this test depends on products never being made public which cannot be guaranteed")
     def test_search_no_products(self):
         sc, ctx = search(self.geom, limit=4)
         self.assertEqual(len(sc), 2)  # test client only has 2 scenes available
