@@ -117,6 +117,7 @@ class JsonApiService(Service):
             "Content-Type": "application/vnd.api+json",
             "Accept": "application/vnd.api+json"
         })
+        return s
 
     @staticmethod
     def jsonapi_document(type, attributes, id=None):
