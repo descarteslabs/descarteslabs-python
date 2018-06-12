@@ -790,6 +790,8 @@ class Catalog(Service):
             wkt_srs=None,
             geotrans=None,
             raster_meta=None,
+            overviews=None,
+            overview_resampler=None,
             **kwargs
     ):
         """Upload an ndarray with georeferencing information.
@@ -809,6 +811,12 @@ class Catalog(Service):
         :param dict raster_meta: Metadata returned from the :meth:`descarteslabs.client.services.raster.Raster.ndarray`
             request which generated the initial data for the :param ndarray: being uploaded. Passing :param geotrans:
             and :param wkt_srs: is unnecessary in this case.
+        :param list(int) overviews: a list of overview resolution magnification factors i.e [2, 4] would make two
+            overviews at 2x and 4x the native resolution. Maximum number of overviews allowed is 16.
+        :param str overview_resampler: Resampler algorithm to use when building overviews. Controls how pixels are
+            combined to make lower res pixels in overviews. Allowed resampler algorithms are:
+            ['nearest', 'average', 'gauss', 'cubic', 'cubicspline', 'lanczos', 'average_mp',
+            'average_magphase', 'mode'].
 
         .. note:: Only one of `proj4` or `wkt_srs` can be provided.
         """
@@ -824,6 +832,9 @@ class Catalog(Service):
         for arg in ['image_id', 'proj4', 'wkt_srs', 'geotrans']:
             if locals()[arg] is not None:
                 kwargs[arg] = locals()[arg]
+        for arg in ['overviews', 'overview_resampler']:
+            if locals()[arg] is not None:
+                metadata['process_controls'][arg] = locals()[arg]
         with NamedTemporaryFile() as tmp:
             np.save(tmp, ndarray, allow_pickle=False)
             # From tempfile docs:
