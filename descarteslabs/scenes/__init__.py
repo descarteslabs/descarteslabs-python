@@ -29,6 +29,7 @@ Define our Area of Interest:
 
 Search for Scenes within it:
 
+>>> import descarteslabs as dl
 >>> scenes, ctx = dl.scenes.search(aoi_geometry,
 ...                                products=["landsat:LC08:PRE:TOAR"],
 ...                                start_datetime="2013-07-01",

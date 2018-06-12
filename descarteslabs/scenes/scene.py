@@ -17,6 +17,7 @@ The Scene class holds metadata about a single scene in the Descartes Labs catalo
 
 Example
 -------
+>>> import descarteslabs as dl
 >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
 >>> ctx  # a default GeoContext to use when loading raster data from this Scene
 AOI(geometry=None,
@@ -176,6 +177,7 @@ class Scene(object):
 
         Example
         -------
+        >>> import descarteslabs as dl
         >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
         >>> ctx
         AOI(geometry=None,
@@ -287,6 +289,7 @@ class Scene(object):
 
         Example
         -------
+        >>> import descarteslabs as dl
         >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         >>> arr = scene.ndarray("red green blue", ctx)
         >>> type(arr)

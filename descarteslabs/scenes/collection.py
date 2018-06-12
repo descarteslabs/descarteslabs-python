@@ -81,9 +81,6 @@ class Collection(object):
     def __eq__(self, other):
         return self._list == other
 
-    def __str__(self):
-        return str(self._list)
-
     def __repr__(self):
         return "{}({})".format(self.__class__.__name__, repr(self._list))
 

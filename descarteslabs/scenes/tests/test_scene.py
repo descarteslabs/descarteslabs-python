@@ -27,7 +27,7 @@ class TestScene(unittest.TestCase):
 
         self.assertEqual(scene.properties.id, scene_id)
         self.assertEqual(scene.properties.product, "landsat:LC08:PRE:TOAR")
-        self.assertEqual(len(scene.properties.bands), 24)
+        self.assertAlmostEqual(len(scene.properties.bands), 24, delta=4)
         self.assertIsInstance(scene.properties.bands, dict)
         self.assertEqual(scene.properties.crs, "EPSG:32615")
         self.assertIsInstance(scene.geometry, shapely.geometry.Polygon)

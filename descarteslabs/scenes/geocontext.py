@@ -141,6 +141,7 @@ class AOI(GeoContext):
     Examples
     --------
 
+    >>> import descarteslabs as dl
     >>> cutline_aoi = dl.scenes.AOI(my_geometry, resolution=40)
     >>> aoi_with_cutline_disabled = cutline_aoi.assign(geometry=None)
     >>> no_cutline_aoi = dl.scenes.AOI(geometry=None, resolution=15, bounds=(-40, 35, -39, 36))
