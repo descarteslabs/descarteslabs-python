@@ -29,7 +29,8 @@ class TestScenesSearch(unittest.TestCase):
 
         for scene in sc:
             # allow for changes in publicly available data
-            self.assertAlmostEqual(len(scene.properties.bands), 16, delta=4)
+            self.assertAlmostEqual(len(scene.properties.bands), 24, delta=4)
+            self.assertIn("derived:ndvi", scene.properties.bands)
 
     @mock.patch("descarteslabs.scenes.geocontext.shapely", ThirdParty("shapely"))
     @mock.patch("descarteslabs.scenes.geocontext.have_shapely", False)
@@ -55,9 +56,5 @@ class TestScenesSearch(unittest.TestCase):
 
     def test_search_no_products(self):
         sc, ctx = search(self.geom, limit=4)
+        self.assertGreater(len(sc), 0)
         self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
-
-        self.assertTrue(all(s.properties.product == "landsat:LC08:PRE:TOAR" for s in sc))
-        for scene in sc:
-            # allow for changes in publicly available data
-            self.assertAlmostEqual(len(scene.properties.bands), 16, delta=4)

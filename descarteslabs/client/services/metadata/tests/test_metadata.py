@@ -183,6 +183,13 @@ class TestMetadata(unittest.TestCase):
         except NotFoundError:
             pass
 
+    def test_bands_by_product_get(self):
+        product_id = 'landsat:LC08:PRE:TOAR'
+        bands = self.instance.get_bands_by_product(product_id)
+        self.assertIn("derived:ndvi", bands)
+        self.assertIn("landsat:LC08:PRE:TOAR:swir2", bands)
+        self.assertGreater(len(bands), 16)  # 16 native bands
+
     def test_derived_bands_get(self):
         band_id = 'derived:ndvi'
         try:

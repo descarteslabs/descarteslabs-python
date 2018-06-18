@@ -134,9 +134,7 @@ def search(aoi,
         products = {meta["properties"]["product"] for meta in metadata["features"]}
 
     product_bands = {
-        product: {
-            band.get("name"): band for band in metadata_client.bands(products=product)
-        }
+        product: Scene._scenes_bands_dict(metadata_client.get_bands_by_product(product))
         for product in products
     }
 
@@ -149,10 +147,15 @@ def search(aoi,
     if len(scenes) > 0:
         assign_ctx = {}
         if ctx.resolution is None:
-            # QUESTION: what should the default resolution be?
-            assign_ctx["resolution"] = min(
-                min(b.get("resolution") for b in six.itervalues(scene.properties["bands"])) for scene in scenes
+            resolutions = filter(
+                None,
+                (b.get("resolution") for band in six.itervalues(product_bands) for b in six.itervalues(band))
             )
+            try:
+                assign_ctx["resolution"] = min(resolutions)
+            except ValueError:
+                assign_ctx["resolution"] = None  # from min of an empty sequence; no band defines resolution
+
         if ctx.crs is None:
             assign_ctx["crs"] = collections.Counter(scene.properties["crs"] for scene in scenes).most_common(1)[0][0]
 

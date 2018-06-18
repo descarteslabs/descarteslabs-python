@@ -149,6 +149,18 @@ class Metadata(Service):
 
         return DotDict(r.json())
 
+    def get_bands_by_product(self, product_id):
+        """
+        All bands (includig derived bands) available in a product.
+
+        :param str product_id: A product identifier.
+
+        :return: A dictionary mapping band IDs to dictionaries of their metadata.
+        """
+        r = self.session.get('/bands/all/{}'.format(product_id))
+
+        return DotDict(r.json())
+
     def products(self, bands=None, limit=None, offset=None, owner=None, text=None, **kwargs):
         """Search products that are available on the platform.
 

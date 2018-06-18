@@ -9,6 +9,13 @@ from descarteslabs.client.services.metadata import Metadata
 metadata_client = Metadata()
 
 
+class MockScene(Scene):
+    "Circumvent __init__ method to create a Scene with arbitrary geometry and properties objects"
+    def __init__(self, geometry, properties):
+        self.geometry = geometry
+        self.properties = properties
+
+
 class TestScene(unittest.TestCase):
     def test_init(self):
         scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
@@ -148,3 +155,55 @@ class TestScene(unittest.TestCase):
             Scene._bands_to_list(1)
         with self.assertRaises(ValueError):
             Scene._bands_to_list([])
+
+    def test_scenes_bands_dict(self):
+        meta_bands = {
+            "someproduct:red": {
+                "name": "red",
+                "id": "someproduct:red"
+            },
+            "someproduct:green": {
+                "name": "green",
+                "id": "someproduct:green"
+            },
+            "someproduct:ndvi": {
+                "name": "ndvi",
+                "id": "someproduct:ndvi"
+            },
+            "derived:ndvi": {
+                "name": "ndvi",
+                "id": "derived:ndvi"
+            },
+        }
+        scenes_bands = Scene._scenes_bands_dict(meta_bands)
+        self.assertEqual(
+            set(scenes_bands.keys()),
+            {"red", "green", "ndvi", "derived:ndvi"}
+        )
+        self.assertEqual(scenes_bands.ndvi, meta_bands["someproduct:ndvi"])
+        self.assertEqual(scenes_bands["derived:ndvi"], meta_bands["derived:ndvi"])
+
+    def test_common_data_type_of_bands(self):
+        mock_properties = {
+            "product": "mock_product",
+            "bands": {
+                "one": dict(dtype="UInt16"),
+                "two": dict(dtype="UInt16"),
+                "derived:three": dict(dtype="UInt16"),
+                "derived:one": dict(dtype="UInt16"),
+                "its_a_byte": dict(dtype="Byte"),
+                "no_dtype": {}
+            }
+        }
+        s = MockScene(None, mock_properties)
+        self.assertEqual(s._common_data_type_of_bands(["its_a_byte"]), "Byte")
+        self.assertEqual(s._common_data_type_of_bands(["one", "two"]), "UInt16")
+        self.assertEqual(s._common_data_type_of_bands(["one", "two", "derived:three", "derived:one"]), "UInt16")
+        with self.assertRaisesRegexp(ValueError, "is not available"):
+            s._common_data_type_of_bands(["one", "woohoo"])
+        with self.assertRaisesRegexp(ValueError, "Did you mean"):
+            s._common_data_type_of_bands(["one", "three"])  # should hint that derived:three exists
+        with self.assertRaisesRegexp(ValueError, "has no 'dtype' field"):
+            s._common_data_type_of_bands(["one", "no_dtype"])
+        with self.assertRaisesRegexp(ValueError, "Bands must all have the same dtype"):
+            s._common_data_type_of_bands(["one", "its_a_byte"])

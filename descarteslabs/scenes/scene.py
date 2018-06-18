@@ -49,6 +49,7 @@ from descarteslabs.client.addons import ThirdParty, shapely, numpy as np
 from descarteslabs.client.services.raster import Raster
 from descarteslabs.client.services.metadata import Metadata
 from descarteslabs.client.exceptions import NotFoundError, BadRequestError
+from descarteslabs.common.dotdict import DotDict
 
 from . import geocontext
 
@@ -69,38 +70,42 @@ class Scene(object):
         Metadata about the scene. Some fields will vary between products,
         but these will be present:
 
-        * id : str
+        * ``id`` : str
             Descartes Labs ID of this scene
-        * crs : str
+        * ``crs`` : str
             Native coordinate reference system of the scene,
             as an EPSG code or PROJ.4 definition
-        * date : datetime.datetime
+        * ``date`` : datetime.datetime
             ``'acquired'`` date parsed as a Python datetime if set,
             otherwise None
-        * bands : DotDict[str, DotDict]
+        * ``bands`` : DotDict[str, DotDict]
             Metadata about the bands available in the scene,
-            as the mapping {band name: band metadata}
+            as the mapping ``{band name: band metadata}``.
+
+            Band names are either the band's ``name`` field (like "red"),
+            or for derived bands, the band's ``id`` (like "derived:ndvi").
+
             Each band metadata dict should contain these fields:
 
-            * id : str
+            * ``id`` : str
                 Descartes Labs ID of the band;
                 unique to every band of every product
-            * name : str
+            * ``name`` : str
                 Human-readable name of the band
-            * dtype : str
+            * ``dtype`` : str
                 Native type in which the band's data is stored
-            * data_range : list
+            * ``data_range`` : list
                 List of [min, max] values the band's data can have
 
             These fields are useful and available in most products,
             but may not always be available:
 
-            * resolution : float
+            * ``resolution`` : float
                 Native resolution of the band, in ``resolution_unit``,
                 that the edge of each pixel represents on the ground
-            * resolution_unit : str
+            * ``resolution_unit`` : str
                 Units of ``resolution`` field, such as ``"m"``
-            * physical_range : list
+            * ``physical_range`` : list
                 [min, max] range of values the band's data *represents*.
                 Values of data have physical meaning
                 (such as a reflectance fraction from 0-1), but often
@@ -109,13 +114,13 @@ class Scene(object):
                 less space than floats). To return data to numbers
                 with physical meaning, they should be mapped
                 from ``data_range`` to ``physical_range``.
-            * wavelength_min
+            * ``wavelength_min``
                 Minimum wavelength captured by the sensor in this band
-            * wavelength_center
+            * ``wavelength_center``
                 Central wavelength captured by the sensor in this band
-            * wavelength_max
+            * ``wavelength_max``
                 Maximum wavelength captured by the sensor in this band
-            * wavelength_unit
+            * ``wavelength_unit``
                 Units of the wavelength fields, such as ``"nm"``
     """
     def __init__(self, scene_dict, bands_dict):
@@ -130,7 +135,7 @@ class Scene(object):
                          else scene_dict["geometry"])
         properties = scene_dict["properties"]
         properties["id"] = scene_dict["id"]
-        properties["bands"] = {b["name"]: b for b in six.itervalues(bands_dict)}
+        properties["bands"] = self._scenes_bands_dict(bands_dict)
         properties["crs"] = (properties.pop("cs_code")
                              if "cs_code" in properties
                              else properties.get("proj4"))
@@ -249,8 +254,9 @@ class Scene(object):
         ----------
         bands : str or Sequence[str]
             Band names to load. Can be a single string of band names
-            separated by spaces (``"red green blue"``),
-            or a sequence of band names (``["red", "green", "blue"]``).
+            separated by spaces (``"red green blue derived:ndvi"``),
+            or a sequence of band names (``["red", "green", "blue", "derived:ndvi"]``).
+            Names must be keys in ``self.properties.bands``.
             If the alpha band is requested, it must be last in the list
             to reduce rasterization errors.
         ctx : GeoContext
@@ -415,10 +421,12 @@ class Scene(object):
             try:
                 band = self_bands[b]
             except KeyError:
-                six.raise_from(
-                    ValueError("Band '{}' is not available in the product '{}'".format(b, self.properties["product"])),
-                    None
-                )
+                msg = "Band '{}' is not available in the product '{}'".format(b, self.properties["product"])
+                # check if they maybe wanted a derived band but forgot the ``derived:`` prefix
+                as_derived = "derived:" + b
+                if as_derived in self_bands:
+                    msg += ", but '{}' is. Did you mean that?".format(as_derived)
+                six.raise_from(ValueError(msg), None)
             try:
                 data_type = band["dtype"]
             except KeyError:
@@ -449,3 +457,14 @@ class Scene(object):
         if len(bands) == 0:
             raise ValueError("No bands specified to load")
         return list(bands)
+
+    @staticmethod
+    def _scenes_bands_dict(metadata_bands):
+        """
+        Convert bands dict from metadata client ({id: band_meta})
+        to {<name, or ID if derived>: band_meta}
+        """
+        return DotDict({
+            id if id.startswith("derived") else meta["name"]: meta
+            for id, meta in six.iteritems(metadata_bands)
+        })
