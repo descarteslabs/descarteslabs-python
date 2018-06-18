@@ -15,45 +15,69 @@
 """
 Create a SceneCollection by searching:
 
->>> import descarteslabs as dl
->>> import numpy as np
->>> aoi_geometry = {'type': 'Polygon',
-...  'coordinates': (((-95.27841503861751, 42.76556057019057),
-...    (-93.15675252485482, 42.36289849433184),
-...    (-93.73350276458868, 40.73810018004927),
-...    (-95.79766011799035, 41.13809376845988),
-...    (-95.27841503861751, 42.76556057019057)),)}
->>> scenes, ctx = dl.scenes.search(aoi_geometry, products=["landsat:LC08:PRE:TOAR"], limit=10)
->>> scenes
-SceneCollection of 10 scenes
-  * Dates: Apr 18, 2013 to Sep 09, 2013
-  * Products: landsat:LC08:PRE:TOAR: 10
+.. ipython::
+
+    In [1]: import descarteslabs as dl
+
+    In [2]: import numpy as np
+
+    In [3]: aoi_geometry = {'type': 'Polygon',
+       ...:  'coordinates': (((-95.27841503861751, 42.76556057019057),
+       ...:    (-93.15675252485482, 42.36289849433184),
+       ...:    (-93.73350276458868, 40.73810018004927),
+       ...:    (-95.79766011799035, 41.13809376845988),
+       ...:    (-95.27841503861751, 42.76556057019057)),)}
+
+    In [4]: scenes, ctx = dl.scenes.search(aoi_geometry, products=["landsat:LC08:PRE:TOAR"], limit=10)
+
+    @doctest
+    In [5]: scenes
+    Out[5]:
+    SceneCollection of 10 scenes
+      * Dates: Apr 18, 2013 to Sep 09, 2013
+      * Products: landsat:LC08:PRE:TOAR: 10
 
 Use `SceneCollection.each` and `SceneCollection.filter` to subselect Scenes you want:
 
->>> # which month is each scene from?
->>> scenes.each.properties.date.month.combine()
-[4, 5, 5, 6, 6, 7, 7, 8, 8, 9]
->>> spring_scenes = scenes.filter(lambda s: s.properties.date.month <= 6)
->>> spring_scenes
-SceneCollection of 5 scenes
-  * Dates: Apr 18, 2013 to Jun 21, 2013
-  * Products: landsat:LC08:PRE:TOAR: 5
-  * ctx: AOI with resolution 60, bounds (-95.79766011799035, 40.73810018004927, -93.15675252485482, 42.76556057019057)
+.. ipython::
 
-Load data with `SceneCollection.stack`:
+    In [6]: # which month is each scene from?
 
->>> stack = spring_scenes.stack("red green blue", ctx)
->>> stack.shape
-(5, 3, 3690, 3724)
+    @doctest
+    In [7]: scenes.each.properties.date.month.combine()
+    Out[7]: [4, 5, 5, 6, 6, 7, 7, 8, 8, 9]
 
-Use `SceneCollection.groupby` and `SceneCollection.stack` to make monthly median composites:
+    In [8]: spring_scenes = scenes.filter(lambda s: s.properties.date.month <= 6)
 
->>> composites = {}
->>> for month, month_scenes in spring_scenes.groupby("properties.date.month"):
-...     month_stack = month_scenes.stack("red green blue", ctx)
-...     month_composite = np.ma.median(month_stack)
-...     composites[month] = month_composite
+    @doctest
+    In [9]: spring_scenes
+    Out[9]:
+    SceneCollection of 5 scenes
+      * Dates: Apr 18, 2013 to Jun 21, 2013
+      * Products: landsat:LC08:PRE:TOAR: 5
+
+Operate on related Scenes with `SceneCollection.groupby`:
+
+.. ipython::
+
+    @doctest
+    In [14]: for month, month_scenes in spring_scenes.groupby("properties.date.month"):
+       ....:    print("Month {}: {} scenes".format(month, len(month_scenes)))
+       ....:
+    Month 4: 1 scenes
+    Month 5: 2 scenes
+    Month 6: 2 scenes
+
+Load data with `SceneCollection.stack` or `SceneCollection.mosaic`:
+
+.. ipython::
+
+    In [10]: ctx_lowres = ctx.assign(resolution=120)
+
+    In [11]: stack = spring_scenes.stack("red green blue", ctx_lowres)
+
+    In [12]: stack.shape
+    Out[12]: (5, 3, 3690, 3724)
 """
 
 from __future__ import division
@@ -77,7 +101,7 @@ class SceneCollection(Collection):
     """
     Holds Scenes, with methods for loading their data.
 
-    As a subclass of Collection, the `filter`, `map`, and `groupby`
+    As a subclass of `Collection`, the `filter`, `map`, and `groupby`
     methods and `each` property simplify inspection and subselection of
     contianed Scenes.
 
@@ -296,7 +320,7 @@ class SceneCollection(Collection):
         -------
         arr : ndarray
             Returned array's shape will be ``(band, y, x)`` if ``bands_axis``
-            is 0, and ``(y, x, band)`` if ``bands_axis`` is -1
+            is 0, and ``(y, x, band)`` if ``bands_axis`` is -1.
             If ``mask_nodata`` or ``mask_alpha`` is True, arr will be a masked array.
         raster_info : dict
             If ``raster_info=True``, a raster information dict is also returned.
@@ -410,9 +434,10 @@ class SceneCollection(Collection):
 
         try:
             products = self.each.properties.product.combine(collections.Counter)
-            products = ", ".join("{}: {}".format(k, v) for k, v in six.iteritems(products))
-            products = "  * Products: {}".format(products)
-            parts.append(products)
+            if len(products) > 0:
+                products = ", ".join("{}: {}".format(k, v) for k, v in six.iteritems(products))
+                products = "  * Products: {}".format(products)
+                parts.append(products)
         except Exception:
             pass
 

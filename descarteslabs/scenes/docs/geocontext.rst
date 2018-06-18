@@ -1,4 +1,4 @@
-Geocontext
+GeoContext
 ----------
 
 :doc:`Back to Scenes<../readme>`

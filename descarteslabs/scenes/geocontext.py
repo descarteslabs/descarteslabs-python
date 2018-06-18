@@ -36,39 +36,87 @@ functionality.
 * `DLTile` helps you split large regions up into a grid of any spacing and
   resolution, and represents a single tile in that grid, in UTM projection.
 
-Examples
+Tutorial
 ========
 
 Often, you don't have to create GeoContexts yourself---an `AOI`
-with default parameters is created for you by `scenes.search` and
-`Scene.from_id`.
-However, here's how you'd create and use them explicitly::
+with default parameters is created for you by `scenes.search <scenes._search.search>`
+and `Scene.from_id`.
+
+.. ipython:: python
 
     import descarteslabs as dl
-    import json
-    with open("my_geometry.geojson") as f:
-        geojson = json.load(f)
 
-    aoi = dl.scenes.AOI(geojson, resolution=10, crs="EPSG:3857")
-    scenes = dl.scenes.search(aoi, products=...)
-    scenes.ctx == aoi  # True
+    scene, default_ctx = dl.scenes.Scene.from_id('landsat:LC08:PRE:TOAR:meta_LC80260322013188_v1')
+    default_ctx
 
-    highres_stack = scenes.stack("red green blue")
+GeoContexts are immutable; instead, create copies with new values using `AOI.assign`.
+(Assigning new values to DLTiles is not yet supported.)
 
-    aoi_lowres = aoi.assign(resolution=120)
-    lowres_stack = scenes.stack("red green blue", ctx=aoi_lowres)
+.. ipython:: python
 
-    aoi_unclipped = aoi.assign(geometry=None)
-    unclipped_stack = scenes.stack("red green blue", ctx=aoi_unclipped)
-    ...
+    # let's use a lower resolution to load images faster
+    lowres = default_ctx.assign(resolution=75)
+    lowres_arr = scene.ndarray("red green blue", lowres)
+    @savefig geocontext1.png
+    dl.scenes.display(lowres_arr, size=4, title="Default GeoContext, 75-meter resolution")
 
-Or for a DLTile::
+You can also create GeoContexts explicitly:
+
+.. ipython:: python
+
+    import shapely.affinity
+
+    # make a new polygon half the size of the scene's full extent
+    new_cutline = shapely.affinity.scale(scene.geometry, xfact=0.5, yfact=0.5)
+
+    webmerc_cutline_aoi = dl.scenes.AOI(
+        geometry=new_cutline,
+        resolution=75,
+        crs="EPSG:3857"  # "EPSG:3857" is the code for the Web Mercator
+    )                    # coordinate reference system, see http://epsg.io/3857
+
+    webmerc_cutline_arr = scene.ndarray("red green blue", webmerc_cutline_aoi)
+    @savefig geocontext2.png
+    dl.scenes.display(webmerc_cutline_arr, size=4, title="Same scene, with cutline and Web Mercator")
+
+Let's assign our new cutline to the default GeoContext
+to see the difference between the coordinate reference systems:
+
+.. ipython:: python
+
+    with_cutline = lowres.assign(geometry=new_cutline)
+
+    with_cutline_arr = scene.ndarray("red green blue", with_cutline)
+    @savefig geocontext3.png
+    dl.scenes.display(with_cutline_arr, size=4, title="Original GeoContext with new cutline")
+
+Why is there all that empty space around the sides?
+We assigned a new geometry, but we didn't change the *bounds*.
+Bounds determine the x-y extent that's rasterized; geometry just clips within that.
+If shapely is installed, you can pass ``bounds="update"`` to compute new bounds when assinging a new geometry.
+
+.. ipython:: python
+
+    cutline_bounds = lowres.assign(geometry=new_cutline, bounds="update")
+    cutline_bounds_arr = scene.ndarray("red green blue", cutline_bounds)
+    @savefig geocontext4.png
+    dl.scenes.display(cutline_bounds_arr, size=4, title="Original GeoContext, new cutline and bounds")
+
+You can also use DLTiles to split up regions along a grid:
+
+.. ipython:: python
 
     tiles = dl.scenes.DLTile.from_shape(
-        geojson, resolution=10, tilesize=512, pad=16
+        new_cutline, resolution=75, tilesize=256, pad=16
     )
-    for tile in tiles:
-        scenes = dl.scenes.search(tile, products=...)
+    len(tiles)
+
+    tile0_arr = scene.ndarray("red green blue", tiles[0])
+    tile1_arr = scene.ndarray("red green blue", tiles[1])
+
+    @savefig geocontext5.png
+    dl.scenes.display(tile0_arr, tile1_arr, title=[tiles[0].key, tiles[1].key], size=3)
 """
 
 import copy
@@ -141,12 +189,13 @@ class AOI(GeoContext):
     Examples
     --------
 
-    >>> import descarteslabs as dl
-    >>> cutline_aoi = dl.scenes.AOI(my_geometry, resolution=40)
-    >>> aoi_with_cutline_disabled = cutline_aoi.assign(geometry=None)
-    >>> no_cutline_aoi = dl.scenes.AOI(geometry=None, resolution=15, bounds=(-40, 35, -39, 36))
-    >>> aoi_without_auto_bounds = dl.scenes.AOI(geometry=my_geometry, resolution=15, bounds=(-40, 35, -39, 36))
-    >>> aoi_with_specific_pixel_dimensions = dl.scenes.AOI(geometry=my_geometry, shape=(200, 400))
+    .. code-block:: python
+
+        cutline_aoi = dl.scenes.AOI(my_geometry, resolution=40)
+        aoi_with_cutline_disabled = cutline_aoi.assign(geometry=None)
+        no_cutline_aoi = dl.scenes.AOI(geometry=None, resolution=15, bounds=(-40, 35, -39, 36))
+        aoi_without_auto_bounds = dl.scenes.AOI(geometry=my_geometry, resolution=15, bounds=(-40, 35, -39, 36))
+        aoi_with_specific_pixel_dimensions = dl.scenes.AOI(geometry=my_geometry, shape=(200, 400))
     """
     __slots__ = (
         "_geometry",

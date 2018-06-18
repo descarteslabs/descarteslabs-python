@@ -21,22 +21,22 @@ Example
 >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
 >>> ctx  # a default GeoContext to use when loading raster data from this Scene
 AOI(geometry=None,
-    resolution=60,
+    resolution=15,
     crs='EPSG:32615',
     align_pixels=True,
     bounds=(-95.8364984, 40.703737, -93.1167728, 42.7999878),
-    dimensions=None)
+    shape=None)
 >>> scene.properties.id
 'landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'
 >>> scene.properties.date
 datetime.datetime(2016, 7, 6, 16, 59, 42, 753476)
 >>> scene.properties.bands.red.resolution
 15
->>> arr = scene.ndarray(ctx, "red green blue")
+>>> arr = scene.ndarray("red green blue", ctx)
 >>> type(arr)
-numpy.ma.core.MaskedArray
+<class 'numpy.ma.core.MaskedArray'>
 >>> arr.shape
-(3, 3815, 3836)
+(3, 15259, 15340)
 """
 
 from __future__ import division
@@ -128,7 +128,7 @@ class Scene(object):
         ``__init__`` instantiates a Scene from a dict returned by `Metadata.search`
         and `Metadata.get_bands_by_id`.
 
-        It's preferred to use `Scene.from_id` or `scenes.search` instead.
+        It's preferred to use `Scene.from_id` or `scenes.search <scenes._search.search>` instead.
         """
         self.geometry = (shapely.geometry.shape(scene_dict["geometry"])
                          if not isinstance(shapely, ThirdParty)
@@ -186,11 +186,11 @@ class Scene(object):
         >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
         >>> ctx
         AOI(geometry=None,
-            resolution=60,
+            resolution=15,
             crs='EPSG:32615',
             align_pixels=True,
             bounds=(-94.724166, 39.2784859, -92.0686956, 41.3717716),
-            dimensions=None)
+            shape=None)
         >>> scene.properties.date
         datetime.datetime(2016, 7, 15, 16, 53, 59, 495435)
 
@@ -299,9 +299,9 @@ class Scene(object):
         >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         >>> arr = scene.ndarray("red green blue", ctx)
         >>> type(arr)
-        numpy.ma.core.MaskedArray
+        <class 'numpy.ma.core.MaskedArray'>
         >>> arr.shape
-        (3, 3815, 3836)
+        (3, 15259, 15340)
         >>> red_band = arr[0]
 
         Raises

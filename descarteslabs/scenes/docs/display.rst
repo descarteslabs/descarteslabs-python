@@ -6,5 +6,5 @@ Display
 
 .. default-role:: any
 
-.. automodule:: descarteslabs.scenes.display
+.. automodule:: descarteslabs.scenes._display
   :members:

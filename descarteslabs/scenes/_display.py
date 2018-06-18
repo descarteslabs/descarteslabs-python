@@ -14,18 +14,6 @@
 
 """
 Displays ndarrays as images, but is easier to use and more flexible than matplotlib's ``imshow``.
-
-Examples
-========
-
->>> import descarteslabs as dl
->>> import numpy as np
->>> a = np.arange(20*15).reshape((20, 15))
->>> b = np.tan(a)
->>> dl.scenes.display(a, b, size=4)
-
-.. image:: https://cdn.descarteslabs.com/docs/api/scenes/display-1.png
-
 """
 
 from __future__ import division
@@ -68,6 +56,18 @@ def display(*imgs, **kwargs):
         Acceptable values are 'none', 'nearest', 'bilinear', 'bicubic', 'spline16',
         'spline36', 'hanning', 'hamming', 'hermite', 'kaiser', 'quadric', 'catrom',
         'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos'
+
+    Example
+    =======
+
+    .. ipython:: python
+
+        import descarteslabs as dl
+        import numpy as np
+        a = np.arange(20*15).reshape((20, 15))
+        b = np.tan(a)
+        @savefig display.png
+        dl.scenes.display(a, b, size=4)
 
     Raises
     ------
@@ -142,6 +142,8 @@ def display(*imgs, **kwargs):
 
         # calculate min and max
         if robust:
+            if hasattr(spectrals, "mask"):
+                spectrals = spectrals.compressed()  # don't include masked values in percentile
             vmin, vmax = np.percentile(spectrals, 2), np.percentile(spectrals, 98)
             if vmin == vmax:
                 robust = False
