@@ -129,7 +129,7 @@ And the mean NDVI value of each month's composite is:
 
     @doctest
     In [16]: {month: composite.mean() for month, composite in monthly_composites.items()}
-    Out[16]: {7: 0.32535368527404873, 8: 0.41194597940346561}
+    Out[16]: {7: 0.32535368527404873, 8: 0.4119459794034656}
 
 View the NDVI composites:
 
