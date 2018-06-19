@@ -20,8 +20,9 @@ from descarteslabs.client.services.service import Service, ThirdPartyService
 
 
 class Storage(Service):
-    TIMEOUT = (9.5, 120)
     """Data Storage Service"""
+
+    TIMEOUT = (9.5, 120)
 
     def __init__(self, url=None, auth=None):
         """The parent Service class implements authentication and exponential
@@ -102,6 +103,7 @@ class Storage(Service):
     def list(self, prefix=None, storage_type='data'):
         """
         List keys that have been stored, with an optional `prefix` and `storage_type`.
+
         :param str prefix: A prefix match of keys returned.
         :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
 
@@ -120,6 +122,7 @@ class Storage(Service):
     def iter_list(self, prefix=None, storage_type='data'):
         """
         Yield keys that have been stored, with an optional `prefix` and `storage_type`.
+
         :param str prefix: A prefix match of keys returned.
         :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
 
@@ -149,6 +152,7 @@ class Storage(Service):
         """Copy a file from a google cloud storage bucket to your descartes
         data bucket. This requires that the dlstorage service account have
         access to your 3rd party bucket.
+
         :param str src_bucket_name: The name of the bucket from which you want to copy data.
         :param str src: The path to the file you want to copy inside the src_bucket_name` bucket.
         :param str dest: The new path of the file inside the descarteslabs data bucket.
