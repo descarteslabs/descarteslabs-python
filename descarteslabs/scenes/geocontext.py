@@ -251,7 +251,8 @@ class AOI(GeoContext):
             computed from ``geometry`` if not specified.
             Otherwise, ``bounds`` are required.
         shape: 2-tuple, optional
-            ``(rows, columns)``, in pixels, to make the output raster.
+            ``(rows, columns)``, in pixels, the output raster should fit within;
+            the longer side of the raster will be min(shape).
             Can only specify one of ``resolution`` and ``shape``.
         """
 
@@ -287,8 +288,8 @@ class AOI(GeoContext):
     @property
     def resolution(self):
         """
-        float: Distance, in meters, that the edge of each pixel represents on
-        the ground
+        float: Distance, in units of the CRS, that the edge of each pixel
+        represents on the ground.
         """
         return self._resolution
 
@@ -331,7 +332,10 @@ class AOI(GeoContext):
 
     @property
     def shape(self):
-        "tuple: ``(rows, columns)``, in pixels, to make the output raster."
+        """
+        tuple: ``(rows, columns)``, in pixels, the output raster should fit within;
+        the longer side of the raster will be min(shape).
+        """
         return self._shape
 
     @property

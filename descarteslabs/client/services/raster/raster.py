@@ -280,16 +280,16 @@ class Raster(Service):
             each respective image's alpha band is `1` (pixels where the alpha band is not
             `1` are "transparent" in the overlap between images). If a pixel is fully
             masked considering all combined alpha bands it will be `0` in all non-alpha
-            bands.
+            bands. Not specifying bands returns all bands in the product.
         :param scales: List of tuples specifying the scaling to be applied to each band.
             A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
             meaning values in the source range ``src_min`` to ``src_max`` will be scaled
             to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
             ``(src_min, src_max)`` is also allowed, in which case the output range
             defaults to ``(0, 255)`` (a useful default for the common output type
-            ``Byte``).  If no scaling is desired for a band, use ``None``.  This tuple
+            ``Byte``).  If no scaling is desired for a band, use ``[0, 1, 0, 1]``.  This tuple
             format and behaviour is identical to GDAL's scales during translation.
-            Example argument: ``[(0, 10000, 0, 127), None, (0, 10000)]`` - the first
+            Example argument: ``[(0, 10000, 0, 127), (0, 1, 0, 1), (0, 10000)]`` - the first
             band will have source values 0-10000 scaled to 0-127, the second band will
             not be scaled, the third band will have 0-10000 scaled to 0-255.
         :param str output_format: Output format (one of ``GTiff``, ``PNG``, ``JPEG``).
@@ -298,9 +298,11 @@ class Raster(Service):
         :param str srs: Output spatial reference system definition understood by GDAL.
         :param float resolution: Desired resolution in output SRS units. Incompatible with
             `dimensions`
-        :param tuple dimensions: Desired output (width, height) in pixels. Incompatible with
-            `resolution`
-        :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
+        :param tuple dimensions: Desired output (width, height) in pixels within which
+            the raster should fit; i.e. the longer side of the raster will be min(dimensions).
+            Incompatible with `resolution`.
+        :param str cutline: A GeoJSON object to be used as a cutline, or WKT string.
+                            GeoJSON coordinates must be in WGS84 lat-lon.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
         :param str bounds_srs:
@@ -414,16 +416,16 @@ class Raster(Service):
             each respective image's alpha band is `1` (pixels where the alpha band is not
             `1` are "transparent" in the overlap between images). If a pixel is fully
             masked considering all combined alpha bands it will be `0` in all non-alpha
-            bands.
+            bands. Not specifying bands returns all bands in the product.
         :param scales: List of tuples specifying the scaling to be applied to each band.
             A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
             meaning values in the source range ``src_min`` to ``src_max`` will be scaled
             to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
             ``(src_min, src_max)`` is also allowed, in which case the output range
             defaults to ``(0, 255)`` (a useful default for the common output type
-            ``Byte``).  If no scaling is desired for a band, use ``None``. This tuple
+            ``Byte``).  If no scaling is desired for a band, use ``[0, 1, 0, 1]``. This tuple
             format and behaviour is identical to GDAL's scales during translation.
-            Example argument: ``[(0, 10000, 0, 127), None, (0, 10000)]`` - the first
+            Example argument: ``[(0, 10000, 0, 127), (0, 1, 0, 1), (0, 10000)]`` - the first
             band will have source values 0-10000 scaled to 0-127, the second band will
             not be scaled, the third band will have 0-10000 scaled to 0-255.
         :param str data_type: Output data type (one of ``Byte``, ``UInt16``, ``Int16``,
@@ -431,9 +433,11 @@ class Raster(Service):
         :param str srs: Output spatial reference system definition understood by GDAL.
         :param float resolution: Desired resolution in output SRS units. Incompatible with
             `dimensions`
-        :param tuple dimensions: Desired output (width, height) in pixels. Incompatible with
-            `resolution`
-        :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
+        :param tuple dimensions: Desired output (width, height) in pixels within which
+            the raster should fit; i.e. the longer side of the raster will be min(dimensions).
+            Incompatible with `resolution`.
+        :param str cutline: A GeoJSON object to be used as a cutline, or WKT string.
+                            GeoJSON coordinates must be in WGS84 lat-lon.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
         :param str bounds_srs:
@@ -569,6 +573,7 @@ class Raster(Service):
 
         To ensure every raster in the stack has the same shape and covers the same
         spatial extent, you must either:
+
         * set ``dltile``, or
         * set [``resolution`` or ``dimensions``], ``srs``, and ``bounds``
 
@@ -583,16 +588,16 @@ class Raster(Service):
             each respective image's alpha band is `1` (pixels where the alpha band is not
             `1` are "transparent" in the overlap between images). If a pixel is fully
             masked considering all combined alpha bands it will be `0` in all non-alpha
-            bands.
+            bands. Not specifying bands returns all bands in the product.
         :param scales: List of tuples specifying the scaling to be applied to each band.
             A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
             meaning values in the source range ``src_min`` to ``src_max`` will be scaled
             to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
             ``(src_min, src_max)`` is also allowed, in which case the output range
             defaults to ``(0, 255)`` (a useful default for the common output type
-            ``Byte``).  If no scaling is desired for a band, use ``None``. This tuple
+            ``Byte``).  If no scaling is desired for a band, use ``[0, 1, 0, 1]``. This tuple
             format and behaviour is identical to GDAL's scales during translation.
-            Example argument: ``[(0, 10000, 0, 127), None, (0, 10000)]`` - the first
+            Example argument: ``[(0, 10000, 0, 127), (0, 1, 0, 1), (0, 10000)]`` - the first
             band will have source values 0-10000 scaled to 0-127, the second band will
             not be scaled, the third band will have 0-10000 scaled to 0-255.
         :param str data_type: Output data type (one of ``Byte``, ``UInt16``, ``Int16``,
@@ -600,9 +605,11 @@ class Raster(Service):
         :param str srs: Output spatial reference system definition understood by GDAL.
         :param float resolution: Desired resolution in output SRS units. Incompatible with
             `dimensions`
-        :param tuple dimensions: Desired output (width, height) in pixels. Incompatible with
-            `resolution`
-        :param str cutline: A GeoJSON feature or geometry to be used as a cutline.
+        :param tuple dimensions: Desired output (width, height) in pixels within which
+            the raster should fit; i.e. the longer side of the raster will be min(dimensions).
+            Incompatible with `resolution`.
+        :param str cutline: A GeoJSON object to be used as a cutline, or WKT string.
+                            GeoJSON coordinates must be in WGS84 lat-lon.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
         :param str bounds_srs:
@@ -620,13 +627,14 @@ class Raster(Service):
             of the number of inputs and `DEFAULT_MAX_WORKERS`.
 
         :return: A tuple of ``(stack, metadata)``.
-            ``stack``: 4D ndarray. The axes are ordered ``(scene, band, y, x)``
-            (or ``(scene, y, x, band)`` if ``order="gdal"``). The scenes in the outermost
-            axis are in the same order as the list of identifiers given as ``inputs``.
-            ``metadata``: List[dict] of the rasterization metadata for each element in ``inputs``.
-            As with the metadata returned by :meth:`ndarray` and :meth:`raster`, these dictionaries
-            contain useful information about the raster, such as its geotransform matrix and WKT
-            of its coordinate system, but there are no guarantees that certain keys will be present.
+
+            * ``stack``: 4D ndarray. The axes are ordered ``(scene, band, y, x)``
+              (or ``(scene, y, x, band)`` if ``order="gdal"``). The scenes in the outermost
+              axis are in the same order as the list of identifiers given as ``inputs``.
+            * ``metadata``: List[dict] of the rasterization metadata for each element in ``inputs``.
+              As with the metadata returned by :meth:`ndarray` and :meth:`raster`, these dictionaries
+              contain useful information about the raster, such as its geotransform matrix and WKT
+              of its coordinate system, but there are no guarantees that certain keys will be present.
         """
         if not isinstance(inputs, (list, tuple)):
             raise TypeError("Inputs must be a list or tuple, instead got '{}'".format(type(inputs)))
