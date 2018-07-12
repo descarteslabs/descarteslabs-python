@@ -9,6 +9,11 @@ Changelog
 =========
 
 ## [Unreleased]
+## [0.11.0] - 2018-07-12
+### Added
+- Scenes package
+- More examples
+
 ### Changed
 - Deprecated `add_namespace` argument in catalog client (defaults to `False`
   now, formerly `True`)
@@ -202,7 +207,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.1...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.1...v0.11.0
 [0.10.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.9.0...v0.9.1
