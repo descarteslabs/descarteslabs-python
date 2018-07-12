@@ -70,24 +70,26 @@ class Catalog(Service):
         r = self.session.post('/core/products', json=kwargs)
         return r.json()
 
-    def get_product(self, product_id, add_namespace=True):
+    def get_product(self, product_id, add_namespace=False):
         if add_namespace:
             product_id = self.namespace_product(product_id)
 
         r = self.session.get('/products/{}'.format(product_id))
         return r.json()
 
-    def add_product(self, product_id, title, description, add_namespace=True, **kwargs):
+    def add_product(self, product_id, title, description, add_namespace=False, **kwargs):
         """Add a product to your catalog.
 
-        :param str product_id: (Required) A unique name for this product.
+        :param str product_id: (Required) A unique name for this product. In the created
+            product a namespace consisting of your user id (e.g.
+            "ae60fc891312ggadc94ade8062213b0063335a3c:") or your organization id (e.g.,
+            "yourcompany:") will be prefixed to this, if it doesn't already have one, in
+            order to make the id globally unique.
         :param str title: (Required) Official product title.
         :param str description: (Required) Information about the product,
                                 why it exists, and what it provides.
 
-        :param bool add_namespace: Add your user namespace to the product_id.
-                                   This is only relevant to administrators modifying
-                                   other users products. Defaults to True.
+        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
         :param list(str) read: A list of groups, or user hashes to give read access to.
         :param int spectral_bands: Number of spectral bands the product has.
         :param list(str) native_bands: A list of the names of the native bands of this product
@@ -120,7 +122,7 @@ class Catalog(Service):
             product_id,
             title,
             description,
-            add_namespace=True,
+            add_namespace=False,
             set_global_permissions=False,
             **kwargs
     ):
@@ -131,8 +133,7 @@ class Catalog(Service):
         :param str description: (Required) Information about the product,
                                 why it exists, and what it provides.
 
-        :param bool add_namespace: Add your user namespace to the product_id.
-            This is only relevant to administrators modifying other users products. Defaults to True.
+        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
         :param list(str) read: A list of groups, or user hashes to give read access to.
         :param int spectral_bands: Number of spectral bands the product has.
         :param list(str) native_bands: A list of the names of the native bands of this product
@@ -166,7 +167,7 @@ class Catalog(Service):
         r = self.session.put('/products/{}'.format(product_id), json=kwargs, params=params)
         return r.json()
 
-    def change_product(self, product_id, add_namespace=True, set_global_permissions=False, **kwargs):
+    def change_product(self, product_id, add_namespace=False, set_global_permissions=False, **kwargs):
         """Update a product to your catalog.
 
         :param str product_id: (Required) The ID of the product to change.
@@ -175,9 +176,7 @@ class Catalog(Service):
         :param list(str) native_bands: A list of the names of the native bands of this product
                                         (most applicable to satellite sensors).
 
-        :param bool add_namespace: Add your user namespace to the product_id.
-                                   This is only relevant to administrators modifying
-                                   other users products. Defaults to True.
+        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
         :param bool set_global_permissions: Update permissions of all existing bands and products
                                             that belong to this product with the updated permission set
                                             specified in the `read` param. Default to false.
@@ -209,7 +208,7 @@ class Catalog(Service):
         r = self.session.patch('/products/{}'.format(product_id), json=kwargs, params=params)
         return r.json()
 
-    def remove_product(self, product_id, add_namespace=True, cascade=False):
+    def remove_product(self, product_id, add_namespace=False, cascade=False):
         """Remove a product from the catalog.
 
         :param str product_id: ID of the product to remove.
@@ -233,7 +232,7 @@ class Catalog(Service):
         r = self.session.get('/products/deletion_tasks/{}'.format(deletion_task_id))
         return r.json()
 
-    def get_band(self, product_id, name, add_namespace=True):
+    def get_band(self, product_id, name, add_namespace=False):
         """Get a band by name.
 
         :return: JSON API representation of the band.
@@ -269,7 +268,7 @@ class Catalog(Service):
             self,
             product_id,
             name,
-            add_namespace=True,
+            add_namespace=False,
             srcband=None,
             dtype=None,
             nbits=None,
@@ -281,9 +280,7 @@ class Catalog(Service):
 
         :param str product_id: (Required) Product to which this band will belong.
         :param str name: (Required) Name of this band.
-        :param bool add_namespace: Add your user namespace to the product_id.
-                                   This is only relevant to administrators modifying
-                                   other users products. Defaults to True.
+        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
         :param int jpx_layer: If data is processed to JPEG2000, which layer is the band in. Defaults to 0.
         :param int srcband: (Required) The 1-based index of the band in the jpx_layer specified.
         :param int srcfile: If the product was processed into multiple files,
@@ -357,7 +354,7 @@ class Catalog(Service):
             dtype=None,
             nbits=None,
             data_range=None,
-            add_namespace=True,
+            add_namespace=False,
             type=None,
             **kwargs
     ):
@@ -365,9 +362,7 @@ class Catalog(Service):
 
         :param str product_id: (Required) Product to which this band will belong.
         :param str name: (Required) Name of this band.
-        :param bool add_namespace: Add your user namespace to the product_id.
-                                   This is only relevant to administrators modifying
-                                   other users products. Defaults to True.
+        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
         :param int jpx_layer: If data is processed to JPEG2000, which layer is the band in. Defaults to 0.
         :param int srcband: (Required) The 1-based index of the band in the jpx_layer specified.
         :param int srcfile: If the product was processed into multiple files,
@@ -433,14 +428,12 @@ class Catalog(Service):
         r = self.session.put('/products/{}/bands/{}'.format(product_id, name), json=kwargs)
         return r.json()
 
-    def change_band(self, product_id, name, add_namespace=True, **kwargs):
+    def change_band(self, product_id, name, add_namespace=False, **kwargs):
         """Add a data band to an existing product.
 
         :param str product_id: (Required) Product to which this band belongs.
         :param str name: Name or id of band to modify.
-        :param bool add_namespace: Add your user namespace to the product_id.
-                                   This is only relevant to administrators modifying
-                                   other users products. Defaults to True.
+        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
         :param list(int) data_range: A list specifying the min and max values for the data in this band.
         :param str dtype: The data type used to store this band e.g Byte or Uint16 or Float32.
         :param int jpx_layer: If data is processed to JPEG2000, which layer is the band in. Use 0 for other formats.
@@ -498,12 +491,12 @@ class Catalog(Service):
         r = self.session.patch('/products/{}/bands/{}'.format(product_id, name), json=kwargs)
         return r.json()
 
-    def remove_band(self, product_id, name, add_namespace=True):
+    def remove_band(self, product_id, name, add_namespace=False):
         if add_namespace:
             product_id = self.namespace_product(product_id)
         self.session.delete('/products/{}/bands/{}'.format(product_id, name))
 
-    def get_image(self, product_id, image_id, add_namespace=True):
+    def get_image(self, product_id, image_id, add_namespace=False):
         """Get a single image metadata entry.
 
         :return: JSON API representation of the image.
@@ -516,15 +509,12 @@ class Catalog(Service):
         r = self.session.get('/products/{}/images/{}'.format(product_id, image_id))
         return r.json()
 
-    def add_image(self, product_id, image_id, add_namespace=True, **kwargs):
+    def add_image(self, product_id, image_id, add_namespace=False, **kwargs):
         """Add an image metadata entry to a product.
 
         :param str product_id: (Required) Product to which this image belongs.
         :param str image_id: (Required) New image's id = <product_id>:<image_id>.
-        :param bool add_namespace: Add your user namespace to the product_id.
-                                   This is only relevant to administrators modifying
-                                   other users products. Defaults to True.
-
+        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
         :param list(str) read: A list of groups, or user hashes to give read access to.
                                      Defaults to the same as the parent product if not specified.
         :param int absolute_orbit: Orbit number since mission start.
@@ -595,15 +585,12 @@ class Catalog(Service):
         r = self.session.post('/products/{}/images'.format(product_id), json=kwargs)
         return r.json()
 
-    def replace_image(self, product_id, image_id, add_namespace=True, **kwargs):
+    def replace_image(self, product_id, image_id, add_namespace=False, **kwargs):
         """Replace image metadata with a new version.
 
         :param str product_id: (Required) Product to which this image belongs.
         :param str image_id: (Required) ID of the image to replace.
-        :param bool add_namespace: Add your user namespace to the product_id.
-                                   This is only relevant to administrators modifying
-                                   other users products. Defaults to True.
-
+        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
         :param list(str) read: A list of groups, or user hashes to give read access to.
                                      Defaults to the same as the parent product if not specified.
         :param int absolute_orbit: Orbit number since mission start.
@@ -677,15 +664,12 @@ class Catalog(Service):
         r = self.session.post('/core/products/{}/images'.format(product_id), json=kwargs)
         return r.json()
 
-    def change_image(self, product_id, image_id, add_namespace=True, **kwargs):
+    def change_image(self, product_id, image_id, add_namespace=False, **kwargs):
         """Add an image metadata entry to a product.
 
         :param str product_id: (Required) Product to which this image belongs.
         :param str image_id: (Required) ID of the image to modify.
-        :param bool add_namespace: Add your user namespace to the product_id.
-                                   This is only relevant to administrators modifying
-                                   other users products. Defaults to True.
-
+        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
         :param list(str) read: A list of groups, or user hashes to give read access to.
         :param int absolute_orbit: Orbit number since mission start.
         :param str acquired: Date the imagery was acquired
@@ -752,7 +736,7 @@ class Catalog(Service):
         r = self.session.patch('/products/{}/images/{}'.format(product_id, image_id), json=kwargs)
         return r.json()
 
-    def remove_image(self, product_id, image_id, add_namespace=True):
+    def remove_image(self, product_id, image_id, add_namespace=False):
         if add_namespace:
             product_id = self.namespace_product(product_id)
         self.session.delete('/products/{}/images/{}'.format(product_id, image_id))

@@ -9,6 +9,10 @@ Changelog
 =========
 
 ## [Unreleased]
+### Changed
+- Deprecated `add_namespace` argument in catalog client (defaults to `False`
+  now, formerly `True`)
+
 ## [0.10.1] - 2018-05-30
 ### Changed
 - Added org to token scope
