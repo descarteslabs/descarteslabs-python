@@ -38,11 +38,11 @@ changed_product = catalog.change_product(
 changed_product_attrs = changed_product['data']['attributes']
 
 ##############################
-# Now, ``'user:some_user_hash'`` is a writer for this product. This user can now change the product metadata,
+# Now, ``'email:someuser@gmail.com'`` is a writer for this product. This user can now change the product metadata,
 # add bands, and add imagery to this product.
 print('Changed product writers: {}'.format(changed_product_attrs['writers']))
 
 #############################
-# Delete our product, we don't need it anymore.
+# Delete our product; we don't need it anymore.
 catalog.remove_product(product_id, add_namespace=True)
 print('Product removed.')
