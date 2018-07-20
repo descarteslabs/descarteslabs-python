@@ -104,11 +104,6 @@ Load and display a scene:
 
 Monthly median composites of NDVI within our area of interest:
 
-.. ipython:: python
-    :suppress:
-
-    from __future__ import division  # otherwise division for NDVI truncates to uint16
-
 .. ipython::
 
     In [13]: import numpy as np
@@ -117,6 +112,7 @@ Monthly median composites of NDVI within our area of interest:
 
     In [15]: for month, month_scenes in scenes.groupby("properties.date.month"):
        ....:     stack = month_scenes.stack("red nir", ctx_lowres)
+       ....:     stack = stack.astype(float)  # otherwise division for NDVI truncates to uint16
        ....:     red, nir = stack[:, 0], stack[:, 1]
        ....:     ndvi = (nir - red) / (nir + red)
        ....:     ndvi_composite = np.ma.median(ndvi, axis=0)
@@ -129,7 +125,7 @@ And the mean NDVI value of each month's composite is:
 
     @doctest
     In [16]: {month: composite.mean() for month, composite in monthly_composites.items()}
-    Out[16]: {7: 0.32535368527404873, 8: 0.4119459794034656}
+    Out[16]: {7: 0.32396951619824726, 8: 0.3973330207454807}
 
 View the NDVI composites:
 
