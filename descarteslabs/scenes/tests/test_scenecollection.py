@@ -36,6 +36,38 @@ class TestSceneCollection(unittest.TestCase):
         stack_axis_1 = scenes.stack("nir red", ctx, bands_axis=1)
         self.assertEqual(stack_axis_1.shape, (2, 2, 123, 121))
 
+    def test_stack_flatten(self):
+        scenes = (
+            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
+            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",  # note: just duplicated
+            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1"
+        )
+        scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
+
+        overlap = scenes[0].geometry.intersection(scenes[2].geometry)
+        ctx = ctxs[0].assign(geometry=overlap, bounds=overlap.bounds, resolution=600)
+
+        scenes = SceneCollection(scenes)
+
+        unflattened = scenes.stack("nir", ctx)
+
+        flattened, metas = scenes.stack(
+            "nir",
+            ctx,
+            flatten="properties.id",
+            raster_info=True,
+        )
+
+        self.assertEqual(len(flattened), 2)
+        self.assertEqual(len(metas), 2)
+
+        mosaic = scenes.mosaic("nir", ctx)
+        allflat = scenes.stack("nir", ctx, flatten="properties.product")
+        self.assertTrue((mosaic == allflat).all())
+
+        noflat = scenes.stack("nir", ctx, flatten=id)
+        self.assertTrue((noflat == unflattened).all())
+
     @mock.patch("descarteslabs.scenes.scenecollection.concurrent", ThirdParty("concurrent"))
     def test_stack_serial(self):
         scenes = ("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1", "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")

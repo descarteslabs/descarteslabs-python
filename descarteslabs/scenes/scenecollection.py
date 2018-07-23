@@ -126,6 +126,7 @@ class SceneCollection(Collection):
     def stack(self,
               bands,
               ctx,
+              flatten=None,
               mask_nodata=True,
               mask_alpha=True,
               bands_axis=1,
@@ -146,6 +147,24 @@ class SceneCollection(Collection):
             to reduce rasterization errors.
         ctx : GeoContext
             A GeoContext to use when loading each Scene
+        flatten : str, Sequence[str], callable, or Sequence[callable], default None
+            "Flatten" groups of Scenes in the stack into a single layer by mosaicking
+            each group (such as Scenes from the same day), then stacking the mosaics.
+
+            ``flatten`` takes the same predicates as `Collection.groupby`, such as
+            ``"properties.date"`` to mosaic Scenes acquired at the exact same timestamp,
+            or ``["properties.date.year", "properties.date.month", "properties.date.day"]``
+            to combine Scenes captured on the same day (but not necessarily the same time).
+
+            This is especially useful when ``ctx`` straddles a scene boundary
+            and contains one image captured right after another. Instead of having
+            each as a separate layer in the stack, you might want them combined.
+
+            Note that indicies in the returned ndarray will no longer correspond to
+            indicies in this SceneCollection, since multiple Scenes may be combined into
+            one layer in the stack. You can call ``groupby`` on this SceneCollection
+            with the same parameters to iterate through groups of Scenes in equivalent
+            order to the returned ndarray.
         mask_nodata : bool, default True
             Whether to mask out values in each band of each scene that equal
             that band's ``nodata`` sentinel value.
@@ -201,7 +220,6 @@ class SceneCollection(Collection):
             mask_alpha=mask_alpha,
             bands_axis=bands_axis,
             raster_info=raster_info,
-            raster_client=self._raster_client,
         )
 
         if bands_axis == 0 or bands_axis == -4:
@@ -212,10 +230,17 @@ class SceneCollection(Collection):
         elif bands_axis > 0:
             kwargs['bands_axis'] = bands_axis - 1  # the bands axis for each component ndarray call in the stack
 
+        if flatten is not None:
+            if isinstance(flatten, six.string_types) or not hasattr(flatten, "__len__"):
+                flatten = [flatten]
+            scenes = [sc if len(sc) > 1 else sc[0] for group, sc in self.groupby(*flatten)]
+        else:
+            scenes = self
+
         full_stack = None
         mask = None
         if raster_info:
-            raster_infos = [None] * len(self)
+            raster_infos = [None] * len(scenes)
 
         bands = Scene._bands_to_list(bands)
         pop_alpha = False
@@ -228,19 +253,26 @@ class SceneCollection(Collection):
             bands.pop(-1)
 
         def threaded_ndarrays():
+            def data_loader(scene_or_scenecollection, bands, ctx, **kwargs):
+                ndarray_kwargs = dict(kwargs, raster_client=self._raster_client)
+                if isinstance(scene_or_scenecollection, self.__class__):
+                    return lambda: scene_or_scenecollection.mosaic(bands, ctx, **kwargs)
+                else:
+                    return lambda: scene_or_scenecollection.ndarray(bands, ctx, **ndarray_kwargs)
+
             try:
                 futures = concurrent.futures
             except ImportError:
                 logging.warning(
                     "Failed to import concurrent.futures. ndarray calls will be serial."
                 )
-                for i, scene in enumerate(self):
-                    yield i, scene.ndarray(bands, ctx, **kwargs)
+                for i, scene_or_scenecollection in enumerate(scenes):
+                    yield i, data_loader(scene_or_scenecollection, bands, ctx, **kwargs)()
             else:
                 with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                     future_ndarrays = {}
-                    for i, scene in enumerate(self):
-                        future_ndarray = executor.submit(scene.ndarray, bands, ctx, **kwargs)
+                    for i, scene_or_scenecollection in enumerate(scenes):
+                        future_ndarray = executor.submit(data_loader(scene_or_scenecollection, bands, ctx, **kwargs))
                         future_ndarrays[future_ndarray] = i
                     for future in futures.as_completed(future_ndarrays):
                         i = future_ndarrays[future]
@@ -253,7 +285,7 @@ class SceneCollection(Collection):
                 raster_infos[i] = raster_meta
 
             if full_stack is None:
-                stack_shape = (len(self),) + arr.shape
+                stack_shape = (len(scenes),) + arr.shape
                 full_stack = np.empty(stack_shape, dtype=arr.dtype)
                 if isinstance(arr, np.ma.MaskedArray):
                     mask = np.empty(stack_shape, dtype=bool)
