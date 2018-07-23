@@ -165,6 +165,9 @@ class SceneCollection(Collection):
             one layer in the stack. You can call ``groupby`` on this SceneCollection
             with the same parameters to iterate through groups of Scenes in equivalent
             order to the returned ndarray.
+
+            Additionally, the order of scenes in the ndarray will change:
+            they'll be sorted by the parameters to ``flatten``.
         mask_nodata : bool, default True
             Whether to mask out values in each band of each scene that equal
             that band's ``nodata`` sentinel value.

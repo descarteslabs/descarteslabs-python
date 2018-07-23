@@ -65,7 +65,11 @@ class TestSceneCollection(unittest.TestCase):
         allflat = scenes.stack("nir", ctx, flatten="properties.product")
         self.assertTrue((mosaic == allflat).all())
 
-        noflat = scenes.stack("nir", ctx, flatten=id)
+        for i, scene in enumerate(scenes):
+            scene.properties.foo = i
+
+        noflat = scenes.stack("nir", ctx, flatten="properties.foo")
+        self.assertEqual(len(noflat), len(scenes))
         self.assertTrue((noflat == unflattened).all())
 
     @mock.patch("descarteslabs.scenes.scenecollection.concurrent", ThirdParty("concurrent"))
