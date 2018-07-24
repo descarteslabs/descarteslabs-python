@@ -3,6 +3,7 @@ import mock
 
 from descarteslabs.client.addons import ThirdParty, shapely
 from descarteslabs.scenes import Scene, geocontext
+from descarteslabs.scenes.scene import _strptime_helper
 
 from descarteslabs.client.services.metadata import Metadata
 
@@ -207,3 +208,9 @@ class TestScene(unittest.TestCase):
             s._common_data_type_of_bands(["one", "no_dtype"])
         with self.assertRaisesRegexp(ValueError, "Bands must all have the same dtype"):
             s._common_data_type_of_bands(["one", "its_a_byte"])
+
+    def test__naive_dateparse(self):
+        self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00+00:00"))
+        self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00.00+00:00"))
+        self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00Z"))
+        self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00"))

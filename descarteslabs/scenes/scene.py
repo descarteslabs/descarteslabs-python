@@ -54,6 +54,24 @@ from descarteslabs.common.dotdict import DotDict
 from . import geocontext
 
 
+def _strptime_helper(s):
+    formats = [
+        '%Y-%m-%dT%H:%M:%S.%fZ',
+        '%Y-%m-%dT%H:%M:%SZ',
+        '%Y-%m-%dT%H:%M:%S.%f+00:00',
+        '%Y-%m-%dT%H:%M:%S+00:00',
+        '%Y-%m-%dT%H:%M:%S'
+    ]
+
+    for fmt in formats:
+        try:
+            return datetime.datetime.strptime(s, fmt)
+        except ValueError:
+            pass
+
+    return None
+
+
 class Scene(object):
     """
     Object holding metadata about a single scene in the Descartes Labs catalog.
@@ -139,15 +157,12 @@ class Scene(object):
         properties["crs"] = (properties.pop("cs_code")
                              if "cs_code" in properties
                              else properties.get("proj4"))
-        try:
-            properties["date"] = datetime.datetime.strptime(properties["acquired"], '%Y-%m-%dT%H:%M:%S.%fZ')
-        except KeyError:
+
+        if 'acquired' in properties:
+            properties["date"] = _strptime_helper(properties["acquired"])
+        else:
             properties["date"] = None
-        except ValueError:
-            try:
-                properties["date"] = datetime.datetime.strptime(properties["acquired"], '%Y-%m-%dT%H:%M:%S.%f+00:00')
-            except ValueError:
-                properties["date"] = None
+
         self.properties = properties
 
     @classmethod
