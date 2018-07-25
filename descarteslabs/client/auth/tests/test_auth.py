@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
+import datetime
 import json
-import six
 import unittest
 
-import responses
-from mock import patch
+import six
 
+import responses
 from descarteslabs.client.auth import Auth
+from descarteslabs.client.exceptions import AuthError
+from mock import patch
 
 
 def token_response_callback(request):
@@ -96,6 +99,44 @@ class TestAuth(unittest.TestCase):
         auth = Auth(token_info_path=None, client_secret="client_secret", client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c")
         auth._get_token()
         self.assertEqual("id_token", auth._token)
+
+    @patch("descarteslabs.client.auth.Auth._get_token")
+    def test_token(self, _get_token):
+        auth = Auth(token_info_path=None, client_secret="client_secret", client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c")
+        token = ".".join((base64.b64encode(p) for p in ["header", json.dumps(dict(exp=9999999999)), "sig"]))
+        auth._token = token
+
+        self.assertEqual(auth.token, token)
+        _get_token.assert_not_called()
+
+    @patch("descarteslabs.client.auth.Auth._get_token")
+    def test_token_expired(self, _get_token):
+        auth = Auth(token_info_path=None, client_secret="client_secret", client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c")
+        token = ".".join((base64.b64encode(p) for p in ["header", json.dumps(dict(exp=0)), "sig"]))
+        auth._token = token
+
+        self.assertEqual(auth.token, token)
+        _get_token.assert_called_once()
+
+    @patch("descarteslabs.client.auth.Auth._get_token", side_effect=AuthError('error'))
+    def test_token_expired_autherror(self, _get_token):
+        auth = Auth(token_info_path=None, client_secret="client_secret", client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c")
+        token = ".".join((base64.b64encode(p) for p in ["header", json.dumps(dict(exp=0)), "sig"]))
+        auth._token = token
+
+        with self.assertRaises(AuthError):
+            auth.token
+        _get_token.assert_called_once()
+
+    @patch("descarteslabs.client.auth.Auth._get_token", side_effect=AuthError('error'))
+    def test_token_in_leeway_autherror(self, _get_token):
+        auth = Auth(token_info_path=None, client_secret="client_secret", client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c")
+        exp = (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds() + auth.leeway / 2
+        token = ".".join((base64.b64encode(p) for p in ["header", json.dumps(dict(exp=exp)), "sig"]))
+        auth._token = token
+
+        self.assertEqual(auth.token, token)
+        _get_token.assert_called_once()
 
 
 if __name__ == '__main__':
