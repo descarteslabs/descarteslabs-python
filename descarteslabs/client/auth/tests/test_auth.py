@@ -49,6 +49,12 @@ def token_response_callback(request):
     return 400, {"Content-Type": "application/json"}, json.dumps(data)
 
 
+def to_bytes(s):
+    if isinstance(s, six.text_type):
+        s = s.encode('utf-8')
+    return s
+
+
 class TestAuth(unittest.TestCase):
     @responses.activate
     def test_get_token(self):
@@ -103,7 +109,7 @@ class TestAuth(unittest.TestCase):
     @patch("descarteslabs.client.auth.Auth._get_token")
     def test_token(self, _get_token):
         auth = Auth(token_info_path=None, client_secret="client_secret", client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c")
-        token = ".".join((base64.b64encode(p) for p in ["header", json.dumps(dict(exp=9999999999)), "sig"]))
+        token = b".".join((base64.b64encode(to_bytes(p)) for p in ["header", json.dumps(dict(exp=9999999999)), "sig"]))
         auth._token = token
 
         self.assertEqual(auth.token, token)
@@ -112,7 +118,7 @@ class TestAuth(unittest.TestCase):
     @patch("descarteslabs.client.auth.Auth._get_token")
     def test_token_expired(self, _get_token):
         auth = Auth(token_info_path=None, client_secret="client_secret", client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c")
-        token = ".".join((base64.b64encode(p) for p in ["header", json.dumps(dict(exp=0)), "sig"]))
+        token = b".".join((base64.b64encode(to_bytes(p)) for p in ["header", json.dumps(dict(exp=0)), "sig"]))
         auth._token = token
 
         self.assertEqual(auth.token, token)
@@ -121,7 +127,7 @@ class TestAuth(unittest.TestCase):
     @patch("descarteslabs.client.auth.Auth._get_token", side_effect=AuthError('error'))
     def test_token_expired_autherror(self, _get_token):
         auth = Auth(token_info_path=None, client_secret="client_secret", client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c")
-        token = ".".join((base64.b64encode(p) for p in ["header", json.dumps(dict(exp=0)), "sig"]))
+        token = b".".join((base64.b64encode(to_bytes(p)) for p in ["header", json.dumps(dict(exp=0)), "sig"]))
         auth._token = token
 
         with self.assertRaises(AuthError):
@@ -132,7 +138,7 @@ class TestAuth(unittest.TestCase):
     def test_token_in_leeway_autherror(self, _get_token):
         auth = Auth(token_info_path=None, client_secret="client_secret", client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c")
         exp = (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds() + auth.leeway / 2
-        token = ".".join((base64.b64encode(p) for p in ["header", json.dumps(dict(exp=exp)), "sig"]))
+        token = b".".join((base64.b64encode(to_bytes(p)) for p in ["header", json.dumps(dict(exp=exp)), "sig"]))
         auth._token = token
 
         self.assertEqual(auth.token, token)
