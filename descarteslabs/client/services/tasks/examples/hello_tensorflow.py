@@ -17,7 +17,7 @@ at = Tasks()
 async_function = at.create_function(
     f,
     name="hello-tensorflow",
-    image="us.gcr.io/dl-ci-cd/images/tasks/public/alpha/py2/default:v2018.04.26",
+    image="us.gcr.io/dl-ci-cd/images/tasks/public/py2/default:v2018.07.25",
 )
 
 for task in as_completed([async_function()]):
