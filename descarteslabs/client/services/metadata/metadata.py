@@ -578,7 +578,7 @@ class Metadata(Service):
         return DotDict(r.json())
 
     def get_band(self, band_id):
-        """Get information about a single product.
+        """Get information about a single band.
 
         :param str band_id: Band Identifier.
 
