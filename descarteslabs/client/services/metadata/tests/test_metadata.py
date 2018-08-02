@@ -173,7 +173,7 @@ class TestMetadata(unittest.TestCase):
     def test_products_get(self):
         product_id = 'landsat:LC08:PRE:TOAR'
         r = self.instance.get_product(product_id)
-        self.assertEqual(r['product'], product_id)
+        self.assertEqual(r['id'], product_id)
 
     def test_bands_get(self):
         band_id = 'landsat:LC08:PRE:TOAR:red'
