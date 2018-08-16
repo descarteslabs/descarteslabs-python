@@ -431,7 +431,7 @@ class Tasks(Service):
         :param str status: Filter tasks to this status.
             Allowed are ['FAILURE', 'SUCCESS'].
         :param str failure_type: Filter tasks to this type of failure.
-            Allowed are ['exception', 'oom', 'timeout', 'internal', 'unknown'].
+            Allowed are ['exception', 'oom', 'timeout', 'internal', 'unknown', 'py_version_mismatch'].
         :param str updated: Filter tasks by updated date after this timestamp.
         :param str created: Filter tasks by creation date after this timestamp.
         :param str webhook: Filter by the webhook uid which spawned the task.
@@ -485,7 +485,7 @@ class Tasks(Service):
         :param str status: Filter tasks to this status.
             Allowed are ['FAILURE', 'SUCCESS'].
         :param str failure_type: Filter tasks to this type of failure.
-            Allowed are ['exception', 'oom', 'timeout', 'internal', 'unknown'].
+            Allowed are ['exception', 'oom', 'timeout', 'internal', 'unknown', 'py_version_mismatch'].
         :param str updated: Filter tasks by updated date after this timestamp.
         :param str created: Filter tasks by creation date after this timestamp.
         :param str webhook: Filter by the webhook uid which spawned the task.
@@ -516,8 +516,8 @@ class Tasks(Service):
     def rerun_failed_tasks(self, group_id, retry_count=0):
         """
         Submits all failed tasks for a rerun, except for tasks that had an
-        out-of-memory failure. These tasks will be run again with the same
-        arguments as before.
+        out-of-memory or version mismatch failure.
+        These tasks will be run again with the same arguments as before.
 
         Tasks that are currently already being rerun will be ignored.
 
