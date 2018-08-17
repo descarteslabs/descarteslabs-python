@@ -9,6 +9,15 @@ Changelog
 =========
 
 ## [Unreleased]
+## [0.11.1] - 2018-08-17
+### Added
+- Namespaced auth environment variables: `DESCARTESLABS_CLIENT_SECRET` and `DESCARTESLABS_CLIENT_ID`. `CLIENT_SECRET` and `CLIENT_ID` will continue to work.
+- Tasks runtime check for Python version.
+
+### Changed
+- Documentation updates
+- Example updates
+
 ## [0.11.0] - 2018-07-12
 ### Added
 - Scenes package
@@ -207,7 +216,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.1...v0.11.0
 [0.10.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.9.1...v0.10.0
