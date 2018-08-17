@@ -144,6 +144,34 @@ class TestAuth(unittest.TestCase):
         self.assertEqual(auth.token, token)
         _get_token.assert_called_once()
 
+    def test_auth_init_env_vars(self):
+        environ = dict(CLIENT_SECRET='secret_bar',
+                       CLIENT_ID="id_bar",
+                       DESCARTESLABS_CLIENT_SECRET='secret_foo',
+                       DESCARTESLABS_CLIENT_ID="id_foo")
+
+        # should work with direct var
+        with patch.dict('descarteslabs.client.auth.auth.os.environ', environ):
+            auth = Auth(client_id='client_id', client_secret='client_secret', jwt_token='jwt_token')
+            self.assertEqual(auth.client_secret, 'client_secret')
+            self.assertEqual(auth.client_id, 'client_id')
+
+        # should work with namespaced env vars
+        with patch.dict('descarteslabs.client.auth.auth.os.environ', environ):
+            auth = Auth()
+            self.assertEqual(auth.client_secret, environ.get('DESCARTESLABS_CLIENT_SECRET'))
+            self.assertEqual(auth.client_id, environ.get('DESCARTESLABS_CLIENT_ID'))
+
+        # remove the namespaced ones
+        environ.pop('DESCARTESLABS_CLIENT_SECRET')
+        environ.pop('DESCARTESLABS_CLIENT_ID')
+
+        # should fallback to legacy env vars
+        with patch.dict('descarteslabs.client.auth.auth.os.environ', environ):
+            auth = Auth()
+            self.assertEqual(auth.client_secret, environ.get('CLIENT_SECRET'))
+            self.assertEqual(auth.client_id, environ.get('CLIENT_ID'))
+
 
 if __name__ == '__main__':
     unittest.main()

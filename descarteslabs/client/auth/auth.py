@@ -82,13 +82,42 @@ class Auth:
             except (IOError, ValueError):
                 pass
 
-        self.client_id = client_id if client_id else os.environ.get('CLIENT_ID', token_info.get('client_id', None))
-        self.client_secret = client_secret if client_secret else os.environ.get('CLIENT_SECRET', token_info.get(
-            'client_secret', None))
-        self.refresh_token = refresh_token if refresh_token \
-            else os.environ.get('DESCARTESLABS_REFRESH_TOKEN', token_info.get('refresh_token', None))
-        self.scope = scope if scope else token_info.get('scope')
-        self._token = jwt_token if jwt_token else os.environ.get('JWT_TOKEN', token_info.get('jwt_token', None))
+        self.client_id = next(
+            (x for x in (
+                client_id,
+                os.environ.get('DESCARTESLABS_CLIENT_ID'),
+                os.environ.get('CLIENT_ID'),
+                token_info.get('client_id')
+            ) if x is not None), None)
+
+        self.client_secret = next(
+            (x for x in (
+                client_secret,
+                os.environ.get('DESCARTESLABS_CLIENT_SECRET'),
+                os.environ.get('CLIENT_SECRET'),
+                token_info.get('client_secret')
+            ) if x is not None), None)
+
+        self.refresh_token = next(
+            (x for x in (
+                refresh_token,
+                os.environ.get('DESCARTESLABS_REFRESH_TOKEN'),
+                token_info.get('refresh_token')
+            ) if x is not None), None)
+
+        self._token = next(
+            (x for x in (
+                jwt_token,
+                os.environ.get('DESCARTESLABS_TOKEN'),
+                token_info.get('JWT_TOKEN'),
+                token_info.get('jwt_token')
+            ) if x is not None), None)
+
+        self.scope = next(
+            (x for x in (
+                scope,
+                token_info.get('scope')
+            ) if x is not None), None)
 
         if token_info:
             # If the token was read from a path but environment variables were set, we may need
