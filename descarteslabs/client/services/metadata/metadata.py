@@ -20,8 +20,8 @@ from descarteslabs.client.services.service import Service
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.raster import Raster
-from descarteslabs.client.services.metadata.metadata_filtering import \
-    AndExpression, GLOBAL_PROPERTIES
+from descarteslabs.client.services.metadata.metadata_filtering import GLOBAL_PROPERTIES
+from descarteslabs.common.property_filtering.filtering import AndExpression
 from descarteslabs.common.dotdict import DotDict, DotList
 
 
