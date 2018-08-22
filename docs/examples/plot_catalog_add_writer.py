@@ -1,6 +1,6 @@
 """
 ==================================================
-Catalog Product Writers Example
+Adding a writer to a Catalog product
 ==================================================
 
 This example adds an additional writer to a product.

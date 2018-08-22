@@ -1,6 +1,6 @@
 """
 ==================================================
-Deploying trained Keras model example.
+Deploying a Keras model
 ==================================================
 
 This example integrates many components of the Descartes Labs platform.

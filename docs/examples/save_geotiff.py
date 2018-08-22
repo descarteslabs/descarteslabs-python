@@ -1,6 +1,6 @@
 """
 ==================================================
-Export Image
+Save image to GeoTIFF
 ==================================================
 
 This example demonstrates how to save an image
