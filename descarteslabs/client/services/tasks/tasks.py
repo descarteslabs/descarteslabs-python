@@ -37,6 +37,16 @@ OFFSET_DEPRECATION_MESSAGE = (
     "future versions of the library. Use `continuation_token`."
 )
 
+CREATE_OR_GET_DEPRECATION_MESSAGE = (
+    "The `create_or_get_function` method has been deprecated. Please use "
+    "the `create_function` method."
+)
+
+GET_FUNCTION_DEPRECATION_MESSAGE = (
+    "The behavior of `get_function` is deprecated and will be changed in "
+    "future versions to get function by group `id` and not `name`."
+)
+
 
 class Tasks(Service):
 
@@ -662,6 +672,8 @@ class Tasks(Service):
         :return: A :class:`CloudFunction`, or `None` if no function with the
             given name exists.
         """
+        warn(GET_FUNCTION_DEPRECATION_MESSAGE, DeprecationWarning)
+
         group_info = self.get_group_by_name(name)
         if group_info is None:
             return None
@@ -713,6 +725,9 @@ class Tasks(Service):
 
         :return: A :class:`CloudFunction`.
         """
+
+        warn(CREATE_OR_GET_DEPRECATION_MESSAGE, DeprecationWarning)
+
         if name:
             cached = self.get_function(name)
             if cached is not None:
