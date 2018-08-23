@@ -7,7 +7,7 @@ def buggy_func():
 
 
 at = Tasks()
-async_func = at.create_or_get_function(buggy_func, name='buggy', retry_count=2)
+async_func = at.create_function(buggy_func, name='buggy', retry_count=2)
 task = async_func()
 
 print(task.result)

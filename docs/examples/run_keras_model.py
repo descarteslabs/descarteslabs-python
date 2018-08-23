@@ -53,7 +53,7 @@ if __name__ == '__main__':
     catalog = Catalog()
     raster = Raster()
 
-    async_function = tasks.create_or_get_function(
+    async_function = tasks.create_function(
         deploy_keras_model,
         image='us.gcr.io/dl-ci-cd/images/tasks/public/py2/default:v2018.06.20',
         name="deploy-resnet",
