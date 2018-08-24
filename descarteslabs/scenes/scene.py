@@ -253,6 +253,34 @@ class Scene(object):
 
         return scene, default_ctx
 
+    def coverage(self, ctx):
+        """
+        Returns the fraction of the ``GeoContext`` geometry
+        covered by the scene geometry.
+
+        Parameters
+        ----------
+        ctx : GeoContext
+            A GeoContext to use when computing coverage
+
+        Returns
+        -------
+        coverage : float
+
+        Example
+        -------
+        >>> import descarteslabs as dl
+        >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
+        >>> ctx  # this ``GeoContext`` is based upon the scene
+        >>> coverage = scene.coverage(ctx)
+        >>> coverage
+        1.0
+
+        """
+        intersection = shapely.geometry.shape(ctx.geometry) \
+            .intersection(shapely.geometry.shape(self.geometry))
+        return intersection.area / ctx.geometry.area
+
     def ndarray(self,
                 bands,
                 ctx,

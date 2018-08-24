@@ -123,6 +123,40 @@ class SceneCollection(Collection):
         else:
             return list(res)
 
+    def filter_coverage(self, ctx, minimum_coverage=1):
+        """
+        Include scenes having footprints with a minimum
+        coverage compared to the geometry of the ``GeoContext``.
+
+        See :func:`Scene.coverage <descarteslabs.scenes.scene.Scene.coverage>`
+        for getting coverage information for a scene.
+
+        Parameters
+        ----------
+        ctx : GeoContext
+            A GeoContext to use when filtering scenes
+        minimum_coverage : float
+            Include scenes with greater than or equal to this
+            fraction of coverage.
+
+        Returns
+        -------
+        scenes : SceneCollection
+
+        Example
+        -------
+        >>> import descarteslabs as dl
+        >>> aoi_geometry = {
+        ...    'type': 'Polygon',
+        ...    'coordinates': (((-95, 42),(-93, 42),(-93, 40),(-95, 41),(-95, 42)))}
+        >>> scenes, ctx = dl.scenes.search(aoi_geometry, products=["landsat:LC08:PRE:TOAR"], limit=20,
+        ...    sort_field='processed')
+        >>> filtered_scenes = scenes.filter_coverage(ctx, 0.50)
+        >>> assert len(filtered_scenes) < len(scenes)
+        """
+
+        return self.filter(lambda scene: scene.coverage(ctx) >= minimum_coverage)
+
     def stack(self,
               bands,
               ctx,

@@ -1,8 +1,8 @@
 import unittest
 import mock
 
-from descarteslabs.client.addons import ThirdParty
-from descarteslabs.scenes import Scene, SceneCollection
+from descarteslabs.client.addons import ThirdParty, shapely
+from descarteslabs.scenes import Scene, SceneCollection, geocontext
 
 
 class TestSceneCollection(unittest.TestCase):
@@ -133,3 +133,14 @@ class TestSceneCollection(unittest.TestCase):
             mosaic, meta = scenes.mosaic("nir", ctx)
         with self.assertRaises(ValueError):
             stack, meta = scenes.stack("nir", ctx)
+
+    def test_filter_coverage(self):
+        polygon = shapely.geometry.Point(0.0, 0.0).buffer(1)
+        ctx = geocontext.AOI(shapely.geometry.mapping(polygon))
+
+        scenes = SceneCollection([
+            Scene(dict(id='foo', geometry=shapely.geometry.mapping(polygon), properties={}), {}),
+            Scene(dict(id='bar', geometry=shapely.geometry.mapping(polygon.buffer(-0.1)), properties={}), {}),
+        ])
+
+        self.assertEqual(len(scenes.filter_coverage(ctx)), 1)

@@ -214,3 +214,20 @@ class TestScene(unittest.TestCase):
         self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00.00+00:00"))
         self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00Z"))
         self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00"))
+
+    def test_coverage(self):
+        scene_geometry = shapely.geometry.mapping(shapely.geometry.Point(0.0, 0.0).buffer(1))
+
+        scene = Scene(dict(id='foo', geometry=scene_geometry, properties={}), {})
+
+        # same geometry
+        ctx = geocontext.AOI(scene_geometry)
+        self.assertEqual(scene.coverage(ctx), 1.0)
+
+        # ctx is larger
+        ctx = geocontext.AOI(shapely.geometry.mapping(shapely.geometry.Point(0.0, 0.0).buffer(2)))
+        self.assertEqual(scene.coverage(ctx), 0.25)
+
+        # ctx is smaller
+        ctx = geocontext.AOI(shapely.geometry.mapping(shapely.geometry.Point(0.0, 0.0).buffer(0.5)))
+        self.assertEqual(scene.coverage(ctx), 1.0)
