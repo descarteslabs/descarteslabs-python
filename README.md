@@ -9,6 +9,12 @@ Changelog
 =========
 
 ## [Unreleased]
+## [0.11.2] - 2018-08-24
+### Changed
+- Moved metadata property filtering to common
+- Deprecated `create_or_get_function` in tasks
+- Renamed some examples
+
 ## [0.11.1] - 2018-08-17
 ### Added
 - Namespaced auth environment variables: `DESCARTESLABS_CLIENT_SECRET` and `DESCARTESLABS_CLIENT_ID`. `CLIENT_SECRET` and `CLIENT_ID` will continue to work.
@@ -216,7 +222,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.1...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.2...HEAD
+[0.11.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.2...v0.11.2
 [0.11.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.1...v0.11.0
 [0.10.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.0...v0.10.1
