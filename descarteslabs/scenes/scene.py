@@ -265,15 +265,14 @@ class Scene(object):
 
         Returns
         -------
-        coverage : float
+        float
 
         Example
         -------
         >>> import descarteslabs as dl
         >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-        >>> ctx  # this ``GeoContext`` is based upon the scene
-        >>> coverage = scene.coverage(ctx)
-        >>> coverage
+        >>> coverage = scene.coverage(ctx)  # doctest: +SKIP
+        >>> coverage  # doctest: +SKIP
         1.0
 
         """

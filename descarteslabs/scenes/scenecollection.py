@@ -148,11 +148,11 @@ class SceneCollection(Collection):
         >>> import descarteslabs as dl
         >>> aoi_geometry = {
         ...    'type': 'Polygon',
-        ...    'coordinates': (((-95, 42),(-93, 42),(-93, 40),(-95, 41),(-95, 42)))}
+        ...    'coordinates': [[[-95, 42],[-93, 42],[-93, 40],[-95, 41],[-95, 42]]]}
         >>> scenes, ctx = dl.scenes.search(aoi_geometry, products=["landsat:LC08:PRE:TOAR"], limit=20,
         ...    sort_field='processed')
-        >>> filtered_scenes = scenes.filter_coverage(ctx, 0.50)
-        >>> assert len(filtered_scenes) < len(scenes)
+        >>> filtered_scenes = scenes.filter_coverage(ctx, 0.50)  # doctest: +SKIP
+        >>> assert len(filtered_scenes) < len(scenes)  # doctest: +SKIP
         """
 
         return self.filter(lambda scene: scene.coverage(ctx) >= minimum_coverage)
