@@ -16,23 +16,19 @@ from __future__ import print_function
 
 import requests
 
-from descarteslabs.client.services.raster import Raster
-from descarteslabs.client.services.metadata import Metadata
-from descarteslabs.client.services.tasks import AsyncTasks
-from descarteslabs.client.services.catalog import Catalog
-from descarteslabs.exceptions import NotFoundError
+import descarteslabs as dl
 
 
 def deploy_keras_model(dltile, src_product_id, dest_product_id):
     import tensorflow as tf
     import numpy as np
-    catalog = Catalog()
-    raster = Raster()
-    metadata = Metadata()
+    catalog_client = dl.Catalog()
+    raster_client = dl.Raster()
+    metadata_client = dl.Metadata()
     # NOTE substitute your own trained model here.
     model = tf.keras.applications.resnet50.ResNet50()
-    scene = metadata.search(src_product_id, geom=raster.dltile(dltile), limit=1)['features'][0]['id']
-    tile, meta = raster.ndarray(
+    scene = metadata_client.search(src_product_id, geom=raster_client.dltile(dltile), limit=1)['features'][0]['id']
+    tile, meta = raster_client.ndarray(
         scene, bands=['red', 'green', 'blue'], scales=[[0, 255]] * 3, ot='Byte', dltile=dltile
     )
     # resnet50 expects the shape of the input array to be 4 dimensional, which allows for batch
@@ -45,13 +41,13 @@ def deploy_keras_model(dltile, src_product_id, dest_product_id):
     image = np.full(tile.shape[:-1], class_, dtype=np.uint16)
     # upload a tile of this "prediction" to catalog
     image_id = ':'.join([src_product_id, dltile.replace(':', '_')])
-    catalog.upload_ndarray(image, dest_product_id, image_id, raster_meta=meta)
+    catalog_client.upload_ndarray(image, dest_product_id, image_id, raster_meta=meta)
 
 
 if __name__ == '__main__':
-    tasks = AsyncTasks()
-    catalog = Catalog()
-    raster = Raster()
+    tasks = dl.Tasks()
+    catalog_client = dl.Catalog()
+    raster_client = dl.Raster()
 
     async_function = tasks.create_function(
         deploy_keras_model,
@@ -60,15 +56,15 @@ if __name__ == '__main__':
     )
     print('task group id', async_function.group_id)
     try:
-        prod = catalog.get_product(':'.join([catalog.auth.namespace, 'resnet-predictions']))
-    except NotFoundError:
-        prod = catalog.add_product(
+        prod = catalog_client.get_product(':'.join([catalog_client.auth.namespace, 'resnet-predictions']))
+    except dl.exceptions.NotFoundError:
+        prod = catalog_client.add_product(
             'resnet-predictions',
             title="Resnet Predictions",
             description="classification results of applying resnet trained with imagenet dataset over"
                         "random satellite imagery tiles"
         )
-        catalog.add_band(
+        catalog_client.add_band(
             prod['data']['id'],
             name='class',
             type='class',
@@ -82,7 +78,7 @@ if __name__ == '__main__':
         'https://raw.githubusercontent.com/whosonfirst-data/whosonfirst-data/master/data/856/884/93/85688493.geojson'
     )
     geom = r.json()['geometry']
-    tiles = raster.dltiles_from_shape(1000, 224, 0, geom)
+    tiles = raster_client.dltiles_from_shape(1000, 224, 0, geom)
     for tile in tiles['features']:
         async_function(tile.properties.key, 'modis:09:v2', prod['data']['id'])
         print('spawned task for tile', tile.properties.key)

@@ -157,7 +157,7 @@ metadata.features for iterating over large search results
 ## [0.4.0] - 2017-06-22
 ### Changes
 - Major refactor of metadata.search
-  * Introduction of "Products" through dl.metadata.products()
+  * Introduction of "Products" through `Metadata.products()`
   * metadata entries id now concatenate the product id and the old metadata
     keys. The original metadata keys are available through entry['key'].
   * Additional sorting available.
@@ -172,7 +172,7 @@ metadata.features for iterating over large search results
 ## [0.3.3] - 2017-06-20
 ### Added
 - DLTile notebook
-- `save` and `outfile_basename` in raster()
+- `save` and `outfile_basename` in `Raster.raster()`
 
 ### Fixes
 - Fix metadata.features

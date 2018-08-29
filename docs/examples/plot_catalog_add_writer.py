@@ -7,16 +7,16 @@ This example adds an additional writer to a product.
 
 """
 
-from descarteslabs.client.services import Catalog
+import descarteslabs as dl
 import uuid
 
 
-catalog = Catalog()
+catalog_client = dl.Catalog()
 
 
 product_id = str(uuid.uuid4())[:8]
 
-product = catalog.add_product(
+product = catalog_client.add_product(
     product_id=product_id,
     title='My Product',
     description='This is my product.'
@@ -31,7 +31,7 @@ print('Product writers: {}'.format(product_attrs['writers']))
 
 ##############################
 # However, we can add a writer to this product.
-changed_product = catalog.change_product(
+changed_product = catalog_client.change_product(
     product_id=product['data']['id'],
     writers=['email:someuser@gmail.com']  # Could be the user hash, email, group, or org of another user.
 )
@@ -44,5 +44,5 @@ print('Changed product writers: {}'.format(changed_product_attrs['writers']))
 
 #############################
 # Delete our product; we don't need it anymore.
-catalog.remove_product(product_id, add_namespace=True)
+catalog_client.remove_product(product_id, add_namespace=True)
 print('Product removed.')

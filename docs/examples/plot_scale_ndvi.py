@@ -13,6 +13,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+metadata_client = dl.Metadata()
+raster_client = dl.Raster()
+
 # A bounding box geometry
 aoi = {
     "type": "Polygon",
@@ -44,11 +47,11 @@ aoi = {
 
 
 # Request Modis imagery, which contains indicies that need to be scaled
-fc = dl.metadata.search(products="modis:09:CREFL", geom=aoi, start_time="2017-05-01",
-                        end_time="2018-05-15", limit=1)
+fc = metadata_client.search(products="modis:09:CREFL", geom=aoi, start_time="2017-05-01",
+                            end_time="2018-05-15", limit=1)
 
 # Fetch the band information using the Metadata API, including the NDVI ranges
-band_info = dl.metadata.get_bands_by_product("modis:09:CREFL")
+band_info = metadata_client.get_bands_by_product("modis:09:CREFL")
 physical_range = band_info['derived:ndvi']['physical_range']
 valid_range = band_info['derived:ndvi']['data_range']
 
@@ -58,7 +61,7 @@ feat_ids = [feat['id'] for feat in fc['features']]
 
 
 # Request the NDVI band and scale it accordingly and the alpha band for masking next
-arr, meta = dl.raster.ndarray(
+arr, meta = raster_client.ndarray(
     feat_ids,
     cutline=aoi,
     bands=['ndvi', 'alpha'],

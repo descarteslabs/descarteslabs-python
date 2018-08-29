@@ -13,6 +13,9 @@ from pprint import pprint
 import descarteslabs as dl
 import matplotlib.pyplot as plt
 
+
+raster_client = dl.Raster()
+
 aoi = {
     "type": "Polygon",
     "coordinates": [
@@ -41,7 +44,7 @@ aoi = {
     ]
 }
 
-img, meta = dl.raster.ndarray(
+img, meta = raster_client.ndarray(
     'landsat:LC08:PRE:TOAR:meta_LC80330342017072_v1',
     bands=['swir1', 'swir2', 'nir', 'alpha'],
     scales=[[0, 4000], [0, 4000], [0, 4000], None],

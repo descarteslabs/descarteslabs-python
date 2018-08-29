@@ -3,34 +3,37 @@ with some custom metadata that you supply. This example builds on the
 hello_catalog.py example.
 """
 
-import geojson
-import arrow
 import os
 from time import sleep
+
+import arrow
 import descarteslabs as dl
-from descarteslabs.ext.catalog import catalog
+import geojson
 
 
-product_id = catalog.add_product(
-        'building_mask:osm:v1',
-        title='OSM Building Mask v1',
-        description='Rasterized OSM building footprints from vector data.'
-                    ' Quality varies regionally. This product has user supplied'
-                    ' geometry and aquired date.'
-    )['data']['id']
+catalog_client = dl.Catalog()
+metadata_client = dl.Metadata()
 
-band_id = catalog.add_band(
-        product_id=product_id,  # id of the product we just created.
-        name='footprint',  # this is a unique name to describe what the band encodes.
-        jpx_layer=0,
-        srcfile=0,
-        srcband=1,  # src band is always a 1-based index (counting starts at 1)
-        nbits=8,
-        dtype='Byte',
-        nodata=0,
-        data_range=[0, 2**8 - 1],
-        type='mask',
-    )['data']['id']
+product_id = catalog_client.add_product(
+    'building_mask:osm:v1',
+    title='OSM Building Mask v1',
+    description='Rasterized OSM building footprints from vector data.'
+    ' Quality varies regionally. This product has user supplied'
+    ' geometry and aquired date.'
+)['data']['id']
+
+band_id = catalog_client.add_band(
+    product_id=product_id,  # id of the product we just created.
+    name='footprint',  # this is a unique name to describe what the band encodes.
+    jpx_layer=0,
+    srcfile=0,
+    srcband=1,  # src band is always a 1-based index (counting starts at 1)
+    nbits=8,
+    dtype='Byte',
+    nodata=0,
+    data_range=[0, 2**8 - 1],
+    type='mask',
+)['data']['id']
 
 image_path = os.path.join(os.path.dirname(__file__), 'building_mask.tif')
 
@@ -48,13 +51,13 @@ custom_metadata = {
     )
 }
 
-catalog.upload_image(image_path, product_id, metadata=custom_metadata)
+catalog_client.upload_image(image_path, product_id, metadata=custom_metadata)
 
 processed_image_id = '{}:{}'.format(product_id, 'building_mask')
 image = None
 while True:
     try:
-        image = dl.metadata.get(processed_image_id)
+        image = metadata_client.get(processed_image_id)
         break
     except Exception:
         sleep(2)
@@ -62,12 +65,12 @@ while True:
 assert(image['acquired'] == custom_metadata['acquired'])
 # clean up
 
-for band in dl.metadata.bands(products=product_id):
-    catalog.remove_band(product_id, band['id'])
+for band in metadata_client.bands(products=product_id):
+    catalog_client.remove_band(product_id, band['id'])
 
-for _image in dl.metadata.search(products=product_id)['features']:
-    catalog.remove_image(product_id, _image['id'])
+for _image in metadata_client.search(products=product_id)['features']:
+    catalog_client.remove_image(product_id, _image['id'])
 
 sleep(10)
 
-catalog.remove_product(product_id)
+catalog_client.remove_product(product_id)

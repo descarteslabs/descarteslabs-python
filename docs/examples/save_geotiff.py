@@ -44,7 +44,9 @@ images = ['landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_035037_20180602_20180602_01_RT
 
 # The Raster API call to download an image mosaic. Other parameters are available
 # The file is written in to the same directory as the script.
-dl.raster.raster(
+
+raster_client = dl.Raster()
+raster_client.raster(
     inputs=images,
     bands=['red', 'green', 'blue', 'alpha'],
     scales=[[0, 5500], [0, 5500], [0, 5500], None],

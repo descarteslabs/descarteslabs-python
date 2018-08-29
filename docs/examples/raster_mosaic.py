@@ -11,18 +11,19 @@ by acquisition date (and/or any other metadata property).
 
 
 """
-import matplotlib.pyplot as plt
-
 import descarteslabs as dl
+import matplotlib.pyplot as plt
 
 print(__doc__)
 
+raster_client = dl.Raster()
+
 # Define my area of interest
-tile = dl.raster.dltile_from_latlon(lat=38.8664364,
-                                    lon=-107.238606300,
-                                    resolution=20.0,
-                                    tilesize=1024,
-                                    pad=0)
+tile = raster_client.dltile_from_latlon(lat=38.8664364,
+                                        lon=-107.238606300,
+                                        resolution=20.0,
+                                        tilesize=1024,
+                                        pad=0)
 
 # Search for Sentinel-2 imagery collected between
 # August 13 - August 21, 2017 over the AOI
@@ -40,11 +41,11 @@ metadata = dl.metadata.search(product='sentinel-2:L1C',
 images = list()
 for feature in metadata['features']:
     image_id = feature['id']
-    arr, meta = dl.raster.ndarray(image_id,
-                                  dltile=tile,
-                                  bands=['nir', 'red', 'green', 'alpha'],
-                                  scales=[[0, 6000, 0, 255], [0, 4000, 0, 255], [0, 4000, 0, 255]],
-                                  data_type='Byte')
+    arr, meta = raster_client.ndarray(image_id,
+                                      dltile=tile,
+                                      bands=['nir', 'red', 'green', 'alpha'],
+                                      scales=[[0, 6000, 0, 255], [0, 4000, 0, 255], [0, 4000, 0, 255]],
+                                      data_type='Byte')
     images.append(arr)
 
 # Plot using Matplotlib
@@ -83,11 +84,11 @@ for date in dates:
     # get ids
     ids = [feature['id'] for feature in metadata['features'] if feature['properties']['acquired'][:10] == date]
     # retrieve mosaicked data
-    arr, meta = dl.raster.ndarray(ids,
-                                  dltile=tile,
-                                  bands=['nir', 'red', 'green', 'alpha'],
-                                  scales=[[0, 6000, 0, 255], [0, 4000, 0, 255], [0, 4000, 0, 255]],
-                                  data_type='Byte')
+    arr, meta = raster_client.ndarray(ids,
+                                      dltile=tile,
+                                      bands=['nir', 'red', 'green', 'alpha'],
+                                      scales=[[0, 6000, 0, 255], [0, 4000, 0, 255], [0, 4000, 0, 255]],
+                                      data_type='Byte')
     images.append(arr)
 
 # plot the mosaics
@@ -111,12 +112,12 @@ plt.tight_layout()
 # the latest image.
 
 all_ids = [feature['id'] for feature in metadata['features']]
-arr, meta = dl.raster.ndarray(all_ids,
-                              dltile=tile,
-                              bands=['nir', 'red', 'green', 'alpha'],
-                              scales=[[0, 6000, 0, 255], [0, 4000, 0, 255], [0, 4000, 0, 255]],
-                              data_type='Byte'
-                              )
+arr, meta = raster_client.ndarray(all_ids,
+                                  dltile=tile,
+                                  bands=['nir', 'red', 'green', 'alpha'],
+                                  scales=[[0, 6000, 0, 255], [0, 4000, 0, 255], [0, 4000, 0, 255]],
+                                  data_type='Byte'
+                                  )
 # plot the image
 plt.figure(figsize=(6, 6))
 plt.imshow(arr)
@@ -128,12 +129,12 @@ plt.axis('off')
 # IDs, and pass that reversed list to Raster
 
 all_ids_reversed = sorted(all_ids, reverse=True)
-arr, meta = dl.raster.ndarray(all_ids_reversed,
-                              dltile=tile,
-                              bands=['nir', 'red', 'green', 'alpha'],
-                              scales=[[0, 6000, 0, 255], [0, 4000, 0, 255], [0, 4000, 0, 255]],
-                              data_type='Byte'
-                              )
+arr, meta = raster_client.ndarray(all_ids_reversed,
+                                  dltile=tile,
+                                  bands=['nir', 'red', 'green', 'alpha'],
+                                  scales=[[0, 6000, 0, 255], [0, 4000, 0, 255], [0, 4000, 0, 255]],
+                                  data_type='Byte'
+                                  )
 # plot the image
 plt.figure(figsize=(6, 6))
 plt.imshow(arr)
