@@ -42,6 +42,12 @@ class TasksTest(ClientTestCase):
     def test_new_group(self):
         def f():
             return True
+        self.mock_response(
+            responses.POST,
+            {'error': 409, 'message': 'namespace is missing authentication'},
+            status=409
+        )
+        self.mock_response(responses.POST, {}, status=201)
         self.mock_response(responses.POST, {'id': 'foo'})
         group = self.client.new_group(f)
         self.assertEqual('foo', group.id)

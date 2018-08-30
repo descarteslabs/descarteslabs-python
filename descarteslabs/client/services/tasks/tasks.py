@@ -26,7 +26,7 @@ from six.moves import zip_longest
 import cloudpickle
 
 from descarteslabs.client.auth import Auth
-from descarteslabs.client.exceptions import NotFoundError
+from descarteslabs.client.exceptions import ConflictError, NotFoundError
 from descarteslabs.client.services.service import Service
 from descarteslabs.client.services.storage import Storage
 from descarteslabs.common.dotdict import DotDict, DotList
@@ -45,6 +45,10 @@ CREATE_OR_GET_DEPRECATION_MESSAGE = (
 GET_FUNCTION_DEPRECATION_MESSAGE = (
     "The behavior of `get_function` is deprecated and will be changed in "
     "future versions to get function by group `id` and not `name`."
+)
+
+CREATE_NAMESPACE_DEPRECATION_MESSAGE = (
+    "Manually creating a namespace is no longer required."
 )
 
 
@@ -66,7 +70,7 @@ class Tasks(Service):
 
         super(Tasks, self).__init__(url, auth=auth)
 
-    def create_namespace(self):
+    def _create_namespace(self):
         """
         Creates a namespace for the user and sets up authentication within it
         from the current client id and secret. Must be called once per user
@@ -80,6 +84,17 @@ class Tasks(Service):
         }
         r = self.session.post('/namespaces/secrets/auth', json=data)
         return r.status_code == 201
+
+    def create_namespace(self):
+        """
+        Creates a namespace for the user and sets up authentication within it
+        from the current client id and secret. Must be called once per user
+        before creating any tasks.
+
+        :return: `True` if successful, `False` otherwise.
+        """
+        warn(CREATE_NAMESPACE_DEPRECATION_MESSAGE, DeprecationWarning)
+        return self._create_namespace()
 
     def new_group(
             self,
@@ -144,11 +159,18 @@ class Tasks(Service):
         if name is not None:
             payload['name'] = name
 
-        r = self.session.post(
-            "/groups",
-            data=json.dumps(payload)
-        )
-        r.raise_for_status()
+        try:
+            r = self.session.post("/groups", json=payload)
+        except ConflictError as e:
+            error_message = json.loads(e.message)['message']
+            if error_message != 'namespace is missing authentication':
+                raise
+
+            if not self._create_namespace():
+                raise
+
+            r = self.session.post("/groups", json=payload)
+
         return DotDict(r.json())
 
     def list_groups(
