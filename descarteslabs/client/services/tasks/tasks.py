@@ -162,7 +162,7 @@ class Tasks(Service):
         try:
             r = self.session.post("/groups", json=payload)
         except ConflictError as e:
-            error_message = json.loads(e.message)['message']
+            error_message = json.loads(str(e))['message']
             if error_message != 'namespace is missing authentication':
                 raise
 
