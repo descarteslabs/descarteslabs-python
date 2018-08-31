@@ -56,6 +56,13 @@ def display(*imgs, **kwargs):
         Acceptable values are 'none', 'nearest', 'bilinear', 'bicubic', 'spline16',
         'spline36', 'hanning', 'hamming', 'hermite', 'kaiser', 'quadric', 'catrom',
         'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos'
+    colormap: str, default None
+        The name of a Colormap registered with matplotlib. Some commonly used
+        built-in options are 'plasma', 'magma', 'viridis', 'inferno'. See
+        https://matplotlib.org/users/colormaps.html for more options.
+
+        To use a Colormap, the input images must have a single band. The Colormap
+        will be ignored for images with more than one band.
 
     Example
     =======
@@ -82,6 +89,7 @@ def display(*imgs, **kwargs):
     size = kwargs.pop("size", 10)
     robust = kwargs.pop("robust", True)
     interpolation = kwargs.pop("interpolation", "bilinear")
+    colormap_name = kwargs.pop("colormap", None)
     if len(kwargs) > 0:
         raise TypeError("Unexpected keyword arguments for display: {}".format(', '.join(six.iterkeys(kwargs))))
 
@@ -107,6 +115,10 @@ def display(*imgs, **kwargs):
             raise ValueError("Different number of titles given than images")
     else:
         titles = [titles] * len(imgs)
+
+    colormap = None
+    if colormap_name:
+        colormap = plt.cm.get_cmap(colormap_name)
 
     for ax, img, title in zip(axs, imgs, titles):
         ax = ax[0]
@@ -170,14 +182,20 @@ def display(*imgs, **kwargs):
             else:
                 alpha = (~disp.mask.any(axis=-1)).astype(disp.dtype)
                 if nbands == 1:
-                    # to use an alpha channel, matplotlib must have a 4-band image,
-                    # so just duplicate the 1 band for r, g, and b
-                    disp = np.concatenate([disp] * 3, axis=-1)  # TODO: unnecessary copy of disp's mask
-            disp = np.concatenate([disp.data, alpha[:, :, np.newaxis]], axis=-1)
+                    if colormap:
+                        disp = colormap(disp[:, :, 0])
+                        disp = disp[:, :, :3]  # Removes the alpha channel the color map always adds
+                    else:
+                        # to use an alpha channel, matplotlib must have a 4-band image,
+                        # so just duplicate the 1 band for r, g, and b
+                        disp = np.concatenate([disp] * 3, axis=-1)  # TODO: unnecessary copy of disp's mask
+            disp = np.concatenate([disp, alpha[:, :, np.newaxis]], axis=-1)
 
         if disp.shape[-1] == 1:
             # matplotlib takes 1 band images as (n, m), not (n, m, 1)
             disp = disp[:, :, 0]
+            if colormap:
+                disp = colormap(disp)
 
         ax.imshow(disp, aspect="equal", interpolation=interpolation)
         if title is not None:
