@@ -287,6 +287,7 @@ class Scene(object):
                 mask_alpha=True,
                 bands_axis=0,
                 raster_info=False,
+                resampler="near",
                 raster_client=None
                 ):
         """
@@ -322,6 +323,11 @@ class Scene(object):
             of the scene, including the coordinate system WKT and geotransform matrix.
             Generally only useful if you plan to upload data derived
             from this scene back to the Descartes catalog, or use it with GDAL.
+        resampler : str, default "near"
+            Algorithm used to interpolate pixel values when scaling and transforming
+            the image to its new resolution or SRS. Possible values are
+            ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
+            ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         raster_client : Raster, optional
             Unneeded in general use; lets you use a specific client instance
             with non-default auth and parameters.
@@ -389,6 +395,7 @@ class Scene(object):
             bands=bands,
             scales=None,
             data_type=common_data_type,
+            resampler=resampler,
             **raster_params
         )
 

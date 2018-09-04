@@ -165,6 +165,7 @@ class SceneCollection(Collection):
               mask_alpha=True,
               bands_axis=1,
               raster_info=False,
+              resampler="near",
               max_workers=None,
               ):
         """
@@ -219,6 +220,11 @@ class SceneCollection(Collection):
             and geotransform matrix.
             Generally only useful if you plan to upload data derived from this
             scene back to the Descartes catalog, or use it with GDAL.
+        resampler : str, default "near"
+            Algorithm used to interpolate pixel values when scaling and transforming
+            each image to its new resolution or SRS. Possible values are
+            ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
+            ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         max_workers : int, default None
             Maximum number of threads to use to parallelize individual ndarray
             calls to each Scene.
@@ -257,6 +263,7 @@ class SceneCollection(Collection):
             mask_alpha=mask_alpha,
             bands_axis=bands_axis,
             raster_info=raster_info,
+            resampler=resampler,
         )
 
         if bands_axis == 0 or bands_axis == -4:
@@ -346,6 +353,7 @@ class SceneCollection(Collection):
                mask_nodata=True,
                mask_alpha=True,
                bands_axis=0,
+               resampler="near",
                raster_info=False,
                ):
         """
@@ -384,6 +392,12 @@ class SceneCollection(Collection):
             of the scenes, including the coordinate system WKT and geotransform matrix.
             Generally only useful if you plan to upload data derived
             from this scene back to the Descartes catalog, or use it with GDAL.
+        resampler : str, default "near"
+            Algorithm used to interpolate pixel values when scaling and transforming
+            the image to its new resolution or SRS. Possible values are
+            ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
+            ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
+
 
         Returns
         -------
@@ -434,6 +448,7 @@ class SceneCollection(Collection):
             bands=bands,
             scales=None,
             data_type=common_data_type,
+            resampler=resampler,
             **raster_params
         )
 

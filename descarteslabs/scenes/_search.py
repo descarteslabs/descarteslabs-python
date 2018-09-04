@@ -22,6 +22,8 @@ from .scene import Scene
 from .scenecollection import SceneCollection
 from . import geocontext
 
+MAX_RESULT_WINDOW = 10000
+
 
 def search(aoi,
            products=None,
@@ -31,6 +33,8 @@ def search(aoi,
            limit=100,
            sort_field=None,
            sort_order='asc',
+           date_field='acquired',
+           query=None,
            randomize=False,
            raster_client=None,
            metadata_client=None
@@ -59,11 +63,19 @@ def search(aoi,
         Restrict to scenes that are covered in clouds by less than this fraction
         (between 0 and 1)
     limit : int, optional
-        Maximum number of Scenes to return
+        Maximum number of Scenes to return, up to 10000.
     sort_field : str, optional
         Field name in ``Scene.properties`` by which to order the results
-    sort_order : str, optional
+    sort_order : str, optional, default 'asc'
         ``"asc"`` or ``"desc"``
+    date_field : str, optional, default 'acquired'
+        The field used when filtering by date
+        (``"acquired"``, ``"processed"``, ``"published"``)
+    query : descarteslabs.common.property_filtering.Expression, optional
+        Expression used to filter Scenes by their properties, built from ``dl.properties``.
+
+        >>> query = 150 < dl.properties.azimuth_angle < 160 & dl.properties.cloud_fraction < 0.5
+        >>> query = dl.properties.sat_id == "Terra"
     randomize : bool, default False, optional
         Randomize the order of the results.
         You may also use an int or str as an explicit seed.
@@ -117,6 +129,9 @@ def search(aoi,
     if isinstance(products, six.string_types):
         products = [products]
 
+    if limit > MAX_RESULT_WINDOW:
+        raise ValueError("Limit must be <= {}".format(MAX_RESULT_WINDOW))
+
     metadata_params = dict(
         products=products,
         geom=ctx.__geo_interface__,
@@ -126,6 +141,8 @@ def search(aoi,
         limit=limit,
         sort_field=sort_field,
         sort_order=sort_order,
+        date=date_field,
+        q=query,
         randomize=randomize
     )
 
