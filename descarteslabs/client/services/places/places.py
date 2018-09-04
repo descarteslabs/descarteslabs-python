@@ -100,7 +100,7 @@ class Places(Service):
         r = self.session.get('/find/%s' % path, params=kwargs)
         return DotList(r.json())
 
-    def search(self, q, limit=10, country=None, region=None, placetype=None, **params):
+    def search(self, q, limit=10, country=None, region=None, placetype=None):
         """Search for shapes
 
         :param str q: A query string.
@@ -123,6 +123,8 @@ class Places(Service):
               'slug': 'north-america_united-states_texas'
             }
         """
+        params = {}
+
         if q:
             params['q'] = q
 
@@ -143,7 +145,7 @@ class Places(Service):
         return DotList(r.json())
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'shape'))
-    def shape(self, slug, output='geojson', geom='low', **params):
+    def shape(self, slug, output='geojson', geom='low'):
         """Get the geometry for a specific slug
 
         :param slug: Slug identifier.
@@ -171,12 +173,14 @@ class Places(Service):
             }
 
         """
+        params = {}
+
         params['geom'] = geom
         r = self.session.get('/shape/%s.%s' % (slug, output), params=params)
         return DotDict(r.json())
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'prefix'))
-    def prefix(self, slug, output='geojson', placetype=None, geom='low', **params):
+    def prefix(self, slug, output='geojson', placetype=None, geom='low'):
         """Get all the places that start with a prefix
 
         :param str slug: Slug identifier.
@@ -193,6 +197,8 @@ class Places(Service):
             102
 
         """
+        params = {}
+
         if placetype:
             params['placetype'] = placetype
         params['geom'] = geom
@@ -221,7 +227,7 @@ class Places(Service):
 
         return DotList(r.json())
 
-    def data(self, slug, source=None, category=None, metric=None, units=None, date=None, placetype='county', **params):
+    def data(self, slug, source=None, category=None, metric=None, units=None, date=None, placetype='county'):
         """Get all values for a prefix search and point in time
 
         :param str slug: Slug identifier (or shape id).
@@ -233,6 +239,8 @@ class Places(Service):
         :param str placetype: Restrict results to a particular place type.
 
         """
+        params = {}
+
         if source:
             params['source'] = source
 
@@ -256,7 +264,7 @@ class Places(Service):
 
         return r.json()
 
-    def statistics(self, slug, source=None, category=None, metric=None, units=None, **params):
+    def statistics(self, slug, source=None, category=None, metric=None, units=None):
         """Get a time series for a specific place
 
         :param str slug: Slug identifier (or shape id).
@@ -267,6 +275,8 @@ class Places(Service):
         :param str units: Units
 
         """
+        params = {}
+
         if source:
             params['source'] = source
 
@@ -284,7 +294,7 @@ class Places(Service):
 
         return r.json()
 
-    def value(self, slug, source=None, category=None, metric=None, date=None, **params):
+    def value(self, slug, source=None, category=None, metric=None, date=None):
         """Get point values for a specific place
 
         :param str slug: Slug identifier (or shape id).
@@ -293,6 +303,8 @@ class Places(Service):
         :param list(str) metric: Metric(s)
         :param str date: Date
         """
+        params = {}
+
         if source:
 
             if isinstance(source, string_types):

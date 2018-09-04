@@ -9,6 +9,9 @@ Changelog
 =========
 
 ## [Unreleased]
+### Changed
+- Removed extra keyword arguments from places client
+
 ## [0.11.2] - 2018-08-24
 ### Changed
 - Moved metadata property filtering to common
