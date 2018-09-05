@@ -1,5 +1,6 @@
 import unittest
 import mock
+import datetime
 
 from descarteslabs.client.addons import ThirdParty
 from descarteslabs.scenes import geocontext, search
@@ -58,3 +59,21 @@ class TestScenesSearch(unittest.TestCase):
         sc, ctx = search(self.geom, limit=4)
         self.assertGreater(len(sc), 0)
         self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
+
+    def test_search_datetime(self):
+        start_datetime = datetime.datetime(2016, 7, 6)
+        end_datetime = datetime.datetime(2016, 7, 15)
+        sc, ctx = search(
+            self.geom,
+            products="landsat:LC08:PRE:TOAR",
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            limit=4
+        )
+
+        self.assertGreater(len(sc), 0)
+        self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
+
+        for scene in sc:
+            self.assertGreaterEqual(scene.properties['date'], start_datetime)
+            self.assertLessEqual(scene.properties['date'], end_datetime)

@@ -14,6 +14,7 @@
 
 import six
 import collections
+import datetime
 
 from descarteslabs.client.services.raster import Raster
 from descarteslabs.client.services.metadata import Metadata
@@ -128,6 +129,12 @@ def search(aoi,
 
     if isinstance(products, six.string_types):
         products = [products]
+
+    if isinstance(start_datetime, datetime.datetime):
+        start_datetime = start_datetime.isoformat()
+
+    if isinstance(end_datetime, datetime.datetime):
+        end_datetime = end_datetime.isoformat()
 
     if limit > MAX_RESULT_WINDOW:
         raise ValueError("Limit must be <= {}".format(MAX_RESULT_WINDOW))
