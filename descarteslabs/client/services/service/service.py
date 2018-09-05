@@ -67,8 +67,6 @@ class Service(object):
                          ]),
                          status_forcelist=[500, 502, 503, 504])
 
-    ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
-
     def __init__(self, url, token=None, auth=None):
         if auth is None:
             auth = Auth()
@@ -100,7 +98,7 @@ class Service(object):
 
     def build_session(self):
         s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
-        s.mount('https://', self.ADAPTER)
+        s.mount('https://', HTTPAdapter(max_retries=self.RETRY_CONFIG))
 
         s.headers.update({
             "Content-Type": "application/json",
