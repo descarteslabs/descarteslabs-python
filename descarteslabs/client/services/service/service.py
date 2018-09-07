@@ -12,17 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import random
 import itertools
+import random
+from warnings import warn
 
 import requests
 from requests.adapters import HTTPAdapter
-from warnings import warn
 from urllib3.util.retry import Retry
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.version import __version__
 from descarteslabs.client.exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, \
     GatewayTimeoutError, ConflictError
+from descarteslabs.common.threading.local import ThreadLocalWrapper
 
 
 class WrappedSession(requests.Session):
@@ -67,6 +68,10 @@ class Service(object):
                          ]),
                          status_forcelist=[500, 502, 503, 504])
 
+    # We share an adapter (one per thread/process) among all clients to take advantage
+    # of the single underlying connection pool.
+    ADAPTER = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=Service.RETRY_CONFIG))
+
     def __init__(self, url, token=None, auth=None):
         if auth is None:
             auth = Auth()
@@ -79,7 +84,11 @@ class Service(object):
 
         self.base_url = url
 
-        self._session = self.build_session()
+        # Sessions can't be shared across threads or processes because the underlying
+        # SSL connection pool can't be shared. We create them thread-local to avoid
+        # intractable exceptions when users naively share clients e.g. when using
+        # multiprocessing.
+        self._session = ThreadLocalWrapper(self.build_session)
 
     @property
     def token(self):
@@ -91,14 +100,15 @@ class Service(object):
 
     @property
     def session(self):
-        if self._session.headers.get('Authorization') != self.token:
-            self._session.headers['Authorization'] = self.token
+        session = self._session.get()
+        if session.headers.get('Authorization') != self.token:
+            session.headers['Authorization'] = self.token
 
-        return self._session
+        return session
 
     def build_session(self):
         s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
-        s.mount('https://', HTTPAdapter(max_retries=self.RETRY_CONFIG))
+        s.mount('https://', self.ADAPTER.get())
 
         s.headers.update({
             "Content-Type": "application/json",
@@ -164,20 +174,20 @@ class ThirdPartyService(object):
                          ]),
                          status_forcelist=[429, 500, 502, 503, 504])
 
-    ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
+    ADAPTER = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=ThirdPartyService.RETRY_CONFIG))
 
     def __init__(self, url=''):
         self.base_url = url
 
-        self._session = self.build_session()
+        self._session = ThreadLocalWrapper(self.build_session)
 
     @property
     def session(self):
-        return self._session
+        return self._session.get()
 
     def build_session(self):
         s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
-        s.mount('https://', self.ADAPTER)
+        s.mount('https://', self.ADAPTER.get())
 
         s.headers.update({
             "Content-Type": "application/octet-stream",

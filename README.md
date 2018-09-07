@@ -10,6 +10,7 @@ Changelog
 
 ## [Unreleased]
 ### Changed
+- Fixed SSL problems when copying clients to forked processes or sharing them among threads
 - Removed extra keyword arguments from places client
 
 ## [0.11.2] - 2018-08-24

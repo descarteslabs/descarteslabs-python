@@ -28,6 +28,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from descarteslabs.client.exceptions import AuthError, OauthError
+from descarteslabs.common.threading.local import ThreadLocalWrapper
 
 DEFAULT_TOKEN_INFO_PATH = os.path.join(
     os.path.expanduser("~"), '.descarteslabs', 'token_info.json')
@@ -58,6 +59,14 @@ def makedirs_if_not_exists(path):
 
 
 class Auth:
+
+    RETRY_CONFIG = Retry(total=5,
+                         backoff_factor=random.uniform(1, 10),
+                         method_whitelist=frozenset(['GET', 'POST']),
+                         status_forcelist=[429, 500, 502, 503, 504])
+
+    ADAPTER = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=Auth.RETRY_CONFIG))
+
     def __init__(self, domain="https://accounts.descarteslabs.com",
                  scope=None, leeway=500, token_info_path=DEFAULT_TOKEN_INFO_PATH,
                  client_id=None, client_secret=None, jwt_token=None, refresh_token=None):
@@ -130,7 +139,7 @@ class Auth:
                 self._token = None
 
         self._namespace = None
-        self._session = None
+        self._session = ThreadLocalWrapper(self.build_session)
         self.domain = domain
         self.leeway = leeway
 
@@ -180,16 +189,12 @@ class Auth:
 
     @property
     def session(self):
-        if self._session is None:
-            self._session = requests.Session()
-            retries = Retry(total=5,
-                            backoff_factor=random.uniform(1, 10),
-                            method_whitelist=frozenset(['GET', 'POST']),
-                            status_forcelist=[429, 500, 502, 503, 504])
+        return self._session.get()
 
-            self._session.mount('https://', HTTPAdapter(max_retries=retries))
-
-        return self._session
+    def build_session(self):
+        session = requests.Session()
+        session.mount('https://', self.ADAPTER.get())
+        return session
 
     def _get_token(self, timeout=100):
         if self.client_id is None:
