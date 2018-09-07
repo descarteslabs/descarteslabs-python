@@ -596,11 +596,13 @@ class AOI(GeoContext):
         if isinstance(geojson, Feature):
             geojson = geojson.geometry
         elif isinstance(geojson, FeatureCollection):
-            try:
-                features = [GeoJSON.to_instance(feature, strict=True).geometry for feature in geojson.features]
-            except (TypeError, KeyError, UnicodeEncodeError) as ex:
-                raise ValueError(
-                    "feature in FeatureCollection not recognized as valid ({}): {}".format(str(ex), feature))
+            features = []
+            for feature in geojson.features:
+                try:
+                    features.append(GeoJSON.to_instance(feature, strict=True).geometry)
+                except (TypeError, KeyError, UnicodeEncodeError) as ex:
+                    raise ValueError(
+                        "feature in FeatureCollection not recognized as valid ({}): {}".format(str(ex), feature))
             geojson = GeometryCollection(features)
         return geojson
 
