@@ -87,11 +87,72 @@ class TestAOI(unittest.TestCase):
         with self.assertRaises(ValueError):
             geocontext.AOI._test_valid_bounds(bounds_point)
 
+    def test_geojson_feature(self):
+        feature = {
+            'type': 'Feature',
+            'geometry': {
+                'coordinates': ((
+                    (-93.52300099792355, 41.241436141055345),
+                    (-93.7138666, 40.703737),
+                    (-94.37053769704536, 40.83098709945576),
+                    (-94.2036617, 41.3717716),
+                    (-93.52300099792355, 41.241436141055345)),
+                ),
+                'type': 'Polygon'
+            }
+        }
+        bounds_wgs84 = (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716)
+        ctx = geocontext.AOI(feature, bounds=bounds_wgs84, resolution=40, crs="EPSG:3857")
+        self.assertEqual(ctx.__geo_interface__, feature['geometry'])
+
+    def test_geojson_featurecollection(self):
+        feature = {
+            'type': 'Feature',
+            'geometry': {
+                'coordinates': ((
+                    (-93.52300099792355, 41.241436141055345),
+                    (-93.7138666, 40.703737),
+                    (-94.37053769704536, 40.83098709945576),
+                    (-94.2036617, 41.3717716),
+                    (-93.52300099792355, 41.241436141055345)),
+                ),
+                'type': 'Polygon'
+            }
+        }
+        collection = {
+            'type': 'FeatureCollection',
+            'features': [feature, feature, feature],
+        }
+        bounds_wgs84 = (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716)
+        ctx = geocontext.AOI(collection, bounds=bounds_wgs84, resolution=40, crs="EPSG:3857")
+        self.assertEqual(ctx.__geo_interface__['type'], 'GeometryCollection')
+        self.assertEqual(ctx.__geo_interface__['geometries'][0], feature['geometry'])
+
     def test_invalid(self):
         with self.assertRaises(ValueError):
             geocontext.AOI(resolution=40, shape=(120, 280))
         with self.assertRaises(TypeError):
             geocontext.AOI(shape=120)
+
+    def test_invalid_geometry(self):
+        valid_geom = {
+            'coordinates': [[
+                [-93.52300099792355, 41.241436141055345],
+                [-93.7138666, 40.703737],
+                [-94.37053769704536, 40.83098709945576],
+                [-94.2036617, 41.3717716],
+                [-93.52300099792355, 41.241436141055345]],
+            ],
+            'type': 'Polygon'
+        }
+        self.assertRaises(ValueError, geocontext.AOI, 1.2)
+        self.assertRaises(ValueError, geocontext.AOI, {})
+        self.assertRaises(ValueError, geocontext.AOI, dict(valid_geom, type='Foo'))
+        self.assertRaises(ValueError, geocontext.AOI, dict(valid_geom, coordinates=1))
+        self.assertRaises(ValueError, geocontext.AOI, {
+            "type": "FeatureCollection",
+            "features": [{"type": "Feature", "geometry": valid_geom}, "hey"],
+        })
 
     @mock.patch.object(geocontext, "have_shapely", False)
     @mock.patch.object(geocontext, "shapely", None)

@@ -121,6 +121,7 @@ You can also use DLTiles to split up regions along a grid:
 
 import copy
 
+from geojson import Feature, FeatureCollection, GeometryCollection, GeoJSON
 import six
 from six.moves import reprlib
 from descarteslabs.client.addons import ThirdParty, shapely
@@ -397,10 +398,8 @@ class AOI(GeoContext):
         otherwise ``self.bounds`` as a GeoJSON Polygon dict if ``self.geometry`` is None.
         """
         if self._geometry is not None:
-            try:
-                return self._geometry.__geo_interface__
-            except AttributeError:
-                return self._geometry
+            geo_interface = getattr(self._geometry, '__geo_interface__', None)
+            return geo_interface or self._geometry
         elif self._bounds is not None:
             return self._polygon_from_bounds(self._bounds)
 
@@ -452,37 +451,8 @@ class AOI(GeoContext):
                              bounds,
                              shape,
                              ):
-        if geometry != "unchanged":
-            if have_shapely:
-                # convert geometry to shapely
-                if geometry is not None and not isinstance(geometry, shapely.geometry.base.BaseGeometry):
-                    try:
-                        # TODO: help Shapely handle Features and FeatureCollecions
-                        geometry = shapely.geometry.shape(geometry)
-                    except Exception:
-                        raise ValueError(
-                            "Could not interpret the given geometry as a Shapely shape. "
-                            "Remember that Shapely does not accept GeoJSON Features or FeatureCollecions, "
-                            "only geometry objects."
-                        )
-
-                if geometry is not None:
-                    # test that geometry is in WGS84
-                    geom_bounds = geometry.bounds
-                    try:
-                        self._test_valid_bounds(geom_bounds)
-                    except ValueError:
-                        six.raise_from(ValueError("Geometry must be in EPSG:4326 (WGS84 lat-lon) coordinates"), None)
-
-                    # TODO: implement _bounds_from_geometry in order to validate CRS without shapely, and because
-                    # it'd be helpful anyway (would remove requirement for explicitly setting bounds
-                    # if shapely not installed)
-            else:  # no shapely
-                try:
-                    geometry = geometry.__geo_interface__
-                except AttributeError:
-                    pass
-                # TODO: validate geojson if shapely not available
+        if geometry is not None and geometry != "unchanged":
+            geometry = self._interpret_geometry_like(geometry)
 
         if bounds != "unchanged":
             # test that bounds are sane, and in WGS84
@@ -582,6 +552,57 @@ class AOI(GeoContext):
             raise ValueError("minx >= maxx in given bounds, should be (minx, miny, maxx, maxy)")
         if bounds[1] >= bounds[3]:
             raise ValueError("miny >= maxy in given bounds, should be (minx, miny, maxx, maxy)")
+
+    @classmethod
+    def _interpret_geometry_like(cls, geometry):
+        geo_interface = getattr(geometry, '__geo_interface__', None)
+        if geo_interface is None and not isinstance(geometry, dict):
+            raise ValueError(
+                "geometry not recognized as GeoJSON or geometry-like with a `__geo_interface__`: {}".format(geometry))
+
+        if have_shapely:
+            # convert geometry to shapely
+            if not isinstance(geometry, shapely.geometry.base.BaseGeometry):
+                geometry_like = geometry if geo_interface else cls._as_geojson_instance(geometry)
+                try:
+                    geometry = shapely.geometry.shape(geometry_like)
+                except Exception:
+                    raise ValueError(
+                        "Could not interpret the given geometry {} as a Shapely shape".format(geometry)
+                    )
+
+            # test that geometry is in WGS84
+            geom_bounds = geometry.bounds
+            try:
+                cls._test_valid_bounds(geom_bounds)
+            except ValueError:
+                six.raise_from(ValueError("Geometry must be in EPSG:4326 (WGS84 lat-lon) coordinates"), None)
+
+            # TODO: implement _bounds_from_geometry in order to validate CRS without shapely, and because
+            # it'd be helpful anyway (would remove requirement for explicitly setting bounds
+            # if shapely not installed)
+            return geometry
+
+        else:
+            return geo_interface or geometry
+
+    @classmethod
+    def _as_geojson_instance(cls, geojson_dict):
+        try:
+            geojson = GeoJSON.to_instance(geojson_dict, strict=True)
+        except (TypeError, KeyError, UnicodeEncodeError) as ex:
+            raise ValueError("geometry not recognized as valid GeoJSON ({}): {}".format(str(ex), geojson_dict))
+        # Shapely cannot handle GeoJSON Features or FeatureCollections
+        if isinstance(geojson, Feature):
+            geojson = geojson.geometry
+        elif isinstance(geojson, FeatureCollection):
+            try:
+                features = [GeoJSON.to_instance(feature, strict=True).geometry for feature in geojson.features]
+            except (TypeError, KeyError, UnicodeEncodeError) as ex:
+                raise ValueError(
+                    "feature in FeatureCollection not recognized as valid ({}): {}".format(str(ex), feature))
+            geojson = GeometryCollection(features)
+        return geojson
 
 
 class DLTile(GeoContext):
