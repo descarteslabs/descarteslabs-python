@@ -9,9 +9,19 @@ Changelog
 =========
 
 ## [Unreleased]
+
+## [0.12.0] - 2018-09-10
 ### Changed
 - Fixed SSL problems when copying clients to forked processes or sharing them among threads
 - Removed extra keyword arguments from places client
+- Scenes now exposes more parameters from raster and metadata
+- Scenes `descarteslabs.scenes.search` will take a python datetime object in addition to a string
+- Scenes will now allow Feature and FeatureCollection in addtion to GeoJSON geometry types
+
+### Added
+- Colormaps supported in `descarteslabs.scenes.display`
+- Task namespaces are automatically created with the first task group
+
 
 ## [0.11.2] - 2018-08-24
 ### Changed
@@ -226,8 +236,9 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.2...HEAD
-[0.11.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.2...v0.11.2
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.2...v0.12.0
+[0.11.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.21...v0.11.2
 [0.11.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.1...v0.11.0
 [0.10.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.0...v0.10.1
