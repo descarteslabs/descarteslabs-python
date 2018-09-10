@@ -1,7 +1,11 @@
 import unittest
 import mock
+import datetime
+import collections
+import textwrap
 
 from descarteslabs.client.addons import ThirdParty, shapely
+from descarteslabs.common.dotdict import DotDict
 from descarteslabs.scenes import Scene, geocontext
 from descarteslabs.scenes.scene import _strptime_helper
 
@@ -231,3 +235,101 @@ class TestScene(unittest.TestCase):
         # ctx is smaller
         ctx = geocontext.AOI(shapely.geometry.mapping(shapely.geometry.Point(0.0, 0.0).buffer(0.5)))
         self.assertEqual(scene.coverage(ctx), 1.0)
+
+
+class TestSceneRepr(unittest.TestCase):
+    def setUp(self):
+        # date format is locale-dependent, so a hardcoded date string could fail for users from different locales
+        date = datetime.datetime(2015, 06, 01, 14, 25, 10)
+        self.date_str = date.strftime("%c")
+
+        properties = {
+            "id": "prod:foo",
+            "product": "prod",
+            "crs": "EPSG:32615",
+            "date": date,
+            "bands": collections.OrderedDict([  # necessary to ensure deterministic order in tests
+                ("blue", {
+                    "resolution": 5,
+                    "resolution_unit": "smoot",
+                    "dtype": "UInt16",
+                    "data_range": [0, 10000],
+                    "physical_range": [0, 1],
+                    "data_unit": "TOAR",
+                }),
+                ("alpha", {
+                    "resolution": 5,
+                    "resolution_unit": "smoot",
+                    "dtype": "UInt8",
+                    "data_range": [0, 1],
+                    "physical_range": [0, 1],
+                })
+            ])
+        }
+        properties = DotDict(properties)
+        self.scene = MockScene({}, properties)
+
+    def test_basic(self):
+        repr_str = repr(self.scene)
+        match_str = """\
+        Scene "prod:foo"
+          * Product: "prod"
+          * CRS: "EPSG:32615"
+          * Date: {}
+          * Bands:
+            * blue: 5 smoot, UInt16, [0, 10000] -> [0, 1] in units "TOAR"
+            * alpha: 5 smoot, UInt8, [0, 1] -> [0, 1]""".format(self.date_str)
+
+        self.assertEqual(repr_str, textwrap.dedent(match_str))
+
+    def test_missing_band_part(self):
+        del self.scene.properties.bands["blue"]["physical_range"]
+        del self.scene.properties.bands["blue"]["dtype"]
+        repr_str = repr(self.scene)
+        match_str = """\
+        Scene "prod:foo"
+          * Product: "prod"
+          * CRS: "EPSG:32615"
+          * Date: {}
+          * Bands:
+            * blue: 5 smoot, [0, 10000] in units "TOAR"
+            * alpha: 5 smoot, UInt8, [0, 1] -> [0, 1]""".format(self.date_str)
+
+        self.assertEqual(repr_str, textwrap.dedent(match_str))
+
+    def test_missing_all_band_parts(self):
+        self.scene.properties.bands["alpha"] = {}
+        repr_str = repr(self.scene)
+        match_str = """\
+        Scene "prod:foo"
+          * Product: "prod"
+          * CRS: "EPSG:32615"
+          * Date: {}
+          * Bands:
+            * blue: 5 smoot, UInt16, [0, 10000] -> [0, 1] in units "TOAR"
+            * alpha""".format(self.date_str)
+
+        self.assertEqual(repr_str, textwrap.dedent(match_str))
+
+    def test_no_bands(self):
+        self.scene.properties.bands = {}
+        repr_str = repr(self.scene)
+        match_str = """\
+        Scene "prod:foo"
+          * Product: "prod"
+          * CRS: "EPSG:32615"
+          * Date: {}""".format(self.date_str)
+
+        self.assertEqual(repr_str, textwrap.dedent(match_str))
+
+    def test_truncate_hella_bands(self):
+        self.scene.properties.bands.update({str(i): {} for i in range(100)})
+        repr_str = repr(self.scene)
+        match_str = """\
+        Scene "prod:foo"
+          * Product: "prod"
+          * CRS: "EPSG:32615"
+          * Date: {}
+          * Bands: 102""".format(self.date_str)
+
+        self.assertEqual(repr_str, textwrap.dedent(match_str))

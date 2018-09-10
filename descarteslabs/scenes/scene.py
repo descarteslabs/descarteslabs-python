@@ -456,11 +456,55 @@ class Scene(object):
             properties=self.properties,
         )
 
-    def _repr_json_(self):
-        return self._dict()
-
     def __repr__(self):
-        return repr(self._dict())
+        parts = [
+            'Scene "{}"'.format(self.properties.get("id")),
+            '  * Product: "{}"'.format(self.properties.get("product")),
+            '  * CRS: "{}"'.format(self.properties.get("crs")),
+        ]
+
+        try:
+            date = '  * Date: {:%c}'.format(self.properties.get("date"))
+            parts.append(date)
+        except Exception:
+            pass
+
+        bands = self.properties.get("bands")
+        if bands is not None:
+            if len(bands) > 30:
+                parts += ["  * Bands: {}".format(len(bands))]
+            else:
+                # strings will be formatted with a band dict as available fields
+                part_format_strings = [
+                    '{resolution}',
+                    '{resolution_unit},',
+                    '{dtype},',
+                    '{data_range}',
+                    '-> {physical_range}',
+                    'in units "{data_unit}"',
+                ]
+
+                band_lines = []
+                # QUESTION(gabe): should there be a canonical ordering to bands? (see GH #973)
+                for bandname, band in six.iteritems(bands):
+                    band_line = "    * " + bandname
+                    band_parts = []
+
+                    for format_string in part_format_strings:
+                        try:
+                            # If the named field in `format_string` is missing from `band`,
+                            # `format_string.format(**band)` will fail with a KeyError, which we catch.
+                            band_parts.append(format_string.format(**band))
+                        except (KeyError, ValueError):
+                            pass
+
+                    if len(band_parts) > 0:
+                        band_line = band_line + ": " + " ".join(band_parts)
+                    band_lines.append(band_line)
+
+                if len(band_lines) > 0:
+                    parts += ["  * Bands:"] + band_lines
+        return "\n".join(parts)
 
     def _common_data_type_of_bands(self, bands):
         "Ensure all requested bands are available, and that they all have the same dtypes"
