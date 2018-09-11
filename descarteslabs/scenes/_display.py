@@ -135,7 +135,7 @@ def display(*imgs, **kwargs):
             # expand 2d image to 3d with 1 band
             slicer = [slice(None)] * 3
             slicer[bands_axis] = np.newaxis
-            img = img[slicer]
+            img = img[tuple(slicer)]
 
         nbands = img.shape[bands_axis]
         if nbands not in (1, 3, 4):
@@ -148,7 +148,7 @@ def display(*imgs, **kwargs):
             # don't include alpha band in min max
             slicer = [slice(None)] * 3
             slicer[bands_axis] = slice(None, 3)
-            spectrals = img[slicer]
+            spectrals = img[tuple(slicer)]
         else:
             spectrals = img
 

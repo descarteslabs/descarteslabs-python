@@ -240,7 +240,7 @@ class TestScene(unittest.TestCase):
 class TestSceneRepr(unittest.TestCase):
     def setUp(self):
         # date format is locale-dependent, so a hardcoded date string could fail for users from different locales
-        date = datetime.datetime(2015, 06, 01, 14, 25, 10)
+        date = datetime.datetime(2015, 6, 1, 14, 25, 10)
         self.date_str = date.strftime("%c")
 
         properties = {
