@@ -520,25 +520,26 @@ class Scene(object):
                 if as_derived in self_bands:
                     msg += ", but '{}' is. Did you mean that?".format(as_derived)
                 six.raise_from(ValueError(msg), None)
-            try:
-                data_type = band["dtype"]
-            except KeyError:
-                six.raise_from(
-                    ValueError(
-                        "Band '{}' of product '{}' has no 'dtype' field. "
-                        "If you created this product, you can fix the metadata "
-                        "at https://catalog.descarteslabs.com.".format(b, self.properties["product"])
-                    ),
-                    None
-                )
-            if common_data_type is None:
-                common_data_type = data_type
-            else:
-                if data_type != common_data_type:
-                    raise ValueError(
-                        "Bands must all have the same dtype. The band '{}' has dtype '{}', "
-                        "but all bands before it had the dtype '{}'.".format(b, data_type, common_data_type)
+            if not (len(bands) > 1 and b == "alpha"):  # allow alpha band to have a different dtype from the rest
+                try:
+                    data_type = band["dtype"]
+                except KeyError:
+                    six.raise_from(
+                        ValueError(
+                            "Band '{}' of product '{}' has no 'dtype' field. "
+                            "If you created this product, you can fix the metadata "
+                            "at https://catalog.descarteslabs.com.".format(b, self.properties["product"])
+                        ),
+                        None
                     )
+                if common_data_type is None:
+                    common_data_type = data_type
+                else:
+                    if data_type != common_data_type:
+                        raise ValueError(
+                            "Bands must all have the same dtype. The band '{}' has dtype '{}', "
+                            "but all bands before it had the dtype '{}'.".format(b, data_type, common_data_type)
+                        )
         return common_data_type
 
     @staticmethod

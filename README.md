@@ -10,13 +10,14 @@ Changelog
 
 ## [Unreleased]
 
-## [0.12.0] - 2018-09-10
+## [0.12.0] - 2018-09-12
 ### Changed
 - Fixed SSL problems when copying clients to forked processes or sharing them among threads
 - Removed extra keyword arguments from places client
 - Scenes now exposes more parameters from raster and metadata
 - Scenes `descarteslabs.scenes.search` will take a python datetime object in addition to a string
-- Scenes will now allow Feature and FeatureCollection in addtion to GeoJSON geometry types
+- Scenes will now allow Feature and FeatureCollection in addition to GeoJSON geometry types
+- Fixed Scenes issue preventing access to products with multi-byte data but single-byte alpha bands
 
 ### Added
 - Colormaps supported in `descarteslabs.scenes.display`
@@ -95,7 +96,7 @@ Changelog
 ## [0.6.1] - 2018-01-09
 ### Changed
 - Reverted `descarteslabs.services.base` to `descarteslabs.services.service`
-  
+
 ## [0.6.0] - 2018-01-08
 ### Changed
 - Reorganization of services
@@ -268,5 +269,3 @@ metadata.features for iterating over large search results
 [0.2.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/descarteslabs/descarteslabs-python/releases/tag/v0.1.0
-
-

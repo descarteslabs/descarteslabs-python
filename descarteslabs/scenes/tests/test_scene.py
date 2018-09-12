@@ -197,12 +197,16 @@ class TestScene(unittest.TestCase):
                 "derived:three": dict(dtype="UInt16"),
                 "derived:one": dict(dtype="UInt16"),
                 "its_a_byte": dict(dtype="Byte"),
-                "no_dtype": {}
+                "alpha": dict(dtype="Byte"),
+                "no_dtype": {},
             }
         }
         s = MockScene(None, mock_properties)
         self.assertEqual(s._common_data_type_of_bands(["its_a_byte"]), "Byte")
         self.assertEqual(s._common_data_type_of_bands(["one", "two"]), "UInt16")
+        self.assertEqual(s._common_data_type_of_bands(["its_a_byte", "alpha"]), "Byte")
+        self.assertEqual(s._common_data_type_of_bands(["one", "alpha"]), "UInt16")  # alpha ignored from common datatype
+        self.assertEqual(s._common_data_type_of_bands(["alpha"]), "Byte")
         self.assertEqual(s._common_data_type_of_bands(["one", "two", "derived:three", "derived:one"]), "UInt16")
         with self.assertRaisesRegexp(ValueError, "is not available"):
             s._common_data_type_of_bands(["one", "woohoo"])
