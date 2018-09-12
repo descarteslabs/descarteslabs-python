@@ -52,6 +52,7 @@ from descarteslabs.client.exceptions import NotFoundError, BadRequestError
 from descarteslabs.common.dotdict import DotDict
 
 from . import geocontext
+from . import _download
 
 
 def _strptime_helper(s):
@@ -302,8 +303,8 @@ class Scene(object):
             Names must be keys in ``self.properties.bands``.
             If the alpha band is requested, it must be last in the list
             to reduce rasterization errors.
-        ctx : GeoContext
-            A GeoContext to use when loading this Scene
+        ctx : `GeoContext`
+            A `GeoContext` to use when loading this Scene
         mask_nodata : bool, default True
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
@@ -359,7 +360,7 @@ class Scene(object):
             If band names are not given or are invalid.
             If the requested bands have different dtypes.
         NotFoundError
-            If a Scene's id cannot be found in the Descartes Labs catalog
+            If a Scene's ID cannot be found in the Descartes Labs catalog
         BadRequestError
             If the Descartes Labs platform is given invalid parameters
         """
@@ -402,7 +403,9 @@ class Scene(object):
         try:
             arr, info = raster_client.ndarray(**full_raster_args)
         except NotFoundError as e:
-            raise NotFoundError("'{}' does not exist in the Descartes catalog".format(self.properties["id"]))
+            six.raise_from(
+                NotFoundError("'{}' does not exist in the Descartes catalog".format(self.properties["id"])), None
+            )
         except BadRequestError as e:
             msg = ("Error with request:\n"
                    "{err}\n"
@@ -441,6 +444,98 @@ class Scene(object):
             return arr, info
         else:
             return arr
+
+    def download(self,
+                 bands,
+                 ctx,
+                 dest=None,
+                 format="tif",
+                 raster_client=None,
+                 ):
+        """
+        Save bands from this scene as a GeoTIFF, PNG, or JPEG, writing to a path or file-like object.
+
+        Parameters
+        ----------
+        bands : str or Sequence[str]
+            Band names to load. Can be a single string of band names
+            separated by spaces (``"red green blue derived:ndvi"``),
+            or a sequence of band names (``["red", "green", "blue", "derived:ndvi"]``).
+            Names must be keys in ``self.properties.bands``.
+        ctx : `GeoContext`
+            A `GeoContext` to use when loading this Scene
+        dest : str, path-like object, or file-like object, default None
+            Where to write the image file.
+
+            * If None (default), it's written to an image file of the given ``format``
+              in the current directory, named by the Scene's ID and requested bands,
+              like ``"sentinel-2:L1C:2018-08-10_10TGK_68_S2A_v1-red-green-blue.tif"``
+            * If a string or path-like object, it's written to that path.
+
+              Any file already existing at that path will be overwritten.
+
+              Any intermediate directories will be created if they don't exist.
+
+              Note that path-like objects (such as pathlib.Path) are only supported
+              in Python 3.6 or later.
+            * If a file-like object, it's written into that file.
+        format : str, default "tif"
+            If a file-like object or None is given as ``dest``: one of "tif", "png", or "jpg".
+
+            If a str or path-like object is given as ``dest``, ``format`` is ignored
+            and determined from the extension on the path (one of ".tif", ".png", or ".jpg").
+        raster_client : Raster, optional
+            Unneeded in general use; lets you use a specific client instance
+            with non-default auth and parameters.
+
+        Returns
+        -------
+        path : str or None
+            If ``dest`` is None or a path, the path where the image file was written is returned.
+            If ``dest`` is file-like, nothing is returned.
+
+        Example
+        -------
+        >>> import descarteslabs as dl
+        >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
+        >>> scene.download("red green blue", ctx)  # doctest: +SKIP
+        "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue.tif"
+        >>> import os
+        >>> os.listdir(".")  # doctest: +SKIP
+        ["landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue.tif"]
+        >>> scene.download(
+        ...     "nir swir1",
+        ...     ctx,
+        ...     "rasters/{ctx.resolution}-{scene.properties.id}.jpg".format(ctx=ctx, scene=scene)
+        ... )  # doctest: +SKIP
+        "rasters/15-landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1.tif"
+        >>> with open("another_raster.jpg", "wb") as f:
+        ...     scene.download("swir2", ctx, dest=f, format="jpg")  # doctest: +SKIP
+
+        Raises
+        ------
+        ValueError
+            If requested bands are unavailable.
+            If band names are not given or are invalid.
+            If the requested bands have different dtypes.
+            If ``format`` is invalid, or the path has an invalid extension.
+        NotFoundError
+            If a Scene's ID cannot be found in the Descartes Labs catalog
+        BadRequestError
+            If the Descartes Labs platform is given invalid parameters
+        """
+        bands = self._bands_to_list(bands)
+        common_data_type = self._common_data_type_of_bands(bands)
+
+        return _download._download(
+            inputs=[self.properties["id"]],
+            bands_list=bands,
+            ctx=ctx,
+            dtype=common_data_type,
+            dest=dest,
+            format=format,
+            raster_client=raster_client,
+        )
 
     @property
     def __geo_interface__(self):

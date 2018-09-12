@@ -17,8 +17,8 @@ metadata_client = Metadata()
 class MockScene(Scene):
     "Circumvent __init__ method to create a Scene with arbitrary geometry and properties objects"
     def __init__(self, geometry, properties):
-        self.geometry = geometry
-        self.properties = properties
+        self.geometry = DotDict(geometry)
+        self.properties = DotDict(properties)
 
 
 class TestScene(unittest.TestCase):
@@ -201,7 +201,7 @@ class TestScene(unittest.TestCase):
                 "no_dtype": {},
             }
         }
-        s = MockScene(None, mock_properties)
+        s = MockScene({}, mock_properties)
         self.assertEqual(s._common_data_type_of_bands(["its_a_byte"]), "Byte")
         self.assertEqual(s._common_data_type_of_bands(["one", "two"]), "UInt16")
         self.assertEqual(s._common_data_type_of_bands(["its_a_byte", "alpha"]), "Byte")
@@ -239,6 +239,19 @@ class TestScene(unittest.TestCase):
         # ctx is smaller
         ctx = geocontext.AOI(shapely.geometry.mapping(shapely.geometry.Point(0.0, 0.0).buffer(0.5)))
         self.assertEqual(scene.coverage(ctx), 1.0)
+
+    @mock.patch("descarteslabs.scenes.scene._download._download")
+    def test_download(self, mock_geotiff):
+        scene = MockScene({}, {
+            "id": "foo:bar",
+            "bands": {
+                "nir": {"dtype": "UInt16"},
+                "yellow": {"dtype": "UInt16"},
+            }
+        })
+        ctx = geocontext.AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
+        scene.download("nir yellow", ctx)
+        mock_geotiff.assert_called_once()
 
 
 class TestSceneRepr(unittest.TestCase):

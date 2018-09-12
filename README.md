@@ -10,6 +10,7 @@ Changelog
 
 ## [Unreleased]
 
+
 ## [0.12.0] - 2018-09-12
 ### Changed
 - Fixed SSL problems when copying clients to forked processes or sharing them among threads
@@ -20,6 +21,7 @@ Changelog
 - Fixed Scenes issue preventing access to products with multi-byte data but single-byte alpha bands
 
 ### Added
+- `Scene.download`, `SceneCollection.download`, and `SceneCollection.download_mosaic` methods
 - Colormaps supported in `descarteslabs.scenes.display`
 - Task namespaces are automatically created with the first task group
 

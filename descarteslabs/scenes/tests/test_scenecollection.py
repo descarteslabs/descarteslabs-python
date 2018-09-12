@@ -1,8 +1,11 @@
 import unittest
 import mock
+import os.path
 
 from descarteslabs.client.addons import ThirdParty, shapely
 from descarteslabs.scenes import Scene, SceneCollection, geocontext
+
+from .test_scene import MockScene
 
 
 class TestSceneCollection(unittest.TestCase):
@@ -144,3 +147,80 @@ class TestSceneCollection(unittest.TestCase):
         ])
 
         self.assertEqual(len(scenes.filter_coverage(ctx)), 1)
+
+
+@mock.patch.object(MockScene, "download")
+class TestSceneCollectionDownload(unittest.TestCase):
+    def setUp(self):
+        properties = [{
+            "id": "foo:bar" + str(i),
+            "bands": {
+                "nir": {"dtype": "UInt16"},
+                "yellow": {"dtype": "UInt16"},
+            }
+        } for i in range(3)]
+
+        self.scenes = SceneCollection([MockScene({}, p) for p in properties])
+        self.ctx = geocontext.AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
+
+    def test_directory(self, mock_download):
+        dest = "rasters"
+        paths = self.scenes.download("nir yellow", self.ctx, dest, format="png")
+
+        self.assertEqual(paths, [
+            os.path.join(dest, "foo:bar0-nir-yellow.png"),
+            os.path.join(dest, "foo:bar1-nir-yellow.png"),
+            os.path.join(dest, "foo:bar2-nir-yellow.png"),
+        ])
+
+        self.assertEqual(mock_download.call_count, len(self.scenes))
+        for scene, path in zip(self.scenes, paths):
+            mock_download.assert_any_call(
+                ["nir", "yellow"],
+                self.ctx,
+                dest=path,
+                raster_client=self.scenes._raster_client
+            )
+
+    def test_custom_paths(self, mock_download):
+        filenames = [
+            os.path.join("foo", "img1.tif"),
+            os.path.join("bar", "img2.jpg"),
+            os.path.join("foo", "img3.tif"),
+        ]
+        result = self.scenes.download("nir yellow", self.ctx, filenames)
+        self.assertEqual(result, filenames)
+
+        self.assertEqual(mock_download.call_count, len(self.scenes))
+        for scene, path in zip(self.scenes, filenames):
+            mock_download.assert_any_call(
+                ["nir", "yellow"],
+                self.ctx,
+                dest=path,
+                raster_client=self.scenes._raster_client
+            )
+
+    def test_non_unique_paths(self, mock_download):
+        nonunique_paths = [
+            "img.tif",
+            "img2.tif",
+            "img.tif"
+        ]
+        with self.assertRaises(RuntimeError):
+            self.scenes.download("nir yellow", self.ctx, nonunique_paths)
+
+    def test_wrong_number_of_dest(self, mock_download):
+        with self.assertRaises(ValueError):
+            self.scenes.download("nir", self.ctx, ["a", "b"])
+
+    def test_wrong_type_of_dest(self, mock_download):
+        with self.assertRaises(TypeError):
+            self.scenes.download("nir", self.ctx, 4)
+
+    @mock.patch("descarteslabs.scenes.scenecollection._download._download")
+    def test_download_mosaic(self, mock_base_download, mock_download):
+        self.scenes.download_mosaic("nir yellow", self.ctx)
+
+        mock_base_download.assert_called_once()
+        called_ids = mock_base_download.call_args[1]["inputs"]
+        self.assertEqual(called_ids, self.scenes.each.properties["id"].combine())

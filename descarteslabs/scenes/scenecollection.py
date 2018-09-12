@@ -61,7 +61,7 @@ Operate on related Scenes with `SceneCollection.groupby`:
 .. ipython::
 
     @doctest
-    In [14]: for month, month_scenes in spring_scenes.groupby("properties.date.month"):
+    In [10]: for month, month_scenes in spring_scenes.groupby("properties.date.month"):
        ....:    print("Month {}: {} scenes".format(month, len(month_scenes)))
        ....:
     Month 4: 1 scenes
@@ -72,12 +72,29 @@ Load data with `SceneCollection.stack` or `SceneCollection.mosaic`:
 
 .. ipython::
 
-    In [10]: ctx_lowres = ctx.assign(resolution=120)
+    In [11]: ctx_lowres = ctx.assign(resolution=120)
 
-    In [11]: stack = spring_scenes.stack("red green blue", ctx_lowres)
+    In [12]: stack = spring_scenes.stack("red green blue", ctx_lowres)
 
-    In [12]: stack.shape
-    Out[12]: (5, 3, 3690, 3724)
+    In [13]: stack.shape
+    Out[13]: (5, 3, 3690, 3724)
+
+Download georeferenced images with `SceneCollection.download` and `SceneCollection.download_mosaic`:
+
+.. ipython::
+
+    @doctest
+    In [14]: spring_scenes.download("red green blue", ctx_lowres, "rasters")
+    Out[14]:
+    ['rasters/landsat:LC08:PRE:TOAR:meta_LC80260312013108_v1-red-green-blue.tif',
+     'rasters/landsat:LC08:PRE:TOAR:meta_LC80260312013124_v1-red-green-blue.tif',
+     'rasters/landsat:LC08:PRE:TOAR:meta_LC80260312013140_v1-red-green-blue.tif',
+     'rasters/landsat:LC08:PRE:TOAR:meta_LC80260312013156_v1-red-green-blue.tif',
+     'rasters/landsat:LC08:PRE:TOAR:meta_LC80260312013172_v1-red-green-blue.tif']
+
+    @doctest
+    In [15]: spring_scenes.download_mosaic("nir red", ctx_lowres)
+    Out[15]: 'mosaic-nir-red.tif'
 """
 
 from __future__ import division
@@ -85,6 +102,7 @@ import collections
 import six
 import logging
 import json
+import os.path
 
 from descarteslabs.client.addons import ThirdParty, concurrent, shapely, numpy as np
 
@@ -93,6 +111,7 @@ from descarteslabs.client.exceptions import NotFoundError, BadRequestError
 
 from .collection import Collection
 from .scene import Scene
+from . import _download
 
 have_shapely = not isinstance(shapely, ThirdParty)
 
@@ -126,15 +145,15 @@ class SceneCollection(Collection):
     def filter_coverage(self, ctx, minimum_coverage=1):
         """
         Include scenes having footprints with a minimum
-        coverage compared to the geometry of the ``GeoContext``.
+        coverage compared to the geometry of the `GeoContext`.
 
         See :func:`Scene.coverage <descarteslabs.scenes.scene.Scene.coverage>`
         for getting coverage information for a scene.
 
         Parameters
         ----------
-        ctx : GeoContext
-            A GeoContext to use when filtering scenes
+        ctx : `GeoContext`
+            A `GeoContext` to use when filtering scenes
         minimum_coverage : float
             Include scenes with greater than or equal to this
             fraction of coverage.
@@ -180,8 +199,8 @@ class SceneCollection(Collection):
             or a sequence of band names (``["red", "green", "blue"]``).
             If the alpha band is requested, it must be last in the list
             to reduce rasterization errors.
-        ctx : GeoContext
-            A GeoContext to use when loading each Scene
+        ctx : `GeoContext`
+            A `GeoContext` to use when loading each Scene
         flatten : str, Sequence[str], callable, or Sequence[callable], default None
             "Flatten" groups of Scenes in the stack into a single layer by mosaicking
             each group (such as Scenes from the same day), then stacking the mosaics.
@@ -251,7 +270,7 @@ class SceneCollection(Collection):
             If not all required parameters are specified in the GeoContext.
             If the SceneCollection is empty.
         NotFoundError
-            If a Scene's id cannot be found in the Descartes Labs catalog
+            If a Scene's ID cannot be found in the Descartes Labs catalog
         BadRequestError
             If the Descartes Labs platform is given unrecognized parameters
         """
@@ -371,8 +390,8 @@ class SceneCollection(Collection):
             or a sequence of band names (``["red", "green", "blue"]``).
             If the alpha band is requested, it must be last in the list
             to reduce rasterization errors.
-        ctx : GeoContext
-            A GeoContext to use when loading each Scene
+        ctx : `GeoContext`
+            A `GeoContext` to use when loading each Scene
         mask_nodata : bool, default True
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
@@ -505,6 +524,249 @@ class SceneCollection(Collection):
             return arr, info
         else:
             return arr
+
+    def download(self,
+                 bands,
+                 ctx,
+                 dest,
+                 format="tif",
+                 max_workers=None,
+                 ):
+        """
+        Download scenes as image files in parallel.
+
+        Parameters
+        ----------
+        bands : str or Sequence[str]
+            Band names to load. Can be a single string of band names
+            separated by spaces (``"red green blue"``),
+            or a sequence of band names (``["red", "green", "blue"]``).
+        ctx : `GeoContext`
+            A `GeoContext` to use when loading each Scene
+        dest : str, path-like, or sequence of str or path-like
+            Directory or sequence of paths to which to write the image files.
+
+            If a directory, files within it will be named by
+            their scene IDs and the bands requested, like
+            ``"sentinel-2:L1C:2018-08-10_10TGK_68_S2A_v1-red-green-blue.tif"``.
+
+            If a sequence of paths of the same length as the SceneCollection is given,
+            each Scene will be written to the corresponding path. This lets you use your
+            own naming scheme, or even write images to multiple directories.
+
+            Any intermediate paths are created if they do not exist,
+            for both a single directory and a sequence of paths.
+        format : str, default "tif"
+            Only if a single directory is given as ``dest``:
+            what image format to use. One of "tif", "png", or "jpg".
+
+            If ``dest`` is a sequence of paths, ``format`` is ignored
+            and determined by the extension on each path.
+        max_workers : int, default None
+            Maximum number of threads to use to parallelize individual ``download``
+            calls to each Scene.
+            If None, it defaults to the number of processors on the machine,
+            multiplied by 5.
+            Note that unnecessary threads *won't* be created if ``max_workers``
+            is greater than the number of Scenes in the SceneCollection.
+
+        Returns
+        -------
+        paths : Sequence[str]
+            A list of all the paths where files were written.
+
+        Example
+        -------
+        >>> import descarteslabs as dl
+        >>> tile = dl.scenes.DLTile.from_key("256:0:75.0:15:-5:230")
+        >>> scenes, _ = dl.scenes.search(tile, products=["landsat:LC08:PRE:TOAR"], limit=5)
+        >>> scenes.download("red green blue", tile, "rasters")  # doctest: +SKIP
+        ["rasters/landsat:LC08:PRE:TOAR:meta_LC80260322013108_v1-red-green-blue.tif",
+         "rasters/landsat:LC08:PRE:TOAR:meta_LC80260322013124_v1-red-green-blue.tif",
+         "rasters/landsat:LC08:PRE:TOAR:meta_LC80260322013140_v1-red-green-blue.tif",
+         "rasters/landsat:LC08:PRE:TOAR:meta_LC80260322013156_v1-red-green-blue.tif",
+         "rasters/landsat:LC08:PRE:TOAR:meta_LC80260322013172_v1-red-green-blue.tif"]
+        >>> # use explicit paths for a custom naming scheme:
+        >>> paths = [
+        ...     "{tile.key}/l8-{scene.properties.date:%Y-%m-%d-%H:%m}.jpg".format(tile=tile, scene=scene)
+        ...     for scene in scenes
+        ... ]
+        >>> scenes.download("nir red", tile, paths)
+        ["256:0:75.0:15:-5:230/l8-2013-04-18-16:04.jpg",
+         "256:0:75.0:15:-5:230/l8-2013-05-04-16:05.jpg",
+         "256:0:75.0:15:-5:230/l8-2013-05-20-16:05.jpg",
+         "256:0:75.0:15:-5:230/l8-2013-06-05-16:06.jpg",
+         "256:0:75.0:15:-5:230/l8-2013-06-21-16:06.jpg"]
+
+        Raises
+        ------
+        RuntimeError
+            If the paths given are not all unique.
+            If there is an error generating default filenames.
+        ValueError
+            If requested bands are unavailable, or band names are not given
+            or are invalid.
+            If not all required parameters are specified in the GeoContext.
+            If the SceneCollection is empty.
+            If ``dest`` is a sequence not equal in length to the SceneCollection.
+            If ``format`` is invalid, or a path has an invalid extension.
+        TypeError
+            If ``dest`` is not a string or a sequence type.
+        NotFoundError
+            If a Scene's ID cannot be found in the Descartes Labs catalog
+        BadRequestError
+            If the Descartes Labs platform is given unrecognized parameters
+        """
+        if len(self) == 0:
+            raise ValueError("This SceneCollection is empty")
+
+        bands = Scene._bands_to_list(bands)
+        # Pre-check that all bands are available in all Scenes, and all have the same dtypes
+        self._common_data_type(bands)
+
+        if _download._is_path_like(dest):
+            default_pattern = "{scene.properties.id}-{bands}.{ext}"
+            bands_str = "-".join(bands)
+            try:
+                dest = [
+                    os.path.join(dest, default_pattern.format(scene=scene, bands=bands_str, ext=format))
+                    for scene in self
+                ]
+            except Exception as e:
+                six.raise_from(
+                    RuntimeError(
+                        "Error while generating default filenames:\n{}\n"
+                        "This is likely due to missing or unexpected data "
+                        "in Scenes in this SceneCollection.".format(e)
+                    ), None
+                )
+
+        try:
+            if len(dest) != len(self):
+                raise ValueError(
+                    "`dest` contains {} items, but the SceneCollection contains {}".format(len(dest), len(self))
+                )
+        except TypeError:
+            six.raise_from(TypeError(
+                "`dest` should be a sequence of strings or path-like objects; "
+                "instead found type {}, which has no length".format(type(dest))
+            ), None)
+
+        # check for duplicate paths to prevent the confusing situation where
+        # multiple rasters overwrite the same filename
+        unique = set()
+        for path in dest:
+            if path in unique:
+                raise RuntimeError("Paths must be unique, but '{}' occurs multiple times".format(path))
+            else:
+                unique.add(path)
+
+        try:
+            futures = concurrent.futures
+        except ImportError:
+            logging.warning(
+                "Failed to import concurrent.futures. Download calls will be serial."
+            )
+            for scene, path in zip(self, dest):
+                scene.download(bands, ctx, dest=path, raster_client=self._raster_client)
+        else:
+            with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = [
+                    executor.submit(
+                        scene.download, bands, ctx, dest=path, raster_client=self._raster_client
+                    )
+                    for scene, path in zip(self, dest)
+                ]
+                concurrent.futures.wait(futures)
+        return dest
+
+    def download_mosaic(self,
+                        bands,
+                        ctx,
+                        dest=None,
+                        format="tif",
+                        ):
+        """
+        Download all scenes as a single image file.
+        Where multiple scenes overlap, only data from the scene that comes last
+        in the SceneCollection is used.
+
+        Parameters
+        ----------
+        bands : str or Sequence[str]
+            Band names to load. Can be a single string of band names
+            separated by spaces (``"red green blue"``),
+            or a sequence of band names (``["red", "green", "blue"]``).
+        ctx : `GeoContext`
+            A `GeoContext` to use when loading the Scenes
+        dest : str, path-like object, or file-like object, default None
+            Where to write the image file.
+
+            * If None (default), it's written to an image file of the given ``format``
+              in the current directory, named by the requested bands,
+              like ``"mosaic-red-green-blue.tif"``
+            * If a string or path-like object, it's written to that path.
+
+              Any file already existing at that path will be overwritten.
+
+              Any intermediate directories will be created if they don't exist.
+
+              Note that path-like objects (such as pathlib.Path) are only supported
+              in Python 3.6 or later.
+            * If a file-like object, it's written into that file.
+        format : str, default "tif"
+            If a file-like object or None is given as ``dest``: one of "tif", "png", or "jpg".
+
+            If a str or path-like object is given as ``dest``, ``format`` is ignored
+            and determined from the extension on the path (one of ".tif", ".png", or ".jpg").
+
+        Returns
+        -------
+        path : str or None
+            If ``dest`` is a path or None, the path where the image file was written is returned.
+            If ``dest`` is file-like, nothing is returned.
+
+        Example
+        -------
+        >>> import descarteslabs as dl
+        >>> tile = dl.scenes.DLTile.from_key("256:0:75.0:15:-5:230")
+        >>> scenes, _ = dl.scenes.search(tile, products=["landsat:LC08:PRE:TOAR"], limit=5)
+        >>> scenes.download_mosaic("nir red", tile)  # doctest: +SKIP
+        'mosaic-nir-red.jpg'
+        >>> scenes.download_mosaic("nir red", tile, dest="mosaics/{}.png".format(tile.key))  # doctest: +SKIP
+        'mosaics/256:0:75.0:15:-5:230.png'
+        >>> with open("another_mosaic.jpg", "wb") as f:
+        ...     scenes.download_mosaic("swir2", tile, dest=f, format="jpg")  # doctest: +SKIP
+
+
+        Raises
+        ------
+        ValueError
+            If requested bands are unavailable, or band names are not given
+            or are invalid.
+            If not all required parameters are specified in the GeoContext.
+            If the SceneCollection is empty.
+            If ``format`` is invalid, or the path has an invalid extension.
+        NotFoundError
+            If a Scene's ID cannot be found in the Descartes Labs catalog
+        BadRequestError
+            If the Descartes Labs platform is given unrecognized parameters
+        """
+        if len(self) == 0:
+            raise ValueError("This SceneCollection is empty")
+
+        bands = Scene._bands_to_list(bands)
+        common_data_type = self._common_data_type(bands)
+
+        return _download._download(
+            inputs=self.each.properties["id"].combine(),
+            bands_list=bands,
+            ctx=ctx,
+            dtype=common_data_type,
+            dest=dest,
+            format=format,
+            raster_client=self._raster_client,
+        )
 
     def __repr__(self):
         parts = ["SceneCollection of {} scene{}".format(len(self), "" if len(self) == 1 else "s")]
