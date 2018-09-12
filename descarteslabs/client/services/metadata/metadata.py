@@ -19,21 +19,12 @@ from six import string_types
 from descarteslabs.client.services.service import Service
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.auth import Auth
+from descarteslabs.client.deprecation import check_deprecated_kwargs
 from descarteslabs.client.services.raster import Raster
 from descarteslabs.client.services.metadata.metadata_filtering import GLOBAL_PROPERTIES
 from descarteslabs.common.property_filtering.filtering import AndExpression
 from descarteslabs.common.dotdict import DotDict, DotList
 
-
-OFFSET_DEPRECATION_MESSAGE = (
-    "Keyword arg `offset` has been deprecated and will be removed in "
-    "future versions of the library. "
-)
-
-SAT_ID_DEPRECATION_MESSAGE = (
-    "Keyword arg `sat_id` has been deprecated and will be removed in "
-    "future versions of the library. "
-)
 
 SOURCES_DEPRECATION_MESSAGE = (
     "Metadata.sources() has been deprecated and will be removed in "
@@ -180,6 +171,7 @@ class Metadata(Service):
             for param in params
             if args[param] is not None
         })
+        check_deprecated_kwargs(kwargs, {"band": "bands"})
 
         r = self.session.post('/products/search', json=kwargs)
 
@@ -199,14 +191,14 @@ class Metadata(Service):
 
         return DotList(r.json())
 
-    def summary(self, products=None, sat_id=None, date='acquired', part=None,
+    def summary(self, products=None, sat_ids=None, date='acquired', part=None,
                 place=None, geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
                 cloud_fraction_0=None, fill_fraction=None, q=None, pixels=None,
                 dltile=None, **kwargs):
         """Get a summary of the results for the specified spatio-temporal query.
 
         :param list(str) products: Product identifier(s).
-        :param list(str) sat_id: Satellite identifier(s). *Deprecated*
+        :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str part: Part of the date to aggregate over (e.g. `day`).
         :param str place: A slug identifier to be used as a region of interest.
@@ -242,6 +234,14 @@ class Metadata(Service):
               'products': ['landsat:LC08:PRE:TOAR']
             }
         """
+        check_deprecated_kwargs(kwargs, {
+            "product": "products",
+            "const_id": "const_ids",
+            "sat_id": "sat_ids",
+            "start_time": "start_datetime",
+            "end_time": "end_datetime",
+        })
+
         if place:
             places = Places()
             places.auth = self.auth
@@ -257,13 +257,11 @@ class Metadata(Service):
         if isinstance(geom, dict):
             geom = json.dumps(geom)
 
-        if sat_id:
-            warn(SAT_ID_DEPRECATION_MESSAGE, DeprecationWarning)
+        if sat_ids:
+            if isinstance(sat_ids, string_types):
+                sat_ids = [sat_ids]
 
-            if isinstance(sat_id, string_types):
-                sat_id = [sat_id]
-
-            kwargs['sat_id'] = sat_id
+            kwargs['sat_ids'] = sat_ids
 
         if products:
             if isinstance(products, string_types):
@@ -306,16 +304,16 @@ class Metadata(Service):
         r = self.session.post('/summary', json=kwargs)
         return DotDict(r.json())
 
-    def search(self, products=None, sat_id=None, date='acquired', place=None,
+    def search(self, products=None, sat_ids=None, date='acquired', place=None,
                geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
-               cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=0,
+               cloud_fraction_0=None, fill_fraction=None, q=None, limit=100,
                fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None,
                continuation_token=None, **kwargs):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. For accessing more than 10000 results, see :py:func:`features`.
 
         :param list(str) products: Product Identifier(s).
-        :param list(str) sat_id: Satellite identifier(s).
+        :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
@@ -326,7 +324,6 @@ class Metadata(Service):
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param expr q: Expression for filtering the results. See :py:attr:`descarteslabs.utilities.properties`.
         :param int limit: Number of items to return up to the maximum of 10000.
-        :param int offset: Number of items to skip.
         :param list(str) fields: Properties to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str sort_field: Property to sort on.
@@ -345,6 +342,15 @@ class Metadata(Service):
             >>> len(scenes['features'])  # doctest: +SKIP
             2
         """
+        check_deprecated_kwargs(kwargs, {
+            "product": "products",
+            "const_id": "const_ids",
+            "sat_id": "sat_ids",
+            "start_time": "start_datetime",
+            "end_time": "end_datetime",
+            "offset": None,
+        })
+
         if place:
             places = Places()
             places.auth = self.auth
@@ -362,17 +368,11 @@ class Metadata(Service):
 
         kwargs.update({'date': date, 'limit': limit})
 
-        if offset:
-            warn(OFFSET_DEPRECATION_MESSAGE, DeprecationWarning)
-            kwargs['offset'] = offset
+        if sat_ids:
+            if isinstance(sat_ids, string_types):
+                sat_ids = [sat_ids]
 
-        if sat_id:
-            warn(SAT_ID_DEPRECATION_MESSAGE, DeprecationWarning)
-
-            if isinstance(sat_id, string_types):
-                sat_id = [sat_id]
-
-            kwargs['sat_id'] = sat_id
+            kwargs['sat_ids'] = sat_ids
 
         if products:
             if isinstance(products, string_types):
@@ -428,15 +428,15 @@ class Metadata(Service):
 
         return DotDict(fc)
 
-    def ids(self, products=None, sat_id=None, date='acquired', place=None,
+    def ids(self, products=None, sat_ids=None, date='acquired', place=None,
             geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
-            cloud_fraction_0=None, fill_fraction=None, q=None, limit=100, offset=None,
+            cloud_fraction_0=None, fill_fraction=None, q=None, limit=100,
             dltile=None, sort_field=None, sort_order=None, randomize=None, **kwargs):
         """Search metadata given a spatio-temporal query. All parameters are
         optional.
 
         :param list(str) products: Products identifier(s).
-        :param list(str) sat_id: Satellite identifier(s).
+        :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
@@ -447,7 +447,6 @@ class Metadata(Service):
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param expr q: Expression for filtering the results. See :py:attr:`descarteslabs.utilities.properties`.
         :param int limit: Number of items to return.
-        :param int offset: Number of items to skip.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str sort_field: Property to sort on.
         :param str sort_order: Order of sort.
@@ -469,16 +468,16 @@ class Metadata(Service):
             ['landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1', 'landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
 
         """
-        result = self.search(sat_id=sat_id, products=products, date=date,
+        result = self.search(sat_ids=sat_ids, products=products, date=date,
                              place=place, geom=geom, start_datetime=start_datetime,
                              end_datetime=end_datetime, cloud_fraction=cloud_fraction,
                              cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             q=q, limit=limit, offset=offset, fields=[], dltile=dltile,
+                             q=q, limit=limit, fields=[], dltile=dltile,
                              sort_field=sort_field, sort_order=sort_order, randomize=randomize, **kwargs)
 
         return DotList(feature['id'] for feature in result['features'])
 
-    def features(self, products=None, sat_id=None, date='acquired', place=None,
+    def features(self, products=None, sat_ids=None, date='acquired', place=None,
                  geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
                  cloud_fraction_0=None, fill_fraction=None, q=None, fields=None,
                  batch_size=1000, dltile=None, sort_field=None, sort_order='asc',
@@ -506,7 +505,7 @@ class Metadata(Service):
         continuation_token = None
 
         while True:
-            result = self.search(sat_id=sat_id, products=products,
+            result = self.search(sat_ids=sat_ids, products=products,
                                  date=date, place=place, geom=geom,
                                  start_datetime=start_datetime, end_datetime=end_datetime,
                                  cloud_fraction=cloud_fraction,
@@ -542,7 +541,7 @@ class Metadata(Service):
              'cloud_fraction_0', 'cs_code', 'descartes_version', 'file_md5s', 'file_sizes', 'files',
              'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'id', 'identifier', 'key',
              'processed', 'product', 'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle',
-             'sat_id', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction',
+             'sat_ids', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction',
              'tile_id']
         """
         r = self.session.get('/get/{}'.format(image_id))

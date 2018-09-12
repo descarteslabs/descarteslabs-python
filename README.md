@@ -15,6 +15,7 @@ Changelog
 ### Changed
 - Fixed SSL problems when copying clients to forked processes or sharing them among threads
 - Removed extra keyword arguments from places client
+- Added deprecation warnings for parameters that have been renamed in the Metadata client
 - Scenes now exposes more parameters from raster and metadata
 - Scenes `descarteslabs.scenes.search` will take a python datetime object in addition to a string
 - Scenes will now allow Feature and FeatureCollection in addition to GeoJSON geometry types

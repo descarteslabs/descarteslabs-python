@@ -7,6 +7,7 @@ from requests.exceptions import RequestException
 
 from descarteslabs.client.addons import numpy as np
 from descarteslabs.client.auth import Auth
+from descarteslabs.client.deprecation import check_deprecated_kwargs
 from descarteslabs.client.exceptions import ServerError
 from descarteslabs.client.services.metadata import Metadata
 from descarteslabs.client.services.service import Service, ThirdPartyService
@@ -67,6 +68,10 @@ class Catalog(Service):
 
     def _add_core_product(self, product_id, **kwargs):
         kwargs['id'] = product_id
+        check_deprecated_kwargs(kwargs, {
+            "start_time": "start_datetime",
+            "end_time": "end_datetime",
+        })
         r = self.session.post('/core/products', json=kwargs)
         return r.json()
 
@@ -112,6 +117,10 @@ class Catalog(Service):
                 if v is None:
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
+        check_deprecated_kwargs(kwargs, {
+            "start_time": "start_datetime",
+            "end_time": "end_datetime",
+        })
 
         kwargs['id'] = self.namespace_product(product_id) if add_namespace else product_id
         r = self.session.post('/products', json=kwargs)
@@ -156,6 +165,10 @@ class Catalog(Service):
                 if v is None:
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
+        check_deprecated_kwargs(kwargs, {
+            "start_time": "start_datetime",
+            "end_time": "end_datetime",
+        })
 
         if add_namespace:
             product_id = self.namespace_product(product_id)
@@ -197,6 +210,10 @@ class Catalog(Service):
         :return: JSON API representation of the product.
         :rtype: dict
         """
+        check_deprecated_kwargs(kwargs, {
+            "start_time": "start_datetime",
+            "end_time": "end_datetime",
+        })
 
         if add_namespace:
             product_id = self.namespace_product(product_id)
@@ -342,6 +359,7 @@ class Catalog(Service):
                 kwargs[k] = v
         if add_namespace:
             product_id = self.namespace_product(product_id)
+        check_deprecated_kwargs(kwargs, {"id": "name"})
 
         r = self.session.post('/products/{}/bands'.format(product_id), json=kwargs)
         return r.json()
@@ -578,7 +596,10 @@ class Catalog(Service):
         :return: JSON API representation of the image.
         :rtype: dict
         """
-
+        check_deprecated_kwargs(kwargs, {
+            "bpp": "bits_per_pixel",
+            "key": "image_id",
+        })
         if add_namespace:
             product_id = self.namespace_product(product_id)
         kwargs['id'] = image_id
@@ -652,7 +673,7 @@ class Catalog(Service):
         :return: JSON API representation of the image.
         :rtype: dict
         """
-
+        check_deprecated_kwargs(kwargs, {"bpp": "bits_per_pixel"})
         if add_namespace:
             product_id = self.namespace_product(product_id)
 
@@ -660,6 +681,7 @@ class Catalog(Service):
         return r.json()
 
     def _add_core_image(self, product_id, image_id, **kwargs):
+        check_deprecated_kwargs(kwargs, {"bpp": "bits_per_pixel"})
         kwargs['id'] = image_id
         r = self.session.post('/core/products/{}/images'.format(product_id), json=kwargs)
         return r.json()
@@ -730,7 +752,7 @@ class Catalog(Service):
         :return: JSON API representation of the image.
         :rtype: dict
         """
-
+        check_deprecated_kwargs(kwargs, {"bpp": "bits_per_pixel"})
         if add_namespace:
             product_id = self.namespace_product(product_id)
         r = self.session.patch('/products/{}/images/{}'.format(product_id, image_id), json=kwargs)
@@ -747,12 +769,14 @@ class Catalog(Service):
         :param str|file|list(str)|list(file) files: (Required) a reference to the file to upload.
         :param str product_id: (Required) The id of the product this image belongs to.
         :param dict metadata: Image metadata to use instead of the computed default values.
-            see :meth:`Catalog.add_image` for allowed keys.
+        :param \**kwargs: All image metadata can also be passed as kwargs,
+            see :meth:`Catalog.add_image` for allowed fields.
         """
 
         if metadata is None:
             metadata = {}
         metadata.update(kwargs)
+        check_deprecated_kwargs(metadata, {"bpp": "bits_per_pixel"})
         if multi is True:
             if not hasattr(files, '__iter__'):
                 raise ValueError("Using `multi=True` requires `files` to be iterable")
@@ -801,6 +825,7 @@ class Catalog(Service):
             combined to make lower res pixels in overviews. Allowed resampler algorithms are:
             ['nearest', 'average', 'gauss', 'cubic', 'cubicspline', 'lanczos', 'average_mp',
             'average_magphase', 'mode'].
+        :param \**kwargs: Metadata for the new image; see :meth:`Catalog.add_image` for allowed fields.
 
         .. note:: Only one of `proj4` or `wkt_srs` can be provided.
         """
@@ -936,6 +961,7 @@ class Catalog(Service):
         if metadata is None:
             metadata = {}
         metadata.setdefault('process_controls', {'upload_type': 'file'})
+        check_deprecated_kwargs(metadata, {"bpp": "bits_per_pixel"})
 
         if isinstance(file_ish, io.IOBase):
             if 'b' not in file_ish.mode:
