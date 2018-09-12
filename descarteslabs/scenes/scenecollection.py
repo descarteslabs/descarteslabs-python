@@ -307,7 +307,7 @@ class SceneCollection(Collection):
 
         bands = Scene._bands_to_list(bands)
         pop_alpha = False
-        if (mask_nodata or mask_alpha) and "alpha" not in bands:
+        if mask_alpha and "alpha" not in bands:
             pop_alpha = True
             bands.append("alpha")
         # Pre-check that all bands and alpha are available in all Scenes, and all have the same dtypes
