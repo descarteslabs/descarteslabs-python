@@ -591,7 +591,7 @@ class SceneCollection(Collection):
         ...     "{tile.key}/l8-{scene.properties.date:%Y-%m-%d-%H:%m}.jpg".format(tile=tile, scene=scene)
         ...     for scene in scenes
         ... ]
-        >>> scenes.download("nir red", tile, paths)
+        >>> scenes.download("nir red", tile, paths)  # doctest: +SKIP
         ["256:0:75.0:15:-5:230/l8-2013-04-18-16:04.jpg",
          "256:0:75.0:15:-5:230/l8-2013-05-04-16:05.jpg",
          "256:0:75.0:15:-5:230/l8-2013-05-20-16:05.jpg",

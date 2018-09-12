@@ -75,7 +75,7 @@ class TestDownload(unittest.TestCase):
         file = six.BytesIO()
         result = self.download(file, format="jpg")
         self.assertIsNone(result)
-        self.assertEqual(file.getvalue(), "i'm a geotiff!")
+        self.assertEqual(file.getvalue(), b"i'm a geotiff!")
         mock_open.assert_not_called()
         mock_makedirs.assert_not_called()
         mock_raster.assert_called_once()

@@ -541,7 +541,7 @@ class Metadata(Service):
              'cloud_fraction_0', 'cs_code', 'descartes_version', 'file_md5s', 'file_sizes', 'files',
              'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'id', 'identifier', 'key',
              'processed', 'product', 'projcs', 'published', 'raster_size', 'reflectance_scale', 'roll_angle',
-             'sat_ids', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction',
+             'sat_id', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version', 'terrain_correction',
              'tile_id']
         """
         r = self.session.get('/get/{}'.format(image_id))
