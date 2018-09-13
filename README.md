@@ -9,7 +9,9 @@ Changelog
 =========
 
 ## [Unreleased]
-
+### Changed
+- Shapely is now a full requirement of this package.
+- Reduced the number of retries for some failure types.
 
 ## [0.12.0] - 2018-09-12
 ### Changed
