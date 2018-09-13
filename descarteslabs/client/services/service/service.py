@@ -59,8 +59,10 @@ class WrappedSession(requests.Session):
 class Service(object):
     TIMEOUT = (9.5, 30)
 
-    RETRY_CONFIG = Retry(total=5,
+    RETRY_CONFIG = Retry(total=3,
+                         connect=2,
                          read=2,
+                         status=2,
                          backoff_factor=random.uniform(1, 3),
                          method_whitelist=frozenset([
                              'HEAD', 'TRACE', 'GET', 'POST',
