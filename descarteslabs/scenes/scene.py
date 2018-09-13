@@ -43,8 +43,9 @@ from __future__ import division
 import six
 import json
 import datetime
+import shapely.geometry
 
-from descarteslabs.client.addons import ThirdParty, shapely, numpy as np
+from descarteslabs.client.addons import numpy as np
 
 from descarteslabs.client.services.raster import Raster
 from descarteslabs.client.services.metadata import Metadata
@@ -81,10 +82,9 @@ class Scene(object):
 
     Attributes
     ----------
-    geometry : shapely.geometry.Polygon or dict
-        The region the scene's data covers, in WGS84 (lat-lon) coordinates.
-        If the Shapely package is installed, it will be a shapely Polygon,
-        otherwise a dict of a GeoJSON Polygon
+    geometry : shapely.geometry.Polygon
+        The region the scene's data covers, in WGS84 (lat-lon) coordinates,
+        represented as a Shapely polygon.
     properties : DotDict
         Metadata about the scene. Some fields will vary between products,
         but these will be present:
@@ -149,9 +149,7 @@ class Scene(object):
 
         It's preferred to use `Scene.from_id` or `scenes.search <scenes._search.search>` instead.
         """
-        self.geometry = (shapely.geometry.shape(scene_dict["geometry"])
-                         if not isinstance(shapely, ThirdParty)
-                         else scene_dict["geometry"])
+        self.geometry = shapely.geometry.shape(scene_dict["geometry"])
         properties = scene_dict["properties"]
         properties["id"] = scene_dict["id"]
         properties["bands"] = self._scenes_bands_dict(bands_dict)
@@ -241,11 +239,7 @@ class Scene(object):
         # which means you could get off-by-one issues with loading an entire scene
         # at native resolution, where the WGS84 bounds result in a slightly differently
         # sized raster than native UTM bounds would with reprojection errors
-        try:
-            bounds = scene.geometry.bounds
-        except AttributeError:
-            xs, ys = zip(*scene.geometry["coordinates"][0])
-            bounds = (min(xs), min(ys), max(xs), max(ys))
+        bounds = scene.geometry.bounds
 
         default_ctx = geocontext.AOI(bounds=bounds,
                                      resolution=default_resolution,

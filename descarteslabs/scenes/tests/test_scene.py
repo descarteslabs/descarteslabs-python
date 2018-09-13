@@ -3,8 +3,8 @@ import mock
 import datetime
 import collections
 import textwrap
+import shapely.geometry
 
-from descarteslabs.client.addons import ThirdParty, shapely
 from descarteslabs.common.dotdict import DotDict
 from descarteslabs.scenes import Scene, geocontext
 from descarteslabs.scenes.scene import _strptime_helper
@@ -45,23 +45,6 @@ class TestScene(unittest.TestCase):
         self.assertIsInstance(scene.geometry, shapely.geometry.Polygon)
         self.assertIsInstance(scene.__geo_interface__, dict)
 
-    @mock.patch("descarteslabs.scenes.scene.shapely", ThirdParty("shapely"))
-    def test_no_shapely(self):
-        scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
-        metadata = metadata_client.get(scene_id)
-        bands = metadata_client.get_bands_by_id(scene_id)
-        metadata = {
-            "type": "Feature",
-            "geometry": metadata.pop("geometry"),
-            "id": metadata.pop("id"),
-            "key": metadata.pop("key"),
-            "properties": metadata
-        }
-        scene = Scene(metadata, bands)
-
-        self.assertIsInstance(scene.geometry, dict)
-        self.assertIs(scene.__geo_interface__, metadata["geometry"])
-
     def test_from_id(self):
         scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
         scene, ctx = Scene.from_id(scene_id)
@@ -72,12 +55,6 @@ class TestScene(unittest.TestCase):
         self.assertEqual(ctx.crs, "EPSG:32615")
         self.assertEqual(ctx.bounds, scene.geometry.bounds)
         self.assertEqual(ctx.geometry, None)
-
-    @mock.patch("descarteslabs.scenes.scene.shapely", ThirdParty("shapely"))
-    def test_from_id_no_shapely(self):
-        scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
-        scene, ctx = Scene.from_id(scene_id)
-        self.assertEqual(ctx.bounds, (-95.8364984, 40.703737, -93.1167728, 42.7999878))
 
     def test_load_one_band(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")

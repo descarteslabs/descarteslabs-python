@@ -52,8 +52,6 @@ def search(aoi,
         Search for scenes that intersect this area by any amount.
         If a GeoContext, a copy is returned as ``ctx``, with missing values filled in.
         Otherwise, the returned ``ctx`` will be an `AOI`, with this as its geometry.
-        If shapely is not installed, this must be a GeoContext instance.
-        See below for details.
     products : str or List[str], optional
         Descartes Labs product identifiers
     start_datetime : str, datetime-like, optional
@@ -113,14 +111,7 @@ def search(aoi,
             raise ValueError("Unspecified where to search, "
                              "since the GeoContext given for ``aoi`` has neither geometry nor bounds set")
     else:
-        try:
-            ctx = geocontext.AOI(geometry=aoi)
-        except NotImplementedError:
-            raise six.raise_from(NotImplementedError(
-                "Cannot create an AOI GeoContext from your geometry, since shapely is not installed. "
-                "Either create a GeoContext yourself and pass it in, or install shapely.\n"
-                "Note that you can install all recommended dependencies with `pip install descarteslabs[complete]`"
-            ), None)
+        ctx = geocontext.AOI(geometry=aoi)
 
     if raster_client is None:
         raster_client = Raster()

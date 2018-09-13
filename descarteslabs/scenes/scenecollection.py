@@ -104,7 +104,7 @@ import logging
 import json
 import os.path
 
-from descarteslabs.client.addons import ThirdParty, concurrent, shapely, numpy as np
+from descarteslabs.client.addons import concurrent, numpy as np
 
 from descarteslabs.client.services.raster import Raster
 from descarteslabs.client.exceptions import NotFoundError, BadRequestError
@@ -112,8 +112,6 @@ from descarteslabs.client.exceptions import NotFoundError, BadRequestError
 from .collection import Collection
 from .scene import Scene
 from . import _download
-
-have_shapely = not isinstance(shapely, ThirdParty)
 
 
 class SceneCollection(Collection):

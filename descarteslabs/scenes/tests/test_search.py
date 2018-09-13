@@ -1,8 +1,6 @@
 import unittest
-import mock
 import datetime
 
-from descarteslabs.client.addons import ThirdParty
 from descarteslabs.scenes import geocontext, search
 
 
@@ -32,12 +30,6 @@ class TestScenesSearch(unittest.TestCase):
             # allow for changes in publicly available data
             self.assertAlmostEqual(len(scene.properties.bands), 24, delta=4)
             self.assertIn("derived:ndvi", scene.properties.bands)
-
-    @mock.patch("descarteslabs.scenes.geocontext.shapely", ThirdParty("shapely"))
-    @mock.patch("descarteslabs.scenes.geocontext.have_shapely", False)
-    def test_search_geom_no_shapely(self):
-        with self.assertRaisesRegexp(NotImplementedError, "pip install"):
-            sc, ctx = search(self.geom, products="landsat:LC08:PRE:TOAR", limit=4)
 
     def test_search_AOI(self):
         aoi = geocontext.AOI(self.geom, resolution=5)

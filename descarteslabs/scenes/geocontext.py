@@ -94,7 +94,7 @@ to see the difference between the coordinate reference systems:
 Why is there all that empty space around the sides?
 We assigned a new geometry, but we didn't change the *bounds*.
 Bounds determine the x-y extent that's rasterized; geometry just clips within that.
-If shapely is installed, you can pass ``bounds="update"`` to compute new bounds when assinging a new geometry.
+You can pass ``bounds="update"`` to compute new bounds when assinging a new geometry.
 
 .. ipython:: python
 
@@ -120,15 +120,13 @@ You can also use DLTiles to split up regions along a grid:
 """
 
 import copy
+import shapely.geometry
+import six
 
 from geojson import Feature, FeatureCollection, GeometryCollection, GeoJSON
-import six
 from six.moves import reprlib
-from descarteslabs.client.addons import ThirdParty, shapely
 
 from descarteslabs.client.services.raster import Raster
-
-have_shapely = not isinstance(shapely, ThirdParty)
 
 
 class GeoContext(object):
@@ -248,8 +246,7 @@ class AOI(GeoContext):
         bounds: 4-tuple, optional
             Clip scenes to these ``(min_x, min_y, max_x, max_y)`` bounds,
             expressed in WGS84 (lat-lon) coordinates.
-            If the Shapely package is installed, ``bounds`` are automatically
-            computed from ``geometry`` if not specified.
+            ``bounds`` are automatically computed from ``geometry`` if not specified.
             Otherwise, ``bounds`` are required.
         shape: 2-tuple, optional
             ``(rows, columns)``, in pixels, the output raster should fit within;
@@ -266,21 +263,14 @@ class AOI(GeoContext):
             shape,
         )
 
-        # If no bounds were given, use the bounds of the geometry if possible
+        # If no bounds were given, use the bounds of the geometry
         if self._bounds is None and self._geometry is not None:
-                if have_shapely:
-                    self._bounds = self._geometry.bounds
-                else:
-                    # TODO: _bounds_from_geometry
-                    raise NotImplementedError(
-                        "Bounds must be set, i.e. to (minx, miny, maxx, maxy) of geometry. "
-                        "(Bounds are only inferred from geometry if the shapely package is installed.)"
-                    )
+            self._bounds = self._geometry.bounds
 
     @property
     def geometry(self):
         """
-        dict or shapely geometry: Clip scenes to this geometry
+        shapely geometry: Clip scenes to this geometry
         Coordinates must be WGS84 (lat-lon)
         If None, scenes will just be clipped to ``bounds``
         """
@@ -359,10 +349,7 @@ class AOI(GeoContext):
         if self._align_pixels is None:
             raise ValueError("AOI must have align_pixels specified")
 
-        if have_shapely:
-            cutline = shapely.geometry.mapping(self._geometry) if self._geometry is not None else None
-        else:
-            cutline = self._geometry
+        cutline = shapely.geometry.mapping(self._geometry) if self._geometry is not None else None
 
         dimensions = (self._shape[1], self._shape[0]) if self._shape is not None else None
 
@@ -417,13 +404,9 @@ class AOI(GeoContext):
         Note
         ----
             If you are assigning a new geometry and want bounds to updated as
-            well, use ``bounds="update"``. (This requires Shapely.)
+            well, use ``bounds="update"``.
 
-            If Shapely is not installed, you should usually specify both
-            ``geometry`` and ``bounds`` in ``assign``, and ``bounds`` should be
-            the ``(min_x, min_y, max_x, max_y)`` of the new geometry.
-
-            Otherwise, if you assign ``geometry`` without changing ``bounds``,
+            If you assign ``geometry`` without changing ``bounds``,
             the new AOI GeoContext will produce rasters with the same
             shape and covering the same spatial area as the old one, just with
             pixels masked out that fall outside your new geometry.
@@ -454,22 +437,16 @@ class AOI(GeoContext):
         if geometry is not None and geometry != "unchanged":
             geometry = self._interpret_geometry_like(geometry)
 
-        if bounds != "unchanged":
-            # test that bounds are sane, and in WGS84
-            if bounds is not None:
-                if bounds == "update":
-                    if geometry is not None:
-                        if have_shapely:
-                            bounds = geometry.bounds
-                        else:
-                            raise NotImplementedError(
-                                "Currently, bounds can only be computed from geometry if shapely is installed"
-                            )
-                    else:
-                        raise ValueError("A geometry must be given with which to update the bounds")
+        # test that bounds are sane, and in WGS84
+        if bounds is not None and bounds != "unchanged":
+            if bounds == "update":
+                if geometry is not None:
+                    bounds = geometry.bounds
                 else:
-                    self._test_valid_bounds(bounds)
-                    bounds = tuple(bounds)
+                    raise ValueError("A geometry must be given with which to update the bounds")
+            else:
+                self._test_valid_bounds(bounds)
+                bounds = tuple(bounds)
 
         if shape != "unchanged" and shape is not None:
             if not isinstance(shape, (list, tuple)) or len(shape) != 2:
@@ -498,8 +475,7 @@ class AOI(GeoContext):
             raise ValueError("Cannot set both resolution and shape")
 
         # test that bounds and geometry actually intersect
-        # TODO: do this without shapely
-        if have_shapely and self._geometry is not None and self._bounds is not None:
+        if self._geometry is not None and self._bounds is not None:
             bounds_shp = shapely.geometry.box(*self._bounds)
             if not bounds_shp.intersects(self._geometry):
                 raise ValueError(
@@ -560,31 +536,24 @@ class AOI(GeoContext):
             raise ValueError(
                 "geometry not recognized as GeoJSON or geometry-like with a `__geo_interface__`: {}".format(geometry))
 
-        if have_shapely:
-            # convert geometry to shapely
-            if not isinstance(geometry, shapely.geometry.base.BaseGeometry):
-                geometry_like = geometry if geo_interface else cls._as_geojson_instance(geometry)
-                try:
-                    geometry = shapely.geometry.shape(geometry_like)
-                except Exception:
-                    raise ValueError(
-                        "Could not interpret the given geometry {} as a Shapely shape".format(geometry)
-                    )
-
-            # test that geometry is in WGS84
-            geom_bounds = geometry.bounds
+        # convert geometry to shapely
+        if not isinstance(geometry, shapely.geometry.base.BaseGeometry):
+            geometry_like = geometry if geo_interface else cls._as_geojson_instance(geometry)
             try:
-                cls._test_valid_bounds(geom_bounds)
-            except ValueError:
-                six.raise_from(ValueError("Geometry must be in EPSG:4326 (WGS84 lat-lon) coordinates"), None)
+                geometry = shapely.geometry.shape(geometry_like)
+            except Exception:
+                raise ValueError(
+                    "Could not interpret the given geometry {} as a Shapely shape".format(geometry)
+                )
 
-            # TODO: implement _bounds_from_geometry in order to validate CRS without shapely, and because
-            # it'd be helpful anyway (would remove requirement for explicitly setting bounds
-            # if shapely not installed)
-            return geometry
+        # test that geometry is in WGS84
+        geom_bounds = geometry.bounds
+        try:
+            cls._test_valid_bounds(geom_bounds)
+        except ValueError:
+            six.raise_from(ValueError("Geometry must be in EPSG:4326 (WGS84 lat-lon) coordinates"), None)
 
-        else:
-            return geo_interface or geometry
+        return geometry
 
     @classmethod
     def _as_geojson_instance(cls, geojson_dict):
@@ -635,7 +604,7 @@ class DLTile(GeoContext):
         It's preferred to use the `DLTile.from_latlon`, `DLTile.from_shape`,
         or `DLTile.from_key` class methods to construct a DLTile GeoContext.
         """
-        self._geometry = shapely.geometry.shape(dltile_dict['geometry']) if have_shapely else dltile_dict['geometry']
+        self._geometry = shapely.geometry.shape(dltile_dict['geometry'])
         properties = dltile_dict['properties']
         self._key = properties["key"]
         self._resolution = properties["resolution"]
@@ -788,7 +757,7 @@ class DLTile(GeoContext):
     @property
     def geometry(self):
         """
-        shapely.geometry.Polygon, or dict: The polygon covered by this DLTile
+        shapely.geometry.Polygon: The polygon covered by this DLTile
         in WGS84 (lat-lon) coordinates
         """
         return self._geometry

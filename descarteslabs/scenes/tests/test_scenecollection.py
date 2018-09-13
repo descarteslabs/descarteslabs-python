@@ -1,8 +1,9 @@
 import unittest
 import mock
 import os.path
+import shapely.geometry
 
-from descarteslabs.client.addons import ThirdParty, shapely
+from descarteslabs.client.addons import ThirdParty
 from descarteslabs.scenes import Scene, SceneCollection, geocontext
 
 from .test_scene import MockScene

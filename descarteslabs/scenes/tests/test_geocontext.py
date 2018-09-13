@@ -154,51 +154,6 @@ class TestAOI(unittest.TestCase):
             "features": [{"type": "Feature", "geometry": valid_geom}, "hey"],
         })
 
-    @mock.patch.object(geocontext, "have_shapely", False)
-    @mock.patch.object(geocontext, "shapely", None)
-    def test_without_shapely(self):
-        geom = {
-            'coordinates': ((
-                (-93.52300099792355, 41.241436141055345),
-                (-93.7138666, 40.703737),
-                (-94.37053769704536, 40.83098709945576),
-                (-94.2036617, 41.3717716),
-                (-93.52300099792355, 41.241436141055345)),
-            ),
-            'type': 'Polygon'
-        }
-        bounds_wgs84 = (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716)
-        ctx = geocontext.AOI(geom, bounds=bounds_wgs84, resolution=40, crs="EPSG:3857")
-        self.assertIs(ctx.geometry, geom)
-        self.assertEqual(ctx.__geo_interface__, geom)
-        self.assertEqual(ctx.bounds, bounds_wgs84)
-
-        raster_params = ctx.raster_params
-        self.assertEqual(raster_params["cutline"], geom)
-
-        with self.assertRaises(NotImplementedError):
-            geocontext.AOI(geom)
-
-    @mock.patch.object(geocontext, "have_shapely", False)
-    @mock.patch.object(geocontext, "shapely", None)
-    def test_geointerface_without_shapely(self):
-        geom = {
-            'coordinates': ((
-                (-93.52300099792355, 41.241436141055345),
-                (-93.7138666, 40.703737),
-                (-94.37053769704536, 40.83098709945576),
-                (-94.2036617, 41.3717716),
-                (-93.52300099792355, 41.241436141055345)),
-            ),
-            'type': 'Polygon'
-        }
-        geointerfaceable = mock.Mock()
-        geointerfaceable.__geo_interface__ = geom
-
-        bounds_wgs84 = (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716)
-        ctx = geocontext.AOI(geometry=geointerfaceable, bounds=bounds_wgs84)
-        self.assertEqual(ctx.geometry, geom)
-
     def test_raster_params(self):
         geom = {
             'coordinates': ((
@@ -273,24 +228,6 @@ class TestAOI(unittest.TestCase):
             ctx.assign(geometry=geom_doesnt_overlap)
         ctx_doesnt_overlap_updated = ctx.assign(geometry=geom_doesnt_overlap, bounds="update")
         self.assertEqual(ctx_doesnt_overlap_updated.bounds, geom_doesnt_overlap.bounds)
-
-    @mock.patch.object(geocontext, "have_shapely", False)
-    @mock.patch.object(geocontext, "shapely", None)
-    def test_assign_update_bounds_no_shapely_failes(self):
-        geom = {
-            'coordinates': ((
-                (-93.52300099792355, 41.241436141055345),
-                (-93.7138666, 40.703737),
-                (-94.37053769704536, 40.83098709945576),
-                (-94.2036617, 41.3717716),
-                (-93.52300099792355, 41.241436141055345)),
-            ),
-            'type': 'Polygon'
-        }
-        bounds_wgs84 = (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716)
-        ctx = geocontext.AOI(geom, bounds=bounds_wgs84)
-        with self.assertRaises(NotImplementedError):
-            ctx.assign(geometry=geom, bounds="update")
 
 
 class TestDLTIle(unittest.TestCase):
