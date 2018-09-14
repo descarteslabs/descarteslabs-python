@@ -74,6 +74,7 @@ def do_setup():
         "cachetools>=2.0.1",
         'futures;python_version=="2.7"',
         "geojson>=2.4.0",
+        "shapely>=1.6.3,<2",
     ]
 
     # Python < 2.7.9 needs requests[security] to avoid SSL issues
@@ -87,7 +88,6 @@ def do_setup():
         "complete": [
             'blosc;platform_system!="Windows"',
             "numpy>=1.10.0",
-            "shapely>=1.5.0",
             "matplotlib>=2.1.0"
         ]
     }
