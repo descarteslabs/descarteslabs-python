@@ -51,10 +51,9 @@ fc = metadata_client.search(products="modis:09:CREFL", geom=aoi, start_time="201
                             end_time="2018-05-15", limit=1)
 
 # Fetch the band information using the Metadata API, including the NDVI ranges
-band_info = metadata_client.get_bands_by_product("modis:09:CREFL")
-physical_range = band_info['derived:ndvi']['physical_range']
-valid_range = band_info['derived:ndvi']['data_range']
-
+band_info = metadata_client.get_band("modis:09:CREFL:ndvi")
+physical_range = band_info['physical_range']
+data_range = band_info['data_range']
 
 # Isolate the image IDs to pull data for
 feat_ids = [feat['id'] for feat in fc['features']]
@@ -65,7 +64,7 @@ arr, meta = raster_client.ndarray(
     feat_ids,
     cutline=aoi,
     bands=['ndvi', 'alpha'],
-    scales=[[valid_range[0], valid_range[1], physical_range[0], physical_range[1]], None],
+    scales=[[data_range[0], data_range[1], physical_range[0], physical_range[1]], None],
     data_type='Float32',
     resolution=120)
 
