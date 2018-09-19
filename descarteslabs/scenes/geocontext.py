@@ -122,6 +122,7 @@ You can also use DLTiles to split up regions along a grid:
 import copy
 import shapely.geometry
 import six
+import threading
 
 from geojson import Feature, FeatureCollection, GeometryCollection, GeoJSON
 from six.moves import reprlib
@@ -148,7 +149,27 @@ class GeoContext(object):
 
     GeoContexts are immutable.
     """
-    __slots__ = ()
+    __slots__ = "_geometry_lock_"
+    # slots *suffixed* with an underscore will be ignored by `__eq__` and `__repr__`.
+    # a double-underscore prefix would be more conventional, but that actually breaks as a slot name.
+
+    def __init__(self):
+        # Shapely objects are not thread-safe, due to the way the underlying GEOS library is used.
+        # Specifically, accessing `__geo_interface__` on the same geometry across threads
+        # can cause bizzare exceptions. This makes `raster_params` and `__geo_interface__` thread-unsafe,
+        # which becomes an issue in `SceneCollection.stack` or `download`.
+        # Subclasses of GeoContext can use this lock to ensure `self._geometry.__geo_interface__`
+        # is accessed from at most 1 thread at a time.
+        self._geometry_lock_ = threading.Lock()
+
+    def __getstate__(self):
+        # Lock objects shouldn't be pickled or deepcopied
+        return {attr: getattr(self, attr) for attr in self.__slots__ if not attr.endswith("_")}
+
+    def __setstate__(self, state):
+        for attr, val in six.iteritems(state):
+            setattr(self, attr, val)
+        self._geometry_lock_ = threading.Lock()
 
     @property
     def raster_params(self):
@@ -166,6 +187,8 @@ class GeoContext(object):
         if not isinstance(other, self.__class__):
             return False
         for attr in self.__slots__:
+            if attr.endswith("_"):
+                continue
             if getattr(self, attr) != getattr(other, attr):
                 return False
         return True
@@ -175,7 +198,7 @@ class GeoContext(object):
         delim = ",\n" + " " * (len(classname) + 1)
         props = delim.join(
             "{}={}".format(attr.lstrip("_"), reprlib.repr(getattr(self, attr)))
-            for attr in self.__slots__
+            for attr in self.__slots__ if not attr.endswith("_")
         )
         return "{}({})".format(classname, props)
 
@@ -253,6 +276,7 @@ class AOI(GeoContext):
             the longer side of the raster will be min(shape).
             Can only specify one of ``resolution`` and ``shape``.
         """
+        super(AOI, self).__init__()
 
         self._validate_and_assign(
             geometry,
@@ -349,7 +373,10 @@ class AOI(GeoContext):
         if self._align_pixels is None:
             raise ValueError("AOI must have align_pixels specified")
 
-        cutline = shapely.geometry.mapping(self._geometry) if self._geometry is not None else None
+        with self._geometry_lock_:
+            # see comment in `GeoContext.__init__` for why we need to prevent
+            # parallel access to `self._geometry.__geo_interface__`
+            cutline = self._geometry.__geo_interface__ if self._geometry is not None else None
 
         dimensions = (self._shape[1], self._shape[0]) if self._shape is not None else None
 
@@ -385,8 +412,10 @@ class AOI(GeoContext):
         otherwise ``self.bounds`` as a GeoJSON Polygon dict if ``self.geometry`` is None.
         """
         if self._geometry is not None:
-            geo_interface = getattr(self._geometry, '__geo_interface__', None)
-            return geo_interface or self._geometry
+            with self._geometry_lock_:
+                # see comment in `GeoContext.__init__` for why we need to prevent
+                # parallel access to `self._geometry.__geo_interface__`
+                return self._geometry.__geo_interface__
         elif self._bounds is not None:
             return self._polygon_from_bounds(self._bounds)
 
@@ -604,6 +633,7 @@ class DLTile(GeoContext):
         It's preferred to use the `DLTile.from_latlon`, `DLTile.from_shape`,
         or `DLTile.from_key` class methods to construct a DLTile GeoContext.
         """
+        super(DLTile, self).__init__()
         self._geometry = shapely.geometry.shape(dltile_dict['geometry'])
         properties = dltile_dict['properties']
         self._key = properties["key"]
@@ -795,10 +825,10 @@ class DLTile(GeoContext):
 
     @property
     def __geo_interface__(self):
-        "dict: ``self.geometry`` as a GeoJSON dict"
-        try:
+        "dict: ``self.geometry`` as a GeoJSON Polygon"
+        with self._geometry_lock_:
+            # see comment in `GeoContext.__init__` for why we need to prevent
+            # parallel access to `self._geometry.__geo_interface__`
             return self._geometry.__geo_interface__
-        except AttributeError:
-            return self._geometry
 
 # TODO: XYZTile?

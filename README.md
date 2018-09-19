@@ -12,6 +12,7 @@ Changelog
 ### Changed
 - Shapely is now a full requirement of this package.
 - Reduced the number of retries for some failure types.
+- Resolved intermittent `SceneCollection.stack` bug that manifested as `AttributeError: 'NoneType' object has no attribute 'coords'` due to Shapely thread-unsafety
 
 ## [0.12.0] - 2018-09-12
 ### Changed

@@ -1,5 +1,8 @@
 import unittest
 import mock
+import multiprocessing
+import concurrent.futures
+import copy
 
 from descarteslabs.scenes import geocontext
 import shapely.geometry
@@ -9,6 +12,7 @@ class SimpleContext(geocontext.GeoContext):
     __slots__ = ("foo", "_bar")
 
     def __init__(self, foo=None, bar=None):
+        super(SimpleContext, self).__init__()
         self.foo = foo
         self._bar = bar
 
@@ -30,6 +34,12 @@ class TestGeoContext(unittest.TestCase):
         self.assertEqual(simple, simple2)
         self.assertNotEqual(simple, simple_diff)
         self.assertNotEqual(simple, not_simple)
+
+    def test_deepcopy(self):
+        simple = SimpleContext(1, False)
+        simple_copy = copy.deepcopy(simple)
+        self.assertIsNot(simple._geometry_lock_, simple_copy._geometry_lock_)
+        self.assertEqual(simple, simple_copy)
 
 
 class TestAOI(unittest.TestCase):
@@ -277,3 +287,91 @@ class TestDLTIle(unittest.TestCase):
             "dltile": self.key,
             "align_pixels": False,
         })
+
+
+# can't use the word `test` in the function name otherwise nose tries to run it...
+def run_threadsafe_experiment(geoctx_factory, property, n=80000):
+    "In a subprocess, test whether parallel access to a property on a GeoContext fails (due to Shapely thread-unsafety)"
+    conn_ours, conn_theirs = multiprocessing.Pipe(duplex=False)
+
+    # Run actual test in a separate process, because unsafe use of Shapely objects
+    # across threads can occasionally cause segfaults, so we want to check the exit
+    # code of the process doing the testing.
+    def threadsafe_test(geoctx_factory, property, conn, n):
+        ctx = geoctx_factory()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+            futures = [executor.submit(lambda: getattr(ctx, property)) for i in range(n)]
+
+        errors = []
+        for future in concurrent.futures.as_completed(futures):
+            if future.exception() is not None:
+                errors.append("exception: {}".format(future.exception()))
+        conn.send(errors)
+
+    p = multiprocessing.Process(target=threadsafe_test, args=(geoctx_factory, property, conn_theirs, n))
+    p.start()
+    p.join()
+    if p.exitcode < 0:
+        errors = ["failed with exit code {}".format(p.exitcode)]
+    else:
+        errors = conn_ours.recv()
+    return errors
+
+
+@unittest.skip("Slow test. Un-skip this and run manually if touching any code related to `_geometry_lock_`!")
+class TestShapelyThreadSafe(unittest.TestCase):
+    @staticmethod
+    def aoi_factory():
+        return geocontext.AOI(
+            {
+                'coordinates': [[
+                    [-93.52300099792355, 41.241436141055345],
+                    [-93.7138666, 40.703737],
+                    [-94.37053769704536, 40.83098709945576],
+                    [-94.2036617, 41.3717716],
+                    [-93.52300099792355, 41.241436141055345],
+                ]],
+                'type': 'Polygon'
+            },
+            crs="EPSG:3857",
+            resolution=10
+        )
+
+    @staticmethod
+    def dltile_factory():
+        return geocontext.DLTile({
+            'geometry': {
+                'coordinates': [[
+                    [-94.64171754779824, 40.9202359006794],
+                    [-92.81755164322226, 40.93177944075989],
+                    [-92.81360932958779, 42.31528732533928],
+                    [-94.6771717075502, 42.303172487087394],
+                    [-94.64171754779824, 40.9202359006794]
+                ]],
+                'type': 'Polygon'
+            },
+            'properties': {
+                'cs_code': 'EPSG:32615',
+                'key': '128:16:960.0:15:-1:37',
+                'outputBounds': [361760.0, 4531200.0, 515360.0, 4684800.0],
+                'pad': 16,
+                'resolution': 960.0,
+                'ti': -1,
+                'tilesize': 128,
+                'tj': 37,
+                'zone': 15
+            },
+            'type': 'Feature'
+        })
+
+    def test_aoi_raster_params_threadsafe(self):
+        errors = run_threadsafe_experiment(self.aoi_factory, "raster_params")
+        self.assertEqual(errors, [])
+
+    def test_aoi_geo_interface_threadsafe(self):
+        errors = run_threadsafe_experiment(self.aoi_factory, "__geo_interface__")
+        self.assertEqual(errors, [])
+
+    def test_dltile_geo_interface_threadsafe(self):
+        errors = run_threadsafe_experiment(self.dltile_factory, "__geo_interface__")
+        self.assertEqual(errors, [])
