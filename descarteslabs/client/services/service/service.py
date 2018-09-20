@@ -27,6 +27,10 @@ from descarteslabs.common.threading.local import ThreadLocalWrapper
 
 
 class WrappedSession(requests.Session):
+
+    # Adapts the custom pickling protocol of requests.Session
+    __attrs__ = requests.Session.__attrs__ + ["base_url", "timeout"]
+
     def __init__(self, base_url, timeout=None):
         self.base_url = base_url
         self.timeout = timeout

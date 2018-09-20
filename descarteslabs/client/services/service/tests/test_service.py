@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pickle
 import unittest
 
 from mock import MagicMock
 from descarteslabs.client.services.service import Service, JsonApiService
+from descarteslabs.client.services.service.service import WrappedSession
 
 
 class TestService(unittest.TestCase):
@@ -30,6 +32,14 @@ class TestJsonApiService(unittest.TestCase):
         token = "foo.bar.sig"
         service = JsonApiService('foo', auth=MagicMock(token=token))
         self.assertEqual(service.session.headers.get('Authorization'), token)
+
+
+class TestWrappedSession(unittest.TestCase):
+    def test_pickling(self):
+        session = WrappedSession('http://example.com', timeout=10)
+        self.assertEqual(10, session.timeout)
+        unpickled = pickle.loads(pickle.dumps(session))
+        self.assertEqual(10, unpickled.timeout)
 
 
 if __name__ == '__main__':
