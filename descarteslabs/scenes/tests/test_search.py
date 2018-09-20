@@ -40,6 +40,16 @@ class TestScenesSearch(unittest.TestCase):
         self.assertEqual(ctx.resolution, 5)
         self.assertEqual(ctx.crs, "EPSG:32615")
 
+    def test_search_AOI_with_shape(self):
+        aoi = geocontext.AOI(self.geom, shape=(100, 100))
+        sc, ctx = search(aoi, products="landsat:LC08:PRE:TOAR", limit=4)
+        self.assertGreater(len(sc), 0)
+        self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
+
+        self.assertEqual(ctx.resolution, None)
+        self.assertEqual(ctx.shape, aoi.shape)
+        self.assertEqual(ctx.crs, "EPSG:32615")
+
     def test_search_dltile(self):
         tile = geocontext.DLTile.from_key('64:0:1000.0:15:-2:70')
         sc, ctx = search(tile, products="landsat:LC08:PRE:TOAR", limit=4)

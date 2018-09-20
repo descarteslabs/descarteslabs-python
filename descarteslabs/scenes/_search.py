@@ -161,7 +161,7 @@ def search(aoi,
 
     if len(scenes) > 0:
         assign_ctx = {}
-        if ctx.resolution is None:
+        if ctx.resolution is None and ctx.shape is None:
             resolutions = filter(
                 None,
                 (b.get("resolution") for band in six.itervalues(product_bands) for b in six.itervalues(band))
