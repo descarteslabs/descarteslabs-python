@@ -54,6 +54,15 @@ class RangeExpression(Expression):
         return {'range': {self.name: self.parts}}
 
 
+class LikeExpression(Expression):
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def serialize(self):
+        return {'like': {self.name: self.value}}
+
+
 class AndExpression(object):
     def __init__(self, parts):
         self.parts = parts
@@ -127,6 +136,23 @@ class Property(object):
 
     def __repr__(self):
         return '<Property {}>'.format(self.name)
+
+    def like(self, other):
+        """Compare against a wildcard string.
+
+        This allows for wildcards, e.g. ``like("bar%foo")`` where any
+        string that starts with ``'bar'`` and ends with ``'foo'`` will be
+        matched.
+
+        This uses the SQL ``LIKE`` syntax with single character
+        wildcard ``'_'`` and arbitrary character wildcard ``'%'``.
+
+        To escape either of these wilcard characters prepend it
+        with a backslash, which becomes a double backslash in the
+        python string, i.e. use ``like("bar\\\\%foo")`` to match exactly
+        ``'bar%foo'``.
+        """
+        return LikeExpression(self.name, other)
 
 
 class Properties(object):
