@@ -12,10 +12,21 @@ class Feature(object):
     Attributes
     ----------
     geometry : shapely.geometry.Polygon or dict
-        If the Shapely package is installed, it will be a shapely Object,
-        otherwise a dict of a simple GeoJSON geometry type
+        If the Shapely package is installed, it will be a shapely shape,
+        otherwise a dict of a simple GeoJSON geometry type.
+        The geometry must be one of these GeoJSON types:
+
+        * Point
+        * MultiPoint
+        * Polygon
+        * MultiPolygon
+        * LineString
+        * MultiLineString
+        * GeometryCollection
+
     properties : DotDict
         Fields describing the geometry.
+        Values can only be strings up to 256 characters or numeric types.
     """
 
     def __init__(self, geometry, properties, id=None):

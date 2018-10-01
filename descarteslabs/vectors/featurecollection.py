@@ -206,7 +206,7 @@ class FeatureCollection(object):
         params = {k: v for k, v in six.iteritems(params) if v is not None}
 
         response = self.vector_client.update_product(self.id, **params)
-        self.__dict__.update(response['attributes'])
+        self.__dict__.update(response['data']['attributes'])
 
     def replace(
             self,
@@ -243,7 +243,7 @@ class FeatureCollection(object):
         )
 
         response = self.vector_client.replace(self.id, **params)
-        self.__dict__.update(response['attributes'])
+        self.__dict__.update(response['data']['attributes'])
 
     @classmethod
     def list(cls, limit=100, page=1, vector_client=None):

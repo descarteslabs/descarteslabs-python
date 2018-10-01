@@ -167,7 +167,7 @@ class TestFeatureCollection(unittest.TestCase):
         vector_client.delete_product.assert_called_once_with('foo')
 
     def test_replace(self, vector_client):
-        vector_client.replace.side_effect = lambda id, **attributes: dict(id=id, attributes=attributes)
+        vector_client.replace.side_effect = lambda id, **attributes: {'data': dict(id=id, attributes=attributes)}
 
         attributes = dict(name='name',
                           title='title',
@@ -187,7 +187,7 @@ class TestFeatureCollection(unittest.TestCase):
             self.assertEqual(getattr(fc, key), attributes[key])
 
     def test_update(self, vector_client):
-        vector_client.update_product.side_effect = lambda id, **attributes: dict(id=id, attributes=attributes)
+        vector_client.update_product.side_effect = lambda id, **attributes: {'data': dict(id=id, attributes=attributes)}
 
         attributes = dict(title='title', description='description')
 
