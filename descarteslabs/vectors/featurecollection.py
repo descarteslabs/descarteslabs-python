@@ -31,9 +31,12 @@ class FeatureCollection(object):
 
     ATTRIBUTES = ['owners', 'writers', 'readers', 'id', 'name', 'title', 'description']
 
-    def __init__(self, id=None, vector_client=None):
+    def __init__(self, id=None, name=None, vector_client=None):
+        if id is not None and name is not None:
+            raise ValueError("You cannot provide both a 'id' and an 'name' to instantiate this class")
 
         self.id = id
+        self._name = name
         self._vector_client = vector_client
 
         self._query_geometry = None
@@ -48,6 +51,16 @@ class FeatureCollection(object):
         self.__dict__.update(response.attributes)
 
         return self
+
+    @classmethod
+    def by_id(cls, product_id, vector_client=None):
+        """Retrieve a vector product by id"""
+        return cls(id=product_id, vector_client=vector_client)
+
+    @classmethod
+    def by_name(cls, product_name, vector_client=None):
+        """Retrieve a vector product by name"""
+        return cls(name=product_name, vector_client=vector_client)
 
     @classmethod
     def create(cls, name, title, description, owners=None, readers=None, writers=None, vector_client=None):
@@ -276,8 +289,16 @@ class FeatureCollection(object):
         """
         Loads the attributes for the `FeatureCollection`.
 
+        It always uses the 'id' attribute to load the FeatureCollection
+        except during instantiation, at which time it may use the name.
         """
-        response = self.vector_client.get_product(self.id)
+        if self.id is not None:
+            response = self.vector_client.get_product(self.id)
+        elif self._name is not None:
+            response = self.vector_client.get_product_by_name(self._name)
+        else:
+            raise ValueError("You must provide either a 'name' or an 'id' to instantiate this class")
+
         self.__dict__.update(response.data.attributes)
 
     def delete(self):

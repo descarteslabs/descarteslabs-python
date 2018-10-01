@@ -84,6 +84,21 @@ class Vector(JsonApiService):
         r = self.session.get('/products/{}'.format(product_id))
         return DotDict(r.json())
 
+    def get_product_by_name(self, product_name):
+        """
+        Get a product's properties.
+
+        :param str product_id: (Required) The name of the vector product to fetch.
+
+        :rtype: DotDict
+        :return: Metadata for the provided product, as a JSON API resource object.
+
+                 The product's ID is under ``.data.id``
+                 and its properties, including name, are under ``.data.attributes``.
+        """
+        r = self.session.get('/products/name/{}'.format(product_name))
+        return DotDict(r.json())
+
     def create_product(self, name, title, description, owners=None, readers=None, writers=None):
         """
         Add a vector product to your catalog.
