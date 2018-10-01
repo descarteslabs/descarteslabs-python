@@ -302,8 +302,6 @@ class Vector(JsonApiService):
         product_id,
         geometry,
         query_expr=None,
-        properties=None,
-        op=None,
         page_size=1000,
         continuation_token=None,
         **kwargs
@@ -312,27 +310,31 @@ class Vector(JsonApiService):
         Query vector features within an existing product.
 
         :param str product_id: (Required) Product within which to search.
-        :param dict geometry: (Required) Search for Features intersecting this shape,
-                              as a GeoJSON geometry
+        :param dict geometry: (Required) Search for Features intersecting
+            this shape, as a GeoJSON geometry
         :param descarteslabs.client.common.filtering.Expression query_expr:
-            A rich query expression generator which excludes the `properties` and `op` arguments.
-            Represents an arbitrary tree of boolean combinations of property comparisons.
-            Using the properties filter factory inside `descarteslabs.client.services.vector.properties` as `p`, you can
-            E.g `query_expr=(p.temperature >= 50) & (p.hour_of_day > 18)`, or even more complicated expressions like
-            `query_expr=(100 > p.temperature >= 50) | ((p.month != 10) & (p.day_of_month > 14))`
-            This expression gets serialized and applied to the properties mapping supplied with the
-            features in the vector product. If you supply a property which doesn't exist as part of the expression
-            that comparison will evaluate to False.
-        :param dict properties: Like ``{property: value}``, query features where property == value
-        :param str op: One of ``"AND"``, ``"OR"``;
-                       how to logically combine parameters in ``properties``
-        :param int page_size: Number of features to return for this page; max is 10000
-        :param str continuation_token: Token returned from a previous call to this method that can be
-            used to fetch the next page of search results. Search parameters must stay consistent
+            A rich query expression generator that represents
+            an arbitrary tree of boolean combinations of property
+            comparisons.  Using the properties filter factory inside
+            `descarteslabs.client.services.vector.properties` as
+            `p`, you can E.g `query_expr=(p.temperature >= 50) &
+            (p.hour_of_day > 18)`, or even more complicated expressions
+            like `query_expr=(100 > p.temperature >= 50) | ((p.month
+            != 10) & (p.day_of_month > 14))` This expression gets
+            serialized and applied to the properties mapping supplied
+            with the features in the vector product. If you supply a
+            property which doesn't exist as part of the expression that
+            comparison will evaluate to False.
+        :param int page_size: Number of features to return for this page;
+            max is 10000
+        :param str continuation_token: Token returned from a previous call
+            to this method that can be used to fetch the next page
+            of search results. Search parameters must stay consistent
             between calls using a continuation token.
 
         :rtype: DotDict
-        :return: Features satisfying the query, as a JSON API resource collection.
+        :return: Features satisfying the query, as a JSON API resource
+            collection.
 
                  The Features' IDs are under ``.data[i].id``,
                  and their properties are under ``.data[i].attributes``.
@@ -341,8 +343,6 @@ class Vector(JsonApiService):
             kwargs,
             geometry=geometry,
             query_expr=(query_expr.serialize() if query_expr is not None else None),
-            properties=properties,
-            op=op,
             limit=page_size,
             continuation_token=continuation_token,
         ).items() if v is not None}
@@ -355,8 +355,6 @@ class Vector(JsonApiService):
         product_id,
         geometry=None,
         query_expr=None,
-        properties=None,
-        op=None,
         limit=None,
         **kwargs
     ):
@@ -367,7 +365,9 @@ class Vector(JsonApiService):
 
         :param str product_id: (Required) Product within which to search.
         :param dict geometry: Search for Features intersecting this shape.
-                              This accepts the following types of GeoJSON geometries:
+                              This accepts the following types of GeoJSON
+                              geometries:
+
                               - Points
                               - MultiPoints
                               - Polygons
@@ -377,17 +377,18 @@ class Vector(JsonApiService):
                               - GeometryCollections
 
         :param descarteslabs.client.common.filtering.Expression query_expr:
-            A rich query expression generator which excludes the `properties` and `op` arguments.
-            Represents an arbitrary tree of boolean combinations of property comparisons.
-            Using the properties filter factory inside `descarteslabs.client.services.vector.properties` as `p`, you can
-            E.g `query_expr=(p.temperature >= 50) & (p.hour_of_day > 18)`, or even more complicated expressions like
-            `query_expr=(100 > p.temperature >= 50) | ((p.month != 10) & (p.day_of_month > 14))`
-            This expression gets serialized and applied to the properties mapping supplied with the
-            features in the vector product. If you supply a property which doesn't exist as part of the expression
-            that comparison will evaluate to False.
-        :param dict properties: Like ``{property: value}``, query features where property == value
-        :param str op: One of ``"AND"``, ``"OR"``;
-                       how to logically combine parameters in ``properties``
+            A rich query expression generator that represents
+            an arbitrary tree of boolean combinations of property
+            comparisons.  Using the properties filter factory inside
+            `descarteslabs.client.services.vector.properties` as
+            `p`, you can E.g `query_expr=(p.temperature >= 50) &
+            (p.hour_of_day > 18)`, or even more complicated expressions
+            like `query_expr=(100 > p.temperature >= 50) | ((p.month
+            != 10) & (p.day_of_month > 14))` This expression gets
+            serialized and applied to the properties mapping supplied
+            with the features in the vector product. If you supply a
+            property which doesn't exist as part of the expression that
+            comparison will evaluate to False.
         :param int limit: Maximum number of features to return, defaults to all.
         :rtype: Iterator
         :return: Features satisfying the query, as JSONAPI primary data objects.
@@ -398,16 +399,16 @@ class Vector(JsonApiService):
         continuation_token = None
         exit = False
         num_generated = 0
+
         while True:
             page = self._fetch_feature_page(
                 product_id,
                 geometry,
                 query_expr=query_expr,
-                properties=properties,
-                op=op,
                 continuation_token=continuation_token,
                 **kwargs
             )
+
             for feature in page.data:
                 if num_generated == limit:
                     exit = True
@@ -416,5 +417,6 @@ class Vector(JsonApiService):
                 num_generated += 1
 
             continuation_token = page.meta.continuation_token
+
             if exit or continuation_token is None:
                 break
