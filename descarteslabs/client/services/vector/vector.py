@@ -39,7 +39,7 @@ class Vector(JsonApiService):
         if url is None:
             url = os.environ.get(
                 "DESCARTESLABS_VECTOR_URL",
-                "https://platform.descarteslabs.com/vector/v1"
+                "https://platform.descarteslabs.com/vector/v2"
             )
         self._gcs_upload_service = ThirdPartyService()
 
