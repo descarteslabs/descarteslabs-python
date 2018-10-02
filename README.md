@@ -9,6 +9,9 @@ Changelog
 =========
 
 ## [Unreleased]
+### Added
+- The vector service is now part of the public package. See `descarteslabs.vectors` and `descarteslabs.client.services.vector`.
+
 ### Changed
 - Shapely is now a full requirement of this package.
 - Reduced the number of retries for some failure types.
