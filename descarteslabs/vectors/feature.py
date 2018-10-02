@@ -69,14 +69,17 @@ class Feature(object):
         >>> properties = {"temperature": 70.13, "size": "large"}
         >>> feature = Feature(geometry=polygon, properties=properties)
         >>> feature.geojson
-        {'id': None,
-        'geometry': {
-            'coordinates': [[[-95.0, 42.0], [-93.0, 42.0], [-93.0, 40.0],[-95.0, 41.0],[-95.0, 42.0]]],
-            'type': 'Polygon'},
+        {'geometry': {'coordinates': (((-95.0, 42.0),
+            (-93.0, 42.0),
+            (-93.0, 40.0),
+            (-95.0, 41.0),
+            (-95.0, 42.0)),),
+         'type': 'Polygon'},
+        'id': None,
         'properties': {
-            'size': 'large',
-            'temperature': 70.13
-        }}
+          'size': 'large',
+          'temperature': 70.13
+        }}  # doctest: +SKIP
         """
         properties = copy.deepcopy(self.properties)
 

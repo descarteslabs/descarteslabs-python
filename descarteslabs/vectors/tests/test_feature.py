@@ -44,6 +44,9 @@ class TestFeature(unittest.TestCase):
         for geometry in geometries:
             feature = Feature(geometry=geometry, properties=properties)
 
-            self.assertEqual(json.dumps(feature.geojson), json.dumps({'id': None,
-                                                                      'geometry': geometry,
-                                                                      'properties': properties}))
+            self.assertEqual(json.dumps(feature.geojson,
+                                        sort_keys=True),
+                             json.dumps({'geometry': geometry,
+                                         'id': None,
+                                         'properties': properties},
+                                        sort_keys=True))

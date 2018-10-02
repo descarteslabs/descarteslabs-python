@@ -58,7 +58,7 @@ class FeatureCollection(object):
         -------
         >>> from descarteslabs.vectors import FeatureCollection
         >>> FeatureCollection.create(name='foo',
-        ...    title='My Foo Vectory Collection',
+        ...    title='My Foo Vector Collection',
         ...    description='Just a test')  # doctest: +SKIP
         """
         params = dict(
@@ -108,11 +108,11 @@ class FeatureCollection(object):
         >>> from descarteslabs.vectors import FeatureCollection, properties as p
         >>> aoi_geometry = {
         ...    'type': 'Polygon',
-        ...    'coordinates': [[[-95, 42],[-93, 42],[-93, 40],[-95, 41],[-95, 42]]]}
-        >>> all_feautures = FeatureCollection('foo')
-        >>> cold_features = all_feautures.filter(properties=(p.temperature <= 50))
-        >>> cold_features_in_aoi = cold_features.filter(geometry=aoi_geometry)
-        >>> cold_features_in_aoi_red = cold_features.filter(properties=(p.color == 'red'))
+        ...    'coordinates': [[[-109, 31], [-102, 31], [-102, 37], [-109, 37], [-109, 31]]]}
+        >>> all_us_cities = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')
+        >>> cities_starting_with_s = all_features.filter(properties=(p.name.like("S%")))
+        >>> cities_in_aoi_starting_with_s = cold_features.filter(geometry=aoi_geometry)
+        >>> large_cities_in_aoi_starting_with_s = cold_features.filter(properties=(p.area_land_meters > 1000))
 
         """
         self = copy.deepcopy(self)
@@ -139,7 +139,7 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
-        >>> fc = FeatureCollection('foo')
+        >>> fc = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')
         >>> fc = fc.limit(10)
 
         """
@@ -161,7 +161,7 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
-        >>> fc = FeatureCollection('foo')
+        >>> fc = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')
         >>> feature_ids = []
         >>> for feature in fc.features():  # doctest: +SKIP
         ...    print(feature)  # doctest: +SKIP
@@ -191,7 +191,7 @@ class FeatureCollection(object):
         >>> attributes = dict(name='name',
         ...    owners=['owners'],
         ...    readers=['readers'])
-        >>> FeatureCollection('foo').update(**attributes)  # doctest: +SKIP
+        >>> FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24').update(**attributes)  # doctest: +SKIP
 
         """
         params = dict(
