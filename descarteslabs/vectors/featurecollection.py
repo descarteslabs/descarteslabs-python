@@ -109,10 +109,10 @@ class FeatureCollection(object):
         >>> aoi_geometry = {
         ...    'type': 'Polygon',
         ...    'coordinates': [[[-109, 31], [-102, 31], [-102, 37], [-109, 37], [-109, 31]]]}
-        >>> all_us_cities = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')
-        >>> cities_starting_with_s = all_features.filter(properties=(p.name.like("S%")))
-        >>> cities_in_aoi_starting_with_s = cold_features.filter(geometry=aoi_geometry)
-        >>> large_cities_in_aoi_starting_with_s = cold_features.filter(properties=(p.area_land_meters > 1000))
+        >>> all_us_cities = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
+        >>> filtered_cities = all_us_cities.filter(properties=(p.name.like("S%")))  # doctest: +SKIP
+        >>> filtered_cities = filtered_cities.filter(geometry=aoi_geometry)  # doctest: +SKIP
+        >>> filtered_cities = filtered_cities.filter(properties=(p.area_land_meters > 1000))  # doctest: +SKIP
 
         """
         self = copy.deepcopy(self)
@@ -139,8 +139,8 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
-        >>> fc = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')
-        >>> fc = fc.limit(10)
+        >>> fc = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
+        >>> fc = fc.limit(10)  # doctest: +SKIP
 
         """
         self = copy.deepcopy(self)
@@ -161,8 +161,7 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
-        >>> fc = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')
-        >>> feature_ids = []
+        >>> fc = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
         >>> for feature in fc.features():  # doctest: +SKIP
         ...    print(feature)  # doctest: +SKIP
         """
