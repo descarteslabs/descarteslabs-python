@@ -14,6 +14,9 @@
 
 import itertools
 import random
+import os
+import platform
+import sys
 from warnings import warn
 
 import requests
@@ -118,8 +121,21 @@ class Service(object):
 
         s.headers.update({
             "Content-Type": "application/json",
-            "User-Agent": "dl-python/{}".format(__version__)
+            "User-Agent": "dl-python/{}".format(__version__),
         })
+
+        try:
+            s.headers.update({
+                # https://github.com/easybuilders/easybuild/wiki/OS_flavor_name_version
+                "X-Platform": platform.platform(),
+                "X-Python": platform.python_version(),
+                # https://stackoverflow.com/questions/47608532/how-to-detect-from-within-python-whether-packages-are-managed-with-conda
+                "X-Conda": str(os.path.exists(os.path.join(sys.prefix, 'conda-meta', 'history'))),
+                # https://stackoverflow.com/questions/15411967/how-can-i-check-if-code-is-executed-in-the-ipython-notebook
+                "X-Notebook": str('ipykernel' in sys.modules),
+            })
+        except Exception:
+            pass
 
         return s
 
