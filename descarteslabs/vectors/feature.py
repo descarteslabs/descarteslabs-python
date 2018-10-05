@@ -37,7 +37,18 @@ class Feature(object):
         ...    'type': 'Polygon',
         ...    'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]}
         >>> properties = {"temperature": 70.13, "size": "large"}
-        >>> Feature(geometry=polygon, properties=properties)
+        >>> Feature(geometry=polygon, properties=properties)  # doctest: +SKIP
+        Feature({
+          'geometry': {
+            'coordinates': (((-95.0, 42.0), (-93.0, 42.0), (-93.0, 40.0), (-95.0, 41.0), (-95.0, 42.0)),),
+            'type': 'Polygon'
+          },
+          'id': None,
+          'properties': {
+            'size': 'large',
+            'temperature': 70.13
+          }
+        })
         """
         if geometry is None:
             raise ValueError("geometry should not be None")
