@@ -9,13 +9,17 @@ Changelog
 =========
 
 ## [Unreleased]
+
+## [0.13.0] - 2018-10-05
+### Changed
+- Shapely is now a full requirement of this package. Note: Windows users should visit https://docs.descarteslabs.com/installation.html#windows-users for installation guidance. 
+- Reduced the number of retries for some failure types.
+- Resolved intermittent `SceneCollection.stack` bug that manifested as `AttributeError: 'NoneType' object has no attribute 'coords'` due to Shapely thread-unsafety.
+- Tracking system environment to improve installation and support of different systems.
+
 ### Added
 - The vector service is now part of the public package. See `descarteslabs.vectors` and `descarteslabs.client.services.vector`.
 
-### Changed
-- Shapely is now a full requirement of this package.
-- Reduced the number of retries for some failure types.
-- Resolved intermittent `SceneCollection.stack` bug that manifested as `AttributeError: 'NoneType' object has no attribute 'coords'` due to Shapely thread-unsafety
 
 ## [0.12.0] - 2018-09-12
 ### Changed
@@ -246,7 +250,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.2...v0.12.0
 [0.11.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.21...v0.11.2
 [0.11.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.0...v0.11.1
