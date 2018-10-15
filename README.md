@@ -9,7 +9,13 @@ Changelog
 =========
 
 ## [Unreleased]
-- Vector client support for retrieving status information about upload jobs. Added methods `Vector.get_upload_results` and `Vector.get_upload_result`
+
+## [0.13.1]
+### Fixed
+- `Vector.upload_features` handles new response format.
+
+### Added
+- Vector client support for retrieving status information about upload jobs. Added methods `Vector.get_upload_results` and `Vector.get_upload_result`.
 
 ## [0.13.0] - 2018-10-05
 ### Changed
