@@ -279,8 +279,52 @@ class Vector(JsonApiService):
             raise Exception('Could not handle file: `{}` pass a valid path or open IOBase instance'.format(file_ish))
         with io.open(file_name, 'rb') as fd:
             r = self.session.post('/products/{}/features/upload'.format(product_id))
-            upload_url = r.text
+            upload = r.json()
+            upload_url = upload['url']
             r = self._gcs_upload_service.session.put(upload_url, data=fd)
+            return upload['upload_id']
+
+    def _fetch_upload_result_page(self, product_id, continuation_token=None):
+        r = self.session.get(
+            '/products/{}/features/uploads'.format(product_id),
+            params={'continuation_token': continuation_token},
+            headers={'Content-Type': 'application/json'},
+        )
+        return DotDict(r.json())
+
+    def get_upload_results(self, product_id):
+        """
+        Get a list of the uploads submitted to a vector product, and status
+        information about each.
+
+        :param str product_id: (required)
+        :return: An iterator over all upload resources created with :meth:`Vector.upload_features`
+        :rtype: Iterator
+        """
+        continuation_token = None
+        while True:
+            page = self._fetch_upload_result_page(product_id, continuation_token=continuation_token)
+            for feature in page.data:
+                yield feature
+            continuation_token = page.meta.continuation_token
+
+            if continuation_token is None:
+                break
+
+    def get_upload_result(self, product_id, upload_id):
+        """
+        Get details about a specific upload job. Included information about
+        processing error streams, which can help debug failed uploads.
+
+        :param str product_id: (required)
+        :param str upload_id: (required) An id pertaining to this requested upload,
+            either returned by :meth:`Vector.get_upload_results` or :meth:`Vector.upload_features`.
+        """
+        r = self.session.get(
+            '/products/{}/features/uploads/{}'.format(product_id, upload_id),
+            headers={'Content-Type': 'application/json'},
+        )
+        return DotDict(r.json())
 
     def _fetch_feature_page(
         self,
