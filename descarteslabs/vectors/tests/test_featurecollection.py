@@ -69,7 +69,7 @@ class TestFeatureCollection(unittest.TestCase):
 
         self.assertEqual(list(filtered.features()), [])
         vector_client.search_features.assert_called_once_with(
-            geometry=geometry, limit=10000, product_id='foo', query_expr=None
+            geometry=geometry, query_limit=None, product_id='foo', query_expr=None
         )
 
     def test_filter_properties(self, vector_client):
@@ -87,7 +87,7 @@ class TestFeatureCollection(unittest.TestCase):
 
         vector_client.search_features.assert_called_once_with(
             geometry=None,
-            limit=10000,
+            query_limit=None,
             product_id='foo',
             query_expr=mock.ANY)
 
@@ -97,12 +97,12 @@ class TestFeatureCollection(unittest.TestCase):
 
         self.assertEqual(list(fc.features()), [])
         vector_client.search_features.assert_called_once_with(
-            geometry=None, limit=10, product_id='foo', query_expr=None
+            geometry=None, query_limit=10, product_id='foo', query_expr=None
         )
 
     def test_list(self, vector_client):
         FeatureCollection.list(vector_client=vector_client)
-        vector_client.list_products.assert_called_once_with(limit=100, page=1)
+        vector_client.list_products.assert_called_once_with(page=1)
 
     def test_refresh(self, vector_client):
         attributes = dict(name='name',

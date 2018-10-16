@@ -1,12 +1,10 @@
 from descarteslabs.common.dotdict import DotDict
+from descarteslabs.client.exceptions import NotFoundError
 from descarteslabs.client.services.vector import Vector
 from descarteslabs.vectors.feature import Feature
 import six
 
 import copy
-
-
-MAX_RESULT_WINDOW = 10000
 
 
 class FeatureCollection(object):
@@ -37,7 +35,7 @@ class FeatureCollection(object):
         self._vector_client = vector_client
 
         self._query_geometry = None
-        self._query_limit = MAX_RESULT_WINDOW
+        self._query_limit = None
         self._query_property_expression = None
 
         self.refresh()
@@ -74,6 +72,44 @@ class FeatureCollection(object):
             vector_client = Vector()
 
         return cls._from_jsonapi(vector_client.create_product(**params).data, vector_client)
+
+    @classmethod
+    def list(cls, vector_client=None):
+        """
+        Returns all `FeatureCollection` products that you have access to.
+
+        Returns
+        -------
+        list(`FeatureCollection`)
+
+        Example
+        -------
+        >>> from descarteslabs.vectors import FeatureCollection
+        >>> FeatureCollection.list()  # doctest: +SKIP
+        """
+
+        if vector_client is None:
+            vector_client = Vector()
+
+        list = []
+
+        page = 1
+        # The first page will always succeed...
+        response = vector_client.list_products(page=page)
+
+        while len(response) > 0:
+            partial_list = [cls._from_jsonapi(fc, vector_client)
+                            for fc in response.data]
+            list.extend(partial_list)
+            page += 1
+
+            # Subsequent pages may throw NotFoundError
+            try:
+                response = vector_client.list_products(page=page)
+            except NotFoundError:
+                response = []
+
+        return list
 
     @property
     def vector_client(self):
@@ -115,18 +151,18 @@ class FeatureCollection(object):
         >>> filtered_cities = filtered_cities.filter(properties=(p.area_land_meters > 1000))  # doctest: +SKIP
 
         """
-        self = copy.deepcopy(self)
+        copied_fc = copy.deepcopy(self)
 
         if geometry is not None:
-            self._query_geometry = getattr(geometry, '__geo_interface__', geometry)
+            copied_fc._query_geometry = getattr(geometry, '__geo_interface__', geometry)
 
         if properties is not None:
-            if self._query_property_expression is None:
-                self._query_property_expression = properties
+            if copied_fc._query_property_expression is None:
+                copied_fc._query_property_expression = properties
             else:
-                self._query_property_expression = self._query_property_expression & properties
+                copied_fc._query_property_expression = copied_fc._query_property_expression & properties
 
-        return self
+        return copied_fc
 
     def limit(self, limit):
         """
@@ -143,9 +179,9 @@ class FeatureCollection(object):
         >>> fc = fc.limit(10)  # doctest: +SKIP
 
         """
-        self = copy.deepcopy(self)
-        self._query_limit = limit
-        return self
+        copied_fc = copy.deepcopy(self)
+        copied_fc._query_limit = limit
+        return copied_fc
 
     def features(self):
         """
@@ -169,7 +205,7 @@ class FeatureCollection(object):
             product_id=self.id,
             geometry=self._query_geometry,
             query_expr=self._query_property_expression,
-            limit=self._query_limit
+            query_limit=self._query_limit,
         )
 
         for response in self.vector_client.search_features(**params):
@@ -244,33 +280,6 @@ class FeatureCollection(object):
         response = self.vector_client.replace(self.id, **params)
         self.__dict__.update(response['data']['attributes'])
 
-    @classmethod
-    def list(cls, limit=100, page=1, vector_client=None):
-        """
-        Returns all `FeatureCollection` that you have access to.
-
-        Returns
-        -------
-        list(`FeatureCollection`)
-
-        Example
-        -------
-        >>> from descarteslabs.vectors import FeatureCollection
-        >>> FeatureCollection.list()  # doctest: +SKIP
-        """
-
-        params = dict(
-            limit=limit,
-            page=page
-        )
-
-        if vector_client is None:
-            vector_client = Vector()
-
-        response = vector_client.list_products(**params)
-
-        return [cls._from_jsonapi(fc, vector_client) for fc in response.data]
-
     def refresh(self):
         """
         Loads the attributes for the `FeatureCollection`.
@@ -317,12 +326,12 @@ class FeatureCollection(object):
 
         documents = self.vector_client.create_features(self.id, attributes)
 
-        copied_features = copy.deepcopy(features)
+        copied_fc = copy.deepcopy(features)
 
-        for feature, doc in zip(copied_features, documents.data):
+        for feature, doc in zip(copied_fc, documents.data):
             feature.id = doc.id
 
-        return copied_features
+        return copied_fc
 
     def _repr_json_(self):
         return DotDict((k, v) for k, v in self.__dict__.items() if k in FeatureCollection.ATTRIBUTES)

@@ -26,6 +26,7 @@ class Vector(JsonApiService):
     This client currently returns data as dictionaries in `JSON API format <http://jsonapi.org/>`_.
     """
     TIMEOUT = (9.5, 60)
+    SEARCH_PAGE_SIZE = 1000
     properties = GenericProperties()
 
     def __init__(self, url=None, auth=None):
@@ -45,12 +46,14 @@ class Vector(JsonApiService):
 
         super(Vector, self).__init__(url, auth=auth)
 
-    def list_products(self, limit=100, page=1):
+    def list_products(self, page_size=100, page=1):
         """
-        Get all vector products that you have access to.
+        Get all vector products that you have access using JSON API pagination.
+        The first page (1) will always succeed but may be empty.
+        Subsequent pages may throw `NotFoundError`.
 
-        :param int limit: Maximum number of vector products to return; max is 1000
-        :param int page: Which page of results to fetch, if there are more results than ``limit``.
+        :param int page_size: Maximum number of vector products to return per page; default is 100.
+        :param int page: Which page of results to fetch, if there are more results than ``page_size``.
 
         :rtype: DotDict
         :return: Available vector products and their properties, as a JSON API collection.
@@ -61,7 +64,7 @@ class Vector(JsonApiService):
         """
 
         params = dict(
-            limit=limit,
+            limit=page_size,
             page=page
         )
 
@@ -331,7 +334,7 @@ class Vector(JsonApiService):
         product_id,
         geometry,
         query_expr=None,
-        page_size=1000,
+        query_limit=None,
         continuation_token=None,
         **kwargs
     ):
@@ -354,8 +357,8 @@ class Vector(JsonApiService):
             with the features in the vector product. If you supply a
             property which doesn't exist as part of the expression that
             comparison will evaluate to False.
-        :param int page_size: Number of features to return for this page;
-            max is 10000
+        :param int query_limit: Number of features to limit the query result to
+            (unlimited by default)
         :param str continuation_token: Token returned from a previous call
             to this method that can be used to fetch the next page
             of search results. Search parameters must stay consistent
@@ -372,7 +375,8 @@ class Vector(JsonApiService):
             kwargs,
             geometry=geometry,
             query_expr=(query_expr.serialize() if query_expr is not None else None),
-            limit=page_size,
+            limit=Vector.SEARCH_PAGE_SIZE,
+            query_limit=query_limit,
             continuation_token=continuation_token,
         ).items() if v is not None}
 
@@ -384,7 +388,7 @@ class Vector(JsonApiService):
         product_id,
         geometry=None,
         query_expr=None,
-        limit=None,
+        query_limit=None,
         **kwargs
     ):
         """
@@ -418,7 +422,7 @@ class Vector(JsonApiService):
             with the features in the vector product. If you supply a
             property which doesn't exist as part of the expression that
             comparison will evaluate to False.
-        :param int limit: Maximum number of features to return, defaults to all.
+        :param int query_limit: Maximum number of features to return for this query, defaults to all.
         :rtype: Iterator
         :return: Features satisfying the query, as JSONAPI primary data objects.
 
@@ -426,26 +430,21 @@ class Vector(JsonApiService):
                  and their properties are under ``.attributes``.
         """
         continuation_token = None
-        exit = False
-        num_generated = 0
 
         while True:
             page = self._fetch_feature_page(
                 product_id,
                 geometry,
                 query_expr=query_expr,
+                query_limit=query_limit,
                 continuation_token=continuation_token,
                 **kwargs
             )
 
             for feature in page.data:
-                if num_generated == limit:
-                    exit = True
-                    break
                 yield feature
-                num_generated += 1
 
             continuation_token = page.meta.continuation_token
 
-            if exit or continuation_token is None:
+            if continuation_token is None:
                 break
