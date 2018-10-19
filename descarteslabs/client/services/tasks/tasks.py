@@ -107,6 +107,7 @@ class Tasks(Service):
             minimum_concurrency=None,
             minimum_seconds=None,
             task_timeout=1800,
+            **kwargs
     ):
         """
         Creates a new task group.
@@ -158,6 +159,8 @@ class Tasks(Service):
 
         if name is not None:
             payload['name'] = name
+
+        payload.update(kwargs)
 
         try:
             r = self.session.post("/groups", json=payload)
