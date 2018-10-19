@@ -287,7 +287,7 @@ class Raster(Service):
             to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
             ``(src_min, src_max)`` is also allowed, in which case the output range
             defaults to ``(0, 255)`` (a useful default for the common output type
-            ``Byte``).  If no scaling is desired for a band, use ``[0, 1, 0, 1]``.  This tuple
+            ``Byte``).  If no scaling is desired for a band, use ``None``.  This tuple
             format and behaviour is identical to GDAL's scales during translation.
             Example argument: ``[(0, 10000, 0, 127), (0, 1, 0, 1), (0, 10000)]`` - the first
             band will have source values 0-10000 scaled to 0-127, the second band will
@@ -423,7 +423,7 @@ class Raster(Service):
             to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
             ``(src_min, src_max)`` is also allowed, in which case the output range
             defaults to ``(0, 255)`` (a useful default for the common output type
-            ``Byte``).  If no scaling is desired for a band, use ``[0, 1, 0, 1]``. This tuple
+            ``Byte``).  If no scaling is desired for a band, use ``None``. This tuple
             format and behaviour is identical to GDAL's scales during translation.
             Example argument: ``[(0, 10000, 0, 127), (0, 1, 0, 1), (0, 10000)]`` - the first
             band will have source values 0-10000 scaled to 0-127, the second band will
@@ -595,7 +595,7 @@ class Raster(Service):
             to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
             ``(src_min, src_max)`` is also allowed, in which case the output range
             defaults to ``(0, 255)`` (a useful default for the common output type
-            ``Byte``).  If no scaling is desired for a band, use ``[0, 1, 0, 1]``. This tuple
+            ``Byte``).  If no scaling is desired for a band, use ``None``. This tuple
             format and behaviour is identical to GDAL's scales during translation.
             Example argument: ``[(0, 10000, 0, 127), (0, 1, 0, 1), (0, 10000)]`` - the first
             band will have source values 0-10000 scaled to 0-127, the second band will
