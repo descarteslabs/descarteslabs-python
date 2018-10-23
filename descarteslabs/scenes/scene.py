@@ -142,6 +142,7 @@ class Scene(object):
             * ``wavelength_unit``
                 Units of the wavelength fields, such as ``"nm"``
     """
+
     def __init__(self, scene_dict, bands_dict):
         """
         ``__init__`` instantiates a Scene from a dict returned by `Metadata.search`
@@ -371,7 +372,8 @@ class Scene(object):
         if mask_alpha:
             if "alpha" not in self_bands:
                 raise ValueError(
-                    "Cannot mask alpha: no alpha band for the product '{}'".format(self.properties["product"])
+                    "Cannot mask alpha: no alpha band for the product '{}'. "
+                    "Try setting 'mask_alpha=False'.".format(self.properties["product"])
                 )
             try:
                 alpha_i = bands.index("alpha")
