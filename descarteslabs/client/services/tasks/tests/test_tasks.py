@@ -19,7 +19,7 @@ import mock
 import responses
 
 from descarteslabs.client.auth import Auth
-from descarteslabs.client.services.tasks import CloudFunction, FutureTask, Tasks, as_completed
+from descarteslabs.client.services.tasks import CloudFunction, Tasks, as_completed
 
 # flake8: noqa
 public_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0sImlzcyI6Imh0dHBzOi8vZGVzY2FydGVzbGFicy5hdXRoMC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMTExMzg1NTY1MjQ4MTIzOTU3MTIiLCJhdWQiOiJaT0JBaTRVUk9sNWdLWklweHhsd09FZng4S3BxWGYyYyIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNDc4MjAxNDE5fQ.sbSzD9ACNZvaxSgClZCnZMpee_p5MBaKV9uHZQonD6Q"
@@ -108,22 +108,6 @@ class CloudFunctionTest(ClientTestCase):
         tasks = self.function.map(iter(["foo", "bar"]), iter(["baz"]))
         self.assertEqual(["foo", "bar"], [task.tuid for task in tasks])
         self.assertEqual([("foo", "baz"), ("bar", None)], [task.args for task in tasks])
-
-
-class FutureTaskTest(ClientTestCase):
-
-    @responses.activate
-    @mock.patch.object(Tasks, "COMPLETION_POLL_INTERVAL_SECONDS", 0)
-    @mock.patch.object(Tasks, "TASK_RESULT_BATCH_SIZE", 3)
-    def test_as_completed(self):
-        tasks = [FutureTask("group_id", str(n), client=self.client) for n in range(5)]
-        response1 = [{'id': str(n), 'result_type': 'json'} for n in range(3)]
-        response2 = [{'id': str(n), 'result_type': 'json'} for n in range(3, 5)]
-        self.mock_response(responses.POST, {'results': response1})
-        self.mock_response(responses.POST, {'results': response2})
-        completed_tasks = list(as_completed(tasks, show_progress=False))
-        self.assertEqual(5, len(completed_tasks))
-        self.assertEqual(list(range(5)), [int(r._task_result['id']) for r in completed_tasks])
 
 
 if __name__ == "__main__":

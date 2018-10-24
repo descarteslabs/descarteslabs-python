@@ -281,7 +281,7 @@ class Vector(JsonApiService):
         else:
             raise Exception('Could not handle file: `{}` pass a valid path or open IOBase instance'.format(file_ish))
         with io.open(file_name, 'rb') as fd:
-            r = self.session.post('/products/{}/features/upload'.format(product_id))
+            r = self.session.post('/products/{}/features/uploads'.format(product_id))
             upload = r.json()
             upload_url = upload['url']
             r = self._gcs_upload_service.session.put(upload_url, data=fd)

@@ -9,6 +9,13 @@ Changelog
 =========
 
 ## [Unreleased]
+### Changed
+- `FutureTask inheritance changed from `dict` to `object`.
+
+### Added
+- `Vectors.upload` allows you to upload a JSON newline delimited file.
+- `Vectors.list_uploads` allows you to list all uploads for a vector product.
+- `UploadTask` contains the information about an upload and is returned by both methods.
 
 ## [0.13.1] - 2018-10-16
 ### Changed
