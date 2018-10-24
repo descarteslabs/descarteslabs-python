@@ -398,7 +398,7 @@ class Scene(object):
 
         try:
             arr, info = raster_client.ndarray(**full_raster_args)
-        except NotFoundError as e:
+        except NotFoundError:
             six.raise_from(
                 NotFoundError("'{}' does not exist in the Descartes catalog".format(self.properties["id"])), None
             )

@@ -380,56 +380,9 @@ class Catalog(Service):
 
         :param str product_id: (Required) Product to which this band will belong.
         :param str name: (Required) Name of this band.
-        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
-        :param int jpx_layer: If data is processed to JPEG2000, which layer is the band in. Defaults to 0.
-        :param int srcband: (Required) The 1-based index of the band in the jpx_layer specified.
-        :param int srcfile: If the product was processed into multiple files,
-                            which one is this in. Defaults to 0 (first file).
-        :param str dtype: (Required) The data type used to store this band e.g Byte or Uint16 or Float32.
-        :param int nbits: (Required) The number of bits of the dtype used to store this band.
-        :param list(int) data_range: (Required) A list specifying the min and max values for the data in this band.
-        :param str type: (Required) The data interpretation of the band. One of ['spectral', 'derived', 'mask', 'class']
 
-        :param int nodata: Pixel value indicating no data available.
-        :param list(str) read: A list of groups, or user hashes to give read access to.
-                                     Defaults to the same as the parent product if not specified.
-        :param str color: The color interpretation of this band.
-                          One of ['Alpha', 'Black', 'Blue', 'Cyan', 'Gray', 'Green', 'Hue',
-                          'Ligntness', 'Magenta', 'Palette', 'Red', 'Saturation',
-                          'Undefined', 'YCbCr_Cb', 'YCbCr_Cr', 'YCbCr_Y', 'Yellow'].
-                          Must be 'Alpha' if `type` is 'mask'.
-                          Must be 'Palette' if `colormap_name` or `colormap` is set.
-        :param str colormap_name: A named colormap to use for this band, one of
-                                  ['plasma', 'magma', 'viridis', 'msw', 'inferno']
-        :param list(list(str)) colormap: A custom colormap to use for this band. Takes a list of lists, where each
-                                         nested list is a 4-tuple of rgba values to map pixels whose value is the index
-                                         of the tuple. i.e the colormap [["100", "20", "200", "255"]] would map pixels
-                                         whose value is 0 in the original band, to the rgba color vector at colormap[0].
-                                         Less than 2^nbits 4-tuples may be provided, and omitted values
-                                         will default map to black.
-
-        :param str data_description: Description of band data.
-        :param list(float) physical_range: If band represents a physical value e.g reflectance
-                                           or radiance what are the possible range of those values.
-        :param str data_unit: Units of the physical range e.g w/sr for radiance
-        :param str data_unit_description: Description of the data unit.
-        :param list(int) default_range: A good default scale for the band to use
-                                        when rastering for display purposes.
-        :param str description: Description of the band.
-        :param str name_common: Standard name for band
-        :param str name_vendor: What the vendor calls the band eg. B1
-        :param int vendor_order: The index of the band in the vendors band tables.
-                                 Useful for referencing the band to other processing
-                                 properties like surface reflectance.
-        :param str processing_level: Description of how the band was processed if at all.
-        :param int res_factor: Scaling of this band relative to the native band resolution.
-        :param int resolution: Resolution of this band.
-        :param str resolution_unit: Unit of the resolution.
-        :param float wavelength_center: Center position of wavelength.
-        :param float wavelength_fwhm: Full width at half maximum value of the wavelength spread.
-        :param float wavelength_min: Minimum wavelength this band is sensitive to.
-        :param float wavelength_max: Maximum wavelength this band is sensitive to.
-        :param str wavelength_unit: Units the wavelength is expressed in.
+        .. note::
+            - See :meth:`Catalog.add_band` for additional kwargs.
 
         :return: JSON API representation of the band.
         :rtype: dict
@@ -451,55 +404,9 @@ class Catalog(Service):
 
         :param str product_id: (Required) Product to which this band belongs.
         :param str name: Name or id of band to modify.
-        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
-        :param list(int) data_range: A list specifying the min and max values for the data in this band.
-        :param str dtype: The data type used to store this band e.g Byte or Uint16 or Float32.
-        :param int jpx_layer: If data is processed to JPEG2000, which layer is the band in. Use 0 for other formats.
-        :param int nbits: The number of bits of the dtype used to store this band.
-        :param int srcband: The 1-based index of the band in the jpx_layer specified.
-        :param int srcfile: If the product was processed into multiple files,
-                            which one is this in.
-        :param str type: The data interpretation of the band. One of ['spectral', 'derived', 'mask', 'class']
 
-        :param list(str) read: A list of groups, or user hashes to give read access to.
-        :param str color: The color interpretation of this band.
-                          One of ['Alpha', 'Black', 'Blue', 'Cyan', 'Gray', 'Green', 'Hue',
-                          'Ligntness', 'Magenta', 'Palette', 'Red', 'Saturation',
-                          'Undefined', 'YCbCr_Cb', 'YCbCr_Cr', 'YCbCr_Y', 'Yellow'].
-                          Must be 'Alpha' if `type` is 'mask'.
-                          Must be 'Palette' if `colormap_name` or `colormap` is set.
-        :param str colormap_name: A named colormap to use for this band, one of
-                                  ['plasma', 'magma', 'viridis', 'msw', 'inferno']
-        :param list(list(str)) colormap: A custom colormap to use for this band. Takes a list of lists, where each
-                                         nested list is a 4-tuple of rgba values to map pixels whose value is the index
-                                         of the tuple. i.e the colormap [["100", "20", "200", "255"]] would map pixels
-                                         whose value is 0 in the original band, to the rgba color vector at colormap[0].
-                                         Less than 2^nbits 4-tuples may be provided, and omitted values
-                                         will default map to black.
-
-        :param str data_description: Description of band data.
-        :param list(float) physical_range: If band represents a physical value e.g reflectance
-                                           or radiance what are the possible range of those values.
-        :param str data_unit: Units of the physical range e.g w/sr for radiance
-        :param str data_unit_description: Description of the data unit.
-        :param list(int) default_range: A good default scale for the band to use
-                                        when rastering for display purposes.
-        :param str description: Description of the band.
-        :param str name_common: Standard name for band
-        :param str name_vendor: What the vendor calls the band eg. B1
-        :param int vendor_order: The index of the band in the vendors band tables.
-                                 Useful for referencing the band to other processing
-                                 properties like surface reflectance.
-        :param int nodata:
-        :param str processing_level: Description of how the band was processed if at all.
-        :param int res_factor: Scaling of this band relative to the native band resolution.
-        :param int resolution: Resolution of this band.
-        :param str resolution_unit: Unit of the resolution.
-        :param float wavelength_center: Center position of wavelength.
-        :param float wavelength_fwhm: Full width at half maximum value of the wavelength spread.
-        :param float wavelength_min: Minimum wavelength this band is sensitive to.
-        :param float wavelength_max: Maximum wavelength this band is sensitive to.
-        :param str wavelength_unit: Units the wavelength is expressed in.
+        .. note::
+            - See :meth:`Catalog.add_band` for additional kwargs.
 
         :return: JSON API representation of the band.
         :rtype: dict
@@ -612,63 +519,9 @@ class Catalog(Service):
         :param str product_id: (Required) Product to which this image belongs.
         :param str image_id: (Required) ID of the image to replace.
         :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
-        :param list(str) read: A list of groups, or user hashes to give read access to.
-                                     Defaults to the same as the parent product if not specified.
-        :param int absolute_orbit: Orbit number since mission start.
-        :param str acquired: Date the imagery was acquired
-        :param str archived: Date the imagery was archived.
-        :param float area: Surface area the image covers
-        :param float azimuth_angle:
-        :param float azimuth_angle_1:
-        :param list(float) bits_per_pixel: Average bits of data per pixel.
-        :param float bright_fraction: Fraction of the image that has reflectance greater than .4 in the blue band.
-        :param str bucket: Name of Google Cloud Bucket. Must be public bucket or Descartes Labs user bucket.
-        :param str catalog_id:
-        :param float cirrus_fraction: Fraction of pixel which are distorted by cirrus clouds.
-        :param float cloud_fraction: Fraction of pixels which are obscured by clouds.
-        :param float cloud_fraction_0: Fraction of pixels which are obscured by clouds.
-        :param str cs_code: Spatial coordinate system code eg. `EPSG:4326`
-        :param datastrip_id: ID of the data strip this image was taken in.
-        :param float degraded_fraction_0:
-        :param str descartes_version:
-        :param str directory: Subdirectory location.
-        :param float duration:
-        :param int duration_days:
-        :param float earth_sun_distance: Earth sun distance at time of image capture.
-        :param list(str) files: Names of the files this image is stored in.
-        :param list(str) file_md5s: File integrity checksums.
-        :param list(int) file_sizes: Number of bytes of each file
-        :param float fill_fraction: Fraction of this image which has data.
-        :param float geolocation_accuracy:
-        :param str|dict geometry: GeoJSON representation of the image coverage.
-        :param float geotrans: Geographic Translator values.
-        :param float gpt_time:
-        :param str identifier: Vendor scene identifier.
-        :param int ifg_tdelta_days:
-        :param float incidence_angle: Sensor incidence angle.
-        :param str pass: On which pass was this image taken.
-        :param str processed: Date which this image was processed.
-        :param str proj4: proj.4 transformation parameters
-        :param str projcs: Projection coordinate system.
-        :param str published: Date the image was published.
-        :param str radiometric_version:
-        :param list(int) raster_size: Dimensions of image in pixels in (width, height).
-        :param list(float) reflectance_scale: Scale factors converting TOA radiances to TOA reflectances
-        :param list(float) reflectance_scale_1:
-        :param int relative_orbit: Orbit number in revisit cycle.
-        :param float roll_angle:
-        :param str safe_id: Standard Archive Format for Europe.
-        :param str sat_id: Satellite identifier.
-        :param float scan_gap_interpolation:
-        :param float solar_azimuth_angle:
-        :param float solar_azimuth_angle_0:
-        :param float solar_azimuth_angle_1:
-        :param float solar_elevation_angle:
-        :param float solar_elevation_angle_0:
-        :param float solar_elevation_angle_1:
-        :param str tile_id:
-        :param float view_angle:
-        :param float view_angle_1:
+
+        .. note::
+            - See :meth:`Catalog.add_image` for additional kwargs.
 
         :return: JSON API representation of the image.
         :rtype: dict
@@ -692,62 +545,9 @@ class Catalog(Service):
         :param str product_id: (Required) Product to which this image belongs.
         :param str image_id: (Required) ID of the image to modify.
         :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
-        :param list(str) read: A list of groups, or user hashes to give read access to.
-        :param int absolute_orbit: Orbit number since mission start.
-        :param str acquired: Date the imagery was acquired
-        :param str archived: Date the imagery was archived.
-        :param float area: Surface area the image covers
-        :param float azimuth_angle:
-        :param float azimuth_angle_1:
-        :param list(float) bits_per_pixel: Average bits of data per pixel.
-        :param float bright_fraction: Fraction of the image that has reflectance greater than .4 in the blue band.
-        :param str bucket: Name of Google Cloud Bucket. Must be public bucket or Descartes Labs user bucket.
-        :param str catalog_id:
-        :param float cirrus_fraction: Fraction of pixel which are distorted by cirrus clouds.
-        :param float cloud_fraction: Fraction of pixels which are obscured by clouds.
-        :param float cloud_fraction_0: Fraction of pixels which are obscured by clouds.
-        :param str cs_code: Spatial coordinate system code eg. `EPSG:4326`
-        :param datastrip_id: ID of the data strip this image was taken in.
-        :param float degraded_fraction_0:
-        :param str descartes_version:
-        :param str directory: Subdirectory location.
-        :param float duration:
-        :param int duration_days:
-        :param float earth_sun_distance: Earth sun distance at time of image capture.
-        :param list(str) files: Names of the files this image is stored in.
-        :param list(str) file_md5s: File integrity checksums.
-        :param list(int) file_sizes: Number of bytes of each file
-        :param float fill_fraction: Fraction of this image which has data.
-        :param float geolocation_accuracy:
-        :param str|dict geometry: GeoJSON representation of the image coverage.
-        :param float geotrans: Geographic Translator values.
-        :param float gpt_time:
-        :param str identifier: Vendor scene identifier.
-        :param int ifg_tdelta_days:
-        :param float incidence_angle: Sensor incidence angle.
-        :param str pass: On which pass was this image taken.
-        :param str processed: Date which this image was processed.
-        :param str proj4: proj.4 transformation parameters
-        :param str projcs: Projection coordinate system.
-        :param str published: Date the image was published.
-        :param str radiometric_version:
-        :param list(int) raster_size: Dimensions of image in pixels (width, height).
-        :param list(float) reflectance_scale: Scale factors converting TOA radiances to TOA reflectances
-        :param list(float) reflectance_scale_1:
-        :param int relative_orbit: Orbit number in revisit cycle.
-        :param float roll_angle:
-        :param str safe_id: Standard Archive Format for Europe.
-        :param str sat_id: Satellite identifier.
-        :param float scan_gap_interpolation:
-        :param float solar_azimuth_angle:
-        :param float solar_azimuth_angle_0:
-        :param float solar_azimuth_angle_1:
-        :param float solar_elevation_angle:
-        :param float solar_elevation_angle_0:
-        :param float solar_elevation_angle_1:
-        :param str tile_id:
-        :param float view_angle:
-        :param float view_angle_1:
+
+        .. note::
+            - See :meth:`Catalog.add_image` for additional kwargs.
 
         :return: JSON API representation of the image.
         :rtype: dict
@@ -769,8 +569,9 @@ class Catalog(Service):
         :param str|file|list(str)|list(file) files: (Required) a reference to the file to upload.
         :param str product_id: (Required) The id of the product this image belongs to.
         :param dict metadata: Image metadata to use instead of the computed default values.
-        :param \**kwargs: All image metadata can also be passed as kwargs,
-            see :meth:`Catalog.add_image` for allowed fields.
+
+        .. note::
+            - See :meth:`Catalog.add_image` for additional kwargs.
         """
 
         if metadata is None:
@@ -825,9 +626,10 @@ class Catalog(Service):
             combined to make lower res pixels in overviews. Allowed resampler algorithms are:
             ['nearest', 'average', 'gauss', 'cubic', 'cubicspline', 'lanczos', 'average_mp',
             'average_magphase', 'mode'].
-        :param \**kwargs: Metadata for the new image; see :meth:`Catalog.add_image` for allowed fields.
 
-        .. note:: Only one of `proj4` or `wkt_srs` can be provided.
+        .. note::
+            - See :meth:`Catalog.add_image` for additional kwargs.
+            - Only one of `proj4` or `wkt_srs` can be provided.
         """
         if ndarray.dtype.name not in self.UPLOAD_NDARRAY_SUPPORTED_DTYPES:
             raise TypeError("{} is not in supported dtypes {}".format(ndarray.dtype.name,

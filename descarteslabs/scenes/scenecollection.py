@@ -471,7 +471,7 @@ class SceneCollection(Collection):
 
         try:
             arr, info = self._raster_client.ndarray(**full_raster_args)
-        except NotFoundError as e:
+        except NotFoundError:
             raise NotFoundError(
                 "Some or all of these IDs don't exist in the Descartes catalog: {}".format(full_raster_args["inputs"])
             )

@@ -74,7 +74,7 @@ def _download(inputs, bands_list, ctx, dtype, dest, format, raster_client=None):
 
     try:
         result = raster_client.raster(**full_raster_args)
-    except NotFoundError as e:
+    except NotFoundError:
         if len(inputs) == 1:
             msg = "'{}' does not exist in the Descartes catalog".format(inputs[0])
         else:

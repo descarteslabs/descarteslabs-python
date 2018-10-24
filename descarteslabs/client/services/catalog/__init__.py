@@ -1,3 +1,3 @@
-from .catalog import *  # flake8: noqa
+from .catalog import catalog, Catalog
 
-__all__ = ["Catalog"]
+__all__ = ["catalog", "Catalog"]

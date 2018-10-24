@@ -1,1 +1,3 @@
-from .filtering import Properties, GenericProperties  # flake8: noqa
+from .filtering import Properties, GenericProperties
+
+__all__ = ["Properties", "GenericProperties"]
