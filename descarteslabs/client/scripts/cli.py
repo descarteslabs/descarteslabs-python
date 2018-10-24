@@ -40,8 +40,8 @@ metadata_parser.add_argument('command', choices=['sources', 'summary', 'search',
 metadata_parser.add_argument('argument', nargs='?')
 metadata_parser.add_argument('-url', help='The url of the service')
 metadata_parser.add_argument('-place', help='A slug for a named place')
-metadata_parser.add_argument('-start_time', help='Start of valid date/time range (inclusive)')
-metadata_parser.add_argument('-end_time', help='End of valid date/time range (inclusive)')
+metadata_parser.add_argument('-start_datetime', help='Start of valid date/time range (inclusive)')
+metadata_parser.add_argument('-end_datetime', help='End of valid date/time range (inclusive)')
 metadata_parser.add_argument('-geom', help='Region of interest as GeoJSON or WKT')
 metadata_parser.add_argument('-params',
                              help='JSON String of additional key/value pairs for searching properties: tile_id, cloud_fraction, etc.')  # NOQA
