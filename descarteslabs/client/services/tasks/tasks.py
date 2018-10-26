@@ -639,6 +639,7 @@ class Tasks(Service):
                         minimum_seconds=None,
                         task_timeout=1800,
                         retry_count=0,
+                        **kwargs
                         ):
         """
         Creates a new task group from a function and returns an asynchronous
@@ -683,6 +684,7 @@ class Tasks(Service):
             minimum_concurrency=minimum_concurrency,
             minimum_seconds=minimum_seconds,
             task_timeout=task_timeout,
+            **kwargs
         )
 
         return CloudFunction(group_info.id, name=name, client=self, retry_count=retry_count)
@@ -712,6 +714,7 @@ class Tasks(Service):
                                minimum_seconds=None,
                                task_timeout=1800,
                                retry_count=0,
+                               **kwargs
                                ):
         """
         Creates or gets an asynchronous function. If a task group with the given
@@ -765,6 +768,7 @@ class Tasks(Service):
             minimum_seconds=minimum_seconds,
             task_timeout=task_timeout,
             retry_count=retry_count,
+            **kwargs
         )
 
     def create_webhook(self, group_id, name=None, label_path=None, label_separator=None):
