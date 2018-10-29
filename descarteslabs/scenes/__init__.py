@@ -131,7 +131,7 @@ View the NDVI composites:
 
 .. ipython::
 
-    @savefig composite.png
+    @savefig composite.png height=9in
     In [17]: dl.scenes.display(*monthly_composites.values(), title=list(monthly_composites.keys()))
 
 """
