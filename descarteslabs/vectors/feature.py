@@ -26,7 +26,7 @@ class Feature(object):
 
     properties : DotDict
         Fields describing the geometry.
-        Values can only be strings up to 256 characters or numeric types.
+        Values can be strings up to 256 characters, numeric types, or ``None``.
     """
 
     def __init__(self, geometry, properties, id=None):
@@ -77,7 +77,7 @@ class Feature(object):
         >>> polygon = {
         ...    'type': 'Polygon',
         ...    'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]}
-        >>> properties = {"temperature": 70.13, "size": "large"}
+        >>> properties = {"temperature": 70.13, "size": "large", "tags": None}
         >>> feature = Feature(geometry=polygon, properties=properties)
         >>> feature.geojson  # doctest: +SKIP
         {'geometry': {'coordinates': (((-95.0, 42.0),
