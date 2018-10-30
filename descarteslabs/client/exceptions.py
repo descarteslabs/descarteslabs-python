@@ -30,20 +30,24 @@ class ServerError(Exception):
     status = 500
 
 
-class BadRequestError(ServerError):
+class BadRequestError(ClientError):
     status = 400
 
 
-class NotFoundError(ServerError):
+class NotFoundError(ClientError):
     status = 404
 
 
-class ConflictError(ServerError):
+class ConflictError(ClientError):
     status = 409
 
 
-class RateLimitError(ServerError):
+class RateLimitError(ClientError):
     status = 429
+
+
+class RetryWithError(ClientError):
+    status = 449
 
 
 class GatewayTimeoutError(ServerError):
