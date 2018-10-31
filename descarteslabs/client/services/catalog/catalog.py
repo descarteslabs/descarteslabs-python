@@ -108,6 +108,7 @@ class Catalog(Service):
         :param str revisit: How often an AOI can expect updated data.
         :param str sensor: Name of the sensor used.
         :param str swath: How large an area the sensor captures at a given time.
+        :param list(str) writers: A list of groups, or user hashes to give read access to.
 
         :return: JSON API representation of the product.
         :rtype: dict
@@ -156,6 +157,7 @@ class Catalog(Service):
         :param str revisit: How often an AOI can expect updated data.
         :param str sensor: Name of the sensor used.
         :param str swath: How large an area the sensor captures at a given time.
+        :param list(str) writers: A list of groups, or user hashes to give read access to.
 
         :return: JSON API representation of the product.
         :rtype: dict
@@ -206,6 +208,7 @@ class Catalog(Service):
         :param str revisit: How often an AOI can expect updated data.
         :param str sensor: Name of the sensor used.
         :param str swath: How large an area the sensor captures at a given time.
+        :param list(str) writers: A list of groups, or user hashes to give read access to.
 
         :return: JSON API representation of the product.
         :rtype: dict
@@ -347,6 +350,7 @@ class Catalog(Service):
         :param float wavelength_min: Minimum wavelength this band is sensitive to.
         :param float wavelength_max: Maximum wavelength this band is sensitive to.
         :param str wavelength_unit: Units the wavelength is expressed in.
+        :param list(str) writers: A list of groups, or user hashes to give read access to.
 
         :return: JSON API representation of the band.
         :rtype: dict
@@ -497,8 +501,9 @@ class Catalog(Service):
         :param str tile_id:
         :param float view_angle:
         :param float view_angle_1:
+        :param list(str) writers: A list of groups, or user hashes to give read access to.
         :param dict extra_properties: User defined custom properties for this image.
-                Only 10 keys are allowed. The dict can only map strings to primitive types (str -> str|float|int).
+            Only 10 keys are allowed. The dict can only map strings to primitive types (str -> str|float|int).
 
         :return: JSON API representation of the image.
         :rtype: dict
@@ -526,6 +531,7 @@ class Catalog(Service):
         :return: JSON API representation of the image.
         :rtype: dict
         """
+
         check_deprecated_kwargs(kwargs, {"bpp": "bits_per_pixel"})
         if add_namespace:
             product_id = self.namespace_product(product_id)
