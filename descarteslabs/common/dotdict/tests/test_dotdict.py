@@ -437,28 +437,28 @@ class TestIndentedRepr(unittest.TestCase):
             },
             [4, 5, 6]
         ]
+        unicode_prefix = ''
+        set_start = '{'
+        set_end = '}'
+
         if six.PY2:  # repr of sets and unicode changed from py2 to py3
-            expected = """\
-            [
-              {
-                'bool': False,
-                (1, (2, 3)): set(['a', 'b', 'c']),
-                u'key': 1.01
-              },
-              [4, 5, 6]
-            ]"""
-        else:
-            expected = """\
-            [
-              {
-                'key': 1.01,
-                'bool': False,
-                (1, (2, 3)): {'a', 'b', 'c'}
-              },
-              [4, 5, 6]
-            ]"""
-        expected = textwrap.dedent(expected)
-        self.assertEqual(idr.repr(obj), expected)
+            unicode_prefix = 'u'
+            set_start = 'set(['
+            set_end = '])'
+
+        output = idr.repr(obj)
+
+        # The order is not guaranteed.  Look for individual lines.
+        # Since the comma depends on the position, skip those.
+        self.assertIn("[\n", output)
+        self.assertIn("  {\n", output)
+        self.assertIn("\n    {}'key': 1.01".format(unicode_prefix), output)
+        self.assertIn("\n    'bool': False", output)
+        self.assertIn("\n    (1, (2, 3)): {}'a', 'b', 'c'{}".format(
+            set_start, set_end), output)
+        self.assertIn("\n  }", output)
+        self.assertIn("\n  [4, 5, 6]", output)
+        self.assertIn("\n]", output)
 
     def test_idr_truncates_str(self):
         idr = IndentedRepr()
