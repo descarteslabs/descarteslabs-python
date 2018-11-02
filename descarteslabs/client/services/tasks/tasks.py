@@ -122,7 +122,7 @@ class Tasks(Service):
             task uses substantially more memory it will be killed. The value
             should be a string and can use postfixes such as Mi, Gi, MB, GB, etc
             (e.g. `"4Gi"`, `"500MB"`). If no unit is specified it is assumed to be
-            in bytes. Default: 2Gi. Maximum: 64Gi.
+            in bytes. Default: 2Gi. Maximum: 96Gi.
         :param int maximum_concurrency: The maximum number of tasks to run in
             parallel. Default: 500. Maximum: 500. If you need higher concurrency
             contact your Descartes Labs customer success representative.
@@ -655,7 +655,7 @@ class Tasks(Service):
             task uses substantially more memory it will be killed. The value
             should be a string and can use postfixes such as Mi, Gi, MB, GB, etc
             (e.g. `"4Gi"`, `"500MB"`). If no unit is specified it is assumed to be
-            in bytes. Default: 2Gi. Maximum: 64Gi.
+            in bytes. Default: 2Gi. Maximum: 96Gi.
         :param int maximum_concurrency: The maximum number of tasks to run in
             parallel. Default: 500. Maximum: 500. If you need higher concurrency
             contact your Descartes Labs customer success representative.
@@ -731,7 +731,7 @@ class Tasks(Service):
             task uses substantially more memory it will be killed. The value
             should be a string and can use postfixes such as Mi, Gi, MB, GB, etc
             (e.g. `"4Gi"`, `"500MB"`). If no unit is specified it is assumed to be
-            in bytes. Default: 2Gi. Maximum: 64Gi.
+            in bytes. Default: 2Gi. Maximum: 96Gi.
         :param int maximum_concurrency: The maximum number of tasks to run in
             parallel. Default: 500. Maximum: 500. If you need higher concurrency
             contact your Descartes Labs customer success representative.
