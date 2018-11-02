@@ -124,10 +124,11 @@ import shapely.geometry
 import six
 import threading
 
-from geojson import Feature, FeatureCollection, GeometryCollection, GeoJSON
 from six.moves import reprlib
 
 from descarteslabs.client.services.raster import Raster
+
+from . import _helpers
 
 
 class GeoContext(object):
@@ -417,7 +418,7 @@ class AOI(GeoContext):
                 # parallel access to `self._geometry.__geo_interface__`
                 return self._geometry.__geo_interface__
         elif self._bounds is not None:
-            return self._polygon_from_bounds(self._bounds)
+            return _helpers._polygon_from_bounds(self._bounds)
 
     def assign(self,
                geometry="unchanged",
@@ -464,7 +465,7 @@ class AOI(GeoContext):
                              shape,
                              ):
         if geometry is not None and geometry != "unchanged":
-            geometry = self._interpret_geometry_like(geometry)
+            geometry = _helpers.geometry_like_to_shapely(geometry)
 
         # test that bounds are sane, and in WGS84
         if bounds is not None and bounds != "unchanged":
@@ -474,7 +475,7 @@ class AOI(GeoContext):
                 else:
                     raise ValueError("A geometry must be given with which to update the bounds")
             else:
-                self._test_valid_bounds(bounds)
+                _helpers.test_valid_bounds(bounds)
                 bounds = tuple(bounds)
 
         if shape != "unchanged" and shape is not None:
@@ -512,97 +513,6 @@ class AOI(GeoContext):
                     "If you're assigning new geometry, assign new bounds as well "
                     "(use `bounds='update'` to use the bounds of the new geometry)."
                 )
-
-    @classmethod
-    def _polygon_from_bounds(cls, bounds):
-        return {
-            "type": "Polygon",
-            "coordinates": ((
-                (bounds[2], bounds[1]),
-                (bounds[2], bounds[3]),
-                (bounds[0], bounds[3]),
-                (bounds[0], bounds[1]),
-                (bounds[2], bounds[1]),
-            ),)
-        }
-
-    @classmethod
-    def _test_valid_bounds(cls, bounds):
-        """
-        Test given bounds are in correct order and are valid WGS84 lat-lon values
-
-        Raises TypeError or ValueError if bounds are invalid
-        """
-        try:
-            if not isinstance(bounds, (list, tuple)):
-                raise TypeError()
-
-            if len(bounds) != 4:
-                raise ValueError(
-                    "Bounds must a sequence of (minx, miny, maxx, maxy), "
-                    "got sequence of length {}".format(len(bounds))
-                )
-        except TypeError:
-            six.raise_from(
-                TypeError("Bounds must a sequence of (minx, miny, maxx, maxy), got {}".format(type(bounds))),
-                None
-            )
-        if not (-180 < bounds[0] < 180 and
-                -90 < bounds[1] < 90 and
-                -180 < bounds[2] < 180 and
-                -90 < bounds[3] < 90):
-            raise ValueError("Bounds must be in EPSG:4326 (WGS84 lat-lon) coordinates")
-
-        if bounds[0] >= bounds[2]:
-            raise ValueError("minx >= maxx in given bounds, should be (minx, miny, maxx, maxy)")
-        if bounds[1] >= bounds[3]:
-            raise ValueError("miny >= maxy in given bounds, should be (minx, miny, maxx, maxy)")
-
-    @classmethod
-    def _interpret_geometry_like(cls, geometry):
-        geo_interface = getattr(geometry, '__geo_interface__', None)
-        if geo_interface is None and not isinstance(geometry, dict):
-            raise ValueError(
-                "geometry not recognized as GeoJSON or geometry-like with a `__geo_interface__`: {}".format(geometry))
-
-        # convert geometry to shapely
-        if not isinstance(geometry, shapely.geometry.base.BaseGeometry):
-            geometry_like = geometry if geo_interface else cls._as_geojson_instance(geometry)
-            try:
-                geometry = shapely.geometry.shape(geometry_like)
-            except Exception:
-                raise ValueError(
-                    "Could not interpret the given geometry {} as a Shapely shape".format(geometry)
-                )
-
-        # test that geometry is in WGS84
-        geom_bounds = geometry.bounds
-        try:
-            cls._test_valid_bounds(geom_bounds)
-        except ValueError:
-            six.raise_from(ValueError("Geometry must be in EPSG:4326 (WGS84 lat-lon) coordinates"), None)
-
-        return geometry
-
-    @classmethod
-    def _as_geojson_instance(cls, geojson_dict):
-        try:
-            geojson = GeoJSON.to_instance(geojson_dict, strict=True)
-        except (TypeError, KeyError, UnicodeEncodeError) as ex:
-            raise ValueError("geometry not recognized as valid GeoJSON ({}): {}".format(str(ex), geojson_dict))
-        # Shapely cannot handle GeoJSON Features or FeatureCollections
-        if isinstance(geojson, Feature):
-            geojson = geojson.geometry
-        elif isinstance(geojson, FeatureCollection):
-            features = []
-            for feature in geojson.features:
-                try:
-                    features.append(GeoJSON.to_instance(feature, strict=True).geometry)
-                except (TypeError, KeyError, UnicodeEncodeError) as ex:
-                    raise ValueError(
-                        "feature in FeatureCollection not recognized as valid ({}): {}".format(str(ex), feature))
-            geojson = GeometryCollection(features)
-        return geojson
 
 
 class DLTile(GeoContext):

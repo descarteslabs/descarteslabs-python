@@ -43,79 +43,7 @@ class TestGeoContext(unittest.TestCase):
 
 
 class TestAOI(unittest.TestCase):
-    def test_polygon_from_bounds(self):
-        bounds = (-95.8364984, 39.2784859, -92.0686956, 42.7999878)
-        geom = {
-            'coordinates': ((
-                (-92.0686956, 39.2784859),
-                (-92.0686956, 42.7999878),
-                (-95.8364984, 42.7999878),
-                (-95.8364984, 39.2784859),
-                (-92.0686956, 39.2784859)
-            ),),
-            'type': 'Polygon'
-        }
-        self.assertEqual(geom, shapely.geometry.box(*bounds).__geo_interface__)
-        self.assertEqual(geocontext.AOI._polygon_from_bounds(bounds), shapely.geometry.box(*bounds).__geo_interface__)
-
-    def test_init_base_params(self):
-        geom = {
-            'coordinates': [[
-                [-93.52300099792355, 41.241436141055345],
-                [-93.7138666, 40.703737],
-                [-94.37053769704536, 40.83098709945576],
-                [-94.2036617, 41.3717716],
-                [-93.52300099792355, 41.241436141055345]],
-            ],
-            'type': 'Polygon'
-        }
-        resolution = 40
-
-        ctx = geocontext.AOI(geom, resolution)
-        self.assertEqual(ctx.resolution, resolution)
-        self.assertEqual(ctx.bounds, (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716))
-        self.assertIsInstance(ctx.geometry, shapely.geometry.Polygon)
-
-    def test_invalid_bounds(self):
-        bounds_utm = (361760.0, 4531200.0, 515360.0, 4684800.0)
-        bounds_wgs84 = (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716)
-        bounds_wrong_order = (bounds_wgs84[2], bounds_wgs84[1], bounds_wgs84[0], bounds_wgs84[3])
-        bounds_wrong_number = bounds_wgs84[:2]
-        bounds_wrong_type = dict(left=1, right=2, top=3, bottom=4)
-        bounds_point = (-90.0, 35.0, -90.0, 35.0)
-
-        geocontext.AOI._test_valid_bounds(bounds_wgs84)
-
-        with self.assertRaises(ValueError):
-            geocontext.AOI._test_valid_bounds(bounds_utm)
-        with self.assertRaises(ValueError):
-            geocontext.AOI._test_valid_bounds(bounds_wrong_order)
-        with self.assertRaises(ValueError):
-            geocontext.AOI._test_valid_bounds(bounds_wrong_number)
-        with self.assertRaises(TypeError):
-            geocontext.AOI._test_valid_bounds(bounds_wrong_type)
-        with self.assertRaises(ValueError):
-            geocontext.AOI._test_valid_bounds(bounds_point)
-
-    def test_geojson_feature(self):
-        feature = {
-            'type': 'Feature',
-            'geometry': {
-                'coordinates': ((
-                    (-93.52300099792355, 41.241436141055345),
-                    (-93.7138666, 40.703737),
-                    (-94.37053769704536, 40.83098709945576),
-                    (-94.2036617, 41.3717716),
-                    (-93.52300099792355, 41.241436141055345)),
-                ),
-                'type': 'Polygon'
-            }
-        }
-        bounds_wgs84 = (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716)
-        ctx = geocontext.AOI(feature, bounds=bounds_wgs84, resolution=40, crs="EPSG:3857")
-        self.assertEqual(ctx.__geo_interface__, feature['geometry'])
-
-    def test_geojson_featurecollection(self):
+    def test_init(self):
         feature = {
             'type': 'Feature',
             'geometry': {
@@ -134,7 +62,11 @@ class TestAOI(unittest.TestCase):
             'features': [feature, feature, feature],
         }
         bounds_wgs84 = (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716)
-        ctx = geocontext.AOI(collection, bounds=bounds_wgs84, resolution=40, crs="EPSG:3857")
+        resolution = 40
+        ctx = geocontext.AOI(collection, resolution=resolution)
+        self.assertEqual(ctx.resolution, resolution)
+        self.assertEqual(ctx.bounds, bounds_wgs84)
+        self.assertIsInstance(ctx.geometry, shapely.geometry.GeometryCollection)
         self.assertEqual(ctx.__geo_interface__['type'], 'GeometryCollection')
         self.assertEqual(ctx.__geo_interface__['geometries'][0], feature['geometry'])
 
@@ -143,26 +75,6 @@ class TestAOI(unittest.TestCase):
             geocontext.AOI(resolution=40, shape=(120, 280))
         with self.assertRaises(TypeError):
             geocontext.AOI(shape=120)
-
-    def test_invalid_geometry(self):
-        valid_geom = {
-            'coordinates': [[
-                [-93.52300099792355, 41.241436141055345],
-                [-93.7138666, 40.703737],
-                [-94.37053769704536, 40.83098709945576],
-                [-94.2036617, 41.3717716],
-                [-93.52300099792355, 41.241436141055345]],
-            ],
-            'type': 'Polygon'
-        }
-        self.assertRaises(ValueError, geocontext.AOI, 1.2)
-        self.assertRaises(ValueError, geocontext.AOI, {})
-        self.assertRaises(ValueError, geocontext.AOI, dict(valid_geom, type='Foo'))
-        self.assertRaises(ValueError, geocontext.AOI, dict(valid_geom, coordinates=1))
-        self.assertRaises(ValueError, geocontext.AOI, {
-            "type": "FeatureCollection",
-            "features": [{"type": "Feature", "geometry": valid_geom}, "hey"],
-        })
 
     def test_raster_params(self):
         geom = {
