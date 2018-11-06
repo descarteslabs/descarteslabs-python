@@ -102,6 +102,7 @@ class Tasks(Service):
             container_image=None,
             name=None,
             cpus=1,
+            gpus=0,
             memory='2Gi',
             maximum_concurrency=None,
             minimum_concurrency=None,
@@ -118,6 +119,8 @@ class Tasks(Service):
         :param str name: An optional name used to later help identify the function.
         :param int cpus: The number of CPUs requested for a single task. A task
             might be throttled if it uses more CPU. Default: 1. Maximum: 32.
+        :param int gpus: The number of GPUs requested for a single task. As of
+            right now, a maximum of 1 GPU is supported. Default: 0. Maximum: 1.
         :param str memory: The maximum memory requirement for a single task. If a
             task uses substantially more memory it will be killed. The value
             should be a string and can use postfixes such as Mi, Gi, MB, GB, etc
@@ -150,6 +153,7 @@ class Tasks(Service):
             'function': _serialize_function(function),
             'function_python_version': ".".join(str(part) for part in sys.version_info[:3]),
             'cpu': cpus,
+            'gpu': gpus,
             'mem': memory,
             'worker_timeout': task_timeout,
             'maximum_concurrency': maximum_concurrency,
@@ -633,6 +637,7 @@ class Tasks(Service):
         return DotList(rerun)
 
     def create_function(self, f, image=None, name=None, cpus=1,
+                        gpus=0,
                         memory='2Gi',
                         maximum_concurrency=None,
                         minimum_concurrency=None,
@@ -651,6 +656,8 @@ class Tasks(Service):
         :param str name: An optional name used to later help identify the function.
         :param int cpus: The number of CPUs requested for a single task. A task
             might be throttled if it uses more CPU. Default: 1. Maximum: 32.
+        :param int gpus: The number of GPUs requested for a single task. As of
+            right now, a maximum of 1 GPU is supported. Default: 0. Maximum: 1.
         :param str memory: The maximum memory requirement for a single task. If a
             task uses substantially more memory it will be killed. The value
             should be a string and can use postfixes such as Mi, Gi, MB, GB, etc
@@ -679,7 +686,7 @@ class Tasks(Service):
         """
         group_info = self.new_group(
             f, container_image=image, name=name,
-            cpus=cpus, memory=memory,
+            cpus=cpus, gpus=gpus, memory=memory,
             maximum_concurrency=maximum_concurrency,
             minimum_concurrency=minimum_concurrency,
             minimum_seconds=minimum_seconds,
@@ -708,6 +715,7 @@ class Tasks(Service):
         return CloudFunction(group_info.id, name=name, client=self)
 
     def create_or_get_function(self, f, image=None, name=None, cpus=1,
+                               gpus=0,
                                memory='2Gi',
                                maximum_concurrency=None,
                                minimum_concurrency=None,
@@ -727,6 +735,8 @@ class Tasks(Service):
         :param str name: An optional name used to later help identify the function.
         :param int cpus: The number of CPUs requested for a single task. A task
             might be throttled if it uses more CPU. Default: 1. Maximum: 32.
+        :param int gpus: The number of GPUs requested for a single task. As of
+            right now, a maximum of 1 GPU is supported. Default: 0. Maximum: 1.
         :param str memory: The maximum memory requirement for a single task. If a
             task uses substantially more memory it will be killed. The value
             should be a string and can use postfixes such as Mi, Gi, MB, GB, etc
@@ -762,7 +772,7 @@ class Tasks(Service):
                 return cached
         return self.create_function(
             f, image=image, name=name, cpus=cpus,
-            memory=memory,
+            gpus=gpus, memory=memory,
             maximum_concurrency=maximum_concurrency,
             minimum_concurrency=minimum_concurrency,
             minimum_seconds=minimum_seconds,
