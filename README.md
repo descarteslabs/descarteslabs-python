@@ -10,9 +10,8 @@ Changelog
 
 ## [Unreleased]
 
-## [0.13.2] - 2018-11-06
+## [0.14.0] - 2018-11-07
 ### Changed
-- `FutureTask` inheritance changed from `dict` to `object`.
 - `scenes.GeoContext`: better defaults and `bounds_crs` parameter
   - `bounds` are no longer limited to WGS84, but can be expressed in any `bounds_crs`
   - New `Scene.default_ctx` uses a Scene's `geotrans` to more accurately determine a `GeoContext` that will result in no warping of the original data, better handling sinusoidal and other non-rectilinear coordinate reference systems.
@@ -20,6 +19,10 @@ Changelog
     They will now be more accurate to the original, unwarped data, but if you were relying on the old defaults, you should now explicitly set the `bounds` to `geometry.bounds`,
     `bounds_crs` to `"EPSG:4326"`, and `align_pixels` to True.
 - `Scene.coverage` and `SceneCollection.filter_coverage` accept any geometry-like object, not just a `GeoContext`.
+
+## [0.13.2] - 2018-11-06
+### Changed
+- `FutureTask` inheritance changed from `dict` to `object`.
 
 ### Added
 - Can now specify a GPU parameter for tasks.
@@ -277,7 +280,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.2...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.12.0...v0.13.0
