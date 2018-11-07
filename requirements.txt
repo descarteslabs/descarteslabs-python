@@ -1,3 +1,4 @@
+affine>=2.2.1
 blosc;platform_system!="Windows"
 cachetools
 futures;python_version=="2.7"
