@@ -12,7 +12,14 @@ Changelog
 
 ## [0.13.2] - 2018-11-06
 ### Changed
-- `FutureTask inheritance changed from `dict` to `object`.
+- `FutureTask` inheritance changed from `dict` to `object`.
+- `scenes.GeoContext`: better defaults and `bounds_crs` parameter
+  - `bounds` are no longer limited to WGS84, but can be expressed in any `bounds_crs`
+  - New `Scene.default_ctx` uses a Scene's `geotrans` to more accurately determine a `GeoContext` that will result in no warping of the original data, better handling sinusoidal and other non-rectilinear coordinate reference systems.
+  - **Important:** the default GeoContexts will now return differently-sized rasters than before!
+    They will now be more accurate to the original, unwarped data, but if you were relying on the old defaults, you should now explicitly set the `bounds` to `geometry.bounds`,
+    `bounds_crs` to `"EPSG:4326"`, and `align_pixels` to True.
+- `Scene.coverage` and `SceneCollection.filter_coverage` accept any geometry-like object, not just a `GeoContext`.
 
 ### Added
 - Can now specify a GPU parameter for tasks.

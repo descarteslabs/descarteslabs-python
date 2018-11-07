@@ -3,6 +3,7 @@ import mock
 import multiprocessing
 import concurrent.futures
 import copy
+import warnings
 
 from descarteslabs.scenes import geocontext
 import shapely.geometry
@@ -66,15 +67,10 @@ class TestAOI(unittest.TestCase):
         ctx = geocontext.AOI(collection, resolution=resolution)
         self.assertEqual(ctx.resolution, resolution)
         self.assertEqual(ctx.bounds, bounds_wgs84)
+        self.assertEqual(ctx.bounds_crs, 'EPSG:4326')
         self.assertIsInstance(ctx.geometry, shapely.geometry.GeometryCollection)
         self.assertEqual(ctx.__geo_interface__['type'], 'GeometryCollection')
         self.assertEqual(ctx.__geo_interface__['geometries'][0], feature['geometry'])
-
-    def test_invalid(self):
-        with self.assertRaises(ValueError):
-            geocontext.AOI(resolution=40, shape=(120, 280))
-        with self.assertRaises(TypeError):
-            geocontext.AOI(shape=120)
 
     def test_raster_params(self):
         geom = {
@@ -104,13 +100,6 @@ class TestAOI(unittest.TestCase):
             "dimensions": None,
         }
         self.assertEqual(raster_params, expected)
-
-    def test_help_with_too_big_resolution(self):
-        aoi = geocontext.AOI(resolution=10, bounds=(-100, 35, -99.9, 35.1), crs="EPSG:4326")
-        with self.assertRaises(ValueError):
-            aoi.raster_params
-        aoi = aoi.assign(crs="EPSG:3857")
-        aoi.raster_params
 
     def test_assign(self):
         geom = {
@@ -146,10 +135,133 @@ class TestAOI(unittest.TestCase):
         self.assertEqual(ctx_updated.bounds, geom_overlaps.bounds)
 
         geom_doesnt_overlap = shapely.affinity.translate(geom, xoff=3)
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegexp(ValueError, "Geometry and bounds do not intersect"):
             ctx.assign(geometry=geom_doesnt_overlap)
         ctx_doesnt_overlap_updated = ctx.assign(geometry=geom_doesnt_overlap, bounds="update")
         self.assertEqual(ctx_doesnt_overlap_updated.bounds, geom_doesnt_overlap.bounds)
+
+        with self.assertRaisesRegexp(ValueError, "A geometry must be given with which to update the bounds"):
+            ctx.assign(bounds="update")
+
+    def test_assign_update_bounds_crs(self):
+        ctx = geocontext.AOI(bounds_crs="EPSG:32615")
+        self.assertEqual(ctx.bounds_crs, "EPSG:32615")
+        geom = shapely.geometry.Point(-20, 30).buffer(1).envelope
+
+        ctx_no_update_bounds = ctx.assign(geometry=geom)
+        self.assertEqual(ctx_no_update_bounds.bounds_crs, "EPSG:32615")
+
+        ctx_update_bounds = ctx.assign(geometry=geom, bounds="update")
+        self.assertEqual(ctx_update_bounds.bounds_crs, "EPSG:4326")
+
+        with self.assertRaisesRegexp(ValueError, "Can't compute bounds from a geometry while also explicitly setting"):
+            ctx = geocontext.AOI(geometry=geom, resolution=40, bounds_crs="EPSG:32615")
+
+    def test_validate_bounds_values_for_bounds_crs__latlon(self):
+        # invalid latlon bounds
+        with self.assertRaisesRegexp(ValueError, "Bounds must be in lat-lon coordinates"):
+            geocontext.AOI(bounds_crs="EPSG:4326", bounds=[500000, 2000000, 501000, 2001000])
+        # valid latlon bounds, no error should raise
+        geocontext.AOI(bounds_crs="EPSG:4326", bounds=[12, -41, 14, -40])
+
+    def test_validate_bounds_values_for_bounds_crs__non_latlon(self):
+        # valid latlon bounds, should warn
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            ctx = geocontext.AOI(bounds_crs="EPSG:32615", bounds=(12, -41, 14, -40))
+            self.assertEqual(ctx.bounds_crs, "EPSG:32615")
+            self.assertEqual(ctx.bounds, (12, -41, 14, -40))
+            warning = w[0]
+            self.assertIn("You might have the wrong `bounds_crs` set.", str(warning.message))
+        # not latlon bounds, no error should raise
+        geocontext.AOI(bounds_crs="EPSG:32615", bounds=[500000, 2000000, 501000, 2001000])
+
+    def test_validate_shape(self):
+        with self.assertRaises(TypeError):
+            geocontext.AOI(shape=120)
+        with self.assertRaises(TypeError):
+            geocontext.AOI(shape=(120, 0, 0))
+
+    def test_validate_resolution(self):
+        with self.assertRaises(TypeError):
+            geocontext.AOI(resolution='foo')
+        with self.assertRaises(ValueError):
+            geocontext.AOI(resolution=-1)
+
+    def test_validate_resolution_shape(self):
+        with self.assertRaises(ValueError):
+            geocontext.AOI(resolution=40, shape=(120, 280))
+
+    def test_validate_bound_geom_intersection(self):
+        # bounds don't intersect
+        with self.assertRaisesRegexp(ValueError, "Geometry and bounds do not intersect"):
+            geocontext.AOI(
+                geometry=shapely.geometry.box(0, 0, 1, 1),
+                bounds=[5, 5, 6, 6],
+                bounds_crs="EPSG:4326",
+            )
+
+        # bounds do intersect; no error should raise
+        geocontext.AOI(
+            geometry=shapely.geometry.box(0, 0, 1, 1),
+            bounds=[0.5, 0.5, 3, 4],
+            bounds_crs="EPSG:4326",
+        )
+
+        # bounds_crs is not WGS84, so we can't check if bounds and geometry intersect or not---no error should raise
+        geocontext.AOI(
+            geometry=shapely.geometry.box(0, 0, 1, 1),
+            bounds_crs="EPSG:32615",
+            bounds=[500000, 2000000, 501000, 2001000],
+        )
+
+    def test_validate_reasonable_resolution(self):
+        # different CRSs --- no error
+        ctx = geocontext.AOI(
+            crs="EPSG:32615",
+            bounds_crs="EPSG:4326",
+            bounds=[0, 0, 1.5, 1.5],
+            resolution=15,
+        )
+        self.assertEqual(ctx.crs, "EPSG:32615")
+        self.assertEqual(ctx.bounds_crs, "EPSG:4326")
+        self.assertEqual(ctx.bounds, (0, 0, 1.5, 1.5))
+        self.assertEqual(ctx.resolution, 15)
+
+        # same CRSs, bounds < resolution --- no error
+        geocontext.AOI(
+            crs="EPSG:32615",
+            bounds_crs="EPSG:32615",
+            bounds=[200000, 5000000, 200100, 5000300],
+            resolution=15,
+        )
+
+        # same CRSs, width < resolution --- error
+        with self.assertRaisesRegexp(ValueError, "less than one pixel wide"):
+            geocontext.AOI(
+                crs="EPSG:32615",
+                bounds_crs="EPSG:32615",
+                bounds=[200000, 5000000, 200001, 5000300],
+                resolution=15,
+            )
+
+        # same CRSs, height < resolution --- error
+        with self.assertRaisesRegexp(ValueError, "less than one pixel tall"):
+            geocontext.AOI(
+                crs="EPSG:32615",
+                bounds_crs="EPSG:32615",
+                bounds=[200000, 5000000, 200100, 5000001],
+                resolution=15,
+            )
+
+        # same CRSs, width < resolution, CRS is lat-lon --- error including "decimal degrees"
+        with self.assertRaisesRegexp(ValueError, "resolution must be given in decimal degrees"):
+            geocontext.AOI(
+                crs="EPSG:4326",
+                bounds_crs="EPSG:4326",
+                bounds=[10, 10, 11, 11],
+                resolution=15,
+            )
 
 
 class TestDLTIle(unittest.TestCase):
@@ -195,6 +307,7 @@ class TestDLTIle(unittest.TestCase):
         self.assertEqual(tile.tilesize, 128)
         self.assertEqual(tile.crs, "EPSG:32615")
         self.assertEqual(tile.bounds, (361760.0, 4531200.0, 515360.0, 4684800.0))
+        self.assertEqual(tile.bounds_crs, "EPSG:32615")
         self.assertEqual(tile.raster_params, {
             "dltile": self.key,
             "align_pixels": False,

@@ -98,6 +98,7 @@ def do_setup():
         'futures;python_version=="2.7"',
         "geojson>=2.4.0",
         "shapely>=1.6.3,<2",
+        "affine>=2.2.1",
     ]
 
     # Python < 2.7.9 needs requests[security] to avoid SSL issues

@@ -3,7 +3,9 @@ import mock
 import datetime
 import collections
 import textwrap
+import warnings
 import shapely.geometry
+import numpy as np
 
 from descarteslabs.common.dotdict import DotDict
 from descarteslabs.scenes import Scene, geocontext
@@ -45,22 +47,76 @@ class TestScene(unittest.TestCase):
         self.assertIsInstance(scene.geometry, shapely.geometry.Polygon)
         self.assertIsInstance(scene.__geo_interface__, dict)
 
+    def test_default_ctx(self):
+        # test doesn't fail with nothing
+        ctx = MockScene({}, {}).default_ctx()
+        self.assertEqual(ctx, geocontext.AOI(bounds_crs=None, align_pixels=False))
+
+        # no geotrans
+        ctx = MockScene({}, {
+            'crs': 'EPSG:4326'
+        }).default_ctx()
+        self.assertEqual(ctx, geocontext.AOI(crs="EPSG:4326", bounds_crs=None, align_pixels=False))
+
+        # north-up geotrans - resolution
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")  # otherwise, the duplicate warning is suppressed the second time
+            ctx = MockScene({}, {
+                'crs': 'EPSG:4326',
+                # origin: (0, 0), pixel size: 2, rotation: 0 degrees
+                'geotrans': [0, 2, 0, 0, 0, -2],
+            }).default_ctx()
+            self.assertEqual(len(w), 0)
+        self.assertEqual(ctx.resolution, 2)
+
+        # non-north-up geotrans - resolution
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            ctx = MockScene({}, {
+                'crs': 'EPSG:4326',
+                # origin: (0, 0), pixel size: 2, rotation: 30 degrees
+                'geotrans': (0.0, 1.7320508075688774, -1, 0.0, 1, 1.7320508075688774)
+            }).default_ctx()
+            warning = w[0]
+            self.assertIn("The GeoContext will *not* return this Scene's original data", str(warning.message))
+        self.assertEqual(ctx.resolution, 2)
+
+        # north-up geotrans - bounds
+        ctx = MockScene({}, {
+            'crs': 'EPSG:4326',
+            # origin: (10, 20), pixel size: 2, rotation: 0 degrees
+            'geotrans': [10, 2, 0, 20, 0, -2],
+            'raster_size': [1, 2]
+        }).default_ctx()
+        self.assertEqual(ctx.bounds, (10, 16, 12, 20))
+
+        # non-north-up geotrans - bounds
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            ctx = MockScene({}, {
+                'crs': 'EPSG:4326',
+                # origin: (0, 0), pixel size: 2, rotation: 45 degrees
+                'geotrans': (0.0, np.sqrt(2), np.sqrt(2), 0.0, np.sqrt(2), -np.sqrt(2)),
+                'raster_size': [1, 1]
+            }).default_ctx()
+            warning = w[0]
+            self.assertIn("The GeoContext will *not* return this Scene's original data", str(warning.message))
+        diagonal = np.sqrt(2**2 + 2**2)
+        self.assertEqual(ctx.bounds, (0, -diagonal / 2, diagonal, diagonal / 2))
+
     def test_from_id(self):
         scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
         scene, ctx = Scene.from_id(scene_id)
 
         self.assertEqual(scene.properties.id, scene_id)
+        self.assertIsInstance(scene.geometry, shapely.geometry.Polygon)
         self.assertIsInstance(ctx, geocontext.AOI)
-        self.assertEqual(ctx.resolution, 15)
-        self.assertEqual(ctx.crs, "EPSG:32615")
-        self.assertEqual(ctx.bounds, scene.geometry.bounds)
-        self.assertEqual(ctx.geometry, None)
 
     def test_load_one_band(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr, info = scene.ndarray("red", ctx.assign(resolution=1000), raster_info=True)
 
-        self.assertEqual(arr.shape, (1, 230, 231))
+        self.assertEqual(arr.shape, (1, 239, 235))
         self.assertTrue(arr.mask[0, 2, 2])
         self.assertFalse(arr.mask[0, 115, 116])
         self.assertEqual(len(info["geoTransform"]), 6)
@@ -90,7 +146,7 @@ class TestScene(unittest.TestCase):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr = scene.ndarray("red green blue", ctx.assign(resolution=1000))
 
-        self.assertEqual(arr.shape, (3, 230, 231))
+        self.assertEqual(arr.shape, (3, 239, 235))
         self.assertTrue((arr.mask[:, 2, 2]).all())
         self.assertFalse((arr.mask[:, 115, 116]).all())
 
@@ -98,7 +154,7 @@ class TestScene(unittest.TestCase):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr = scene.ndarray("red green blue", ctx.assign(resolution=1000), bands_axis=-1)
 
-        self.assertEqual(arr.shape, (230, 231, 3))
+        self.assertEqual(arr.shape, (239, 235, 3))
         self.assertTrue((arr.mask[2, 2, :]).all())
         self.assertFalse((arr.mask[115, 116, :]).all())
 
@@ -112,17 +168,17 @@ class TestScene(unittest.TestCase):
         arr = scene.ndarray(["red", "nir"], ctx.assign(resolution=1000), mask_nodata=False, mask_alpha=False)
 
         self.assertFalse(hasattr(arr, "mask"))
-        self.assertEqual(arr.shape, (2, 230, 231))
+        self.assertEqual(arr.shape, (2, 239, 235))
 
     def with_alpha(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
 
         arr = scene.ndarray(["red", "alpha"], ctx.assign(resolution=1000))
-        self.assertEqual(arr.shape, (2, 230, 231))
+        self.assertEqual(arr.shape, (2, 239, 235))
         self.assertTrue((arr.mask == (arr.data[1] == 0)).all())
 
         arr = scene.ndarray(["alpha"], ctx.assign(resolution=1000), mask_nodata=False)
-        self.assertEqual(arr.shape, (1, 230, 231))
+        self.assertEqual(arr.shape, (1, 239, 235))
         self.assertTrue((arr.mask == (arr.data == 0)).all())
 
         with self.assertRaises(ValueError):
@@ -201,21 +257,20 @@ class TestScene(unittest.TestCase):
         self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00"))
 
     def test_coverage(self):
-        scene_geometry = shapely.geometry.mapping(shapely.geometry.Point(0.0, 0.0).buffer(1))
+        scene_geometry = shapely.geometry.Point(0.0, 0.0).buffer(1)
 
         scene = Scene(dict(id='foo', geometry=scene_geometry, properties={}), {})
 
-        # same geometry
-        ctx = geocontext.AOI(scene_geometry)
-        self.assertEqual(scene.coverage(ctx), 1.0)
+        # same geometry (as a GeoJSON)
+        self.assertEqual(scene.coverage(scene_geometry.__geo_interface__), 1.0)
 
-        # ctx is larger
-        ctx = geocontext.AOI(shapely.geometry.mapping(shapely.geometry.Point(0.0, 0.0).buffer(2)))
-        self.assertEqual(scene.coverage(ctx), 0.25)
+        # geom is larger
+        geom_larger = shapely.geometry.Point(0.0, 0.0).buffer(2)
+        self.assertEqual(scene.coverage(geom_larger), 0.25)
 
-        # ctx is smaller
-        ctx = geocontext.AOI(shapely.geometry.mapping(shapely.geometry.Point(0.0, 0.0).buffer(0.5)))
-        self.assertEqual(scene.coverage(ctx), 1.0)
+        # geom is smaller
+        geom_smaller = shapely.geometry.Point(0.0, 0.0).buffer(0.5)
+        self.assertEqual(scene.coverage(geom_smaller), 1.0)
 
     @mock.patch("descarteslabs.scenes.scene._download._download")
     def test_download(self, mock_geotiff):

@@ -140,21 +140,19 @@ class SceneCollection(Collection):
         else:
             return list(res)
 
-    def filter_coverage(self, ctx, minimum_coverage=1):
+    def filter_coverage(self, geom, minimum_coverage=1):
         """
-        Include scenes having footprints with a minimum
-        coverage compared to the geometry of the `GeoContext`.
+        Include only Scenes overlapping with ``geom`` by some fraction.
 
-        See :func:`Scene.coverage <descarteslabs.scenes.scene.Scene.coverage>`
+        See `Scene.coverage <descarteslabs.scenes.scene.Scene.coverage>`
         for getting coverage information for a scene.
 
         Parameters
         ----------
-        ctx : `GeoContext`
-            A `GeoContext` to use when filtering scenes
+        geom : GeoJSON-like dict, GeoContext, or object with __geo_interface__
+            Geometry to which to compare each Scene's geometry.
         minimum_coverage : float
-            Include scenes with greater than or equal to this
-            fraction of coverage.
+            Only include Scenes that cover ``geom`` by at least this fraction.
 
         Returns
         -------
@@ -172,7 +170,7 @@ class SceneCollection(Collection):
         >>> assert len(filtered_scenes) < len(scenes)  # doctest: +SKIP
         """
 
-        return self.filter(lambda scene: scene.coverage(ctx) >= minimum_coverage)
+        return self.filter(lambda scene: scene.coverage(geom) >= minimum_coverage)
 
     def stack(self,
               bands,

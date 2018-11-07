@@ -21,10 +21,11 @@ Example
 >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
 >>> ctx  # a default GeoContext to use when loading raster data from this Scene
 AOI(geometry=None,
-    resolution=15,
+    resolution=15.0,
     crs='EPSG:32615',
-    align_pixels=True,
-    bounds=(-95.8364984, 40.703737, -93.1167728, 42.7999878),
+    align_pixels=False,
+    bounds=(258292.5, 4503907.5, 493732.5, 4743307.5),
+    bounds_crs='EPSG:32615',
     shape=None)
 >>> scene.properties.id
 'landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'
@@ -43,7 +44,10 @@ from __future__ import division
 import six
 import json
 import datetime
+import warnings
+
 import shapely.geometry
+from affine import Affine
 
 from descarteslabs.client.addons import numpy as np
 
@@ -54,6 +58,7 @@ from descarteslabs.common.dotdict import DotDict
 
 from . import geocontext
 from . import _download
+from . import _helpers
 
 
 def _strptime_helper(s):
@@ -170,8 +175,7 @@ class Scene(object):
         """
         Return the metadata for a Descartes Labs scene ID as a Scene object.
 
-        Also returns a GeoContext with reasonable defaults to use
-        when loading the Scene's ndarray.
+        Also returns a GeoContext for loading the Scene's original, unwarped data.
 
         Parameters
         ----------
@@ -187,13 +191,8 @@ class Scene(object):
         scene: Scene
             Scene instance with metadata loaded from the Descartes Labs catalog
         ctx: AOI
-            A default GeoContext useful for loading this Scene.
-            These defaults are used:
-
-            * bounds: bounds of the Scene's geometry
-            * resolution: the finest resolution of any band in the scene
-            * crs: native CRS of the Scene (generally, a UTM CRS)
-            * align_pixels: True
+            A GeoContext for loading this Scene's original data.
+            The defaults used are described in `Scene.default_ctx`.
 
         Example
         -------
@@ -201,10 +200,11 @@ class Scene(object):
         >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
         >>> ctx
         AOI(geometry=None,
-            resolution=15,
+            resolution=15.0,
             crs='EPSG:32615',
-            align_pixels=True,
-            bounds=(-94.724166, 39.2784859, -92.0686956, 41.3717716),
+            align_pixels=False,
+            bounds=(348592.5, 4345567.5, 581632.5, 4582807.5),
+            bounds_crs='EPSG:32615',
             shape=None)
         >>> scene.properties.date
         datetime.datetime(2016, 7, 15, 16, 53, 59, 495435)
@@ -229,52 +229,111 @@ class Scene(object):
         bands = metadata_client.get_bands_by_id(scene_id)
         scene = cls(metadata, bands)
 
-        # TODO: not sure what default res should be
-        try:
-            default_resolution = min(filter(None, [b.get("resolution") for b in six.itervalues(bands)]))
-        except ValueError:
-            default_resolution = 100
+        return scene, scene.default_ctx()
 
-        # QUESTION: default bounds will now be in WGS84, not UTM
-        # indeed, there's no way to give bounds in UTM besides with a DLTile,
-        # which means you could get off-by-one issues with loading an entire scene
-        # at native resolution, where the WGS84 bounds result in a slightly differently
-        # sized raster than native UTM bounds would with reprojection errors
-        bounds = scene.geometry.bounds
-
-        default_ctx = geocontext.AOI(bounds=bounds,
-                                     resolution=default_resolution,
-                                     crs=scene.properties["crs"]
-                                     )
-
-        return scene, default_ctx
-
-    def coverage(self, ctx):
+    def default_ctx(self):
         """
-        Returns the fraction of the ``GeoContext`` geometry
-        covered by the scene geometry.
+        Return an AOI GeoContext for loading this Scene's original, unwarped data.
 
-        Parameters
-        ----------
-        ctx : GeoContext
-            A GeoContext to use when computing coverage
+        These defaults are used:
+
+        * resolution: resolution determined from the Scene's ``geotrans``
+        * crs: native CRS of the Scene (often, a UTM CRS)
+        * bounds: bounds determined from the Scene's ``geotrans`` and ``raster_size``
+        * bounds_crs: native CRS of the Scene
+        * align_pixels: False, to prevent interpolation snapping pixels to a new grid
+        * geometry: None
+
+        .. note::
+
+            Using this GeoContext will only return original, unwarped data
+            if the Scene is axis-aligned ("north-up") within the CRS.
+            If its ``geotrans`` applies a rotation, a warning will be raised.
+            In that case, use `Raster.ndarray` or `Raster.raster` to retrieve
+            original data. (The GeoContext paradigm requires bounds for consistentcy,
+            which are inherently axis-aligned.)
 
         Returns
         -------
-        float
+        ctx: AOI
+        """
+        resolution = None
+        bounds = None
+        bounds_crs = None
+        crs = self.properties.get('crs')
+
+        geotrans = self.properties.get('geotrans')
+        if geotrans is not None:
+            geotrans = Affine.from_gdal(*geotrans)
+            if not geotrans.is_rectilinear:
+                # NOTE: this may still be an insufficient check for some CRSs, i.e. polar stereographic?
+                warnings.warn(
+                    "The GeoContext will *not* return this Scene's original data, "
+                    "since it's rotated compared to the grid of the CRS. "
+                    "The array will be 'north-up', with the data rotated within it, "
+                    "and extra empty pixels padded around the side(s). "
+                    "To get the original, unrotated data, you must use the Raster API: "
+                    "`dl.raster.ndarray(scene.properties.id, ...)`."
+                )
+
+            scaling1, scaling2 = geotrans._scaling
+            if scaling1 == scaling2:
+                resolution = scaling1
+            else:
+                # if pixels aren't square (unlikely), we won't just pick a resolution---user has to figure that out.
+                warnings.warn(
+                    "Scene has non-square pixels, so no single resolution can be assigned. "
+                    "Use `shape` instead for more predictable results."
+                )
+
+            raster_size = self.properties.get('raster_size')
+            if raster_size is not None:
+                cols, rows = raster_size
+                # upper-left, upper-right, lower-left, lower-right in pixel coordinates
+                pixel_corners = [(0, 0), (cols, 0), (0, rows), (cols, rows)]
+                geo_corners = [geotrans * corner for corner in pixel_corners]
+                xs, ys = zip(*geo_corners)
+                bounds = (min(xs), min(ys), max(xs), max(ys))
+                bounds_crs = crs
+
+        return geocontext.AOI(
+            geometry=None,
+            resolution=resolution,
+            bounds=bounds,
+            bounds_crs=bounds_crs,
+            crs=crs,
+            align_pixels=False,
+        )
+
+    def coverage(self, geom):
+        """
+        The fraction of a geometry-like object covered by this Scene's geometry.
+
+        Parameters
+        ----------
+        geom : GeoJSON-like dict, GeoContext, or object with __geo_interface__
+            Geometry to which to compare this Scene's geometry
+
+        Returns
+        -------
+        coverage: float
+            The fraction of ``geom``'s area that overlaps with this Scene,
+            between 0 and 1.
 
         Example
         -------
         >>> import descarteslabs as dl
         >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-        >>> coverage = scene.coverage(ctx)  # doctest: +SKIP
-        >>> coverage  # doctest: +SKIP
-        1.0
-
+        >>> scene.coverage(scene.geometry.buffer(1))  # doctest: +SKIP
+        0.8
         """
-        intersection = shapely.geometry.shape(ctx.geometry) \
-            .intersection(shapely.geometry.shape(self.geometry))
-        return intersection.area / ctx.geometry.area
+        if isinstance(geom, geocontext.GeoContext):
+            shape = geom.geometry
+        else:
+            shape = _helpers.geometry_like_to_shapely(geom)
+
+        intersection = shape.intersection(self.geometry)
+        return intersection.area / shape.area
 
     def ndarray(self,
                 bands,
@@ -321,7 +380,7 @@ class Scene(object):
             from this scene back to the Descartes catalog, or use it with GDAL.
         resampler : str, default "near"
             Algorithm used to interpolate pixel values when scaling and transforming
-            the image to its new resolution or SRS. Possible values are
+            the image to its new resolution or CRS. Possible values are
             ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         raster_client : Raster, optional

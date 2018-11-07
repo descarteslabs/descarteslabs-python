@@ -103,6 +103,12 @@ You can pass ``bounds="update"`` to compute new bounds when assinging a new geom
     @savefig geocontext4.png
     dl.scenes.display(cutline_bounds_arr, size=4, title="Original GeoContext, new cutline and bounds")
 
+Bounds can be expressed in any coordinate reference system, set in ``bounds_crs``.
+They're typically either in the native CRS of the Scene, or in WGS84 when clipping to a geometry.
+Note that when computing bounds from a geometry, ``bounds_crs`` is automatically set to
+``"EPSG:4326"`` (short for WGS84 lat-lon coordinates), since that's the CRS in which
+the geometry is also defined.
+
 You can also use DLTiles to split up regions along a grid:
 
 .. ipython:: python
@@ -123,6 +129,7 @@ import copy
 import shapely.geometry
 import six
 import threading
+import warnings
 
 from six.moves import reprlib
 
@@ -142,7 +149,7 @@ class GeoContext(object):
 
     Specifically, a fully-defined GeoContext specifies:
 
-    * geometry to use as a cutline (WGS84), and/or bounds (WGS84)
+    * geometry to use as a cutline (WGS84), and/or bounds
     * resolution (m)
     * EPSG code of the output coordinate reference system
     * whether to align pixels to the output CRS
@@ -226,6 +233,7 @@ class AOI(GeoContext):
         "_crs",
         "_align_pixels",
         "_bounds",
+        "_bounds_crs",
         "_shape",
     )
 
@@ -235,6 +243,7 @@ class AOI(GeoContext):
                  crs=None,
                  align_pixels=True,
                  bounds=None,
+                 bounds_crs="EPSG:4326",
                  shape=None,
                  ):
         """
@@ -269,9 +278,13 @@ class AOI(GeoContext):
             native resolution and projection.
         bounds: 4-tuple, optional
             Clip scenes to these ``(min_x, min_y, max_x, max_y)`` bounds,
-            expressed in WGS84 (lat-lon) coordinates.
+            expressed in ``bounds_crs`` (which defaults to WGS84 lat-lon).
             ``bounds`` are automatically computed from ``geometry`` if not specified.
             Otherwise, ``bounds`` are required.
+        bounds_crs: str, optional, default "EPSG:4326"
+            The Coordinate Reference System of the ``bounds``,
+            given as an EPSG code (like ``"EPSG:4326"``), a PROJ.4 definition,
+            or an OGC CRS Well-Known Text string.
         shape: 2-tuple, optional
             ``(rows, columns)``, in pixels, the output raster should fit within;
             the longer side of the raster will be min(shape).
@@ -279,18 +292,20 @@ class AOI(GeoContext):
         """
         super(AOI, self).__init__()
 
-        self._validate_and_assign(
+        if bounds is None and geometry is not None:
+            bounds = "update"
+
+        # If no bounds were given, use the bounds of the geometry
+        self._assign(
             geometry,
             resolution,
             crs,
             align_pixels,
             bounds,
+            bounds_crs,
             shape,
         )
-
-        # If no bounds were given, use the bounds of the geometry
-        if self._bounds is None and self._geometry is not None:
-            self._bounds = self._geometry.bounds
+        self._validate()
 
     @property
     def geometry(self):
@@ -312,7 +327,7 @@ class AOI(GeoContext):
     @property
     def crs(self):
         """
-        str: Coordinate Reference System into which scenes will be projected,
+        str: Coordinate reference system into which scenes will be projected,
         expressed as an EPSG code (like ``"EPSG:4326"``), a PROJ.4 definition,
         or an OGC CRS Well-Known Text string
         """
@@ -342,9 +357,18 @@ class AOI(GeoContext):
     def bounds(self):
         """
         tuple: Clip scenes to these ``(min_x, min_y, max_x, max_y)`` bounds,
-        expressed in WGS84 (lat-lon) coordinates.
+        expressed in the coordinate reference system in ``bounds_crs``.
         """
         return self._bounds
+
+    @property
+    def bounds_crs(self):
+        """
+        str: The coordinate reference system of the ``bounds``,
+        given as an EPSG code (like ``"EPSG:4326"``), a PROJ.4 definition,
+        or an OGC CRS Well-Known Text string.
+        """
+        return self._bounds_crs
 
     @property
     def shape(self):
@@ -360,13 +384,15 @@ class AOI(GeoContext):
         dict: The properties of this AOI,
         as keyword arguments to use for ``Raster.ndarray`` or ``Raster.raster``.
 
-        Raises ValueError if ``self.bounds``, ``self.crs``, ``self.resolution``,
-        or ``self.align_pixels`` is None, or values are invalid.
+        Raises ValueError if ``self.bounds``, ``self.crs``, ``self.bounds_crs``,
+        ``self.resolution``, or ``self.align_pixels`` is None.
         """
         # Ensure that there can be no ambiguity: every parameter must be specified,
         # so every raster call using this context will return spatially equivalent data
         if self._bounds is None:
             raise ValueError("AOI must have bounds specified")
+        if self._bounds_crs is None:
+            raise ValueError("AOI must have bounds_crs specified")
         if self._crs is None:
             raise ValueError("AOI must have CRS specified")
         if self._resolution is None and self._shape is None:
@@ -381,26 +407,11 @@ class AOI(GeoContext):
 
         dimensions = (self._shape[1], self._shape[0]) if self._shape is not None else None
 
-        if self._resolution is not None and self._crs == "EPSG:4326":
-            # helpful warning about a common mistake
-            crs_width = self._bounds[2] - self._bounds[0]
-            crs_height = self._bounds[3] - self._bounds[1]
-            msg = (
-                "Output raster's {dim} ({dim_len:.4f} decimal degrees) is smaller than its resolution "
-                "({res:.4f} decimal degrees), meaning it would be less than one pixel {dim_adj}.\n"
-                "Remember that resolution is specified in units of the output CRS. "
-                "Since your CRS is EPSG:4326 (WGS84 lat-lon), resolution must be given in decimal degrees, not meters."
-            )
-            if crs_width < self._resolution:
-                raise ValueError(msg.format(dim="width", dim_len=crs_width, res=self._resolution, dim_adj="wide"))
-            if crs_height < self._resolution:
-                raise ValueError(msg.format(dim="height", dim_len=crs_height, res=self._resolution, dim_adj="tall"))
-
         return {
             "cutline": cutline,
             "resolution": self._resolution,
             "srs": self._crs,
-            "bounds_srs": "EPSG:4326",
+            "bounds_srs": self._bounds_crs,
             "align_pixels": self._align_pixels,
             "bounds": self._bounds,
             "dimensions": dimensions
@@ -410,15 +421,21 @@ class AOI(GeoContext):
     def __geo_interface__(self):
         """
         dict: ``self.geometry`` as a GeoJSON Geometry dict,
-        otherwise ``self.bounds`` as a GeoJSON Polygon dict if ``self.geometry`` is None.
+        otherwise ``self.bounds`` as a GeoJSON Polygon dict if ``self.geometry`` is None
+        and ``self.bounds_crs`` is ``"EPSG:4326"``, otherwise raises RuntimeError
         """
         if self._geometry is not None:
             with self._geometry_lock_:
                 # see comment in `GeoContext.__init__` for why we need to prevent
                 # parallel access to `self._geometry.__geo_interface__`
                 return self._geometry.__geo_interface__
-        elif self._bounds is not None:
+        elif self._bounds is not None and _helpers.is_wgs84_crs(self._bounds_crs):
             return _helpers._polygon_from_bounds(self._bounds)
+        else:
+            raise RuntimeError(
+                "AOI GeoContext must have a geometry set, or bounds set and a WGS84 `bounds_crs`, "
+                "to have a __geo_interface__"
+            )
 
     def assign(self,
                geometry="unchanged",
@@ -426,6 +443,7 @@ class AOI(GeoContext):
                crs="unchanged",
                align_pixels="unchanged",
                bounds="unchanged",
+               bounds_crs="unchanged",
                shape="unchanged",
                ):
         """
@@ -434,7 +452,10 @@ class AOI(GeoContext):
         Note
         ----
             If you are assigning a new geometry and want bounds to updated as
-            well, use ``bounds="update"``.
+            well, use ``bounds="update"``. This will also change ``bounds_crs``
+            to ``"EPSG:4326"``, since the geometry's coordinates are in WGS84
+            decimal degrees, so the new bounds determined from those coordinates
+            must be in that CRS as well.
 
             If you assign ``geometry`` without changing ``bounds``,
             the new AOI GeoContext will produce rasters with the same
@@ -446,47 +467,140 @@ class AOI(GeoContext):
         new : `AOI`
         """
         new = copy.deepcopy(self)
-        new._validate_and_assign(
+        new._assign(
             geometry,
             resolution,
             crs,
             align_pixels,
             bounds,
+            bounds_crs,
             shape,
         )
+        new._validate()
         return new
 
-    def _validate_and_assign(self,
-                             geometry,
-                             resolution,
-                             crs,
-                             align_pixels,
-                             bounds,
-                             shape,
-                             ):
+    def _validate(self):
+        # test that bounds are sane
+        if self._bounds is not None:
+            _helpers.test_valid_bounds(self._bounds)
+
+        # rough check that bounds values actually make sense for bounds_crs
+        if self._bounds_crs is not None and self._bounds is not None:
+            valid_latlon_bounds = _helpers.valid_latlon_bounds(self._bounds)
+            if _helpers.is_geographic_crs(self._bounds_crs):
+                if not valid_latlon_bounds:
+                    raise ValueError(
+                        "Bounds must be in lat-lon coordinates, "
+                        "but the given bounds are outside [-90, 90] for y or [-180, 180] for x."
+                    )
+            else:
+                if valid_latlon_bounds:
+                    # Warn that bounds are probably in the wrong CRS.
+                    # But we can't be sure without a proper tool for working with CRSs,
+                    # since bounds that look like valid lat-lon coords
+                    # *could* be valid in a different CRS, though unlikely.
+                    warnings.warn(
+                        "You might have the wrong `bounds_crs` set.\n"
+                        "Bounds appear to be in lat-lon decimal degrees, but the `bounds_crs` "
+                        "does not seem to be a geographic coordinate reference system "
+                        "(i.e. its units are not degrees, but meters, feet, etc.).\n\n"
+
+                        "If this is unexpected, set `bounds_crs='EPSG:4326'`."
+                    )
+
+        # validate shape
+        if self._shape is not None:
+            if not isinstance(self._shape, (list, tuple)) or len(self._shape) != 2:
+                raise TypeError("Shape must be a tuple of (rows, columns) in pixels")
+
+        # validate resolution
+        if self._resolution is not None:
+            if not isinstance(self._resolution, (int, float)):
+                raise TypeError(
+                    "Resolution must be an int or float, got type '{}'".format(type(self._resolution).__name__)
+                )
+            if self._resolution <= 0:
+                raise ValueError("Resolution must be greater than zero")
+
+        # can't set both resolution and shape
+        if self._resolution is not None and self._shape is not None:
+            raise ValueError("Cannot set both resolution and shape")
+
+        # check that bounds and geometry actually intersect (if bounds in wgs84)
+        if self._geometry is not None and self._bounds is not None and _helpers.is_wgs84_crs(self._bounds_crs):
+            bounds_shp = shapely.geometry.box(*self._bounds)
+            if not bounds_shp.intersects(self._geometry):
+                raise ValueError(
+                    "Geometry and bounds do not intersect. This would result in all data being masked. "
+                    "If you're assigning new geometry, assign new bounds as well "
+                    "(use `bounds='update'` to use the bounds of the new geometry)."
+                )
+
+        # Helpful warning about a common mistake: resolution < width
+        # The CRS of bounds and CRS of resolution must be the same to compare between those values
+
+        # This most often happens when switching from a projected to a geodetic CRS (i.e. UTM to WGS84)
+        # and not updating the (units of the) resolution accordingly, so you now have, say,
+        # 30 decimal degrees as your resolution. Probably not what you meant.
+
+        # TODO: better way of checking equivalence between CRSs than string equality
+        if (
+            self._crs is not None
+            and self._resolution is not None
+            and self._bounds is not None
+            and self._bounds_crs == self._crs
+        ):
+            crs_width = self._bounds[2] - self._bounds[0]
+            crs_height = self._bounds[3] - self._bounds[1]
+            msg = (
+                "Output raster's {dim} ({dim_len:.4f}) is smaller than its resolution "
+                "({res:.4f}), meaning it would be less than one pixel {dim_adj}.\n"
+                "Remember that resolution is specified in units of the output CRS, "
+                "which are not necessarily meters."
+            )
+            if _helpers.is_geographic_crs(self._crs):
+                msg += "\nSince your CRS is in lat-lon coordinates, resolution must be given in decimal degrees."
+
+            if crs_width < self._resolution:
+                raise ValueError(msg.format(dim="width", dim_len=crs_width, res=self._resolution, dim_adj="wide"))
+            if crs_height < self._resolution:
+                raise ValueError(msg.format(dim="height", dim_len=crs_height, res=self._resolution, dim_adj="tall"))
+
+    def _assign(self,
+                geometry,
+                resolution,
+                crs,
+                align_pixels,
+                bounds,
+                bounds_crs,
+                shape,
+                ):
+        # we use "unchanged" as a sentinel value, because None is a valid thing to set attributes to.
         if geometry is not None and geometry != "unchanged":
             geometry = _helpers.geometry_like_to_shapely(geometry)
 
-        # test that bounds are sane, and in WGS84
         if bounds is not None and bounds != "unchanged":
             if bounds == "update":
-                if geometry is not None:
+                if bounds_crs not in (None, "unchanged", "EPSG:4326"):
+                    raise ValueError(
+                        "Can't compute bounds from a geometry while also explicitly setting a `bounds_crs`.\n\n"
+
+                        "To resolve: don't set `bounds_crs`. It will be set to 'EPSG:4326' for you. "
+                        "(Though you can do so explicitly if you'd like.)\n\n"
+
+                        "Explanation: the coordinates in a geometry are latitudes and longitudes "
+                        "in decimal degrees, defined in the WGS84 coordinate reference system "
+                        "(referred to by the code EPSG:4326). When we infer `bounds` from a `geometry`, "
+                        "those bounds will be in the same coordinate reference system as the geometry---i.e., WGS84. "
+                        "Therefore, setting `bounds_crs` to anything besides 'EPSG:4326' doesn't make sense."
+                    )
+                bounds_crs = "EPSG:4326"
+                if geometry is not None and geometry != "unchanged":
                     bounds = geometry.bounds
                 else:
                     raise ValueError("A geometry must be given with which to update the bounds")
             else:
-                _helpers.test_valid_bounds(bounds)
                 bounds = tuple(bounds)
-
-        if shape != "unchanged" and shape is not None:
-            if not isinstance(shape, (list, tuple)) or len(shape) != 2:
-                raise TypeError("Shape must be a tuple of (rows, columns) in pixels")
-
-        if resolution != "unchanged" and resolution is not None:
-            if not isinstance(resolution, (int, float)):
-                raise TypeError("Resolution must be an int or float, got type '{}'".format(type(resolution).__name__))
-            if resolution <= 0:
-                raise ValueError("Resolution must be greater than zero")
 
         if geometry != "unchanged":
             self._geometry = geometry
@@ -498,21 +612,10 @@ class AOI(GeoContext):
             self._align_pixels = align_pixels
         if bounds != "unchanged":
             self._bounds = bounds
+        if bounds_crs != "unchanged":
+            self._bounds_crs = bounds_crs
         if shape != "unchanged":
             self._shape = shape
-
-        if self._resolution is not None and self._shape is not None:
-            raise ValueError("Cannot set both resolution and shape")
-
-        # test that bounds and geometry actually intersect
-        if self._geometry is not None and self._bounds is not None:
-            bounds_shp = shapely.geometry.box(*self._bounds)
-            if not bounds_shp.intersects(self._geometry):
-                raise ValueError(
-                    "Geometry and bounds do not intersect. This would result in all data being masked. "
-                    "If you're assigning new geometry, assign new bounds as well "
-                    "(use `bounds='update'` to use the bounds of the new geometry)."
-                )
 
 
 class DLTile(GeoContext):
@@ -530,6 +633,7 @@ class DLTile(GeoContext):
         "_pad",
         "_crs",
         "_bounds",
+        "_bounds_crs",
         "_geometry",
         "_zone",
         "_ti",
@@ -552,6 +656,7 @@ class DLTile(GeoContext):
         self._pad = properties["pad"]
         self._crs = properties["cs_code"]
         self._bounds = tuple(properties["outputBounds"])
+        self._bounds_crs = properties["cs_code"]
         self._zone = properties["zone"]
         self._ti = properties["ti"]
         self._tj = properties["tj"]
@@ -680,7 +785,7 @@ class DLTile(GeoContext):
     @property
     def crs(self):
         """
-        str: Coordinate Reference System into which scenes will be projected.
+        str: Coordinate reference system into which scenes will be projected.
         For DLTiles, this is always a UTM projection, given as an EPSG code.
         """
         return self._crs
@@ -689,10 +794,18 @@ class DLTile(GeoContext):
     def bounds(self):
         """
         tuple: The ``(min_x, min_y, max_x, max_y)`` of the area covered by
-        this DLTile, in UTM coordinates
+        this DLTile, in the UTM coordinate reference system given in ``bounds_crs``.
         """
-        # QUESTION: should this be in WGS84 to be consistent with the rest of GeoContext
         return self._bounds
+
+    @property
+    def bounds_crs(self):
+        """
+        str: The coordinate reference system of the ``bounds``,
+        given as an EPSG code (like ``"EPSG:32615"``).
+        A DLTile's CRS is always UTM.
+        """
+        return self._bounds_crs
 
     @property
     def geometry(self):
