@@ -37,7 +37,7 @@ datetime.datetime(2016, 7, 6, 16, 59, 42, 753476)
 >>> type(arr)
 <class 'numpy.ma.core.MaskedArray'>
 >>> arr.shape
-(3, 15259, 15340)
+(3, 15960, 15696)
 """
 
 from __future__ import division
@@ -404,7 +404,7 @@ class Scene(object):
         >>> type(arr)
         <class 'numpy.ma.core.MaskedArray'>
         >>> arr.shape
-        (3, 15259, 15340)
+        (3, 15960, 15696)
         >>> red_band = arr[0]
 
         Raises
