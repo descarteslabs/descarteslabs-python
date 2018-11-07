@@ -638,6 +638,9 @@ class DLTile(GeoContext):
         "_zone",
         "_ti",
         "_tj",
+        "_geotrans",
+        "_proj4",
+        "_wkt",
     )
 
     def __init__(self, dltile_dict):
@@ -660,6 +663,11 @@ class DLTile(GeoContext):
         self._zone = properties["zone"]
         self._ti = properties["ti"]
         self._tj = properties["tj"]
+
+        # these properties may not be present
+        self._geotrans = properties.get("geotrans", None)
+        self._proj4 = properties.get("proj4", None)
+        self._wkt = properties.get("wkt", None)
 
     @classmethod
     def from_latlon(cls, lat, lon, resolution, tilesize, pad, raster_client=None):
@@ -845,6 +853,33 @@ class DLTile(GeoContext):
             # are aligned with the same dltile. otherwise, pixel (0,0) in 1 image could be at
             # different coordinates than the other
         }
+
+    @property
+    def geotrans(self):
+        """
+        tuple: The 6-tuple GDAL geotrans for this DLTile in the shape
+        ``(a, b, c, d, e, f)`` where
+        a is the top left pixel's x-coordinate
+        b is the west-east pixel resolution
+        c is the row rotation, always 0 for DLTiles
+        d is the top left pixel's y-coordinate
+        e is the column rotation, always 0 for DLTiles
+        f is the north-south pixel resolution, always a negative value
+        """
+        if self._geotrans is None:
+            return None
+
+        return tuple(self._geotrans)
+
+    @property
+    def proj4(self):
+        "str: PROJ.4 definition for this DLTile's coordinate reference system"
+        return self._proj4
+
+    @property
+    def wkt(self):
+        "str: OGC Well-Known Text definition for this DLTile's coordinate reference system"
+        return self._wkt
 
     @property
     def __geo_interface__(self):

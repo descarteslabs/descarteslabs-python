@@ -288,7 +288,10 @@ class TestDLTIle(unittest.TestCase):
                 'ti': -1,
                 'tilesize': 128,
                 'tj': 37,
-                'zone': 15
+                'zone': 15,
+                'geotrans': [361760.0, 960.0, 0, 4684800.0, 0, -960.0],
+                'proj4': '+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs ',
+                'wkt': 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]' # noqa
             },
             'type': 'Feature'
         }
@@ -312,6 +315,9 @@ class TestDLTIle(unittest.TestCase):
             "dltile": self.key,
             "align_pixels": False,
         })
+        self.assertEqual(tile.geotrans, (361760.0, 960, 0, 4684800.0, 0, -960))
+        self.assertEqual(tile.proj4, "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs ")
+        self.assertEqual(tile.wkt, 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]') # noqa
 
 
 # can't use the word `test` in the function name otherwise nose tries to run it...
@@ -384,7 +390,10 @@ class TestShapelyThreadSafe(unittest.TestCase):
                 'ti': -1,
                 'tilesize': 128,
                 'tj': 37,
-                'zone': 15
+                'zone': 15,
+                'geotrans': [361760.0, 960.0, 0, 4684800.0, 0, -960.0],
+                'proj4': '+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs ',
+                'wkt': 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]' # noqa
             },
             'type': 'Feature'
         })
