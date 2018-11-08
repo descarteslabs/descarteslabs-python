@@ -191,7 +191,7 @@ class Metadata(Service):
 
         return DotList(r.json())
 
-    def summary(self, products=None, sat_ids=None, date='acquired', part=None,
+    def summary(self, products=None, sat_ids=None, date='acquired', interval=None,
                 place=None, geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
                 cloud_fraction_0=None, fill_fraction=None, q=None, pixels=None,
                 dltile=None, **kwargs):
@@ -200,7 +200,17 @@ class Metadata(Service):
         :param list(str) products: Product identifier(s).
         :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
-        :param str part: Part of the date to aggregate over (e.g. `day`).
+        :param str interval: Part of the date to aggregate over (e.g. `day`).
+            The list of possibilites is:
+
+            * ``year`` or ``y``
+            * ``quarter``
+            * ``month`` or ``M``
+            * ``week`` or ``q``
+            * ``day`` or ``d``
+            * ``hour`` or ``h``
+            * ``minute`` or ``m``
+            * ``product``
         :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
         :param str start_datetime: Desired starting timestamp, in any common format.
@@ -217,7 +227,7 @@ class Metadata(Service):
             >>> from descarteslabs.client.services import Metadata
             >>> Metadata().summary(place='north-america_united-states_iowa', \
                     products=['landsat:LC08:PRE:TOAR'], start_datetime='2016-07-06', \
-                    end_datetime='2016-07-07', part='hour', pixels=True)
+                    end_datetime='2016-07-07', interval='hour', pixels=True)
             {
               'bytes': 93298309,
               'count': 1,
@@ -240,6 +250,7 @@ class Metadata(Service):
             "sat_id": "sat_ids",
             "start_time": "start_datetime",
             "end_time": "end_datetime",
+            "part": "interval",
         })
 
         if place:
@@ -272,8 +283,8 @@ class Metadata(Service):
         if date:
             kwargs['date'] = date
 
-        if part:
-            kwargs['part'] = part
+        if interval:
+            kwargs['interval'] = interval
 
         if geom:
             kwargs['geom'] = geom
