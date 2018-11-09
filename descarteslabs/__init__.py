@@ -16,6 +16,7 @@
 from .client.auth import Auth
 from .client import services
 from .client.services import *
+from .client import exceptions
 
 try:
     from . import scenes
@@ -32,4 +33,4 @@ metadata = Metadata(auth=descartes_auth)
 places = Places(auth=descartes_auth)
 raster = Raster(auth=descartes_auth)
 
-__all__ = ["descartes_auth", "metadata", "places", "raster", "Auth"] + services.__all__
+__all__ = ["descartes_auth", "metadata", "places", "raster", "Auth", "exceptions"] + services.__all__
