@@ -409,7 +409,9 @@ class FeatureCollection(object):
         Parameters
         ----------
         features : `Feature` or list(`Feature`)
-            A single feature or list of features to add.
+            A single feature or list of features to add. The max
+            number of features that can be passed in a single
+            call is 100.
 
         Returns
         -------
