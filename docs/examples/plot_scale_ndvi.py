@@ -66,7 +66,7 @@ arr, meta = raster_client.ndarray(
     bands=['ndvi', 'alpha'],
     scales=[[data_range[0], data_range[1], physical_range[0], physical_range[1]], None],
     data_type='Float32',
-    resolution=120)
+    dimensions=(100, 100))
 
 # mask out nodata pixels
 nodata = arr[:, :, -1] == 0
