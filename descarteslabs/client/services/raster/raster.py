@@ -245,6 +245,9 @@ class Raster(Service):
             }
         """
 
+        if not key:
+            raise ValueError('Invalid key')
+
         r = self.session.get('/dlkeys/%s' % key)
 
         return DotDict(r.json())

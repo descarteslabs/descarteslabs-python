@@ -367,6 +367,10 @@ class TestRaster(unittest.TestCase):
         self.assertEqual(dltile_feature['properties']['key'], "2048:16:30.0:16:-4:81")
 
     def test_dltile(self):
+        with self.assertRaises(ValueError):
+            self.raster.dltile(None)
+        with self.assertRaises(ValueError):
+            self.raster.dltile('')
         dltile_feature = self.raster.dltile("2048:16:30.0:16:-4:81")
         self.assertEqual(dltile_feature['properties']['key'], "2048:16:30.0:16:-4:81")
 
