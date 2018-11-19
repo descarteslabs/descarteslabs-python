@@ -275,6 +275,7 @@ class Raster(Service):
             align_pixels=False,
             resampler=None,
             dltile=None,
+            processing_level=None,
             save=False,
             outfile_basename=None,
             **pass_through_params
@@ -322,6 +323,10 @@ class Raster(Service):
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
             ``max``, ``min``, ``med``, ``q1``, ``q3``).
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str processing_level: How the processing level of the underlying data
+            should be adjusted, one of ``toa`` (top of atmosphere) and ``surface``. For
+            products that support it, ``surface`` applies Descartes Labs' general surface
+            reflectance algorithm to the output.
         :param bool save: Write resulting files to disk. Default: False
         :param str outfile_basename: If 'save' is True, override default filename using
             this string as a base.
@@ -356,6 +361,7 @@ class Raster(Service):
             'outsize': dimensions,
             'targetAlignedPixels': align_pixels,
             'resampleAlg': resampler,
+            'processing_level': processing_level,
         }
         params.update(pass_through_params)
 
@@ -414,6 +420,7 @@ class Raster(Service):
             resampler=None,
             order='image',
             dltile=None,
+            processing_level=None,
             **pass_through_params
     ):
         """Retrieve a raster as a NumPy array.
@@ -459,6 +466,10 @@ class Raster(Service):
         :param str order: Order of the returned array. `image` returns arrays as
             ``(row, column, band)`` while `gdal` returns arrays as ``(band, row, column)``.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str processing_level: How the processing level of the underlying data
+            should be adjusted, one of ``toa`` (top of atmosphere) and ``surface``. For
+            products that support it, ``surface`` applies Descartes Labs' general surface
+            reflectance algorithm to the output.
 
         :return: A tuple of ``(np_array, metadata)``. The first element (``np_array``) is
             the rastered scene as a NumPy array. The second element (``metadata``) is a
@@ -486,6 +497,7 @@ class Raster(Service):
             'outsize': dimensions,
             'targetAlignedPixels': align_pixels,
             'resampleAlg': resampler,
+            'processing_level': processing_level,
         }
         params.update(pass_through_params)
 
@@ -575,6 +587,7 @@ class Raster(Service):
             resampler=None,
             order='image',
             dltile=None,
+            processing_level=None,
             max_workers=None,
             **pass_through_params
     ):
@@ -631,6 +644,10 @@ class Raster(Service):
         :param str order: Order of the returned array. `image` returns arrays as
             ``(scene, row, column, band)`` while `gdal` returns arrays as ``(scene, band, row, column)``.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str processing_level: How the processing level of the underlying data
+            should be adjusted, one of ``toa`` (top of atmosphere) and ``surface``. For
+            products that support it, ``surface`` applies Descartes Labs' general surface
+            reflectance algorithm to the output.
         :param int max_workers: Maximum number of threads over which to
             parallelize individual ndarray calls. If `None`, will be set to the minimum
             of the number of inputs and `DEFAULT_MAX_WORKERS`.
@@ -663,6 +680,7 @@ class Raster(Service):
             resampler=resampler,
             order=order,
             dltile=dltile,
+            processing_level=processing_level,
             max_workers=max_workers,
             **pass_through_params
         )

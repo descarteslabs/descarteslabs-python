@@ -181,6 +181,7 @@ class SceneCollection(Collection):
               bands_axis=1,
               raster_info=False,
               resampler="near",
+              processing_level=None,
               max_workers=None,
               ):
         """
@@ -240,6 +241,11 @@ class SceneCollection(Collection):
             each image to its new resolution or SRS. Possible values are
             ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
+        processing_level : str, optional
+            How the processing level of the underlying data should be adjusted. Possible
+            values are ``toa`` (top of atmosphere) and ``surface``. For products that
+            support it, ``surface`` applies Descartes Labs' general surface reflectance
+            algorithm to the output.
         max_workers : int, default None
             Maximum number of threads to use to parallelize individual ndarray
             calls to each Scene.
@@ -279,6 +285,7 @@ class SceneCollection(Collection):
             bands_axis=bands_axis,
             raster_info=raster_info,
             resampler=resampler,
+            processing_level=processing_level,
         )
 
         if bands_axis == 0 or bands_axis == -4:
@@ -369,6 +376,7 @@ class SceneCollection(Collection):
                mask_alpha=True,
                bands_axis=0,
                resampler="near",
+               processing_level=None,
                raster_info=False,
                ):
         """
@@ -412,6 +420,11 @@ class SceneCollection(Collection):
             the image to its new resolution or SRS. Possible values are
             ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
+        processing_level : str, optional
+            How the processing level of the underlying data should be adjusted. Possible
+            values are ``toa`` (top of atmosphere) and ``surface``. For products that
+            support it, ``surface`` applies Descartes Labs' general surface reflectance
+            algorithm to the output.
 
 
         Returns
@@ -464,6 +477,7 @@ class SceneCollection(Collection):
             scales=None,
             data_type=common_data_type,
             resampler=resampler,
+            processing_level=processing_level,
             **raster_params
         )
 
@@ -526,6 +540,8 @@ class SceneCollection(Collection):
                  ctx,
                  dest,
                  format="tif",
+                 resampler="near",
+                 processing_level=None,
                  max_workers=None,
                  ):
         """
@@ -558,6 +574,16 @@ class SceneCollection(Collection):
 
             If ``dest`` is a sequence of paths, ``format`` is ignored
             and determined by the extension on each path.
+        resampler : str, default "near"
+            Algorithm used to interpolate pixel values when scaling and transforming
+            the image to its new resolution or SRS. Possible values are
+            ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
+            ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
+        processing_level : str, optional
+            How the processing level of the underlying data should be adjusted. Possible
+            values are ``toa`` (top of atmosphere) and ``surface``. For products that
+            support it, ``surface`` applies Descartes Labs' general surface reflectance
+            algorithm to the output.
         max_workers : int, default None
             Maximum number of threads to use to parallelize individual ``download``
             calls to each Scene.
@@ -657,6 +683,11 @@ class SceneCollection(Collection):
             else:
                 unique.add(path)
 
+        download_args = dict(
+            resampler=resampler,
+            processing_level=processing_level,
+            raster_client=self._raster_client,
+        )
         try:
             futures = concurrent.futures
         except ImportError:
@@ -664,12 +695,12 @@ class SceneCollection(Collection):
                 "Failed to import concurrent.futures. Download calls will be serial."
             )
             for scene, path in zip(self, dest):
-                scene.download(bands, ctx, dest=path, raster_client=self._raster_client)
+                scene.download(bands, ctx, dest=path, **download_args)
         else:
             with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 futures = [
                     executor.submit(
-                        scene.download, bands, ctx, dest=path, raster_client=self._raster_client
+                        scene.download, bands, ctx, dest=path, **download_args
                     )
                     for scene, path in zip(self, dest)
                 ]
@@ -681,6 +712,8 @@ class SceneCollection(Collection):
                         ctx,
                         dest=None,
                         format="tif",
+                        resampler="near",
+                        processing_level=None,
                         ):
         """
         Download all scenes as a single image file.
@@ -715,6 +748,16 @@ class SceneCollection(Collection):
 
             If a str or path-like object is given as ``dest``, ``format`` is ignored
             and determined from the extension on the path (one of ".tif", ".png", or ".jpg").
+        resampler : str, default "near"
+            Algorithm used to interpolate pixel values when scaling and transforming
+            the image to its new resolution or SRS. Possible values are
+            ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
+            ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
+        processing_level : str, optional
+            How the processing level of the underlying data should be adjusted. Possible
+            values are ``toa`` (top of atmosphere) and ``surface``. For products that
+            support it, ``surface`` applies Descartes Labs' general surface reflectance
+            algorithm to the output.
 
         Returns
         -------
@@ -761,6 +804,8 @@ class SceneCollection(Collection):
             dtype=common_data_type,
             dest=dest,
             format=format,
+            resampler=resampler,
+            processing_level=processing_level,
             raster_client=self._raster_client,
         )
 

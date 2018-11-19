@@ -32,7 +32,8 @@ def _get_format(ext):
         )
 
 
-def _download(inputs, bands_list, ctx, dtype, dest, format, raster_client=None):
+def _download(inputs, bands_list, ctx, dtype, dest, format, resampler="near",
+              processing_level=None, raster_client=None):
     """
     Download inputs as an image file and save to file or path-like `dest`.
     Code shared by Scene.download and SceneCollection.download_mosaic
@@ -67,6 +68,8 @@ def _download(inputs, bands_list, ctx, dtype, dest, format, raster_client=None):
         bands=bands_list,
         scales=None,
         data_type=dtype,
+        resampler=resampler,
+        processing_level=processing_level,
         output_format=format,
         save=False,
         **raster_params

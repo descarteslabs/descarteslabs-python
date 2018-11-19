@@ -180,6 +180,8 @@ class TestSceneCollectionDownload(unittest.TestCase):
                 ["nir", "yellow"],
                 self.ctx,
                 dest=path,
+                resampler="near",
+                processing_level=None,
                 raster_client=self.scenes._raster_client
             )
 
@@ -198,6 +200,8 @@ class TestSceneCollectionDownload(unittest.TestCase):
                 ["nir", "yellow"],
                 self.ctx,
                 dest=path,
+                resampler="near",
+                processing_level=None,
                 raster_client=self.scenes._raster_client
             )
 

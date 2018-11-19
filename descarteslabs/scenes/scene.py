@@ -343,6 +343,7 @@ class Scene(object):
                 bands_axis=0,
                 raster_info=False,
                 resampler="near",
+                processing_level=None,
                 raster_client=None
                 ):
         """
@@ -383,6 +384,11 @@ class Scene(object):
             the image to its new resolution or CRS. Possible values are
             ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
+        processing_level : str, optional
+            How the processing level of the underlying data should be adjusted. Possible
+            values are ``toa`` (top of atmosphere) and ``surface``. For products that
+            support it, ``surface`` applies Descartes Labs' general surface reflectance
+            algorithm to the output.
         raster_client : Raster, optional
             Unneeded in general use; lets you use a specific client instance
             with non-default auth and parameters.
@@ -452,6 +458,7 @@ class Scene(object):
             scales=None,
             data_type=common_data_type,
             resampler=resampler,
+            processing_level=processing_level,
             **raster_params
         )
 
@@ -505,6 +512,8 @@ class Scene(object):
                  ctx,
                  dest=None,
                  format="tif",
+                 resampler="near",
+                 processing_level=None,
                  raster_client=None,
                  ):
         """
@@ -539,6 +548,16 @@ class Scene(object):
 
             If a str or path-like object is given as ``dest``, ``format`` is ignored
             and determined from the extension on the path (one of ".tif", ".png", or ".jpg").
+        resampler : str, default "near"
+            Algorithm used to interpolate pixel values when scaling and transforming
+            the image to its new resolution or SRS. Possible values are
+            ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
+            ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
+        processing_level : str, optional
+            How the processing level of the underlying data should be adjusted. Possible
+            values are ``toa`` (top of atmosphere) and ``surface``. For products that
+            support it, ``surface`` applies Descartes Labs' general surface reflectance
+            algorithm to the output.
         raster_client : Raster, optional
             Unneeded in general use; lets you use a specific client instance
             with non-default auth and parameters.
@@ -589,6 +608,8 @@ class Scene(object):
             dtype=common_data_type,
             dest=dest,
             format=format,
+            resampler=resampler,
+            processing_level=processing_level,
             raster_client=raster_client,
         )
 
