@@ -131,10 +131,12 @@ class Raster(Service):
                 'key': '2048:16:30.0:14:3:74',
                 'outputBounds': [683840.0, 4546080.0, 746240.0, 4608480.0],
                 'pad': 16,
+                'proj4': '+proj=utm +zone=14 +datum=WGS84 +units=m +no_defs ',
                 'resolution': 30.0,
                 'ti': 3,
                 'tilesize': 2048,
                 'tj': 74,
+                'wkt': 'PROJCS["WGS 84 / UTM zone 14N",GEOGCS["WGS...Northing",NORTH],AUTHORITY["EPSG","32614"]]',
                 'zone': 14
               },
               'type': 'Feature'
@@ -186,10 +188,12 @@ class Raster(Service):
                 'key': '1024:16:15.0:41:-16:324',
                 'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
                 'pad': 16,
+                'proj4': '+proj=utm +zone=41 +datum=WGS84 +units=m +no_defs ',
                 'resolution': 15.0,
                 'ti': -16,
                 'tilesize': 1024,
                 'tj': 324,
+                'wkt': 'PROJCS["WGS 84 / UTM zone 41N",GEOGCS["WGS...Northing",NORTH],AUTHORITY["EPSG","32641"]]',
                 'zone': 41
               },
               'type': 'Feature'
@@ -235,10 +239,12 @@ class Raster(Service):
                 'key': '1024:16:15.0:41:-16:324',
                 'outputBounds': [254000.0, 4976400.0, 269840.0, 4992240.0],
                 'pad': 16,
+                'proj4': '+proj=utm +zone=41 +datum=WGS84 +units=m +no_defs ',
                 'resolution': 15.0,
                 'ti': -16,
                 'tilesize': 1024,
                 'tj': 324,
+                'wkt': 'PROJCS["WGS 84 / UTM zone 41N",GEOGCS["WGS...Northing",NORTH],AUTHORITY["EPSG","32641"]]',
                 'zone': 41
               },
               'type': 'Feature'
