@@ -21,8 +21,7 @@ from descarteslabs.client.services.places import Places
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.deprecation import check_deprecated_kwargs
 from descarteslabs.client.services.raster import Raster
-from descarteslabs.client.services.metadata.metadata_filtering import GLOBAL_PROPERTIES
-from descarteslabs.common.property_filtering.filtering import AndExpression
+from descarteslabs.common.property_filtering.filtering import AndExpression, GenericProperties
 from descarteslabs.common.dotdict import DotDict, DotList
 
 
@@ -45,7 +44,7 @@ class Metadata(Service):
 
     TIMEOUT = (9.5, 120)
 
-    properties = GLOBAL_PROPERTIES
+    properties = GenericProperties()
 
     def __init__(self, url=None, auth=None):
         """The parent Service class implements authentication and exponential

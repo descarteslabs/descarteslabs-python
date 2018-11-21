@@ -13,8 +13,9 @@
 # limitations under the License.
 
 from .metadata import Metadata
-from .metadata_filtering import GLOBAL_PROPERTIES
+from descarteslabs.common.property_filtering import GenericProperties
 
-properties = GLOBAL_PROPERTIES
+
+properties = GenericProperties()
 
 __all__ = ["Metadata", "properties"]

@@ -17,6 +17,7 @@ from .client.auth import Auth
 from .client import services
 from .client.services import *
 from .client import exceptions
+from .common.property_filtering import GenericProperties
 
 try:
     from . import scenes
@@ -32,5 +33,6 @@ descartes_auth = Auth.from_environment_or_token_json()
 metadata = Metadata(auth=descartes_auth)
 places = Places(auth=descartes_auth)
 raster = Raster(auth=descartes_auth)
+properties = GenericProperties()
 
-__all__ = ["descartes_auth", "metadata", "places", "raster", "Auth", "exceptions"] + services.__all__
+__all__ = ["descartes_auth", "metadata", "places", "raster", "properties", "Auth", "exceptions"] + services.__all__
