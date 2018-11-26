@@ -9,6 +9,8 @@ Changelog
 =========
 
 ## [Unreleased]
+
+## [0.14.1] - 2018-11-26
 ### Added
 - Scenes and raster clients have a `processing_level` parameter that can be used to turn on surface reflectance processing for products that support it
 
