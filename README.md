@@ -284,7 +284,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.14.1...HEAD
+[0.14.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.0...v0.13.1
