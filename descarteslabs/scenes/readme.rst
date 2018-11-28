@@ -1,8 +1,10 @@
+.. role:: scenes
+
 Scenes
 ------
 
 .. Use single ticks to auto-reference for cleaner docstrings
-.. default-role:: any
+.. default-role:: scenes
 
 .. Hide the toctree, as the docstring in __init__ provides the equivalent
 .. toctree::

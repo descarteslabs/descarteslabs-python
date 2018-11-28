@@ -1,9 +1,11 @@
+.. role:: scenes
+
 Collection
 ----------
 
 :doc:`Back to Scenes<../readme>`
 
-.. default-role:: any
+.. default-role:: scenes
 
 .. automodule:: descarteslabs.scenes.collection
   :members:
