@@ -77,6 +77,7 @@ class Catalog(Service):
 
     def get_product(self, product_id, add_namespace=False):
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
 
         r = self.session.get('/products/{}'.format(product_id))
@@ -123,7 +124,12 @@ class Catalog(Service):
             "end_time": "end_datetime",
         })
 
-        kwargs['id'] = self.namespace_product(product_id) if add_namespace else product_id
+        if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
+            kwargs['id'] = self.namespace_product(product_id)
+        else:
+            kwargs['id'] = product_id
+
         r = self.session.post('/products', json=kwargs)
         return r.json()
 
@@ -173,6 +179,7 @@ class Catalog(Service):
         })
 
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
 
         params = None
@@ -219,6 +226,7 @@ class Catalog(Service):
         })
 
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
 
         params = None
@@ -235,6 +243,7 @@ class Catalog(Service):
         :param bool cascade: Force deletion of all the associated bands and images. BEWARE this cannot be undone.
         """
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
         params = {'cascade': cascade}
         r = self.session.delete('/products/{}'.format(product_id), params=params)
@@ -259,6 +268,7 @@ class Catalog(Service):
         :rtype: dict
         """
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
 
         r = self.session.get('/products/{}/bands/{}'.format(product_id, name))
@@ -362,6 +372,7 @@ class Catalog(Service):
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
         check_deprecated_kwargs(kwargs, {"id": "name"})
 
@@ -398,6 +409,7 @@ class Catalog(Service):
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
 
         r = self.session.put('/products/{}/bands/{}'.format(product_id, name), json=kwargs)
@@ -416,12 +428,14 @@ class Catalog(Service):
         :rtype: dict
         """
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
         r = self.session.patch('/products/{}/bands/{}'.format(product_id, name), json=kwargs)
         return r.json()
 
     def remove_band(self, product_id, name, add_namespace=False):
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
         self.session.delete('/products/{}/bands/{}'.format(product_id, name))
 
@@ -433,6 +447,7 @@ class Catalog(Service):
         """
 
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
 
         r = self.session.get('/products/{}/images/{}'.format(product_id, image_id))
@@ -513,6 +528,7 @@ class Catalog(Service):
             "key": "image_id",
         })
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
         kwargs['id'] = image_id
         r = self.session.post('/products/{}/images'.format(product_id), json=kwargs)
@@ -534,6 +550,7 @@ class Catalog(Service):
 
         check_deprecated_kwargs(kwargs, {"bpp": "bits_per_pixel"})
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
 
         r = self.session.put('/products/{}/images/{}'.format(product_id, image_id), json=kwargs)
@@ -560,21 +577,24 @@ class Catalog(Service):
         """
         check_deprecated_kwargs(kwargs, {"bpp": "bits_per_pixel"})
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
         r = self.session.patch('/products/{}/images/{}'.format(product_id, image_id), json=kwargs)
         return r.json()
 
     def remove_image(self, product_id, image_id, add_namespace=False):
         if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
             product_id = self.namespace_product(product_id)
         self.session.delete('/products/{}/images/{}'.format(product_id, image_id))
 
-    def upload_image(self, files, product_id, metadata=None, multi=False, image_id=None, **kwargs):
+    def upload_image(self, files, product_id, metadata=None, multi=False, image_id=None, add_namespace=False, **kwargs):
         """Upload an image for a product you own.
 
         :param str|file|list(str)|list(file) files: (Required) a reference to the file to upload.
         :param str product_id: (Required) The id of the product this image belongs to.
         :param dict metadata: Image metadata to use instead of the computed default values.
+        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
 
         .. note::
             - See :meth:`Catalog.add_image` for additional kwargs.
@@ -590,9 +610,9 @@ class Catalog(Service):
             elif image_id is None:
                 raise ValueError("Using `multi=True` requires `image_id` to be specified")
             else:
-                upload = self._do_multi_file_upload(files, product_id, image_id, metadata)
+                upload = self._do_multi_file_upload(files, product_id, image_id, metadata, add_namespace=add_namespace)
         else:
-            upload = self._do_upload(files, product_id, metadata=metadata)
+            upload = self._do_upload(files, product_id, metadata=metadata, add_namespace=add_namespace)
         if upload[0]:
             raise upload[2]
 
@@ -607,6 +627,7 @@ class Catalog(Service):
             raster_meta=None,
             overviews=None,
             overview_resampler=None,
+            add_namespace=False,
             **kwargs
     ):
         """Upload an ndarray with georeferencing information.
@@ -632,6 +653,7 @@ class Catalog(Service):
             combined to make lower res pixels in overviews. Allowed resampler algorithms are:
             ['nearest', 'average', 'gauss', 'cubic', 'cubicspline', 'lanczos', 'average_mp',
             'average_magphase', 'mode'].
+        :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
 
         .. note::
             - See :meth:`Catalog.add_image` for additional kwargs.
@@ -664,7 +686,7 @@ class Catalog(Service):
             # When leaving the context manager the tempfile wrapper will still cleanup
             # and unlink the file descriptor.
             tmp.file.close()
-            upload = self._do_upload(tmp.name, product_id, metadata=metadata)
+            upload = self._do_upload(tmp.name, product_id, metadata=metadata, add_namespace=add_namespace)
             if upload[0]:
                 raise upload[2]
 
@@ -743,7 +765,7 @@ class Catalog(Service):
         result = self.session.get('/products/{}/uploads/{}'.format(product_id, upload_id))
         return result.json()
 
-    def _do_multi_file_upload(self, files, product_id, image_id, metadata):
+    def _do_multi_file_upload(self, files, product_id, image_id, metadata, add_namespace=False):
         file_keys = [os.path.basename(_f) for _f in files]
         process_controls = metadata.setdefault('process_controls', {'upload_type': 'file'})
         multi_file_args = {
@@ -754,17 +776,19 @@ class Catalog(Service):
         }
         process_controls.update(multi_file_args)
         for _file in files:
-            upload = self._do_upload(_file, product_id, metadata=metadata)
+            upload = self._do_upload(_file, product_id, metadata=metadata, add_namespace=add_namespace)
             if upload[0]:
                 return upload
         else:
             return upload
 
-    def _do_upload(self, file_ish, product_id, metadata=None):
+    def _do_upload(self, file_ish, product_id, metadata=None, add_namespace=False):
         # kwargs are treated as metadata fields and restricted to primitives
         # for the key val pairs.
         fd = None
-        product_id = self.namespace_product(product_id)
+        if add_namespace:
+            check_deprecated_kwargs(locals(), {'add_namespace': None})
+            product_id = self.namespace_product(product_id)
 
         if metadata is None:
             metadata = {}
