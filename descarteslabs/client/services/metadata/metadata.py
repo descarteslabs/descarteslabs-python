@@ -217,7 +217,8 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
-        :param expr q: Expression for filtering the results. See :py:attr:`descarteslabs.utilities.properties`.
+        :param expr q: Expression for filtering the results. See
+            :py:attr:`descarteslabs.client.services.metadata.properties`.
         :param bool pixels: Whether to include pixel counts in summary calculations.
         :param str dltile: A dltile key used to specify the resolution, bounds, and srs.
 
@@ -332,7 +333,8 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
-        :param expr q: Expression for filtering the results. See :py:attr:`descarteslabs.utilities.properties`.
+        :param expr q: Expression for filtering the results. See
+            :py:attr:`descarteslabs.client.services.metadata.properties`.
         :param int limit: Number of items to return up to the maximum of 10000.
         :param list(str) fields: Properties to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
@@ -455,7 +457,8 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
-        :param expr q: Expression for filtering the results. See :py:attr:`descarteslabs.utilities.properties`.
+        :param expr q: Expression for filtering the results. See
+            :py:attr:`descarteslabs.client.services.metadata.properties`.
         :param int limit: Number of items to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str sort_field: Property to sort on.

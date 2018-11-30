@@ -8,7 +8,7 @@ Metadata
 Filtering
 ---------
 
-.. py:attribute:: descarteslabs.client.services.metadata.properties
+.. py:attribute:: properties
 
     Most of the metadata searching functions allow for flexible filtering on scene metadata.
 
