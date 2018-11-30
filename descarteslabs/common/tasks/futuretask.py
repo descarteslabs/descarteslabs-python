@@ -62,6 +62,10 @@ class FutureTask(object):
     def __init__(self, guid, tuid, client=None, args=None, kwargs=None):
         self.guid = guid
         self.tuid = tuid
+        if client is None:
+            from descarteslabs.client.services.tasks import Tasks  # circular import
+            client = Tasks()
+
         self.client = client
         self.args = args
         self.kwargs = kwargs
