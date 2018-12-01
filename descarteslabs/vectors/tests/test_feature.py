@@ -48,5 +48,6 @@ class TestFeature(unittest.TestCase):
                                         sort_keys=True),
                              json.dumps({'geometry': geometry,
                                          'id': None,
-                                         'properties': properties},
+                                         'properties': properties,
+                                         'type': 'Feature'},
                                         sort_keys=True))

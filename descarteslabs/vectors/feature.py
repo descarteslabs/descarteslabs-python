@@ -29,6 +29,8 @@ class Feature(object):
         Values can be strings up to 256 characters, numeric types, or ``None``.
     """
 
+    geojson_type = "Feature"
+
     def __init__(self, geometry, properties, id=None):
         """
         Example
@@ -86,17 +88,19 @@ class Feature(object):
             (-95.0, 41.0),
             (-95.0, 42.0)),),
          'type': 'Polygon'},
-        'id': None,
-        'properties': {
-          'size': 'large',
-          'temperature': 70.13
-        }}
+         'id': None,
+         'properties': {
+           'size': 'large',
+           'temperature': 70.13
+         },
+         'type': 'Feature'
+        }
         """
         properties = copy.deepcopy(self.properties)
 
         geometry = self.geometry.__geo_interface__
 
-        return dict(properties=properties, geometry=geometry, id=self.id)
+        return dict(properties=properties, geometry=geometry, id=self.id, type=self.geojson_type)
 
     @property
     def __geo_interface__(self):
