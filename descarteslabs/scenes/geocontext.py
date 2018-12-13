@@ -430,7 +430,7 @@ class AOI(GeoContext):
                 # parallel access to `self._geometry.__geo_interface__`
                 return self._geometry.__geo_interface__
         elif self._bounds is not None and _helpers.is_wgs84_crs(self._bounds_crs):
-            return _helpers._polygon_from_bounds(self._bounds)
+            return _helpers.polygon_from_bounds(self._bounds)
         else:
             raise RuntimeError(
                 "AOI GeoContext must have a geometry set, or bounds set and a WGS84 `bounds_crs`, "
