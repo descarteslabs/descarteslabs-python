@@ -32,10 +32,11 @@ class DotDict(dict):
     >>> d.b[0].foo
         'bar'
     """
+
     __slots__ = ()  # no need for a namespace __dict__ when DotDict is a dict already
 
     def _repr_json_(self):
-        return self, {'expanded': False}
+        return self, {"expanded": False}
 
     @classmethod
     def _box(cls, value):
@@ -117,7 +118,9 @@ class DotDict(dict):
                     self[k] = boxed
                 yield (k, boxed)
         else:
-            raise AttributeError("'iteritems' is only implemented in Python 2; use .items()")
+            raise AttributeError(
+                "'iteritems' is only implemented in Python 2; use .items()"
+            )
 
     def values(self):
         """
@@ -139,7 +142,9 @@ class DotDict(dict):
             for k, v in self.iteritems():
                 yield v
         else:
-            raise AttributeError("'itervalues' is only implemented in Python 2; use .values()")
+            raise AttributeError(
+                "'itervalues' is only implemented in Python 2; use .values()"
+            )
 
     def get(self, key, default=None):
         """
@@ -209,6 +214,7 @@ class DotDict(dict):
 
 class DotDict_view(object):
     """Wrapper around a dictionary view object that yields dicts and lists as DotDicts and DotLists when iterated."""
+
     __slots__ = ("_view",)
 
     def __init__(self, dotdict):
@@ -313,6 +319,7 @@ class DotList(list):
     Returns contained dicts as DotDicts (and contained lists as DotLists),
     soley to allow attribute access past list indexing
     """
+
     __slots__ = ()
 
     def __getitem__(self, i):
@@ -376,7 +383,6 @@ def _possibly_sorted(x):
 
 
 class IndentedRepr(reprlib.Repr, object):
-
     def __init__(self):
         super(IndentedRepr, self).__init__()
 
@@ -400,22 +406,22 @@ class IndentedRepr(reprlib.Repr, object):
         # repr1 is explicity defined rather than inherited,
         # because py2 and py3 have different implementations---py2 inlines repr_instance, basically
         typename = type(x).__name__
-        if ' ' in typename:
+        if " " in typename:
             parts = typename.split()
-            typename = '_'.join(parts)
-        if hasattr(self, 'repr_' + typename):
-            return getattr(self, 'repr_' + typename)(x, level)
+            typename = "_".join(parts)
+        if hasattr(self, "repr_" + typename):
+            return getattr(self, "repr_" + typename)(x, level)
         else:
             return self.repr_instance(x, level)
 
     def repr_dict(self, x, level):
         n = len(x)
         if n == 0:
-            return '{}'
+            return "{}"
         if self.maxlevel is not None:
             depth = self.maxlevel - level
             if level <= 0:
-                return '{...}'
+                return "{...}"
             newlevel = level - 1
         else:
             if level is None:
@@ -424,19 +430,22 @@ class IndentedRepr(reprlib.Repr, object):
             newlevel = level + 1
         repr1 = self.repr1
         pieces = []
-        for key in islice(_possibly_sorted(x), self.maxdict if self.maxdict is not None and depth > 0 else None):
+        for key in islice(
+            _possibly_sorted(x),
+            self.maxdict if self.maxdict is not None and depth > 0 else None,
+        ):
             keyrepr = repr1(key, newlevel)
             valrepr = repr1(x[key], newlevel)
-            pieces.append('%s: %s' % (keyrepr, valrepr))
+            pieces.append("%s: %s" % (keyrepr, valrepr))
         if self.maxdict is not None and n > self.maxdict and depth > 0:
-            pieces.append('...')
+            pieces.append("...")
 
-        outer_indent = ' ' * (self.indent * depth)
-        inner_indent = outer_indent + ' ' * self.indent
-        s = (',\n%s' % inner_indent).join(pieces)
-        return '{\n%s%s\n%s}' % (inner_indent, s, outer_indent)
+        outer_indent = " " * (self.indent * depth)
+        inner_indent = outer_indent + " " * self.indent
+        s = (",\n%s" % inner_indent).join(pieces)
+        return "{\n%s%s\n%s}" % (inner_indent, s, outer_indent)
 
-    def _repr_iterable(self, x, level, left, right, maxiter, trail=''):
+    def _repr_iterable(self, x, level, left, right, maxiter, trail=""):
         n = len(x)
         if self.maxlevel is not None:
             depth = self.maxlevel - level
@@ -447,42 +456,46 @@ class IndentedRepr(reprlib.Repr, object):
             depth = level
             newlevel = level + 1
 
-        outer_indent = ' ' * (self.indent * depth)
-        inner_indent = outer_indent + ' ' * self.indent
+        outer_indent = " " * (self.indent * depth)
+        inner_indent = outer_indent + " " * self.indent
 
         if self.maxlevel is not None and level <= 0 and n:
-            s = '...'
+            s = "..."
         else:
             repr1 = self.repr1
-            pieces = [repr1(elem, newlevel)
-                      for elem in islice(x, maxiter if maxiter is not None and depth > 0 else None)]
+            pieces = [
+                repr1(elem, newlevel)
+                for elem in islice(
+                    x, maxiter if maxiter is not None and depth > 0 else None
+                )
+            ]
 
-            has_multiline_pieces = any('\n' in piece for piece in pieces)
+            has_multiline_pieces = any("\n" in piece for piece in pieces)
 
             if maxiter is not None and n > maxiter and depth > 0:
-                pieces.append('...')
+                pieces.append("...")
 
             if has_multiline_pieces or maxiter is not None and n > maxiter:
                 # multiline if long list, or components have line breaks (prevents weird closing bracket indentation)
-                s = (',\n%s' % inner_indent).join(pieces)
-                s = '\n%s%s\n%s' % (inner_indent, s, outer_indent)
+                s = (",\n%s" % inner_indent).join(pieces)
+                s = "\n%s%s\n%s" % (inner_indent, s, outer_indent)
             else:
                 # single line if short
-                s = ', '.join(pieces)
+                s = ", ".join(pieces)
 
             if n == 1 and trail:
                 right = trail + right
 
-        return '%s%s%s' % (left, s, right)
+        return "%s%s%s" % (left, s, right)
 
     def repr_str(self, x, level):
-        s = repr(x[:self.maxstring])
+        s = repr(x[: self.maxstring])
         if self.maxstring is not None:
             if len(s) > self.maxstring:
                 i = max(0, (self.maxstring - 3) // 2)
                 j = max(0, self.maxstring - 3 - i)
-                s = repr(x[:i] + x[len(x) - j:])
-                s = s[:i] + '...' + s[len(s) - j:]
+                s = repr(x[:i] + x[len(x) - j :])
+                s = s[:i] + "..." + s[len(s) - j :]
         return s
 
     def repr_int(self, x, level):
@@ -493,7 +506,7 @@ class IndentedRepr(reprlib.Repr, object):
         if self.maxlong is not None and len(s) > self.maxlong:
             i = max(0, (self.maxlong - 3) // 2)
             j = max(0, self.maxlong - 3 - i)
-            s = s[:i] + '...' + s[len(s) - j:]
+            s = s[:i] + "..." + s[len(s) - j :]
         return s
 
     def repr_instance(self, x, level):
@@ -502,11 +515,11 @@ class IndentedRepr(reprlib.Repr, object):
             # Bugs in x.__repr__() can cause arbitrary
             # exceptions -- then make up something
         except Exception:
-            return '<%s instance at %#x>' % (x.__class__.__name__, id(x))
+            return "<%s instance at %#x>" % (x.__class__.__name__, id(x))
         if self.maxother is not None and len(s) > self.maxother:
             i = max(0, (self.maxother - 3) // 2)
             j = max(0, self.maxother - 3 - i)
-            s = s[:i] + '...' + s[len(s) - j:]
+            s = s[:i] + "..." + s[len(s) - j :]
         return s
 
 

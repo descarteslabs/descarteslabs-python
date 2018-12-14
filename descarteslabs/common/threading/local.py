@@ -11,19 +11,20 @@ class ThreadLocalWrapper(object):
     In contrast to standard thread-locals this is compatible with multiple
     processes.
     """
+
     def __init__(self, factory):
         self._factory = factory
         self._create_local(os.getpid())
 
     def get(self):
         self._init_local()
-        if not hasattr(self._local, 'wrapped'):
+        if not hasattr(self._local, "wrapped"):
             self._local.wrapped = self._factory()
         return self._local.wrapped
 
     def _init_local(self):
         local_pid = os.getpid()
-        previous_pid = getattr(self._local, '_pid', None)
+        previous_pid = getattr(self._local, "_pid", None)
         if previous_pid is None:
             self._local._pid = local_pid
         elif local_pid != previous_pid:
