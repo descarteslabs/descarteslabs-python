@@ -21,7 +21,10 @@ from descarteslabs.client.services.places import Places
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.deprecation import check_deprecated_kwargs
 from descarteslabs.client.services.raster import Raster
-from descarteslabs.common.property_filtering.filtering import AndExpression, GenericProperties
+from descarteslabs.common.property_filtering.filtering import (
+    AndExpression,
+    GenericProperties,
+)
 from descarteslabs.common.dotdict import DotDict, DotList
 
 
@@ -54,10 +57,12 @@ class Metadata(Service):
         if auth is None:
             auth = Auth()
 
-        simplefilter('always', DeprecationWarning)
+        simplefilter("always", DeprecationWarning)
         if url is None:
-            url = os.environ.get("DESCARTESLABS_METADATA_URL",
-                                 "https://platform.descarteslabs.com/metadata/v1")
+            url = os.environ.get(
+                "DESCARTESLABS_METADATA_URL",
+                "https://platform.descarteslabs.com/metadata/v1",
+            )
 
         super(Metadata, self).__init__(url, auth=auth)
         self._raster = Raster(auth=self.auth)
@@ -65,7 +70,7 @@ class Metadata(Service):
     def sources(self):
         warn(SOURCES_DEPRECATION_MESSAGE, DeprecationWarning)
 
-        r = self.session.get('/sources')
+        r = self.session.get("/sources")
         return DotList(r.json())
 
     def bands(
@@ -90,20 +95,20 @@ class Metadata(Service):
 
 
         """
-        params = ['limit', 'offset', 'products',
-                  'wavelength', 'resolution', 'tags']
+        params = ["limit", "offset", "products", "wavelength", "resolution", "tags"]
 
         args = locals()
-        kwargs = dict(kwargs, **{
-            param: args[param]
-            for param in params
-            if args[param] is not None
-        })
+        kwargs = dict(
+            kwargs,
+            **{param: args[param] for param in params if args[param] is not None}
+        )
 
-        r = self.session.post('/bands/search', json=kwargs)
+        r = self.session.post("/bands/search", json=kwargs)
         return DotList(r.json())
 
-    def derived_bands(self, bands=None, require_bands=None, limit=None, offset=None, **kwargs):
+    def derived_bands(
+        self, bands=None, require_bands=None, limit=None, offset=None, **kwargs
+    ):
         """Search for predefined derived bands that you have access to.
 
         :param list(str) bands: Limit the derived bands to ones that can be
@@ -115,16 +120,15 @@ class Metadata(Service):
         :param int limit: Number of results to return.
         :param int offset: Index to start at when returning results.
         """
-        params = ['bands', 'limit', 'offset']
+        params = ["bands", "limit", "offset"]
 
         args = locals()
-        kwargs = dict(kwargs, **{
-            param: args[param]
-            for param in params
-            if args[param] is not None
-        })
+        kwargs = dict(
+            kwargs,
+            **{param: args[param] for param in params if args[param] is not None}
+        )
 
-        r = self.session.post('/bands/derived/search', json=kwargs)
+        r = self.session.post("/bands/derived/search", json=kwargs)
         return DotList(r.json())
 
     def get_bands_by_id(self, id_):
@@ -135,7 +139,7 @@ class Metadata(Service):
 
         :return: A dictionary of band entries and their metadata.
         """
-        r = self.session.get('/bands/id/{}'.format(id_))
+        r = self.session.get("/bands/id/{}".format(id_))
 
         return DotDict(r.json())
 
@@ -147,11 +151,13 @@ class Metadata(Service):
 
         :return: A dictionary mapping band IDs to dictionaries of their metadata.
         """
-        r = self.session.get('/bands/all/{}'.format(product_id))
+        r = self.session.get("/bands/all/{}".format(product_id))
 
         return DotDict(r.json())
 
-    def products(self, bands=None, limit=None, offset=None, owner=None, text=None, **kwargs):
+    def products(
+        self, bands=None, limit=None, offset=None, owner=None, text=None, **kwargs
+    ):
         """Search products that are available on the platform.
 
         :param list(str) bands: Band name(s) e.g ["red", "nir"] to filter products by.
@@ -162,17 +168,16 @@ class Metadata(Service):
         :param str text: Filter products by string match.
 
         """
-        params = ['limit', 'offset', 'bands', 'owner', 'text']
+        params = ["limit", "offset", "bands", "owner", "text"]
 
         args = locals()
-        kwargs = dict(kwargs, **{
-            param: args[param]
-            for param in params
-            if args[param] is not None
-        })
+        kwargs = dict(
+            kwargs,
+            **{param: args[param] for param in params if args[param] is not None}
+        )
         check_deprecated_kwargs(kwargs, {"band": "bands"})
 
-        r = self.session.post('/products/search', json=kwargs)
+        r = self.session.post("/products/search", json=kwargs)
 
         return DotList(r.json())
 
@@ -186,14 +191,28 @@ class Metadata(Service):
             ['landsat:LC08:PRE:TOAR']
 
         """
-        r = self.session.get('/products')
+        r = self.session.get("/products")
 
         return DotList(r.json())
 
-    def summary(self, products=None, sat_ids=None, date='acquired', interval=None,
-                place=None, geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
-                cloud_fraction_0=None, fill_fraction=None, q=None, pixels=None,
-                dltile=None, **kwargs):
+    def summary(
+        self,
+        products=None,
+        sat_ids=None,
+        date="acquired",
+        interval=None,
+        place=None,
+        geom=None,
+        start_datetime=None,
+        end_datetime=None,
+        cloud_fraction=None,
+        cloud_fraction_0=None,
+        fill_fraction=None,
+        q=None,
+        pixels=None,
+        dltile=None,
+        **kwargs
+    ):
         """Get a summary of the results for the specified spatio-temporal query.
 
         :param list(str) products: Product identifier(s).
@@ -244,26 +263,29 @@ class Metadata(Service):
               'products': ['landsat:LC08:PRE:TOAR']
             }
         """
-        check_deprecated_kwargs(kwargs, {
-            "product": "products",
-            "const_id": "const_ids",
-            "sat_id": "sat_ids",
-            "start_time": "start_datetime",
-            "end_time": "end_datetime",
-            "part": "interval",
-        })
+        check_deprecated_kwargs(
+            kwargs,
+            {
+                "product": "products",
+                "const_id": "const_ids",
+                "sat_id": "sat_ids",
+                "start_time": "start_datetime",
+                "end_time": "end_datetime",
+                "part": "interval",
+            },
+        )
 
         if place:
             places = Places()
             places.auth = self.auth
-            shape = places.shape(place, geom='low')
-            geom = json.dumps(shape['geometry'])
+            shape = places.shape(place, geom="low")
+            geom = json.dumps(shape["geometry"])
 
         if dltile is not None:
             if isinstance(dltile, string_types):
                 dltile = self._raster.dltile(dltile)
             if isinstance(dltile, dict):
-                geom = dltile['geometry']
+                geom = dltile["geometry"]
 
         if isinstance(geom, dict):
             geom = json.dumps(geom)
@@ -272,54 +294,71 @@ class Metadata(Service):
             if isinstance(sat_ids, string_types):
                 sat_ids = [sat_ids]
 
-            kwargs['sat_ids'] = sat_ids
+            kwargs["sat_ids"] = sat_ids
 
         if products:
             if isinstance(products, string_types):
                 products = [products]
 
-            kwargs['products'] = products
+            kwargs["products"] = products
 
         if date:
-            kwargs['date'] = date
+            kwargs["date"] = date
 
         if interval:
-            kwargs['interval'] = interval
+            kwargs["interval"] = interval
 
         if geom:
-            kwargs['geom'] = geom
+            kwargs["geom"] = geom
 
         if start_datetime:
-            kwargs['start_datetime'] = start_datetime
+            kwargs["start_datetime"] = start_datetime
 
         if end_datetime:
-            kwargs['end_datetime'] = end_datetime
+            kwargs["end_datetime"] = end_datetime
 
         if cloud_fraction is not None:
-            kwargs['cloud_fraction'] = cloud_fraction
+            kwargs["cloud_fraction"] = cloud_fraction
 
         if cloud_fraction_0 is not None:
-            kwargs['cloud_fraction_0'] = cloud_fraction_0
+            kwargs["cloud_fraction_0"] = cloud_fraction_0
 
         if fill_fraction is not None:
-            kwargs['fill_fraction'] = fill_fraction
+            kwargs["fill_fraction"] = fill_fraction
 
         if q is not None:
             if not isinstance(q, list):
                 q = [q]
-            kwargs['query_expr'] = AndExpression(q).serialize()
+            kwargs["query_expr"] = AndExpression(q).serialize()
 
         if pixels:
-            kwargs['pixels'] = pixels
+            kwargs["pixels"] = pixels
 
-        r = self.session.post('/summary', json=kwargs)
+        r = self.session.post("/summary", json=kwargs)
         return DotDict(r.json())
 
-    def search(self, products=None, sat_ids=None, date='acquired', place=None,
-               geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
-               cloud_fraction_0=None, fill_fraction=None, q=None, limit=100,
-               fields=None, dltile=None, sort_field=None, sort_order="asc", randomize=None,
-               continuation_token=None, **kwargs):
+    def search(
+        self,
+        products=None,
+        sat_ids=None,
+        date="acquired",
+        place=None,
+        geom=None,
+        start_datetime=None,
+        end_datetime=None,
+        cloud_fraction=None,
+        cloud_fraction_0=None,
+        fill_fraction=None,
+        q=None,
+        limit=100,
+        fields=None,
+        dltile=None,
+        sort_field=None,
+        sort_order="asc",
+        randomize=None,
+        continuation_token=None,
+        **kwargs
+    ):
         """Search metadata given a spatio-temporal query. All parameters are
         optional. For accessing more than 10000 results, see :py:func:`features`.
 
@@ -354,96 +393,114 @@ class Metadata(Service):
             >>> len(scenes['features'])  # doctest: +SKIP
             2
         """
-        check_deprecated_kwargs(kwargs, {
-            "product": "products",
-            "const_id": "const_ids",
-            "sat_id": "sat_ids",
-            "start_time": "start_datetime",
-            "end_time": "end_datetime",
-            "offset": None,
-        })
+        check_deprecated_kwargs(
+            kwargs,
+            {
+                "product": "products",
+                "const_id": "const_ids",
+                "sat_id": "sat_ids",
+                "start_time": "start_datetime",
+                "end_time": "end_datetime",
+                "offset": None,
+            },
+        )
 
         if place:
             places = Places()
             places.auth = self.auth
-            shape = places.shape(place, geom='low')
-            geom = json.dumps(shape['geometry'])
+            shape = places.shape(place, geom="low")
+            geom = json.dumps(shape["geometry"])
 
         if dltile is not None:
             if isinstance(dltile, string_types):
                 dltile = self._raster.dltile(dltile)
             if isinstance(dltile, dict):
-                geom = dltile['geometry']
+                geom = dltile["geometry"]
 
         if isinstance(geom, dict):
             geom = json.dumps(geom)
 
-        kwargs.update({'date': date, 'limit': limit})
+        kwargs.update({"date": date, "limit": limit})
 
         if sat_ids:
             if isinstance(sat_ids, string_types):
                 sat_ids = [sat_ids]
 
-            kwargs['sat_ids'] = sat_ids
+            kwargs["sat_ids"] = sat_ids
 
         if products:
             if isinstance(products, string_types):
                 products = [products]
 
-            kwargs['products'] = products
+            kwargs["products"] = products
 
         if geom:
-            kwargs['geom'] = geom
+            kwargs["geom"] = geom
 
         if start_datetime:
-            kwargs['start_datetime'] = start_datetime
+            kwargs["start_datetime"] = start_datetime
 
         if end_datetime:
-            kwargs['end_datetime'] = end_datetime
+            kwargs["end_datetime"] = end_datetime
 
         if cloud_fraction is not None:
-            kwargs['cloud_fraction'] = cloud_fraction
+            kwargs["cloud_fraction"] = cloud_fraction
 
         if cloud_fraction_0 is not None:
-            kwargs['cloud_fraction_0'] = cloud_fraction_0
+            kwargs["cloud_fraction_0"] = cloud_fraction_0
 
         if fill_fraction is not None:
-            kwargs['fill_fraction'] = fill_fraction
+            kwargs["fill_fraction"] = fill_fraction
 
         if fields is not None:
-            kwargs['fields'] = fields
+            kwargs["fields"] = fields
 
         if q is not None:
             if not isinstance(q, list):
                 q = [q]
-            kwargs['query_expr'] = AndExpression(q).serialize()
+            kwargs["query_expr"] = AndExpression(q).serialize()
 
         if sort_field is not None:
-            kwargs['sort_field'] = sort_field
+            kwargs["sort_field"] = sort_field
 
         if sort_order is not None:
-            kwargs['sort_order'] = sort_order
+            kwargs["sort_order"] = sort_order
 
         if randomize is not None:
-            kwargs['random_seed'] = randomize
+            kwargs["random_seed"] = randomize
 
         if continuation_token is not None:
-            kwargs['continuation_token'] = continuation_token
+            kwargs["continuation_token"] = continuation_token
 
-        r = self.session.post('/search', json=kwargs)
+        r = self.session.post("/search", json=kwargs)
 
-        fc = {'type': 'FeatureCollection', "features": r.json()}
+        fc = {"type": "FeatureCollection", "features": r.json()}
 
-        if 'x-continuation-token' in r.headers:
-            fc['properties'] = {
-                'continuation_token': r.headers['x-continuation-token']}
+        if "x-continuation-token" in r.headers:
+            fc["properties"] = {"continuation_token": r.headers["x-continuation-token"]}
 
         return DotDict(fc)
 
-    def ids(self, products=None, sat_ids=None, date='acquired', place=None,
-            geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
-            cloud_fraction_0=None, fill_fraction=None, q=None, limit=100,
-            dltile=None, sort_field=None, sort_order=None, randomize=None, **kwargs):
+    def ids(
+        self,
+        products=None,
+        sat_ids=None,
+        date="acquired",
+        place=None,
+        geom=None,
+        start_datetime=None,
+        end_datetime=None,
+        cloud_fraction=None,
+        cloud_fraction_0=None,
+        fill_fraction=None,
+        q=None,
+        limit=100,
+        dltile=None,
+        sort_field=None,
+        sort_order=None,
+        randomize=None,
+        **kwargs
+    ):
         """Search metadata given a spatio-temporal query. All parameters are
         optional.
 
@@ -481,20 +538,50 @@ class Metadata(Service):
             ['landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1', 'landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
 
         """
-        result = self.search(sat_ids=sat_ids, products=products, date=date,
-                             place=place, geom=geom, start_datetime=start_datetime,
-                             end_datetime=end_datetime, cloud_fraction=cloud_fraction,
-                             cloud_fraction_0=cloud_fraction_0, fill_fraction=fill_fraction,
-                             q=q, limit=limit, fields=[], dltile=dltile,
-                             sort_field=sort_field, sort_order=sort_order, randomize=randomize, **kwargs)
+        result = self.search(
+            sat_ids=sat_ids,
+            products=products,
+            date=date,
+            place=place,
+            geom=geom,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            cloud_fraction=cloud_fraction,
+            cloud_fraction_0=cloud_fraction_0,
+            fill_fraction=fill_fraction,
+            q=q,
+            limit=limit,
+            fields=[],
+            dltile=dltile,
+            sort_field=sort_field,
+            sort_order=sort_order,
+            randomize=randomize,
+            **kwargs
+        )
 
-        return DotList(feature['id'] for feature in result['features'])
+        return DotList(feature["id"] for feature in result["features"])
 
-    def features(self, products=None, sat_ids=None, date='acquired', place=None,
-                 geom=None, start_datetime=None, end_datetime=None, cloud_fraction=None,
-                 cloud_fraction_0=None, fill_fraction=None, q=None, fields=None,
-                 batch_size=1000, dltile=None, sort_field=None, sort_order='asc',
-                 randomize=None, **kwargs):
+    def features(
+        self,
+        products=None,
+        sat_ids=None,
+        date="acquired",
+        place=None,
+        geom=None,
+        start_datetime=None,
+        end_datetime=None,
+        cloud_fraction=None,
+        cloud_fraction_0=None,
+        fill_fraction=None,
+        q=None,
+        fields=None,
+        batch_size=1000,
+        dltile=None,
+        sort_field=None,
+        sort_order="asc",
+        randomize=None,
+        **kwargs
+    ):
         """Generator that efficiently scrolls through the search results.
 
         :param int batch_size: Number of features to fetch per request.
@@ -518,23 +605,35 @@ class Metadata(Service):
         continuation_token = None
 
         while True:
-            result = self.search(sat_ids=sat_ids, products=products,
-                                 date=date, place=place, geom=geom,
-                                 start_datetime=start_datetime, end_datetime=end_datetime,
-                                 cloud_fraction=cloud_fraction,
-                                 cloud_fraction_0=cloud_fraction_0,
-                                 fill_fraction=fill_fraction, q=q,
-                                 fields=fields, limit=batch_size, dltile=dltile,
-                                 sort_field=sort_field, sort_order=sort_order,
-                                 randomize=randomize, continuation_token=continuation_token, **kwargs)
+            result = self.search(
+                sat_ids=sat_ids,
+                products=products,
+                date=date,
+                place=place,
+                geom=geom,
+                start_datetime=start_datetime,
+                end_datetime=end_datetime,
+                cloud_fraction=cloud_fraction,
+                cloud_fraction_0=cloud_fraction_0,
+                fill_fraction=fill_fraction,
+                q=q,
+                fields=fields,
+                limit=batch_size,
+                dltile=dltile,
+                sort_field=sort_field,
+                sort_order=sort_order,
+                randomize=randomize,
+                continuation_token=continuation_token,
+                **kwargs
+            )
 
-            if not result['features']:
+            if not result["features"]:
                 break
 
-            for feature in result['features']:
+            for feature in result["features"]:
                 yield feature
 
-            continuation_token = result['properties'].get('continuation_token')
+            continuation_token = result["properties"].get("continuation_token")
             if not continuation_token:
                 break
 
@@ -557,7 +656,7 @@ class Metadata(Service):
              'roll_angle', 'sat_id', 'solar_azimuth_angle', 'solar_elevation_angle', 'sw_version',
              'terrain_correction', 'tile_id']
         """
-        r = self.session.get('/get/{}'.format(image_id))
+        r = self.session.get("/get/{}".format(image_id))
         return DotDict(r.json())
 
     def get_by_ids(self, ids, fields=None, ignore_not_found=True, **kwargs):
@@ -572,12 +671,12 @@ class Metadata(Service):
         :return: List of image metadata.
         :rtype: list(dict)
         """
-        kwargs['ids'] = ids
-        kwargs['ignore_not_found'] = ignore_not_found
+        kwargs["ids"] = ids
+        kwargs["ignore_not_found"] = ignore_not_found
         if fields is not None:
-            kwargs['fields'] = fields
+            kwargs["fields"] = fields
 
-        r = self.session.post('/batch/images', json=kwargs)
+        r = self.session.post("/batch/images", json=kwargs)
         return DotList(r.json())
 
     def get_product(self, product_id):
@@ -586,7 +685,7 @@ class Metadata(Service):
         :param str product_id: Product Identifier.
 
         """
-        r = self.session.get('/products/{}'.format(product_id))
+        r = self.session.get("/products/{}".format(product_id))
         return DotDict(r.json())
 
     def get_band(self, band_id):
@@ -595,7 +694,7 @@ class Metadata(Service):
         :param str band_id: Band Identifier.
 
         """
-        r = self.session.get('/bands/{}'.format(band_id))
+        r = self.session.get("/bands/{}".format(band_id))
         return DotDict(r.json())
 
     def get_derived_band(self, derived_band_id):
@@ -604,5 +703,5 @@ class Metadata(Service):
         :param str derived_band_id: Derived band identifier.
 
         """
-        r = self.session.get('/bands/derived/{}'.format(derived_band_id))
+        r = self.session.get("/bands/derived/{}".format(derived_band_id))
         return DotDict(r.json())

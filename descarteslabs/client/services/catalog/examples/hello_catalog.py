@@ -17,10 +17,10 @@ raster_client = dl.Raster()
 # group related images.
 
 product_id = catalog_client.add_product(
-    'building_mask:osm:v0',
-    title='OSM Building Mask',
-    description='Rasterized OSM building footprints from vector data. Quality varies regionally'
-)['data']['id']
+    "building_mask:osm:v0",
+    title="OSM Building Mask",
+    description="Rasterized OSM building footprints from vector data. Quality varies regionally",
+)["data"]["id"]
 
 # Next we need to add bands. The core function of a band is to tell us how data
 # is encoded in the imagery that you are going to upload. For these building
@@ -28,16 +28,16 @@ product_id = catalog_client.add_product(
 
 band_id = catalog_client.add_band(
     product_id=product_id,  # id of the product we just created.
-    name='footprint',  # this is a unique name to describe what the band encodes.
+    name="footprint",  # this is a unique name to describe what the band encodes.
     jpx_layer=0,
     srcfile=0,
     srcband=1,  # src band is always a 1-based index (counting starts at 1)
     nbits=8,
-    dtype='Byte',
+    dtype="Byte",
     nodata=0,
-    data_range=[0, 2**8 - 1],
-    type='mask',
-)['data']['id']
+    data_range=[0, 2 ** 8 - 1],
+    type="mask",
+)["data"]["id"]
 
 # Now we want to add some actual imagery to our catalog. We will use the
 # `upload_image` method. Processing of the uploaded image is asynchronous, the
@@ -45,12 +45,12 @@ band_id = catalog_client.add_band(
 # For now you can use the metadata image searching functions to determine that your
 # imagery has been processed.
 
-image_path = os.path.join(os.path.dirname(__file__), 'building_mask.tif')
+image_path = os.path.join(os.path.dirname(__file__), "building_mask.tif")
 
 catalog_client.upload_image(image_path, product_id)
 
 # Poll for processed image
-processed_image_id = '{}:{}'.format(product_id, 'building_mask')
+processed_image_id = "{}:{}".format(product_id, "building_mask")
 
 image = None
 while True:
@@ -61,13 +61,15 @@ while True:
         sleep(2)
 
 # Lets look at our data
-raster_client.raster([processed_image_id], save=True, outfile_basename='./processed_building_mask')
+raster_client.raster(
+    [processed_image_id], save=True, outfile_basename="./processed_building_mask"
+)
 
 # Let's say we want to add a colormap to our data so that it is nicer to look
 # at. We have some built in colormaps which you can reference by name, and
 # you can also add a custom colormap.
 
-catalog_client.change_band(product_id, band_id, colormap_name='magma')
+catalog_client.change_band(product_id, band_id, colormap_name="magma")
 
 # Now calls to raster.raster will produce false color images. Note that because
 # of internal caching you will need to wait about 1 minute for your band
@@ -87,13 +89,15 @@ catalog_client.change_band(product_id, band_id, colormap=bad_colormap)
 # Maybe you play around with your new product and decide it has a wider appeal.
 # Lets share the product with some other folks.
 
-catalog_client.change_product(product_id, read=['some:group'])
+catalog_client.change_product(product_id, read=["some:group"])
 
 # WAIT, by default we have only set permissions for the product, not the bands
 # and images that belong to it. To do that we need to take advantage of the
 # set_global_permissions flag on the `change_product` method.
 
-catalog_client.change_product(product_id, read=['some:group'], set_global_permissions=True)
+catalog_client.change_product(
+    product_id, read=["some:group"], set_global_permissions=True
+)
 
 # Don't worry if all your imagery isn't available to the new read group immediately.
 # The update is handled in the background, so you don't have to wait for a (potentially long)
@@ -106,12 +110,12 @@ catalog_client.change_product(product_id, read=['some:group'], set_global_permis
 # them inaccessible.
 
 for band in metadata_client.bands(products=product_id):
-    catalog_client.remove_band(product_id, band['id'])
+    catalog_client.remove_band(product_id, band["id"])
 
 # Removing an image has the side effect that it will cleanup the image data
 # associated with this metadata.
-for _image in metadata_client.search(products=product_id)['features']:
-    catalog_client.remove_image(product_id, _image['id'])
+for _image in metadata_client.search(products=product_id)["features"]:
+    catalog_client.remove_image(product_id, _image["id"])
 
 sleep(3)  # need to wait for the database to register the deleted bands/images
 # a fix for this is in the works.

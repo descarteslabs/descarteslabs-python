@@ -29,41 +29,41 @@ def places_handler(args):
 
     kwargs = {}
 
-    if args.command == 'placetypes':
+    if args.command == "placetypes":
         placetypes = places.placetypes()
 
         print(json.dumps(placetypes, indent=2))
 
-    if args.command == 'models':
+    if args.command == "models":
         sources = places.sources()
 
         print(json.dumps(sources))
 
-    if args.command == 'find':
+    if args.command == "find":
 
         if args.placetype:
-            kwargs['placetype'] = args.placetype
+            kwargs["placetype"] = args.placetype
 
         find = places.find(args.argument, **kwargs)
 
         print(json.dumps(find, indent=2))
 
-    if args.command == 'shape':
-        kwargs['geom'] = args.geom
+    if args.command == "shape":
+        kwargs["geom"] = args.geom
         shape = places.shape(args.argument, **kwargs)
 
         print(json.dumps(shape, indent=2))
 
-    if args.command == 'prefix':
+    if args.command == "prefix":
         if args.argument is None:
             raise RuntimeError("Please specify location in argument")
 
         if args.placetype is None:
             raise RuntimeError("Please specify placetype, e.g. -placetype region")
 
-        kwargs['geom'] = args.geom
-        kwargs['output'] = args.output
-        kwargs['placetype'] = args.placetype
+        kwargs["geom"] = args.geom
+        kwargs["output"] = args.output
+        kwargs["placetype"] = args.placetype
 
         prefix = places.prefix(args.argument, **kwargs)
 

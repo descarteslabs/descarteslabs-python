@@ -15,6 +15,7 @@
 
 class ClientError(Exception):
     """ Base class """
+
     pass
 
 

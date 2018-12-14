@@ -5,7 +5,7 @@ storage_client = Storage()
 storage_client.set("my-key", "some-value")
 v = storage_client.get("my-key")
 
-assert (v == "some-value")
+assert v == "some-value"
 
 key_list = storage_client.list()
 assert "my-key" in key_list

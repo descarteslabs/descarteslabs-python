@@ -36,34 +36,51 @@ class TestMetadata(unittest.TestCase):
 
     def test_search(self):
         r = self.instance.search()
-        self.assertGreater(len(r['features']), 0)
+        self.assertGreater(len(r["features"]), 0)
 
     def test_search_dltile(self):
         dltile = "256:16:30.0:15:-11:591"
-        r = self.instance.search(start_datetime='2016-07-06', end_datetime='2016-07-07',
-                                 products=['landsat:LC08:PRE:TOAR'], dltile=dltile)
-        ids = [f['id'] for f in r['features']]
-        self.assertTrue('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1' in ids)
+        r = self.instance.search(
+            start_datetime="2016-07-06",
+            end_datetime="2016-07-07",
+            products=["landsat:LC08:PRE:TOAR"],
+            dltile=dltile,
+        )
+        ids = [f["id"] for f in r["features"]]
+        self.assertTrue("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1" in ids)
 
     def test_sat_id(self):
-        r = self.instance.search(start_datetime='2016-07-06', end_datetime='2016-07-07', sat_id='LANDSAT_8')
-        self.assertGreater(len(r['features']), 0)
+        r = self.instance.search(
+            start_datetime="2016-07-06", end_datetime="2016-07-07", sat_id="LANDSAT_8"
+        )
+        self.assertGreater(len(r["features"]), 0)
 
     def test_cloud_fraction(self):
-        r = self.instance.search(start_datetime='2016-07-06', end_datetime='2016-07-07', sat_id='LANDSAT_8',
-                                 cloud_fraction=0.5)
-        for feature in r['features']:
-            self.assertLess(feature['properties']['cloud_fraction'], 0.5)
+        r = self.instance.search(
+            start_datetime="2016-07-06",
+            end_datetime="2016-07-07",
+            sat_id="LANDSAT_8",
+            cloud_fraction=0.5,
+        )
+        for feature in r["features"]:
+            self.assertLess(feature["properties"]["cloud_fraction"], 0.5)
 
-        r = self.instance.search(start_datetime='2016-07-06', end_datetime='2016-07-07', sat_id='LANDSAT_8',
-                                 cloud_fraction=0.0)
-        for feature in r['features']:
-            self.assertEqual(feature['properties']['cloud_fraction'], 0.0)
+        r = self.instance.search(
+            start_datetime="2016-07-06",
+            end_datetime="2016-07-07",
+            sat_id="LANDSAT_8",
+            cloud_fraction=0.0,
+        )
+        for feature in r["features"]:
+            self.assertEqual(feature["properties"]["cloud_fraction"], 0.0)
 
     def test_search_by_product(self):
-        r = self.instance.search(start_datetime='2016-07-06', end_datetime='2016-07-07',
-                                 products=['landsat:LC08:PRE:TOAR'])
-        self.assertGreater(len(r['features']), 0)
+        r = self.instance.search(
+            start_datetime="2016-07-06",
+            end_datetime="2016-07-07",
+            products=["landsat:LC08:PRE:TOAR"],
+        )
+        self.assertGreater(len(r["features"]), 0)
 
     def test_fields(self):
         cases = [
@@ -75,13 +92,13 @@ class TestMetadata(unittest.TestCase):
 
         for fields in cases:
             r = self.instance.search(
-                start_datetime='2016-07-06',
-                end_datetime='2016-07-07',
+                start_datetime="2016-07-06",
+                end_datetime="2016-07-07",
                 products="landsat:LC08:PRE:TOAR",
                 limit=1,
-                fields=fields
+                fields=fields,
             )
-            for feature in r['features']:
+            for feature in r["features"]:
                 if "id" not in fields:
                     fields.append("id")
 
@@ -94,72 +111,78 @@ class TestMetadata(unittest.TestCase):
                 self.assertEqual(sorted(feature.keys()), sorted(fields))
 
         fields = ["cloud_fraction", "fill_fraction"]
-        r = self.instance.search(start_datetime='2016-07-06',
-                                 end_datetime='2016-07-07',
-                                 fields=fields)
-        for feature in r['features']:
-            self.assertEqual(sorted(feature['properties'].keys()), sorted(fields))
+        r = self.instance.search(
+            start_datetime="2016-07-06", end_datetime="2016-07-07", fields=fields
+        )
+        for feature in r["features"]:
+            self.assertEqual(sorted(feature["properties"].keys()), sorted(fields))
 
     def test_multiple_products_search(self):
         r = self.instance.search(
-            start_datetime='2016-07-06',
-            end_datetime='2016-07-07',
-            products=['landsat:LE07:PRE:TOAR', 'landsat:LC08:PRE:TOAR']
+            start_datetime="2016-07-06",
+            end_datetime="2016-07-07",
+            products=["landsat:LE07:PRE:TOAR", "landsat:LC08:PRE:TOAR"],
         )
-        self.assertGreater(len(r['features']), 0)
+        self.assertGreater(len(r["features"]), 0)
 
     def test_place(self):
-        r = self.instance.search(products=['landsat:LC08:PRE:TOAR'],
-                                 place='north-america_united-states_iowa',
-                                 limit=1)
-        self.assertEqual(1, len(r['features']))
+        r = self.instance.search(
+            products=["landsat:LC08:PRE:TOAR"],
+            place="north-america_united-states_iowa",
+            limit=1,
+        )
+        self.assertEqual(1, len(r["features"]))
 
     def test_summary(self):
         r = self.instance.summary(
-            start_datetime='2016-07-06',
-            end_datetime='2016-07-07',
-            products=['landsat:LC08:PRE:TOAR'],
-            pixels=True
+            start_datetime="2016-07-06",
+            end_datetime="2016-07-07",
+            products=["landsat:LC08:PRE:TOAR"],
+            pixels=True,
         )
-        self.assertIn('products', r)
-        self.assertIn('count', r)
-        self.assertIn('pixels', r)
-        self.assertIn('bytes', r)
-        self.assertGreater(r['count'], 0)
+        self.assertIn("products", r)
+        self.assertIn("count", r)
+        self.assertIn("pixels", r)
+        self.assertIn("bytes", r)
+        self.assertGreater(r["count"], 0)
 
     def test_summary_part(self):
         r = self.instance.summary(
-            start_datetime='2016-07-06',
-            end_datetime='2016-07-07',
-            products=['landsat:LC08:PRE:TOAR'],
-            part='year',
-            pixels=True
+            start_datetime="2016-07-06",
+            end_datetime="2016-07-07",
+            products=["landsat:LC08:PRE:TOAR"],
+            part="year",
+            pixels=True,
         )
-        self.assertIn('count', r)
-        self.assertIn('pixels', r)
-        self.assertIn('bytes', r)
-        self.assertIn('items', r)
-        self.assertEqual(len(r['items']), 1)
+        self.assertIn("count", r)
+        self.assertIn("pixels", r)
+        self.assertIn("bytes", r)
+        self.assertIn("items", r)
+        self.assertEqual(len(r["items"]), 1)
 
     def test_features(self):
-        r = self.instance.features(start_datetime='2016-07-06',
-                                   end_datetime='2016-07-07',
-                                   sat_id='LANDSAT_8',
-                                   batch_size=10)
+        r = self.instance.features(
+            start_datetime="2016-07-06",
+            end_datetime="2016-07-07",
+            sat_id="LANDSAT_8",
+            batch_size=10,
+        )
         first_21 = itertools.islice(r, 21)
         self.assertGreater(len(list(first_21)), 0)
 
     def test_products_search_sort(self):
-        r = self.instance.search(start_datetime='2016-07-06',
-                                 end_datetime='2016-07-07',
-                                 products=['landsat:LC08:PRE:TOAR'],
-                                 sort_field="cloud_fraction",
-                                 sort_order="desc")
-        self.assertGreater(len(r['features']), 0)
+        r = self.instance.search(
+            start_datetime="2016-07-06",
+            end_datetime="2016-07-07",
+            products=["landsat:LC08:PRE:TOAR"],
+            sort_field="cloud_fraction",
+            sort_order="desc",
+        )
+        self.assertGreater(len(r["features"]), 0)
 
         last = None
-        for feature in r['features']:
-            current = feature['properties']['cloud_fraction']
+        for feature in r["features"]:
+            current = feature["properties"]["cloud_fraction"]
             if last is None:
                 last = current
                 continue
@@ -171,87 +194,93 @@ class TestMetadata(unittest.TestCase):
         self.assertEqual(len(r), 1)
 
     def test_products_get(self):
-        product_id = 'landsat:LC08:PRE:TOAR'
+        product_id = "landsat:LC08:PRE:TOAR"
         r = self.instance.get_product(product_id)
-        self.assertEqual(r['id'], product_id)
+        self.assertEqual(r["id"], product_id)
 
     def test_bands_get(self):
-        band_id = 'landsat:LC08:PRE:TOAR:red'
+        band_id = "landsat:LC08:PRE:TOAR:red"
         try:
             band = self.instance.get_band(band_id)
-            self.assertEqual(band_id, band['id'])
+            self.assertEqual(band_id, band["id"])
         except NotFoundError:
             pass
 
     def test_bands_by_product_get(self):
-        product_id = 'landsat:LC08:PRE:TOAR'
+        product_id = "landsat:LC08:PRE:TOAR"
         bands = self.instance.get_bands_by_product(product_id)
         self.assertIn("derived:ndvi", bands)
         self.assertIn("landsat:LC08:PRE:TOAR:swir2", bands)
         self.assertGreater(len(bands), 16)  # 16 native bands
 
     def test_derived_bands_get(self):
-        band_id = 'derived:ndvi'
+        band_id = "derived:ndvi"
         try:
             d_band = self.instance.get_derived_band(band_id)
-            self.assertIn('bands', d_band)
+            self.assertIn("bands", d_band)
         except NotFoundError:
             pass
 
     def test_derived_bands_search(self):
-        bands = ['red', 'nir']
+        bands = ["red", "nir"]
         bands = self.instance.derived_bands(bands=bands)
 
     def test_get_bands_by_id(self):
-        self.instance.get_bands_by_id('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1')
+        self.instance.get_bands_by_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
 
     def test_expr_serialization(self):
         p = self.instance.properties
-        q = ((0.1 < p.cloud_fraction <= 0.2) & (p.sat_id == "f00b")) | (p.sat_id == "usa-245")
-        expected_q = {"or": [
-            {"and": [
-                {"range": {"cloud_fraction": {"gt": 0.1, "lte": 0.2}}},
-                {"eq": {"sat_id": "f00b"}}
-            ]},
-            {"eq": {"sat_id": "usa-245"}},
-        ]}
+        q = ((0.1 < p.cloud_fraction <= 0.2) & (p.sat_id == "f00b")) | (
+            p.sat_id == "usa-245"
+        )
+        expected_q = {
+            "or": [
+                {
+                    "and": [
+                        {"range": {"cloud_fraction": {"gt": 0.1, "lte": 0.2}}},
+                        {"eq": {"sat_id": "f00b"}},
+                    ]
+                },
+                {"eq": {"sat_id": "usa-245"}},
+            ]
+        }
 
         self.assertEqual(q.serialize(), expected_q)
 
     def test_datetime_backwards_compatibility(self):
         # TODO: Remove this test once old datetime format is deprecated and removed.
         search_r = self.instance.search(
-            start_time='2016-07-06',
-            end_time='2016-07-07',
-            products=['landsat:LC08:PRE:TOAR']
+            start_time="2016-07-06",
+            end_time="2016-07-07",
+            products=["landsat:LC08:PRE:TOAR"],
         )
-        self.assertGreater(len(search_r['features']), 0)
+        self.assertGreater(len(search_r["features"]), 0)
         features_r = self.instance.features(
-            start_time='2016-07-06',
-            end_time='2016-07-07',
-            sat_id='LANDSAT_8',
-            batch_size=10
+            start_time="2016-07-06",
+            end_time="2016-07-07",
+            sat_id="LANDSAT_8",
+            batch_size=10,
         )
         self.assertGreater(len(list(features_r)), 0)
         ids_r = self.instance.ids(
-            start_time='2016-07-06',
-            end_time='2016-07-07',
-            products=['landsat:LC08:PRE:TOAR'],
-            limit=10
+            start_time="2016-07-06",
+            end_time="2016-07-07",
+            products=["landsat:LC08:PRE:TOAR"],
+            limit=10,
         )
         self.assertGreater(len(list(ids_r)), 0)
         summary_r = self.instance.summary(
-            start_time='2016-07-06',
-            end_time='2016-07-07',
-            products=['landsat:LC08:PRE:TOAR'],
-            pixels=True
+            start_time="2016-07-06",
+            end_time="2016-07-07",
+            products=["landsat:LC08:PRE:TOAR"],
+            pixels=True,
         )
-        self.assertIn('products', summary_r)
-        self.assertIn('count', summary_r)
-        self.assertIn('pixels', summary_r)
-        self.assertIn('bytes', summary_r)
-        self.assertGreater(summary_r['count'], 0)
+        self.assertIn("products", summary_r)
+        self.assertIn("count", summary_r)
+        self.assertIn("pixels", summary_r)
+        self.assertIn("bytes", summary_r)
+        self.assertGreater(summary_r["count"], 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

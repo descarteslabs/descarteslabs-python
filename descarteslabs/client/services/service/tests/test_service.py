@@ -23,24 +23,24 @@ from descarteslabs.client.services.service.service import WrappedSession
 class TestService(unittest.TestCase):
     def test_session_token(self):
         token = "foo.bar.sig"
-        service = Service('foo', auth=MagicMock(token=token))
-        self.assertEqual(service.session.headers.get('Authorization'), token)
+        service = Service("foo", auth=MagicMock(token=token))
+        self.assertEqual(service.session.headers.get("Authorization"), token)
 
 
 class TestJsonApiService(unittest.TestCase):
     def test_session_token(self):
         token = "foo.bar.sig"
-        service = JsonApiService('foo', auth=MagicMock(token=token))
-        self.assertEqual(service.session.headers.get('Authorization'), token)
+        service = JsonApiService("foo", auth=MagicMock(token=token))
+        self.assertEqual(service.session.headers.get("Authorization"), token)
 
 
 class TestWrappedSession(unittest.TestCase):
     def test_pickling(self):
-        session = WrappedSession('http://example.com', timeout=10)
+        session = WrappedSession("http://example.com", timeout=10)
         self.assertEqual(10, session.timeout)
         unpickled = pickle.loads(pickle.dumps(session))
         self.assertEqual(10, unpickled.timeout)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

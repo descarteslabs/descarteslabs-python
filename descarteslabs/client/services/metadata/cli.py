@@ -26,68 +26,68 @@ def metadata_handler(args):
 
     kwargs = {}
 
-    if args.command == 'sources':
+    if args.command == "sources":
         sources = metadata.sources()
 
         print(json.dumps(sources, indent=2))
 
-    if args.command == 'summary':
+    if args.command == "summary":
         if args.place:
-            kwargs['place'] = args.place
+            kwargs["place"] = args.place
         if args.start_datetime:
-            kwargs['start_datetime'] = args.start_datetime
+            kwargs["start_datetime"] = args.start_datetime
         if args.end_datetime:
-            kwargs['end_datetime'] = args.end_datetime
+            kwargs["end_datetime"] = args.end_datetime
         if args.geom:
-            kwargs['geom'] = args.geom
+            kwargs["geom"] = args.geom
         if args.bbox:
-            kwargs['bbox'] = args.bbox
+            kwargs["bbox"] = args.bbox
 
         summary = metadata.summary(**kwargs)
 
         print(json.dumps(summary))
 
-    if args.command == 'search':
+    if args.command == "search":
         if args.place:
-            kwargs['place'] = args.place
+            kwargs["place"] = args.place
         if args.start_datetime:
-            kwargs['start_datetime'] = args.start_datetime
+            kwargs["start_datetime"] = args.start_datetime
         if args.end_datetime:
-            kwargs['end_datetime'] = args.end_datetime
+            kwargs["end_datetime"] = args.end_datetime
         if args.geom:
-            kwargs['geom'] = args.geom
+            kwargs["geom"] = args.geom
         if args.limit:
-            kwargs['limit'] = args.limit
+            kwargs["limit"] = args.limit
         if args.offset:
-            kwargs['offset'] = args.offset
+            kwargs["offset"] = args.offset
         if args.bbox:
-            kwargs['bbox'] = args.bbox
+            kwargs["bbox"] = args.bbox
 
         search = metadata.search(**kwargs)
 
         print(json.dumps(search, indent=2))
 
-    if args.command == 'ids':
+    if args.command == "ids":
         if args.place:
-            kwargs['place'] = args.place
+            kwargs["place"] = args.place
         if args.start_datetime:
-            kwargs['start_datetime'] = args.start_datetime
+            kwargs["start_datetime"] = args.start_datetime
         if args.end_datetime:
-            kwargs['end_datetime'] = args.end_datetime
+            kwargs["end_datetime"] = args.end_datetime
         if args.geom:
-            kwargs['geom'] = args.geom
+            kwargs["geom"] = args.geom
         if args.limit:
-            kwargs['limit'] = args.limit
+            kwargs["limit"] = args.limit
         if args.offset:
-            kwargs['offset'] = args.offset
+            kwargs["offset"] = args.offset
         if args.bbox:
-            kwargs['bbox'] = args.bbox
+            kwargs["bbox"] = args.bbox
 
         ids = metadata.ids(**kwargs)
 
-        print(' '.join(ids))
+        print(" ".join(ids))
 
-    if args.command == 'get':
+    if args.command == "get":
         get = metadata.get(args.argument)
 
         print(json.dumps(get))

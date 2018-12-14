@@ -14,44 +14,44 @@ catalog_client = dl.Catalog()
 metadata_client = dl.Metadata()
 
 product_id = catalog_client.add_product(
-    'building_mask:osm:test_v1',
-    title='Multi File OSM Building Mask Test',
-    description='Rasterized OSM building footprints from vector data. '
-    'Quality varies regionally. Multi file scene test.'
-)['data']['id']
+    "building_mask:osm:test_v1",
+    title="Multi File OSM Building Mask Test",
+    description="Rasterized OSM building footprints from vector data. "
+    "Quality varies regionally. Multi file scene test.",
+)["data"]["id"]
 
 band0_id = catalog_client.add_band(
     product_id=product_id,  # id of the product we just created.
-    name='footprint_file0',  # this is a unique name to describe what the band encodes.
+    name="footprint_file0",  # this is a unique name to describe what the band encodes.
     jpx_layer=0,
     srcfile=0,
     srcband=1,  # src band is always a 1-based index (counting starts at 1)
     nbits=8,
-    dtype='Byte',
+    dtype="Byte",
     nodata=0,
-    data_range=[0, 2**8 - 1],
-    type='mask',
-)['data']['id']
+    data_range=[0, 2 ** 8 - 1],
+    type="mask",
+)["data"]["id"]
 
 
 band1_id = catalog_client.add_band(
     product_id=product_id,  # id of the product we just created.
-    band_id='footprint_file1',  # this is a unique name to describe what the band encodes.
-    name='Footprint 1',  # More human friendly name for display purposes (can be same as id).
+    band_id="footprint_file1",  # this is a unique name to describe what the band encodes.
+    name="Footprint 1",  # More human friendly name for display purposes (can be same as id).
     jpx_layer=0,
     # Note the different srcfile index here. This band references data in the second file in the scene.
     srcfile=1,
     srcband=1,  # src band is always a 1-based index (counting starts at 1)
     nbits=8,
-    dtype='Byte',
+    dtype="Byte",
     nodata=0,
-    data_range=[0, 2**8 - 1],
-    type='mask',
-)['data']['id']
+    data_range=[0, 2 ** 8 - 1],
+    type="mask",
+)["data"]["id"]
 
-image_path = os.path.join(os.path.dirname(__file__), 'building_mask.tif')
-other_image_path = os.path.join(os.path.dirname(__file__), 'other_building_mask.tif')
-os.system('cp {src} {dest}'.format(src=image_path, dest=other_image_path))
+image_path = os.path.join(os.path.dirname(__file__), "building_mask.tif")
+other_image_path = os.path.join(os.path.dirname(__file__), "other_building_mask.tif")
+os.system("cp {src} {dest}".format(src=image_path, dest=other_image_path))
 
 
 # Now we will use the upload_file method with the `multi` flag enabled to do a
@@ -59,16 +59,13 @@ os.system('cp {src} {dest}'.format(src=image_path, dest=other_image_path))
 # to specify the unique key with the `image_key` field. Failure to
 # provide unique keys could result in data being overwritten.
 
-image_key = '_'.join(['test_multi_image_scene', str(arrow.now().timestamp)])
+image_key = "_".join(["test_multi_image_scene", str(arrow.now().timestamp)])
 catalog_client.upload_image(
-    [image_path, other_image_path],
-    product_id,
-    multi=True,
-    image_key=image_key,
+    [image_path, other_image_path], product_id, multi=True, image_key=image_key
 )
 
 # Poll for processed image
-processed_image_id = '{}:{}'.format(product_id, image_key)
+processed_image_id = "{}:{}".format(product_id, image_key)
 
 image = None
 while True:
@@ -78,4 +75,4 @@ while True:
     except Exception:
         sleep(2)
 
-assert len(image['files']) == 2
+assert len(image["files"]) == 2

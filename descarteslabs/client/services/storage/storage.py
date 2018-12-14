@@ -32,31 +32,37 @@ class Storage(Service):
         if auth is None:
             auth = Auth()
 
-        warnings.simplefilter('always', DeprecationWarning)
+        warnings.simplefilter("always", DeprecationWarning)
         if url is None:
             url = os.environ.get(
                 "DESCARTESLABS_STORAGE_URL",
-                "https://platform.descarteslabs.com/storage/v1"
+                "https://platform.descarteslabs.com/storage/v1",
             )
 
         self._gcs_upload_service = ThirdPartyService()
 
         super(Storage, self).__init__(url, auth=auth)
 
-    def get_signed_url(self, key, storage_type='data'):
-        r = self.session.get('/{storage_type}/get_signed_url/{key}'.format(storage_type=storage_type, key=key))
-        r.raise_for_status()
-        return r.content.decode('ascii')
-
-    def get_upload_url(self, key, storage_type='data', **kwargs):
+    def get_signed_url(self, key, storage_type="data"):
         r = self.session.get(
-            '/{storage_type}/new_resumable_url/{key}'.format(storage_type=storage_type, key=key),
-            params=kwargs
+            "/{storage_type}/get_signed_url/{key}".format(
+                storage_type=storage_type, key=key
+            )
         )
         r.raise_for_status()
-        return r.content.decode('ascii')
+        return r.content.decode("ascii")
 
-    def delete(self, key, storage_type='data'):
+    def get_upload_url(self, key, storage_type="data", **kwargs):
+        r = self.session.get(
+            "/{storage_type}/new_resumable_url/{key}".format(
+                storage_type=storage_type, key=key
+            ),
+            params=kwargs,
+        )
+        r.raise_for_status()
+        return r.content.decode("ascii")
+
+    def delete(self, key, storage_type="data"):
         """
         Delete the data stored at location `key` with storage type
         `storage_type`
@@ -66,9 +72,11 @@ class Storage(Service):
 
         """
 
-        self.session.delete('/{storage_type}/{key}'.format(storage_type=storage_type, key=key))
+        self.session.delete(
+            "/{storage_type}/{key}".format(storage_type=storage_type, key=key)
+        )
 
-    def set(self, key, value, storage_type='data'):
+    def set(self, key, value, storage_type="data"):
         """
         Store string `value` at location `key`, with storage type
         `storage_type`
@@ -83,7 +91,7 @@ class Storage(Service):
         self._gcs_upload_service.session.put(rurl, data=value)
         return
 
-    def get(self, key, storage_type='data'):
+    def get(self, key, storage_type="data"):
         """
         Retrieve data stored at location `key`, with storage type
         `storage_type`
@@ -96,11 +104,13 @@ class Storage(Service):
 
         """
 
-        r = self.session.get('/{storage_type}/get/{key}'.format(storage_type=storage_type, key=key))
+        r = self.session.get(
+            "/{storage_type}/get/{key}".format(storage_type=storage_type, key=key)
+        )
         r.raise_for_status()
         return r.content
 
-    def list(self, prefix=None, storage_type='data'):
+    def list(self, prefix=None, storage_type="data"):
         """
         List keys that have been stored, with an optional `prefix` and `storage_type`.
 
@@ -113,13 +123,13 @@ class Storage(Service):
         """
 
         r = self.session.get(
-            '/{storage_type}/list'.format(storage_type=storage_type),
-            params={'prefix': prefix}
+            "/{storage_type}/list".format(storage_type=storage_type),
+            params={"prefix": prefix},
         )
         r.raise_for_status()
         return r.json()
 
-    def iter_list(self, prefix=None, storage_type='data'):
+    def iter_list(self, prefix=None, storage_type="data"):
         """
         Yield keys that have been stored, with an optional `prefix` and `storage_type`.
 
@@ -132,23 +142,25 @@ class Storage(Service):
         """
 
         r = self.session.get(
-            '/{storage_type}/list'.format(storage_type=storage_type),
-            params={'prefix': prefix}
+            "/{storage_type}/list".format(storage_type=storage_type),
+            params={"prefix": prefix},
         )
         r.raise_for_status()
         for item in r.json():
             yield item
-        while r.headers.get('X-NEXT', None) is not None:
+        while r.headers.get("X-NEXT", None) is not None:
             r = self.session.get(
-                '/{storage_type}/list'.format(storage_type=storage_type),
-                headers={'X-NEXT': r.headers['X-NEXT']},
-                params={'prefix': prefix}
+                "/{storage_type}/list".format(storage_type=storage_type),
+                headers={"X-NEXT": r.headers["X-NEXT"]},
+                params={"prefix": prefix},
             )
             r.raise_for_status()
             for item in r.json():
                 yield item
 
-    def copy_from_bucket(self, src_bucket_name, src, dest, user_ns=None, storage_type='data'):
+    def copy_from_bucket(
+        self, src_bucket_name, src, dest, user_ns=None, storage_type="data"
+    ):
         """Copy a file from a google cloud storage bucket to your descartes
         data bucket. This requires that the dlstorage service account have
         access to your 3rd party bucket.
@@ -161,14 +173,14 @@ class Storage(Service):
         if user_ns is None:
             user_ns = self.auth.namespace
         r = self.session.post(
-            '/copy/{user_ns}/src/{src_bucket}/{src}/dest/{storage_type}/{dest}'.format(
+            "/copy/{user_ns}/src/{src_bucket}/{src}/dest/{storage_type}/{dest}".format(
                 user_ns=user_ns,
                 src_bucket=src_bucket_name,
                 src=src,
                 storage_type=storage_type,
-                dest=dest
+                dest=dest,
             ),
-            json={}
+            json={},
         )
         return r.json()
 

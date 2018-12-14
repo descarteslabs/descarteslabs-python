@@ -24,8 +24,14 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.version import __version__
-from descarteslabs.client.exceptions import ServerError, BadRequestError, NotFoundError, RateLimitError, \
-    GatewayTimeoutError, ConflictError
+from descarteslabs.client.exceptions import (
+    ServerError,
+    BadRequestError,
+    NotFoundError,
+    RateLimitError,
+    GatewayTimeoutError,
+    ConflictError,
+)
 from descarteslabs.common.threading.local import ThreadLocalWrapper
 
 
@@ -40,17 +46,21 @@ class WrappedSession(requests.Session):
         super(WrappedSession, self).__init__()
 
     def request(self, method, url, **kwargs):
-        if self.timeout and 'timeout' not in kwargs:
-            kwargs['timeout'] = self.timeout
+        if self.timeout and "timeout" not in kwargs:
+            kwargs["timeout"] = self.timeout
 
-        resp = super(WrappedSession, self).request(method, self.base_url + url, **kwargs)
+        resp = super(WrappedSession, self).request(
+            method, self.base_url + url, **kwargs
+        )
 
         if resp.status_code >= 200 and resp.status_code < 400:
             return resp
         elif resp.status_code == 400:
             raise BadRequestError(resp.text)
         elif resp.status_code == 404:
-            raise NotFoundError(resp.text if 'text' in resp else '404 {} {}'.format(method, url))
+            raise NotFoundError(
+                resp.text if "text" in resp else "404 {} {}".format(method, url)
+            )
         elif resp.status_code == 409:
             raise ConflictError(resp.text)
         elif resp.status_code == 429:
@@ -58,7 +68,8 @@ class WrappedSession(requests.Session):
         elif resp.status_code == 504:
             raise GatewayTimeoutError(
                 "Your request timed out on the server. "
-                "Consider reducing the complexity of your request.")
+                "Consider reducing the complexity of your request."
+            )
         else:
             raise ServerError(resp.text)
 
@@ -66,16 +77,17 @@ class WrappedSession(requests.Session):
 class Service(object):
     TIMEOUT = (9.5, 30)
 
-    RETRY_CONFIG = Retry(total=3,
-                         connect=2,
-                         read=2,
-                         status=2,
-                         backoff_factor=random.uniform(1, 3),
-                         method_whitelist=frozenset([
-                             'HEAD', 'TRACE', 'GET', 'POST',
-                             'PUT', 'OPTIONS', 'DELETE'
-                         ]),
-                         status_forcelist=[500, 502, 503, 504])
+    RETRY_CONFIG = Retry(
+        total=3,
+        connect=2,
+        read=2,
+        status=2,
+        backoff_factor=random.uniform(1, 3),
+        method_whitelist=frozenset(
+            ["HEAD", "TRACE", "GET", "POST", "PUT", "OPTIONS", "DELETE"]
+        ),
+        status_forcelist=[500, 502, 503, 504],
+    )
 
     # We share an adapter (one per thread/process) among all clients to take advantage
     # of the single underlying connection pool.
@@ -86,7 +98,10 @@ class Service(object):
             auth = Auth()
 
         if token is not None:
-            warn("setting token at service level will be removed in future", DeprecationWarning)
+            warn(
+                "setting token at service level will be removed in future",
+                DeprecationWarning,
+            )
             auth._token = token
 
         self.auth = auth
@@ -110,30 +125,38 @@ class Service(object):
     @property
     def session(self):
         session = self._session.get()
-        if session.headers.get('Authorization') != self.token:
-            session.headers['Authorization'] = self.token
+        if session.headers.get("Authorization") != self.token:
+            session.headers["Authorization"] = self.token
 
         return session
 
     def build_session(self):
         s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
-        s.mount('https://', self.ADAPTER.get())
+        s.mount("https://", self.ADAPTER.get())
 
-        s.headers.update({
-            "Content-Type": "application/json",
-            "User-Agent": "dl-python/{}".format(__version__),
-        })
+        s.headers.update(
+            {
+                "Content-Type": "application/json",
+                "User-Agent": "dl-python/{}".format(__version__),
+            }
+        )
 
         try:
-            s.headers.update({
-                # https://github.com/easybuilders/easybuild/wiki/OS_flavor_name_version
-                "X-Platform": platform.platform(),
-                "X-Python": platform.python_version(),
-                # https://stackoverflow.com/questions/47608532/how-to-detect-from-within-python-whether-packages-are-managed-with-conda
-                "X-Conda": str(os.path.exists(os.path.join(sys.prefix, 'conda-meta', 'history'))),
-                # https://stackoverflow.com/questions/15411967/how-can-i-check-if-code-is-executed-in-the-ipython-notebook
-                "X-Notebook": str('ipykernel' in sys.modules),
-            })
+            s.headers.update(
+                {
+                    # https://github.com/easybuilders/easybuild/wiki/OS_flavor_name_version
+                    "X-Platform": platform.platform(),
+                    "X-Python": platform.python_version(),
+                    # https://stackoverflow.com/questions/47608532/how-to-detect-from-within-python-whether-packages-are-managed-with-conda
+                    "X-Conda": str(
+                        os.path.exists(
+                            os.path.join(sys.prefix, "conda-meta", "history")
+                        )
+                    ),
+                    # https://stackoverflow.com/questions/15411967/how-can-i-check-if-code-is-executed-in-the-ipython-notebook
+                    "X-Notebook": str("ipykernel" in sys.modules),
+                }
+            )
         except Exception:
             pass
 
@@ -143,20 +166,17 @@ class Service(object):
 class JsonApiService(Service):
     def build_session(self):
         s = super(JsonApiService, self).build_session()
-        s.headers.update({
-            "Content-Type": "application/vnd.api+json",
-            "Accept": "application/vnd.api+json"
-        })
+        s.headers.update(
+            {
+                "Content-Type": "application/vnd.api+json",
+                "Accept": "application/vnd.api+json",
+            }
+        )
         return s
 
     @staticmethod
     def jsonapi_document(type, attributes, id=None):
-        resource = {
-            "data": {
-                "type": type,
-                "attributes": attributes
-            }
-        }
+        resource = {"data": {"type": type, "attributes": attributes}}
         if id is not None:
             resource["data"]["id"] = id
         return resource
@@ -168,37 +188,37 @@ class JsonApiService(Service):
         else:
             if len(ids_list) != len(attributes_list):
                 raise ValueError(
-                    "Different number of resources given than IDs: {} vs {}".foramt(len(attributes_list), len(ids_list))
+                    "Different number of resources given than IDs: {} vs {}".foramt(
+                        len(attributes_list), len(ids_list)
+                    )
                 )
         resources = []
         for attributes, id in zip(attributes_list, ids_list):
-            resource = {
-                "type": type,
-                "attributes": attributes
-            }
+            resource = {"type": type, "attributes": attributes}
             if id is not None:
                 resource["id"] = id
             resources.append(resource)
-        return {
-            "data": resources
-        }
+        return {"data": resources}
 
 
 class ThirdPartyService(object):
     TIMEOUT = (9.5, 30)
 
-    RETRY_CONFIG = Retry(total=10,
-                         read=2,
-                         backoff_factor=random.uniform(1, 3),
-                         method_whitelist=frozenset([
-                             'HEAD', 'TRACE', 'GET', 'POST',
-                             'PUT', 'OPTIONS', 'DELETE'
-                         ]),
-                         status_forcelist=[429, 500, 502, 503, 504])
+    RETRY_CONFIG = Retry(
+        total=10,
+        read=2,
+        backoff_factor=random.uniform(1, 3),
+        method_whitelist=frozenset(
+            ["HEAD", "TRACE", "GET", "POST", "PUT", "OPTIONS", "DELETE"]
+        ),
+        status_forcelist=[429, 500, 502, 503, 504],
+    )
 
-    ADAPTER = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=ThirdPartyService.RETRY_CONFIG))
+    ADAPTER = ThreadLocalWrapper(
+        lambda: HTTPAdapter(max_retries=ThirdPartyService.RETRY_CONFIG)
+    )
 
-    def __init__(self, url=''):
+    def __init__(self, url=""):
         self.base_url = url
 
         self._session = ThreadLocalWrapper(self.build_session)
@@ -209,11 +229,13 @@ class ThirdPartyService(object):
 
     def build_session(self):
         s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
-        s.mount('https://', self.ADAPTER.get())
+        s.mount("https://", self.ADAPTER.get())
 
-        s.headers.update({
-            "Content-Type": "application/octet-stream",
-            "User-Agent": "dl-python/{}".format(__version__)
-        })
+        s.headers.update(
+            {
+                "Content-Type": "application/octet-stream",
+                "User-Agent": "dl-python/{}".format(__version__),
+            }
+        )
 
         return s

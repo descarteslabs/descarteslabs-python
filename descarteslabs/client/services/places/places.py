@@ -36,7 +36,10 @@ class Places(Service):
             auth = Auth()
 
         if url is None:
-            url = os.environ.get("DESCARTESLABS_PLACES_URL", "https://platform.descarteslabs.com/waldo/v2")
+            url = os.environ.get(
+                "DESCARTESLABS_PLACES_URL",
+                "https://platform.descarteslabs.com/waldo/v2",
+            )
 
         super(Places, self).__init__(url, auth=auth)
         self.cache = TTLCache(maxsize, ttl)
@@ -48,10 +51,10 @@ class Places(Service):
             List of placetypes ['continent', 'country', 'dependency', 'macroregion', 'region',
                                 'district', 'mesoregion', 'microregion', 'county', 'locality']
         """
-        r = self.session.get('/placetypes')
+        r = self.session.get("/placetypes")
         return r.json()
 
-    def random(self, geom='low', placetype=None):
+    def random(self, geom="low", placetype=None):
         """Get a random location
 
         geom: string
@@ -62,19 +65,19 @@ class Places(Service):
         params = {}
 
         if geom:
-            params['geom'] = geom
+            params["geom"] = geom
 
         if placetype:
-            params['placetype'] = placetype
+            params["placetype"] = placetype
 
-        r = self.session.get('/random', params=params)
+        r = self.session.get("/random", params=params)
 
         if r.status_code != 200:
             raise RuntimeError("%s: %s" % (r.status_code, r.text))
 
         return DotDict(r.json())
 
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'find'))
+    @cachedmethod(operator.attrgetter("cache"), key=partial(hashkey, "find"))
     def find(self, path, **kwargs):
         """Find candidate slugs based on full or partial path.
 
@@ -97,7 +100,7 @@ class Places(Service):
               }
             ]
         """
-        r = self.session.get('/find/%s' % path, params=kwargs)
+        r = self.session.get("/find/%s" % path, params=kwargs)
         return DotList(r.json())
 
     def search(self, q, limit=10, country=None, region=None, placetype=None):
@@ -126,26 +129,26 @@ class Places(Service):
         params = {}
 
         if q:
-            params['q'] = q
+            params["q"] = q
 
         if country:
-            params['country'] = country
+            params["country"] = country
 
         if region:
-            params['region'] = region
+            params["region"] = region
 
         if placetype:
-            params['placetype'] = placetype
+            params["placetype"] = placetype
 
         if limit:
-            params['n'] = limit
+            params["n"] = limit
 
-        r = self.session.get('/search', params=params, timeout=self.TIMEOUT)
+        r = self.session.get("/search", params=params, timeout=self.TIMEOUT)
 
         return DotList(r.json())
 
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'shape'))
-    def shape(self, slug, output='geojson', geom='low'):
+    @cachedmethod(operator.attrgetter("cache"), key=partial(hashkey, "shape"))
+    def shape(self, slug, output="geojson", geom="low"):
         """Get the geometry for a specific slug
 
         :param slug: Slug identifier.
@@ -175,12 +178,12 @@ class Places(Service):
         """
         params = {}
 
-        params['geom'] = geom
-        r = self.session.get('/shape/%s.%s' % (slug, output), params=params)
+        params["geom"] = geom
+        r = self.session.get("/shape/%s.%s" % (slug, output), params=params)
         return DotDict(r.json())
 
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'prefix'))
-    def prefix(self, slug, output='geojson', placetype=None, geom='low'):
+    @cachedmethod(operator.attrgetter("cache"), key=partial(hashkey, "prefix"))
+    def prefix(self, slug, output="geojson", placetype=None, geom="low"):
         """Get all the places that start with a prefix
 
         :param str slug: Slug identifier.
@@ -200,34 +203,43 @@ class Places(Service):
         params = {}
 
         if placetype:
-            params['placetype'] = placetype
-        params['geom'] = geom
-        r = self.session.get('/prefix/%s.%s' % (slug, output), params=params)
+            params["placetype"] = placetype
+        params["geom"] = geom
+        r = self.session.get("/prefix/%s.%s" % (slug, output), params=params)
 
         return DotDict(r.json())
 
     def sources(self):
         """Get a list of sources
         """
-        r = self.session.get('/sources', timeout=self.TIMEOUT)
+        r = self.session.get("/sources", timeout=self.TIMEOUT)
 
         return DotList(r.json())
 
     def categories(self):
         """Get a list of categories
         """
-        r = self.session.get('/categories', timeout=self.TIMEOUT)
+        r = self.session.get("/categories", timeout=self.TIMEOUT)
 
         return DotList(r.json())
 
     def metrics(self):
         """Get a list of metrics
         """
-        r = self.session.get('/metrics', timeout=self.TIMEOUT)
+        r = self.session.get("/metrics", timeout=self.TIMEOUT)
 
         return DotList(r.json())
 
-    def data(self, slug, source=None, category=None, metric=None, units=None, date=None, placetype='county'):
+    def data(
+        self,
+        slug,
+        source=None,
+        category=None,
+        metric=None,
+        units=None,
+        date=None,
+        placetype="county",
+    ):
         """Get all values for a prefix search and point in time
 
         :param str slug: Slug identifier (or shape id).
@@ -242,25 +254,24 @@ class Places(Service):
         params = {}
 
         if source:
-            params['source'] = source
+            params["source"] = source
 
         if category:
-            params['category'] = category
+            params["category"] = category
 
         if metric:
-            params['metric'] = metric
+            params["metric"] = metric
 
         if units:
-            params['units'] = units
+            params["units"] = units
 
         if date:
-            params['date'] = date
+            params["date"] = date
 
         if placetype:
-            params['placetype'] = placetype
+            params["placetype"] = placetype
 
-        r = self.session.get('/data/%s' % (slug),
-                             params=params, timeout=self.TIMEOUT)
+        r = self.session.get("/data/%s" % (slug), params=params, timeout=self.TIMEOUT)
 
         return r.json()
 
@@ -278,19 +289,20 @@ class Places(Service):
         params = {}
 
         if source:
-            params['source'] = source
+            params["source"] = source
 
         if category:
-            params['category'] = category
+            params["category"] = category
 
         if metric:
-            params['metric'] = metric
+            params["metric"] = metric
 
         if units:
-            params['units'] = units
+            params["units"] = units
 
-        r = self.session.get('/statistics/%s' % (slug),
-                             params=params, timeout=self.TIMEOUT)
+        r = self.session.get(
+            "/statistics/%s" % (slug), params=params, timeout=self.TIMEOUT
+        )
 
         return r.json()
 
@@ -310,26 +322,25 @@ class Places(Service):
             if isinstance(source, string_types):
                 source = [source]
 
-            params['source'] = source
+            params["source"] = source
 
         if category:
 
             if isinstance(category, string_types):
                 category = [category]
 
-            params['category'] = category
+            params["category"] = category
 
         if metric:
 
             if isinstance(metric, string_types):
                 metric = [metric]
 
-            params['metric'] = metric
+            params["metric"] = metric
 
         if date:
-            params['date'] = date
+            params["date"] = date
 
-        r = self.session.get('/value/%s' % (slug),
-                             params=params, timeout=self.TIMEOUT)
+        r = self.session.get("/value/%s" % (slug), params=params, timeout=self.TIMEOUT)
 
         return r.json()

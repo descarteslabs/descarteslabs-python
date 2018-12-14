@@ -29,60 +29,80 @@ class TestPlaces(unittest.TestCase):
         self.assertGreaterEqual(10, len(data))
 
     def test_find(self):
-        r = self.instance.find('united-states_iowa')
+        r = self.instance.find("united-states_iowa")
         self.assertEqual(1, len(r))
 
     def test_search(self):
-        r = self.instance.search('texas')
+        r = self.instance.search("texas")
         self.assertEqual(8, len(r))
 
-        r = self.instance.search('texas', country='united-states')
+        r = self.instance.search("texas", country="united-states")
         self.assertEqual(7, len(r))
 
-        r = self.instance.search('texas', country='united-states', placetype='county')
+        r = self.instance.search("texas", country="united-states", placetype="county")
         self.assertEqual(2, len(r))
 
-        r = self.instance.search('texas', country='united-states', region='oklahoma', placetype='county')
+        r = self.instance.search(
+            "texas", country="united-states", region="oklahoma", placetype="county"
+        )
         self.assertEqual(1, len(r))
 
     def test_shape(self):
-        r = self.instance.shape('north-america_united-states_iowa')
-        self.assertEqual(85688713, r['id'])
+        r = self.instance.shape("north-america_united-states_iowa")
+        self.assertEqual(85688713, r["id"])
 
     def test_prefix(self):
         # counties by default
-        r = self.instance.prefix('north-america_united-states_iowa')
-        self.assertEqual(99, len(r['features']))
+        r = self.instance.prefix("north-america_united-states_iowa")
+        self.assertEqual(99, len(r["features"]))
 
-        r = self.instance.prefix('north-america_united-states_iowa', placetype='district')
-        self.assertEqual(9, len(r['features']))
+        r = self.instance.prefix(
+            "north-america_united-states_iowa", placetype="district"
+        )
+        self.assertEqual(9, len(r["features"]))
 
     def test_sources(self):
         r = self.instance.sources()
-        self.assertIn({'name': 'nass'}, r)
+        self.assertIn({"name": "nass"}, r)
 
     def test_categories(self):
         r = self.instance.categories()
-        self.assertIn({'name': 'corn'}, r)
+        self.assertIn({"name": "corn"}, r)
 
     def test_metrics(self):
         r = self.instance.metrics()
-        self.assertIn({'name': 'yield', 'units': 'bu/ac'}, r)
+        self.assertIn({"name": "yield", "units": "bu/ac"}, r)
 
     def test_value(self):
-        r = self.instance.value('north-america_united-states', source='nass', category='corn', metric='yield')
+        r = self.instance.value(
+            "north-america_united-states",
+            source="nass",
+            category="corn",
+            metric="yield",
+        )
         self.assertEqual(1, len(r))
 
     def test_statistics(self):
-        r = self.instance.statistics('north-america_united-states', source='nass', category='corn', metric='yield',
-                                     units='bu/ac')
+        r = self.instance.statistics(
+            "north-america_united-states",
+            source="nass",
+            category="corn",
+            metric="yield",
+            units="bu/ac",
+        )
         self.assertEqual(36, len(r))
 
     def test_data(self):
-        r = self.instance.data('north-america_united-states', source='nass', category='corn', metric='yield',
-                               date='2015-01-01', units='bu/ac')
+        r = self.instance.data(
+            "north-america_united-states",
+            source="nass",
+            category="corn",
+            metric="yield",
+            date="2015-01-01",
+            units="bu/ac",
+        )
         self.assertEqual(1439, len(r))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
