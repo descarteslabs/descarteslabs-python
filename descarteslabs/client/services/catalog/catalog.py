@@ -203,7 +203,7 @@ class Catalog(Service):
     def change_product(
         self, product_id, add_namespace=False, set_global_permissions=False, **kwargs
     ):
-        """Update a product to your catalog.
+        """Update a product in your catalog.
 
         :param str product_id: (Required) The ID of the product to change.
         :param list(str) read: A list of groups, or user hashes to give read access to.
@@ -432,7 +432,7 @@ class Catalog(Service):
         return r.json()
 
     def change_band(self, product_id, name, add_namespace=False, **kwargs):
-        """Add a data band to an existing product.
+        """Update a data band of a product.
 
         :param str product_id: (Required) Product to which this band belongs.
         :param str name: Name or id of band to modify.
@@ -582,7 +582,7 @@ class Catalog(Service):
         return r.json()
 
     def change_image(self, product_id, image_id, add_namespace=False, **kwargs):
-        """Add an image metadata entry to a product.
+        """Update an image metadata entry of a product.
 
         :param str product_id: (Required) Product to which this image belongs.
         :param str image_id: (Required) ID of the image to modify.
