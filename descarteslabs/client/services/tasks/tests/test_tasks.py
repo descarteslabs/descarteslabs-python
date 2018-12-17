@@ -19,7 +19,8 @@ import mock
 import responses
 
 from descarteslabs.client.auth import Auth
-from descarteslabs.client.services.tasks import CloudFunction, Tasks, as_completed
+from descarteslabs.client.services.tasks import CloudFunction, Tasks, as_completed, GroupTerminalException
+from descarteslabs.common.tasks import FutureTask
 
 # flake8: noqa
 public_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0sImlzcyI6Imh0dHBzOi8vZGVzY2FydGVzbGFicy5hdXRoMC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMTExMzg1NTY1MjQ4MTIzOTU3MTIiLCJhdWQiOiJaT0JBaTRVUk9sNWdLWklweHhsd09FZng4S3BxWGYyYyIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNDc4MjAxNDE5fQ.sbSzD9ACNZvaxSgClZCnZMpee_p5MBaKV9uHZQonD6Q"
@@ -29,6 +30,7 @@ class ClientTestCase(unittest.TestCase):
 
     def setUp(self):
         url = "http://example.com"
+        self.url = url
         self.client = Tasks(url=url, auth=Auth(jwt_token=public_token, token_info_path=None))
         self.match_url = re.compile(url)
 
@@ -75,9 +77,23 @@ class TasksTest(ClientTestCase):
     @responses.activate
     @mock.patch.object(Tasks, "COMPLETION_POLL_INTERVAL_SECONDS", 0)
     def test_wait_for_completion(self):
-        self.mock_response(responses.GET, {'id': 'foo', 'queue': {'pending': 3, 'successes': 0, 'failures': 0}})
-        self.mock_response(responses.GET, {'id': 'foo', 'queue': {'pending': 0, 'successes': 2, 'failures': 1}})
+        self.mock_response(responses.GET, {'id': 'foo', 'queue': {'pending': 3,
+                                                                  'successes': 0, 'failures': 0}, 'status': 'running'})
+        self.mock_response(responses.GET, {'id': 'foo', 'queue': {'pending': 0,
+                                                                  'successes': 2, 'failures': 1}, 'status': 'running'})
         self.client.wait_for_completion('foo', show_progress=False)
+
+    @responses.activate
+    @mock.patch.object(Tasks, "COMPLETION_POLL_INTERVAL_SECONDS", 0)
+    def test_wait_for_completion_group_terminated(self):
+
+        self.mock_response(responses.GET, {'id': 'foo', 'queue': {'pending': 3,
+                                                                  'successes': 0, 'failures': 0}, 'status': 'running'})
+        self.mock_response(responses.GET, {'id': 'foo', 'queue': {'pending': 3,
+                                                                  'successes': 0, 'failures': 0}, 'status': 'terminated'})
+
+        with self.assertRaises(GroupTerminalException):
+            self.client.wait_for_completion('foo', show_progress=False)
 
 
 class CloudFunctionTest(ClientTestCase):

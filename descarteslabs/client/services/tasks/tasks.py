@@ -52,6 +52,10 @@ CREATE_NAMESPACE_DEPRECATION_MESSAGE = (
 )
 
 
+class GroupTerminalException(Exception):
+    pass
+
+
 class Tasks(Service):
 
     TASK_RESULT_BATCH_SIZE = 100
@@ -307,8 +311,13 @@ class Tasks(Service):
         """
         Waits until all submitted tasks for a given group are completed.
 
+        If a task group stops accepting tasks, will raise
+        :class:`GroupTerminalException` and stop waiting.
+
         :param str group_id: The group id.
         :param bool show_progress: Whether to log progress information.
+
+        :raises: ``GroupTerminalException``
         """
         queue = self.get_group(group_id).queue
         while queue.pending > 0:
@@ -316,7 +325,12 @@ class Tasks(Service):
             if show_progress:
                 logging.warning("Done with %i / %i tasks", completed, queue.pending + completed)
             time.sleep(self.COMPLETION_POLL_INTERVAL_SECONDS)
-            queue = self.get_group(group_id).queue
+
+            # check for terminal states
+            group = self.get_group(group_id)
+            _raise_if_terminal_group(group_id, self, group)
+
+            queue = group.queue
 
     def new_task(self, group_id, arguments=None, parameters=None,
                  labels=None, retry_count=0):
@@ -923,9 +937,23 @@ class CloudFunction(object):
         """
         Waits until all tasks submitted through this function are completed.
 
+        If a task group stops accepting tasks, will raise
+        :class:`GroupTerminalException` and stop waiting.
+
         :param bool show_progress: Whether to log progress information.
         """
         self.client.wait_for_completion(self.group_id, show_progress=show_progress)
+
+
+def _raise_if_terminal_group(group_id, client, group=None):
+    if group is None:
+        group = client.get_group(group_id)
+
+    if group.status in ["terminated", "build_failed"]:
+        msg = "Group no longer running tasks. Group status: {}.".format(group.status)
+        if group.status == "build_failed":
+            msg = "{} Check the build log and fix any errors then resubmit your tasks.".format(msg)
+        raise GroupTerminalException(msg)
 
 
 def as_completed(tasks, show_progress=True):
@@ -936,6 +964,9 @@ def as_completed(tasks, show_progress=True):
     If you don't care about the particular results of the tasks and only
     want to wait for all tasks to complete, use
     :meth:`wait_for_completion <CloudFunction>`.
+
+    If a task group stops accepting tasks, will raise
+    :class:`GroupTerminalException` and stop waiting.
 
     :param list tasks: List of :class:`FutureTask` objects.
     :param bool show_progress: Whether to log progress information.
@@ -951,6 +982,10 @@ def as_completed(tasks, show_progress=True):
 
         for group_id, group_tasks in by_group.items():
             client = group_tasks[0].client
+
+            # stop waiting if the group hits a terminal state
+            _raise_if_terminal_group(group_id, client)
+
             task_ids = [task.tuid for task in group_tasks]
             try:
                 results = client.get_task_result_batch(group_id, task_ids, include=['stacktrace'])
