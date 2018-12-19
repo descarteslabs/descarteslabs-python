@@ -94,6 +94,91 @@ class Raster(Service):
 
         super(Raster, self).__init__(url, auth=auth)
 
+    # please keep default maxtiles value equal to MAXTILES in the service
+    def iter_dltiles_from_shape(self, resolution, tilesize, pad, shape, maxtiles=5000):
+        """Return an iterator over a feature collection of DLTile GeoJSONs
+        that intersect a GeoJSON Geometry `shape`.
+
+        Utilizing paged requests to the Raster service, it is possible
+        to retrieve and consume very large shapes and/or very small tiles,
+        avoiding the 'Shape and tiling generate too many tiles' error.
+
+        :param float resolution: Resolution of DLTile
+        :param int tilesize: Number of valid pixels per DLTile
+        :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
+        :param str shape: A GeoJSON geometry specifying a shape over
+            which to intersect DLTiles.
+        :param int maxtiles: Maximum number of tiles per paged request.
+            Defaults to 10000.
+
+        :return: An iterator over a GeoJSON FeatureCollection of
+            intersecting DLTile geometries.
+
+        Example::
+
+            >>> from descarteslabs.client.services import Raster, Places
+            >>> iowa = Places().shape("north-america_united-states_iowa")
+            >>> next(Raster().iter_dltiles_from_shape(30.0, 2048, 16, iowa))
+            {
+              'geometry': {
+                'coordinates': [
+                  [
+                    [-96.81264975325402, 41.045203319986356],
+                    [-96.07101667769108, 41.02873098016475],
+                    [-96.04576296033223, 41.59007261142797],
+                    [-96.79377566762066, 41.60687154946031],
+                    ...
+                  ]
+                ],
+                'type': 'Polygon'
+              },
+              'properties': {
+                'cs_code': 'EPSG:32614',
+                'geotrans': [
+                  683840.0,
+                  30.0,
+                  0,
+                  4608480.0,
+                  ...
+                ],
+                'key': '2048:16:30.0:14:3:74',
+                'outputBounds': [683840.0, 4546080.0, 746240.0, 4608480.0],
+                'pad': 16,
+                'proj4': '+proj=utm +zone=14 +datum=WGS84 +units=m +no_defs ',
+                'resolution': 30.0,
+                'ti': 3,
+                'tilesize': 2048,
+                'tj': 74,
+                'wkt': 'PROJCS["WGS 84 / UTM zone 14N",GEOGCS["WGS...Northing",NORTH],AUTHORITY["EPSG","32614"]]',
+                'zone': 14
+              },
+              'type': 'Feature'
+            }
+            ...
+        """
+
+        shape = as_json_string(shape)
+        params = {
+            'resolution': resolution,
+            'tilesize': tilesize,
+            'pad': pad,
+            'shape': shape,
+            'maxtiles': maxtiles
+        }
+
+        while True:
+            r = self.session.post('/dlkeys/from_shape', json=params)
+            fc = DotDict(r.json())
+            for t in fc.features:
+                yield t
+            iterstate = fc.get('iterstate', None)
+            if iterstate:
+                params['start_zone'] = iterstate.start_zone
+                params['start_ti'] = iterstate.start_ti
+                params['start_tj'] = iterstate.start_tj
+            else:
+                break
+
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
         Return a feature collection of DLTile GeoJSONs that intersect
@@ -150,16 +235,8 @@ class Raster(Service):
             }
         """
 
-        shape = as_json_string(shape)
-        params = {
-            'resolution': resolution,
-            'tilesize': tilesize,
-            'pad': pad,
-            'shape': shape,
-        }
-
-        r = self.session.post('/dlkeys/from_shape', json=params)
-        return DotDict(r.json())
+        return DotDict(type='FeatureCollection',
+                       features=list(self.iter_dltiles_from_shape(resolution, tilesize, pad, shape)))
 
     def dltile_from_latlon(self, lat, lon, resolution, tilesize, pad):
         """

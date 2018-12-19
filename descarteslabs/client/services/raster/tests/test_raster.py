@@ -356,6 +356,14 @@ class TestRaster(unittest.TestCase):
         self.assertTrue("files" in r)
         self.assertIsNotNone(r['files']['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.png'])
 
+    def test_iter_dltiles_from_place(self):
+        iowa = self.places.shape('north-america_united-states_iowa', geom='low')
+        iowa_geom = iowa['geometry']
+        n = 0
+        for tile in self.raster.iter_dltiles_from_shape(30.0, 2048, 16, iowa_geom, maxtiles=4):
+            n += 1
+        self.assertEqual(n, 58)
+
     def test_dltiles_from_place(self):
         iowa = self.places.shape('north-america_united-states_iowa', geom='low')
         iowa_geom = iowa['geometry']
