@@ -269,23 +269,31 @@ class Vector(JsonApiService):
 
     def upload_features(self, file_ish, product_id):
         """
-        Asynchonously upload a file of `Newline Delimited JSON <https://github.com/ndjson/ndjson-spec>`_ features.
+        Asynchonously upload a file or stream of
+        `Newline Delimited JSON <https://github.com/ndjson/ndjson-spec>`_
+        features.
 
-        :param str|:py:class:`io.IOBase` file_ish: an open file object, or a path to the file to upload.
+        It is recommended that the IOBase object is a byte-oriented (not
+        text-oriented) object, although Python 3 allows `io.StringIO` to
+        be used.
+
+        :param str|:py:class:`io.IOBase` file_ish: an open IOBase object, or a path to the file to upload.
         :param str product_id: Product to which these features will belong.
         """
         if isinstance(file_ish, io.IOBase):
-            file_name = file_ish.name
-        elif isinstance(file_ish, six.string_types) and os.path.exists(file_ish):
-            file_name = file_ish
+            return self._upload_features(file_ish, product_id)
+        elif isinstance(file_ish, six.string_types):
+            with io.open(file_ish, 'rb') as stream:
+                return self._upload_features(stream, product_id)
         else:
-            raise Exception('Could not handle file: `{}` pass a valid path or open IOBase instance'.format(file_ish))
-        with io.open(file_name, 'rb') as fd:
-            r = self.session.post('/products/{}/features/uploads'.format(product_id))
-            upload = r.json()
-            upload_url = upload['url']
-            r = self._gcs_upload_service.session.put(upload_url, data=fd)
-            return upload['upload_id']
+            raise Exception('Could not handle file: `{}`; pass a path or open IOBase instance'.format(file_ish))
+
+    def _upload_features(self, iobase, product_id):
+        r = self.session.post('/products/{}/features/uploads'.format(product_id))
+        upload = r.json()
+        upload_url = upload['url']
+        r = self._gcs_upload_service.session.put(upload_url, data=iobase)
+        return upload['upload_id']
 
     def _fetch_upload_result_page(self, product_id, continuation_token=None):
         r = self.session.get(
