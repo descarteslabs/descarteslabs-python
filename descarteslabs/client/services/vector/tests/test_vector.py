@@ -106,7 +106,7 @@ class TasksTest(ClientTestCase):
 
         for i in range(10):
             s += '{'
-            s += '{}'.format(self.attrs).encode('utf-8')
+            s += '{}'.format(self.attrs)
             s += '}\n'
 
         with self.assertRaises(Exception):
