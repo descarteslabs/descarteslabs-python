@@ -154,7 +154,6 @@ class Raster(Service):
               },
               'type': 'Feature'
             }
-            ...
         """
 
         shape = as_json_string(shape)
