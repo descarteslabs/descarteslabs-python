@@ -1,6 +1,7 @@
 import os
 import six
 import io
+import logging
 
 from descarteslabs.common.property_filtering import GenericProperties
 from descarteslabs.client.services.service import JsonApiService, ThirdPartyService
@@ -255,17 +256,38 @@ class Vector(JsonApiService):
 
         :param str product_id: (Required) Product to which this feature will belong.
         :param list(dict) features: (Required) Each feature must be a dict with a geometry
-                                    and properties field.
+                                    and properties field. If more than 100 features,
+                                    will be batched in groups of 100, but consider
+                                    using upload_features() instead.
 
         :rtype: DotDict
         :return: Created features, as a JSON API resource collection.
 
                  The new Features' IDs are under ``.data[i].id``,
                  and their properties are under ``.data[i].attributes``.
+        :raises ClientError: A variety of http-related exceptions can
+                 thrown. If more than 100 features were passed in, some
+                 of these may have been successfully inserted, others not.
+                 If this is a problem, then stick with <= 100 features.
         """
-        jsonapi = self.jsonapi_collection(type="feature", attributes_list=features)
-        r = self.session.post('/products/{}/features'.format(product_id), json=jsonapi)
-        return DotDict(r.json())
+
+        if len(features) > 100:
+            logging.warning(
+                'create_features: feature collection has more than 100 features,' +
+                ' will batch by 100 but consider using upload_features')
+
+        # forcibly pass a zero-length list for appropriate validation error
+        for i in range(0, max(len(features), 1), 100):
+            jsonapi = self.jsonapi_collection(type="feature",
+                                              attributes_list=features[i:i+100])
+            r = self.session.post('/products/{}/features'.format(product_id),
+                                  json=jsonapi)
+            if i == 0:
+                result = DotDict(r.json())
+            else:
+                result.data.extend(DotDict(r.json()).data)
+
+        return result
 
     def upload_features(self, file_ish, product_id):
         """
