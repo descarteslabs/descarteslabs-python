@@ -133,6 +133,7 @@ import warnings
 
 from six.moves import reprlib
 
+from descarteslabs.client.addons import mercantile
 from descarteslabs.client.services.raster import Raster
 
 from . import _helpers
@@ -889,4 +890,115 @@ class DLTile(GeoContext):
             # parallel access to `self._geometry.__geo_interface__`
             return self._geometry.__geo_interface__
 
-# TODO: XYZTile?
+
+class XYZTile(GeoContext):
+    """
+    A GeoContext for XYZ tiles, such as those used in web maps.
+
+    The tiles are always 256x256 pixels, in the spherical Mercator
+    or "Web Mercator" coordinate reference system (EPSG:3857).
+
+    Requires the optional ``mercantile`` package.
+    """
+    __slots__ = (
+        "_x",
+        "_y",
+        "_z",
+    )
+
+    def __init__(self, x, y, z):
+        """
+        Parameters
+        ----------
+        x: int
+            X-index of the tile (increases going east)
+        y: int
+            Y-index of the tile (increases going south)
+        z: int
+            Zoom level of the tile
+        """
+        self._x = x
+        self._y = y
+        self._z = z
+        super(XYZTile, self).__init__()
+
+    @property
+    def x(self):
+        "int: X-index of the tile (increases going east)"
+        return self._x
+
+    @property
+    def y(self):
+        "int: Y-index of the tile (increases going south)"
+        return self._y
+
+    @property
+    def z(self):
+        "int: Zoom level of the tile"
+        return self._z
+
+    def parent(self):
+        "The parent XYZTile enclosing this one"
+        return self.__class__(*mercantile.parent(self._x, self._y, self._z))
+
+    def children(self):
+        "List of child XYZTiles contained within this one"
+        return [self.__class__(*t) for t in mercantile.children(self._x, self._y, self._z)]
+
+    @property
+    def geometry(self):
+        """
+        shapely.geometry.Polygon: The polygon covered by this XYZTile
+        in WGS84 (lat-lon) coordinates
+        """
+        return shapely.geometry.box(*mercantile.bounds(self._x, self._y, self._z))
+
+    @property
+    def bounds(self):
+        """
+        tuple: The ``(min_x, min_y, max_x, max_y)`` of the area covered by
+        this XYZTile, in spherical Mercator coordinates (EPSG:3857).
+        """
+        return tuple(mercantile.xy_bounds(self._x, self._y, self._z))
+
+    @property
+    def crs(self):
+        """
+        str: Coordinate reference system into which scenes will be projected.
+        Always ``"EPSG:3857"`` (spherical Mercator, aka "Web Mercator")
+        """
+        return "EPSG:3857"
+
+    @property
+    def bounds_crs(self):
+        """
+        str: The coordinate reference system of the ``bounds``.
+        Always ``"EPSG:3857"`` (spherical Mercator, aka "Web Mercator")
+        """
+        return "EPSG:3857"
+
+    @property
+    def tilesize(self):
+        """
+        int: Length of each side of the tile, in pixels. Always 256.
+        """
+        return 256
+
+    @property
+    def __geo_interface__(self):
+        "dict: ``self.geometry`` as a GeoJSON Polygon"
+        return self.geometry.__geo_interface__
+
+    @property
+    def raster_params(self):
+        """
+        dict: The properties of this XYZTile,
+        as keyword arguments to use for `Raster.ndarray` or `Raster.raster`.
+        """
+        return {
+            "bounds": self.bounds,
+            "srs": self.crs,
+            "bounds_srs": self.bounds_crs,
+            "align_pixels": False,
+            "dimensions": (self.tilesize, self.tilesize)
+        }

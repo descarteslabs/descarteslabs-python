@@ -320,6 +320,30 @@ class TestDLTIle(unittest.TestCase):
         self.assertEqual(tile.wkt, 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]') # noqa
 
 
+class TestXYZTile(unittest.TestCase):
+    def test_bounds(self):
+        tile = geocontext.XYZTile(1, 1, 2)
+        self.assertEqual(tile.bounds, (-10018754.171394622, -7.081154551613622e-10, 0.0, 10018754.171394626))
+
+    def test_geometry(self):
+        tile = geocontext.XYZTile(1, 1, 2)
+        self.assertEqual(tile.geometry.bounds, (-90.0, 0.0, 0.0, 66.51326044311186))
+
+    def test_raster_params(self):
+        tile = geocontext.XYZTile(1, 1, 2)
+        self.assertEqual(tile.raster_params, {
+            'bounds': (-10018754.171394622, -7.081154551613622e-10, 0.0, 10018754.171394626),
+            'srs': 'EPSG:3857',
+            'bounds_srs': 'EPSG:3857',
+            'align_pixels': False,
+            'dimensions': (256, 256),
+        })
+
+    def test_children_parent(self):
+        tile = geocontext.XYZTile(1, 1, 2)
+        self.assertEqual(tile, tile.children()[0].parent())
+
+
 # can't use the word `test` in the function name otherwise nose tries to run it...
 def run_threadsafe_experiment(geoctx_factory, property, n=80000):
     "In a subprocess, test whether parallel access to a property on a GeoContext fails (due to Shapely thread-unsafety)"

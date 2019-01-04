@@ -44,6 +44,11 @@ try:
 except ImportError:
     concurrent = ThirdParty("futures")
 
+try:
+    import mercantile
+except ImportError:
+    mercantile = ThirdParty("mercantile")
+
 
 def import_matplotlib_pyplot():
     try:

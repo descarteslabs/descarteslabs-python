@@ -9,6 +9,7 @@ Changelog
 =========
 
 ## [Unreleased]
+- XYZTile GeoContext class, helpful for rendering to web maps that use XYZ-style tiles in a spherical Mercator CRS.
 
 ## [0.14.1] - 2018-11-26
 ### Added
@@ -46,7 +47,7 @@ Changelog
 
 ## [0.13.0] - 2018-10-05
 ### Changed
-- Shapely is now a full requirement of this package. Note: Windows users should visit https://docs.descarteslabs.com/installation.html#windows-users for installation guidance. 
+- Shapely is now a full requirement of this package. Note: Windows users should visit https://docs.descarteslabs.com/installation.html#windows-users for installation guidance.
 - Reduced the number of retries for some failure types.
 - Resolved intermittent `SceneCollection.stack` bug that manifested as `AttributeError: 'NoneType' object has no attribute 'coords'` due to Shapely thread-unsafety.
 - Tracking system environment to improve installation and support of different systems.

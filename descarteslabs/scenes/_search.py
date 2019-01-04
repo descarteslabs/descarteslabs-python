@@ -159,7 +159,7 @@ def search(aoi,
         raster_client=raster_client
     )
 
-    if len(scenes) > 0:
+    if len(scenes) > 0 and isinstance(ctx, geocontext.AOI):
         assign_ctx = {}
         if ctx.resolution is None and ctx.shape is None:
             resolutions = filter(

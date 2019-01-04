@@ -113,6 +113,7 @@ def do_setup():
             'blosc;platform_system!="Windows"',
             "numpy>=1.10.0",
             "matplotlib>=2.1.0",
+            "mercantile>=1.0.4",
         ],
     }
     kwargs['license'] = 'Apache 2.0'

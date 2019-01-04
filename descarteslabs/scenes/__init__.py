@@ -136,11 +136,11 @@ View the NDVI composites:
 
 """
 
-from .geocontext import AOI, DLTile, GeoContext
+from .geocontext import AOI, DLTile, XYZTile, GeoContext
 from ._display import display
 from ._search import search
 from .scene import Scene
 from .collection import Collection
 from .scenecollection import SceneCollection
 
-__all__ = ["Scene", "SceneCollection", "Collection", "AOI", "DLTile", "GeoContext", "search", "display"]
+__all__ = ["Scene", "SceneCollection", "Collection", "AOI", "DLTile", "XYZTile", "GeoContext", "search", "display"]
