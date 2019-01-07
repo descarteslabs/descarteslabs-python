@@ -1,3 +1,6 @@
+import copy
+import time
+
 from descarteslabs.common.dotdict import DotDict
 from descarteslabs.client.exceptions import NotFoundError
 from descarteslabs.common.tasks import UploadTask
@@ -5,7 +8,17 @@ from descarteslabs.client.services.vector import Vector
 from descarteslabs.vectors.feature import Feature
 import six
 
-import copy
+
+class VectorException(Exception):
+    pass
+
+
+class WaitTimeoutError(VectorException):
+    pass
+
+
+class FailedCopyError(VectorException):
+    pass
 
 
 class FeatureCollection(object):
@@ -54,6 +67,8 @@ class FeatureCollection(object):
     """
 
     ATTRIBUTES = ['owners', 'writers', 'readers', 'id', 'name', 'title', 'description']
+    COMPLETE_STATUSES = ["DONE", "SUCCESS", "FAILURE"]
+    COMPLETION_POLL_INTERVAL_SECONDS = 5
 
     def __init__(self, id=None, vector_client=None):
 
@@ -482,6 +497,118 @@ class FeatureCollection(object):
                                       client=self.vector_client))
 
         return results
+
+    def copy(self, name, title, description, owners=None, readers=None, writers=None):
+        """
+        Apply a filter to an existing product and create a new vector product in your catalog
+        from the result, taking into account calls to `FeatureCollection.filter()`
+        and `FeatureCollection.limit()`.
+
+        A query of some sort must be set, otherwise a BadRequestError will be raised.
+
+        Copies occur asynchronously and can take a long time to complete.  Features
+        will not be accessible in the new FeatureCollection until the copy completes.  Use
+        `FeatureCollection.wait_for_copy()` to block until the copy completes.
+
+        Parameters
+        ----------
+        name : str
+            A short name without spaces (like a handle).
+        title : str
+            A more verbose and expressive name for display purposes.
+        description : str
+            Information about the `FeatureCollection`, why it exists,
+            and what it provides.
+        owners : list(str), optional
+            User, group, or organization IDs that own
+            the newly created FeatureCollection.  Defaults to
+            [``current user``, ``current org``].
+            The owner can edit and delete this `FeatureCollection`.
+        readers : list(str), optional
+            User, group, or organization IDs that can read
+            the newly created `FeatureCollection`.
+        writers : list(str), optional
+            User, group, or organization IDs that can edit
+            the newly created `FeatureCollection` (includes read permission).
+
+        Returns
+        -------
+        vectors.FeatureCollection
+            A new `FeatureCollection`.
+
+        Example
+        -------
+        >>> from descarteslabs.vectors import FeatureCollection, properties as p
+        >>> aoi_geometry = {
+        ...    'type': 'Polygon',
+        ...    'coordinates': [[[-109, 31], [-102, 31], [-102, 37], [-109, 37], [-109, 31]]]}
+        >>> all_us_cities = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
+        >>> filtered_cities = all_us_cities.filter(properties=(p.name.like("S%")))  # doctest: +SKIP
+        >>> filtered_cities = filtered_cities.filter(geometry=aoi_geometry)  # doctest: +SKIP
+        >>> filtered_cities = filtered_cities.filter(properties=(p.area_land_meters > 1000))  # doctest: +SKIP
+        >>> filtered_cities_fc = filtered_cities.copy(name='filtered-cities',
+        ...    title='My Filtered US Cities Vector Collection',
+        ...    description='A collection of cities in the US')  # doctest: +SKIP
+        """
+        params = dict(
+            product_id=self.id,
+            geometry=self._query_geometry,
+            query_expr=self._query_property_expression,
+            query_limit=self._query_limit,
+            name=name,
+            title=title,
+            description=description,
+            owners=owners,
+            readers=readers,
+            writers=writers,
+        )
+
+        return self._from_jsonapi(self.vector_client.create_product_from_query(**params).data)
+
+    def wait_for_copy(self, timeout=None):
+        """
+        Wait for a copy operation to complete. Copies occur asynchronously
+        and can take a long time to complete.  Features will not be accessible
+        in the FeatureCollection until the copy completes.
+
+        If the product was not created using a copy job, a BadRequestError is raised.
+        If the copy job ran, but failed, a FailedCopyError is raised.
+        If a timeout is specified and the timeout is reached, a WaitTimeoutError is raised.
+
+        Parameters
+        ----------
+        timeout : int
+            Number of seconds to wait before the wait times out.  If not specified, will
+            wait indefinitely.
+
+        Example
+        -------
+        >>> from descarteslabs.vectors import FeatureCollection, properties as p
+        >>> aoi_geometry = {
+        ...    'type': 'Polygon',
+        ...    'coordinates': [[[-109, 31], [-102, 31], [-102, 37], [-109, 37], [-109, 31]]]}
+        >>> all_us_cities = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
+        >>> filtered_cities = all_us_cities.filter(properties=(p.name.like("S%")))  # doctest: +SKIP
+        >>> filtered_cities_fc = filtered_cities.copy(name='filtered-cities',
+        ...    title='My Filtered US Cities Vector Collection',
+        ...    description='A collection of cities in the US')  # doctest: +SKIP
+        >>> filtered_cities_fc.wait_for_copy(timeout=120)  # doctest: +SKIP
+        """
+        start_time = time.time()
+
+        while True:
+            job_data = self.vector_client.get_product_from_query_status(self.id)
+
+            status = job_data.data.attributes.state
+            if status in FeatureCollection.COMPLETE_STATUSES:
+                if status == "FAILURE":
+                    raise FailedCopyError("copy to product {} from job {} failed".format(self.id, job_data.data.id))
+                else:
+                    break
+
+            time.sleep(FeatureCollection.COMPLETION_POLL_INTERVAL_SECONDS)
+            if timeout is not None and (time.time() - start_time) > timeout:
+                raise WaitTimeoutError("wait timeout reached")
 
     def _repr_json_(self):
         return DotDict((k, v) for k, v in self.__dict__.items() if k in FeatureCollection.ATTRIBUTES)

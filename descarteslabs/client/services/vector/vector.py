@@ -478,3 +478,100 @@ class Vector(JsonApiService):
 
             if continuation_token is None:
                 break
+
+    def create_product_from_query(
+        self,
+        name,
+        title,
+        description,
+        product_id,
+        owners=None,
+        readers=None,
+        writers=None,
+        geometry=None,
+        query_expr=None,
+        query_limit=None
+    ):
+        """
+        Query vector features within an existing product and create a new
+        vector product to your catalog from the query result.
+
+        At least one of `geometry`, `query_expr`, or `query_limit` is required.
+
+        :param str name: (Required) A name for the new product.
+        :param str title: (Required) Official product title.
+        :param str description: (Required) Information about the product,
+                                why it exists, and what it provides.
+        :param str product_id: (Required) Product within which to search.
+        :param: list(str) owners: User, group, or organization IDs that own this product.
+                            Each ID must be prefixed with ``user:``, ``group:``, or ``org:``.
+                            Defaults to [current user, current user's org].
+        :param: list(str) readers: User, group, or organization IDs that can read this product.
+                                  Each ID must be prefixed with ``user:``, ``group:``, or ``org:``.
+        :param: list(str) writers: User, group, or organization IDs that can edit this product.
+                                  Each ID must be prefixed with ``user:``, ``group:``, or ``org:``.
+        :param dict geometry: Search for Features intersecting this shape.
+                              This accepts the following types of GeoJSON
+                              geometries:
+
+                              - Points
+                              - MultiPoints
+                              - Polygons
+                              - MultiPolygons
+                              - LineStrings
+                              - MultiLineStrings
+                              - GeometryCollections
+
+        :param descarteslabs.client.common.filtering.Expression query_expr:
+            A rich query expression generator that represents
+            an arbitrary tree of boolean combinations of property
+            comparisons.  Using the properties filter factory inside
+            `descarteslabs.client.services.vector.properties` as
+            `p`, you can E.g `query_expr=(p.temperature >= 50) &
+            (p.hour_of_day > 18)`, or even more complicated expressions
+            like `query_expr=(100 > p.temperature >= 50) | ((p.month
+            != 10) & (p.day_of_month > 14))` This expression gets
+            serialized and applied to the properties mapping supplied
+            with the features in the vector product. If you supply a
+            property which doesn't exist as part of the expression that
+            comparison will evaluate to False.
+        :param int query_limit: Maximum number of features to return for this query, defaults to all.
+
+        :rtype: DotDict
+        :return: Created vector product, as a JSON API resource object.
+
+                 The new product's ID is under ``.data.id``
+                 and its properties are under ``.data.attributes``.
+        """
+        product_params = dict(
+            name=name,
+            title=title,
+            description=description,
+            owners=owners,
+            readers=readers,
+            writers=writers
+        )
+
+        query_params = {k: v for k, v in dict(
+            geometry=geometry,
+            query_expr=(query_expr.serialize() if query_expr is not None else None),
+            query_limit=query_limit,
+        ).items() if v is not None}
+
+        params = dict(
+            product=product_params,
+            query=query_params
+        )
+
+        r = self.session.post('/products/{}/search/copy'.format(product_id), json=params)
+        return DotDict(r.json())
+
+    def get_product_from_query_status(self, product_id):
+        """
+        Get the result of creating a new product from a query.
+
+        :param str product_id: (Required) Id of the product created
+                               by a call to `create_product_from_query`.
+        """
+        r = self.session.get("/products/{}/search/copy/status".format(product_id))
+        return DotDict(r.json())

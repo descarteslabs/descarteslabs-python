@@ -14,7 +14,7 @@ It's available under ``descarteslabs.vectors``.
 
 
 from .feature import Feature
-from .featurecollection import FeatureCollection
+from .featurecollection import FeatureCollection, WaitTimeoutError, FailedCopyError, VectorException
 from descarteslabs.client.services.vector import properties
 
-__all__ = ["Feature", "FeatureCollection", "properties"]
+__all__ = ["Feature", "FeatureCollection", "properties", "WaitTimeoutError", "FailedCopyError", "VectorException"]

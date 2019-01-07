@@ -20,6 +20,7 @@ import responses
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.vector import Vector
+from descarteslabs.client.exceptions import BadRequestError, NotFoundError
 
 public_token = "header.e30.signature"
 
@@ -48,6 +49,40 @@ class ClientTestCase(unittest.TestCase):
             'properties': {'baz': 1.0, 'foo': 'bar'}
         }
 
+        self.product_response = {
+            'data': {
+                'attributes': {
+                    'description': 'bar',
+                    'name': 'new-test-produt',
+                    'owners': [
+                        'org:descarteslabs',
+                        'user:3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1'
+                    ],
+                    'readers': [],
+                    'title': 'Test Product',
+                    'writers': []
+                },
+                'id': '2b4552ff4b8a4bb5bb278c94005db50',
+                'meta': {
+                    'created': '2018-12-27T17:01:16.197369',
+                    'bq_copy_job_id': 'c589d688-3230-4caf-9f9d-18854f71e91d'
+                },
+                'type': 'product'
+            }
+        }
+
+        self.status_response = {
+            'data': {
+                'attributes': {
+                    'created': '2019-01-03T20:07:51.720000+00:00',
+                    'started': '2019-01-03T20:07:51.903000+00:00',
+                    'status': 'RUNNING'
+                },
+                'id': 'c589d688-3230-4caf-9f9d-18854f71e91d',
+                'type': 'copy_query'
+            }
+        }
+
     def mock_response(self, method, json, status=200, **kwargs):
         responses.add(method, self.match_url, json=json, status=status, **kwargs)
 
@@ -55,7 +90,7 @@ class ClientTestCase(unittest.TestCase):
         responses.add(method, self.match_gcs_url, json=json, status=status, **kwargs)
 
 
-class TasksTest(ClientTestCase):
+class VectorsTest(ClientTestCase):
 
     @responses.activate
     def test_upload_bytesio(self):
@@ -111,6 +146,47 @@ class TasksTest(ClientTestCase):
 
         with self.assertRaises(Exception):
             self.client.upload_features(s, 'test')
+
+    @responses.activate
+    def test_create_product_from_query(self):
+        self.mock_response(responses.POST, self.product_response, status=201)
+
+        r = self.client.create_product_from_query(
+            "foo",
+            "Foo",
+            "Foo is a bar",
+            "baz"
+        )
+
+        self.assertEqual("2b4552ff4b8a4bb5bb278c94005db50", r.data.id)
+        self.assertEqual("c589d688-3230-4caf-9f9d-18854f71e91d", r.data.meta.bq_copy_job_id)
+
+    @responses.activate
+    def test_create_product_from_query_exception(self):
+        self.mock_response(responses.POST, {}, status=400)
+
+        with self.assertRaises(BadRequestError):
+            self.client.create_product_from_query(
+                "foo",
+                "Foo",
+                "Foo is a bar",
+                "baz"
+            )
+
+    @responses.activate
+    def test_get_product_from_query_status(self):
+        self.mock_response(responses.GET, self.status_response, status=200)
+
+        r = self.client.get_product_from_query_status("2b4552ff4b8a4bb5bb278c94005db50")
+
+        self.assertEqual(r.data.id, "c589d688-3230-4caf-9f9d-18854f71e91d")
+
+    @responses.activate
+    def test_get_product_from_query_status_not_found(self):
+        self.mock_response(responses.GET, self.status_response, status=404)
+
+        with self.assertRaises(NotFoundError):
+            self.client.get_product_from_query_status("2b4552ff4b8a4bb5bb278c94005db50")
 
 
 if __name__ == "__main__":

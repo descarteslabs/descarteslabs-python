@@ -14,7 +14,8 @@
 
 import unittest
 
-from descarteslabs.vectors import FeatureCollection, Feature, properties as p
+from descarteslabs.vectors import (FeatureCollection, Feature, properties as p,
+                                   WaitTimeoutError, FailedCopyError)
 from descarteslabs.common.dotdict import DotDict
 import mock
 
@@ -204,3 +205,126 @@ class TestFeatureCollection(unittest.TestCase):
     def test__repr__(self, vector_client):
         fc = FeatureCollection('foo')
         self.assertEqual(repr(fc), "FeatureCollection({\n  'id': 'foo'\n})")
+
+    def test_copy(self, vector_client):
+        attributes = dict(name='name',
+                          title='title',
+                          description='description',
+                          owners=['owners'],
+                          readers=['readers'],
+                          writers=None)
+
+        fc = FeatureCollection('foo', vector_client=vector_client)
+        geometry = mock.MagicMock()
+
+        filtered = fc.filter(geometry=geometry)
+
+        exp = (p.foo > 0)
+        filtered = filtered.filter(properties=exp)
+
+        filtered.copy(**attributes)
+
+        vector_client.create_product_from_query.assert_called_once_with(
+            description='description',
+            name='name',
+            owners=['owners'],
+            readers=['readers'],
+            title='title',
+            writers=None,
+            product_id="foo",
+            geometry=mock.ANY,
+            query_expr=mock.ANY,
+            query_limit=None,
+        )
+
+    @mock.patch('descarteslabs.vectors.featurecollection.FeatureCollection.vector_client',
+                new_callable=mock.PropertyMock)
+    def test_wait(self, vector_client, _):
+        calls = [
+            DotDict({
+                'data': {
+                    'attributes': {
+                        'created': '2019-01-03T20:07:51.720000+00:00',
+                        'started': '2019-01-03T20:07:51.903000+00:00',
+                        'state': 'RUNNING'
+                    },
+                    'id': 'c589d688-3230-4caf-9f9d-18854f71e91d',
+                    'type': 'copy_query'
+                }
+            }),
+            DotDict({
+                'data': {
+                    'attributes': {
+                        'created': '2019-01-03T20:07:51.720000+00:00',
+                        'started': '2019-01-03T20:07:51.903000+00:00',
+                        'state': 'DONE'
+                    },
+                    'id': 'c589d688-3230-4caf-9f9d-18854f71e91d',
+                    'type': 'copy_query'
+                }
+            })
+        ]
+
+        mock_get = mock.MagicMock(side_effect=calls)
+        vector_client.return_value.get_product_from_query_status = mock_get
+
+        FeatureCollection.COMPLETION_POLL_INTERVAL_SECONDS = 1
+        FeatureCollection('foo').wait_for_copy()
+        self.assertEqual(2, mock_get.call_count)
+
+    @mock.patch('descarteslabs.vectors.featurecollection.FeatureCollection.vector_client',
+                new_callable=mock.PropertyMock)
+    def test_wait_failed(self, vector_client, _):
+        calls = [
+            DotDict({
+                'data': {
+                    'attributes': {
+                        'created': '2019-01-03T20:07:51.720000+00:00',
+                        'started': '2019-01-03T20:07:51.903000+00:00',
+                        'state': 'FAILURE'
+                    },
+                    'id': 'c589d688-3230-4caf-9f9d-18854f71e91d',
+                    'type': 'copy_query'
+                }
+            })
+        ]
+
+        mock_get = mock.MagicMock(side_effect=calls)
+        vector_client.return_value.get_product_from_query_status = mock_get
+
+        with self.assertRaises(FailedCopyError):
+            FeatureCollection('foo').wait_for_copy()
+
+    @mock.patch('descarteslabs.vectors.featurecollection.FeatureCollection.vector_client',
+                new_callable=mock.PropertyMock)
+    def test_wait_timeout(self, vector_client, _):
+        calls = [
+            DotDict({
+                'data': {
+                    'attributes': {
+                        'created': '2019-01-03T20:07:51.720000+00:00',
+                        'started': '2019-01-03T20:07:51.903000+00:00',
+                        'state': 'RUNNING'
+                    },
+                    'id': 'c589d688-3230-4caf-9f9d-18854f71e91d',
+                    'type': 'copy_query'
+                }
+            }),
+            DotDict({
+                'data': {
+                    'attributes': {
+                        'created': '2019-01-03T20:07:51.720000+00:00',
+                        'started': '2019-01-03T20:07:51.903000+00:00',
+                        'state': 'RUNNING'
+                    },
+                    'id': 'c589d688-3230-4caf-9f9d-18854f71e91d',
+                    'type': 'copy_query'
+                }
+            })
+        ]
+
+        mock_get = mock.MagicMock(side_effect=calls)
+        vector_client.return_value.get_product_from_query_status = mock_get
+        FeatureCollection.COMPLETION_POLL_INTERVAL_SECONDS = 1
+        with self.assertRaises(WaitTimeoutError):
+            FeatureCollection('foo').wait_for_copy(timeout=0)
