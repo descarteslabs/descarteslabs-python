@@ -1,6 +1,6 @@
 affine>=2.2.1
 blosc;platform_system!="Windows"
-cachetools
+cachetools>=2.0.1
 futures;python_version=="2.7"
 mock
 requests>=2.20.1,<3
