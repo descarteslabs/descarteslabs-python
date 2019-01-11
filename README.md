@@ -13,7 +13,7 @@ Changelog
 ## [0.15.0] - 2019-01-09
 ### Added
 - Raster client can now handle arbitrarily large numbers of tiles generated from a shape using the new `iter_dltiles_from_shape()` method which allows you to iterate over large numbers of tiles in a time- and memory-efficient manner. Similarly the existing `dltiles_from_shape()` method can now handle arbitrarily large numbers of tiles although it can be very slow.
-- Vector client `upload_features()` can now upload contents of a stream (e.g. `io.IOBase`) as well as the contents of a named file.
+- Vector client `upload_features()` can now upload contents of a stream (e.g. `io.IOBase` derivative such as `io.StringIO`) as well as the contents of a named file.
 - Vector FeatureCollection `add()` method can now handle an arbitrary number of Features. Use of the `upload_features()` method is still encouraged for large collections.
 - Vector client now supports creating a new product from the results of a query against an existing product with the `create_product_from_query()` method. This support is also accessible via the new `FeatureCollection.copy()` method.
 - XYZTile GeoContext class, helpful for rendering to web maps that use XYZ-style tiles in a spherical Mercator CRS.
