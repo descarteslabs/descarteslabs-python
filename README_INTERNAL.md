@@ -23,6 +23,9 @@ Releasing the Python client
 - Publish the package at this tag to pypi - at the moment only Justin
   and Sam can do this: `monorepo/tools/pypi.sh --tag vX.Y.Z`
 - Update the version in images/tasks/public/py\*/requirements.txt.default
+- Build the images
+- Retrieve the versions of installed python packages with `pip freeze`
+  and update docs/guides/tasks.rst
 - Build the images: `bazel build //images/tasks/public/...`
 - Retrieve the versions of installed python packages in each image with e.g.
   `docker run --entrypoint bash -it images/tasks/public/py3.6-gpu/default:latest` 
@@ -30,6 +33,10 @@ Releasing the Python client
   check the python version numbers and update as appropriate (things change as
   new point releases come out).
 - commit and merge these changes.
+- Post an internal announcement about the new version in an appropriate
+  channel (currently #doing). Include a link to the changelog and maybe
+  highlight the most important changes people may care about.
+
 
 Running tests on Python 3
 -------------------------
