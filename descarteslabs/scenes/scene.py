@@ -19,7 +19,7 @@ Example
 -------
 >>> import descarteslabs as dl
 >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")  # doctest: +SKIP
->>> ctx  # a default GeoContext to use when loading raster data from this Scene
+>>> ctx  # a default GeoContext to use when loading raster data from this Scene  # doctest: +SKIP
 AOI(geometry=None,
     resolution=15.0,
     crs='EPSG:32615',
