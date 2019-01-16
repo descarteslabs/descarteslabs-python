@@ -13,6 +13,8 @@ from descarteslabs.scenes.scene import _strptime_helper
 
 from descarteslabs.client.services.metadata import Metadata
 
+from .mock_data import _metadata_get, _metadata_get_bands, _raster_ndarray
+
 metadata_client = Metadata()
 
 
@@ -24,6 +26,8 @@ class MockScene(Scene):
 
 
 class TestScene(unittest.TestCase):
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
     def test_init(self):
         scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
         metadata = metadata_client.get(scene_id)
@@ -104,6 +108,8 @@ class TestScene(unittest.TestCase):
         diagonal = np.sqrt(2**2 + 2**2)
         self.assertEqual(ctx.bounds, (0, -diagonal / 2, diagonal, diagonal / 2))
 
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
     def test_from_id(self):
         scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
         scene, ctx = Scene.from_id(scene_id)
@@ -112,6 +118,9 @@ class TestScene(unittest.TestCase):
         self.assertIsInstance(scene.geometry, shapely.geometry.Polygon)
         self.assertIsInstance(ctx, geocontext.AOI)
 
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_one_band(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr, info = scene.ndarray("red", ctx.assign(resolution=1000), raster_info=True)
@@ -124,11 +133,15 @@ class TestScene(unittest.TestCase):
         with self.assertRaises(TypeError):
             scene.ndarray("blue", ctx, invalid_argument=True)
 
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
     def test_nonexistent_band_fails(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         with self.assertRaises(ValueError):
             scene.ndarray("blue yellow", ctx)
 
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
     def test_different_band_dtypes_fails(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         scene.properties.bands = {
@@ -142,6 +155,9 @@ class TestScene(unittest.TestCase):
         with self.assertRaises(ValueError):
             scene.ndarray("red green", ctx)
 
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_multiband(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr = scene.ndarray("red green blue", ctx.assign(resolution=1000))
@@ -150,6 +166,9 @@ class TestScene(unittest.TestCase):
         self.assertTrue((arr.mask[:, 2, 2]).all())
         self.assertFalse((arr.mask[:, 115, 116]).all())
 
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_multiband_axis_last(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr = scene.ndarray("red green blue", ctx.assign(resolution=1000), bands_axis=-1)
@@ -163,6 +182,9 @@ class TestScene(unittest.TestCase):
         with self.assertRaises(ValueError):
             arr = scene.ndarray("red green blue", ctx.assign(resolution=1000), bands_axis=-3)
 
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_nomask(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr = scene.ndarray(["red", "nir"], ctx.assign(resolution=1000), mask_nodata=False, mask_alpha=False)
@@ -170,6 +192,9 @@ class TestScene(unittest.TestCase):
         self.assertFalse(hasattr(arr, "mask"))
         self.assertEqual(arr.shape, (2, 239, 235))
 
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def with_alpha(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
 

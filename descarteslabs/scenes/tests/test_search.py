@@ -3,6 +3,9 @@ import datetime
 
 from descarteslabs.scenes import geocontext, search
 
+import mock
+from .mock_data import _metadata_search, _metadata_get_bands_by_product
+
 
 class TestScenesSearch(unittest.TestCase):
     geom = {
@@ -16,6 +19,8 @@ class TestScenesSearch(unittest.TestCase):
         'type': 'Polygon'
     }
 
+    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
+    @mock.patch("descarteslabs.scenes._search.Metadata.get_bands_by_product", _metadata_get_bands_by_product)
     def test_search_geom(self):
         sc, ctx = search(self.geom, products="landsat:LC08:PRE:TOAR", limit=4)
         self.assertGreater(len(sc), 0)
@@ -31,6 +36,8 @@ class TestScenesSearch(unittest.TestCase):
             self.assertAlmostEqual(len(scene.properties.bands), 24, delta=4)
             self.assertIn("derived:ndvi", scene.properties.bands)
 
+    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
+    @mock.patch("descarteslabs.scenes._search.Metadata.get_bands_by_product", _metadata_get_bands_by_product)
     def test_search_AOI(self):
         aoi = geocontext.AOI(self.geom, resolution=5)
         sc, ctx = search(aoi, products="landsat:LC08:PRE:TOAR", limit=4)
@@ -40,6 +47,8 @@ class TestScenesSearch(unittest.TestCase):
         self.assertEqual(ctx.resolution, 5)
         self.assertEqual(ctx.crs, "EPSG:32615")
 
+    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
+    @mock.patch("descarteslabs.scenes._search.Metadata.get_bands_by_product", _metadata_get_bands_by_product)
     def test_search_AOI_with_shape(self):
         aoi = geocontext.AOI(self.geom, shape=(100, 100))
         sc, ctx = search(aoi, products="landsat:LC08:PRE:TOAR", limit=4)
@@ -50,6 +59,8 @@ class TestScenesSearch(unittest.TestCase):
         self.assertEqual(ctx.shape, aoi.shape)
         self.assertEqual(ctx.crs, "EPSG:32615")
 
+    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
+    @mock.patch("descarteslabs.scenes._search.Metadata.get_bands_by_product", _metadata_get_bands_by_product)
     def test_search_dltile(self):
         tile = geocontext.DLTile.from_key('64:0:1000.0:15:-2:70')
         sc, ctx = search(tile, products="landsat:LC08:PRE:TOAR", limit=4)
@@ -57,11 +68,15 @@ class TestScenesSearch(unittest.TestCase):
         self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
         self.assertEqual(ctx, tile)
 
+    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
+    @mock.patch("descarteslabs.scenes._search.Metadata.get_bands_by_product", _metadata_get_bands_by_product)
     def test_search_no_products(self):
         sc, ctx = search(self.geom, limit=4)
         self.assertGreater(len(sc), 0)
         self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
 
+    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
+    @mock.patch("descarteslabs.scenes._search.Metadata.get_bands_by_product", _metadata_get_bands_by_product)
     def test_search_datetime(self):
         start_datetime = datetime.datetime(2016, 7, 6)
         end_datetime = datetime.datetime(2016, 7, 15)

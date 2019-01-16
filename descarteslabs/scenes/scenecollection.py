@@ -165,7 +165,7 @@ class SceneCollection(Collection):
         ...    'type': 'Polygon',
         ...    'coordinates': [[[-95, 42],[-93, 42],[-93, 40],[-95, 41],[-95, 42]]]}
         >>> scenes, ctx = dl.scenes.search(aoi_geometry, products=["landsat:LC08:PRE:TOAR"], limit=20,
-        ...    sort_field='processed')
+        ...    sort_field='processed')  # doctest: +SKIP
         >>> filtered_scenes = scenes.filter_coverage(ctx, 0.50)  # doctest: +SKIP
         >>> assert len(filtered_scenes) < len(scenes)  # doctest: +SKIP
         """
@@ -600,8 +600,8 @@ class SceneCollection(Collection):
         Example
         -------
         >>> import descarteslabs as dl
-        >>> tile = dl.scenes.DLTile.from_key("256:0:75.0:15:-5:230")
-        >>> scenes, _ = dl.scenes.search(tile, products=["landsat:LC08:PRE:TOAR"], limit=5)
+        >>> tile = dl.scenes.DLTile.from_key("256:0:75.0:15:-5:230")  # doctest: +SKIP
+        >>> scenes, _ = dl.scenes.search(tile, products=["landsat:LC08:PRE:TOAR"], limit=5)  # doctest: +SKIP
         >>> scenes.download("red green blue", tile, "rasters")  # doctest: +SKIP
         ["rasters/landsat:LC08:PRE:TOAR:meta_LC80260322013108_v1-red-green-blue.tif",
          "rasters/landsat:LC08:PRE:TOAR:meta_LC80260322013124_v1-red-green-blue.tif",
@@ -612,7 +612,7 @@ class SceneCollection(Collection):
         >>> paths = [
         ...     "{tile.key}/l8-{scene.properties.date:%Y-%m-%d-%H:%m}.jpg".format(tile=tile, scene=scene)
         ...     for scene in scenes
-        ... ]
+        ... ]  # doctest: +SKIP
         >>> scenes.download("nir red", tile, paths)  # doctest: +SKIP
         ["256:0:75.0:15:-5:230/l8-2013-04-18-16:04.jpg",
          "256:0:75.0:15:-5:230/l8-2013-05-04-16:05.jpg",
@@ -768,8 +768,8 @@ class SceneCollection(Collection):
         Example
         -------
         >>> import descarteslabs as dl
-        >>> tile = dl.scenes.DLTile.from_key("256:0:75.0:15:-5:230")
-        >>> scenes, _ = dl.scenes.search(tile, products=["landsat:LC08:PRE:TOAR"], limit=5)
+        >>> tile = dl.scenes.DLTile.from_key("256:0:75.0:15:-5:230")  # doctest: +SKIP
+        >>> scenes, _ = dl.scenes.search(tile, products=["landsat:LC08:PRE:TOAR"], limit=5)  # doctest: +SKIP
         >>> scenes.download_mosaic("nir red", tile)  # doctest: +SKIP
         'mosaic-nir-red.jpg'
         >>> scenes.download_mosaic("nir red", tile, dest="mosaics/{}.png".format(tile.key))  # doctest: +SKIP

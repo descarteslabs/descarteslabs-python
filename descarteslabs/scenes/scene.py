@@ -18,7 +18,7 @@ The Scene class holds metadata about a single scene in the Descartes Labs catalo
 Example
 -------
 >>> import descarteslabs as dl
->>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
+>>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")  # doctest: +SKIP
 >>> ctx  # a default GeoContext to use when loading raster data from this Scene
 AOI(geometry=None,
     resolution=15.0,
@@ -27,16 +27,16 @@ AOI(geometry=None,
     bounds=(258292.5, 4503907.5, 493732.5, 4743307.5),
     bounds_crs='EPSG:32615',
     shape=None)
->>> scene.properties.id
+>>> scene.properties.id  # doctest: +SKIP
 'landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'
->>> scene.properties.date
+>>> scene.properties.date  # doctest: +SKIP
 datetime.datetime(2016, 7, 6, 16, 59, 42, 753476)
->>> scene.properties.bands.red.resolution
+>>> scene.properties.bands.red.resolution  # doctest: +SKIP
 15
->>> arr = scene.ndarray("red green blue", ctx)
->>> type(arr)
+>>> arr = scene.ndarray("red green blue", ctx)  # doctest: +SKIP
+>>> type(arr)  # doctest: +SKIP
 <class 'numpy.ma.core.MaskedArray'>
->>> arr.shape
+>>> arr.shape  # doctest: +SKIP
 (3, 15960, 15696)
 """
 
@@ -197,8 +197,8 @@ class Scene(object):
         Example
         -------
         >>> import descarteslabs as dl
-        >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
-        >>> ctx
+        >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")  # doctest: +SKIP
+        >>> ctx  # doctest: +SKIP
         AOI(geometry=None,
             resolution=15.0,
             crs='EPSG:32615',
@@ -206,7 +206,7 @@ class Scene(object):
             bounds=(348592.5, 4345567.5, 581632.5, 4582807.5),
             bounds_crs='EPSG:32615',
             shape=None)
-        >>> scene.properties.date
+        >>> scene.properties.date  # doctest: +SKIP
         datetime.datetime(2016, 7, 15, 16, 53, 59, 495435)
 
         Raises
@@ -323,7 +323,7 @@ class Scene(object):
         Example
         -------
         >>> import descarteslabs as dl
-        >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
+        >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")  # doctest: +SKIP
         >>> scene.coverage(scene.geometry.buffer(1))  # doctest: +SKIP
         0.8
         """
@@ -405,13 +405,13 @@ class Scene(object):
         Example
         -------
         >>> import descarteslabs as dl
-        >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-        >>> arr = scene.ndarray("red green blue", ctx)
-        >>> type(arr)
+        >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")  # doctest: +SKIP
+        >>> arr = scene.ndarray("red green blue", ctx)  # doctest: +SKIP
+        >>> type(arr)  # doctest: +SKIP
         <class 'numpy.ma.core.MaskedArray'>
-        >>> arr.shape
+        >>> arr.shape  # doctest: +SKIP
         (3, 15960, 15696)
-        >>> red_band = arr[0]
+        >>> red_band = arr[0]  # doctest: +SKIP
 
         Raises
         ------
@@ -571,7 +571,7 @@ class Scene(object):
         Example
         -------
         >>> import descarteslabs as dl
-        >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
+        >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")  # doctest: +SKIP
         >>> scene.download("red green blue", ctx)  # doctest: +SKIP
         "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue.tif"
         >>> import os

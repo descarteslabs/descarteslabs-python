@@ -7,9 +7,13 @@ from descarteslabs.client.addons import ThirdParty
 from descarteslabs.scenes import Scene, SceneCollection, geocontext
 
 from .test_scene import MockScene
+from .mock_data import _metadata_get, _metadata_get_bands, _raster_ndarray
 
 
 class TestSceneCollection(unittest.TestCase):
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_stack(self):
         scenes = ("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1", "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
         scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
@@ -40,6 +44,9 @@ class TestSceneCollection(unittest.TestCase):
         stack_axis_1 = scenes.stack("nir red", ctx, bands_axis=1)
         self.assertEqual(stack_axis_1.shape, (2, 2, 122, 120))
 
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_stack_flatten(self):
         scenes = (
             "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
@@ -76,6 +83,9 @@ class TestSceneCollection(unittest.TestCase):
         self.assertEqual(len(noflat), len(scenes))
         self.assertTrue((noflat == unflattened).all())
 
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     @mock.patch("descarteslabs.scenes.scenecollection.concurrent", ThirdParty("concurrent"))
     def test_stack_serial(self):
         scenes = ("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1", "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
@@ -88,6 +98,9 @@ class TestSceneCollection(unittest.TestCase):
         stack, metas = scenes.stack("nir", ctx, raster_info=True)
         self.assertEqual(stack.shape, (2, 1, 122, 120))
 
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_mosaic(self):
         scenes = ("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1", "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
         scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
@@ -124,6 +137,9 @@ class TestSceneCollection(unittest.TestCase):
         with self.assertRaises(TypeError):
             scenes.mosaic("red", ctx, invalid_argument=True)
 
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_fails_with_different_dtypes(self):
         scenes = ("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1", "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
         scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
@@ -138,6 +154,7 @@ class TestSceneCollection(unittest.TestCase):
         with self.assertRaises(ValueError):
             stack, meta = scenes.stack("nir", ctx)
 
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     def test_filter_coverage(self):
         polygon = shapely.geometry.Point(0.0, 0.0).buffer(1)
         ctx = geocontext.AOI(geometry=polygon)
