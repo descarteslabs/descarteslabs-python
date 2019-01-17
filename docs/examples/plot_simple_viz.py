@@ -9,7 +9,7 @@ Visualize a true color Landsat 8 Scene.
 
 import descarteslabs as dl
 
-# Create a tile around Paris, France
+# Create a tile around Pisa, Italy
 tile = dl.scenes.DLTile.from_latlon(43.7230,
                                     10.3966,
                                     resolution=20.0,
