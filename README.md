@@ -9,6 +9,7 @@ Changelog
 =========
 
 ## [Unreleased]
+- `Metadata.search` no longer has a 10,000-item limit, and the number of items returned will be closer to `limit`.
 
 ## [0.15.0] - 2019-01-09
 ### Added

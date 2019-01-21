@@ -110,13 +110,6 @@ class TestMetadata(unittest.TestCase):
 
                 self.assertEqual(sorted(feature.keys()), sorted(fields))
 
-        fields = ["cloud_fraction", "fill_fraction"]
-        r = self.instance.search(
-            start_datetime="2016-07-06", end_datetime="2016-07-07", fields=fields
-        )
-        for feature in r["features"]:
-            self.assertEqual(sorted(feature["properties"].keys()), sorted(fields))
-
     def test_multiple_products_search(self):
         r = self.instance.search(
             start_datetime="2016-07-06",

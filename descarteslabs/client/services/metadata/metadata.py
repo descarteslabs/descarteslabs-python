@@ -14,6 +14,7 @@
 
 import json
 import os
+import itertools
 from warnings import warn, simplefilter
 from six import string_types
 from descarteslabs.client.services.service import Service
@@ -244,8 +245,8 @@ class Metadata(Service):
         Example usage::
 
             >>> from descarteslabs.client.services import Metadata
-            >>> Metadata().summary(place='north-america_united-states_iowa', \
-                    products=['landsat:LC08:PRE:TOAR'], start_datetime='2016-07-06', \
+            >>> Metadata().summary(place='north-america_united-states_iowa',
+                    products=['landsat:LC08:PRE:TOAR'], start_datetime='2016-07-06',
                     end_datetime='2016-07-07', interval='hour', pixels=True)
             {
               'bytes': 93298309,
@@ -337,7 +338,7 @@ class Metadata(Service):
         r = self.session.post("/summary", json=kwargs)
         return DotDict(r.json())
 
-    def search(
+    def _query(
         self,
         products=None,
         sat_ids=None,
@@ -359,39 +360,11 @@ class Metadata(Service):
         continuation_token=None,
         **kwargs
     ):
-        """Search metadata given a spatio-temporal query. All parameters are
-        optional. For accessing more than 10000 results, see :py:func:`features`.
+        """
+        Execute a metadata query for up to 10,000 items.
 
-        :param list(str) products: Product Identifier(s).
-        :param list(str) sat_ids: Satellite identifier(s).
-        :param str date: The date field to use for search (e.g. `acquired`).
-        :param str place: A slug identifier to be used as a region of interest.
-        :param str geom: A GeoJSON or WKT region of interest.
-        :param str start_datetime: Desired starting timestamp, in any common format.
-        :param str end_datetime: Desired ending timestamp, in any common format.
-        :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
-        :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
-        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
-        :param expr q: Expression for filtering the results. See
-            :py:attr:`descarteslabs.client.services.metadata.properties`.
-        :param int limit: Number of items to return up to the maximum of 10000.
-        :param list(str) fields: Properties to return.
-        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
-        :param str sort_field: Property to sort on.
-        :param str sort_order: Order of sort.
-        :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
-
-        return: GeoJSON ``FeatureCollection``
-
-        Example::
-
-            >>> from descarteslabs.client.services import Metadata
-            >>> scenes = Metadata().search(place='north-america_united-states_iowa', \
-                                         products=['landsat:LC08:PRE:TOAR'], \
-                                         start_datetime='2016-07-01', \
-                                         end_datetime='2016-07-31T23:59:59')
-            >>> len(scenes['features'])  # doctest: +SKIP
-            2
+        Use :py:func:`search` or :py:func:`features` instead, which batch searches into smaller requests
+        and handle paging for you.
         """
         check_deprecated_kwargs(
             kwargs,
@@ -481,6 +454,85 @@ class Metadata(Service):
 
         return DotDict(fc)
 
+    def search(
+        self,
+        products=None,
+        sat_ids=None,
+        date="acquired",
+        place=None,
+        geom=None,
+        start_datetime=None,
+        end_datetime=None,
+        cloud_fraction=None,
+        cloud_fraction_0=None,
+        fill_fraction=None,
+        q=None,
+        limit=100,
+        fields=None,
+        dltile=None,
+        sort_field=None,
+        sort_order="asc",
+        randomize=None,
+        **kwargs
+    ):
+        """Search metadata given a spatio-temporal query. All parameters are
+        optional.
+
+        If performing a large query, consider using the iterator :py:func:`features` instead.
+
+        :param list(str) products: Product Identifier(s).
+        :param list(str) sat_ids: Satellite identifier(s).
+        :param str date: The date field to use for search (e.g. `acquired`).
+        :param str place: A slug identifier to be used as a region of interest.
+        :param str geom: A GeoJSON or WKT region of interest.
+        :param str start_datetime: Desired starting timestamp, in any common format.
+        :param str end_datetime: Desired ending timestamp, in any common format.
+        :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
+        :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
+        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param expr q: Expression for filtering the results. See
+            :py:attr:`descarteslabs.client.services.metadata.properties`.
+        :param int limit: Maximuim number of items to return.
+        :param list(str) fields: Properties to return.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str sort_field: Property to sort on.
+        :param str sort_order: Order of sort.
+        :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
+
+        return: GeoJSON ``FeatureCollection``
+
+        Example::
+
+            >>> from descarteslabs.client.services import Metadata
+            >>> scenes = Metadata().search(place='north-america_united-states_iowa',
+                                         products=['landsat:LC08:PRE:TOAR'],
+                                         start_datetime='2016-07-01',
+                                         end_datetime='2016-07-31T23:59:59')
+            >>> len(scenes['features'])  # doctest: +SKIP
+            2
+        """
+        features_iter = self.features(
+            products=products,
+            sat_ids=sat_ids,
+            date=date,
+            place=place,
+            geom=geom,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            cloud_fraction=cloud_fraction,
+            cloud_fraction_0=cloud_fraction_0,
+            fill_fraction=fill_fraction,
+            q=q,
+            fields=fields,
+            dltile=dltile,
+            sort_field=sort_field,
+            sort_order=sort_order,
+            randomize=randomize,
+            **kwargs
+        )
+        limited_features = itertools.islice(features_iter, limit)
+        return DotDict(type="FeatureCollection", features=DotList(limited_features))
+
     def ids(
         self,
         products=None,
@@ -527,9 +579,9 @@ class Metadata(Service):
         Example::
 
             >>> from descarteslabs.client.services import Metadata
-            >>> ids = Metadata().ids(place='north-america_united-states_iowa', \
-                                 products=['landsat:LC08:PRE:TOAR'], \
-                                 start_datetime='2016-07-01', \
+            >>> ids = Metadata().ids(place='north-america_united-states_iowa',
+                                 products=['landsat:LC08:PRE:TOAR'],
+                                 start_datetime='2016-07-01',
                                  end_datetime='2016-07-31T23:59:59')
             >>> len(ids)  # doctest: +SKIP
             1
@@ -591,11 +643,11 @@ class Metadata(Service):
         Example::
 
             >>> from descarteslabs.client.services import Metadata
-            >>> features = Metadata().features("landsat:LC08:PRE:TOAR", \
-                            start_datetime='2016-01-01', \
+            >>> features = Metadata().features("landsat:LC08:PRE:TOAR",
+                            start_datetime='2016-01-01',
                             end_datetime="2016-03-01")
             >>> total = 0
-            >>> for f in features: \
+            >>> for f in features:
                     total += 1
 
             >>> total # doctest: +SKIP
@@ -605,7 +657,7 @@ class Metadata(Service):
         continuation_token = None
 
         while True:
-            result = self.search(
+            result = self._query(
                 sat_ids=sat_ids,
                 products=products,
                 date=date,
