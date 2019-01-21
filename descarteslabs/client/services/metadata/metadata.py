@@ -245,9 +245,11 @@ class Metadata(Service):
         Example usage::
 
             >>> from descarteslabs.client.services import Metadata
-            >>> Metadata().summary(place='north-america_united-states_iowa',
-                    products=['landsat:LC08:PRE:TOAR'], start_datetime='2016-07-06',
-                    end_datetime='2016-07-07', interval='hour', pixels=True)
+            >>> Metadata().summary(
+            ...     place='north-america_united-states_iowa',
+            ...     products=['landsat:LC08:PRE:TOAR'], start_datetime='2016-07-06',
+            ...     end_datetime='2016-07-07', interval='hour', pixels=True
+            ... )
             {
               'bytes': 93298309,
               'count': 1,
@@ -504,10 +506,12 @@ class Metadata(Service):
         Example::
 
             >>> from descarteslabs.client.services import Metadata
-            >>> scenes = Metadata().search(place='north-america_united-states_iowa',
-                                         products=['landsat:LC08:PRE:TOAR'],
-                                         start_datetime='2016-07-01',
-                                         end_datetime='2016-07-31T23:59:59')
+            >>> scenes = Metadata().search(
+            ...     place='north-america_united-states_iowa',
+            ...     products=['landsat:LC08:PRE:TOAR'],
+            ...     start_datetime='2016-07-01',
+            ...     end_datetime='2016-07-31T23:59:59'
+            ... )
             >>> len(scenes['features'])  # doctest: +SKIP
             2
         """
@@ -579,10 +583,12 @@ class Metadata(Service):
         Example::
 
             >>> from descarteslabs.client.services import Metadata
-            >>> ids = Metadata().ids(place='north-america_united-states_iowa',
-                                 products=['landsat:LC08:PRE:TOAR'],
-                                 start_datetime='2016-07-01',
-                                 end_datetime='2016-07-31T23:59:59')
+            >>> ids = Metadata().ids(
+            ...     place='north-america_united-states_iowa',
+            ...     products=['landsat:LC08:PRE:TOAR'],
+            ...     start_datetime='2016-07-01',
+            ...     end_datetime='2016-07-31T23:59:59'
+            ... )
             >>> len(ids)  # doctest: +SKIP
             1
 
@@ -643,12 +649,14 @@ class Metadata(Service):
         Example::
 
             >>> from descarteslabs.client.services import Metadata
-            >>> features = Metadata().features("landsat:LC08:PRE:TOAR",
-                            start_datetime='2016-01-01',
-                            end_datetime="2016-03-01")
+            >>> features = Metadata().features(
+            ...     "landsat:LC08:PRE:TOAR",
+            ...     start_datetime='2016-01-01',
+            ...     end_datetime="2016-03-01"
+            ... )
             >>> total = 0
             >>> for f in features:
-                    total += 1
+            ...     total += 1
 
             >>> total # doctest: +SKIP
             31898
