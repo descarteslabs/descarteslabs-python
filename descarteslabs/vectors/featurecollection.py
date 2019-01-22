@@ -21,6 +21,25 @@ class FailedCopyError(VectorException):
     pass
 
 
+class _FeaturesIterator(object):
+    """Private iterator for features() that also returns length"""
+    def __init__(self, response):
+        self._response = response
+
+    def __len__(self):
+        return len(self._response)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return Feature._create_from_jsonapi(self._response.next())
+
+    def next(self):
+        """Backwards compatibility for Python 2"""
+        return self.__next__()
+
+
 class FeatureCollection(object):
     """
     A proxy object for accesssing millions of features within a collection
@@ -259,20 +278,25 @@ class FeatureCollection(object):
     def features(self):
         """
         Iterate through each `Feature` in the `FeatureCollection`, taking into
-        account calls to `FeatureCollection.filter()`
-        and `FeatureCollection.limit()`.
+        account calls to `FeatureCollection.filter()` and
+        `FeatureCollection.limit()`.
 
-        A query of some sort must be set, otherwise a BadRequestError will be raised.
+        A query or limit of some sort must be set, otherwise a BadRequestError
+        will be raised.
 
-        Yields
-        ------
-        `Feature`
+        The length of the returned iterator indicates the full query size.
+
+        Returns
+        -------
+        `Iterator` which returns `Feature` and has a length
 
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
         >>> fc = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
-        >>> for feature in fc.features():  # doctest: +SKIP
+        >>> features = fc.features()  #doctest: +SKIP
+        >>> print(len(features))  #doctest: +SKIP
+        >>> for feature in features:  # doctest: +SKIP
         ...    print(feature)  # doctest: +SKIP
         """
         params = dict(
@@ -282,8 +306,7 @@ class FeatureCollection(object):
             query_limit=self._query_limit,
         )
 
-        for response in self.vector_client.search_features(**params):
-            yield Feature._create_from_jsonapi(response)
+        return _FeaturesIterator(self.vector_client.search_features(**params))
 
     def update(self,
                name=None,

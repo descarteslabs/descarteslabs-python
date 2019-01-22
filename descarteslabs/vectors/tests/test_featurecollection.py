@@ -59,6 +59,8 @@ class TestFeatureCollection(unittest.TestCase):
             self.assertIsNotNone(getattr(fc, key))
 
     def test_filter_geometry(self, vector_client):
+        vector_client.search_features = mock.Mock(return_value=iter([]))
+
         fc = FeatureCollection('foo', vector_client=vector_client)
         geometry = mock.MagicMock()
 
@@ -74,6 +76,8 @@ class TestFeatureCollection(unittest.TestCase):
         )
 
     def test_filter_properties(self, vector_client):
+        vector_client.search_features = mock.Mock(return_value=iter([]))
+
         fc = FeatureCollection('foo', vector_client=vector_client)
 
         exp = (p.foo > 0)
@@ -93,6 +97,8 @@ class TestFeatureCollection(unittest.TestCase):
             query_expr=mock.ANY)
 
     def test_limit(self, vector_client):
+        vector_client.search_features = mock.Mock(return_value=iter([]))
+
         limit = 10
         fc = FeatureCollection('foo', vector_client=vector_client).limit(limit)
 

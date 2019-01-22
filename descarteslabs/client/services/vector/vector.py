@@ -9,6 +9,68 @@ from descarteslabs.client.auth import Auth
 from descarteslabs.common.dotdict import DotDict
 
 
+class _SearchFeaturesIterator(object):
+    """Private iterator for search_features() that also returns length"""
+    def __init__(
+        self,
+        client,
+        product_id,
+        geometry,
+        query_expr,
+        query_limit,
+        **kwargs
+    ):
+        self._client = client
+        self._product_id = product_id
+        self._geometry = geometry
+        self._query_expr = query_expr
+        self._query_limit = query_limit
+        self._kwargs = kwargs
+        self._continuation_token = None
+        self._page_offset = 0
+        self._page_len = 0
+
+        # updates _continuation_token, _page_offset, _page_len
+        self._next_page()
+        self._length = self._page.meta.total_results
+
+    def __iter__(self):
+        return self
+
+    def __len__(self):
+        return self._length
+
+    def __next__(self):
+        if self._page_offset >= self._page_len:
+            if self._continuation_token is None:
+                raise StopIteration()
+
+            self._next_page()
+
+        try:
+            return self._page.data[self._page_offset]
+        finally:
+            self._page_offset += 1
+
+    def _next_page(self):
+        self._page = self._client._fetch_feature_page(
+            product_id=self._product_id,
+            geometry=self._geometry,
+            query_expr=self._query_expr,
+            query_limit=self._query_limit,
+            continuation_token=self._continuation_token,
+            **self._kwargs
+        )
+
+        self._continuation_token = self._page.meta.continuation_token
+        self._page_offset = 0
+        self._page_len = len(self._page.data)
+
+    def next(self):
+        """Backwards compatibility for Python 2"""
+        return self.__next__()
+
+
 class Vector(JsonApiService):
     """
     Client for storing and querying vector data.
@@ -426,6 +488,9 @@ class Vector(JsonApiService):
 
         At least one of `geometry`, `query_expr`, or `properties` is required.
 
+        The returned iterator has a length that indicates the size of
+        the query.
+
         :param str product_id: (Required) Product within which to search.
         :param dict geometry: Search for Features intersecting this shape.
                               This accepts the following types of GeoJSON
@@ -458,26 +523,11 @@ class Vector(JsonApiService):
 
                  The Features' IDs are under ``.id``,
                  and their properties are under ``.attributes``.
+                 len() can be used on the returned iterator to determine
+                 the query size.
         """
-        continuation_token = None
-
-        while True:
-            page = self._fetch_feature_page(
-                product_id,
-                geometry,
-                query_expr=query_expr,
-                query_limit=query_limit,
-                continuation_token=continuation_token,
-                **kwargs
-            )
-
-            for feature in page.data:
-                yield feature
-
-            continuation_token = page.meta.continuation_token
-
-            if continuation_token is None:
-                break
+        return _SearchFeaturesIterator(
+            self, product_id, geometry, query_expr, query_limit)
 
     def create_product_from_query(
         self,
