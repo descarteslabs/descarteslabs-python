@@ -1,8 +1,12 @@
-import collections
-
 import six
 import shapely.geometry
 import geojson
+
+try:
+    # only after py3.4
+    import collections.abc as abc
+except ImportError:
+    import collections as abc
 
 
 def polygon_from_bounds(bounds):
@@ -97,7 +101,7 @@ def geometry_like_to_shapely(geometry):
     if isinstance(geometry, shapely.geometry.base.BaseGeometry):
         return geometry
 
-    if not isinstance(geometry, collections.Mapping):
+    if not isinstance(geometry, abc.Mapping):
         try:
             geometry = geometry.__geo_interface__
         except AttributeError:
