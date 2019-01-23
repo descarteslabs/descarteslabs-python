@@ -21,7 +21,8 @@ import json
 import descarteslabs.client.addons as addons
 from descarteslabs.client.addons import numpy as np
 from descarteslabs.client.services.raster import Raster
-from descarteslabs.client.services.places import Places
+
+from descarteslabs.client.services.raster.tests.iowa_geometry import iowa_geom
 
 
 class TestRaster(unittest.TestCase):
@@ -31,7 +32,6 @@ class TestRaster(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.raster = Raster()
-        cls.places = Places()
 
     def test_raster(self):
         # TODO: Remove key test once keys are deprecated and removed.
@@ -357,16 +357,12 @@ class TestRaster(unittest.TestCase):
         self.assertIsNotNone(r['files']['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.png'])
 
     def test_iter_dltiles_from_place(self):
-        iowa = self.places.shape('north-america_united-states_iowa', geom='low')
-        iowa_geom = iowa['geometry']
         n = 0
         for tile in self.raster.iter_dltiles_from_shape(30.0, 2048, 16, iowa_geom, maxtiles=4):
             n += 1
         self.assertEqual(n, 58)
 
     def test_dltiles_from_place(self):
-        iowa = self.places.shape('north-america_united-states_iowa', geom='low')
-        iowa_geom = iowa['geometry']
         dltiles_feature_collection = self.raster.dltiles_from_shape(30.0, 2048, 16, iowa_geom)
         self.assertEqual(len(dltiles_feature_collection['features']), 58)
 

@@ -116,9 +116,24 @@ class Raster(Service):
 
         Example::
 
-            >>> from descarteslabs.client.services import Raster, Places
-            >>> iowa = Places().shape("north-america_united-states_iowa")
-            >>> next(Raster().iter_dltiles_from_shape(30.0, 2048, 16, iowa))
+            >>> iowa_geom = {
+            ...     "coordinates": [[
+            ...         [-96.498997, 42.560832],
+            ...         [-95.765645, 40.585208],
+            ...         [-91.729115, 40.61364],
+            ...         [-91.391613, 40.384038],
+            ...         [-90.952233, 40.954047],
+            ...         [-91.04589, 41.414085],
+            ...         [-90.343228, 41.587833],
+            ...         [-90.140613, 41.995999],
+            ...         [-91.065059, 42.751338],
+            ...         [-91.217706, 43.50055],
+            ...         [-96.599191, 43.500456],
+            ...         [-96.498997, 42.560832]
+            ...     ]],
+            ...     "type": "Polygon"
+            ... }
+            >>> next(Raster().iter_dltiles_from_shape(30.0, 2048, 16, iowa_geom))
             {
               'geometry': {
                 'coordinates': [
@@ -193,9 +208,25 @@ class Raster(Service):
 
         Example::
 
-            >>> from descarteslabs.client.services import Raster, Places
-            >>> iowa = Places().shape("north-america_united-states_iowa")
-            >>> tiles = Raster().dltiles_from_shape(30.0, 2048, 16, iowa)
+            >>> from descarteslabs.client.services import Raster
+            >>> iowa_geom = {
+            ...     "coordinates": [[
+            ...         [-96.498997, 42.560832],
+            ...         [-95.765645, 40.585208],
+            ...         [-91.729115, 40.61364],
+            ...         [-91.391613, 40.384038],
+            ...         [-90.952233, 40.954047],
+            ...         [-91.04589, 41.414085],
+            ...         [-90.343228, 41.587833],
+            ...         [-90.140613, 41.995999],
+            ...         [-91.065059, 42.751338],
+            ...         [-91.217706, 43.50055],
+            ...         [-96.599191, 43.500456],
+            ...         [-96.498997, 42.560832]
+            ...     ]],
+            ...     "type": "Polygon"
+            ... }
+            >>> tiles = Raster().dltiles_from_shape(30.0, 2048, 16, iowa_geom)
             >>> tiles['features'][0]
             {
               'geometry': {

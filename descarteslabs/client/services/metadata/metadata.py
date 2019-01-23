@@ -245,24 +245,49 @@ class Metadata(Service):
         Example usage::
 
             >>> from descarteslabs.client.services import Metadata
-            >>> Metadata().summary(
-            ...     place='north-america_united-states_iowa',
-            ...     products=['landsat:LC08:PRE:TOAR'], start_datetime='2016-07-06',
-            ...     end_datetime='2016-07-07', interval='hour', pixels=True
-            ... )
+            >>> iowa_geom = {
+            ...     "coordinates": [[
+            ...         [-96.498997, 42.560832],
+            ...         [-95.765645, 40.585208],
+            ...         [-91.729115, 40.61364],
+            ...         [-91.391613, 40.384038],
+            ...         [-90.952233, 40.954047],
+            ...         [-91.04589, 41.414085],
+            ...         [-90.343228, 41.587833],
+            ...         [-90.140613, 41.995999],
+            ...         [-91.065059, 42.751338],
+            ...         [-91.217706, 43.50055],
+            ...         [-96.599191, 43.500456],
+            ...         [-96.498997, 42.560832]
+            ...     ]],
+            ...     "type": "Polygon"
+            ... }
+            >>> Metadata().summary(geom=iowa_geom,
+            ...                    products=['landsat:LC08:PRE:TOAR'],
+            ...                    start_datetime='2016-07-06',
+            ...                    end_datetime='2016-07-07',
+            ...                    interval='hour',
+            ...                    pixels=True)
             {
-              'bytes': 93298309,
-              'count': 1,
+              'bytes': 290740659,
+              'count': 3,
               'items': [
                 {
-                  'bytes': 93298309,
-                  'count': 1,
+                  'bytes': 191795912,
+                  'count': 2,
                   'date': '2016-07-06T16:00:00',
-                  'pixels': 250508160,
+                  'pixels': 500639616,
                   'timestamp': 1467820800
+                },
+                {
+                  'bytes': 98944747,
+                  'count': 1,
+                  'date': '2016-07-06T17:00:00',
+                  'pixels': 251142720,
+                  'timestamp': 1467824400
                 }
               ],
-              'pixels': 250508160,
+              'pixels': 751782336,
               'products': ['landsat:LC08:PRE:TOAR']
             }
         """
@@ -506,14 +531,31 @@ class Metadata(Service):
         Example::
 
             >>> from descarteslabs.client.services import Metadata
+            >>> iowa_geom = {
+            ...     "coordinates": [[
+            ...         [-96.498997, 42.560832],
+            ...         [-95.765645, 40.585208],
+            ...         [-91.729115, 40.61364],
+            ...         [-91.391613, 40.384038],
+            ...         [-90.952233, 40.954047],
+            ...         [-91.04589, 41.414085],
+            ...         [-90.343228, 41.587833],
+            ...         [-90.140613, 41.995999],
+            ...         [-91.065059, 42.751338],
+            ...         [-91.217706, 43.50055],
+            ...         [-96.599191, 43.500456],
+            ...         [-96.498997, 42.560832]
+            ...     ]],
+            ...     "type": "Polygon"
+            ... }
             >>> scenes = Metadata().search(
-            ...     place='north-america_united-states_iowa',
+            ...     geom=iowa_geom,
             ...     products=['landsat:LC08:PRE:TOAR'],
             ...     start_datetime='2016-07-01',
             ...     end_datetime='2016-07-31T23:59:59'
             ... )
             >>> len(scenes['features'])  # doctest: +SKIP
-            2
+            32
         """
         features_iter = self.features(
             products=products,
@@ -583,14 +625,29 @@ class Metadata(Service):
         Example::
 
             >>> from descarteslabs.client.services import Metadata
-            >>> ids = Metadata().ids(
-            ...     place='north-america_united-states_iowa',
-            ...     products=['landsat:LC08:PRE:TOAR'],
-            ...     start_datetime='2016-07-01',
-            ...     end_datetime='2016-07-31T23:59:59'
-            ... )
+            >>> iowa_geom = {
+            ...     "coordinates": [[
+            ...         [-96.498997, 42.560832],
+            ...         [-95.765645, 40.585208],
+            ...         [-91.729115, 40.61364],
+            ...         [-91.391613, 40.384038],
+            ...         [-90.952233, 40.954047],
+            ...         [-91.04589, 41.414085],
+            ...         [-90.343228, 41.587833],
+            ...         [-90.140613, 41.995999],
+            ...         [-91.065059, 42.751338],
+            ...         [-91.217706, 43.50055],
+            ...         [-96.599191, 43.500456],
+            ...         [-96.498997, 42.560832]
+            ...     ]],
+            ...     "type": "Polygon"
+            ... }
+            >>> ids = Metadata().ids(geom=iowa_geom,
+            ...                      products=['landsat:LC08:PRE:TOAR'],
+            ...                      start_datetime='2016-07-01',
+            ...                      end_datetime='2016-07-31T23:59:59')
             >>> len(ids)  # doctest: +SKIP
-            1
+            32
 
             >>> ids  # doctest: +SKIP
             ['landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1', 'landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
