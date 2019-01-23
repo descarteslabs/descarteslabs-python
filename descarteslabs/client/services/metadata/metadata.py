@@ -268,28 +268,21 @@ class Metadata(Service):
             ...                    end_datetime='2016-07-07',
             ...                    interval='hour',
             ...                    pixels=True)
-            {
-              'bytes': 290740659,
-              'count': 3,
-              'items': [
                 {
-                  'bytes': 191795912,
-                  'count': 2,
-                  'date': '2016-07-06T16:00:00',
-                  'pixels': 500639616,
-                  'timestamp': 1467820800
-                },
-                {
-                  'bytes': 98944747,
+                  'bytes': 93298309,
                   'count': 1,
-                  'date': '2016-07-06T17:00:00',
-                  'pixels': 251142720,
-                  'timestamp': 1467824400
+                  'items': [
+                    {
+                      'bytes': 93298309,
+                      'count': 1,
+                      'date': '2016-07-06T16:00:00',
+                      'pixels': 250508160,
+                      'timestamp': 1467820800
+                    }
+                  ],
+                  'pixels': 250508160,
+                  'products': ['landsat:LC08:PRE:TOAR']
                 }
-              ],
-              'pixels': 751782336,
-              'products': ['landsat:LC08:PRE:TOAR']
-            }
         """
         check_deprecated_kwargs(
             kwargs,
