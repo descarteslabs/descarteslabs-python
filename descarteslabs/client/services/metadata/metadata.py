@@ -548,7 +548,7 @@ class Metadata(Service):
             ...     end_datetime='2016-07-31T23:59:59'
             ... )
             >>> len(scenes['features'])  # doctest: +SKIP
-            32
+            2
         """
         features_iter = self.features(
             products=products,
@@ -640,7 +640,7 @@ class Metadata(Service):
             ...                      start_datetime='2016-07-01',
             ...                      end_datetime='2016-07-31T23:59:59')
             >>> len(ids)  # doctest: +SKIP
-            32
+            2
 
             >>> ids  # doctest: +SKIP
             ['landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1', 'landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
