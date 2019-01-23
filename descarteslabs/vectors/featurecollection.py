@@ -33,7 +33,7 @@ class _FeaturesIterator(object):
         return self
 
     def __next__(self):
-        return Feature._create_from_jsonapi(self._response.next())
+        return Feature._create_from_jsonapi(next(self._response))
 
     def next(self):
         """Backwards compatibility for Python 2"""
