@@ -14,21 +14,41 @@
 
 import base64
 from collections import defaultdict, OrderedDict
+import dis
+import glob
+import importlib
+import inspect
+import io
 import itertools
 import json
 import logging
 import os
+import re
+import shutil
+import six
+from six.moves import zip_longest
 import sys
 import time
 from warnings import warn
-from six.moves import zip_longest
+from tempfile import (
+    mkstemp,
+    NamedTemporaryFile,
+)
+import zipfile
 
 import cloudpickle
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.exceptions import ConflictError
-from descarteslabs.client.services.service import Service
+from descarteslabs.client.services.service import Service, ThirdPartyService
 from descarteslabs.common.dotdict import DotDict, DotList
+from descarteslabs.common.services.tasks.constants import (
+    ENTRYPOINT,
+    FunctionType,
+    DIST,
+    DATA,
+    REQUIREMENTS,
+)
 from descarteslabs.common.tasks import FutureTask
 
 
@@ -56,11 +76,22 @@ class GroupTerminalException(Exception):
     pass
 
 
+class BoundGlobalError(NameError):
+    """
+    Raised when a global is referenced in a function where it won't be available
+    when executed remotely.
+    """
+    pass
+
+
 class Tasks(Service):
 
     TASK_RESULT_BATCH_SIZE = 100
     RERUN_BATCH_SIZE = 200
     COMPLETION_POLL_INTERVAL_SECONDS = 5
+    ENTRYPOINT_TEMPLATE = "{source}\nmain = {function_name}\n"
+    IMPORT_TEMPLATE = "from {module} import {obj}"
+    IS_GLOB_PATTERN = re.compile(r'[\*\?\[]')
 
     def __init__(self, url=None, auth=None):
         if auth is None:
@@ -71,6 +102,8 @@ class Tasks(Service):
                 "DESCARTESLABS_TASKS_URL",
                 "https://platform.descarteslabs.com/tasks/v1"
             )
+
+        self._gcs_upload_service = ThirdPartyService()
 
         super(Tasks, self).__init__(url, auth=auth)
 
@@ -112,12 +145,17 @@ class Tasks(Service):
             minimum_concurrency=None,
             minimum_seconds=None,
             task_timeout=1800,
+            include_modules=None,
+            include_data=None,
+            requirements=None,
             **kwargs
     ):
         """
         Creates a new task group.
 
         :param function function: The function to be called in a task.
+            The function cannot contain any globals or ``BoundGlobalError``
+            will be raised
         :param str container_image: The location of a docker image to be used for
             the environment in which the function is executed.
         :param str name: An optional name used to later help identify the function.
@@ -146,15 +184,26 @@ class Tasks(Service):
         :param int task_timeout: Maximum runtime for a single task in seconds. A
             task will be killed if it exceeds this limit. Default: 30 minutes.
             Minimum: 10 seconds. Maximum: 24 hours.
+        :param list(str) include_modules: Locally importable python names to include as
+            modules in the task group, which can be imported by the entrypoint function, `function`.
+        :param list(str) include_data: Non python data files to include in the task group. Data
+            path must be descendant of system path or python path directories.
+        :param requirements: A list of Python dependencies required by this function
+            or a path to a file listing those dependencies, in standard setuptools
+            notation (see PEP 508 https://www.python.org/dev/peps/pep-0508/).
+            For example, if the packages `foo` and `bar` are required, then
+            `['foo', 'bar']` or `['foo>2.0', 'bar>=1.0']` might be possible values.
 
         :return: A dictionary representing the group created.
+
+        :raises: ``BoundGlobalError`` if the given function refers to global
+            variables
         """
         if container_image is None:
-            container_image = "us.gcr.io/dl-ci-cd/images/tasks/public/alpha/py2/default:v2018.04.26"
+            container_image = "us.gcr.io/dl-ci-cd/images/tasks/public/py2/default:v2018.11.17"
 
         payload = {
             'image': container_image,
-            'function': _serialize_function(function),
             'function_python_version': ".".join(str(part) for part in sys.version_info[:3]),
             'cpu': cpus,
             'gpu': gpus,
@@ -170,19 +219,41 @@ class Tasks(Service):
 
         payload.update(kwargs)
 
+        bundle_path = None
         try:
-            r = self.session.post("/groups", json=payload)
-        except ConflictError as e:
-            error_message = json.loads(str(e))['message']
-            if error_message != 'namespace is missing authentication':
-                raise
+            if include_data is not None or include_modules is not None or requirements is not None:
+                bundle_path = self._build_bundle(function, include_data, include_modules, requirements)
+                payload.update({
+                    'function_type': FunctionType.PY_BUNDLE
+                })
+            else:
+                payload.update({
+                    'function': _serialize_function(function),
+                    'function_type': FunctionType.PY_PICKLE
+                })
 
-            if not self._create_namespace():
-                raise
+            try:
+                r = self.session.post("/groups", json=payload)
+            except ConflictError as e:
+                error_message = json.loads(str(e))['message']
+                if error_message != 'namespace is missing authentication':
+                    raise
 
-            r = self.session.post("/groups", json=payload)
+                if not self._create_namespace():
+                    raise
 
-        return DotDict(r.json())
+                r = self.session.post("/groups", json=payload)
+            group = r.json()
+
+            if bundle_path is not None:
+                url = group.pop('upload_url')
+                with io.open(bundle_path, mode='rb') as bundle:
+                    self._gcs_upload_service.session.put(url, data=bundle)
+        finally:
+            if bundle_path and os.path.exists(bundle_path):
+                os.remove(bundle_path)
+
+        return DotDict(group)
 
     def list_groups(
         self,
@@ -190,6 +261,7 @@ class Tasks(Service):
         created=None,
         updated=None,
         sort_field=None,
+        include=None,
         sort_order="asc",
         limit=100,
         continuation_token=None,
@@ -204,6 +276,8 @@ class Tasks(Service):
         :param str sort_field: The field to sort groups on. Allowed are
             ['created', 'updated'].
         :param str sort_order: Allowed are ['asc', 'desc']. Default: 'asc'.
+        :param list[str] include: extra fields to include in groups in the response.
+            allowed are: ['build_log_url']
         :param int limit: The number of results to get (max 1000 per page).
         :param str continuation_token: A string returned from a previous call to
             `list_groups()`, which you can use to get the next page of results.
@@ -213,7 +287,7 @@ class Tasks(Service):
             are further matching groups.
         """
         params = {'limit': limit}
-        for field in ['status', 'created', 'updated', 'sort_field', 'sort_order', 'continuation_token']:
+        for field in ['status', 'created', 'updated', 'sort_field', 'sort_order', 'include', 'continuation_token']:
             if locals()[field] is not None:
                 params[field] = locals()[field]
         r = self.session.get("/groups", params=params)
@@ -256,16 +330,20 @@ class Tasks(Service):
             if continuation_token is None:
                 break
 
-    def get_group(self, group_id):
+    def get_group(self, group_id, include=None):
         """
         Retrieves a single task group by id.
 
         :param str group_id: The group id.
+        :param list[str] include: extra fields to include in groups in the response.
+            allowed are: ['build_log_url, 'build_log']. Note that build logs over
+            10 Mi will not be returned, request the build log url instead.
 
         :return: A dictionary representing the task group.
         """
         r = self.session.get(
             "/groups/{}".format(group_id),
+            params={'include': include or ()},
         )
         r.raise_for_status()
         return DotDict(r.json())
@@ -658,6 +736,9 @@ class Tasks(Service):
                         minimum_seconds=None,
                         task_timeout=1800,
                         retry_count=0,
+                        include_modules=None,
+                        include_data=None,
+                        requirements=None,
                         **kwargs
                         ):
         """
@@ -695,6 +776,15 @@ class Tasks(Service):
             Minimum: 10 seconds. Maximum: 24 hours.
         :param int retry_count: Number of times to retry a task if it fails
             Default: 0. Maximum: 5.
+        :param list(str) include_modules: Locally importable python names to include as
+            modules in the task group, which can be imported by the entrypoint function, `function`.
+        :param list(str) include_data: Non python data files to include in the task group. Data
+            path must be descendant of system path or python path directories.
+        :param requirements: A list of Python dependencies required by this function
+            or a path to a file listing those dependencies, in standard setuptools
+            notation (see PEP 508 https://www.python.org/dev/peps/pep-0508/).
+            For example, if the packages `foo` and `bar` are required, then
+            `['foo', 'bar']` or `['foo>2.0', 'bar>=1.0']` might be possible values.
 
         :return: A :class:`CloudFunction`.
         """
@@ -705,6 +795,9 @@ class Tasks(Service):
             minimum_concurrency=minimum_concurrency,
             minimum_seconds=minimum_seconds,
             task_timeout=task_timeout,
+            include_modules=include_modules,
+            include_data=include_data,
+            requirements=requirements,
             **kwargs
         )
 
@@ -838,6 +931,283 @@ class Tasks(Service):
         )
         r.raise_for_status()
         return True
+
+    def _sys_paths(self):
+        if not hasattr(self, '_cached_sys_paths'):
+            # use longest matching path entries.
+            self._cached_sys_paths = sorted(filter(bool, sys.path), key=len, reverse=True)
+        return self._cached_sys_paths
+
+    def _get_globals(self, func):
+        # Disassemble the function and capture the output
+        buffer = six.StringIO()
+        save_stdout = sys.stdout
+
+        try:
+            sys.stdout = buffer
+            dis.dis(func)
+        finally:
+            sys.stdout = save_stdout
+
+        # Search for LOAD_GLOBAL instruction and capture the var name
+        search_expr = ".* LOAD_GLOBAL .*\\((.*)\\)"
+        compiled_search = re.compile(search_expr)
+
+        # Non-builtin globals are collected here
+        globs = set()
+
+        for line in buffer.getvalue().split('\n'):
+            result = compiled_search.match(line)
+
+            if result:
+                name = result.group(1)
+
+                if not hasattr(six.moves.builtins, name):
+                    globs.add(name)
+
+        return sorted(globs)
+
+    def _find_object(self, name):
+        """Search for an object as specified by a fully qualified name.
+        The fully qualified name must refer to an object that can be resolved
+        through the module search path.
+
+        :returns: The object, the module path as list, and the
+                  function path as list
+        """
+        module_path = []  # Fully qualified module path
+        object_path = []  # Fully qualified object path
+
+        obj = None
+        parts = name.split('.')
+
+        for part in parts:
+            error = None
+
+            if hasattr(obj, part):
+                # Could be any object (module, class, etc.)
+                obj = getattr(obj, part)
+
+                if inspect.ismodule(obj) and not object_path:
+                    module_path.append(part)
+                else:
+                    object_path.append(part)
+            else:
+                # If not found, assume it's a module that must be loaded
+                if object_path:
+                    error = "'{}' has no attribute '{}'".format(
+                        type(obj), part)
+                    raise NameError("Cannot resolve function name '{}': {}".format(
+                        name, error))
+                else:
+                    module_path.append(part)
+
+                    current_module_path = ".".join(module_path)
+                    try:
+                        obj = importlib.import_module(current_module_path)
+                    except Exception as ex:
+                        traceback = sys.exc_info()[2]
+                        six.reraise(
+                            NameError,
+                            NameError("Cannot resolve function name '{}', error importing module {}: {}".format(
+                                name, current_module_path, ex)),
+                            traceback
+                        )
+
+        # When we're at the end, we should have found a valid object
+        return obj, module_path, object_path
+
+    def _build_bundle(
+        self,
+        group_function,
+        include_data,
+        include_modules,
+        requirements=None
+    ):
+        data_files = self._find_data_files(include_data or [])
+
+        with NamedTemporaryFile(delete=False, suffix='.zip', mode='wb') as f:
+            try:
+                with zipfile.ZipFile(f, mode='w', compression=zipfile.ZIP_DEFLATED) as bundle:
+                    self._write_main_function(group_function, bundle)
+                    self._write_data_files(data_files, bundle)
+
+                    if include_modules:
+                        self._write_include_modules(include_modules, bundle)
+
+                    if requirements:
+                        bundle.writestr(REQUIREMENTS, self._requirements_string(requirements))
+                _, file_name = mkstemp(suffix=".zip")
+                shutil.move(f.name, file_name)
+
+                return file_name
+            finally:
+                if os.path.exists(f.name):
+                    os.remove(f.name)
+
+    def _find_data_files(self, include_data):
+        data_files = []
+
+        for pattern in include_data:
+            is_glob = self.IS_GLOB_PATTERN.search(pattern)
+            matched_paths = glob.glob(pattern)
+
+            if not matched_paths:
+                if is_glob:
+                    warn("Include data glob pattern had no matches: {}".format(pattern))
+                else:
+                    raise ValueError("No data file found for path: {}".format(pattern))
+            for path in map(os.path.abspath, matched_paths):
+                if os.path.exists(path):
+                    sys_path = self._sys_path_prefix(path)
+
+                    if os.path.isdir(path):
+                        raise ValueError("Cannot pass directories as included data: `{}`".format(path))
+                    else:
+                        data_files.append((path, self._archive_path(path, DATA, sys_path=sys_path)))
+                else:
+                    raise ValueError("Data file location does not exist: {}".format(path))
+
+        return data_files
+
+    def _write_main_function(self, f, archive):
+        is_named_function = isinstance(f, six.string_types)
+
+        if is_named_function:
+            f, module_path, function_path = self._find_object(f)
+
+            if not callable(f):
+                raise ValueError("Tasks main function must be a callable: `{}`".format(f))
+
+            # Simply import the module
+            source = self.IMPORT_TEMPLATE.format(
+                module=".".join(module_path), obj=function_path[0])
+            function_name = ".".join(function_path)
+        else:
+            if not inspect.isfunction(f):
+                raise ValueError("Tasks main function must be user-defined function: `{}`".format(f))
+
+            # We can't get the code for a given lambda
+            if f.__name__ == '<lambda>':
+                raise ValueError("Task main function cannot be a lambda expression: `{}`".format(f))
+
+            # Furthermore, the given function cannot refer to globals
+            bound_globals = self._get_globals(f)
+
+            if bound_globals:
+                raise BoundGlobalError(
+                    "Illegal reference to one or more global variables in your "
+                    "function: {}".format(bound_globals)
+                )
+
+            try:
+                source = inspect.getsource(f).strip()
+                function_name = f.__name__
+            except IOError as ioe:  # from the inpect.getsource call.
+                raise ValueError("Cannot get function source for {}: {}".format(f, ioe))
+
+        entrypoint_source = self.ENTRYPOINT_TEMPLATE.format(
+            source=source, function_name=function_name)
+        archive.writestr('{}/{}'.format(DIST, ENTRYPOINT), entrypoint_source)
+
+    def _write_data_files(self, data_files, archive):
+        for path, archive_path in data_files:
+            archive.write(path, archive_path)
+
+    def _write_include_modules(self, include_modules, archive):
+        for mod_name in include_modules:
+            mod = importlib.import_module(mod_name)
+            # detect system packages from distribution or virtualenv locations.
+            if re.match('.*(?:site|dist)-packages', mod.__file__) is not None:
+                raise ValueError("Cannot include system modules: `{}`.".format(mod.__file__))
+
+            mod_file = mod.__file__.replace('.pyc', '.py', 1)
+            if not os.path.exists(mod_file):
+                raise IOError("Source code for module is missing, only byte code exists: `{}`.".format(mod_name))
+            sys_path = self._sys_path_prefix(mod_file)
+
+            self._include_init_files(os.path.dirname(mod_file), archive, sys_path=sys_path)
+            archive_names = archive.namelist()
+            # this is a package, get all decendants if they exist.
+            if os.path.basename(mod_file) == '__init__.py':
+                for dirpath, dirnames, filenames in os.walk(os.path.dirname(mod_file)):
+                    for file_ in [f for f in filenames if f.endswith('.py')]:
+                        path = os.path.join(dirpath, file_)
+                        arcname = self._archive_path(path, DIST, sys_path)
+                        if arcname not in archive_names:
+                            archive.write(path, arcname=arcname)
+            else:
+                archive.write(mod_file, arcname=self._archive_path(mod_file, DIST, sys_path))
+
+    def _include_init_files(self, dir_path, archive, sys_path=None):
+        sys_path = sys_path or self._sys_path_prefix(dir_path)
+        relative_dir_path = self._relative_dir_path(dir_path, sys_path)
+        archive_names = archive.namelist()
+        # have we walked this path before?
+        if os.path.join(DIST, relative_dir_path, "__init__.py") not in archive_names:
+            partial_path = ''
+            for path_part in relative_dir_path.split(os.sep):
+                partial_path = os.path.join(partial_path, path_part)
+                rel_init_location = os.path.join(partial_path, "__init__.py")
+                abs_init_location = os.path.join(sys_path, rel_init_location)
+                arcname = os.path.join(DIST, rel_init_location)
+                if not os.path.exists(abs_init_location):
+                    raise IOError("Source code for module is missing: `{}`.".format(abs_init_location))
+                if arcname not in archive_names:
+                    archive.write(abs_init_location, arcname=arcname)
+
+    def _requirements_string(self, requirements):
+        if not pkg_resources:
+            warn(
+                "Your Python does not have a recent version of `setuptools`. "
+                "For a better experience update your environment by running `pip install -U setuptools`."
+            )
+        if isinstance(requirements, six.string_types):
+            return self._requirements_file_string(requirements)
+        else:
+            return self._requirements_list_string(requirements)
+
+    def _requirements_file_string(self, requirements):
+        if not os.path.isfile(requirements):
+            raise ValueError(
+                "Requirements file at {} not found. Did you mean to specify a single requirement? "
+                "Pass it wrapped in a list.".format(requirements)
+            )
+        with open(requirements) as f:
+            requirements_string = f.read()
+        if pkg_resources:
+            try:
+                list(pkg_resources.parse_requirements(requirements_string))
+            except ValueError as ex:
+                raise ValueError("Invalid Python requirement in file: {}".format(str(ex)))
+        return requirements_string
+
+    def _requirements_list_string(self, requirements):
+        if pkg_resources:
+            bad_requirements = []
+            for requirement in requirements:
+                try:
+                    pkg_resources.Requirement.parse(requirement)
+                except ValueError:
+                    bad_requirements.append(requirement)
+            if bad_requirements:
+                raise ValueError("Invalid Python requirements: {}".format(",".join(bad_requirements)))
+        return "\n".join(requirements)
+
+    def _relative_dir_path(self, dir_path, sys_path):
+        return dir_path.replace(sys_path, '', 1).strip(os.sep)
+
+    def _sys_path_prefix(self, path):
+        for sys_path in self._sys_paths():
+            if path.startswith(sys_path):
+                return sys_path
+        else:
+            raise IOError("Location is not on system path: `{}`".format(path))
+
+    def _archive_path(self, path, archive_prefix, sys_path=None):
+        abspath = os.path.abspath(path)
+        sys_path = sys_path or self._sys_path_prefix(abspath)
+        return os.path.join(archive_prefix, abspath.replace(sys_path, '', 1).strip(os.sep))
 
 
 AsyncTasks = Tasks
@@ -1007,3 +1377,25 @@ def _serialize_function(function):
     # decode it into a string to be able to json dump it again later.
     encoded_bytes = base64.b64encode(cloudpickle.dumps(function))
     return encoded_bytes.decode('ascii')
+
+
+def maybe_get_pkg_resources():
+    """
+    Return the pkg_resources module or None, depending on whether we think that whatever
+    the system has available is going to do an ok job at parsing requirements patterns.
+    We don't want to strictly require any particular version of setuptools to not force
+    the user to mess with their system.
+    """
+    try:
+        import pkg_resources
+        try:
+            pkg_resources.Requirement.parse('foo[bar]==2.0;python_version>"2.7"')
+        except (ValueError, AttributeError):
+            return None
+        else:
+            return pkg_resources
+    except ImportError:
+        return None
+
+
+pkg_resources = maybe_get_pkg_resources()
