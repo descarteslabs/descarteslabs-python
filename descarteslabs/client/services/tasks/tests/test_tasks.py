@@ -184,7 +184,8 @@ class TasksPackagingTest(ClientTestCase):
         with mock.patch("os.remove"):  # Don't delete bundle so we can read it back below
             self.client.new_group(foo, include_data=[self.DATA_FILE_PATH], include_modules=[self.TEST_MODULE])
 
-        call_args = json.loads(responses.calls[0].request.body)
+        body = responses.calls[0].request.body.decode("utf-8")  # prior to 3.6, json does not accept bytes
+        call_args = json.loads(body)
         bundle = responses.calls[1].request.body
         try:
             with ZipFile(bundle.name, mode='r') as zf:
