@@ -115,51 +115,23 @@ class TasksTest(ClientTestCase):
 
 class TasksPackagingTest(ClientTestCase):
 
-    PACKAGE_NAME = 'package'
-    GLOBAL_STRING = ' A global var '
-    LOCAL_STRING = ' A local var '
+    TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
+    TEST_PACKAGE_NAME = "dl_test_package"
+    DATA_FILE_RELATIVE_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
+    DATA_FILE_PATH = os.path.join(TEST_DATA_PATH, DATA_FILE_RELATIVE_PATH)
+    TEST_MODULE = "{}.package.module".format(TEST_PACKAGE_NAME)
+    TEST_MODULE_PATH = "{}/package/module.py".format(TEST_PACKAGE_NAME)
+    GLOBAL_STRING = 'A global var'
+    LOCAL_STRING = 'A local var'
 
-    @classmethod
-    def setUpClass(cls):
-        super(TasksPackagingTest, cls).setUpClass()
-        cls.TEST_SOURCE_TREE = os.path.relpath(tempfile.mkdtemp(dir='./'))
-        shutil.os.mkdir(os.path.join(cls.TEST_SOURCE_TREE, cls.PACKAGE_NAME, ''))
-        with io.open(os.path.join(cls.TEST_SOURCE_TREE, 'data.json'), mode='wb') as dat:
-            dat.write(json.dumps({'foo': 'bar'}).encode("utf-8"))
-        with io.open(os.path.join(cls.TEST_SOURCE_TREE, '__init__.py'), mode='wb') as dat:
-            pass
+    def setUp(self):
+        super(TasksPackagingTest, self).setUp()
+        self._sys_path = sys.path
+        sys.path += [self.TEST_DATA_PATH]
 
-        with io.open(os.path.join(cls.TEST_SOURCE_TREE, cls.PACKAGE_NAME, '__init__.py'), mode='wb') as dat:
-            pass
-
-        with io.open(os.path.join(cls.TEST_SOURCE_TREE, cls.PACKAGE_NAME, 'module.py'), mode='w') as dat:
-            dat.write("""
-a_global = "{global_string}"
-
-
-def foo():
-    print("foo")
-
-
-def func_foo():
-    a_local = "{local_string}"
-    return a_local + a_global
-
-
-class outer_class():
-    class inner_class:
-        @staticmethod
-        def func_bar():
-            a_local = "{local_string}"
-            return a_local + a_global
-""".format(global_string=cls.GLOBAL_STRING, local_string=cls.LOCAL_STRING))
-
-        cls.FIXTURE_PACKAGE = os.path.join(cls.TEST_SOURCE_TREE, cls.PACKAGE_NAME)
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.TEST_SOURCE_TREE)
-        super(TasksPackagingTest, cls).tearDownClass()
+    def tearDown(self):
+        sys.path = self._sys_path
+        super(TasksPackagingTest, self).tearDown()
 
     @staticmethod
     def a_function():
@@ -209,10 +181,8 @@ class outer_class():
         resp_json = {'id': 12345343, 'upload_url': upload_url}
         self.mock_response(responses.POST, status=201, json=resp_json)
         responses.add(responses.PUT, upload_url, status=200)
-        data_path = os.path.join(self.TEST_SOURCE_TREE, 'data.json')
-        module_name = '.'.join([self.TEST_SOURCE_TREE, self.PACKAGE_NAME, 'module'])
         with mock.patch("os.remove"):  # Don't delete bundle so we can read it back below
-            self.client.new_group(foo, include_data=[data_path], include_modules=[module_name])
+            self.client.new_group(foo, include_data=[self.DATA_FILE_PATH], include_modules=[self.TEST_MODULE])
 
         call_args = json.loads(responses.calls[0].request.body)
         bundle = responses.calls[1].request.body
@@ -244,15 +214,13 @@ class outer_class():
                     self.assertIn(b'main = foo', source)
 
     def test_find_data_files_glob(self):
-        pattern = os.path.join(self.TEST_SOURCE_TREE, '*.json')
-        fixture_path = os.path.join(self.TEST_SOURCE_TREE, 'data.json')
+        pattern = os.path.join(self.TEST_DATA_PATH, 'dl_test_package/*.json')
         data_files = self.client._find_data_files([pattern])
-        self.assertEqual([(os.path.abspath(fixture_path), os.path.join(DATA, fixture_path))], data_files)
+        self.assertEqual([(self.DATA_FILE_PATH, os.path.join(DATA, self.DATA_FILE_RELATIVE_PATH))], data_files)
 
     def test_find_data_files(self):
-        fixture_path = os.path.join(self.TEST_SOURCE_TREE, 'data.json')
-        data_files = self.client._find_data_files([fixture_path])
-        self.assertEqual([(os.path.abspath(fixture_path), os.path.join(DATA, fixture_path))], data_files)
+        data_files = self.client._find_data_files([self.DATA_FILE_PATH])
+        self.assertEqual([(self.DATA_FILE_PATH, os.path.join(DATA, self.DATA_FILE_RELATIVE_PATH))], data_files)
 
     def test_find_data_files_directory(self):
         self.assertRaises(ValueError, self.client._find_data_files, ["descarteslabs"])
@@ -270,16 +238,14 @@ class outer_class():
         self.assertRaises(ImportError, self.client._write_include_modules, ['doesnt.exist'], None)
 
     def test_include_modules(self):
-        module_name = '.'.join([self.TEST_SOURCE_TREE, self.PACKAGE_NAME, 'module'])
-        fixture_path = os.path.join(self.FIXTURE_PACKAGE, 'module.py')
         with tempfile.NamedTemporaryFile(suffix='.zip') as f:
             with ZipFile(f, mode='w') as arc:
-                self.client._write_include_modules([module_name], arc)
+                self.client._write_include_modules([self.TEST_MODULE], arc)
             f.seek(0)
             with ZipFile(f, mode='r') as arc:
-                path = os.path.join(DIST, fixture_path)
-                init_path = os.path.join(DIST, self.FIXTURE_PACKAGE, '__init__.py')
-                pkg_init_path = os.path.join(DIST, self.TEST_SOURCE_TREE, '__init__.py')
+                path = os.path.join(DIST, self.TEST_MODULE_PATH)
+                init_path = os.path.join(DIST, 'dl_test_package/package/__init__.py')
+                pkg_init_path = os.path.join(DIST, 'dl_test_package/__init__.py')
                 self.assertIn(path, arc.namelist())
                 self.assertIn(init_path, arc.namelist())
                 self.assertIn(pkg_init_path, arc.namelist())
@@ -287,18 +253,16 @@ class outer_class():
                     self.assertIn(b'def foo()', fixture_data.read())
 
     def test_build_bundle(self):
-        module_name = '.'.join(
-            [self.TEST_SOURCE_TREE, self.PACKAGE_NAME, 'module'])
-        module_path = os.path.join(DIST, self.FIXTURE_PACKAGE, 'module.py')
-        data_path = os.path.join(DATA, self.TEST_SOURCE_TREE, 'data.json')
+        module_path = os.path.join(DIST, self.TEST_MODULE_PATH)
+        data_path = os.path.join(DATA, self.DATA_FILE_RELATIVE_PATH)
 
         def foo():
             pass
 
         zf = self.client._build_bundle(
             foo,
-            [os.path.join(self.TEST_SOURCE_TREE, 'data.json')],
-            [module_name]
+            [self.DATA_FILE_PATH],
+            [self.TEST_MODULE]
         )
 
         try:
@@ -311,8 +275,6 @@ class outer_class():
                 os.remove(zf)
 
     def test_build_bundle_with_globals(self):
-        module_name = '.'.join(
-            [self.TEST_SOURCE_TREE, self.PACKAGE_NAME, 'module'])
 
         def foo():
             print(a_global)
@@ -325,25 +287,22 @@ class outer_class():
         with self.assertRaises(BoundGlobalError):
             self.client._build_bundle(
                 foo,
-                [os.path.join(self.TEST_SOURCE_TREE, 'data.json')],
-                [module_name]
+                [self.DATA_FILE_PATH],
+                [self.TEST_MODULE]
             )
 
         with self.assertRaises(BoundGlobalError):
             self.client._build_bundle(
                 Foo.bar,
-                [os.path.join(self.TEST_SOURCE_TREE, 'data.json')],
-                [module_name]
+                [self.DATA_FILE_PATH],
+                [self.TEST_MODULE]
             )
 
     def test_build_bundle_with_named_function(self):
-        module_name = '.'.join(
-            [self.TEST_SOURCE_TREE, self.PACKAGE_NAME, 'module'])
-
         zf = self.client._build_bundle(
-            module_name + ".func_foo",
-            [os.path.join(self.TEST_SOURCE_TREE, 'data.json')],
-            [module_name]
+            self.TEST_MODULE + ".func_foo",
+            [self.DATA_FILE_PATH],
+            [self.TEST_MODULE]
         )
 
         try:
@@ -355,9 +314,9 @@ class outer_class():
 
         # And a nested function
         zf = self.client._build_bundle(
-            module_name + ".outer_class.inner_class.func_bar",
-            [os.path.join(self.TEST_SOURCE_TREE, 'data.json')],
-            [module_name]
+            self.TEST_MODULE + ".outer_class.inner_class.func_bar",
+            [self.DATA_FILE_PATH],
+            [self.TEST_MODULE]
         )
 
         try:
@@ -368,20 +327,17 @@ class outer_class():
                 os.remove(zf)
 
     def test_build_bundle_with_named_function_bad(self):
-        module_name = '.'.join(
-            [self.TEST_SOURCE_TREE, self.PACKAGE_NAME, 'module'])
-
         with self.assertRaises(NameError):
             zf = self.client._build_bundle(
                 "func.func_foo",
-                [os.path.join(self.TEST_SOURCE_TREE, 'data.json')],
-                [module_name]
+                [self.DATA_FILE_PATH],
+                [self.TEST_MODULE]
             )
 
         zf = self.client._build_bundle(
             "descarteslabs.client.services.tasks.tests.test_tasks.TasksPackagingTest.a_function",
-            [os.path.join(self.TEST_SOURCE_TREE, 'data.json')],
-            [module_name]
+            [self.DATA_FILE_PATH],
+            [self.TEST_MODULE]
         )
 
         try:
