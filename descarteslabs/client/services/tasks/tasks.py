@@ -24,7 +24,6 @@ import json
 import logging
 import os
 import re
-import shutil
 import six
 from six.moves import zip_longest
 import sys
