@@ -117,10 +117,11 @@ class TasksPackagingTest(ClientTestCase):
 
     TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
     TEST_PACKAGE_NAME = "dl_test_package"
-    DATA_FILE_RELATIVE_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
+    DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
+    DATA_FILE_ZIP_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
     DATA_FILE_PATH = os.path.join(TEST_DATA_PATH, DATA_FILE_RELATIVE_PATH)
     TEST_MODULE = "{}.package.module".format(TEST_PACKAGE_NAME)
-    TEST_MODULE_PATH = "{}/package/module.py".format(TEST_PACKAGE_NAME)
+    TEST_MODULE_ZIP_PATH = "{}/package/module.py".format(TEST_PACKAGE_NAME)
     GLOBAL_STRING = 'A global var'
     LOCAL_STRING = 'A local var'
 
@@ -244,9 +245,9 @@ class TasksPackagingTest(ClientTestCase):
                 self.client._write_include_modules([self.TEST_MODULE], arc)
             f.seek(0)
             with ZipFile(f, mode='r') as arc:
-                path = os.path.join(DIST, self.TEST_MODULE_PATH)
-                init_path = os.path.join(DIST, 'dl_test_package/package/__init__.py')
-                pkg_init_path = os.path.join(DIST, 'dl_test_package/__init__.py')
+                path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
+                init_path = "{}/dl_test_package/package/__init__.py".format(DIST)
+                pkg_init_path = "{}/dl_test_package/__init__.py".format(DIST)
                 self.assertIn(path, arc.namelist())
                 self.assertIn(init_path, arc.namelist())
                 self.assertIn(pkg_init_path, arc.namelist())
@@ -254,8 +255,8 @@ class TasksPackagingTest(ClientTestCase):
                     self.assertIn(b'def foo()', fixture_data.read())
 
     def test_build_bundle(self):
-        module_path = os.path.join(DIST, self.TEST_MODULE_PATH)
-        data_path = os.path.join(DATA, self.DATA_FILE_RELATIVE_PATH)
+        module_path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
+        data_path = "{}/{}".format(DATA, self.DATA_FILE_ZIP_PATH)
 
         def foo():
             pass
@@ -367,11 +368,8 @@ class TasksPackagingTest(ClientTestCase):
         )
 
     def test_requirements_string_file(self):
-        with tempfile.NamedTemporaryFile() as f:
-            reqs = "# My requirements\nfoo\n\nbar[baz]"
-            f.write(six.b(reqs))
-            f.flush()
-            self.assertEqual(reqs, self.client._requirements_string(f.name))
+        good_requirements = os.path.join(self.TEST_DATA_PATH, "good_requirements.txt")
+        self.assertEqual(open(good_requirements).read(), self.client._requirements_string(good_requirements))
 
     def test_requirements_string_bad(self):
         self.assertRaises(ValueError, self.client._requirements_string, ["foo\nbar"])
@@ -380,10 +378,9 @@ class TasksPackagingTest(ClientTestCase):
 
     def test_requirements_string_file_bad(self):
         self.assertRaises(ValueError, self.client._requirements_string, "non-existent.txt")
-        with tempfile.NamedTemporaryFile() as f:
-            f.write(b"----bad")
-            f.flush()
-            self.assertRaises(ValueError, self.client._requirements_string, f.name)
+        bad_requirements = os.path.join(self.TEST_DATA_PATH, "bad_requirements.txt")
+        self.assertTrue(os.path.exists(bad_requirements))
+        self.assertRaises(ValueError, self.client._requirements_string, bad_requirements)
 
 
 class CloudFunctionTest(ClientTestCase):

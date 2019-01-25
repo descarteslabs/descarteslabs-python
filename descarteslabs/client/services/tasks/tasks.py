@@ -30,10 +30,7 @@ from six.moves import zip_longest
 import sys
 import time
 from warnings import warn
-from tempfile import (
-    mkstemp,
-    NamedTemporaryFile,
-)
+from tempfile import NamedTemporaryFile
 import zipfile
 
 import cloudpickle
@@ -1026,8 +1023,8 @@ class Tasks(Service):
     ):
         data_files = self._find_data_files(include_data or [])
 
-        with NamedTemporaryFile(delete=False, suffix='.zip', mode='wb') as f:
-            try:
+        try:
+            with NamedTemporaryFile(delete=False, suffix='.zip', mode='wb') as f:
                 with zipfile.ZipFile(f, mode='w', compression=zipfile.ZIP_DEFLATED) as bundle:
                     self._write_main_function(group_function, bundle)
                     self._write_data_files(data_files, bundle)
@@ -1037,13 +1034,11 @@ class Tasks(Service):
 
                     if requirements:
                         bundle.writestr(REQUIREMENTS, self._requirements_string(requirements))
-                _, file_name = mkstemp(suffix=".zip")
-                shutil.move(f.name, file_name)
-
-                return file_name
-            finally:
-                if os.path.exists(f.name):
-                    os.remove(f.name)
+            return f.name
+        except Exception:
+            if os.path.exists(f.name):
+                os.remove(f.name)
+            raise
 
     def _find_data_files(self, include_data):
         data_files = []
