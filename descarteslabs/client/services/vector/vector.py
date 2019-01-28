@@ -351,7 +351,7 @@ class Vector(JsonApiService):
 
         return result
 
-    def upload_features(self, file_ish, product_id):
+    def upload_features(self, file_ish, product_id, max_errors=0):
         """
         Asynchonously upload a file or stream of
         `Newline Delimited JSON <https://github.com/ndjson/ndjson-spec>`_
@@ -363,17 +363,19 @@ class Vector(JsonApiService):
 
         :param str|:py:class:`io.IOBase` file_ish: an open IOBase object, or a path to the file to upload.
         :param str product_id: Product to which these features will belong.
+        :param int max_errors: The maximum number of errors permitted before declaring failure.
         """
         if isinstance(file_ish, io.IOBase):
-            return self._upload_features(file_ish, product_id)
+            return self._upload_features(file_ish, product_id, max_errors)
         elif isinstance(file_ish, six.string_types):
             with io.open(file_ish, 'rb') as stream:
-                return self._upload_features(stream, product_id)
+                return self._upload_features(stream, product_id, max_errors)
         else:
             raise Exception('Could not handle file: `{}`; pass a path or open IOBase instance'.format(file_ish))
 
-    def _upload_features(self, iobase, product_id):
-        r = self.session.post('/products/{}/features/uploads'.format(product_id))
+    def _upload_features(self, iobase, product_id, max_errors):
+        jsonapi = self.jsonapi_document(type="features", attributes={'max_errors': max_errors})
+        r = self.session.post('/products/{}/features/uploads'.format(product_id), json=jsonapi)
         upload = r.json()
         upload_url = upload['url']
         r = self._gcs_upload_service.session.put(upload_url, data=iobase)

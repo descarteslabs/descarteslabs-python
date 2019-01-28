@@ -9,6 +9,8 @@ Changelog
 =========
 
 ## [Unreleased]
+- `FeatureCollection.upload` and `Vector.upload_features` now accept an optional `max_errors` parameter to control how many errors are acceptable before declaring an upload a failure.
+- `UploadTask` (as returned by `FeatureCollection.upload` and `Vector.list_uploads`) now has added attributes to better identify what was processed and what errors occurred.
 
 ## [0.16.0] - 2019-01-28
 ### Added

@@ -480,7 +480,7 @@ class FeatureCollection(object):
 
         return copied_features
 
-    def upload(self, file_ref):
+    def upload(self, file_ref, max_errors=0):
         """
         Asynchonously add features from a file of
         `Newline Delimited JSON <https://github.com/ndjson/ndjson-spec>`_
@@ -491,6 +491,8 @@ class FeatureCollection(object):
         ----------
         file_ref : io.IOBase or str
             An open file object, or a path to the file to upload.
+        max_errors : int
+            The maximum number of errors permitted before declaring failure.
 
         Returns
         -------
