@@ -9,8 +9,14 @@ Changelog
 =========
 
 ## [Unreleased]
-- `Metadata.search` no longer has a 10,000-item limit, and the number of items returned will be closer to `limit`.
+
+## [0.16.0] - 2019-01-28
+### Added
 - Tasks now support passing modules, data and requirements along with the function code, allowing for a more complex and customized execution environment.
+- Vector search query results now report their total number of results by means of the standard `len()` function.
+
+### Changed
+- `Metadata.search` no longer has a 10,000-item limit, and the number of items returned will be closer to `limit`.
 
 ## [0.15.0] - 2019-01-09
 ### Added
@@ -301,7 +307,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.16.0...HEAD
+[0.15.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.2...v0.14.0
