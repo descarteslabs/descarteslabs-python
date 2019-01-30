@@ -1,4 +1,4 @@
-from descarteslabs.ext.storage import Storage
+from descarteslabs.client.services.storage import Storage
 
 storage_client = Storage()
 

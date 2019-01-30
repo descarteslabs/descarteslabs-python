@@ -2,8 +2,8 @@ import logging
 
 import matplotlib.pyplot as plt
 from descarteslabs import metadata, raster
-from descarteslabs.ext.cache import cached
-from descarteslabs.ext.storage import Storage
+from descarteslabs.client.services.cache import cached
+from descarteslabs.client.services.storage import Storage
 
 logging.basicConfig(
     level=logging.DEBUG,
