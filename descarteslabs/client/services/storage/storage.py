@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import six
 import warnings
 
 from descarteslabs.client.auth import Auth
@@ -82,7 +83,7 @@ class Storage(Service):
         `storage_type`
 
         :param str key: A unique string mapped to an existing storage blob
-        :param str value: bytes to be stored at location `key`
+        :param str value: bytes or file-like object to be stored at location `key`
         :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
         """
 
@@ -183,6 +184,51 @@ class Storage(Service):
             json={},
         )
         return r.json()
+
+    def set_file(self, key, file_obj, storage_type="data"):
+        """
+        Store file-like object `file_obj` at location `key`, with storage type
+        `storage_type`
+
+        :param str key: A unique string mapped to an existing storage blob
+        :param str file_obj: File-like object or name of file to be stored at location `key`
+        :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
+        """
+        rurl = self.get_upload_url(key, storage_type=storage_type)
+
+        if isinstance(file_obj, six.string_types):
+            with open(file_obj, 'rb') as f:
+                self._gcs_upload_service.session.put(rurl, data=f)
+        else:
+            self._gcs_upload_service.session.put(rurl, data=file_obj)
+
+        return
+
+    def get_file(self, key, file_obj, storage_type="data"):
+        """
+        Retrieve data stored at location `key`, with storage type
+        `storage_type` and store in file `file_obj`
+
+        :param str key: A unique string mapped to an existing storage blob
+        :param str file_obj: File-like object or name of file in which retrieved data will be stored
+        :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
+        """
+        r = self.session.get(
+            "/{storage_type}/get/{key}".format(storage_type=storage_type, key=key),
+            stream=True
+        )
+        r.raise_for_status()
+
+        if isinstance(file_obj, six.string_types):
+            with open(file_obj, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=None):
+                    if chunk:
+                        f.write(chunk)
+        else:
+            for chunk in r.iter_content(chunk_size=None):
+                if chunk:
+                    file_obj.write(chunk)
+        return
 
 
 storage = Storage()
