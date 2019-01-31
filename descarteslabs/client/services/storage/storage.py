@@ -18,6 +18,7 @@ import warnings
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.service import Service, ThirdPartyService
+from descarteslabs.client.exceptions import NotFoundError
 
 
 class Storage(Service):
@@ -110,6 +111,27 @@ class Storage(Service):
         )
         r.raise_for_status()
         return r.content
+
+    def exists(self, key, storage_type="data"):
+        """
+        Determine if there is data stored at location `key` with storage type `storage_type`
+
+        :param str key: A unique string
+        :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
+
+        Returns:
+            A boolean value indicating whether there is data at location `key`
+
+        """
+        r = None
+        try:
+            r = self.session.head(
+                "/{storage_type}/get/{key}".format(storage_type=storage_type, key=key)
+            )
+        except NotFoundError:
+            return False
+
+        return r and r.ok
 
     def list(self, prefix=None, storage_type="data"):
         """

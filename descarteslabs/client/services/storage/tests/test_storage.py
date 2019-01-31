@@ -19,6 +19,7 @@ import re
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.storage import Storage
+from descarteslabs.client.exceptions import ServerError
 
 
 public_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0sImlzcyI6Imh0dHBzOi8vZGVzY2FydGVzbGFicy5hdXRoMC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMTExMzg1NTY1MjQ4MTIzOTU3MTIiLCJhdWQiOiJaT0JBaTRVUk9sNWdLWklweHhsd09FZng4S3BxWGYyYyIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNDc4MjAxNDE5fQ.sbSzD9ACNZvaxSgClZCnZMpee_p5MBaKV9uHZQonD6Q" # noqa
@@ -58,6 +59,22 @@ class TestStorage(StorageClientTestCase):
         with NamedTemporaryFile() as tmp:
             self.client.get_file('foo', tmp)
             self.assertEqual(len(data), tmp.tell())
+
+    @responses.activate
+    def test_exists_true(self):
+        self.mock_response(responses.HEAD, None, 200)
+        self.assertTrue(self.client.exists('foo'))
+
+    @responses.activate
+    def test_exists_false(self):
+        self.mock_response(responses.HEAD, None, 404)
+        self.assertFalse(self.client.exists('foo'))
+
+    @responses.activate
+    def test_exists_bad_req(self):
+        self.mock_response(responses.HEAD, None, 500)
+        with self.assertRaises(ServerError):
+            self.client.exists('foo')
 
 
 if __name__ == "__main__":
