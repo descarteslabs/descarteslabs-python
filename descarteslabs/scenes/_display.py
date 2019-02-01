@@ -156,7 +156,7 @@ def display(*imgs, **kwargs):
         if robust:
             if hasattr(spectrals, "mask"):
                 spectrals = spectrals.compressed()  # don't include masked values in percentile
-            vmin, vmax = np.percentile(spectrals, 2), np.percentile(spectrals, 98)
+            vmin, vmax = np.nanpercentile(spectrals, 2), np.nanpercentile(spectrals, 98)
             if vmin == vmax:
                 robust = False
 
