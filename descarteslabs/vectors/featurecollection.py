@@ -1,28 +1,21 @@
 import copy
-import time
 
 from descarteslabs.common.dotdict import DotDict
 from descarteslabs.client.exceptions import NotFoundError
 from descarteslabs.common.tasks import UploadTask
 from descarteslabs.client.services.vector import Vector
 from descarteslabs.vectors.feature import Feature
+
+# import these exceptions for backwards compatibility
+from descarteslabs.vectors.exceptions import (InvalidQueryException,   # noqa
+    VectorException, FailedCopyError, WaitTimeoutError)
+from descarteslabs.vectors.async_job import DeleteJob, CopyJob
 import six
-
-
-class VectorException(Exception):
-    pass
-
-
-class WaitTimeoutError(VectorException):
-    pass
-
-
-class FailedCopyError(VectorException):
-    pass
 
 
 class _FeaturesIterator(object):
     """Private iterator for features() that also returns length"""
+
     def __init__(self, response):
         self._response = response
 
@@ -597,7 +590,7 @@ class FeatureCollection(object):
         in the FeatureCollection until the copy completes.
 
         If the product was not created using a copy job, a BadRequestError is raised.
-        If the copy job ran, but failed, a FailedCopyError is raised.
+        If the copy job ran, but failed, a FailedJobError is raised.
         If a timeout is specified and the timeout is reached, a WaitTimeoutError is raised.
 
         Parameters
@@ -619,21 +612,50 @@ class FeatureCollection(object):
         ...    description='A collection of cities in the US')  # doctest: +SKIP
         >>> filtered_cities_fc.wait_for_copy(timeout=120)  # doctest: +SKIP
         """
-        start_time = time.time()
+        job = CopyJob(self.id, self.vector_client)
+        job.wait_for_completion(timeout)
 
-        while True:
-            job_data = self.vector_client.get_product_from_query_status(self.id)
+    def delete_features(self):
+        """
+        Apply a filter to a product and delete features that match the filter criteria,
+        taking into account calls to `FeatureCollection.filter()`.  Cannot be used with
+        calls to `FeatureCollection.limit()`
 
-            status = job_data.data.attributes.state
-            if status in FeatureCollection.COMPLETE_STATUSES:
-                if status == "FAILURE":
-                    raise FailedCopyError("copy to product {} from job {} failed".format(self.id, job_data.data.id))
-                else:
-                    break
+        A query of some sort must be set, otherwise a BadRequestError will be raised.
 
-            time.sleep(FeatureCollection.COMPLETION_POLL_INTERVAL_SECONDS)
-            if timeout is not None and (time.time() - start_time) > timeout:
-                raise WaitTimeoutError("wait timeout reached")
+        Delete jobs occur asynchronously and can take a long time to complete. You
+        can access `FeatureCollection.features()` while a delete job is running,
+        but you cannot issue another `FeatureCollection.delete_features()` until
+        the current job has completed running.  Use `DeleteJob.wait_for_completion()`
+        to block until the job is done.
+
+        Parameters
+        ----------
+        vectors.async_job.DeleteJob
+            A new `DeleteJob`.
+
+        Example
+        -------
+        >>> from descarteslabs.vectors import FeatureCollection
+        >>> aoi_geometry = {
+        ...    'type': 'Polygon',
+        ...    'coordinates': [[[-109, 31], [-102, 31], [-102, 37], [-109, 37], [-109, 31]]]}
+        >>> fc = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
+        >>> fc.filter(geometry=aoi_geometry)  # doctest: +SKIP
+        >>> delete_job = fc.delete_features()  # doctest: +SKIP
+        >>> delete_job.wait_for_completion()  # doctest: +SKIP
+        """
+        if self._query_limit:
+            raise InvalidQueryException("limits cannot be used when deleting features")
+
+        params = dict(
+            product_id=self.id,
+            geometry=self._query_geometry,
+            query_expr=self._query_property_expression,
+        )
+
+        product = self.vector_client.delete_features_from_query(**params).data
+        return DeleteJob(product.id)
 
     def _repr_json_(self):
         return DotDict((k, v) for k, v in self.__dict__.items() if k in FeatureCollection.ATTRIBUTES)

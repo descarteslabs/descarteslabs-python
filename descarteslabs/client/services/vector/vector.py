@@ -11,6 +11,7 @@ from descarteslabs.common.dotdict import DotDict
 
 class _SearchFeaturesIterator(object):
     """Private iterator for search_features() that also returns length"""
+
     def __init__(
         self,
         client,
@@ -341,7 +342,7 @@ class Vector(JsonApiService):
         # forcibly pass a zero-length list for appropriate validation error
         for i in range(0, max(len(features), 1), 100):
             jsonapi = self.jsonapi_collection(type="feature",
-                                              attributes_list=features[i:i+100])
+                                              attributes_list=features[i:i + 100])
             r = self.session.post('/products/{}/features'.format(product_id),
                                   json=jsonapi)
             if i == 0:
@@ -620,10 +621,68 @@ class Vector(JsonApiService):
 
     def get_product_from_query_status(self, product_id):
         """
-        Get the result of creating a new product from a query.
+        Get the status of the job creating a new product from a query.
 
         :param str product_id: (Required) Id of the product created
                                by a call to `create_product_from_query`.
         """
         r = self.session.get("/products/{}/search/copy/status".format(product_id))
+        return DotDict(r.json())
+
+    def delete_features_from_query(self, product_id, geometry=None, query_expr=None, **kwargs):
+        """
+        Query an existing Vector product and delete features that match
+        the query results.
+
+        At least one of `geometry`, `query_expr`, or `properties` is required.
+
+        :param str product_id: (Required) Product within which to search for features to delete.
+        :param dict geometry: Search for Features intersecting this shape.
+                              This accepts the following types of GeoJSON
+                              geometries:
+
+                              - Points
+                              - MultiPoints
+                              - Polygons
+                              - MultiPolygons
+                              - LineStrings
+                              - MultiLineStrings
+                              - GeometryCollections
+
+        :param descarteslabs.client.common.filtering.Expression query_expr:
+            A rich query expression generator that represents
+            an arbitrary tree of boolean combinations of property
+            comparisons.  Using the properties filter factory inside
+            `descarteslabs.client.services.vector.properties` as
+            `p`, you can E.g `query_expr=(p.temperature >= 50) &
+            (p.hour_of_day > 18)`, or even more complicated expressions
+            like `query_expr=(100 > p.temperature >= 50) | ((p.month
+            != 10) & (p.day_of_month > 14))` This expression gets
+            serialized and applied to the properties mapping supplied
+            with the features in the vector product. If you supply a
+            property which doesn't exist as part of the expression that
+            comparison will evaluate to False.
+
+        :rtype: DotDict
+        :return: The Vector product features were deleted from, as a JSON API resource object.
+
+                 The new product's ID is under ``.data.id``
+                 and its properties are under ``.data.attributes``.
+        """
+        query_params = {k: v for k, v in dict(
+            geometry=geometry,
+            query_expr=(query_expr.serialize() if query_expr is not None else None)
+        ).items() if v is not None}
+
+        r = self.session.delete("/products/{}/search".format(product_id), json=query_params)
+        return DotDict(r.json())
+
+    def get_delete_features_status(self, product_id):
+        """
+        Get the status of the job deleting features from a query.
+
+        :param str product_id: (Required) Id of the product created
+                               by a call to `create_product_from_query`.
+        """
+        r = self.session.get("/products/{}/search/delete/status".format(product_id))
         return DotDict(r.json())

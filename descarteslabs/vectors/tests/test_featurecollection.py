@@ -15,7 +15,7 @@
 import unittest
 
 from descarteslabs.vectors import (FeatureCollection, Feature, properties as p,
-                                   WaitTimeoutError, FailedCopyError)
+                                   WaitTimeoutError, FailedJobError, InvalidQueryException)
 from descarteslabs.common.dotdict import DotDict
 import mock
 
@@ -281,6 +281,7 @@ class TestFeatureCollection(unittest.TestCase):
     @mock.patch('descarteslabs.vectors.featurecollection.FeatureCollection.vector_client',
                 new_callable=mock.PropertyMock)
     def test_wait_failed(self, vector_client, _):
+        # CopyJob.refresh called twice
         calls = [
             DotDict({
                 'data': {
@@ -293,17 +294,18 @@ class TestFeatureCollection(unittest.TestCase):
                     'type': 'copy_query'
                 }
             })
-        ]
+        ] * 2
 
         mock_get = mock.MagicMock(side_effect=calls)
         vector_client.return_value.get_product_from_query_status = mock_get
 
-        with self.assertRaises(FailedCopyError):
+        with self.assertRaises(FailedJobError):
             FeatureCollection('foo').wait_for_copy()
 
     @mock.patch('descarteslabs.vectors.featurecollection.FeatureCollection.vector_client',
                 new_callable=mock.PropertyMock)
     def test_wait_timeout(self, vector_client, _):
+        # CopyJob.refresh called thrice
         calls = [
             DotDict({
                 'data': {
@@ -315,22 +317,34 @@ class TestFeatureCollection(unittest.TestCase):
                     'id': 'c589d688-3230-4caf-9f9d-18854f71e91d',
                     'type': 'copy_query'
                 }
-            }),
-            DotDict({
-                'data': {
-                    'attributes': {
-                        'created': '2019-01-03T20:07:51.720000+00:00',
-                        'started': '2019-01-03T20:07:51.903000+00:00',
-                        'state': 'RUNNING'
-                    },
-                    'id': 'c589d688-3230-4caf-9f9d-18854f71e91d',
-                    'type': 'copy_query'
-                }
             })
-        ]
+        ] * 3
 
         mock_get = mock.MagicMock(side_effect=calls)
         vector_client.return_value.get_product_from_query_status = mock_get
         FeatureCollection.COMPLETION_POLL_INTERVAL_SECONDS = 1
         with self.assertRaises(WaitTimeoutError):
             FeatureCollection('foo').wait_for_copy(timeout=0)
+
+    @mock.patch("descarteslabs.vectors.featurecollection.DeleteJob")
+    def test_delete_features(self, vector_client, delete_job):
+        fc = FeatureCollection("foo", vector_client=vector_client)
+
+        geometry = mock.MagicMock()
+        fc = fc.filter(geometry=geometry)
+
+        exp = (p.foo > 0)
+        fc = fc.filter(properties=exp)
+
+        fc.delete_features()
+
+        vector_client.delete_features_from_query.assert_called_once_with(product_id="foo",
+                                                                         geometry=geometry,
+                                                                         query_expr=exp)
+
+    def test_delete_features_limits_fail(self, vector_client):
+        fc = FeatureCollection("foo", vector_client=vector_client)
+        fc = fc.limit(100)
+
+        with self.assertRaises(InvalidQueryException):
+            fc.delete_features()

@@ -53,7 +53,7 @@ class ClientTestCase(unittest.TestCase):
             'data': {
                 'attributes': {
                     'description': 'bar',
-                    'name': 'new-test-produt',
+                    'name': 'new-test-product',
                     'owners': [
                         'org:descarteslabs',
                         'user:3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1'
@@ -64,8 +64,7 @@ class ClientTestCase(unittest.TestCase):
                 },
                 'id': '2b4552ff4b8a4bb5bb278c94005db50',
                 'meta': {
-                    'created': '2018-12-27T17:01:16.197369',
-                    'bq_copy_job_id': 'c589d688-3230-4caf-9f9d-18854f71e91d'
+                    'created': '2018-12-27T17:01:16.197369'
                 },
                 'type': 'product'
             }
@@ -159,7 +158,6 @@ class VectorsTest(ClientTestCase):
         )
 
         self.assertEqual("2b4552ff4b8a4bb5bb278c94005db50", r.data.id)
-        self.assertEqual("c589d688-3230-4caf-9f9d-18854f71e91d", r.data.meta.bq_copy_job_id)
 
     @responses.activate
     def test_create_product_from_query_exception(self):
@@ -183,6 +181,36 @@ class VectorsTest(ClientTestCase):
 
     @responses.activate
     def test_get_product_from_query_status_not_found(self):
+        self.mock_response(responses.GET, self.status_response, status=404)
+
+        with self.assertRaises(NotFoundError):
+            self.client.get_product_from_query_status("2b4552ff4b8a4bb5bb278c94005db50")
+
+    @responses.activate
+    def delete_features_from_query(self):
+        self.mock_response(responses.DELETE, self.product_response, status=202)
+
+        r = self.client.delete_features_from_query("foo", "bar", "baz")
+
+        self.assertEqual("2b4552ff4b8a4bb5bb278c94005db50", r.data.id)
+
+    @responses.activate
+    def delete_features_from_query_bad_request(self):
+        self.mock_response(responses.DELETE, self.product_response, status=400)
+
+        with self.assertRaises(BadRequestError):
+            self.client.delete_features_from_query("foo", "bar", "baz")
+
+    @responses.activate
+    def test_get_delete_features_status(self):
+        self.mock_response(responses.GET, self.status_response, status=200)
+
+        r = self.client.get_product_from_query_status("2b4552ff4b8a4bb5bb278c94005db50")
+
+        self.assertEqual(r.data.id, "c589d688-3230-4caf-9f9d-18854f71e91d")
+
+    @responses.activate
+    def test_get_delete_features_status_not_found(self):
         self.mock_response(responses.GET, self.status_response, status=404)
 
         with self.assertRaises(NotFoundError):
