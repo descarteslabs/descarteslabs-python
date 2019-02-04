@@ -931,7 +931,7 @@ class Tasks(Service):
     def _sys_paths(self):
         if not hasattr(self, '_cached_sys_paths'):
             # use longest matching path entries.
-            self._cached_sys_paths = sorted(filter(bool, sys.path), key=len, reverse=True)
+            self._cached_sys_paths = sorted(map(os.path.abspath, sys.path), key=len, reverse=True)
         return self._cached_sys_paths
 
     def _get_globals(self, func):
@@ -1120,7 +1120,7 @@ class Tasks(Service):
                 raise IOError("Source code for module is missing, only byte code exists: `{}`.".format(mod_name))
             sys_path = self._sys_path_prefix(mod_file)
 
-            self._include_init_files(os.path.dirname(mod_file), archive, sys_path=sys_path)
+            self._include_init_files(os.path.dirname(mod_file), archive, sys_path)
             archive_names = archive.namelist()
             # this is a package, get all decendants if they exist.
             if os.path.basename(mod_file) == '__init__.py':
@@ -1133,9 +1133,8 @@ class Tasks(Service):
             else:
                 archive.write(mod_file, arcname=self._archive_path(mod_file, DIST, sys_path))
 
-    def _include_init_files(self, dir_path, archive, sys_path=None):
-        sys_path = sys_path or self._sys_path_prefix(dir_path)
-        relative_dir_path = self._relative_dir_path(dir_path, sys_path)
+    def _include_init_files(self, dir_path, archive, sys_path):
+        relative_dir_path = os.path.relpath(dir_path, sys_path)
         archive_names = archive.namelist()
         # have we walked this path before?
         if os.path.join(DIST, relative_dir_path, "__init__.py") not in archive_names:
@@ -1188,20 +1187,16 @@ class Tasks(Service):
                 raise ValueError("Invalid Python requirements: {}".format(",".join(bad_requirements)))
         return "\n".join(requirements)
 
-    def _relative_dir_path(self, dir_path, sys_path):
-        return dir_path.replace(sys_path, '', 1).strip(os.sep)
-
     def _sys_path_prefix(self, path):
+        absolute_path = os.path.abspath(path)
         for sys_path in self._sys_paths():
-            if path.startswith(sys_path):
+            if absolute_path.startswith(sys_path):
                 return sys_path
         else:
             raise IOError("Location is not on system path: `{}`".format(path))
 
-    def _archive_path(self, path, archive_prefix, sys_path=None):
-        abspath = os.path.abspath(path)
-        sys_path = sys_path or self._sys_path_prefix(abspath)
-        return os.path.join(archive_prefix, abspath.replace(sys_path, '', 1).strip(os.sep))
+    def _archive_path(self, path, archive_prefix, sys_path):
+        return os.path.join(archive_prefix, os.path.relpath(path, sys_path))
 
 
 AsyncTasks = Tasks

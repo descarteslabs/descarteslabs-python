@@ -254,6 +254,16 @@ class TasksPackagingTest(ClientTestCase):
                 with arc.open(path) as fixture_data:
                     self.assertIn(b'def foo()', fixture_data.read())
 
+    @mock.patch.object(sys, "path", new=[os.path.relpath(TEST_DATA_PATH)])
+    def test_include_modules_relative_sys_path(self):
+        with tempfile.NamedTemporaryFile(suffix='.zip') as f:
+            with ZipFile(f, mode='w') as arc:
+                self.client._write_include_modules([self.TEST_MODULE], arc)
+            f.seek(0)
+            with ZipFile(f, mode='r') as arc:
+                path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
+                self.assertIn(path, arc.namelist())
+
     def test_build_bundle(self):
         module_path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
         data_path = "{}/{}".format(DATA, self.DATA_FILE_ZIP_PATH)

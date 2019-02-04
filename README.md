@@ -9,12 +9,14 @@ Changelog
 =========
 
 ## [Unreleased]
+### Added
 - `FeatureCollection.upload` and `Vector.upload_features` now accept an optional `max_errors` parameter to control how many errors are acceptable before declaring an upload a failure.
 - `UploadTask` (as returned by `FeatureCollection.upload` and `Vector.list_uploads`) now has added attributes to better identify what was processed and what errors occurred.
 - `Storage` now has added methods `set_file` and `get_file` to allow for better uploading and downloading, respectively, of large files.
-
-### Added
 - `Storage` class now has an `exists()` method that checks whether an object exists in storage at the location of a given `key` and returns a boolean.
+
+### Changed
+- Fixed tasks bugs when including modules with relative paths in `sys.path`
 
 ## [0.16.0] - 2019-01-28
 ### Added
