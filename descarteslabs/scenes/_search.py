@@ -23,8 +23,6 @@ from .scene import Scene
 from .scenecollection import SceneCollection
 from . import geocontext
 
-MAX_RESULT_WINDOW = 10000
-
 
 def search(aoi,
            products=None,
@@ -61,8 +59,8 @@ def search(aoi,
     cloud_fraction : float, optional
         Restrict to scenes that are covered in clouds by less than this fraction
         (between 0 and 1)
-    limit : int, optional
-        Maximum number of Scenes to return, up to 10000.
+    limit : int or None, optional, default 100
+        Maximum number of Scenes to return, or None for all results.
     sort_field : str, optional
         Field name in ``Scene.properties`` by which to order the results
     sort_order : str, optional, default 'asc'
@@ -126,9 +124,6 @@ def search(aoi,
 
     if isinstance(end_datetime, datetime.datetime):
         end_datetime = end_datetime.isoformat()
-
-    if limit > MAX_RESULT_WINDOW:
-        raise ValueError("Limit must be <= {}".format(MAX_RESULT_WINDOW))
 
     metadata_params = dict(
         products=products,

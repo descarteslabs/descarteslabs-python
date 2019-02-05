@@ -14,6 +14,7 @@ Changelog
 - `UploadTask` (as returned by `FeatureCollection.upload` and `Vector.list_uploads`) now has added attributes to better identify what was processed and what errors occurred.
 - `Storage` now has added methods `set_file` and `get_file` to allow for better uploading and downloading, respectively, of large files.
 - `Storage` class now has an `exists()` method that checks whether an object exists in storage at the location of a given `key` and returns a boolean.
+- `Scenes.search` allows `limit=None`
 
 ### Changed
 - Fixed tasks bugs when including modules with relative paths in `sys.path`
