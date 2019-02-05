@@ -512,7 +512,7 @@ class Metadata(Service):
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param expr q: Expression for filtering the results. See
             :py:attr:`descarteslabs.client.services.metadata.properties`.
-        :param int limit: Maximuim number of items to return.
+        :param int limit: Maximum number of items to return.
         :param list(str) fields: Properties to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str sort_field: Property to sort on.
