@@ -15,6 +15,9 @@ Changelog
 - `Storage` now has added methods `set_file` and `get_file` to allow for better uploading and downloading, respectively, of large files.
 - `Storage` class now has an `exists()` method that checks whether an object exists in storage at the location of a given `key` and returns a boolean.
 - `Scenes.search` allows `limit=None`
+- `FeatureCollection.delete_features` added to support deleting `Feature`s that match a `filter`
+- `FeatureCollection.delete_features` and `FeatureCollection.wait_for_copy` now use `AsyncJob` to poll for asynchronous job completion. 
+- `Vector.delete_features_from_query` and `Vector.get_delete_features_status` added to support new `FeatureCollection` and `AsyncJob` methods.
 
 ### Changed
 - Fixed tasks bugs when including modules with relative paths in `sys.path`
