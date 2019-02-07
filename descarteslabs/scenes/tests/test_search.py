@@ -62,7 +62,25 @@ class TestScenesSearch(unittest.TestCase):
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch("descarteslabs.scenes._search.Metadata.get_bands_by_product", _metadata_get_bands_by_product)
     def test_search_dltile(self):
-        tile = geocontext.DLTile.from_key('64:0:1000.0:15:-2:70')
+        tile = geocontext.DLTile({
+            'geometry': {
+                'coordinates': [[[-94.50970627780103, 40.460817879515986], [-93.75494640538922, 40.468212507270195],
+                                 [-93.76149667591069, 41.04471363474632], [-94.5228005945451, 41.03716803374444],
+                                 [-94.50970627780103, 40.460817879515986]]],
+                'type': 'Polygon'
+            },
+            'properties': {
+                'cs_code': 'EPSG:32615',
+                'key': '64:0:1000.0:15:-2:70',
+                'outputBounds': [372000.0, 4480000.0, 436000.0, 4544000.0],
+                'pad': 0,
+                'resolution': 1000.0,
+                'ti': -2,
+                'tilesize': 64,
+                'tj': 70,
+                'zone': 15
+            },
+        })
         sc, ctx = search(tile, products="landsat:LC08:PRE:TOAR", limit=4)
         self.assertGreater(len(sc), 0)
         self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
