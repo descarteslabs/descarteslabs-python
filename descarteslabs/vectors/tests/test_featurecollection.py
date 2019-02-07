@@ -46,14 +46,16 @@ class TestFeatureCollection(unittest.TestCase):
         )
 
     def test_from_jsonapi(self, vector_client):
+        vector_client = mock.MagicMock()
         r = DotDict(
             id='foo',
             attributes=dict(
                 owners=[], readers=[], writers=[], name='name', title='title',
                 description='description'))
 
-        fc = FeatureCollection._from_jsonapi(r)
+        fc = FeatureCollection._from_jsonapi(r, vector_client=vector_client)
         self.assertIsNotNone(fc.id)
+        vector_client.get_product.assert_not_called()
 
         for key in r.attributes.keys():
             self.assertIsNotNone(getattr(fc, key))
@@ -107,9 +109,11 @@ class TestFeatureCollection(unittest.TestCase):
             geometry=None, query_limit=10, product_id='foo', query_expr=None
         )
 
-    def test_list(self, vector_client):
+    @mock.patch("descarteslabs.vectors.FeatureCollection.refresh")
+    def test_list(self, vector_client, mock_refresh):
         FeatureCollection.list(vector_client=vector_client)
         vector_client.list_products.assert_called_once_with(page=1)
+        mock_refresh.assert_not_called()
 
     def test_refresh(self, vector_client):
         attributes = dict(name='name',

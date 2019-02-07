@@ -82,7 +82,7 @@ class FeatureCollection(object):
     COMPLETE_STATUSES = ["DONE", "SUCCESS", "FAILURE"]
     COMPLETION_POLL_INTERVAL_SECONDS = 5
 
-    def __init__(self, id=None, vector_client=None):
+    def __init__(self, id=None, vector_client=None, refresh=True):
 
         self.id = id
         self._vector_client = vector_client
@@ -91,11 +91,12 @@ class FeatureCollection(object):
         self._query_limit = None
         self._query_property_expression = None
 
-        self.refresh()
+        if refresh:
+            self.refresh()
 
     @classmethod
     def _from_jsonapi(cls, response, vector_client=None):
-        self = cls(response.id, vector_client=vector_client)
+        self = cls(response.id, vector_client=vector_client, refresh=False)
         self.__dict__.update(response.attributes)
 
         return self
