@@ -9,6 +9,8 @@ Changelog
 =========
 
 ## [Unreleased]
+
+## [0.17.0] - 2019-02-07
 ### Added
 - `FeatureCollection.upload` and `Vector.upload_features` now accept an optional `max_errors` parameter to control how many errors are acceptable before declaring an upload a failure.
 - `UploadTask` (as returned by `FeatureCollection.upload` and `Vector.list_uploads`) now has added attributes to better identify what was processed and what errors occurred.
@@ -319,7 +321,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.14.0...v0.14.1
