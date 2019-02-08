@@ -194,7 +194,7 @@ class UploadTask(FutureTask):
         if status == self.SUCCESS:
             status = self._result_attribute('load', {}).get('state', self._SKIPPED)
             if status == self._SKIPPED:
-                if self.error_rows() > 0:
+                if self.error_rows > 0:
                     status = self.FAILURE
                 else:
                     status = self.SUCCESS
