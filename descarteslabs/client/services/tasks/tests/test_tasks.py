@@ -72,10 +72,7 @@ class TasksTest(ClientTestCase):
         with warnings.catch_warnings(record=True) as w:
             group = self.client.new_group(f)
             self.assertEqual('foo', group.id)
-            self.assertEqual(
-                "You must use version 0.4.0 of cloudpickle for compatibility with the Tasks client. 0.3.0 found.",
-                w[0].message.message
-            )
+            self.assertEqual(1, len(w))
 
     @responses.activate
     @mock.patch.object(sys.modules['cloudpickle'], '__version__', None)
@@ -85,10 +82,7 @@ class TasksTest(ClientTestCase):
         self.mock_response(responses.POST, {}, status=201)
         with warnings.catch_warnings(record=True) as w:
             group = self.client.new_group(f)
-            self.assertEqual(
-                "You must use version 0.4.0 of cloudpickle for compatibility with the Tasks client. None found.",
-                w[0].message.message
-            )
+            self.assertEqual(1, len(w))
 
     @responses.activate
     def test_iter_groups(self):
