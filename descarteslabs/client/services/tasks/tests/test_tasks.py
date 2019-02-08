@@ -58,6 +58,7 @@ class ClientTestCase(unittest.TestCase):
 class TasksTest(ClientTestCase):
 
     @responses.activate
+    @mock.patch.object(sys.modules['cloudpickle'], '__version__', '0.3.0')
     def test_new_group(self):
         def f():
             return True
@@ -68,8 +69,26 @@ class TasksTest(ClientTestCase):
         )
         self.mock_response(responses.POST, {}, status=201)
         self.mock_response(responses.POST, {'id': 'foo'})
-        group = self.client.new_group(f)
-        self.assertEqual('foo', group.id)
+        with warnings.catch_warnings(record=True) as w:
+            group = self.client.new_group(f)
+            self.assertEqual('foo', group.id)
+            self.assertEqual(
+                "You must use version 0.4.0 of cloudpickle for compatibility with the Tasks client. 0.3.0 found.",
+                w[0].message.message
+            )
+
+    @responses.activate
+    @mock.patch.object(sys.modules['cloudpickle'], '__version__', None)
+    def test_cloudpickle_not_found(self):
+        def f():
+            return True
+        self.mock_response(responses.POST, {}, status=201)
+        with warnings.catch_warnings(record=True) as w:
+            group = self.client.new_group(f)
+            self.assertEqual(
+                "You must use version 0.4.0 of cloudpickle for compatibility with the Tasks client. None found.",
+                w[0].message.message
+            )
 
     @responses.activate
     def test_iter_groups(self):
@@ -175,7 +194,6 @@ class TasksPackagingTest(ClientTestCase):
 
     @responses.activate
     def test_new_group(self):
-
         def foo():
             pass
         upload_url = 'https://storage.google.com/upload/b/dl-pex-storage/o/12345343'
