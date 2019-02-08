@@ -12,96 +12,73 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import unittest
 
+import responses
+
+from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.places import Places
+
+public_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0sImlzcyI6Imh0dHBzOi8vZGVzY2FydGVzbGFicy5hdXRoMC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMTExMzg1NTY1MjQ4MTIzOTU3MTIiLCJhdWQiOiJaT0JBaTRVUk9sNWdLWklweHhsd09FZng4S3BxWGYyYyIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNDc4MjAxNDE5fQ.sbSzD9ACNZvaxSgClZCnZMpee_p5MBaKV9uHZQonD6Q" # noqa
 
 
 class TestPlaces(unittest.TestCase):
-    instance = None
 
-    @classmethod
-    def setUpClass(cls):
-        cls.instance = Places()
+    def setUp(self):
+        self.url = "http://example.com"
+        self.instance = Places(url=self.url, auth=Auth(jwt_token=public_token, token_info_path=None))
+        self.match_url = re.compile(self.url)
 
+    def mock_response(self, method, json, status=200, **kwargs):
+        responses.add(method, self.match_url, json=json, status=status, **kwargs)
+
+    @responses.activate
     def test_placetypes(self):
+        self.mock_response(responses.GET, ["continent", "country"])
         data = self.instance.placetypes()
-        self.assertGreaterEqual(10, len(data))
+        self.assertEqual(2, len(data))
 
+    @responses.activate
     def test_find(self):
+        self.mock_response(responses.GET, [{"id": 85632693}])
         r = self.instance.find("united-states_iowa")
         self.assertEqual(1, len(r))
 
+    @responses.activate
     def test_search(self):
+        self.mock_response(responses.GET, [{"id": 85632693}])
         r = self.instance.search("texas")
-        self.assertEqual(8, len(r))
+        self.assertEqual(1, len(r))
 
         r = self.instance.search("texas", country="united-states")
-        self.assertEqual(7, len(r))
+        self.assertEqual(1, len(r))
 
         r = self.instance.search("texas", country="united-states", placetype="county")
-        self.assertEqual(2, len(r))
+        self.assertEqual(1, len(r))
 
         r = self.instance.search(
             "texas", country="united-states", region="oklahoma", placetype="county"
         )
         self.assertEqual(1, len(r))
 
+    @responses.activate
     def test_shape(self):
+        self.mock_response(responses.GET, {"id": 85632693})
         r = self.instance.shape("north-america_united-states_iowa")
-        self.assertEqual(85688713, r["id"])
+        self.assertEqual(85632693, r["id"])
 
+    @responses.activate
     def test_prefix(self):
         # counties by default
+        self.mock_response(responses.GET, {"type": "FeatureCollection", "features": [{"id": 85632693}]})
         r = self.instance.prefix("north-america_united-states_iowa")
-        self.assertEqual(99, len(r["features"]))
+        self.assertEqual(1, len(r["features"]))
 
         r = self.instance.prefix(
             "north-america_united-states_iowa", placetype="district"
         )
-        self.assertEqual(9, len(r["features"]))
-
-    def test_sources(self):
-        r = self.instance.sources()
-        self.assertIn({"name": "nass"}, r)
-
-    def test_categories(self):
-        r = self.instance.categories()
-        self.assertIn({"name": "corn"}, r)
-
-    def test_metrics(self):
-        r = self.instance.metrics()
-        self.assertIn({"name": "yield", "units": "bu/ac"}, r)
-
-    def test_value(self):
-        r = self.instance.value(
-            "north-america_united-states",
-            source="nass",
-            category="corn",
-            metric="yield",
-        )
-        self.assertEqual(1, len(r))
-
-    def test_statistics(self):
-        r = self.instance.statistics(
-            "north-america_united-states",
-            source="nass",
-            category="corn",
-            metric="yield",
-            units="bu/ac",
-        )
-        self.assertEqual(36, len(r))
-
-    def test_data(self):
-        r = self.instance.data(
-            "north-america_united-states",
-            source="nass",
-            category="corn",
-            metric="yield",
-            date="2015-01-01",
-            units="bu/ac",
-        )
-        self.assertEqual(1439, len(r))
+        self.assertEqual(1, len(r["features"]))
 
 
 if __name__ == "__main__":
