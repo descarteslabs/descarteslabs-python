@@ -495,7 +495,7 @@ class FeatureCollection(object):
             so asking for them before they're available will block
             until the details are available.
         """
-        upload_id = self.vector_client.upload_features(file_ref, self.id)
+        upload_id = self.vector_client.upload_features(file_ref, self.id, max_errors=max_errors)
         return UploadTask(self.id, upload_id=upload_id,
                           client=self.vector_client)
 
