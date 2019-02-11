@@ -10,6 +10,15 @@ Changelog
 
 ## [Unreleased]
 
+## [0.17.1] - 2019-02-11
+### Added
+
+### Changed
+- Fixed typo in `UploadTask.status` which caused exception when handling certain failure conditions
+- `FeatureCollection.upload` parameter `max_errors` was not being passed to Vector client.
+- Ensure `cloudpickle==0.4.0` is version used when creating `Tasks`.
+- Eliminate redundant queries from `FeatureCollection.list`.
+
 ## [0.17.0] - 2019-02-07
 ### Added
 - `FeatureCollection.upload` and `Vector.upload_features` now accept an optional `max_errors` parameter to control how many errors are acceptable before declaring an upload a failure.
