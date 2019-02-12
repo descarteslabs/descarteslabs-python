@@ -126,8 +126,8 @@ class Collection(object):
         3
         5
         4
-        >>> c.each.capitalize().pipe(len).combine(set)
-        {3, 4, 5}
+        >>> list(c.each.capitalize().pipe(len).combine(set))
+        [3, 4, 5]
 
         Yields
         ------
@@ -191,13 +191,19 @@ class Collection(object):
         >>> c = Collection([FooBar("a", True), FooBar("b", False), FooBar("a", False)])
 
         >>> for group, items in c.groupby("foo"):
-        ...     print(group, items)
-        a Collection([FooBar(foo='a', bar=True), FooBar(foo='a', bar=False)])
-        b Collection([FooBar(foo='b', bar=False)])
+        ...     print(group)
+        ...     print(items)
+        a
+        Collection([FooBar(foo='a', bar=True), FooBar(foo='a', bar=False)])
+        b
+        Collection([FooBar(foo='b', bar=False)])
         >>> for group, items in c.groupby("bar"):
-        ...     print(group, items)
-        False Collection([FooBar(foo='b', bar=False), FooBar(foo='a', bar=False)])
-        True Collection([FooBar(foo='a', bar=True)])
+        ...     print(group)
+        ...     print(items)
+        False
+        Collection([FooBar(foo='b', bar=False), FooBar(foo='a', bar=False)])
+        True
+        Collection([FooBar(foo='a', bar=True)])
         """
         if len(predicates) == 0:
             raise TypeError("No predicate(s) given to groupby")

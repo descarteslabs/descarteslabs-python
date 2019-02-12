@@ -70,9 +70,8 @@ def search(aoi,
         (``"acquired"``, ``"processed"``, ``"published"``)
     query : descarteslabs.common.property_filtering.Expression, optional
         Expression used to filter Scenes by their properties, built from ``dl.properties``.
-
-        >>> query = 150 < dl.properties.azimuth_angle < 160 & dl.properties.cloud_fraction < 0.5
-        >>> query = dl.properties.sat_id == "Terra"
+        Example value:
+        ``150 < dl.properties.azimuth_angle < 160 & dl.properties.cloud_fraction < 0.5``
     randomize : bool, default False, optional
         Randomize the order of the results.
         You may also use an int or str as an explicit seed.
