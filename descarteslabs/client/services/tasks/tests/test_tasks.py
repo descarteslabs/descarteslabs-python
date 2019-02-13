@@ -70,7 +70,7 @@ class TasksTest(ClientTestCase):
         self.mock_response(responses.POST, {}, status=201)
         self.mock_response(responses.POST, {'id': 'foo'})
         with warnings.catch_warnings(record=True) as w:
-            group = self.client.new_group(f)
+            group = self.client.new_group(f, 'task-image')
             self.assertEqual('foo', group.id)
             self.assertEqual(1, len(w))
 
@@ -81,7 +81,7 @@ class TasksTest(ClientTestCase):
             return True
         self.mock_response(responses.POST, {}, status=201)
         with warnings.catch_warnings(record=True) as w:
-            group = self.client.new_group(f)
+            group = self.client.new_group(f, 'task-image')
             self.assertEqual(1, len(w))
 
     @responses.activate
@@ -195,7 +195,7 @@ class TasksPackagingTest(ClientTestCase):
         self.mock_response(responses.POST, status=201, json=resp_json)
         responses.add(responses.PUT, upload_url, status=200)
         with mock.patch("os.remove"):  # Don't delete bundle so we can read it back below
-            self.client.new_group(foo, include_data=[self.DATA_FILE_PATH], include_modules=[self.TEST_MODULE])
+            self.client.new_group(foo, 'task-image', include_data=[self.DATA_FILE_PATH], include_modules=[self.TEST_MODULE])
 
         body = responses.calls[0].request.body.decode("utf-8")  # prior to 3.6, json does not accept bytes
         call_args = json.loads(body)

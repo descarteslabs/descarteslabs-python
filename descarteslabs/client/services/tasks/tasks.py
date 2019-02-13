@@ -132,7 +132,7 @@ class Tasks(Service):
     def new_group(
             self,
             function,
-            container_image=None,
+            container_image,
             name=None,
             cpus=1,
             gpus=0,
@@ -195,8 +195,6 @@ class Tasks(Service):
         :raises: ``BoundGlobalError`` if the given function refers to global
             variables
         """
-        if container_image is None:
-            container_image = "us.gcr.io/dl-ci-cd/images/tasks/public/py2/default:v2018.11.17"
 
         payload = {
             'image': container_image,
@@ -724,7 +722,7 @@ class Tasks(Service):
             task_ids = list(itertools.islice(task_id_iterable, self.RERUN_BATCH_SIZE))
         return DotList(rerun)
 
-    def create_function(self, f, image=None, name=None, cpus=1,
+    def create_function(self, f, image, name=None, cpus=1,
                         gpus=0,
                         memory='2Gi',
                         maximum_concurrency=None,
@@ -817,7 +815,7 @@ class Tasks(Service):
 
         return CloudFunction(group_info.id, name=name, client=self)
 
-    def create_or_get_function(self, f, image=None, name=None, cpus=1,
+    def create_or_get_function(self, f, image, name=None, cpus=1,
                                gpus=0,
                                memory='2Gi',
                                maximum_concurrency=None,
