@@ -16,7 +16,7 @@ import base64
 import datetime
 import json
 import unittest
-
+import warnings
 import six
 
 import responses
@@ -65,6 +65,17 @@ def to_bytes(s):
 
 
 class TestAuth(unittest.TestCase):
+
+    def tearDown(self):
+        warnings.resetwarnings()
+
+    def test_auth_client_refresh_match(self):
+        with warnings.catch_warnings(record=True) as w:
+            auth = Auth(client_id="client_id", client_secret="secret", refresh_token="mismatched_refresh_token")
+            self.assertEqual(1, len(w))
+            self.assertEqual("mismatched_refresh_token", auth.refresh_token)
+            self.assertEqual("mismatched_refresh_token", auth.client_secret)
+
     @responses.activate
     def test_get_token(self):
         responses.add(
@@ -219,11 +230,14 @@ class TestAuth(unittest.TestCase):
         _get_token.assert_called_once()
 
     def test_auth_init_env_vars(self):
+        warnings.simplefilter("ignore")
+
         environ = dict(
             CLIENT_SECRET="secret_bar",
             CLIENT_ID="id_bar",
             DESCARTESLABS_CLIENT_SECRET="secret_foo",
             DESCARTESLABS_CLIENT_ID="id_foo",
+            DESCARTESLABS_REFRESH_TOKEN="refresh_foo"
         )
 
         # should work with direct var
@@ -231,6 +245,7 @@ class TestAuth(unittest.TestCase):
             auth = Auth(
                 client_id="client_id",
                 client_secret="client_secret",
+                refresh_token="client_secret",
                 jwt_token="jwt_token",
             )
             self.assertEqual(auth.client_secret, "client_secret")
@@ -240,18 +255,24 @@ class TestAuth(unittest.TestCase):
         with patch.dict("descarteslabs.client.auth.auth.os.environ", environ):
             auth = Auth()
             self.assertEqual(
-                auth.client_secret, environ.get("DESCARTESLABS_CLIENT_SECRET")
+                # when refresh_token and client_secret do not match,
+                # the Auth implementation sets both to the value of
+                # refresh_token
+                auth.client_secret, environ.get("DESCARTESLABS_REFRESH_TOKEN")
             )
             self.assertEqual(auth.client_id, environ.get("DESCARTESLABS_CLIENT_ID"))
 
-        # remove the namespaced ones
+        # remove the namespaced ones, except the refresh token because
+        # Auth does not recognize a REFRESH_TOKEN environment variable
+        # and removing it from the dictionary would result in non-deterministic
+        # results based on the token_info.json file on the test runner disk
         environ.pop("DESCARTESLABS_CLIENT_SECRET")
         environ.pop("DESCARTESLABS_CLIENT_ID")
 
         # should fallback to legacy env vars
         with patch.dict("descarteslabs.client.auth.auth.os.environ", environ):
             auth = Auth()
-            self.assertEqual(auth.client_secret, environ.get("CLIENT_SECRET"))
+            self.assertEqual(auth.client_secret, environ.get("DESCARTESLABS_REFRESH_TOKEN"))
             self.assertEqual(auth.client_id, environ.get("CLIENT_ID"))
 
 

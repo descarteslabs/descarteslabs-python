@@ -143,6 +143,18 @@ class Auth:
             None,
         )
 
+        if self.client_secret != self.refresh_token:
+            if self.client_secret is not None and self.refresh_token is not None:
+                warnings.warn(
+                    "Authentication token mismatch: "
+                    "client_secret and refresh_token values must match for authentication to work correctly. "
+                )
+
+            if self.refresh_token is not None:
+                self.client_secret = self.refresh_token
+            elif self.client_secret is not None:
+                self.refresh_token = self.client_secret
+
         self._token = next(
             (
                 x
@@ -256,17 +268,13 @@ class Auth:
                 "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
                 "target": self.client_id,
                 "api_type": "app",
-                "refresh_token": self.refresh_token
-                if self.refresh_token is not None
-                else self.client_secret,
+                "refresh_token": self.refresh_token,
             }
         else:
             params = {
                 "client_id": self.client_id,
                 "grant_type": "refresh_token",
-                "refresh_token": self.refresh_token
-                if self.refresh_token is not None
-                else self.client_secret,
+                "refresh_token": self.refresh_token,
             }
 
             if self.scope is not None:
