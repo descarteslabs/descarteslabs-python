@@ -9,6 +9,8 @@ Changelog
 =========
 
 ## [Unreleased]
+### Changed
+- Tasks methods `create_function`, `create_or_get_function`, and `new_group` now have image as a required parameter
 
 ### Added
 - `Metadata.paged_search` has been added and essentially supports the original behavior of `Metadata.search` prior to release 0.16.0.
