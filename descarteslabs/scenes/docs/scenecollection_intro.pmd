@@ -1,0 +1,89 @@
+Create a SceneCollection by searching:
+
+```{python, echo = False}
+# Limit what we import to limit the dependencies we need
+import descarteslabs.scenes
+
+import types
+dl = types.ModuleType("descarteslabs")
+
+dl.scenes = descarteslabs.scenes
+
+# Avoid logging warnings
+import logging
+logging.disable(logging.WARNING)
+
+scenes = None
+```
+
+```{python, term = True, wrap = False}
+import descarteslabs as dl
+import numpy as np
+
+aoi_geometry = {
+    'type': 'Polygon',
+    'coordinates': (
+        ((-95.27841503861751, 42.76556057019057),
+        (-93.15675252485482, 42.36289849433184),
+        (-93.73350276458868, 40.73810018004927),
+        (-95.79766011799035, 41.13809376845988),
+        (-95.27841503861751, 42.76556057019057)),
+    )
+}
+
+scenes, ctx = dl.scenes.search(
+    aoi_geometry,
+    products=["landsat:LC08:PRE:TOAR"],
+    limit=10
+)
+
+scenes
+```
+
+```{python, echo = False}
+assert scenes is not None
+spring_scenes = None
+```
+
+Use `SceneCollection.each` and `SceneCollection.filter` to subselect Scenes you want:
+
+```{python, term = True, wrap = False}
+# which month is each scene from?
+scenes.each.properties.date.month.combine()
+
+spring_scenes = scenes.filter(lambda s: s.properties.date.month <= 6)
+spring_scenes
+```
+
+```{python, echo = False}
+assert spring_scenes is not None
+stack = None
+```
+
+Operate on related Scenes with `SceneCollection.groupby`:
+
+```{python, term = True, wrap = False}
+for month, month_scenes in spring_scenes.groupby("properties.date.month"):
+    print("Month {}: {} scenes".format(month, len(month_scenes)))
+```
+
+Load data with `SceneCollection.stack` or `SceneCollection.mosaic`:
+
+```{python, term = True, wrap = False}
+ctx_lowres = ctx.assign(resolution=120)
+stack = spring_scenes.stack("red green blue", ctx_lowres)
+
+stack.shape
+```
+
+```{python, echo = False}
+assert stack is not None
+```
+
+Download georeferenced images with `SceneCollection.download` and `SceneCollection.download_mosaic`:
+
+```{python, term = True, wrap = False}
+spring_scenes.download("red green blue", ctx_lowres, "rasters")
+
+spring_scenes.download_mosaic("nir red", ctx_lowres)
+```

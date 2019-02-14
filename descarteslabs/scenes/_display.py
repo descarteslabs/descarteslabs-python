@@ -67,14 +67,7 @@ def display(*imgs, **kwargs):
     Example
     =======
 
-    .. ipython:: python
-
-        import descarteslabs as dl
-        import numpy as np
-        a = np.arange(20*15).reshape((20, 15))
-        b = np.tan(a)
-        @savefig display.png
-        dl.scenes.display(a, b, size=4)
+    .. include:: display_example.rst
 
     Raises
     ------

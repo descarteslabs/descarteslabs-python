@@ -1,0 +1,108 @@
+Define our Area of Interest:
+
+```{python, term = True, wrap = False}
+aoi_geometry = {
+    'type': 'Polygon',
+    'coordinates': ((
+        (-93.52300099792355, 41.241436141055345),
+        (-93.7138666, 40.703737),
+        (-94.37053769704536, 40.83098709945576),
+        (-94.2036617, 41.3717716),
+        (-93.52300099792355, 41.241436141055345)
+    ),)  # the trailing comma is significant
+}
+```
+
+Search for Scenes within it:
+
+```{python, echo = False}
+# Limit what we import to limit the dependencies we need
+import descarteslabs.scenes
+
+import types
+dl = types.ModuleType("descarteslabs")
+
+dl.scenes = descarteslabs.scenes
+
+# Avoid logging warnings
+import logging
+logging.disable(logging.WARNING)
+
+import warnings
+warnings.simplefilter("ignore")
+
+scenes = None
+```
+```{python, evaluate = False}
+>>> import descarteslabs as dl
+```
+
+```{python, term = True, wrap = False}
+scenes, ctx = dl.scenes.search(
+    aoi_geometry,
+    products=["landsat:LC08:PRE:TOAR"],
+    start_datetime="2013-07-01",
+    end_datetime="2013-09-01",
+    limit=10
+)
+```
+
+```{python, echo = False}
+assert scenes != None and ctx != None
+```
+
+```{python, term = True, wrap = False}
+scenes
+
+ctx
+
+ctx_lowres = ctx.assign(resolution=60)
+```
+
+Quickly inspect metadata:
+
+```{python, term = True, wrap = False}
+scenes = scenes.sorted("properties.date")
+
+scenes.each.properties.id
+
+scenes.each.properties.date.month
+```
+
+Load and display a scene:
+
+```{python, term = True, wrap = False, width = "10in", f_size = (10, 10)}
+scene = scenes[-1]
+
+arr = scene.ndarray("red green blue", ctx_lowres)
+
+dl.scenes.display(arr)
+```
+
+Monthly median composites of NDVI within our area of interest:
+
+```{python, term = True, wrap = False}
+import numpy as np
+
+monthly_composites = {}
+
+for month, month_scenes in scenes.groupby("properties.date.month"):
+    stack = month_scenes.stack("red nir", ctx_lowres)
+    stack = stack.astype(float)  # avoid truncating to uint16
+    red, nir = stack[:, 0], stack[:, 1]
+    ndvi = (nir - red) / (nir + red)
+    ndvi_composite = np.ma.median(ndvi, axis=0)
+    monthly_composites[month] = ndvi_composite
+```
+
+And the mean NDVI value of each month's composite is:
+
+```{python, term = True, wrap = False}
+{month: composite.mean() for month, composite in monthly_composites.items()}
+```
+
+View the NDVI composites:
+
+```{python, term = True, wrap = False, width = "5in", f_size = (5, 10)}
+dl.scenes.display(*monthly_composites.values(), title=list(monthly_composites.keys()))
+```

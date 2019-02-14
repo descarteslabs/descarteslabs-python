@@ -83,6 +83,7 @@ class Auth:
     ):
         """
         Helps retrieve JWT from a client id and refresh token for cli usage.
+
         :param domain: endpoint for auth0
         :param scope: the JWT fields to be included
         :param leeway: JWT expiration leeway
@@ -195,8 +196,10 @@ class Auth:
     @classmethod
     def from_environment_or_token_json(cls, **kwargs):
         """
-        Creates an Auth object from environment variables CLIENT_ID, CLIENT_SECRET,
-        JWT_TOKEN if they are set, or else from a JSON file at the given path.
+        Creates an Auth object from environment variables CLIENT_ID,
+        CLIENT_SECRET, JWT_TOKEN if they are set, or else from a JSON
+        file at the given path.
+
         :param domain: endpoint for auth0
         :param scope: the JWT fields to be included
         :param leeway: JWT expiration leeway

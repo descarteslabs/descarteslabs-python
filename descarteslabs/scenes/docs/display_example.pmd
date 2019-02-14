@@ -1,0 +1,19 @@
+```{python, echo = False}
+# Limit what we import to limit the dependencies we need
+import descarteslabs.scenes
+
+import types
+dl = types.ModuleType("descarteslabs")
+
+dl.scenes = descarteslabs.scenes
+```
+
+```{python, term = True, wrap = False, width = "4in", f_size = (4, 8)}
+import descarteslabs as dl
+import numpy as np
+
+a = np.arange(20*15).reshape((20, 15))
+b = np.tan(a)
+
+dl.scenes.display(a, b, size=4)
+```
