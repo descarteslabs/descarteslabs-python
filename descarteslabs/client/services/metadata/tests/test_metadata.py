@@ -51,7 +51,7 @@ class TestMetadata(unittest.TestCase):
 
     def test_sat_id(self):
         r = self.instance.search(
-            start_datetime="2016-07-06", end_datetime="2016-07-07", sat_id="LANDSAT_8"
+            start_datetime="2016-07-06", end_datetime="2016-07-07", sat_ids="LANDSAT_8"
         )
         self.assertGreater(len(r["features"]), 0)
 
@@ -59,7 +59,7 @@ class TestMetadata(unittest.TestCase):
         r = self.instance.search(
             start_datetime="2016-07-06",
             end_datetime="2016-07-07",
-            sat_id="LANDSAT_8",
+            sat_ids="LANDSAT_8",
             cloud_fraction=0.5,
         )
         for feature in r["features"]:
@@ -68,7 +68,7 @@ class TestMetadata(unittest.TestCase):
         r = self.instance.search(
             start_datetime="2016-07-06",
             end_datetime="2016-07-07",
-            sat_id="LANDSAT_8",
+            sat_ids="LANDSAT_8",
             cloud_fraction=0.0,
         )
         for feature in r["features"]:
@@ -144,7 +144,7 @@ class TestMetadata(unittest.TestCase):
             start_datetime="2016-07-06",
             end_datetime="2016-07-07",
             products=["landsat:LC08:PRE:TOAR"],
-            part="year",
+            interval="year",
             pixels=True,
         )
         self.assertIn("count", r)
@@ -157,7 +157,7 @@ class TestMetadata(unittest.TestCase):
         r = self.instance.features(
             start_datetime="2016-07-06",
             end_datetime="2016-07-07",
-            sat_id="LANDSAT_8",
+            sat_ids="LANDSAT_8",
             batch_size=10,
         )
         first_21 = itertools.islice(r, 21)
@@ -251,7 +251,7 @@ class TestMetadata(unittest.TestCase):
         features_r = self.instance.features(
             start_time="2016-07-06",
             end_time="2016-07-07",
-            sat_id="LANDSAT_8",
+            sat_ids="LANDSAT_8",
             batch_size=10,
         )
         self.assertGreater(len(list(features_r)), 0)

@@ -358,7 +358,7 @@ class Metadata(Service):
         r = self.session.post("/summary", json=kwargs)
         return DotDict(r.json())
 
-    def _query(
+    def paged_search(
         self,
         products=None,
         sat_ids=None,
@@ -381,10 +381,36 @@ class Metadata(Service):
         **kwargs
     ):
         """
-        Execute a metadata query for up to 10,000 items.
+        Execute a metadata query in a paged manner, with up to 10,000 items per page.
 
-        Use :py:func:`search` or :py:func:`features` instead, which batch searches into smaller requests
-        and handle paging for you.
+        Most clients should use :py:func:`features` instead, which batch searches into smaller requests
+        and handles the paging for you.
+
+        :param list(str) products: Product Identifier(s).
+        :param list(str) sat_ids: Satellite identifier(s).
+        :param str date: The date field to use for search (default is `acquired`).
+        :param str place: A slug identifier to be used as a region of interest.
+        :param str geom: A GeoJSON or WKT region of interest.
+        :param str start_datetime: Desired starting timestamp, in any common format.
+        :param str end_datetime: Desired ending timestamp, in any common format.
+        :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
+        :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
+        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param expr q: Expression for filtering the results. See
+            :py:attr:`descarteslabs.client.services.metadata.properties`.
+        :param int limit: Maximum number of items per page to return.
+        :param list(str) fields: Properties to return.
+        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str sort_field: Property to sort on.
+        :param str sort_order: Order of sort.
+        :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
+        :param str continuation_token: None for new query, or the `properties.continuation_token` value from
+            the returned FeatureCollection from a previous invocation of this method to page through a large
+            result set.
+
+        return: GeoJSON ``FeatureCollection`` containing at most `limit` features.
+
+
         """
         check_deprecated_kwargs(
             kwargs,
@@ -520,6 +546,9 @@ class Metadata(Service):
         :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
 
         return: GeoJSON ``FeatureCollection``
+
+        Note that as of release 0.16.0 the ``continuation_token`` token has been removed. Please use the
+        :py:func:`paged_search` if you require this feature.
 
         Example::
 
@@ -715,7 +744,7 @@ class Metadata(Service):
         continuation_token = None
 
         while True:
-            result = self._query(
+            result = self.paged_search(
                 sat_ids=sat_ids,
                 products=products,
                 date=date,

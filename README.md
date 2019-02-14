@@ -10,6 +10,10 @@ Changelog
 
 ## [Unreleased]
 
+### Added
+- `Metadata.paged_search` has been added and essentially supports the original behavior of `Metadata.search` prior to release 0.16.0.
+This method should generally be avoided in favor of `Metadata.features` (or `Metadata.search`).
+
 ## [0.17.1] - 2019-02-11
 ### Added
 
@@ -39,7 +43,8 @@ Changelog
 - Vector search query results now report their total number of results by means of the standard `len()` function.
 
 ### Changed
-- `Metadata.search` no longer has a 10,000-item limit, and the number of items returned will be closer to `limit`.
+- `Metadata.search` no longer has a 10,000-item limit, and the number of items returned will be closer to `limit`. This
+method no longer accepts the `continuation_token` parameter.
 
 ## [0.15.0] - 2019-01-09
 ### Added
