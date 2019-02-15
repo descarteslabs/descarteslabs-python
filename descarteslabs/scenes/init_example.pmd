@@ -71,7 +71,7 @@ scenes.each.properties.date.month
 
 Load and display a scene:
 
-```{python, term = True, wrap = False, width = "10in", f_size = (10, 10)}
+```{python, term = True, wrap = False, width = "7in", f_size = (10, 10)}
 scene = scenes[-1]
 
 arr = scene.ndarray("red green blue", ctx_lowres)
@@ -103,6 +103,6 @@ And the mean NDVI value of each month's composite is:
 
 View the NDVI composites:
 
-```{python, term = True, wrap = False, width = "5in", f_size = (5, 10)}
+```{python, term = True, wrap = False, width = "4.5in", f_size = (10, 20)}
 dl.scenes.display(*monthly_composites.values(), title=list(monthly_composites.keys()))
 ```

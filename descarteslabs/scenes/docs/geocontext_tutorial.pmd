@@ -30,7 +30,7 @@ default_ctx
 GeoContexts are immutable; instead, create copies with new values using `AOI.assign`.
 (Assigning new values to DLTiles is not yet supported.)
 
-```{python, term = True, wrap = False, width = '20cm'}
+```{python, term = True, wrap = False, width = "4in", f_size = (4, 4)}
 # let's use a lower resolution to load images faster
 lowres = default_ctx.assign(resolution=75)
 lowres_arr = scene.ndarray("red green blue", lowres)
@@ -40,7 +40,7 @@ dl.scenes.display(lowres_arr, size=4, title="Default GeoContext, 75-meter resolu
 
 You can also create GeoContexts explicitly:
 
-```{python, term = True, wrap = False, width = '20cm'}
+```{python, term = True, wrap = False, width = "4in", f_size = (4, 4)}
 import shapely.affinity
 
 # make a new polygon half the size of the scene's full extent
@@ -60,7 +60,7 @@ dl.scenes.display(webmerc_cutline_arr, size=4, title="Same scene, with cutline a
 Let's assign our new cutline to the default GeoContext
 to see the difference between the coordinate reference systems:
 
-```{python, term = True, wrap = False, width = '20cm'}
+```{python, term = True, wrap = False, width = "4in", f_size = (4, 4)}
 with_cutline = lowres.assign(geometry=new_cutline)
 
 with_cutline_arr = scene.ndarray("red green blue", with_cutline)
@@ -73,7 +73,7 @@ We assigned a new geometry, but we didn't change the *bounds*.
 Bounds determine the x-y extent that's rasterized; geometry just clips within that.
 You can pass ``bounds="update"`` to compute new bounds when assinging a new geometry.
 
-```{python, term = True, wrap = False, width = '20cm'}
+```{python, term = True, wrap = False, width = '4in', f_size = (4, 4)}
 cutline_bounds = lowres.assign(geometry=new_cutline, bounds="update")
 cutline_bounds_arr = scene.ndarray("red green blue", cutline_bounds)
 
@@ -88,7 +88,7 @@ the geometry is also defined.
 
 You can also use DLTiles to split up regions along a grid:
 
-```{python, term = True, wrap = False, width = '20cm'}
+```{python, term = True, wrap = False, width = "3in", f_size = (3, 6)}
 tiles = dl.scenes.DLTile.from_shape(
     new_cutline,
     resolution=75,
