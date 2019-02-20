@@ -686,3 +686,13 @@ class Vector(JsonApiService):
         """
         r = self.session.get("/products/{}/search/delete/status".format(product_id))
         return DotDict(r.json())
+
+    def count_features(self, product_id):
+        """
+        Get the count of the features in a product.
+
+        :param str product_id: (Required) Id of the product created
+                               by a call to `create_product_from_query`.
+        """
+        r = self.session.get("/products/{}/features/count".format(product_id))
+        return r.json()

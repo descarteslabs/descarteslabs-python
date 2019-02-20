@@ -193,6 +193,10 @@ class FeatureCollection(object):
             self._vector_client = Vector()
         return self._vector_client
 
+    def count(self):
+        """Return the number of features in this product"""
+        return self.vector_client.count_features(self.id)
+
     def filter(self, geometry=None, properties=None):
         """
         Include only the features matching the given geometry and properties.
