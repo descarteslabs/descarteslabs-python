@@ -190,6 +190,7 @@ def display(*imgs, **kwargs):
             if colormap:
                 disp = colormap(disp)
 
+        ax.grid(False)  # just to be sure
         ax.imshow(disp, aspect="equal", interpolation=interpolation)
         if title is not None:
             ax.set_title(str(title))
