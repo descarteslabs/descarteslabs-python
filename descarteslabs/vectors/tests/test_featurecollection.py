@@ -32,6 +32,25 @@ class TestFeatureCollection(unittest.TestCase):
         self.assertIsNotNone(fc.vector_client)
 
     def test_create(self, vector_client):
+        attributes = dict(product_id='product_id',
+                          title='title',
+                          description='description',
+                          owners=['owners'],
+                          readers=['readers'],
+                          writers=None)
+
+        FeatureCollection.create(vector_client=vector_client, **attributes)
+
+        vector_client.create_product.assert_called_once_with(
+            description='description',
+            product_id='product_id',
+            owners=['owners'],
+            readers=['readers'],
+            title='title',
+            writers=None
+        )
+
+    def test_create_deprecated(self, vector_client):
         attributes = dict(name='name',
                           title='title',
                           description='description',
@@ -42,7 +61,12 @@ class TestFeatureCollection(unittest.TestCase):
         FeatureCollection.create(vector_client=vector_client, **attributes)
 
         vector_client.create_product.assert_called_once_with(
-            description='description', name='name', owners=['owners'], readers=['readers'], title='title', writers=None
+            description='description',
+            product_id='name',
+            owners=['owners'],
+            readers=['readers'],
+            title='title',
+            writers=None
         )
 
     def test_from_jsonapi(self, vector_client):
@@ -178,7 +202,8 @@ class TestFeatureCollection(unittest.TestCase):
         vector_client.delete_product.assert_called_once_with('foo')
 
     def test_replace(self, vector_client):
-        vector_client.replace.side_effect = lambda id, **attributes: {'data': dict(id=id, attributes=attributes)}
+        vector_client.replace_product.side_effect = lambda id, **attributes: {
+            'data': dict(id=id, attributes=attributes)}
 
         attributes = dict(name='name',
                           title='title',
@@ -187,10 +212,11 @@ class TestFeatureCollection(unittest.TestCase):
                           readers=['readers'],
                           writers=None)
 
+        attributes.pop("name")   # name is deprecated
         fc = FeatureCollection('foo', vector_client=vector_client)
         fc.replace(**attributes)
 
-        vector_client.replace.assert_called_once_with(
+        vector_client.replace_product.assert_called_once_with(
             'foo', **attributes
         )
 
@@ -217,6 +243,37 @@ class TestFeatureCollection(unittest.TestCase):
         self.assertEqual(repr(fc), "FeatureCollection({\n  'id': 'foo'\n})")
 
     def test_copy(self, vector_client):
+        attributes = dict(product_id='product_id',
+                          title='title',
+                          description='description',
+                          owners=['owners'],
+                          readers=['readers'],
+                          writers=None)
+
+        fc = FeatureCollection('foo', vector_client=vector_client)
+        geometry = mock.MagicMock()
+
+        filtered = fc.filter(geometry=geometry)
+
+        exp = (p.foo > 0)
+        filtered = filtered.filter(properties=exp)
+
+        filtered.copy(**attributes)
+
+        vector_client.create_product_from_query.assert_called_once_with(
+            description='description',
+            new_product_id='product_id',
+            owners=['owners'],
+            readers=['readers'],
+            title='title',
+            writers=None,
+            product_id="foo",
+            geometry=mock.ANY,
+            query_expr=mock.ANY,
+            query_limit=None,
+        )
+
+    def test_copy_deprecated(self, vector_client):
         attributes = dict(name='name',
                           title='title',
                           description='description',
@@ -236,7 +293,7 @@ class TestFeatureCollection(unittest.TestCase):
 
         vector_client.create_product_from_query.assert_called_once_with(
             description='description',
-            name='name',
+            new_product_id='name',
             owners=['owners'],
             readers=['readers'],
             title='title',

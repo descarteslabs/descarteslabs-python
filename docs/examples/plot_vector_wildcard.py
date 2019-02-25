@@ -9,12 +9,14 @@ The API reference for these methods and classes is at :py:mod:`descarteslabs.vec
 """
 
 from descarteslabs.vectors import Feature, FeatureCollection, properties as p
+import uuid
 
 ################################################
 # Let's make a test :class:`FeatureCollection <descarteslabs.vectors.featurecollection.FeatureCollection>`
 # use :meth:`FeatureCollection.create <descarteslabs.vectors.featurecollection.FeatureCollection.create>`.
 
-fc = FeatureCollection.create(name="my_test_product",
+id_suffix = str(uuid.uuid4())
+fc = FeatureCollection.create(product_id="my_test_product" + id_suffix,
                               title="My Test Product",
                               description="This product was created using an example file.")
 

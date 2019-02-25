@@ -11,6 +11,8 @@ Changelog
 ## [Unreleased]
 ### Changed
 - Tasks methods `create_function`, `create_or_get_function`, and `new_group` now have image as a required parameter
+- The `name` parameter is renamed to `product_id` in `Vector.create_product`, and `FeatureCollection.create` and `FeatureCollection.copy`.  The 'name' parameter is renamed to `new_product_id` in `Vector.create_product_from_query`.  Using `name` will continue to work, but will be removed completely in future versions.
+- The `name` parameter is no longer required, and is ignored for `Vector.replace_product`, `Vector.update_product`, `FeatureCollection.update` and `FeatureCollection.replace`.  This parameter will be removed completely in future versions.
 
 ### Added
 - `Metadata.paged_search` has been added and essentially supports the original behavior of `Metadata.search` prior to release 0.16.0.

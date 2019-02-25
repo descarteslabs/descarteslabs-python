@@ -2,6 +2,7 @@ import copy
 
 from descarteslabs.common.dotdict import DotDict
 from descarteslabs.client.exceptions import NotFoundError
+from descarteslabs.client.deprecation import deprecate
 from descarteslabs.common.tasks import UploadTask
 from descarteslabs.client.services.vector import Vector
 from descarteslabs.vectors.feature import Feature
@@ -50,7 +51,7 @@ class FeatureCollection(object):
     id : str
         The unique identifier for this `FeatureCollection`.
     name : str
-        A short name without spaces (like a handle).
+        (Deprecated) Will be removed in future versions.
     title : str
         A more verbose and expressive name for display purposes.
     description : str
@@ -102,14 +103,19 @@ class FeatureCollection(object):
         return self
 
     @classmethod
-    def create(cls, name, title, description, owners=None, readers=None, writers=None, vector_client=None):
+    @deprecate(renames={"name": "product_id"})
+    def create(cls, product_id, title, description, owners=None, readers=None, writers=None, vector_client=None):
         """
         Create a vector product in your catalog.
 
         Parameters
         ----------
-        name : str
-            A short name without spaces (like a handle).
+        product_id : str
+            A unique name for this product. In the created
+            product a namespace consisting of your user id (e.g.
+            "ae60fc891312ggadc94ade8062213b0063335a3c:") or your organization id (e.g.,
+            "yourcompany:") will be prefixed to this, if it doesn't already have one, in
+            order to make the id globally unique.
         title : str
             A more verbose and expressive name for display purposes.
         description : str
@@ -130,12 +136,12 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
-        >>> FeatureCollection.create(name='foo',
+        >>> FeatureCollection.create(product_id='foo',
         ...    title='My Foo Vector Collection',
         ...    description='Just a test')  # doctest: +SKIP
         """
         params = dict(
-            name=name,
+            product_id=product_id,
             title=title,
             description=description,
             owners=owners,
@@ -306,6 +312,8 @@ class FeatureCollection(object):
 
         return _FeaturesIterator(self.vector_client.search_features(**params))
 
+    # TODO: remove name from params
+    @deprecate(renames={"name": None})
     def update(self,
                name=None,
                title=None,
@@ -319,7 +327,7 @@ class FeatureCollection(object):
         Parameters
         ----------
         name : str, optional
-            A short name without spaces (like a handle).
+            (Deprecated) Will be removed in future versions.
         title : str, optional
             A more verbose and expressive name for display purposes.
         description : str, optional
@@ -339,14 +347,12 @@ class FeatureCollection(object):
 
         Example
         -------
-        >>> attributes = dict(name='name',
-        ...    owners=['email:me@org.com'],
+        >>> attributes = dict(owners=['email:me@org.com'],
         ...    readers=['group:trusted'])
         >>> FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24').update(**attributes)  # doctest: +SKIP
 
         """
         params = dict(
-            name=name,
             title=title,
             description=description,
             owners=owners,
@@ -359,11 +365,13 @@ class FeatureCollection(object):
         response = self.vector_client.update_product(self.id, **params)
         self.__dict__.update(response['data']['attributes'])
 
+    # TODO: remove name from params
+    @deprecate(["title", "description"], renames={"name": None})
     def replace(
             self,
-            name,
-            title,
-            description,
+            name=None,
+            title=None,
+            description=None,
             owners=None,
             readers=None,
             writers=None,
@@ -375,12 +383,12 @@ class FeatureCollection(object):
 
         Parameters
         ----------
-        name : str
-            A short name without spaces (like a handle).
+        name : str, optional
+            (Deprecated) Will be removed in future version.
         title : str
-            A more verbose name for display purposes.
+            (Required) A more verbose name for display purposes.
         description : str
-            Information about the `FeatureCollection`, why it exists,
+            (Required) Information about the `FeatureCollection`, why it exists,
             and what it provides.
         owners : list(str), optional
             User, group, or organization IDs that own
@@ -396,17 +404,14 @@ class FeatureCollection(object):
 
         Example
         -------
-        >>> attributes = dict(name='name',
-        ...    title='title',
+        >>> attributes = dict(title='title',
         ...    description='description',
         ...    owners=['email:you@org.com'],
         ...    readers=['group:readers'],
         ...    writers=[])
         >>> FeatureCollection('foo').replace(**attributes)  # doctest: +SKIP
         """
-
         params = dict(
-            name=name,
             title=title,
             description=description,
             owners=owners,
@@ -414,7 +419,7 @@ class FeatureCollection(object):
             writers=writers,
         )
 
-        response = self.vector_client.replace(self.id, **params)
+        response = self.vector_client.replace_product(self.id, **params)
         self.__dict__.update(response['data']['attributes'])
 
     def refresh(self):
@@ -521,7 +526,8 @@ class FeatureCollection(object):
 
         return results
 
-    def copy(self, name, title, description, owners=None, readers=None, writers=None):
+    @deprecate(renames={"name": "product_id"})
+    def copy(self, product_id, title, description, owners=None, readers=None, writers=None):
         """
         Apply a filter to an existing product and create a new vector product in your catalog
         from the result, taking into account calls to `FeatureCollection.filter()`
@@ -535,8 +541,12 @@ class FeatureCollection(object):
 
         Parameters
         ----------
-        name : str
-            A short name without spaces (like a handle).
+        product_id : str
+            A unique name for this product. In the created
+            product a namespace consisting of your user id (e.g.
+            "ae60fc891312ggadc94ade8062213b0063335a3c:") or your organization id (e.g.,
+            "yourcompany:") will be prefixed to this, if it doesn't already have one, in
+            order to make the id globally unique.
         title : str
             A more verbose and expressive name for display purposes.
         description : str
@@ -578,7 +588,7 @@ class FeatureCollection(object):
             geometry=self._query_geometry,
             query_expr=self._query_property_expression,
             query_limit=self._query_limit,
-            name=name,
+            new_product_id=product_id,
             title=title,
             description=description,
             owners=owners,

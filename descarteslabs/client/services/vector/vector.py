@@ -4,6 +4,7 @@ import io
 import logging
 
 from descarteslabs.common.property_filtering import GenericProperties
+from descarteslabs.client.deprecation import deprecate
 from descarteslabs.client.services.service import JsonApiService, ThirdPartyService
 from descarteslabs.client.auth import Auth
 from descarteslabs.common.dotdict import DotDict
@@ -85,7 +86,7 @@ class Vector(JsonApiService):
     Concepts:
 
     * "Feature": a single geometric entity and its associated metadata (equivalent to a GeoJSON Feature).
-    * "Product": a collection of related Features, with a common name, description, and access controls.
+    * "Product": a collection of related Features, with a common id, description, and access controls.
 
     This client currently returns data as dictionaries in `JSON API format <http://jsonapi.org/>`_.
     """
@@ -151,11 +152,16 @@ class Vector(JsonApiService):
         r = self.session.get('/products/{}'.format(product_id))
         return DotDict(r.json())
 
-    def create_product(self, name, title, description, owners=None, readers=None, writers=None):
+    @deprecate(renames={"name": "product_id"})
+    def create_product(self, product_id, title, description, owners=None, readers=None, writers=None):
         """
         Add a vector product to your catalog.
 
-        :param str name: (Required) A name for this product.
+        :param str product_id: (Required) A unique name for this product. In the created
+            product a namespace consisting of your user id (e.g.
+            "ae60fc891312ggadc94ade8062213b0063335a3c:") or your organization id (e.g.,
+            "yourcompany:") will be prefixed to this, if it doesn't already have one, in
+            order to make the id globally unique.
         :param str title: (Required) Official product title.
         :param str description: (Required) Information about the product,
                                 why it exists, and what it provides.
@@ -174,7 +180,6 @@ class Vector(JsonApiService):
                  and its properties are under ``.data.attributes``.
         """
         params = dict(
-            name=name,
             title=title,
             description=description,
             owners=owners,
@@ -182,16 +187,17 @@ class Vector(JsonApiService):
             writers=writers
         )
 
-        jsonapi = self.jsonapi_document(type="product", attributes=params)
+        jsonapi = self.jsonapi_document(type="product", attributes=params, id=product_id)
         r = self.session.post('/products', json=jsonapi)
         return DotDict(r.json())
 
+    @deprecate(required=["product_id", "title", "description"], renames={"name": None})
     def replace_product(
             self,
-            product_id,
-            name,
-            title,
-            description,
+            product_id=None,
+            name=None,
+            title=None,
+            description=None,
             owners=None,
             readers=None,
             writers=None
@@ -200,7 +206,6 @@ class Vector(JsonApiService):
         Replace a vector product in your catalog.
 
         :param str product_id: (Required) The vector product to replace.
-        :param str name: (Required) A name for this product.
         :param str title: (Required) Official product title.
         :param str description: (Required) Information about the product,
                                 why it exists, and what it provides.
@@ -211,6 +216,7 @@ class Vector(JsonApiService):
                                   Each ID must be prefixed with `user:`, `group:`, or `org:`.
         :param: list(str) writers: User, group, or organization IDs that can edit this product.
                                   Each ID must be prefixed with `user:`, `group:`, or `org:`.
+        :param str name: (Deprecated) Will be removed completely in future versions.
 
         :rtype: DotDict
         :return: Replaced vector product, as a JSON API resource object
@@ -218,8 +224,8 @@ class Vector(JsonApiService):
                  The new product's ID is under ``.data.id``
                  and its properties are under ``.data.attributes``.
         """
+        # TODO: fully deprecate `name` and remove from params completely
         params = dict(
-            name=name,
             title=title,
             description=description,
             owners=owners,
@@ -231,6 +237,7 @@ class Vector(JsonApiService):
         r = self.session.put('/products/{}'.format(product_id), json=jsonapi)
         return DotDict(r.json())
 
+    @deprecate(renames={"name": None})
     def update_product(
             self,
             product_id,
@@ -244,7 +251,7 @@ class Vector(JsonApiService):
         """Update a vector product in your catalog.
 
         :param str product_id: (Required) The vector product to replace.
-        :param str name: Name for this product.
+        :param str name: (Deprecated) Will be removed completely in future versions.
         :param str title: Official product title.
         :param str description: Information about the product,
                                 why it exists, and what it provides.
@@ -258,8 +265,8 @@ class Vector(JsonApiService):
         :return: Updated vector product, as a JSON API resource object.
         :rtype: DotDict
         """
+        # TODO: fully deprecate name and remove from params completely
         params = dict(
-            name=name,
             title=title,
             description=description,
             owners=owners,
@@ -336,8 +343,8 @@ class Vector(JsonApiService):
 
         if len(features) > 100:
             logging.warning(
-                'create_features: feature collection has more than 100 features,' +
-                ' will batch by 100 but consider using upload_features')
+                'create_features: feature collection has more than 100 features,'
+                + ' will batch by 100 but consider using upload_features')
 
         # forcibly pass a zero-length list for appropriate validation error
         for i in range(0, max(len(features), 1), 100):
@@ -532,9 +539,10 @@ class Vector(JsonApiService):
         return _SearchFeaturesIterator(
             self, product_id, geometry, query_expr, query_limit)
 
+    @deprecate(renames={"name": "new_product_id"})
     def create_product_from_query(
         self,
-        name,
+        new_product_id,
         title,
         description,
         product_id,
@@ -551,7 +559,11 @@ class Vector(JsonApiService):
 
         At least one of `geometry`, `query_expr`, or `query_limit` is required.
 
-        :param str name: (Required) A name for the new product.
+        :param str new_product_id: (Required) A unique name for this product. In the created
+            product a namespace consisting of your user id (e.g.
+            "ae60fc891312ggadc94ade8062213b0063335a3c:") or your organization id (e.g.,
+            "yourcompany:") will be prefixed to this, if it doesn't already have one, in
+            order to make the id globally unique.
         :param str title: (Required) Official product title.
         :param str description: (Required) Information about the product,
                                 why it exists, and what it provides.
@@ -597,7 +609,7 @@ class Vector(JsonApiService):
                  and its properties are under ``.data.attributes``.
         """
         product_params = dict(
-            name=name,
+            id=new_product_id,
             title=title,
             description=description,
             owners=owners,
