@@ -9,6 +9,8 @@ Changelog
 =========
 
 ## [Unreleased]
+
+## [0.17.2] - 2019-02-26
 ### Changed
 - Tasks methods `create_function`, `create_or_get_function`, and `new_group` now have image as a required parameter
 - The `name` parameter is renamed to `product_id` in `Vector.create_product`, and `FeatureCollection.create` and `FeatureCollection.copy`.  The 'name' parameter is renamed to `new_product_id` in `Vector.create_product_from_query`.  Using `name` will continue to work, but will be removed completely in future versions.
@@ -339,7 +341,9 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.2...HEAD
+[0.17.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.1...v0.17.2
+[0.17.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.14.1...v0.15.0
