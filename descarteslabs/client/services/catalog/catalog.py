@@ -713,23 +713,25 @@ class Catalog(Service):
         for arg in ["overviews", "overview_resampler"]:
             if locals()[arg] is not None:
                 metadata["process_controls"][arg] = locals()[arg]
-        with NamedTemporaryFile() as tmp:
-            np.save(tmp, ndarray, allow_pickle=False)
-            # From tempfile docs:
-            # Whether the name can be used to open the file a second time, while
-            # the named temporary file is still open, varies across platforms
-            # (it can be so used on Unix; it cannot on Windows NT or later)
-            #
-            # We close the underlying file object so _do_upload can open the path again
-            # in a cross platform compatible way.
-            # When leaving the context manager the tempfile wrapper will still cleanup
-            # and unlink the file descriptor.
-            tmp.file.close()
-            upload = self._do_upload(
-                tmp.name, product_id, metadata=metadata, add_namespace=add_namespace
-            )
-            if upload[0]:
-                raise upload[2]
+        with NamedTemporaryFile(delete=False) as tmp:
+            try:
+                np.save(tmp, ndarray, allow_pickle=False)
+                # From tempfile docs:
+                # Whether the name can be used to open the file a second time, while
+                # the named temporary file is still open, varies across platforms
+                # (it can be so used on Unix; it cannot on Windows NT or later)
+                #
+                # We close the underlying file object so _do_upload can open the path again
+                # in a cross platform compatible way. Cleanup is manual in the finally
+                # block.
+                tmp.close()
+                upload = self._do_upload(
+                    tmp.name, product_id, metadata=metadata, add_namespace=add_namespace
+                )
+                if upload[0]:
+                    raise upload[2]
+            finally:
+                os.unlink(tmp.name)
 
     def upload_results(
         self,

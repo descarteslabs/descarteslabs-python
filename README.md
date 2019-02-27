@@ -9,6 +9,8 @@ Changelog
 =========
 
 ## [Unreleased]
+### Changed
+- Fixed issues with `Catalog.upload_ndarray()` under Windows
 
 ## [0.17.2] - 2019-02-26
 ### Changed

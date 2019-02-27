@@ -14,6 +14,7 @@
 
 import numpy as np
 import unittest
+import os
 import sys
 from mock import patch
 from tempfile import NamedTemporaryFile
@@ -90,15 +91,20 @@ class TestCatalog(unittest.TestCase):
         product = "foo:product_id"
         gcs_upload_url = "https://gcs_upload_url.com"
         upload_url = "https://platform.descarteslabs.com/metadata/v1/catalog/products/{}/images/upload/{}"
-        with NamedTemporaryFile() as tmp:
-            tmp.write(b"foo")
-            responses.add(
-                responses.POST,
-                upload_url.format(product, tmp.name.split("/")[-1]),
-                body=gcs_upload_url,
-            )
-            responses.add(responses.PUT, gcs_upload_url)
-            self.instance.upload_image(tmp.name, product)
+        with NamedTemporaryFile(delete=False) as tmp:
+            try:
+                tmp.write(b"foo")
+                tmp.close()
+                responses.add(
+                    responses.POST,
+                    upload_url.format(product, os.path.basename(tmp.name)),
+                    body=gcs_upload_url,
+                )
+                responses.add(responses.PUT, gcs_upload_url)
+                self.instance.upload_image(tmp.name, product)
+            finally:
+                # Manual cleanup required for Windows compatibility
+                os.unlink(tmp.name)
 
     @responses.activate
     def test_upload_ndarray(self):
