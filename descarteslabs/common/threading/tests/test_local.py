@@ -1,5 +1,6 @@
 import multiprocessing
 import os
+import sys
 import unittest
 import threading
 
@@ -17,10 +18,23 @@ class ThreadLocalWrapperTest(unittest.TestCase):
     def _send_id(self, queue):
         queue.put(self.wrapper.get())
 
-    def test_wrapper(self):
+    def test_thread_thread(self):
         main_thread_id = self.wrapper.get()
         self.assertEqual(main_thread_id, self.wrapper.get())
 
+        thread = threading.Thread(target=self._store_id)
+        thread.start()
+        thread.join()
+        self.assertNotEqual(main_thread_id, self.thread_id)
+
+    # Note on Windows: fork is not available so multiprocessing pickles the multiprocessing
+    # function and arguments. ThreadLocalWrapper isn't picklable, so the following tests
+    # can't work on Windows. But the problem it solves for multiprocessing also doesn't
+    # exist there.
+
+    @unittest.skipIf(sys.platform.startswith("win"), "forking not a concern on Windows")
+    def test_wrapper_process(self):
+        main_thread_id = self.wrapper.get()
         thread = threading.Thread(target=self._store_id)
         thread.start()
         thread.join()
@@ -34,6 +48,7 @@ class ThreadLocalWrapperTest(unittest.TestCase):
         self.assertNotEqual(main_thread_id, process_id)
         self.assertNotEqual(self.thread_id, process_id)
 
+    @unittest.skipIf(sys.platform.startswith("win"), "forking not a concern on Windows")
     def test_wrapper_unused_in_main_process(self):
         queue = multiprocessing.Queue()
         process = multiprocessing.Process(target=self._send_id, args=(queue,))
@@ -42,6 +57,7 @@ class ThreadLocalWrapperTest(unittest.TestCase):
         process.join()
         self.assertNotEqual(process_id, self.wrapper.get())
 
+    @unittest.skipIf(sys.platform.startswith("win"), "forking not a concern on Windows")
     def test_fork_from_fork(self):
         # A gross edge case discovered by Clark: if a process is forked from a forked process
         # things will go awry if we hadn't initialized the internal threading.local's pid.
