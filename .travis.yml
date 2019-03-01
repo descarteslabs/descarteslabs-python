@@ -3,13 +3,27 @@ python:
 - '2.7'
 - '3.5'
 - '3.6'
+matrix:
+  include:
+    # Direct Python support is not yet supported in Travis so manual installation
+    # via choco and conda is required for now. Based on tips grafted from
+    # https://travis-ci.community/t/python-support-on-windows/241/4
+    - os: windows
+      language: sh
+      python: '3.7'
+      before_install:
+        - choco install miniconda3
+        # python is in miniconda3, conda is in miniconda3/Scripts, openssl is in miniconda3/Library/bin
+        - export PATH="/c/Tools/miniconda3:/c/Tools/miniconda3/Scripts:/c/Tools/miniconda3/Library/bin:$PATH"
+        - conda install shapely numpy --yes
+
 git:
   lfs_skip_smudge: true
 before_install:
 - pip install --upgrade pip setuptools
 install:
-- pip install --upgrade -r requirements.txt
-- pip install flake8 coverage nose mock responses shapely matplotlib  # doctests fail with ThirdParty pattern
+- pip install -r requirements.txt
+- pip install flake8 coverage nose mock responses shapely numpy
 script:
 - nosetests --with-coverage --cover-package=descarteslabs && flake8
 - pip install .
@@ -17,5 +31,6 @@ notifications:
   slack:
     on_success: change
     on_failure: always
+    on_pull_requests: false
     rooms:
       secure: BRwjZ+u816j6gtCtjE6Ez3aAyPZYXqmkR0CxHtD+hELH63hE0F9mgBGz0tdmOUo8eND9XzoDW1le05akJbAFlMW62xnCz07UyIacrmTXAiJKHG05XOF6lj7WZcJXBVSEKt1pQjjDQaAiRxmdwbxd1wDzNqxtUp/C/TekYtJAbyV47iJTqkw/AYh3U9xRw2JMcSA4k1DWh2XZoYmcTJwVGTXCB6U0ixN+E243eyBcrDHi5KnjwHTBeMMH0khuYoKY7K9szwuIphi7FPZc/nWgC4oMBfM9XDMBI8kq6j/nWTkbeexe3EjR+Y9S4CPelPHa/Ln+cCLsnUp1ANX3W5zhwH1dyS6G+bbRcefiWtr9fJD1VEA4hJtiI/56Dr6gzpf+27O1ySgRjGwHGAy9GT2THmNeYIAgk+E3sNL0KIisKxTf0tZAhA19jgVKwUqT6fKrrZeeH35zOK2DG9Z74xv3vNh9AQOIlHjF2OBLRo/tcP3KZQ/VEp1eyZbblcMMTxVcP/bfG58K9h5RiUPSbuMQJq7jI4njX0XvzD7wSUvLuNrc2nbn+JNjc6t9f0AI2YJg7uxKS/nPWthZ02CYl0nN/3zrlLOKfxEjdU/CBqYL8I9QflfbwzXgCKnfnDh/wHISy0Kl17C7lR4tekfJfD7CteRmguYIduuVUHVE00MdLEg=
