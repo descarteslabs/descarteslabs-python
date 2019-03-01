@@ -11,6 +11,7 @@ matrix:
     - os: windows
       language: sh
       python: '3.7'
+      filter_secrets: false
       before_install:
         - choco install miniconda3
         # python is in miniconda3, conda is in miniconda3/Scripts, openssl is in miniconda3/Library/bin
