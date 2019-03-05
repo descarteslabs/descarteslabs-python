@@ -15,32 +15,69 @@
 import pickle
 import unittest
 
-from mock import MagicMock
-from descarteslabs.client.services.service import Service, JsonApiService
-from descarteslabs.client.services.service.service import WrappedSession
+import mock
+
+from descarteslabs.client.services.service import JsonApiService, Service
+from descarteslabs.client.services.service.service import WrappedSession, requests
+
+FAKE_URL = "http://localhost"
+FAKE_TOKEN = "foo.bar.sig"
 
 
 class TestService(unittest.TestCase):
     def test_session_token(self):
-        token = "foo.bar.sig"
-        service = Service("foo", auth=MagicMock(token=token))
-        self.assertEqual(service.session.headers.get("Authorization"), token)
+        service = Service("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
+        self.assertEqual(service.session.headers.get("Authorization"), FAKE_TOKEN)
+
+    def test_client_session_header(self):
+        service = Service("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
+        assert "X-Client-Session" in service.session.headers
 
 
 class TestJsonApiService(unittest.TestCase):
     def test_session_token(self):
-        token = "foo.bar.sig"
-        service = JsonApiService("foo", auth=MagicMock(token=token))
-        self.assertEqual(service.session.headers.get("Authorization"), token)
+        service = JsonApiService("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
+        self.assertEqual(service.session.headers.get("Authorization"), FAKE_TOKEN)
+
+    def test_client_session_header(self):
+        service = JsonApiService("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
+        assert "X-Client-Session" in service.session.headers
 
 
 class TestWrappedSession(unittest.TestCase):
     def test_pickling(self):
-        session = WrappedSession("http://example.com", timeout=10)
+        session = WrappedSession(FAKE_URL, timeout=10)
         self.assertEqual(10, session.timeout)
         unpickled = pickle.loads(pickle.dumps(session))
         self.assertEqual(10, unpickled.timeout)
 
+    @mock.patch.object(requests.Session, "request")
+    def test_request_group_header_none(self, request):
+        request.return_value.status_code = 200
 
-if __name__ == "__main__":
-    unittest.main()
+        session = WrappedSession("")
+        session.request("POST", FAKE_URL)
+
+        request.assert_called_once()
+        assert "X-Request-Group" in request.call_args[1]["headers"]
+
+    @mock.patch.object(requests.Session, "request")
+    def test_request_group_header_conflict(self, request):
+        request.return_value.status_code = 200
+
+        args = "POST", FAKE_URL
+        kwargs = dict(headers={"X-Request-Group": "f00"})
+
+        session = WrappedSession("")
+        session.request(*args, **kwargs)
+        request.assert_called_once_with(*args, **kwargs)  # we do nothing here
+
+    @mock.patch.object(requests.Session, "request")
+    def test_request_group_header_no_conflict(self, request):
+        request.return_value.status_code = 200
+
+        session = WrappedSession("")
+        session.request("POST", FAKE_URL, headers={"foo": "bar"})
+
+        request.assert_called_once()
+        assert "X-Request-Group" in request.call_args[1]["headers"]

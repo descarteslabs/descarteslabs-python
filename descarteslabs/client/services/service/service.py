@@ -17,6 +17,8 @@ import random
 import os
 import platform
 import sys
+import uuid
+
 from warnings import warn
 
 import requests
@@ -48,6 +50,11 @@ class WrappedSession(requests.Session):
     def request(self, method, url, **kwargs):
         if self.timeout and "timeout" not in kwargs:
             kwargs["timeout"] = self.timeout
+
+        if "headers" not in kwargs:
+            kwargs['headers'] = {}
+
+        kwargs['headers']['X-Request-Group'] = uuid.uuid4().hex
 
         resp = super(WrappedSession, self).request(
             method, self.base_url + url, **kwargs
@@ -155,6 +162,7 @@ class Service(object):
                     ),
                     # https://stackoverflow.com/questions/15411967/how-can-i-check-if-code-is-executed-in-the-ipython-notebook
                     "X-Notebook": str("ipykernel" in sys.modules),
+                    "X-Client-Session": uuid.uuid4().hex,
                 }
             )
         except Exception:
