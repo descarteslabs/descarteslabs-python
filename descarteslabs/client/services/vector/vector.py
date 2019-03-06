@@ -496,7 +496,7 @@ class Vector(JsonApiService):
         """
         Iterate over vector features within an existing product.
 
-        At least one of `geometry`, `query_expr`, or `properties` is required.
+        At least one of `geometry`, `query_expr`, or `query_limit` is required.
 
         The returned iterator has a length that indicates the size of
         the query.
@@ -646,7 +646,7 @@ class Vector(JsonApiService):
         Query an existing Vector product and delete features that match
         the query results.
 
-        At least one of `geometry`, `query_expr`, or `properties` is required.
+        One of `geometry` or `query_expr` is required.
 
         :param str product_id: (Required) Product within which to search for features to delete.
         :param dict geometry: Search for Features intersecting this shape.
