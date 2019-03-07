@@ -9,8 +9,10 @@ Changelog
 =========
 
 ## [Unreleased]
+## [0.17.3] - 2019-03-06
 ### Changed
 - Fixed issues with `Catalog.upload_ndarray()` under Windows
+- Added header to client requests to better debug retries
 
 ## [0.17.2] - 2019-02-26
 ### Changed
@@ -343,7 +345,8 @@ metadata.features for iterating over large search results
 ### Added
 - Initial release of client library
 
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.2...HEAD
+[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.3...HEAD
+[0.17.3]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.2...v0.17.3
 [0.17.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.1...v0.17.2
 [0.17.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.16.0...v0.17.0
