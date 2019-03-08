@@ -17,10 +17,12 @@ import tempfile
 import shutil
 import unittest
 import json
+import mock
 
 import descarteslabs.client.addons as addons
 from descarteslabs.client.addons import numpy as np
 from descarteslabs.client.services.raster import Raster
+import descarteslabs.client.services.raster.raster
 
 from descarteslabs.client.services.raster.tests.iowa_geometry import iowa_geom
 
@@ -75,72 +77,38 @@ class TestRaster(unittest.TestCase):
             shutil.rmtree(tmpdir)
 
     def test_ndarray(self):
-        try:
-            data, metadata = self.raster.ndarray(
-                inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
-                bands=['red', 'green', 'blue', 'alpha'],
-                resolution=960,
-            )
-            self.assertEqual(data.shape, (249, 245, 4))
-            self.assertEqual(data.dtype, np.uint16)
-            self.assertEqual(len(metadata['bands']), 4)
-        except ImportError:
-            pass
+        data, metadata = self.raster.ndarray(
+            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
+            bands=['red', 'green', 'blue', 'alpha'],
+            resolution=960,
+        )
+        self.assertEqual(data.shape, (249, 245, 4))
+        self.assertEqual(data.dtype, np.uint16)
+        self.assertEqual(len(metadata['bands']), 4)
 
     def test_ndarray_single_band(self):
-        try:
-            data, metadata = self.raster.ndarray(
-                inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
-                bands=['red'],
-                resolution=960,
-            )
-            self.assertEqual(data.shape, (249, 245))
-            self.assertEqual(data.dtype, np.uint16)
-            self.assertEqual(len(metadata['bands']), 1)
-        except ImportError:
-            pass
-
-    def test_raster_blosc(self):
-        r = self.raster.raster(
+        data, metadata = self.raster.ndarray(
             inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
-            bands=['red', 'green', 'blue', 'alpha'],
+            bands=['red'],
             resolution=960,
         )
+        self.assertEqual(data.shape, (249, 245))
+        self.assertEqual(data.dtype, np.uint16)
+        self.assertEqual(len(metadata['bands']), 1)
 
-        old_blosc = addons.blosc
-        addons.blosc = addons.ThirdParty("blosc")
-
-        r2 = self.raster.raster(
-            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
-            bands=['red', 'green', 'blue', 'alpha'],
-            resolution=960,
-        )
-
-        addons.blosc = old_blosc
-
-        self.assertEqual(r, r2)
-
-    def test_ndarray_blosc(self):
-        r, meta = self.raster.ndarray(
+    def test_ndarray_no_blosc(self):
+        args = dict(
             inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
             bands=['red', 'green', 'blue', 'alpha'],
             resolution=960,
             align_pixels=True
         )
+        r, meta = self.raster.ndarray(**args)
 
-        old_blosc = addons.blosc
-        addons.blosc = addons.ThirdParty("blosc")
+        with mock.patch.object(descarteslabs.client.services.raster.raster, "blosc", addons.ThirdParty("blosc")):
+            r2, meta2 = self.raster.ndarray(**args)
 
-        r2, meta2 = self.raster.ndarray(
-            inputs=['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'],
-            bands=['red', 'green', 'blue', 'alpha'],
-            resolution=960,
-            align_pixels=True
-        )
-
-        addons.blosc = old_blosc
-
-        self.assertTrue((r == r2).all())
+        np.testing.assert_array_equal(r, r2)
         self.assertEqual(meta, meta2)
 
     def test_stack_dltile(self):
