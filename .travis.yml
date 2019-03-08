@@ -24,9 +24,9 @@ before_install:
 - pip install --upgrade pip setuptools
 install:
 - pip install -r requirements.txt
-- pip install flake8 coverage nose mock responses shapely numpy
+- pip install flake8 mock responses shapely numpy pytest==4.1.1
 script:
-- nosetests --with-coverage --cover-package=descarteslabs && flake8
+- pytest -rfExXP --assert=plain descarteslabs && flake8
 - pip install .
 notifications:
   slack:
