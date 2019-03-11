@@ -96,7 +96,7 @@ class SceneCollection(Collection):
               ctx,
               flatten=None,
               mask_nodata=True,
-              mask_alpha=True,
+              mask_alpha=None,
               bands_axis=1,
               raster_info=False,
               resampler="near",
@@ -141,9 +141,11 @@ class SceneCollection(Collection):
         mask_nodata : bool, default True
             Whether to mask out values in each band of each scene that equal
             that band's ``nodata`` sentinel value.
-        mask_alpha : bool, default True
+        mask_alpha : bool, default None
             Whether to mask pixels in all bands of each scene where
-            the alpha band is 0.
+            the alpha band is 0. If the alpha band is available for all scenes in the
+            collection and ``mask_alpha`` is not specified, ``mask_alpha`` is set to
+            True. If not, mask_alpha is set to False.
         bands_axis : int, default 1
             Axis along which bands should be located.
             If 1, the array will have shape ``(scene, band, y, x)``, if -1,
@@ -227,6 +229,9 @@ class SceneCollection(Collection):
         if raster_info:
             raster_infos = [None] * len(scenes)
 
+        if mask_alpha is None:
+            mask_alpha = self._collection_has_alpha()
+
         bands = Scene._bands_to_list(bands)
         pop_alpha = False
         if mask_alpha and "alpha" not in bands:
@@ -292,7 +297,7 @@ class SceneCollection(Collection):
                bands,
                ctx,
                mask_nodata=True,
-               mask_alpha=True,
+               mask_alpha=None,
                bands_axis=0,
                resampler="near",
                processing_level=None,
@@ -318,8 +323,11 @@ class SceneCollection(Collection):
         mask_nodata : bool, default True
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
-        mask_alpha : bool, default True
+        mask_alpha : bool, default None
             Whether to mask pixels in all bands where the alpha band of all scenes is 0.
+            If the alpha band is available for all scenes in the collection and
+            ``mask_alpha`` is not specified, ``mask_alpha`` is set to True. If not,
+            mask_alpha is set to False.
         bands_axis : int, default 0
             Axis along which bands should be located in the returned array.
             If 0, the array will have shape ``(band, y, x)``,
@@ -374,6 +382,9 @@ class SceneCollection(Collection):
             raise ValueError("Invalid bands_axis; axis {} would not exist in a 3D array".format(bands_axis))
 
         bands = Scene._bands_to_list(bands)
+
+        if mask_alpha is None:
+            mask_alpha = self._collection_has_alpha()
 
         if mask_alpha:
             try:
@@ -763,3 +774,6 @@ class SceneCollection(Collection):
                         .format(i, data_type, common_data_type)
                     )
         return common_data_type
+
+    def _collection_has_alpha(self):
+        return all(scene.has_alpha() for scene in self)

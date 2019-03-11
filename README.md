@@ -9,6 +9,9 @@ Changelog
 =========
 
 ## [Unreleased]
+### Changed
+- `Scene.ndarray`, `SceneCollection.stack`, and `SceneCollection.mosaic` now will automatically mask alpha if the alpha band is available in the relevant scene(s), and will set `mask_alpha` to `False` if the alpha band does not exist.  
+
 ## [0.17.3] - 2019-03-06
 ### Changed
 - Fixed issues with `Catalog.upload_ndarray()` under Windows

@@ -339,7 +339,7 @@ class Scene(object):
                 bands,
                 ctx,
                 mask_nodata=True,
-                mask_alpha=True,
+                mask_alpha=None,
                 bands_axis=0,
                 raster_info=False,
                 resampler="near",
@@ -363,8 +363,10 @@ class Scene(object):
         mask_nodata : bool, default True
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
-        mask_alpha : bool, default True
+        mask_alpha : bool, default None
             Whether to mask pixels in all bands where the alpha band is 0.
+            If the alpha band is available and ``mask_alpha`` is not specified,
+            ``mask_alpha`` is set to True. If not, ``mask_alpha`` is set to False.
         bands_axis : int, default 0
             Axis along which bands should be located in the returned array.
             If 0, the array will have shape ``(band, y, x)``, if -1,
@@ -434,8 +436,14 @@ class Scene(object):
         common_data_type = self._common_data_type_of_bands(bands)
 
         self_bands = self.properties["bands"]
+
+        if mask_alpha is None:
+            # if user does not set mask_alpha, only attempt to mask_alpha if
+            # alpha band is exists in the scene.
+            mask_alpha = self.has_alpha()
+
         if mask_alpha:
-            if "alpha" not in self_bands:
+            if not self.has_alpha():
                 raise ValueError(
                     "Cannot mask alpha: no alpha band for the product '{}'. "
                     "Try setting 'mask_alpha=False'.".format(self.properties["product"])
@@ -506,6 +514,9 @@ class Scene(object):
             return arr, info
         else:
             return arr
+
+    def has_alpha(self):
+        return "alpha" in self.properties["bands"]
 
     def download(self,
                  bands,
