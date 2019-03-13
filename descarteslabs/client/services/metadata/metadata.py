@@ -781,6 +781,9 @@ class Metadata(Service):
 
         :param str image_id: Image identifier.
 
+        :return: A dictionary of metadata for a single image.
+        :rtype: dict
+
         Example::
 
             >>> from descarteslabs.client.services import Metadata
@@ -823,6 +826,8 @@ class Metadata(Service):
 
         :param str product_id: Product Identifier.
 
+        :return: A dictionary with metadata for a single product.
+        :rtype: dict
         """
         r = self.session.get("/products/{}".format(product_id))
         return DotDict(r.json())
@@ -832,15 +837,19 @@ class Metadata(Service):
 
         :param str band_id: Band Identifier.
 
+        :return: A dictionary with metadata for a single band.
+        :rtype: dict
         """
         r = self.session.get("/bands/{}".format(band_id))
         return DotDict(r.json())
 
     def get_derived_band(self, derived_band_id):
-        """Get information about a single product.
+        """Get information about a single derived band.
 
         :param str derived_band_id: Derived band identifier.
 
+        :return: A dictionary with metadata for a single derived band.
+        :rtype: dict
         """
         r = self.session.get("/bands/derived/{}".format(derived_band_id))
         return DotDict(r.json())
