@@ -53,7 +53,7 @@ class RasterTest(unittest.TestCase):
     def create_blosc_response(self, metadata, array):
         array_meta = {"shape": array.shape, "dtype": array.dtype.name, "chunks": [1]}
         array_ptr = array.__array_interface__['data'][0]
-        blosc_data = blosc.compress_ptr(array_ptr, array.size, array.dtype.itemsize)
+        blosc_data = blosc.compress_ptr(array_ptr, array.size, array.dtype.itemsize).decode("utf-8")
         return "\n".join([json.dumps(metadata), json.dumps(array_meta), blosc_data])
 
     @responses.activate
@@ -121,7 +121,7 @@ class RasterTest(unittest.TestCase):
         response = "\n".join([json.dumps(raster_meta), json.dumps(file_meta), file_data])
         self.mock_response(responses.POST, json=None, body=response)
         raster = self.raster.raster(["fakeid"])
-        self.assertEqual(file_data, raster["files"]["mosaic.tiff"])
+        self.assertEqual(file_data.encode("utf-8"), raster["files"]["mosaic.tiff"])
         self.assertEqual(raster_meta["metadata"], raster["metadata"])
 
     @responses.activate
@@ -135,7 +135,7 @@ class RasterTest(unittest.TestCase):
         with tempfile.NamedTemporaryFile(suffix=".tiff") as temp:
             temp.close()  # For Windows compatibility
             raster = self.raster.raster(["fakeid"], outfile_basename=os.path.splitext(temp.name)[0], save=True)
-            self.assertEqual(file_data, raster["files"][temp.name])
+            self.assertEqual(file_data.encode("utf-8"), raster["files"][temp.name])
             with open(temp.name) as data:
                 self.assertEqual(file_data, data.read())
 
@@ -145,7 +145,7 @@ class RasterTest(unittest.TestCase):
         expected_array = np.zeros((2, 2))
         expected_metadata = {"foo": "bar"}
         content = io.BytesIO()
-        np.savez(content, data=expected_array, metadata=json.dumps(expected_metadata))
+        np.savez(content, data=expected_array, metadata=json.dumps(expected_metadata).encode("utf-8"))
         self.mock_response(responses.POST, json=None, body=content.getvalue())
         array, meta = self.raster.ndarray(["fakeid"])
         self.assertEqual(expected_metadata, meta)
