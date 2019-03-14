@@ -24,7 +24,7 @@ from descarteslabs.client.addons import numpy as np
 from descarteslabs.client.services.raster import Raster
 import descarteslabs.client.services.raster.raster
 
-from descarteslabs.client.services.raster.tests.iowa_geometry import iowa_geom
+from descarteslabs.client.services.raster.smoke_tests.iowa_geometry import iowa_geom
 
 
 class TestRaster(unittest.TestCase):
@@ -231,41 +231,6 @@ class TestRaster(unittest.TestCase):
         )
         self.assertEqual(stack.shape, (2, 80, 84, 4))
         self.assertEqual(stack.dtype, np.uint16)
-
-    def test_stack_underspecified(self):
-        keys = ['landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
-        cutline = {
-            'coordinates': ((
-                (-95.66055514862535, 41.24469400862013),
-                (-94.74931826062456, 41.26199387228942),
-                (-94.76311013534223, 41.95357639323731),
-                (-95.69397431605952, 41.93542085595837),
-                (-95.66055514862535, 41.24469400862013)
-            ),),
-            'type': 'Polygon'
-        }
-        place = "north-america_united-states_iowa"
-        bounds = (-95.69397431605952, 41.24469400862013, -94.74931826062456, 41.95357639323731)
-        resolution = 960
-        dimensions = (128, 128)
-        srs = "EPSG:32615"
-
-        with self.assertRaises(ValueError):
-            self.raster.stack(keys)
-        with self.assertRaises(ValueError):
-            self.raster.stack(keys, resolution=resolution)
-        with self.assertRaises(ValueError):
-            self.raster.stack(keys, dimensions=dimensions)
-        with self.assertRaises(ValueError):
-            self.raster.stack(keys, bounds=bounds)
-        with self.assertRaises(ValueError):
-            self.raster.stack(keys, resolution=resolution, cutline=cutline)
-        with self.assertRaises(ValueError):
-            self.raster.stack(keys, resolution=resolution, cutline=cutline, bounds=bounds)
-        with self.assertRaises(ValueError):
-            self.raster.stack(keys, resolution=resolution, cutline=cutline, srs=srs)
-        with self.assertRaises(ValueError):
-            self.raster.stack(keys, resolution=resolution, place=place)
 
     def test_cutline_dict(self):
         shape = {

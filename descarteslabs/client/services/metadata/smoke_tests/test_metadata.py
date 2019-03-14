@@ -221,25 +221,6 @@ class TestMetadata(unittest.TestCase):
     def test_get_bands_by_id(self):
         self.instance.get_bands_by_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
 
-    def test_expr_serialization(self):
-        p = self.instance.properties
-        q = ((0.1 < p.cloud_fraction <= 0.2) & (p.sat_id == "f00b")) | (
-            p.sat_id == "usa-245"
-        )
-        expected_q = {
-            "or": [
-                {
-                    "and": [
-                        {"range": {"cloud_fraction": {"gt": 0.1, "lte": 0.2}}},
-                        {"eq": {"sat_id": "f00b"}},
-                    ]
-                },
-                {"eq": {"sat_id": "usa-245"}},
-            ]
-        }
-
-        self.assertEqual(q.serialize(), expected_q)
-
     def test_datetime_backwards_compatibility(self):
         # TODO: Remove this test once old datetime format is deprecated and removed.
         search_r = self.instance.search(
