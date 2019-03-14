@@ -16,6 +16,7 @@ import io
 import json
 import os
 import re
+import sys
 import tempfile
 import unittest
 
@@ -151,6 +152,7 @@ class RasterTest(unittest.TestCase):
         self.assertEqual(expected_metadata, meta)
         np.testing.assert_array_equal(expected_array, array)
 
+    @unittest.skipIf(sys.platform.startswith("win"), "no blosc on Windows")
     @responses.activate
     def test_ndarray_blosc(self):
         expected_metadata = {"foo": "bar"}
@@ -176,8 +178,9 @@ class RasterTest(unittest.TestCase):
         np.testing.assert_array_equal(expected_array, stack[1, :])
         self.assertEqual([expected_metadata] * 2, meta)
 
+    @unittest.skipIf(sys.platform.startswith("win"), "no blosc on Windows")
     @mock.patch.object(descarteslabs.client.services.raster.raster, "concurrent", ThirdParty("concurrent"))
-    def test_stack_serial(self):
+    def test_stack_serial_blosc(self):
         self.do_stack(
             resolution=60,
             srs="EPSG:32615",
@@ -185,7 +188,8 @@ class RasterTest(unittest.TestCase):
             bands=["red"],
         )
 
-    def test_stack_threaded(self):
+    @unittest.skipIf(sys.platform.startswith("win"), "no blosc on Windows")
+    def test_stack_threaded_blosc(self):
         self.do_stack(
             resolution=60,
             srs="EPSG:32615",
@@ -193,7 +197,8 @@ class RasterTest(unittest.TestCase):
             bands=["red"],
         )
 
-    def test_stack_dltile(self):
+    @unittest.skipIf(sys.platform.startswith("win"), "no blosc on Windows")
+    def test_stack_dltile_blosc(self):
         self.do_stack(
             dltile="128:16:960.0:15:-2:37",
             bands=["red"],
