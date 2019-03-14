@@ -17,6 +17,9 @@ Changelog
 - Fixed issues with `Catalog.upload_ndarray()` under Windows
 - Added header to client requests to better debug retries
 
+### Fixed
+- Improved error messages for Catalog client upload methods
+
 ## [0.17.2] - 2019-02-26
 ### Changed
 - Tasks methods `create_function`, `create_or_get_function`, and `new_group` now have image as a required parameter

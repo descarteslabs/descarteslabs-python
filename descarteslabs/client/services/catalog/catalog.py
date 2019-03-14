@@ -8,7 +8,7 @@ from requests.exceptions import RequestException
 from descarteslabs.client.addons import numpy as np
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.deprecation import check_deprecated_kwargs
-from descarteslabs.client.exceptions import ServerError
+from descarteslabs.client.exceptions import ServerError, NotFoundError
 from descarteslabs.client.services.metadata import Metadata
 from descarteslabs.client.services.service import Service, ThirdPartyService
 
@@ -838,6 +838,9 @@ class Catalog(Service):
         metadata.setdefault("process_controls", {"upload_type": "file"})
         check_deprecated_kwargs(metadata, {"bpp": "bits_per_pixel"})
 
+        if not isinstance(product_id, six.string_types):
+            raise TypeError("product_id=%s is invalid. product_id must be a string." % product_id)
+
         if isinstance(file_ish, io.IOBase):
             if "b" not in file_ish.mode:
                 file_ish = io.open(file_ish.name, "rb")
@@ -866,6 +869,9 @@ class Catalog(Service):
             r = self._gcs_upload_service.session.put(upload_url, data=fd)
         except (ServerError, RequestException) as e:
             return 1, fd.name, e
+        except NotFoundError as e:
+            raise NotFoundError("Make sure product_id exists in the catalog before \
+            attempting to upload data. %s" % e.message)
         finally:
             fd.close()
 

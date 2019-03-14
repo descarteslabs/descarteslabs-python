@@ -58,6 +58,16 @@ class TestCatalog(unittest.TestCase):
                 np.zeros((10, 10), dtype=dtype), "product", "key"
             )
 
+    def test_upload_invalid_id(self):
+        self.assertRaises(
+            TypeError,
+            self.instance.upload_ndarray,
+            np.zeros((10, 10)),
+            # invalid product id
+            {"foo": "bar"},
+            "key",
+        )
+
     @unittest.skipIf(sys.version_info.major == 3, "Test only makes sense in py2")
     def test_upload_image_deprecated_file_type(self):
         # in py2 NamedTemporaryFile produces a file object not a IOBase object
