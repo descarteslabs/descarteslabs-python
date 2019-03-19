@@ -34,6 +34,10 @@ class UploadTask(FutureTask):
 
     def __init__(self, guid, tuid=None, client=None, upload_id=None,
                  result_attrs=None):
+        if client is None:
+            from descarteslabs.client.services.vector import Vector  # circular import
+            client = Vector()
+
         FutureTask.__init__(self, guid, tuid, client)
 
         self._upload_id = upload_id
