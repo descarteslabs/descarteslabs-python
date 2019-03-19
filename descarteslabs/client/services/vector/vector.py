@@ -369,9 +369,17 @@ class Vector(JsonApiService):
         text-oriented) object, although Python 3 allows `io.StringIO` to
         be used.
 
+        This is an asynchronous operation and you can query for the status
+        using `Vector.get_upload_result()` with the upload_id returned by
+        this method.  The upload id is the image_id.
+
+
         :param str|:py:class:`io.IOBase` file_ish: an open IOBase object, or a path to the file to upload.
         :param str product_id: Product to which these features will belong.
         :param int max_errors: The maximum number of errors permitted before declaring failure.
+
+        :return: The upload id.
+        :rtype: str
         """
         if isinstance(file_ish, io.IOBase):
             return self._upload_features(file_ish, product_id, max_errors)

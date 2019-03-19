@@ -621,10 +621,18 @@ class Catalog(Service):
     ):
         """Upload an image for a product you own.
 
+        This is an asynchronous operation and you can query for the status
+        using `Catalog.upload_result()` with the upload_id returned by this
+        method.  The upload id is the image_id, which defaults to the
+        name of the file to be uploaded.
+
         :param str|file|list(str)|list(file) files: (Required) a reference to the file to upload.
         :param str product_id: (Required) The id of the product this image belongs to.
         :param dict metadata: Image metadata to use instead of the computed default values.
         :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
+
+        :return: The upload id.
+        :rtype: str
 
         .. note::
             - See :meth:`Catalog.add_image` for additional kwargs.
@@ -632,25 +640,39 @@ class Catalog(Service):
 
         if metadata is None:
             metadata = {}
+
         metadata.update(kwargs)
         check_deprecated_kwargs(metadata, {"bpp": "bits_per_pixel"})
+
         if multi is True:
             if not hasattr(files, "__iter__"):
-                raise ValueError("Using `multi=True` requires `files` to be iterable")
+                raise ValueError(
+                    "Using `multi=True` requires `files` to be iterable"
+                )
             elif image_id is None:
                 raise ValueError(
                     "Using `multi=True` requires `image_id` to be specified"
                 )
             else:
-                upload = self._do_multi_file_upload(
-                    files, product_id, image_id, metadata, add_namespace=add_namespace
+                failed, upload_id, error = self._do_multi_file_upload(
+                    files,
+                    product_id,
+                    image_id,
+                    metadata,
+                    add_namespace=add_namespace
                 )
         else:
-            upload = self._do_upload(
-                files, product_id, metadata=metadata, add_namespace=add_namespace
+            failed, upload_id, error = self._do_upload(
+                files,
+                product_id,
+                metadata=metadata,
+                add_namespace=add_namespace
             )
-        if upload[0]:
-            raise upload[2]
+
+        if failed:
+            raise error
+
+        return upload_id
 
     def upload_ndarray(
         self,
@@ -667,6 +689,10 @@ class Catalog(Service):
         **kwargs
     ):
         """Upload an ndarray with georeferencing information.
+
+        This is an asynchronous operation and you can query for the status
+        using `Catalog.upload_result()` with the upload_id returned by this
+        method.  The upload id is the image_id.
 
         :param ndarray ndarray: (Required) A numpy ndarray with image data. If you are providing a multi-band image
             it should have 3 dimensions and the 3rd dimension of the array should index the bands. The dtype of the
@@ -690,6 +716,9 @@ class Catalog(Service):
             ['nearest', 'average', 'gauss', 'cubic', 'cubicspline', 'lanczos', 'average_mp',
             'average_magphase', 'mode'].
         :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
+
+        :return: The upload id.
+        :rtype: str
 
         .. note::
             - See :meth:`Catalog.add_image` for additional kwargs.
@@ -717,19 +746,26 @@ class Catalog(Service):
             try:
                 np.save(tmp, ndarray, allow_pickle=False)
                 # From tempfile docs:
-                # Whether the name can be used to open the file a second time, while
-                # the named temporary file is still open, varies across platforms
-                # (it can be so used on Unix; it cannot on Windows NT or later)
+                # Whether the name can be used to open the file a second time,
+                # while the named temporary file is still open, varies across
+                # platforms (it can be so used on Unix; it cannot on Windows
+                # NT or later)
                 #
-                # We close the underlying file object so _do_upload can open the path again
-                # in a cross platform compatible way. Cleanup is manual in the finally
-                # block.
+                # We close the underlying file object so _do_upload can open
+                # the path again in a cross platform compatible way.
+                # Cleanup is manual in the finally block.
                 tmp.close()
-                upload = self._do_upload(
-                    tmp.name, product_id, metadata=metadata, add_namespace=add_namespace
+                failed, upload_id, error = self._do_upload(
+                    tmp.name,
+                    product_id,
+                    metadata=metadata,
+                    add_namespace=add_namespace
                 )
-                if upload[0]:
-                    raise upload[2]
+
+                if failed:
+                    raise error
+
+                return upload_id
             finally:
                 os.unlink(tmp.name)
 
@@ -744,6 +780,8 @@ class Catalog(Service):
         continuation_token=None,
     ):
         """Get result information for debugging your uploads.
+
+        The upload id is included in the ``labels`` property.
 
         :param str product_id: Product ID to get upload results for.
         :param int limit: Number of results to get, useful for paging.
@@ -766,6 +804,8 @@ class Catalog(Service):
 
     def iter_upload_results(self, product_id, status=None, updated=None, created=None):
         """Get result information for debugging your uploads.
+
+        The upload id is included in the ``labels`` property.
 
         :param str product_id: Product ID to get upload results for.
         :param str status: Filter results by status, values are ["SUCCESS", "FAILURE"]
@@ -794,6 +834,7 @@ class Catalog(Service):
         """Get one upload result with the processing logs.
 
         This is useful for debugging failed uploads.
+
         :param str product_id: Product ID to get upload result for.
         :param str upload_id: ID of specific upload to get a result record of, includes the run logs.
 
@@ -806,7 +847,12 @@ class Catalog(Service):
         return result.json()
 
     def _do_multi_file_upload(
-        self, files, product_id, image_id, metadata, add_namespace=False
+        self,
+        files,
+        product_id,
+        image_id,
+        metadata,
+        add_namespace=False
     ):
         file_keys = [os.path.basename(_f) for _f in files]
         process_controls = metadata.setdefault(
@@ -816,66 +862,80 @@ class Catalog(Service):
             "multi_file": {"image_files": file_keys, "image_id": image_id}
         }
         process_controls.update(multi_file_args)
-        for _file in files:
-            upload = self._do_upload(
-                _file, product_id, metadata=metadata, add_namespace=add_namespace
-            )
-            if upload[0]:
-                return upload
-        else:
-            return upload
 
-    def _do_upload(self, file_ish, product_id, metadata=None, add_namespace=False):
+        for _file in files:
+            failed, upload_id, error = self._do_upload(
+                _file, product_id,
+                metadata=metadata,
+                add_namespace=add_namespace
+            )
+
+            if failed:
+                break
+
+        return failed, upload_id, error
+
+    def _do_upload(
+        self,
+        file_ish,
+        product_id,
+        metadata=None,
+        add_namespace=False
+    ):
         # kwargs are treated as metadata fields and restricted to primitives
         # for the key val pairs.
         fd = None
+        upload_id = None
+
         if add_namespace:
             check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
 
         if metadata is None:
             metadata = {}
+
         metadata.setdefault("process_controls", {"upload_type": "file"})
         check_deprecated_kwargs(metadata, {"bpp": "bits_per_pixel"})
 
         if not isinstance(product_id, six.string_types):
-            raise TypeError("product_id=%s is invalid. product_id must be a string." % product_id)
+            raise TypeError(
+                "product_id={} is invalid. "
+                "product_id must be a string.".format(product_id)
+            )
 
         if isinstance(file_ish, io.IOBase):
             if "b" not in file_ish.mode:
+                file_ish.close()
                 file_ish = io.open(file_ish.name, "rb")
+
             fd = file_ish
         elif isinstance(file_ish, six.string_types) and os.path.exists(file_ish):
             fd = io.open(file_ish, "rb")
         else:
-            return (
-                1,
-                file_ish,
-                Exception(
-                    "Could not handle file: `{}` pass a valid path or open IOBase instance".format(
-                        file_ish
-                    )
-                ),
+            e = Exception(
+                "Could not handle file: `{}` pass a valid path "
+                "or open IOBase file".format(file_ish)
             )
+            return True, upload_id, e
+
         try:
+            upload_id = metadata.pop("image_id", None) or os.path.basename(fd.name)
+
             r = self.session.post(
-                "/products/{}/images/upload/{}".format(
-                    product_id,
-                    metadata.pop("image_id", None) or os.path.basename(fd.name),
-                ),
+                "/products/{}/images/upload/{}".format(product_id, upload_id),
                 json=metadata,
             )
             upload_url = r.text
             r = self._gcs_upload_service.session.put(upload_url, data=fd)
         except (ServerError, RequestException) as e:
-            return 1, fd.name, e
+            return True, upload_id, e
         except NotFoundError as e:
             raise NotFoundError("Make sure product_id exists in the catalog before \
             attempting to upload data. %s" % e.message)
         finally:
             fd.close()
 
-        return 0, fd.name, ""
+        return False, upload_id, None
 
 
 catalog = Catalog()
