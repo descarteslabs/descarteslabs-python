@@ -16,9 +16,11 @@ import uuid
 # use :meth:`FeatureCollection.create <descarteslabs.vectors.featurecollection.FeatureCollection.create>`.
 
 id_suffix = str(uuid.uuid4())
-fc = FeatureCollection.create(product_id="my_test_product" + id_suffix,
-                              title="My Test Product",
-                              description="This product was created using an example file.")
+fc = FeatureCollection.create(
+    product_id="my_test_product" + id_suffix,
+    title="My Test Product",
+    description="This product was created using an example file.",
+)
 
 print("Created Feature Collection with id {}".format(fc.id))
 
@@ -28,28 +30,13 @@ polygon = {
     "type": "Polygon",
     "coordinates": [
         [
-            [
-                -105.86975097656249,
-                36.94550173495345
-            ],
-            [
-                -104.930419921875,
-                36.94550173495345
-            ],
-            [
-                -104.930419921875,
-                37.70120736474139
-            ],
-            [
-                -105.86975097656249,
-                37.70120736474139
-            ],
-            [
-                -105.86975097656249,
-                36.94550173495345
-            ]
+            [-105.86975097656249, 36.94550173495345],
+            [-104.930419921875, 36.94550173495345],
+            [-104.930419921875, 37.70120736474139],
+            [-105.86975097656249, 37.70120736474139],
+            [-105.86975097656249, 36.94550173495345],
         ]
-    ]
+    ],
 }
 
 ################################################
@@ -59,8 +46,10 @@ polygon = {
 # in the range 0 through 19.  In addition there is feature with value
 # 'number _' and  a feature with value 'number %'.
 
-features = [Feature(geometry=polygon, properties={"count": "number %d" % count})
-            for count in range(0, 20)]
+features = [
+    Feature(geometry=polygon, properties={"count": "number %d" % count})
+    for count in range(0, 20)
+]
 
 features.append(Feature(geometry=polygon, properties={"count": "number %"}))
 features.append(Feature(geometry=polygon, properties={"count": "number _"}))

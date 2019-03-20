@@ -22,14 +22,21 @@ import descarteslabs as dl
 def deploy_keras_model(dltile, src_product_id, dest_product_id):
     import tensorflow as tf
     import numpy as np
+
     catalog_client = dl.Catalog()
     raster_client = dl.Raster()
     metadata_client = dl.Metadata()
     # NOTE substitute your own trained model here.
     model = tf.keras.applications.resnet50.ResNet50()
-    scene = metadata_client.search(src_product_id, geom=raster_client.dltile(dltile), limit=1)['features'][0]['id']
+    scene = metadata_client.search(
+        src_product_id, geom=raster_client.dltile(dltile), limit=1
+    )["features"][0]["id"]
     tile, meta = raster_client.ndarray(
-        scene, bands=['red', 'green', 'blue'], scales=[[0, 255]] * 3, ot='Byte', dltile=dltile
+        scene,
+        bands=["red", "green", "blue"],
+        scales=[[0, 255]] * 3,
+        ot="Byte",
+        dltile=dltile,
     )
     # resnet50 expects the shape of the input array to be 4 dimensional, which allows for batch
     # predictions.
@@ -40,45 +47,47 @@ def deploy_keras_model(dltile, src_product_id, dest_product_id):
     # create a new raster of the tile area with one channel of the prediction from the model.
     image = np.full(tile.shape[:-1], class_, dtype=np.uint16)
     # upload a tile of this "prediction" to catalog
-    image_id = ':'.join([src_product_id, dltile.replace(':', '_')])
+    image_id = ":".join([src_product_id, dltile.replace(":", "_")])
     catalog_client.upload_ndarray(image, dest_product_id, image_id, raster_meta=meta)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     tasks = dl.Tasks()
     catalog_client = dl.Catalog()
     raster_client = dl.Raster()
 
     async_function = tasks.create_function(
         deploy_keras_model,
-        image='us.gcr.io/dl-ci-cd/images/tasks/public/py2/default:v2018.06.20',
+        image="us.gcr.io/dl-ci-cd/images/tasks/public/py2/default:v2018.06.20",
         name="deploy-resnet",
     )
-    print('task group id', async_function.group_id)
+    print("task group id", async_function.group_id)
     try:
-        prod = catalog_client.get_product(':'.join([catalog_client.auth.namespace, 'resnet-predictions']))
+        prod = catalog_client.get_product(
+            ":".join([catalog_client.auth.namespace, "resnet-predictions"])
+        )
     except dl.exceptions.NotFoundError:
         prod = catalog_client.add_product(
-            'resnet-predictions',
+            "resnet-predictions",
             title="Resnet Predictions",
             description="classification results of applying resnet trained with imagenet dataset over"
-                        "random satellite imagery tiles"
+            "random satellite imagery tiles",
         )
         catalog_client.add_band(
-            prod['data']['id'],
-            name='class',
-            type='class',
+            prod["data"]["id"],
+            name="class",
+            type="class",
             srcband=1,
-            dtype='UInt16',
+            dtype="UInt16",
             nbits=10,
             data_range=[0, 999],
-            colormap_name='magma',
+            colormap_name="magma",
         )
     r = requests.get(
-        'https://raw.githubusercontent.com/whosonfirst-data/whosonfirst-data/master/data/856/884/93/85688493.geojson'
+        "https://raw.githubusercontent.com/whosonfirst-data/whosonfirst-data/master/data/856/884/93/85688493.geojson"
     )
-    geom = r.json()['geometry']
+    geom = r.json()["geometry"]
     tiles = raster_client.dltiles_from_shape(1000, 224, 0, geom)
-    for tile in tiles['features']:
-        async_function(tile.properties.key, 'modis:09:v2', prod['data']['id'])
-        print('spawned task for tile', tile.properties.key)
+    for tile in tiles["features"]:
+        async_function(tile.properties.key, "modis:09:v2", prod["data"]["id"])
+        print("spawned task for tile", tile.properties.key)

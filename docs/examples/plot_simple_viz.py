@@ -10,19 +10,19 @@ Visualize a true color Landsat 8 Scene.
 import descarteslabs as dl
 
 # Create a tile around Pisa, Italy
-tile = dl.scenes.DLTile.from_latlon(43.7230,
-                                    10.3966,
-                                    resolution=20.0,
-                                    tilesize=1024,
-                                    pad=0)
+tile = dl.scenes.DLTile.from_latlon(
+    43.7230, 10.3966, resolution=20.0, tilesize=1024, pad=0
+)
 
 # Use the Scenes API to search for imagery availble over the area of interest
-scenes, ctx = dl.scenes.search(tile,
-                               products=["landsat:LC08:01:RT:TOAR"],
-                               start_datetime="2018-04-01",
-                               end_datetime="2018-05-01",
-                               limit=2,
-                               cloud_fraction=.1)
+scenes, ctx = dl.scenes.search(
+    tile,
+    products=["landsat:LC08:01:RT:TOAR"],
+    start_datetime="2018-04-01",
+    end_datetime="2018-05-01",
+    limit=2,
+    cloud_fraction=0.1,
+)
 
 # Pick just one scene
 scene = scenes[0]

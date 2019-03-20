@@ -17,37 +17,24 @@ taos = {
     "type": "Polygon",
     "coordinates": [
         [
-            [
-                -105.71868896484375,
-                36.33725319397006
-            ],
-            [
-                -105.2105712890625,
-                36.33725319397006
-            ],
-            [
-                -105.2105712890625,
-                36.73668306473141
-            ],
-            [
-                -105.71868896484375,
-                36.73668306473141
-            ],
-            [
-                -105.71868896484375,
-                36.33725319397006
-            ]
+            [-105.71868896484375, 36.33725319397006],
+            [-105.2105712890625, 36.33725319397006],
+            [-105.2105712890625, 36.73668306473141],
+            [-105.71868896484375, 36.73668306473141],
+            [-105.71868896484375, 36.33725319397006],
         ]
-    ]
+    ],
 }
 
 # Create a SceneCollection
-scenes, ctx = dl.scenes.search(taos,
-                               products=["landsat:LC08:01:RT:TOAR", "sentinel-2:L1C"],
-                               start_datetime="2018-05-01",
-                               end_datetime="2018-06-01",
-                               cloud_fraction=0.2,
-                               limit=15)
+scenes, ctx = dl.scenes.search(
+    taos,
+    products=["landsat:LC08:01:RT:TOAR", "sentinel-2:L1C"],
+    start_datetime="2018-05-01",
+    end_datetime="2018-06-01",
+    cloud_fraction=0.2,
+    limit=15,
+)
 
 #####################################################
 # See which Scenes we have, and how many per product:

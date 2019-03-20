@@ -18,9 +18,11 @@ import uuid
 # Let's make a test :class:`FeatureCollection <descarteslabs.vectors.featurecollection.FeatureCollection>`
 # use :meth:`FeatureCollection.create <descarteslabs.vectors.featurecollection.FeatureCollection.create>`.
 id_suffix = str(uuid.uuid4())
-fc = FeatureCollection.create(product_id="my_test_product" + id_suffix,
-                              title="My Test Product",
-                              description="This product was created using an example file.")
+fc = FeatureCollection.create(
+    product_id="my_test_product" + id_suffix,
+    title="My Test Product",
+    description="This product was created using an example file.",
+)
 
 print(fc)
 
@@ -36,33 +38,21 @@ print(fc)
 # Let's create a :class:`Feature <descarteslabs.vectors.feature.Feature>` for this product and add it using
 # :meth:`FeatureCollection.add <descarteslabs.vectors.featurecollection.FeatureCollection.add>`.
 
-feature = Feature(geometry={
-    "type": "Polygon",
-    "coordinates": [
-        [
+feature = Feature(
+    geometry={
+        "type": "Polygon",
+        "coordinates": [
             [
-                -105.86975097656249,
-                36.94550173495345
-            ],
-            [
-                -104.930419921875,
-                36.94550173495345
-            ],
-            [
-                -104.930419921875,
-                37.70120736474139
-            ],
-            [
-                -105.86975097656249,
-                37.70120736474139
-            ],
-            [
-                -105.86975097656249,
-                36.94550173495345
+                [-105.86975097656249, 36.94550173495345],
+                [-104.930419921875, 36.94550173495345],
+                [-104.930419921875, 37.70120736474139],
+                [-105.86975097656249, 37.70120736474139],
+                [-105.86975097656249, 36.94550173495345],
             ]
-        ]
-    ]
-}, properties={"foo": "bar"})
+        ],
+    },
+    properties={"foo": "bar"},
+)
 
 fc.add([feature])
 
@@ -74,29 +64,14 @@ fc.add([feature])
 aoi = {
     "type": "Polygon",
     "coordinates": [
-            [
-                [
-                    -105.194091796875,
-                    36.88181755936464
-                ],
-                [
-                    -104.765625,
-                    36.88181755936464
-                ],
-                [
-                    -104.765625,
-                    37.13404537126446
-                ],
-                [
-                    -105.194091796875,
-                    37.13404537126446
-                ],
-                [
-                    -105.194091796875,
-                    36.88181755936464
-                ]
-            ]
-    ]
+        [
+            [-105.194091796875, 36.88181755936464],
+            [-104.765625, 36.88181755936464],
+            [-104.765625, 37.13404537126446],
+            [-105.194091796875, 37.13404537126446],
+            [-105.194091796875, 36.88181755936464],
+        ]
+    ],
 }
 
 fc = fc.filter(geometry=aoi)
@@ -107,12 +82,12 @@ print(list(fc.features()))  # this returns an iterator
 # :class:`FeatureCollection <descarteslabs.vectors.featurecollection.FeatureCollection>`
 # intersecting the aoi where ``foo=bar``.
 
-print(list(fc.filter(properties=(p.foo == 'bar')).features()))
+print(list(fc.filter(properties=(p.foo == "bar")).features()))
 
 ################################################
 # Search for :class:`Feature <descarteslabs.vectors.feature.Feature>` where property ``foo=foo``.
 # There should be no results.
-print(list(fc.filter(properties=(p.foo == 'foo')).features()))
+print(list(fc.filter(properties=(p.foo == "foo")).features()))
 
 ################################################
 # And cleanup

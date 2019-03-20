@@ -20,42 +20,27 @@ aoi = {
     "type": "Polygon",
     "coordinates": [
         [
-            [
-                -105.86975097656249,
-                36.94550173495345
-            ],
-            [
-                -104.930419921875,
-                36.94550173495345
-            ],
-            [
-                -104.930419921875,
-                37.70120736474139
-            ],
-            [
-                -105.86975097656249,
-                37.70120736474139
-            ],
-            [
-                -105.86975097656249,
-                36.94550173495345
-            ]
+            [-105.86975097656249, 36.94550173495345],
+            [-104.930419921875, 36.94550173495345],
+            [-104.930419921875, 37.70120736474139],
+            [-105.86975097656249, 37.70120736474139],
+            [-105.86975097656249, 36.94550173495345],
         ]
-    ]
+    ],
 }
 
 img, meta = raster_client.ndarray(
-    'landsat:LC08:PRE:TOAR:meta_LC80330342017072_v1',
-    bands=['swir1', 'swir2', 'nir', 'alpha'],
+    "landsat:LC08:PRE:TOAR:meta_LC80330342017072_v1",
+    bands=["swir1", "swir2", "nir", "alpha"],
     scales=[[0, 4000], [0, 4000], [0, 4000], None],
-    data_type='Byte',
+    data_type="Byte",
     cutline=aoi,
-    resolution=120
+    resolution=120,
 )
 
 # visualize the image
 plt.figure(figsize=[8, 8])
-plt.axis('off')
+plt.axis("off")
 plt.imshow(img)
 plt.show()
 
