@@ -443,7 +443,7 @@ class FeatureCollection(object):
 
         self.vector_client.delete_product(self.id)
 
-    def add(self, features):
+    def add(self, features, correct_winding_order=False):
         """
         Add multiple features to an existing `FeatureCollection`.
 
@@ -453,6 +453,9 @@ class FeatureCollection(object):
             A single feature or list of features to add. Collections
             of more than 100 features will be batched in groups of 100,
             but consider using upload() instead.
+        correct_winding_order : bool
+            A Boolean pecifying whether to correct Polygon and MultiPolygon
+            features that do not follow counter-clockwise winding order.
 
         Returns
         -------
@@ -474,7 +477,7 @@ class FeatureCollection(object):
 
         attributes = [{k: v for k, v in f.geojson.items() if k in ['properties', 'geometry']} for f in features]
 
-        documents = self.vector_client.create_features(self.id, attributes)
+        documents = self.vector_client.create_features(self.id, attributes, correct_winding_order=correct_winding_order)
 
         copied_features = copy.deepcopy(features)
 
@@ -483,7 +486,7 @@ class FeatureCollection(object):
 
         return copied_features
 
-    def upload(self, file_ref, max_errors=0):
+    def upload(self, file_ref, max_errors=0, correct_winding_order=False):
         """
         Asynchonously add features from a file of
         `Newline Delimited JSON <https://github.com/ndjson/ndjson-spec>`_
@@ -496,6 +499,9 @@ class FeatureCollection(object):
             An open file object, or a path to the file to upload.
         max_errors : int
             The maximum number of errors permitted before declaring failure.
+        correct_winding_order : bool
+            A Boolean specifying whether to correct Polygon and MultiPolygon
+            features that do not follow counter-clockwise winding order.
 
         Returns
         -------
@@ -504,7 +510,12 @@ class FeatureCollection(object):
             so asking for them before they're available will block
             until the details are available.
         """
-        upload_id = self.vector_client.upload_features(file_ref, self.id, max_errors=max_errors)
+        upload_id = self.vector_client.upload_features(
+            file_ref,
+            self.id,
+            max_errors=max_errors,
+            correct_winding_order=correct_winding_order
+        )
         return UploadTask(self.id, upload_id=upload_id,
                           client=self.vector_client)
 

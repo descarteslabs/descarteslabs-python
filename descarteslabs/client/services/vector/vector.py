@@ -288,7 +288,7 @@ class Vector(JsonApiService):
 
         self.session.delete('/products/{}'.format(product_id))
 
-    def create_feature(self, product_id, geometry, properties=None):
+    def create_feature(self, product_id, geometry, properties=None, correct_winding_order=False):
         """
         Add a feature to an existing vector product.
 
@@ -304,6 +304,9 @@ class Vector(JsonApiService):
                               - GeometryCollections
 
         :param dict properties: Dictionary of arbitrary properties.
+        :param bool correct_winding_order: Boolean specifying whether to correct Polygon
+                                and MultiPolygon features that do not follow counter-clockwise
+                                winding order.
 
         :rtype: DotDict
         :return: Created Feature, as a JSON API resource collection.
@@ -315,12 +318,14 @@ class Vector(JsonApiService):
             geometry=geometry,
             properties=properties
         )
+        if correct_winding_order:
+            params["correct_winding_order"] = True
 
         jsonapi = self.jsonapi_document(type="feature", attributes=params)
         r = self.session.post('/products/{}/features'.format(product_id), json=jsonapi)
         return DotDict(r.json())
 
-    def create_features(self, product_id, features):
+    def create_features(self, product_id, features, correct_winding_order=False):
         """
         Add multiple features to an existing vector product.
 
@@ -329,6 +334,9 @@ class Vector(JsonApiService):
                                     and properties field. If more than 100 features,
                                     will be batched in groups of 100, but consider
                                     using upload_features() instead.
+        :param bool correct_winding_order: Boolean specifying whether to correct Polygon
+                                    and MultiPolygon features that do not follow counter-clockwise
+                                    winding order.
 
         :rtype: DotDict
         :return: Created features, as a JSON API resource collection.
@@ -348,8 +356,10 @@ class Vector(JsonApiService):
 
         # forcibly pass a zero-length list for appropriate validation error
         for i in range(0, max(len(features), 1), 100):
-            jsonapi = self.jsonapi_collection(type="feature",
-                                              attributes_list=features[i:i + 100])
+            attributes = ([dict(feat, **{"correct_winding_order": True}) for feat in features[i:i + 100]]
+                          if correct_winding_order else features[i:i + 100])
+            jsonapi = self.jsonapi_collection(type="feature", attributes_list=attributes)
+
             r = self.session.post('/products/{}/features'.format(product_id),
                                   json=jsonapi)
             if i == 0:
@@ -359,7 +369,7 @@ class Vector(JsonApiService):
 
         return result
 
-    def upload_features(self, file_ish, product_id, max_errors=0):
+    def upload_features(self, file_ish, product_id, max_errors=0, correct_winding_order=False):
         """
         Asynchonously upload a file or stream of
         `Newline Delimited JSON <https://github.com/ndjson/ndjson-spec>`_
@@ -378,19 +388,27 @@ class Vector(JsonApiService):
         :param str product_id: Product to which these features will belong.
         :param int max_errors: The maximum number of errors permitted before declaring failure.
 
+        :param bool correct_winding_order: Boolean specifying whether to correct Polygon
+                    and MultiPolygon features that do not follow counter-clockwise winding order.
+
         :return: The upload id.
         :rtype: str
         """
         if isinstance(file_ish, io.IOBase):
-            return self._upload_features(file_ish, product_id, max_errors)
+            return self._upload_features(file_ish, product_id, max_errors, correct_winding_order)
         elif isinstance(file_ish, six.string_types):
             with io.open(file_ish, 'rb') as stream:
-                return self._upload_features(stream, product_id, max_errors)
+                return self._upload_features(stream, product_id, max_errors, correct_winding_order)
         else:
             raise Exception('Could not handle file: `{}`; pass a path or open IOBase instance'.format(file_ish))
 
-    def _upload_features(self, iobase, product_id, max_errors):
-        jsonapi = self.jsonapi_document(type="features", attributes={'max_errors': max_errors})
+    def _upload_features(self, iobase, product_id, max_errors, correct_winding_order):
+        jsonapi = self.jsonapi_document(
+            type="features",
+            attributes={
+                'max_errors': max_errors,
+                'correct_winding_order': correct_winding_order}
+        )
         r = self.session.post('/products/{}/features/uploads'.format(product_id), json=jsonapi)
         upload = r.json()
         upload_url = upload['url']

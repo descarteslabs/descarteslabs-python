@@ -163,12 +163,14 @@ class TestFeatureCollection(unittest.TestCase):
 
         fc.add(feature)
         vector_client.create_features.assert_called_once_with(
-            'foo', [dict(geometry=getattr(feature.geometry, '__geo_interface__', feature.geometry),
-                         properties=feature.properties)]
+            'foo',
+            [dict(geometry=getattr(feature.geometry, '__geo_interface__', feature.geometry),
+                  properties=feature.properties)],
+            correct_winding_order=False
         )
 
     def test_add_bulk_and_update_with_id(self, vector_client):
-        def create_features(product_id, attributes):
+        def create_features(product_id, attributes, correct_winding_order=False):
             return DotDict(data=[dict(id=attr['properties']['id'], attributes=attr) for attr in attributes])
 
         vector_client.create_features.side_effect = create_features
@@ -183,12 +185,14 @@ class TestFeatureCollection(unittest.TestCase):
         modified_features = fc.add(features)
 
         vector_client.create_features.assert_called_once_with(
-            'foo', [
+            'foo',
+            [
                 dict(geometry=getattr(features[0].geometry, '__geo_interface__', features[0].geometry),
                      properties=features[0].properties),
                 dict(geometry=getattr(features[1].geometry, '__geo_interface__', features[1].geometry),
                      properties=features[1].properties),
-            ]
+            ],
+            correct_winding_order=False
         )
 
         for f in modified_features:

@@ -15,7 +15,7 @@
 import io
 import re
 import unittest
-
+import json
 import responses
 
 from descarteslabs.client.auth import Auth
@@ -80,6 +80,23 @@ class ClientTestCase(unittest.TestCase):
                 'id': 'c589d688-3230-4caf-9f9d-18854f71e91d',
                 'type': 'copy_query'
             }
+        }
+
+        self.feature_response = {
+            'data': [
+                {
+                    'attributes': {
+                        'created': '2019-03-28T23:08:24.991729+00:00',
+                        'geometry': {
+                            'coordinates': [[[-95, 42], [-95, 41], [-93, 40], [-93, 42],  [-95, 42]]],
+                            'type': 'Polygon'
+                        },
+                        'properties': {}
+                    },
+                    'id': '7d724ae48d1fab595bc95b6091b005c920327',
+                    'type': 'feature'
+                }
+            ]
         }
 
     def mock_response(self, method, json, status=200, **kwargs):
@@ -206,7 +223,6 @@ class VectorsTest(ClientTestCase):
         self.mock_response(responses.GET, self.status_response, status=200)
 
         r = self.client.get_product_from_query_status("2b4552ff4b8a4bb5bb278c94005db50")
-
         self.assertEqual(r.data.id, "c589d688-3230-4caf-9f9d-18854f71e91d")
 
     @responses.activate
@@ -215,6 +231,184 @@ class VectorsTest(ClientTestCase):
 
         with self.assertRaises(NotFoundError):
             self.client.get_product_from_query_status("2b4552ff4b8a4bb5bb278c94005db50")
+
+    @responses.activate
+    def test_create_feature_correct_wo(self):
+        self.mock_response(responses.POST, self.feature_response, status=200)
+        non_ccw = {
+            'type': 'Polygon',
+            'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+        }
+
+        self.client.create_feature("2b4552ff4b8a4bb5bb278c94005db50", non_ccw, correct_winding_order=True)
+        expected_req_body = {
+            "data": {
+                "attributes": {
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+                    },
+                    "correct_winding_order": True,
+                    "properties": None
+                },
+                "type": "feature"
+            }
+        }
+        request = responses.calls[0].request
+        self.assertEqual(request.body, json.dumps(expected_req_body))
+
+    @responses.activate
+    def test_create_feature_default(self):
+        self.mock_response(responses.POST, self.feature_response, status=400)
+        non_ccw = {
+            'type': 'Polygon',
+            'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+        }
+
+        self.assertRaises(
+            BadRequestError,
+            self.client.create_feature,
+            "2b4552ff4b8a4bb5bb278c94005db50",
+            non_ccw
+        )
+
+        expected_req_body = {
+            "data": {
+                "attributes": {
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+                    },
+                    "properties": None
+                },
+                "type": "feature"
+            }
+        }
+
+        request = responses.calls[0].request
+        self.assertEqual(request.body, json.dumps(expected_req_body))
+
+    @responses.activate
+    def test_create_features_correct_wo(self):
+        self.mock_response(responses.POST, self.feature_response, status=200)
+        non_ccw_list = [
+            {
+                'type': 'Polygon',
+                'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+            }, {
+                "type": "MultiPolygon",
+                "coordinates": [
+                    [[[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]],
+                    [[[-91, 44], [-92, 43], [-91, 42], [-89, 43], [-91, 44]]],
+                    [[[-97, 44], [-96, 42], [-95, 43], [-94, 43], [-95, 44], [-97, 44]]]
+                ]
+            }, {
+                "type": "MultiLineString",
+                "coordinates": [
+                    [[-91, 44], [-89, 43], [-91, 42],  [-92, 43]],
+                    [[-95, 42], [-93, 42],  [-93, 40], [-95, 41]]
+                ]
+            }
+        ]
+
+        self.client.create_features("2b4552ff4b8a4bb5bb278c94005db50", non_ccw_list, correct_winding_order=True)
+        expected_req_body = {
+            "data": [{
+                    "attributes": {
+                        "correct_winding_order": True,
+                        "type": "Polygon",
+                        "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+                    },
+                    "type": "feature"
+                }, {
+                    "attributes": {
+                        "correct_winding_order": True,
+                        "type": "MultiPolygon",
+                        "coordinates": [
+                            [[[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]],
+                            [[[-91, 44], [-92, 43], [-91, 42], [-89, 43], [-91, 44]]],
+                            [[[-97, 44], [-96, 42], [-95, 43], [-94, 43], [-95, 44], [-97, 44]]]
+                        ]
+                    },
+                    "type": "feature"
+                }, {
+                    "attributes": {
+                        "correct_winding_order": True,
+                        "type": "MultiLineString",
+                        "coordinates": [
+                            [[-91, 44], [-89, 43], [-91, 42], [-92, 43]],
+                            [[-95, 42], [-93, 42], [-93, 40], [-95, 41]]
+                        ]
+                    },
+                    "type": "feature"
+                }
+            ]
+        }
+
+        request = responses.calls[0].request
+        self.assertEqual(request.body, json.dumps(expected_req_body))
+
+    @responses.activate
+    def test_create_features_default(self):
+        self.mock_response(responses.POST, self.feature_response, status=400)
+        non_ccw_list = [
+            {
+                'type': 'Polygon',
+                'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+            }, {
+                "type": "MultiPolygon",
+                "coordinates": [
+                    [[[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]],
+                    [[[-91, 44], [-92, 43], [-91, 42], [-89, 43], [-91, 44]]],
+                    [[[-97, 44], [-96, 42], [-95, 43], [-94, 43], [-95, 44], [-97, 44]]]
+                ]
+            }, {
+                "type": "MultiLineString",
+                "coordinates": [
+                    [[-91, 44], [-89, 43], [-91, 42],  [-92, 43]],
+                    [[-95, 42], [-93, 42],  [-93, 40], [-95, 41]]
+                ]
+            }
+        ]
+
+        self.assertRaises(
+            BadRequestError,
+            self.client.create_features,
+            "2b4552ff4b8a4bb5bb278c94005db50",
+            non_ccw_list
+        )
+
+        expected_req_body = {
+            "data": [{
+                    "attributes": {
+                        "type": "Polygon",
+                        "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+                    },
+                    "type": "feature"
+                }, {
+                    "attributes": {
+                        "type": "MultiPolygon",
+                        "coordinates": [
+                            [[[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]],
+                            [[[-91, 44], [-92, 43], [-91, 42], [-89, 43], [-91, 44]]],
+                            [[[-97, 44], [-96, 42], [-95, 43], [-94, 43], [-95, 44], [-97, 44]]]
+                        ]
+                    },
+                    "type": "feature"
+                }, {
+                    "attributes": {
+                        "type": "MultiLineString",
+                        "coordinates": [
+                            [[-91, 44], [-89, 43], [-91, 42], [-92, 43]],
+                            [[-95, 42], [-93, 42], [-93, 40], [-95, 41]]
+                        ]
+                    },
+                    "type": "feature"
+                }
+            ]
+        }
+        request = responses.calls[0].request
+        self.assertEqual(request.body, json.dumps(expected_req_body))
 
 
 if __name__ == "__main__":
