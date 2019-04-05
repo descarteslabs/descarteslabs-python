@@ -239,8 +239,6 @@ class VectorsTest(ClientTestCase):
             'type': 'Polygon',
             'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
         }
-
-        self.client.create_feature("2b4552ff4b8a4bb5bb278c94005db50", non_ccw, correct_winding_order=True)
         expected_req_body = {
             "data": {
                 "attributes": {
@@ -254,8 +252,12 @@ class VectorsTest(ClientTestCase):
                 "type": "feature"
             }
         }
+
+        self.client.create_feature("2b4552ff4b8a4bb5bb278c94005db50", non_ccw, correct_winding_order=True)
+
         request = responses.calls[0].request
-        self.assertEqual(request.body, json.dumps(expected_req_body))
+        self.assertEqual(json.loads(request.body), expected_req_body)\
+
 
     @responses.activate
     def test_create_feature_default(self):
@@ -274,19 +276,19 @@ class VectorsTest(ClientTestCase):
 
         expected_req_body = {
             "data": {
+                "type": "feature",
                 "attributes": {
                     "geometry": {
                         "type": "Polygon",
                         "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
                     },
                     "properties": None
-                },
-                "type": "feature"
+                }
             }
         }
 
         request = responses.calls[0].request
-        self.assertEqual(request.body, json.dumps(expected_req_body))
+        self.assertEqual(json.loads(request.body), expected_req_body)
 
     @responses.activate
     def test_create_features_correct_wo(self):
@@ -314,13 +316,14 @@ class VectorsTest(ClientTestCase):
         self.client.create_features("2b4552ff4b8a4bb5bb278c94005db50", non_ccw_list, correct_winding_order=True)
         expected_req_body = {
             "data": [{
+                    "type": "feature",
                     "attributes": {
                         "correct_winding_order": True,
                         "type": "Polygon",
                         "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
-                    },
-                    "type": "feature"
+                    }
                 }, {
+                    "type": "feature",
                     "attributes": {
                         "correct_winding_order": True,
                         "type": "MultiPolygon",
@@ -329,9 +332,9 @@ class VectorsTest(ClientTestCase):
                             [[[-91, 44], [-92, 43], [-91, 42], [-89, 43], [-91, 44]]],
                             [[[-97, 44], [-96, 42], [-95, 43], [-94, 43], [-95, 44], [-97, 44]]]
                         ]
-                    },
-                    "type": "feature"
+                    }
                 }, {
+                    "type": "feature",
                     "attributes": {
                         "correct_winding_order": True,
                         "type": "MultiLineString",
@@ -339,14 +342,13 @@ class VectorsTest(ClientTestCase):
                             [[-91, 44], [-89, 43], [-91, 42], [-92, 43]],
                             [[-95, 42], [-93, 42], [-93, 40], [-95, 41]]
                         ]
-                    },
-                    "type": "feature"
+                    }
                 }
             ]
         }
 
         request = responses.calls[0].request
-        self.assertEqual(request.body, json.dumps(expected_req_body))
+        self.assertEqual(json.loads(request.body), expected_req_body)
 
     @responses.activate
     def test_create_features_default(self):
@@ -380,12 +382,13 @@ class VectorsTest(ClientTestCase):
 
         expected_req_body = {
             "data": [{
+                    "type": "feature",
                     "attributes": {
                         "type": "Polygon",
                         "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
-                    },
-                    "type": "feature"
+                    }
                 }, {
+                    "type": "feature",
                     "attributes": {
                         "type": "MultiPolygon",
                         "coordinates": [
@@ -393,22 +396,21 @@ class VectorsTest(ClientTestCase):
                             [[[-91, 44], [-92, 43], [-91, 42], [-89, 43], [-91, 44]]],
                             [[[-97, 44], [-96, 42], [-95, 43], [-94, 43], [-95, 44], [-97, 44]]]
                         ]
-                    },
-                    "type": "feature"
+                    }
                 }, {
+                    "type": "feature",
                     "attributes": {
                         "type": "MultiLineString",
                         "coordinates": [
                             [[-91, 44], [-89, 43], [-91, 42], [-92, 43]],
                             [[-95, 42], [-93, 42], [-93, 40], [-95, 41]]
                         ]
-                    },
-                    "type": "feature"
+                    }
                 }
             ]
         }
         request = responses.calls[0].request
-        self.assertEqual(request.body, json.dumps(expected_req_body))
+        self.assertEqual(json.loads(request.body), expected_req_body)
 
 
 if __name__ == "__main__":
