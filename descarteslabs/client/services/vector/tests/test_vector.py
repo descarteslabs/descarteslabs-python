@@ -256,8 +256,7 @@ class VectorsTest(ClientTestCase):
         self.client.create_feature("2b4552ff4b8a4bb5bb278c94005db50", non_ccw, correct_winding_order=True)
 
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body), expected_req_body)\
-
+        self.assertEqual(json.loads(request.body.decode('utf-8')), expected_req_body)
 
     @responses.activate
     def test_create_feature_default(self):
@@ -288,7 +287,7 @@ class VectorsTest(ClientTestCase):
         }
 
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body), expected_req_body)
+        self.assertEqual(json.loads(request.body.decode('utf-8')), expected_req_body)
 
     @responses.activate
     def test_create_features_correct_wo(self):
@@ -348,7 +347,7 @@ class VectorsTest(ClientTestCase):
         }
 
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body), expected_req_body)
+        self.assertEqual(json.loads(request.body.decode('utf-8')), expected_req_body)
 
     @responses.activate
     def test_create_features_default(self):
@@ -410,7 +409,7 @@ class VectorsTest(ClientTestCase):
             ]
         }
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body), expected_req_body)
+        self.assertEqual(json.loads(request.body.decode('utf-8')), expected_req_body)
 
 
 if __name__ == "__main__":
