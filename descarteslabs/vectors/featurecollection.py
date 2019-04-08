@@ -1,4 +1,5 @@
 import copy
+from shapely.geometry import shape
 
 from descarteslabs.common.dotdict import DotDict
 from descarteslabs.client.exceptions import NotFoundError
@@ -443,7 +444,7 @@ class FeatureCollection(object):
 
         self.vector_client.delete_product(self.id)
 
-    def add(self, features, correct_winding_order=False):
+    def add(self, features, fix_geometry='accept'):
         """
         Add multiple features to an existing `FeatureCollection`.
 
@@ -453,9 +454,14 @@ class FeatureCollection(object):
             A single feature or list of features to add. Collections
             of more than 100 features will be batched in groups of 100,
             but consider using upload() instead.
-        correct_winding_order : bool
-            A Boolean pecifying whether to correct Polygon and MultiPolygon
-            features that do not follow counter-clockwise winding order.
+        fix_geometry : str
+            String specifying how to handle certain problem geometries, including those
+            which do not follow counter-clockwise winding order (which is required by the
+            GeoJSON spec but not many popular tools). Allowed values are ``reject`` (reject
+            invalid geometries with an error), ``fix`` (correct invalid geometries if
+            possible and use this corrected value when creating the feature), and ``accept``
+            (the default) which will correct the geometry for internal use but retain the
+            original geometry in the results.
 
         Returns
         -------
@@ -477,16 +483,18 @@ class FeatureCollection(object):
 
         attributes = [{k: v for k, v in f.geojson.items() if k in ['properties', 'geometry']} for f in features]
 
-        documents = self.vector_client.create_features(self.id, attributes, correct_winding_order=correct_winding_order)
+        documents = self.vector_client.create_features(self.id, attributes, fix_geometry=fix_geometry)
 
         copied_features = copy.deepcopy(features)
 
         for feature, doc in zip(copied_features, documents.data):
             feature.id = doc.id
+            if fix_geometry == 'fix':
+                feature.geometry = shape(doc.attributes.geometry)
 
         return copied_features
 
-    def upload(self, file_ref, max_errors=0, correct_winding_order=False):
+    def upload(self, file_ref, max_errors=0, fix_geometry='accept'):
         """
         Asynchonously add features from a file of
         `Newline Delimited JSON <https://github.com/ndjson/ndjson-spec>`_
@@ -499,9 +507,14 @@ class FeatureCollection(object):
             An open file object, or a path to the file to upload.
         max_errors : int
             The maximum number of errors permitted before declaring failure.
-        correct_winding_order : bool
-            A Boolean specifying whether to correct Polygon and MultiPolygon
-            features that do not follow counter-clockwise winding order.
+        fix_geometry : str
+            String specifying how to handle certain problem geometries, including those
+            which do not follow counter-clockwise winding order (which is required by the
+            GeoJSON spec but not many popular tools). Allowed values are ``reject`` (reject
+            invalid geometries with an error), ``fix`` (correct invalid geometries if
+            possible and use this corrected value when creating the feature), and ``accept``
+            (the default) which will correct the geometry for internal use but retain the
+            original geometry in the results.
 
         Returns
         -------
@@ -514,7 +527,7 @@ class FeatureCollection(object):
             file_ref,
             self.id,
             max_errors=max_errors,
-            correct_winding_order=correct_winding_order
+            fix_geometry=fix_geometry
         )
         return UploadTask(self.id, upload_id=upload_id,
                           client=self.vector_client)

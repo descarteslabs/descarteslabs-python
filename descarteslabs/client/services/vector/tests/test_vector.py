@@ -246,32 +246,28 @@ class VectorsTest(ClientTestCase):
                         "type": "Polygon",
                         "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
                     },
-                    "correct_winding_order": True,
+                    "fix_geometry": "fix",
                     "properties": None
                 },
                 "type": "feature"
             }
         }
 
-        self.client.create_feature("2b4552ff4b8a4bb5bb278c94005db50", non_ccw, correct_winding_order=True)
+        self.client.create_feature("2b4552ff4b8a4bb5bb278c94005db50", non_ccw, fix_geometry='fix')
 
         request = responses.calls[0].request
         self.assertEqual(json.loads(request.body.decode('utf-8')), expected_req_body)
 
     @responses.activate
-    def test_create_feature_default(self):
+    def test_create_feature_error(self):
         self.mock_response(responses.POST, self.feature_response, status=400)
         non_ccw = {
             'type': 'Polygon',
             'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
         }
 
-        self.assertRaises(
-            BadRequestError,
-            self.client.create_feature,
-            "2b4552ff4b8a4bb5bb278c94005db50",
-            non_ccw
-        )
+        with self.assertRaises(BadRequestError):
+            self.client.create_feature("2b4552ff4b8a4bb5bb278c94005db50", non_ccw, fix_geometry='reject')
 
         expected_req_body = {
             "data": {
@@ -281,6 +277,7 @@ class VectorsTest(ClientTestCase):
                         "type": "Polygon",
                         "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
                     },
+                    "fix_geometry": "reject",
                     "properties": None
                 }
             }
@@ -312,19 +309,19 @@ class VectorsTest(ClientTestCase):
             }
         ]
 
-        self.client.create_features("2b4552ff4b8a4bb5bb278c94005db50", non_ccw_list, correct_winding_order=True)
+        self.client.create_features("2b4552ff4b8a4bb5bb278c94005db50", non_ccw_list, fix_geometry='fix')
         expected_req_body = {
             "data": [{
                     "type": "feature",
                     "attributes": {
-                        "correct_winding_order": True,
+                        "fix_geometry": 'fix',
                         "type": "Polygon",
                         "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
                     }
                 }, {
                     "type": "feature",
                     "attributes": {
-                        "correct_winding_order": True,
+                        "fix_geometry": 'fix',
                         "type": "MultiPolygon",
                         "coordinates": [
                             [[[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]],
@@ -335,7 +332,7 @@ class VectorsTest(ClientTestCase):
                 }, {
                     "type": "feature",
                     "attributes": {
-                        "correct_winding_order": True,
+                        "fix_geometry": 'fix',
                         "type": "MultiLineString",
                         "coordinates": [
                             [[-91, 44], [-89, 43], [-91, 42], [-92, 43]],
@@ -350,7 +347,7 @@ class VectorsTest(ClientTestCase):
         self.assertEqual(json.loads(request.body.decode('utf-8')), expected_req_body)
 
     @responses.activate
-    def test_create_features_default(self):
+    def test_create_features_error(self):
         self.mock_response(responses.POST, self.feature_response, status=400)
         non_ccw_list = [
             {
@@ -372,23 +369,21 @@ class VectorsTest(ClientTestCase):
             }
         ]
 
-        self.assertRaises(
-            BadRequestError,
-            self.client.create_features,
-            "2b4552ff4b8a4bb5bb278c94005db50",
-            non_ccw_list
-        )
+        with self.assertRaises(BadRequestError):
+            self.client.create_features("2b4552ff4b8a4bb5bb278c94005db50", non_ccw_list, fix_geometry='reject')
 
         expected_req_body = {
             "data": [{
                     "type": "feature",
                     "attributes": {
+                        "fix_geometry": "reject",
                         "type": "Polygon",
                         "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
                     }
                 }, {
                     "type": "feature",
                     "attributes": {
+                        "fix_geometry": "reject",
                         "type": "MultiPolygon",
                         "coordinates": [
                             [[[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]],
@@ -399,6 +394,7 @@ class VectorsTest(ClientTestCase):
                 }, {
                     "type": "feature",
                     "attributes": {
+                        "fix_geometry": "reject",
                         "type": "MultiLineString",
                         "coordinates": [
                             [[-91, 44], [-89, 43], [-91, 42], [-92, 43]],

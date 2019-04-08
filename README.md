@@ -11,7 +11,11 @@ Changelog
 ## [Unreleased]
 ### Changed
 - `Scene.ndarray`, `SceneCollection.stack`, and `SceneCollection.mosaic` now will automatically mask alpha if the alpha band is available in the relevant scene(s), and will set `mask_alpha` to `False` if the alpha band does not exist.
-- `Vectors.featurecollection.add`, `Vectors.featurecollection.upload`, `Vector.create_feature`, `Vector.create_features`, and `Vector.upload_features` all accept a `correct_winding_order` boolean argument that determines whether the Vector service will reject or correct features that do not follow the counterclockwise winding order rule. It is set to `False` by default. 
+- `Vectors.featurecollection.add`, `Vectors.featurecollection.upload`, `Vector.create_feature`, `Vector.create_features`, and `Vector.upload_features` all accept a `fix_geometry` string argument that determines how to handle certain problem geometries
+including those which do not follow counter-clockwise winding order (which is required by the GeoJSON spec but not many
+popular tools). Allowed values are ``reject`` (reject invalid geometries with an error), ``fix`` (correct invalid
+geometries if possible and use this corrected value when creating the feature), and ``accept`` (the default) which will
+correct the geometry for internal use but retain the original geometry in the results.
 
 ## [0.17.3] - 2019-03-06
 ### Changed
