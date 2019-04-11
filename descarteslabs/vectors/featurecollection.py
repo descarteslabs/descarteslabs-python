@@ -532,9 +532,15 @@ class FeatureCollection(object):
         return UploadTask(self.id, upload_id=upload_id,
                           client=self.vector_client)
 
-    def list_uploads(self):
+    def list_uploads(self, pending=True):
         """
         Get all the upload tasks for this product.
+
+        Parameters
+        ----------
+        pending : bool
+            If True then include pending/currently running upload tasks in the result,
+            otherwise only include complete upload tasks. Defaults to True.
 
         Returns
         -------
@@ -543,10 +549,16 @@ class FeatureCollection(object):
         """
         results = []
 
-        for result in self.vector_client.get_upload_results(self.id):
-            results.append(UploadTask(self.id, tuid=result.id,
-                                      result_attrs=result.attributes,
-                                      client=self.vector_client))
+        for result in self.vector_client.get_upload_results(self.id, pending=pending):
+            # PENDING tasks aren't really tasks yet, and the id is the upload_id, not the task_id
+            if result.attributes and result.attributes.get('status') == 'PENDING':
+                results.append(UploadTask(self.id, upload_id=result.id,
+                                          result_attrs=result.attributes,
+                                          client=self.vector_client))
+            else:
+                results.append(UploadTask(self.id, tuid=result.id,
+                                          result_attrs=result.attributes,
+                                          client=self.vector_client))
 
         return results
 

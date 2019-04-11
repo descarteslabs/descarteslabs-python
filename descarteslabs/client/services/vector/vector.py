@@ -426,26 +426,27 @@ class Vector(JsonApiService):
         r = self._gcs_upload_service.session.put(upload_url, data=iobase)
         return upload['upload_id']
 
-    def _fetch_upload_result_page(self, product_id, continuation_token=None):
+    def _fetch_upload_result_page(self, product_id, continuation_token=None, pending=False):
         r = self.session.get(
             '/products/{}/features/uploads'.format(product_id),
-            params={'continuation_token': continuation_token},
+            params={'pending': bool(pending), 'continuation_token': continuation_token},
             headers={'Content-Type': 'application/json'},
         )
         return DotDict(r.json())
 
-    def get_upload_results(self, product_id):
+    def get_upload_results(self, product_id, pending=False):
         """
         Get a list of the uploads submitted to a vector product, and status
         information about each.
 
         :param str product_id: (required)
+        :param bool pending: If True, include pending upload jobs in the result. Defaults to False.
         :return: An iterator over all upload resources created with :meth:`Vector.upload_features`
         :rtype: Iterator
         """
         continuation_token = None
         while True:
-            page = self._fetch_upload_result_page(product_id, continuation_token=continuation_token)
+            page = self._fetch_upload_result_page(product_id, continuation_token=continuation_token, pending=pending)
             for feature in page.data:
                 yield feature
             continuation_token = page.meta.continuation_token
@@ -453,7 +454,7 @@ class Vector(JsonApiService):
             if continuation_token is None:
                 break
 
-    def get_upload_result(self, product_id, upload_id):
+    def get_upload_result(self, product_id, upload_id, pending=False):
         """
         Get details about a specific upload job. Included information about
         processing error streams, which can help debug failed uploads.
@@ -461,9 +462,11 @@ class Vector(JsonApiService):
         :param str product_id: (required)
         :param str upload_id: (required) An id pertaining to this requested upload,
             either returned by :meth:`Vector.get_upload_results` or :meth:`Vector.upload_features`.
+        :param bool pending: If True, include pending upload jobs in the result. Defaults to False.
         """
         r = self.session.get(
             '/products/{}/features/uploads/{}'.format(product_id, upload_id),
+            params={'pending': bool(pending)},
             headers={'Content-Type': 'application/json'},
         )
         return DotDict(r.json())

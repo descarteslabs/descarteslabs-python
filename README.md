@@ -16,6 +16,13 @@ including those which do not follow counter-clockwise winding order (which is re
 popular tools). Allowed values are ``reject`` (reject invalid geometries with an error), ``fix`` (correct invalid
 geometries if possible and use this corrected value when creating the feature), and ``accept`` (the default) which will
 correct the geometry for internal use but retain the original geometry in the results.
+- `Vector.get_upload_results` and `Vector.get_upload_result` now accept a `pending` parameter to include pending uploads
+in the results. Such pending results will have `status: PENDING` and, in lieu of a task id, the `id` attribute will contain
+the upload id as returned by `Vector.upload_features`
+- `UploadTask.status` no longer blocks until the upload task is completed, but rather returns the current status of the
+upload job, which may be `PENDING`, `RUNNING`, `SUCCESS`, or `FAILURE`.
+- The `FutureTask.ready` and `UploadTask.ready` property has been added to test whether the task has completed.
+A return value of `True` means that if `get_result(wait=True)` were to be called, it would return without blocking.
 
 ## [0.17.3] - 2019-03-06
 ### Changed

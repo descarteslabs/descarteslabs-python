@@ -71,6 +71,16 @@ class TestFutureTask(ClientTestCase):
             ft.get_result(wait=True, timeout=1)
 
     @responses.activate
+    def test_ready(self):
+        ft = FutureTask(guid=guid, tuid=tuid, client=self.client)
+
+        self.mock_response(responses.GET, {}, status=404)
+        self.mock_response(responses.GET, {'id': tuid, 'result_type': 'json'})
+
+        self.assertFalse(ft.ready)
+        self.assertTrue(ft.ready)
+
+    @responses.activate
     @mock.patch.object(Tasks, "COMPLETION_POLL_INTERVAL_SECONDS", 0)
     @mock.patch.object(Tasks, "TASK_RESULT_BATCH_SIZE", 3)
     def test_as_completed(self):

@@ -1,4 +1,3 @@
-from descarteslabs.client.exceptions import NotFoundError
 from descarteslabs.common.tasks import FutureTask, TransientResultError, TimeoutError
 
 import time
@@ -27,9 +26,9 @@ class UploadTask(FutureTask):
     ``FeatureCollection.upload()`` and ``FeatureCollection.list_uploads()``.
     """
 
+    PENDING = 'PENDING'
+    RUNNING = 'RUNNING'
     _SKIPPED = 'SKIPPED'
-    _PENDING = 'PENDING'
-    _RUNNING = 'RUNNING'
     _DONE = 'DONE'
 
     def __init__(self, guid, tuid=None, client=None, upload_id=None,
@@ -61,6 +60,9 @@ class UploadTask(FutureTask):
 
         Raises
         ------
+        ``NotFoundError``
+            When the upload id or task id does not exist.
+
         ``TransientResultError``
             When the result is not ready yet (and not waiting).
 
@@ -71,9 +73,11 @@ class UploadTask(FutureTask):
         # Things are complicated compared to FutureTask, because the upload task
         # can have completed, but the BigQuery upload process may not yet have terminated.
         # We wait for termination of the BigQuery upload.
-        if self._task_result is None or (self._task_result.status == self.SUCCESS and
-                                         ('load' not in self._task_result or
-                                          self._task_result.load.state in (self._PENDING, self._RUNNING))):
+        if (self._task_result is None or
+            self._task_result.status == self.PENDING or
+            (self._task_result.status == self.SUCCESS and
+             ('load' not in self._task_result or
+              self._task_result.load.state in (self.PENDING, self.RUNNING)))):  # noqa
             if self._upload_id:
                 id = self._upload_id
             elif self.tuid:
@@ -84,19 +88,18 @@ class UploadTask(FutureTask):
             start = time.time()
 
             while timeout is None or (time.time() - start) < timeout:
-                try:
-                    result = self.client.get_upload_result(self.guid, id)
-                    self.tuid = result.data.id
-                    self._task_result = result.data.attributes
-                except NotFoundError:
-                    if not wait:
-                        raise TransientResultError()
-                else:
-                    if (self._task_result.status == self.SUCCESS and
-                        self._task_result.load.state not in (self._PENDING, self._RUNNING)):  # noqa
-                        break
-                    if not wait:
-                        raise TransientResultError()
+                result = self.client.get_upload_result(self.guid, id, pending=True)
+                if result.data.attributes.status != self.PENDING:
+                    # we have actual task results
+                    id = self.tuid = result.data.id
+                self._task_result = result.data.attributes
+                if (self._task_result.status == self.FAILURE or
+                    (self._task_result.status == self.SUCCESS and
+                     'load' in self._task_result and
+                     self._task_result.load.state not in (self.PENDING, self.RUNNING))):  # noqa
+                    break
+                if not wait:
+                    raise TransientResultError()
 
                 time.sleep(self.COMPLETION_POLL_INTERVAL_SECONDS)
             else:
@@ -129,7 +132,6 @@ class UploadTask(FutureTask):
         """
         if self._upload_id is None:
             labels = self._result_attribute('labels')
-
             if labels is not None:
                 self._upload_id = labels[2]
 
@@ -185,18 +187,26 @@ class UploadTask(FutureTask):
     @property
     def status(self):
         """
-        :return: The status (``SUCCESS`` or ``FAILURE``) for this completed task.
+        :return: The status (``PENDING``, ``RUNNING``, ``SUCCESS`` or ``FAILURE``) for this completed task.
 
         Some errors may have occurred even when the status is ``SUCCESS``, if the
         upload was initiated with a non-zero ``max_errors`` parameter. The
         ``error_rows`` or ``errors`` property should be consulted.
 
         Conversely, some rows may have been inserted even with the status is ``FAILURE``.
+
+        Status values of ``PENDING`` or ``RUNNING`` indicate the upload is still in progress,
+        and can be waited upon for completion.
         """
-        status = self._result_attribute('status', None)
+        try:
+            self.get_result(wait=False)
+        except TransientResultError:
+            # expected if not yet done
+            pass
+        status = self._task_result.status
 
         if status == self.SUCCESS:
-            status = self._result_attribute('load', {}).get('state', self._SKIPPED)
+            status = self._task_result.load.state
             if status == self._SKIPPED:
                 if self.error_rows > 0:
                     status = self.FAILURE
@@ -206,3 +216,17 @@ class UploadTask(FutureTask):
                 status = self.SUCCESS
 
         return status
+
+    def __repr__(self):
+        s = "UploadTask\n"
+        if self._task_result is None:
+            s += "\tStatus: Pending\n"
+        else:
+            s += "\tStatus: {}\n".format(self._task_result.status)
+            s += "\tMemory usage (MiB): {:.2f}\n".format(
+                self._task_result.peak_memory_usage / (1024 * 1024.)
+            )
+            s += "\tRuntime (s): {}\n".format(self._task_result.runtime)
+            s += "\tLoad State: {}\n".format(self._task_result.load.state)
+
+        return s

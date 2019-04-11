@@ -112,6 +112,17 @@ class FutureTask(object):
         return self._task_result.get(attribute_name, default)
 
     @property
+    def ready(self):
+        """
+        :return: True if the upload task has completed and status is available, otherwise False.
+        """
+        try:
+            self.get_result(wait=False)
+            return True
+        except TransientResultError:
+            return False
+
+    @property
     def result(self):
         """
         :return: The return value of the function for this completed task.
@@ -218,13 +229,13 @@ class FutureTask(object):
 
     def __repr__(self):
         s = "Task\n"
-        if self._task_result is None:
-            s += "\tStatus: Pending\n"
-        else:
-            s += "\tStatus: {}\n".format(self.status)
+        if self.ready:
+            s += "\tStatus: {}\n".format(self._task_result.status)
             s += "\tMemory usage (MiB): {:.2f}\n".format(
-                self.peak_memory_usage / (1024 * 1024.)
+                self._task_result.peak_memory_usage / (1024 * 1024.)
             )
-            s += "\tRuntime (s): {}\n".format(self.runtime)
+            s += "\tRuntime (s): {}\n".format(self._task_result.runtime)
+        else:
+            s += "\tStatus: Pending\n"
 
         return s
