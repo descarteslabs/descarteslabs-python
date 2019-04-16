@@ -23,6 +23,16 @@ the upload id as returned by `Vector.upload_features`
 upload job, which may be `PENDING`, `RUNNING`, `SUCCESS`, or `FAILURE`.
 - The `FutureTask.ready` and `UploadTask.ready` property has been added to test whether the task has completed.
 A return value of `True` means that if `get_result(wait=True)` were to be called, it would return without blocking.
+- You can now export features to a storage `data` blob.  To export from the
+`vector` client, use `Vector.export_product_from_query()` with a storage key
+and an optional query.  This returns the task id of the export task.  You
+can ask for status using `Vector.get_export_results()` for all export tasks
+or `Vector.get_export_result()` for a specific task by task id.
+- FeatureCollection has been extended with this functionality with a
+`FeatureCollection.export()` method that takes a storage key.  This operates
+on the filter chain that FeatureCollection represents, or the full product
+if there is no filter chain.  It returns an `ExportTask` which behaves
+similar to the `FutureTask`.
 
 ## [0.17.3] - 2019-03-06
 ### Changed

@@ -4,7 +4,7 @@ from shapely.geometry import shape
 from descarteslabs.common.dotdict import DotDict
 from descarteslabs.client.exceptions import NotFoundError
 from descarteslabs.client.deprecation import deprecate
-from descarteslabs.common.tasks import UploadTask
+from descarteslabs.common.tasks import UploadTask, ExportTask
 from descarteslabs.client.services.vector import Vector
 from descarteslabs.vectors.feature import Feature
 
@@ -665,6 +665,82 @@ class FeatureCollection(object):
         """
         job = CopyJob(self.id, self.vector_client)
         job.wait_for_completion(timeout)
+
+    def export(self, key):
+        """
+        Either export the full product, or the result of a filter chain.
+        The exported geojson features will be stored as a ``data`` file
+        in Descartes Labs Storage.
+
+        The export will occur asynchronously and can take a long time
+        to complete.  The data file will not be accessible until the export
+        is complete.
+
+        Parameters
+        ----------
+        key : str
+            The name under which the export will be available in the Storage service.
+            The ``storage_type`` will be ``data``.
+            Note that this will overwrite any existing data if the key already exists.
+
+        Returns
+        -------
+        :class:`ExportTask`
+            The export task
+
+        Example
+        -------
+        >>> from descarteslabs.vectors import FeatureCollection, properties as p
+        >>> from descarteslabs import Storage  # doctest: +SKIP
+        >>> aoi_geometry = {
+        ...    "type": "Polygon",
+        ...    "coordinates": [[ # A small area in Washington DC
+        ...        [-77.05501556396483, 38.90946877327506],
+        ...        [-77.0419692993164, 38.90946877327506],
+        ...        [-77.0419692993164, 38.91855139233948],
+        ...        [-77.05501556396483, 38.91855139233948],
+        ...        [-77.05501556396483, 38.90946877327506]
+        ...     ]]
+        ... }
+        >>> buildings = FeatureCollection(
+        ...     "a35126a241bd022c026e96ab9fe5e0ea23967d08:USBuildingFootprints")  # doctest: +SKIP
+        >>> filtered_buildings = filtered_cities.filter(geometry=aoi_geometry)  # doctest: +SKIP
+        >>> task = filtered_buildings.export("my_export")  # doctest: +SKIP
+        >>> if task.is_success: # This waits for the task to complete
+        ...     task.get_file("my_export", "some_local_file.geojson")  # doctest: +SKIP
+        """
+
+        params = dict(
+            product_id=self.id,
+            key=key,
+            geometry=self._query_geometry,
+            query_expr=self._query_property_expression,
+            query_limit=self._query_limit,
+        )
+
+        task_id = self.vector_client.export_product_from_query(**params)
+        return ExportTask(self.id, task_id, client=self.vector_client, key=key)
+
+    def list_exports(self):
+        """
+        Get all the export tasks for this product.
+
+        Returns
+        -------
+        list(`ExportTask`)
+            The list of tasks for the product.
+        """
+        results = []
+
+        for result in self.vector_client.get_export_results(self.id):
+            results.append(ExportTask(
+                self.id,
+                tuid=result.id,
+                result_attrs=result.attributes,
+                client=self.vector_client
+            ))
+
+        return results
 
     def delete_features(self):
         """
