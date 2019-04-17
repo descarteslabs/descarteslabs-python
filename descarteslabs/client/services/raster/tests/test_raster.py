@@ -20,13 +20,16 @@ import sys
 import tempfile
 import unittest
 
-import mock
-import responses
-
 from descarteslabs.client.addons import blosc, numpy as np, ThirdParty
 from descarteslabs.client.auth import Auth
 import descarteslabs.client.services.raster.raster
 from descarteslabs.client.services.raster.raster import as_json_string, Raster
+
+import responses
+try:
+    import mock
+except ImportError:
+    from unittest import mock
 
 public_token = "header.e30.signature"
 a_geometry = {

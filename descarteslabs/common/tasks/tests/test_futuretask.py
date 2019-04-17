@@ -1,4 +1,8 @@
-import mock
+try:
+    import mock
+except ImportError:
+    from unittest import mock
+
 import re
 import responses
 import unittest

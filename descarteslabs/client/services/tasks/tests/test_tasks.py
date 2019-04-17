@@ -26,8 +26,11 @@ import unittest
 import warnings
 from zipfile import ZipFile
 
-import mock
 import responses
+try:
+    import mock
+except ImportError:
+    from unittest import mock
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.tasks import BoundGlobalError, CloudFunction, \
