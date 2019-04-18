@@ -10,8 +10,14 @@ Changelog
 
 ## [Unreleased]
 ### Changed
+
+### Fixed
+
+## [0.18.0] - 2019-04-18
+### Changed
+- Many old and obsolete examples were removed from the package.
 - `Scene.ndarray`, `SceneCollection.stack`, and `SceneCollection.mosaic` now will automatically mask alpha if the alpha band is available in the relevant scene(s), and will set `mask_alpha` to `False` if the alpha band does not exist.
-- `Vectors.featurecollection.add`, `Vectors.featurecollection.upload`, `Vector.create_feature`, `Vector.create_features`, and `Vector.upload_features` all accept a `fix_geometry` string argument that determines how to handle certain problem geometries
+- `FeatureCollection.add`, `FeatureCollection.upload`, `Vector.create_feature`, `Vector.create_features`, and `Vector.upload_features` all accept a `fix_geometry` string argument that determines how to handle certain problem geometries
 including those which do not follow counter-clockwise winding order (which is required by the GeoJSON spec but not many
 popular tools). Allowed values are ``reject`` (reject invalid geometries with an error), ``fix`` (correct invalid
 geometries if possible and use this corrected value when creating the feature), and ``accept`` (the default) which will
@@ -33,6 +39,11 @@ or `Vector.get_export_result()` for a specific task by task id.
 on the filter chain that FeatureCollection represents, or the full product
 if there is no filter chain.  It returns an `ExportTask` which behaves
 similar to the `FutureTask`.
+- `Catalog.upload_image()` and `Catalog.upload_ndarray()` now will return an `upload_id` that can be used to query the status of that upload using `Catalog.upload_result()`.  Note that the upload id is the image id and if you use identical image ids `Catalog.upload_result()` will only show the result of the most recent upload.
+
+### Fixed
+- Several typical kinds of non-conforming GeoJSON which previously caused errors can now be accepted or
+fixed by the `FeatureCollection` and `Vector` methods for adding or uploading new vector geometries.
 
 ## [0.17.3] - 2019-03-06
 ### Changed
