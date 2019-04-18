@@ -368,12 +368,13 @@ class Catalog(Service):
         :param str processing_level: Description of how the band was processed if at all.
         :param int res_factor: Scaling of this band relative to the native band resolution.
         :param int resolution: Resolution of this band.
-        :param str resolution_unit: Unit of the resolution.
+        :param str resolution_unit: Unit of the resolution, must be either "meters" or "degrees".
+                                    Required if `resolution` is specified.
         :param float wavelength_center: Center position of wavelength.
         :param float wavelength_fwhm: Full width at half maximum value of the wavelength spread.
         :param float wavelength_min: Minimum wavelength this band is sensitive to.
         :param float wavelength_max: Maximum wavelength this band is sensitive to.
-        :param str wavelength_unit: Units the wavelength is expressed in.
+        :param str wavelength_unit: Units the wavelength is expressed in, must be "nm" if provided.
         :param list(str) writers: A list of groups, or user hashes to give read access to.
 
         :return: JSON API representation of the band.
