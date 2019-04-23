@@ -65,9 +65,10 @@ class WrappedSession(requests.Session):
         elif resp.status_code == 400:
             raise BadRequestError(resp.text)
         elif resp.status_code == 404:
-            raise NotFoundError(
-                resp.text if "text" in resp else "404 {} {}".format(method, url)
-            )
+            text = resp.text
+            if not text:
+                text = "404 {} {}".format(method, url)
+            raise NotFoundError(text)
         elif resp.status_code == 409:
             raise ConflictError(resp.text)
         elif resp.status_code == 429:
