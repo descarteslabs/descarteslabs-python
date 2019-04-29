@@ -121,7 +121,7 @@ class Metadata(Service):
         :param int limit: Number of results to return.
         :param int offset: Index to start at when returning results.
         """
-        params = ["bands", "limit", "offset"]
+        params = ["bands", "require_bands", "limit", "offset"]
 
         args = locals()
         kwargs = dict(
