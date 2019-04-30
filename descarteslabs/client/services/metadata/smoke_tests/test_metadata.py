@@ -221,40 +221,6 @@ class TestMetadata(unittest.TestCase):
     def test_get_bands_by_id(self):
         self.instance.get_bands_by_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
 
-    def test_datetime_backwards_compatibility(self):
-        # TODO: Remove this test once old datetime format is deprecated and removed.
-        search_r = self.instance.search(
-            start_time="2016-07-06",
-            end_time="2016-07-07",
-            products=["landsat:LC08:PRE:TOAR"],
-        )
-        self.assertGreater(len(search_r["features"]), 0)
-        features_r = self.instance.features(
-            start_time="2016-07-06",
-            end_time="2016-07-07",
-            sat_ids="LANDSAT_8",
-            batch_size=10,
-        )
-        self.assertGreater(len(list(features_r)), 0)
-        ids_r = self.instance.ids(
-            start_time="2016-07-06",
-            end_time="2016-07-07",
-            products=["landsat:LC08:PRE:TOAR"],
-            limit=10,
-        )
-        self.assertGreater(len(list(ids_r)), 0)
-        summary_r = self.instance.summary(
-            start_time="2016-07-06",
-            end_time="2016-07-07",
-            products=["landsat:LC08:PRE:TOAR"],
-            pixels=True,
-        )
-        self.assertIn("products", summary_r)
-        self.assertIn("count", summary_r)
-        self.assertIn("pixels", summary_r)
-        self.assertIn("bytes", summary_r)
-        self.assertGreater(summary_r["count"], 0)
-
 
 if __name__ == "__main__":
     unittest.main()
