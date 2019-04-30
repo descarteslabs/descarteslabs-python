@@ -1,11 +1,9 @@
-.. role:: scenes
-
 GeoContext
 ----------
 
 :doc:`Back to Scenes<../readme>`
 
-.. default-role:: scenes
+.. default-role:: any
 
 .. automodule:: descarteslabs.scenes.geocontext
   :members:

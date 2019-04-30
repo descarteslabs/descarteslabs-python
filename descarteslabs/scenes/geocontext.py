@@ -35,9 +35,8 @@ functionality.
   and projection.
 * `DLTile` helps you split large regions up into a grid of any spacing and
   resolution, and represents a single tile in that grid, in UTM projection.
-
-.. include:: geocontext_tutorial.rst
 """
+
 
 import copy
 import shapely.geometry

@@ -64,11 +64,6 @@ def display(*imgs, **kwargs):
         To use a Colormap, the input images must have a single band. The Colormap
         will be ignored for images with more than one band.
 
-    Example
-    =======
-
-    .. include:: display_example.rst
-
     Raises
     ------
     ImportError

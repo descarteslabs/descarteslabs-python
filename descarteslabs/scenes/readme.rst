@@ -12,12 +12,8 @@ Scenes
   :maxdepth: 3
   :glob:
 
-  docs/collection.rst
-  docs/display.rst
-  docs/geocontext.rst
-  docs/scene.rst
-  docs/scenecollection.rst
-  docs/search.rst
+  docs/*
 
 .. include top-level docstring from __init__.py:
 .. automodule:: descarteslabs.scenes
+
