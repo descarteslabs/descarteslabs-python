@@ -119,6 +119,8 @@ def range_expr(op):
 
 
 class Property(object):
+    """A wrapper object for a single property"""
+
     def __init__(self, name, parts=None):
         self.name = name
         self.parts = parts or {}
@@ -156,6 +158,8 @@ class Property(object):
 
 
 class Properties(object):
+    """A wrapper object to allow constructing filter expressions using properties"""
+
     def __init__(self, *args):
         self.props = args
 
@@ -168,5 +172,12 @@ class Properties(object):
 
 
 class GenericProperties(object):
+    """A wrapper object to allow constructing filter expressions using properties.
+
+    You can construct filter expression using the ``==``, ``!=``, ``<``, ``>``,
+    ``<=`` and ``>=`` operators as well as the
+    :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
+    method.  You can combine filter expressions with ``&`` and ``|``.
+    """
     def __getattr__(self, attr):
         return Property(attr)

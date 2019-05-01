@@ -80,13 +80,13 @@ class FutureTask(object):
         """
         Attempt to load the result for this task. After returning from this
         method without an exception raised, the return value for the task is
-        available through the `result` property.
+        available through the :attr:`result` property.
 
         :param bool wait: Whether to wait for the task to complete or raise
-            a :class:`TransientResultError` if the task hasnt completed
-            yet.
+            a :exc:`~descarteslabs.common.tasks.futuretask.TransientResultError`
+            if the task hasnt completed yet.
         :param int timeout: How long to wait for the task to complete, or
-            `None` to wait indefinitely.
+            :const:`None` to wait indefinitely.
         """
         if self._task_result is None:
             start = time.time()
@@ -114,6 +114,9 @@ class FutureTask(object):
     @property
     def ready(self):
         """
+        Property indicating whether the task has completed
+
+        :rtype: bool
         :return: True if the upload task has completed and status is available, otherwise False.
         """
         try:
@@ -125,6 +128,9 @@ class FutureTask(object):
     @property
     def result(self):
         """
+        Property indicating the return value of the function for this completed task.
+
+        :rtype: json or pickled type
         :return: The return value of the function for this completed task.
         """
         if not self.is_success:
@@ -155,7 +161,10 @@ class FutureTask(object):
     @property
     def log(self):
         """
-        :return: The log output for this completed task.
+        Property indicating the log output for this completed task.
+
+        :rtype: str
+        :return: The log output
         """
         self.get_result(wait=True)
 
@@ -172,27 +181,41 @@ class FutureTask(object):
     @property
     def peak_memory_usage(self):
         """
-        :return: The peak memory usage for this completed task, in bytes.
+        Property indicating the peak memory usage for this completed task, in bytes.
+
+        :rtype: int
+        :return: The peak memory usage
         """
         return self._result_attribute('peak_memory_usage')
 
     @property
     def runtime(self):
         """
-        :return: The time spent executing the function for this task, in seconds.
+        Property indicating the time spent executing the function for this task,
+        in seconds.
+
+        :rtype: int
+        :return: The time spent executing the function
         """
         return self._result_attribute('runtime')
 
     @property
     def status(self):
         """
-        :return: The status (``SUCCESS`` or ``FAILURE``) for this completed task.
+        Property indicating the status (:const:`SUCCESS` or :const`FAILURE`) for
+        this completed task.
+
+        :rtype: str
+        :return: The status for this completed task.
         """
         return self._result_attribute('status')
 
     @property
     def is_success(self):
         """
+        Did this task succeeed?
+
+        :rtype: bool
         :return: Whether this task succeeded.
         """
         return self.status == FutureTask.SUCCESS
@@ -200,8 +223,11 @@ class FutureTask(object):
     @property
     def exception_name(self):
         """
-        :return: The name of the exception raised during the function execution,
-            if any.
+        Property indicating the name of the exception raised during the function
+        execution, if any
+
+        :rtype: str
+        :return: The name of the exception or :const:`None`
         """
         return self._result_attribute('exception_name')
 
@@ -210,8 +236,11 @@ class FutureTask(object):
     @property
     def stacktrace(self):
         """
-        :return: The stacktrace of the exception raised during the function
-            execution, if any.
+        Property indicating the stacktrace of the exception raised during the function
+        execution, if any.
+
+        :rtype: str
+        :return: The stacktrace of the exception or :const:`None`
         """
         return self._result_attribute('stacktrace')
 
@@ -220,7 +249,10 @@ class FutureTask(object):
     @property
     def failure_type(self):
         """
-        :return: The type of failure if this task did not succeed.
+        The type of failure if this task did not succeed.
+
+        :rtype: str
+        :return: The failure type
         """
         return self._result_attribute('failure_type')
 

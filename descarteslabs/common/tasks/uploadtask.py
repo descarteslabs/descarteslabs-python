@@ -6,7 +6,7 @@ import time
 class UploadTask(FutureTask):
     """
     An upload task which may or may not have completed yet. Accessing any
-    attributes before the task is completed (for example ``status``)
+    attributes before the task is completed (for example :attr:`status`)
     will block until the task completes.
 
     The upload process is two-phased. In the first phase, the input file is
@@ -17,13 +17,15 @@ class UploadTask(FutureTask):
     have completed, the upload is considered done.
 
     If you want to check whether the attributes are available, use
-    ``get_result()`` which will raise a ``TransientResultError`` if the
+    :meth:`get_result()` which will raise a
+    :exc:`~descarteslabs.common.tasks.futuretask.TransientResultError` if the
     attributes are not available yet.
 
-    Upload tasks don't have a ``result`` or ``log`` attribute.
+    Upload tasks don't have a :attr:`result` or :attr:`log` attribute.
 
-    Do not create an ``UploadTask`` yourself; it is returned by
-    ``FeatureCollection.upload()`` and ``FeatureCollection.list_uploads()``.
+    Do not create an :class:`UploadTask` yourself; it is returned by
+    :meth:`FeatureCollection.upload <descarteslabs.vectors.featurecollection.FeatureCollection.upload>`
+    and :meth:`FeatureCollection.list_uploads <descarteslabs.vectors.featurecollection.FeatureCollection.list_uploads>`.
     """
 
     PENDING = 'PENDING'
@@ -48,26 +50,18 @@ class UploadTask(FutureTask):
         from this method without an exception raised, the information for
         the task is available through the various properties.
 
-        Parameters
-        ----------
-        wait : bool
-            Whether to wait for the task to complete or raise
-            a ``TransientResultError`` if the task hasn't completed
-            yet.
-        timeout : int
-            How long to wait in seconds for the task to complete, or
-            ``None`` to wait indefinitely.
+        :param bool wait: Whether to wait for the task to complete or raise
+            a :exc:`~descarteslabs.common.tasks.futuretask.TransientResultError`
+            if the task hasn't completed yet.
 
-        Raises
-        ------
-        ``NotFoundError``
-            When the upload id or task id does not exist.
+        :param int timeout: How long to wait in seconds for the task to complete, or
+            :const:`None` to wait indefinitely.
 
-        ``TransientResultError``
-            When the result is not ready yet (and not waiting).
+        :raises NotFoundError: When the upload id or task id does not exist.
 
-        ``TimeoutError``
-            When the timeout has been reached (if waiting and set).
+        :raises TransientResultError: When the result is not ready yet (and not waiting).
+
+        :raises TimeoutError: When the timeout has been reached (if waiting and set).
         """
 
         # Things are complicated compared to FutureTask, because the upload task
@@ -107,28 +101,27 @@ class UploadTask(FutureTask):
 
     @property
     def result(self):
+        """Upload tasks don't have a result.
+
+        :raises AttributeError: No result available
         """
-        Raises
-        ------
-        AttributeError
-            Upload tasks don't have a result."""
         raise AttributeError("Upload tasks don't have a result")
 
     @property
     def log(self):
+        """Upload tasks don't have a log.
+
+        :raises AttributeError: No log available
         """
-        Raises
-        ------
-        AttributeError
-            Upload tasks don't have a log."""
         raise AttributeError("Upload tasks don't have a log")
 
     @property
     def upload_id(self):
         """
-        Get the upload_id for the task.
+        Property indicating the upload_id for the task.
 
-        :return: (*str*) The id of the upload that resulted in this task.
+        :rtype: str
+        :return: The id of the upload that resulted in this task.
         """
         if self._upload_id is None:
             labels = self._result_attribute('labels')
@@ -140,9 +133,12 @@ class UploadTask(FutureTask):
     @property
     def error_rows(self):
         """
-        :return: (*int*) The number of rows that could not be loaded. This is the sum
-        of the number of invalid features plus the number of valid features which otherwise
-        failed to load.
+        Property indicating the number of rows that could not be loaded. This is the sum
+        of the number of invalid features plus the number of valid features
+        which otherwise failed to load.
+
+        :rtype: int
+        :return: The number of rows that could not be loaded.
         """
         return (len(self._result_attribute('result', {}).get('errors', [])) +
                 len(self._result_attribute('load', {}).get('errors') or []))
@@ -150,8 +146,12 @@ class UploadTask(FutureTask):
     @property
     def errors(self):
         """
-        :return: (*list* or None) Error records from upload. Errors may come from parsing of the
-        input file or from attempting to add the features to the collection.
+        Property indicating the list of error records from upload. Errors may come
+        from parsing of the input file or from attempting to add the features to
+        the collection.
+
+        :rtype: list or None
+        :return: Error records from upload.
         """
         result = (self._result_attribute('result', {}).get('errors', []) +
                   (self._result_attribute('load', {}).get('errors') or []))
@@ -162,41 +162,55 @@ class UploadTask(FutureTask):
     @property
     def input_features(self):
         """
-        :return: (*int*) The number of features to insert. This may be different
+        Property indicating the number of features to insert. This may be different
         from the number of lines in the input file due to errors while parsing
         the input file.
+
+        :rtype: int
+        :return: The number of features to insert.
         """
         return self._result_attribute('result', {}).get('input_features', 0)
 
     @property
     def input_rows(self):
         """
-        :return: (*int*) The number of rows to insert. This may be different from
-        the number reported by ``input_features`` due to sharding.
+        Property indicating the number of rows to insert. This may be different from
+        the number reported by :attr:`input_features` due to sharding.
+
+        :rtype: int
+        :return: The number of rows to insert.
         """
         return self._result_attribute('result', {}).get('input_rows', 0)
 
     @property
     def output_rows(self):
         """
-        :return: (*int*) The number of rows that were added. This may be different than
-        the number reported by ``input_rows`` if errors occurred.
+        Property indicating the number of rows that were added. This may be different
+        than the number reported by :attr:`input_rows` if errors occurred.
+
+        :rtype: int
+        :return: The number of rows that were added.
         """
         return self._result_attribute('load', {}).get('output_rows', 0)
 
     @property
     def status(self):
         """
-        :return: The status (``PENDING``, ``RUNNING``, ``SUCCESS`` or ``FAILURE``) for this completed task.
+        Property indicating the status of the task, which can be :const:`PENDING`,
+        :const:`RUNNING`, :const:`SUCCESS` or :const:`FAILURE`.
 
-        Some errors may have occurred even when the status is ``SUCCESS``, if the
-        upload was initiated with a non-zero ``max_errors`` parameter. The
-        ``error_rows`` or ``errors`` property should be consulted.
+        Some errors may have occurred even when the status is :const:`SUCCESS`, if the
+        upload was initiated with a non-zero :attr:`max_errors` parameter. The
+        :attr:`error_rows` or :attr:`errors` property should be consulted.
 
-        Conversely, some rows may have been inserted even with the status is ``FAILURE``.
+        Conversely, some rows may have been inserted even with the status is
+        :const:`FAILURE`.
 
-        Status values of ``PENDING`` or ``RUNNING`` indicate the upload is still in progress,
-        and can be waited upon for completion.
+        Status values of :const:`PENDING` or :const:`RUNNING` indicate the upload
+        is still in progress, and can be waited upon for completion.
+
+        :rtype: str
+        :return: The status for this task.
         """
         try:
             self.get_result(wait=False)

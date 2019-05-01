@@ -12,13 +12,16 @@ from descarteslabs.common.tasks import (
 class ExportTask(FutureTask):
     """
     An export task. Accessing any attributes before the task is completed
-    (for example ``status``) will block until the task completes.
+    (for example :attr:`status`) will block until the task completes.
 
     If you want to check whether the attributes are available, use
-    ``is_ready`` which will return ``True`` when attributes are available.
+    :attr:`is_ready` which will return :const:`True` when attributes are available.
 
-    Do not create an ``ExportTask`` yourself; it is returned by
-    ``FeatureCollection.export()`` and ``FeatureCollection.list_exports()``.
+    Do not create an :class:`ExportTask` yourself; it is returned by
+    :meth:`FeatureCollection.export
+    <descarteslabs.vectors.featurecollection.FeatureCollection.export>`
+    and :meth:`FeatureCollection.list_exports
+    <descarteslabs.vectors.featurecollection.FeatureCollection.list_exports>`.
     """
 
     def __init__(self, guid, tuid=None, client=None, result_attrs=None, key=None):
@@ -59,23 +62,16 @@ class ExportTask(FutureTask):
         from this method without an exception raised, the information for
         the task is available through the various properties.
 
-        Parameters
-        ----------
-        wait : bool
-            Whether to wait for the task to complete or raise
-            a ``TransientResultError`` if the task hasn't completed
-            yet.
-        timeout : int
-            How long to wait in seconds for the task to complete, or
-            ``None`` to wait indefinitely.
+        :param bool wait: Whether to wait for the task to complete or raise
+            a :exc:`~descarteslabs.common.tasks.futuretask.TransientResultError`
+            if the task hasn't completed yet.
 
-        Raises
-        ------
-        ``TransientResultError``
-            When the result is not ready yet (and not waiting).
+        :param int timeout: How long to wait in seconds for the task to complete, or
+            :const:`None` to wait indefinitely.
 
-        ``TimeoutError``
-            When the timeout has been reached (if waiting and set).
+        :raises TransientResultError: When the result is not ready yet (and not waiting).
+
+        :raises TimeoutError: When the timeout has been reached (if waiting and set).
         """
 
         # We have to go through the vector service since we don't
@@ -103,10 +99,10 @@ class ExportTask(FutureTask):
     @property
     def result(self):
         """
-        Raises
-        ------
-        AttributeError
-            Export tasks don't have a result."""
+        Export tasks don't have a result.
+
+        :raises AttributeError: No result available
+        """
         raise AttributeError("Export tasks don't have a result")
 
     def __repr__(self):
