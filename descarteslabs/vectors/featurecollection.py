@@ -242,6 +242,12 @@ class FeatureCollection(object):
         >>> filtered_cities = filtered_cities.filter(properties=(p.area_land_meters > 1000))  # doctest: +SKIP
 
         """
+        if geometry is not None and self._query_geometry is not None:
+            # Oopsies; we're about to overwrite an existing geometry filter
+            raise InvalidQueryException(
+                "You cannot overwrite an existing geometry filter"
+            )
+
         copied_fc = copy.deepcopy(self)
 
         if geometry is not None:

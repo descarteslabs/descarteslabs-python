@@ -101,6 +101,16 @@ class TestFeatureCollection(unittest.TestCase):
             geometry=geometry, query_limit=None, product_id='foo', query_expr=None
         )
 
+    def test_filter_geometry_twice(self, vector_client):
+        vector_client.search_features = mock.Mock(return_value=iter([]))
+
+        fc = FeatureCollection('foo', vector_client=vector_client)
+        geometry = mock.MagicMock()
+
+        filtered = fc.filter(geometry=geometry)
+        with self.assertRaises(InvalidQueryException):
+            filtered = filtered.filter(geometry=geometry)
+
     def test_filter_properties(self, vector_client):
         vector_client.search_features = mock.Mock(return_value=iter([]))
 
