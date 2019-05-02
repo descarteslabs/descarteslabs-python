@@ -38,7 +38,7 @@ auth_parser.add_argument(
 metadata_parser = subparsers.add_parser("metadata")
 metadata_parser.add_argument(
     "command",
-    choices=["sources", "summary", "search", "keys", "get"],
+    choices=["summary", "search", "keys", "get"],
     help="The action to take",
 )
 metadata_parser.add_argument("argument", nargs="?")

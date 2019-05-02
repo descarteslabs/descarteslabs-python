@@ -15,7 +15,7 @@
 import json
 import os
 import itertools
-from warnings import warn, simplefilter
+from warnings import simplefilter
 from six import string_types
 from descarteslabs.client.services.service import Service
 from descarteslabs.client.services.places import Places
@@ -27,13 +27,6 @@ from descarteslabs.common.property_filtering.filtering import (
     GenericProperties,
 )
 from descarteslabs.common.dotdict import DotDict, DotList
-
-
-SOURCES_DEPRECATION_MESSAGE = (
-    "Metadata.sources() has been deprecated and will be removed in "
-    "future versions of the library. Please use "
-    "Metadata.available_products() or Metadata.products() instead. "
-)
 
 
 class Metadata(Service):
@@ -67,12 +60,6 @@ class Metadata(Service):
 
         super(Metadata, self).__init__(url, auth=auth)
         self._raster = Raster(auth=self.auth)
-
-    def sources(self):
-        warn(SOURCES_DEPRECATION_MESSAGE, DeprecationWarning)
-
-        r = self.session.get("/sources")
-        return DotList(r.json())
 
     def bands(
         self,

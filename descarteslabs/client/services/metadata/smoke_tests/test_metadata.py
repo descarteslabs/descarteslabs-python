@@ -26,10 +26,6 @@ class TestMetadata(unittest.TestCase):
     def setUpClass(cls):
         cls.instance = Metadata()
 
-    def test_sources(self):
-        r = self.instance.sources()
-        self.assertGreater(len(r), 0)
-
     def test_available_products(self):
         r = self.instance.available_products()
         self.assertGreater(len(r), 0)

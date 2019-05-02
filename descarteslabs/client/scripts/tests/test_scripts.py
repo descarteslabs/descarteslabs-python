@@ -73,12 +73,6 @@ class TestScripts(unittest.TestCase):
             ]
             self.assertEqual(json.loads(out.getvalue().strip()), iowa)
 
-    def test_metadata_sources(self):
-        with mock.patch("sys.stdout", new_callable=StringIO) as out:
-            handle(parser.parse_args(["metadata", "sources"]))
-            sources = [{"sat_id": "LANDSAT_8", "product": "landsat:LC08:PRE:TOAR"}]
-            self.assertEqual(json.loads(out.getvalue().strip()), sources)
-
 
 if __name__ == "__main__":
     unittest.main()

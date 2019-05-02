@@ -26,11 +26,6 @@ def metadata_handler(args):
 
     kwargs = {}
 
-    if args.command == "sources":
-        sources = metadata.sources()
-
-        print(json.dumps(sources, indent=2))
-
     if args.command == "summary":
         if args.place:
             kwargs["place"] = args.place

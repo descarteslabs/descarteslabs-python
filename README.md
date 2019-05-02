@@ -10,6 +10,7 @@ Changelog
 
 ## [Unreleased]
 ### Changed
+- Removed deprecated method `Metadata.sources()`
 
 ### Fixed
 
