@@ -47,7 +47,6 @@ Filtering
     :var geolocation_accuracy:
 
         RMSE of the geometric residuals (pixels) in both line and sample directions measured on the terrain-corrected product independently using GLS2000. Only applicable to Landsat data.
-    :var gsd: Ground sampling distance in meters.
     :var opaque_fraction: Fraction of pixels identified as dense clouds. Only applicable to Sentinel-2 data.
 
         See https://sentinel.esa.int/web/sentinel/technical-guides/sentinel-2-msi/level-1c/cloud-masks for more information.
