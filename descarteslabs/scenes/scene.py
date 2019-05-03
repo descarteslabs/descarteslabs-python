@@ -175,7 +175,8 @@ class Scene(object):
         """
         Return the metadata for a Descartes Labs scene ID as a Scene object.
 
-        Also returns a GeoContext for loading the Scene's original, unwarped data.
+        Also returns a :class:`~descarteslabs.scenes.geocontext.GeoContext`
+        for loading the Scene's original, unwarped data.
 
         Parameters
         ----------
@@ -191,7 +192,7 @@ class Scene(object):
         scene: Scene
             Scene instance with metadata loaded from the Descartes Labs catalog
         ctx: AOI
-            A GeoContext for loading this Scene's original data.
+            A :class:`~descarteslabs.scenes.geocontext.GeoContext`for loading this Scene's original data.
             The defaults used are described in `Scene.default_ctx`.
 
         Example
@@ -246,12 +247,12 @@ class Scene(object):
 
         .. note::
 
-            Using this GeoContext will only return original, unwarped data
-            if the Scene is axis-aligned ("north-up") within the CRS.
-            If its ``geotrans`` applies a rotation, a warning will be raised.
+            Using this :class:`~descarteslabs.scenes.geocontext.GeoContext` will only
+            return original, unwarped data if the Scene is axis-aligned ("north-up")
+            within the CRS. If its ``geotrans`` applies a rotation, a warning will be raised.
             In that case, use `Raster.ndarray` or `Raster.raster` to retrieve
-            original data. (The GeoContext paradigm requires bounds for consistentcy,
-            which are inherently axis-aligned.)
+            original data. (The :class:`~descarteslabs.scenes.geocontext.GeoContext`
+            paradigm requires bounds for consistentcy, which are inherently axis-aligned.)
 
         Returns
         -------
@@ -311,7 +312,7 @@ class Scene(object):
 
         Parameters
         ----------
-        geom : GeoJSON-like dict, GeoContext, or object with __geo_interface__
+        geom : GeoJSON-like dict, :class:`~descarteslabs.scenes.geocontext.GeoContext`, or object with __geo_interface__
             Geometry to which to compare this Scene's geometry
 
         Returns
@@ -358,8 +359,8 @@ class Scene(object):
             Names must be keys in ``self.properties.bands``.
             If the alpha band is requested, it must be last in the list
             to reduce rasterization errors.
-        ctx : `GeoContext`
-            A `GeoContext` to use when loading this Scene
+        ctx : :class:`~descarteslabs.scenes.geocontext.GeoContext`
+            A :class:`~descarteslabs.scenes.geocontext.GeoContext` to use when loading this Scene
         mask_nodata : bool, default True
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
@@ -537,8 +538,8 @@ class Scene(object):
             separated by spaces (``"red green blue derived:ndvi"``),
             or a sequence of band names (``["red", "green", "blue", "derived:ndvi"]``).
             Names must be keys in ``self.properties.bands``.
-        ctx : `GeoContext`
-            A `GeoContext` to use when loading this Scene
+        ctx : :class:`~descarteslabs.scenes.geocontext.GeoContext`
+            A :class:`~descarteslabs.scenes.geocontext.GeoContext` to use when loading this Scene
         dest : str, path-like object, or file-like object, default None
             Where to write the image file.
 

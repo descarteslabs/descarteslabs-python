@@ -46,10 +46,10 @@ def search(aoi,
 
     Parameters
     ----------
-    aoi : GeoJSON-like dict, GeoContext, or object with __geo_interface__
+    aoi : GeoJSON-like dict, :class:`~descarteslabs.scenes.geocontext.GeoContext`, or object with __geo_interface__
         Search for scenes that intersect this area by any amount.
-        If a GeoContext, a copy is returned as ``ctx``, with missing values filled in.
-        Otherwise, the returned ``ctx`` will be an `AOI`, with this as its geometry.
+        If a :class:`~descarteslabs.scenes.geocontext.GeoContext`, a copy is returned as ``ctx``, with missing values
+        filled in. Otherwise, the returned ``ctx`` will be an `AOI`, with this as its geometry.
     products : str or List[str], optional
         Descartes Labs product identifiers
     start_datetime : str, datetime-like, optional
@@ -86,14 +86,14 @@ def search(aoi,
     -------
     scenes : SceneCollection
         Scenes matching your criteria.
-    ctx: GeoContext
-        The given ``aoi`` as a GeoContext (if it isn't one already),
+    ctx: :class:`~descarteslabs.scenes.geocontext.GeoContext`
+        The given ``aoi`` as a :class:`~descarteslabs.scenes.geocontext.GeoContext` (if it isn't one already),
         with reasonable default parameters for loading all matching Scenes.
 
-        If ``aoi`` was a `GeoContext`, ``ctx`` will be a copy of ``aoi``,
+        If ``aoi`` was a :class:`~descarteslabs.scenes.geocontext.GeoContext`, ``ctx`` will be a copy of ``aoi``,
         with any properties that were ``None`` assigned the defaults below.
 
-        If ``aoi`` was not a `GeoContext`, an `AOI` instance will be created
+        If ``aoi`` was not a :class:`~descarteslabs.scenes.geocontext.GeoContext`, an `AOI` instance will be created
         with ``aoi`` as its geometry, and defaults assigned as described below:
 
         **Default Spatial Parameters:**
