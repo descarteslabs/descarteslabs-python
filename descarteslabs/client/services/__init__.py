@@ -16,7 +16,7 @@
 from descarteslabs.client.services.metadata import Metadata
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.raster import Raster
-from descarteslabs.client.services.storage import Storage, cached
+from descarteslabs.client.services.storage import Storage
 from descarteslabs.client.services.catalog import Catalog
 from descarteslabs.client.services.tasks import AsyncTasks, Tasks, FutureTask, CloudFunction
 from descarteslabs.client.services.vector import Vector
