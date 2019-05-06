@@ -10,6 +10,11 @@ Changelog
 
 ## [Unreleased]
 ### Changed
+
+### Fixed
+
+## [0.19.0] - 2019-05-06
+### Changed
 - Removed deprecated method `Metadata.sources()`
 - `FeatureCollection.filter(geometry)` will now raise an `InvalidQueryException` if you
   try to overwrite an existing geometry in the filter chain.  You can only set the
