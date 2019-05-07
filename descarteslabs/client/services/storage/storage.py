@@ -232,7 +232,9 @@ class Storage(Service):
         `storage_type` and store in file `file_obj`
 
         :param str key: A unique string mapped to an existing storage blob
-        :param str file_obj: File-like object or name of file in which retrieved data will be stored
+        :param str file_obj: File-like object or name of file in which retrieved data will be stored. If this is
+            a file-like object it must accept bytes (for example, a file opened in binary mode such as with
+            ``open(filename, 'wb')``).
         :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
         """
         r = self.session.get(
