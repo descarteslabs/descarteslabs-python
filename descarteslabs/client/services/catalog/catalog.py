@@ -472,7 +472,7 @@ class Catalog(Service):
         r = self.session.get("/products/{}/images/{}".format(product_id, image_id))
         return r.json()
 
-    def add_image(self, product_id, image_id, add_namespace=False, **kwargs):
+    def add_image(self, product_id, image_id, add_namespace=False, storage_state="available", **kwargs):
         """Add an image metadata entry to a product.
 
         :param str product_id: (Required) Product to which this image belongs.
@@ -532,6 +532,9 @@ class Catalog(Service):
         :param float solar_elevation_angle:
         :param float solar_elevation_angle_0:
         :param float solar_elevation_angle_1:
+        :param str storage_state: A string indicating whether data for the image is stored on the Descartes
+            Labs platform. Allowed values are "available" and "remote". If `"remote"`, entry may not include the
+            fields bucket, directory, files, file_md5s, file_sizes. Default is `"available"`.
         :param str tile_id:
         :param float view_angle:
         :param float view_angle_1:
@@ -547,15 +550,19 @@ class Catalog(Service):
             check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
         kwargs["id"] = image_id
+        kwargs["storage_state"] = storage_state
         r = self.session.post("/products/{}/images".format(product_id), json=kwargs)
         return r.json()
 
-    def replace_image(self, product_id, image_id, add_namespace=False, **kwargs):
+    def replace_image(self, product_id, image_id, add_namespace=False, storage_state="available", **kwargs):
         """Replace image metadata with a new version.
 
         :param str product_id: (Required) Product to which this image belongs.
         :param str image_id: (Required) ID of the image to replace.
         :param bool add_namespace: Add your user namespace to the product_id. *Deprecated*
+        :param str storage_state: A string indicating whether data for the image is stored on the Descartes
+            Labs platform. Allowed values are "available" and "remote". If `"remote"`, entry may not include the
+            fields bucket, directory, files, file_md5s, file_sizes. Default is `"available"`.
 
         .. note::
             - See :meth:`Catalog.add_image` for additional kwargs.
@@ -568,6 +575,8 @@ class Catalog(Service):
         if add_namespace:
             check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
+
+        kwargs["storage_state"] = storage_state
 
         r = self.session.put(
             "/products/{}/images/{}".format(product_id, image_id), json=kwargs

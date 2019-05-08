@@ -19,6 +19,8 @@ import sys
 from mock import patch
 from tempfile import NamedTemporaryFile
 import responses
+import json
+import re
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.catalog import Catalog
@@ -30,7 +32,12 @@ class TestCatalog(unittest.TestCase):
     instance = None
 
     def setUp(self):
-        self.instance = Catalog()
+        self.url = "http://www.example.com/metadata/v1/catalog"
+        self.instance = Catalog(url=self.url)
+        self.match_url = re.compile(self.url)
+
+    def mock_response(self, method, json, status=200, **kwargs):
+        responses.add(method, self.match_url, json=json, status=status, **kwargs)
 
     @staticmethod
     def validate_ndarray_callback(request):
@@ -100,7 +107,7 @@ class TestCatalog(unittest.TestCase):
     def test_upload_image(self):
         product = "foo:product_id"
         gcs_upload_url = "https://gcs_upload_url.com"
-        upload_url = "https://platform.descarteslabs.com/metadata/v1/catalog/products/{}/images/upload/{}"
+        upload_url = "http://www.example.com/metadata/v1/catalog/products/{}/images/upload/{}"
         with NamedTemporaryFile(delete=False) as tmp:
             try:
                 tmp.write(b"foo")
@@ -120,12 +127,20 @@ class TestCatalog(unittest.TestCase):
     def test_upload_ndarray(self):
         product = "foo:product_id"
         gcs_upload_url = "https://gcs_upload_url.com"
-        upload_url = "https://platform.descarteslabs.com/metadata/v1/catalog/products/{}/images/upload/key"
+        upload_url = "http://www.example.com/metadata/v1/catalog/products/{}/images/upload/key"
         responses.add(responses.POST, upload_url.format(product), body=gcs_upload_url)
         responses.add_callback(
             responses.PUT, gcs_upload_url, callback=self.validate_ndarray_callback
         )
         self.instance.upload_ndarray(np.zeros((10, 10)), product, "key")
+
+    # tests verifying storage state kwarg is applied correctly
+    @responses.activate
+    def test_add_image_default(self):
+        self.mock_response(responses.POST, json={})
+        self.instance.add_image("product", "fake_image_id")
+        request = responses.calls[0].request
+        self.assertEqual(json.loads(request.body.decode('utf-8'))["storage_state"], "available")
 
 
 if __name__ == "__main__":

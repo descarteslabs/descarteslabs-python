@@ -9,6 +9,10 @@ Changelog
 =========
 
 ## [Unreleased]
+
+### Added
+- Metadata, Catalog, and Scenes now support a new `storage_state` property for managing image metadata and filtering search results. `storage_state="available"` is the default for new images and indicates that the raster data for that scene is available on the Descartes Labs platform. `storage_state="remote"` indicates that the raster data has not yet been processed and made available to client users.
+
 ### Changed
 
 ### Fixed

@@ -17,6 +17,7 @@ import warnings
 import unittest
 
 import responses
+import json
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.metadata import Metadata
@@ -93,7 +94,18 @@ class MetadataTest(unittest.TestCase):
         features = [{"id": "foo"}, {"id": "bar"}, {"id": "baz"}]
         self.mock_response(responses.POST, json=features)
         collection = self.instance.search(limit=2)
+        req = responses.calls[0].request
+        self.assertNotIn("storage_state", json.loads(req.body.decode('utf-8')))
         self.assertEqual(features[:2], collection.features)
+
+    @responses.activate
+    def test_search_storage_state(self):
+        features = [{"id": "foo"}, {"id": "bar"}, {"id": "baz"}]
+        self.mock_response(responses.POST, json=features)
+        collection = self.instance.search(limit=2, storage_state="available")
+        self.assertEqual(features[:2], collection.features)
+        req = responses.calls[0].request
+        self.assertIn("storage_state", json.loads(req.body.decode('utf-8')))
 
     @responses.activate
     def test_features(self):
@@ -105,12 +117,25 @@ class MetadataTest(unittest.TestCase):
         # with 0 results happens in practice.
         self.mock_response(responses.POST, json=[], headers={"x-continuation-token": "token3"})
         self.assertEqual(features, list(self.instance.features()))
+        req = responses.calls[0].request
+        self.assertNotIn("storage_state", json.loads(req.body.decode('utf-8')))
 
     @responses.activate
-    def test_summary(self):
+    def test_summary_default(self):
         summary = {"count": 42}
         self.mock_response(responses.POST, json=summary)
         self.assertEqual(summary, self.instance.summary())
+        req = responses.calls[0].request
+        self.assertNotIn("storage_state", json.loads(req.body.decode('utf-8')))
+
+    @responses.activate
+    def test_summary_storage_state(self):
+        summary = {"count": 42}
+        self.mock_response(responses.POST, json=summary)
+        self.assertEqual(summary, self.instance.summary(storage_state="available"))
+        expected_req = {"date": "acquired", "storage_state": "available"}
+        req = responses.calls[0].request
+        self.assertEqual(json.loads(req.body.decode('utf-8')), expected_req)
 
     @responses.activate
     def test_summary_dltile(self):

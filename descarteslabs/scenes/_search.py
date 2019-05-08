@@ -29,6 +29,7 @@ def search(aoi,
            start_datetime=None,
            end_datetime=None,
            cloud_fraction=None,
+           storage_state=None,
            limit=100,
            sort_field=None,
            sort_order='asc',
@@ -59,6 +60,9 @@ def search(aoi,
     cloud_fraction : float, optional
         Restrict to scenes that are covered in clouds by less than this fraction
         (between 0 and 1)
+    storage_state : str, optional
+        Filter results based on ``storage_state`` value
+        (``"available"``, ``"remote"``, or ``None``)
     limit : int or None, optional, default 100
         Maximum number of Scenes to return, or None for all results.
     sort_field : str, optional
@@ -130,6 +134,7 @@ def search(aoi,
         start_datetime=start_datetime,
         end_datetime=end_datetime,
         cloud_fraction=cloud_fraction,
+        storage_state=storage_state,
         limit=limit,
         sort_field=sort_field,
         sort_order=sort_order,

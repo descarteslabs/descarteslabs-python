@@ -196,6 +196,7 @@ class Metadata(Service):
         cloud_fraction=None,
         cloud_fraction_0=None,
         fill_fraction=None,
+        storage_state=None,
         q=None,
         pixels=None,
         dltile=None,
@@ -224,6 +225,8 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param str storage_state: Filter results based on `storage_state` value. Allowed values are `"available"`,
+            `"remote"`, or `None`, which returns all results regardless of `storage_state` value.
         :param expr q: Expression for filtering the results. See
             :py:attr:`descarteslabs.client.services.metadata.properties`.
         :param bool pixels: Whether to include pixel counts in summary calculations.
@@ -342,6 +345,9 @@ class Metadata(Service):
         if pixels:
             kwargs["pixels"] = pixels
 
+        if storage_state:
+            kwargs["storage_state"] = storage_state
+
         r = self.session.post("/summary", json=kwargs)
         return DotDict(r.json())
 
@@ -357,6 +363,7 @@ class Metadata(Service):
         cloud_fraction=None,
         cloud_fraction_0=None,
         fill_fraction=None,
+        storage_state=None,
         q=None,
         limit=100,
         fields=None,
@@ -383,6 +390,9 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param str storage_state: Filter results based on `storage_state` value. Allowed values are
+            `"available"`, `"remote"`, or `None`, which returns all results regardless of
+            `storage_state` value.
         :param expr q: Expression for filtering the results. See
             :py:attr:`descarteslabs.client.services.metadata.properties`.
         :param int limit: Maximum number of items per page to return.
@@ -458,6 +468,9 @@ class Metadata(Service):
         if fill_fraction is not None:
             kwargs["fill_fraction"] = fill_fraction
 
+        if storage_state:
+            kwargs["storage_state"] = storage_state
+
         if fields is not None:
             kwargs["fields"] = fields
 
@@ -499,6 +512,7 @@ class Metadata(Service):
         cloud_fraction=None,
         cloud_fraction_0=None,
         fill_fraction=None,
+        storage_state=None,
         q=None,
         limit=100,
         fields=None,
@@ -523,6 +537,9 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param str storage_state: Filter results based on `storage_state` value. Allowed values are
+            `"available"`, `"remote"`, or `None`, which returns all results regardless of
+            `storage_state` value.
         :param expr q: Expression for filtering the results. See
             :py:attr:`descarteslabs.client.services.metadata.properties`.
         :param int limit: Maximum number of items to return.
@@ -577,6 +594,7 @@ class Metadata(Service):
             cloud_fraction=cloud_fraction,
             cloud_fraction_0=cloud_fraction_0,
             fill_fraction=fill_fraction,
+            storage_state=storage_state,
             q=q,
             fields=fields,
             dltile=dltile,
@@ -601,6 +619,7 @@ class Metadata(Service):
         cloud_fraction=None,
         cloud_fraction_0=None,
         fill_fraction=None,
+        storage_state=None,
         q=None,
         limit=100,
         dltile=None,
@@ -622,6 +641,9 @@ class Metadata(Service):
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param str storage_state: Filter results based on `storage_state` value. Allowed values are
+            `"available"`, `"remote"`, or `None`, which returns all results regardless of
+            `storage_state` value.
         :param expr q: Expression for filtering the results. See
             :py:attr:`descarteslabs.client.services.metadata.properties`.
         :param int limit: Number of items to return.
@@ -674,6 +696,7 @@ class Metadata(Service):
             cloud_fraction=cloud_fraction,
             cloud_fraction_0=cloud_fraction_0,
             fill_fraction=fill_fraction,
+            storage_state=storage_state,
             q=q,
             limit=limit,
             fields=[],
@@ -698,6 +721,7 @@ class Metadata(Service):
         cloud_fraction=None,
         cloud_fraction_0=None,
         fill_fraction=None,
+        storage_state=None,
         q=None,
         fields=None,
         batch_size=1000,
@@ -743,6 +767,7 @@ class Metadata(Service):
                 cloud_fraction=cloud_fraction,
                 cloud_fraction_0=cloud_fraction_0,
                 fill_fraction=fill_fraction,
+                storage_state=storage_state,
                 q=q,
                 fields=fields,
                 limit=batch_size,
