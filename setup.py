@@ -13,28 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Descartes Labs Python Client
-
-.. code-block:: bash
-
-    pip install descarteslabs[complete]
-
-Documentation is available at https://docs.descarteslabs.com.
-
-Source code and version information is at https://github.com/descarteslabs/descarteslabs-python.
-
-The Descartes Labs Platform simplifies analysis of **global-scale raster data** by providing:
-
-  * Access to a catalog of petabytes of disparate geospatial data,
-    all normalized and interoperable through one **common interface**
-  * **Infrastructure** to parallelize any code across thousands of machines co-located with that data
-  * The ability to **add new data to that catalog**-whether the output of analysis on existing data,
-    or from a proprietary source-which can then be used as an input for more analysis
-  * A Python client library to access these systems
-  * Web interfaces to `browse this catalog <https://catalog.descarteslabs.com/>`_
-    and `view imagery <https://viewer.descarteslabs.com/>`_, including your data you create
-"""
-
 import ast
 import os
 import re
@@ -42,9 +20,14 @@ import sys
 
 from setuptools import find_packages, setup
 
+# Parse the docstring out of descarteslabs/__init__.py
+_docstring_re = re.compile(r'"""((.|\n)*)\n"""', re.MULTILINE)
+with open('descarteslabs/__init__.py', 'rb') as f:
+    __doc__ = _docstring_re.search(f.read().decode('utf-8')).group(1)
+
 DOCLINES = __doc__.split("\n")
 
-# Parse version out of descarteslabs/__init__.py
+# Parse version out of descarteslabs/client/version.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
 with open('descarteslabs/client/version.py', 'rb') as f:
     version = str(ast.literal_eval(_version_re.search(f.read().decode('utf-8')).group(1)))
