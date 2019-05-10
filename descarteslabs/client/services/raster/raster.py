@@ -782,8 +782,8 @@ class Raster(Service):
 
         :return: A tuple of ``(stack, metadata)``.
 
-            * ``stack``: 4D ndarray. The axes are ordered ``(scene, band, y, x)``
-              (or ``(scene, y, x, band)`` if ``order="gdal"``). The scenes in the outermost
+            * ``stack``: 4D ndarray. The axes are ordered ``(scene, y, x, band)``
+              (or ``(scene, band, y, x)`` if ``order="gdal"``). The scenes in the outermost
               axis are in the same order as the list of identifiers given as ``inputs``.
             * ``metadata``: List[dict] of the rasterization metadata for each element in ``inputs``.
               As with the metadata returned by :meth:`ndarray` and :meth:`raster`, these dictionaries
