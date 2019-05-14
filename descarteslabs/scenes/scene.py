@@ -155,6 +155,7 @@ class Scene(object):
 
         It's preferred to use `Scene.from_id` or `scenes.search <scenes._search.search>` instead.
         """
+
         self.geometry = shapely.geometry.shape(scene_dict["geometry"])
         properties = scene_dict["properties"]
         properties["id"] = scene_dict["id"]
@@ -192,7 +193,7 @@ class Scene(object):
         scene: Scene
             Scene instance with metadata loaded from the Descartes Labs catalog
         ctx: AOI
-            A :class:`~descarteslabs.scenes.geocontext.GeoContext`for loading this Scene's original data.
+            A :class:`~descarteslabs.scenes.geocontext.GeoContext` for loading this Scene's original data.
             The defaults used are described in `Scene.default_ctx`.
 
         Example
@@ -212,9 +213,10 @@ class Scene(object):
 
         Raises
         ------
-        NotFoundError
+        `NotFoundError`
             If the ``scene_id`` cannot be found in the Descartes Labs catalog
         """
+
         if metadata_client is None:
             metadata_client = Metadata()
 
@@ -234,7 +236,8 @@ class Scene(object):
 
     def default_ctx(self):
         """
-        Return an AOI GeoContext for loading this Scene's original, unwarped data.
+        Return an :class:`AOI GeoContext <descarteslabs.scenes.geocontext.AOI>`
+        for loading this Scene's original, unwarped data.
 
         These defaults are used:
 
@@ -258,6 +261,7 @@ class Scene(object):
         -------
         ctx: AOI
         """
+
         resolution = None
         bounds = None
         bounds_crs = None
@@ -328,6 +332,7 @@ class Scene(object):
         >>> scene.coverage(scene.geometry.buffer(1))  # doctest: +SKIP
         0.8
         """
+
         if isinstance(geom, geocontext.GeoContext):
             shape = geom.geometry
         else:
@@ -422,9 +427,9 @@ class Scene(object):
             If requested bands are unavailable.
             If band names are not given or are invalid.
             If the requested bands have different dtypes.
-        NotFoundError
+        `NotFoundError`
             If a Scene's ID cannot be found in the Descartes Labs catalog
-        BadRequestError
+        `BadRequestError`
             If the Descartes Labs platform is given invalid parameters
         """
         if raster_client is None:
@@ -605,9 +610,9 @@ class Scene(object):
             If band names are not given or are invalid.
             If the requested bands have different dtypes.
             If ``format`` is invalid, or the path has an invalid extension.
-        NotFoundError
+        `NotFoundError`
             If a Scene's ID cannot be found in the Descartes Labs catalog
-        BadRequestError
+        `BadRequestError`
             If the Descartes Labs platform is given invalid parameters
         """
         bands = self._bands_to_list(bands)

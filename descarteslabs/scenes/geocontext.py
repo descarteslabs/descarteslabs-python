@@ -71,6 +71,7 @@ class GeoContext(object):
 
     GeoContexts are immutable.
     """
+
     __slots__ = "_geometry_lock_"
     # slots *suffixed* with an underscore will be ignored by `__eq__` and `__repr__`.
     # a double-underscore prefix would be more conventional, but that actually breaks as a slot name.
@@ -166,25 +167,25 @@ class AOI(GeoContext):
         geometry: GeoJSON-like dict, object with ``__geo_interface__``; optional
             Clip scenes to this geometry.
             Coordinates must be WGS84 (lat-lon).
-            If None, scenes will just be clipped to ``bounds``.
+            If :const:`None`, scenes will just be clipped to `bounds`.
         resolution: float, optional
             Distance, in units of the CRS, that the edge of each pixel
             represents on the ground.
-            Can only specify one of ``resolution`` and ``shape``.
+            Can only specify one of `resolution` and `shape`.
         crs: str, optional
             Coordinate Reference System into which scenes will be projected,
-            expressed as an EPSG code (like ``"EPSG:4326"``), a PROJ.4 definition,
+            expressed as an EPSG code (like :const:`EPSG:4326`), a PROJ.4 definition,
             or an OGC CRS Well-Known Text string
         align_pixels: bool, optional, default True
             If True, this ensures that, in different Scenes rasterized
             with this same AOI GeoContext, pixels ``(i, j)`` correspond
             to the same area in space. This is accomplished by snapping the
             coordinates of the origin (top-left corner of top-left pixel)
-            to a non-fractional interval of ``resolution``.
+            to a non-fractional interval of `resolution`.
 
-            If ``align_pixels`` is False, when using scenes with different
+            If `align_pixels` is False, when using scenes with different
             native resolutions and/or projections, pixels at the same indicies
-            can be misaligned by a fraction of ``resolution``
+            can be misaligned by a fraction of `resolution`
             (i.e. correspond to *slighly* different coordinates in space).
 
             However, this requires warping of the original image, which can be
@@ -192,18 +193,19 @@ class AOI(GeoContext):
             native resolution and projection.
         bounds: 4-tuple, optional
             Clip scenes to these ``(min_x, min_y, max_x, max_y)`` bounds,
-            expressed in ``bounds_crs`` (which defaults to WGS84 lat-lon).
-            ``bounds`` are automatically computed from ``geometry`` if not specified.
-            Otherwise, ``bounds`` are required.
+            expressed in `bounds_crs` (which defaults to WGS84 lat-lon).
+            `bounds` are automatically computed from `geometry` if not specified.
+            Otherwise, `bounds` are required.
         bounds_crs: str, optional, default "EPSG:4326"
-            The Coordinate Reference System of the ``bounds``,
-            given as an EPSG code (like ``"EPSG:4326"``), a PROJ.4 definition,
+            The Coordinate Reference System of the `bounds`,
+            given as an EPSG code (like :const:`EPSG:4326`), a PROJ.4 definition,
             or an OGC CRS Well-Known Text string.
         shape: 2-tuple, optional
             ``(rows, columns)``, in pixels, the output raster should fit within;
             the longer side of the raster will be min(shape).
-            Can only specify one of ``resolution`` and ``shape``.
+            Can only specify one of `resolution` and `shape`.
         """
+
         super(AOI, self).__init__()
 
         if bounds is None and geometry is not None:
@@ -225,9 +227,10 @@ class AOI(GeoContext):
     def geometry(self):
         """
         shapely geometry: Clip scenes to this geometry
-        Coordinates must be WGS84 (lat-lon)
-        If None, scenes will just be clipped to ``bounds``
+        Coordinates must be WGS84 (lat-lon).
+        If :const:`None`, scenes will just be clipped to `bounds`.
         """
+
         return self._geometry
 
     @property
@@ -236,27 +239,30 @@ class AOI(GeoContext):
         float: Distance, in units of the CRS, that the edge of each pixel
         represents on the ground.
         """
+
         return self._resolution
 
     @property
     def crs(self):
         """
         str: Coordinate reference system into which scenes will be projected,
-        expressed as an EPSG code (like ``"EPSG:4326"``), a PROJ.4 definition,
-        or an OGC CRS Well-Known Text string
+        expressed as an EPSG code (like :const:`EPSG:4326`), a PROJ.4 definition,
+        or an OGC CRS Well-Known Text string.
         """
+
         return self._crs
 
     @property
     def align_pixels(self):
         """
-        bool: If True, this ensures that, in different Scenes rasterized with
+        bool: If True, this ensures that, in different
+        `Scenes <descarteslabs.scenes.scene.Scene>` rasterized with
         this same AOI GeoContext, pixels ``(i, j)`` correspond to the
         same area in space. This is accomplished by snapping the coordinates of
         the origin (top-left corner of top-left pixel) to a non-fractional
-        interval of ``resolution``.
+        interval of `resolution`.
 
-        If ``align_pixels`` is False, when using scenes with different native
+        If `align_pixels` is False, when using scenes with different native
         resolutions and/or projections, pixels at the same indicies can be
         misaligned by a fraction of ``resolution`` (i.e. correspond to *slighly*
         different coordinates in space).
@@ -265,23 +271,26 @@ class AOI(GeoContext):
         undesireable when you want to work with the original data in its native
         resolution and projection.
         """
+
         return self._align_pixels
 
     @property
     def bounds(self):
         """
         tuple: Clip scenes to these ``(min_x, min_y, max_x, max_y)`` bounds,
-        expressed in the coordinate reference system in ``bounds_crs``.
+        expressed in the coordinate reference system in `bounds_crs`.
         """
+
         return self._bounds
 
     @property
     def bounds_crs(self):
         """
-        str: The coordinate reference system of the ``bounds``,
-        given as an EPSG code (like ``"EPSG:4326"``), a PROJ.4 definition,
+        str: The coordinate reference system of the `bounds`,
+        given as an EPSG code (like :const:`EPSG:4326`), a PROJ.4 definition,
         or an OGC CRS Well-Known Text string.
         """
+
         return self._bounds_crs
 
     @property
@@ -290,17 +299,21 @@ class AOI(GeoContext):
         tuple: ``(rows, columns)``, in pixels, the output raster should fit within;
         the longer side of the raster will be min(shape).
         """
+
         return self._shape
 
     @property
     def raster_params(self):
         """
-        dict: The properties of this AOI,
-        as keyword arguments to use for ``Raster.ndarray`` or ``Raster.raster``.
+        dict: The properties of this `AOI`,
+        as keyword arguments to use for
+        :class:`~descarteslabs.client.services.raster.raster.Raster.ndarray` or
+        :class:`~descarteslabs.client.services.raster.raster.Raster.raster`.
 
-        Raises ValueError if ``self.bounds``, ``self.crs``, ``self.bounds_crs``,
-        ``self.resolution``, or ``self.align_pixels`` is None.
+        Raises ValueError if `bounds`, `crs`, `bounds_crs`,
+        `resolution`, or `align_pixels` is :const:`None`.
         """
+
         # Ensure that there can be no ambiguity: every parameter must be specified,
         # so every raster call using this context will return spatially equivalent data
         if self._bounds is None:
@@ -334,10 +347,12 @@ class AOI(GeoContext):
     @property
     def __geo_interface__(self):
         """
-        dict: ``self.geometry`` as a GeoJSON Geometry dict,
-        otherwise ``self.bounds`` as a GeoJSON Polygon dict if ``self.geometry`` is None
-        and ``self.bounds_crs`` is ``"EPSG:4326"``, otherwise raises RuntimeError
+        dict: `self.geometry` as a GeoJSON Geometry dict,
+        otherwise `bounds` as a GeoJSON Polygon dict if `geometry` is
+        :const:`None` and `bounds_crs` is :const:`EPSG:4326`, otherwise
+        raises :exc:`RuntimeError`.
         """
+
         if self._geometry is not None:
             with self._geometry_lock_:
                 # see comment in `GeoContext.__init__` for why we need to prevent
@@ -366,12 +381,12 @@ class AOI(GeoContext):
         Note
         ----
             If you are assigning a new geometry and want bounds to updated as
-            well, use ``bounds="update"``. This will also change ``bounds_crs``
-            to ``"EPSG:4326"``, since the geometry's coordinates are in WGS84
+            well, use ``bounds="update"``. This will also change `bounds_crs`
+            to :const:`EPSG:4326`, since the geometry's coordinates are in WGS84
             decimal degrees, so the new bounds determined from those coordinates
             must be in that CRS as well.
 
-            If you assign ``geometry`` without changing ``bounds``,
+            If you assign `geometry` without changing `bounds`,
             the new AOI GeoContext will produce rasters with the same
             shape and covering the same spatial area as the old one, just with
             pixels masked out that fall outside your new geometry.
@@ -380,6 +395,7 @@ class AOI(GeoContext):
         -------
         new : `AOI`
         """
+
         new = copy.deepcopy(self)
         new._assign(
             geometry,
@@ -534,7 +550,8 @@ class AOI(GeoContext):
 
 class DLTile(GeoContext):
     """
-    A GeoContext that clips and projects Scenes to a single DLTile.
+    A GeoContext that clips and projects
+    :class:`Scenes <descarteslabs.scenes.scene.Scene>` to a single DLTile.
 
     DLTiles allow you to define a grid of arbitrary spacing, resolution,
     and overlap that can cover the globe.
@@ -564,6 +581,7 @@ class DLTile(GeoContext):
         It's preferred to use the `DLTile.from_latlon`, `DLTile.from_shape`,
         or `DLTile.from_key` class methods to construct a DLTile GeoContext.
         """
+
         super(DLTile, self).__init__()
         self._geometry = shapely.geometry.shape(dltile_dict['geometry'])
         properties = dltile_dict['properties']
@@ -586,7 +604,7 @@ class DLTile(GeoContext):
     @classmethod
     def from_latlon(cls, lat, lon, resolution, tilesize, pad, raster_client=None):
         """
-        Return a DLTile GeoContext that covers a latitude/longitude
+        Return a DLTile GeoContext that covers a latitude/longitude.
 
         Where the point falls within the tile will vary, depending on the point
         and tiling parameters.
@@ -612,6 +630,7 @@ class DLTile(GeoContext):
         -------
         tile : DLTile
         """
+
         if raster_client is None:
             raster_client = Raster()
         tile = raster_client.dltile_from_latlon(lat, lon, resolution, tilesize, pad)
@@ -621,21 +640,21 @@ class DLTile(GeoContext):
     def from_shape(cls, shape, resolution, tilesize, pad, raster_client=None):
         # TODO : non-overlapping tiles across UTM zones
         """
-        Return a list of DLTiles that intersect the given geometry
+        Return a list of DLTiles that intersect the given geometry.
 
         Parameters
         ----------
         shape : GeoJSON-like
-            A GeoJSON dict, or object with a __geo_interface__. Must be in
-            EPSG:4326 (WGS84 lat-lon) projection.
+            A GeoJSON dict, or object with a ``__geo_interface__``. Must be in
+            :const:`EPSG:4326` (WGS84 lat-lon) projection.
         resolution : float
-            Distance, in meters, that the edge of each pixel represents on the ground
+            Distance, in meters, that the edge of each pixel represents on the ground.
         tilesize : int
-            Length of each side of the tile, in pixels
+            Length of each side of the tile, in pixels.
         pad : int
             Number of extra pixels by which each side of the tile is buffered.
             This determines the number of pixels by which two tiles overlap.
-        raster_client : descarteslabs.client.services.Raster, optional, default None
+        raster_client : `Raster`, optional, default :const:`None`.
             Unneeded in general use; lets you use a specific client instance
             with non-default auth and parameters.
 
@@ -643,6 +662,7 @@ class DLTile(GeoContext):
         -------
         tiles : List[DLTile]
         """
+
         if raster_client is None:
             raster_client = Raster()
 
@@ -661,7 +681,7 @@ class DLTile(GeoContext):
         ----------
         dltile_key : str
             DLTile key, e.g. '128:16:960.0:15:-1:37'
-        raster_client : descarteslabs.client.services.Raster, optional, default None
+        raster_client : `Raster`, optional, default :const:`None`.
             Unneeded in general use; lets you use a specific client instance
             with non-default auth and parameters.
 
@@ -669,6 +689,7 @@ class DLTile(GeoContext):
         -------
         tile: DLTile
         """
+
         if raster_client is None:
             raster_client = Raster()
         tile = raster_client.dltile(dltile_key)
@@ -680,11 +701,13 @@ class DLTile(GeoContext):
         str: The DLTile's key, which encodes the tiling parameters,
         and which number in the grid this tile is.
         """
+
         return self._key
 
     @property
     def resolution(self):
         "float: Distance, in meters, that the edge of each pixel represents on the ground"
+
         return self._resolution
 
     @property
@@ -694,6 +717,7 @@ class DLTile(GeoContext):
         Note that the total number of pixels along each side of an image is
         ``tile_size + 2*padding``
         """
+
         return self._tilesize
 
     @property
@@ -702,6 +726,7 @@ class DLTile(GeoContext):
         int: Number of extra pixels by which each side of the tile is buffered.
         This determines the number of pixels by which two tiles overlap.
         """
+
         return self._pad
 
     @property
@@ -710,23 +735,26 @@ class DLTile(GeoContext):
         str: Coordinate reference system into which scenes will be projected.
         For DLTiles, this is always a UTM projection, given as an EPSG code.
         """
+
         return self._crs
 
     @property
     def bounds(self):
         """
         tuple: The ``(min_x, min_y, max_x, max_y)`` of the area covered by
-        this DLTile, in the UTM coordinate reference system given in ``bounds_crs``.
+        this DLTile, in the UTM coordinate reference system given in `bounds_crs`.
         """
+
         return self._bounds
 
     @property
     def bounds_crs(self):
         """
-        str: The coordinate reference system of the ``bounds``,
-        given as an EPSG code (like ``"EPSG:32615"``).
+        str: The coordinate reference system of the `bounds`,
+        given as an EPSG code (like :const:`EPSG:32615`).
         A DLTile's CRS is always UTM.
         """
+
         return self._bounds_crs
 
     @property
@@ -735,21 +763,25 @@ class DLTile(GeoContext):
         shapely.geometry.Polygon: The polygon covered by this DLTile
         in WGS84 (lat-lon) coordinates
         """
+
         return self._geometry
 
     @property
     def zone(self):
         "int: The UTM zone of this tile"
+
         return self._zone
 
     @property
     def ti(self):
         "int: The y-index of this tile in its grid"
+
         return self._ti
 
     @property
     def tj(self):
         "int: The x-index of this tile in its grid"
+
         return self._tj
 
     @property
@@ -758,6 +790,7 @@ class DLTile(GeoContext):
         dict: The properties of this DLTile,
         as keyword arguments to use for `Raster.ndarray` or `Raster.raster`.
         """
+
         return {
             "dltile": self._key,
             "align_pixels": False
@@ -773,13 +806,15 @@ class DLTile(GeoContext):
         """
         tuple: The 6-tuple GDAL geotrans for this DLTile in the shape
         ``(a, b, c, d, e, f)`` where
-        a is the top left pixel's x-coordinate
-        b is the west-east pixel resolution
-        c is the row rotation, always 0 for DLTiles
-        d is the top left pixel's y-coordinate
-        e is the column rotation, always 0 for DLTiles
-        f is the north-south pixel resolution, always a negative value
+
+        | a is the top left pixel's x-coordinate
+        | b is the west-east pixel resolution
+        | c is the row rotation, always 0 for DLTiles
+        | d is the top left pixel's y-coordinate
+        | e is the column rotation, always 0 for DLTiles
+        | f is the north-south pixel resolution, always a negative value
         """
+
         if self._geotrans is None:
             return None
 
@@ -788,16 +823,19 @@ class DLTile(GeoContext):
     @property
     def proj4(self):
         "str: PROJ.4 definition for this DLTile's coordinate reference system"
+
         return self._proj4
 
     @property
     def wkt(self):
         "str: OGC Well-Known Text definition for this DLTile's coordinate reference system"
+
         return self._wkt
 
     @property
     def __geo_interface__(self):
-        "dict: ``self.geometry`` as a GeoJSON Polygon"
+        "dict: `geometry` as a GeoJSON Polygon"
+
         with self._geometry_lock_:
             # see comment in `GeoContext.__init__` for why we need to prevent
             # parallel access to `self._geometry.__geo_interface__`
@@ -809,10 +847,11 @@ class XYZTile(GeoContext):
     A GeoContext for XYZ tiles, such as those used in web maps.
 
     The tiles are always 256x256 pixels, in the spherical Mercator
-    or "Web Mercator" coordinate reference system (EPSG:3857).
+    or "Web Mercator" coordinate reference system (:const:`EPSG:3857`).
 
     Requires the optional ``mercantile`` package.
     """
+
     __slots__ = (
         "_x",
         "_y",
@@ -830,6 +869,7 @@ class XYZTile(GeoContext):
         z: int
             Zoom level of the tile
         """
+
         self._x = x
         self._y = y
         self._z = z
@@ -838,32 +878,38 @@ class XYZTile(GeoContext):
     @property
     def x(self):
         "int: X-index of the tile (increases going east)"
+
         return self._x
 
     @property
     def y(self):
         "int: Y-index of the tile (increases going south)"
+
         return self._y
 
     @property
     def z(self):
         "int: Zoom level of the tile"
+
         return self._z
 
     def parent(self):
         "The parent XYZTile enclosing this one"
+
         return self.__class__(*mercantile.parent(self._x, self._y, self._z))
 
     def children(self):
         "List of child XYZTiles contained within this one"
+
         return [self.__class__(*t) for t in mercantile.children(self._x, self._y, self._z)]
 
     @property
     def geometry(self):
         """
         shapely.geometry.Polygon: The polygon covered by this XYZTile
-        in WGS84 (lat-lon) coordinates
+        in :const:`WGS84` (lat-lon) coordinates
         """
+
         return shapely.geometry.box(*mercantile.bounds(self._x, self._y, self._z))
 
     @property
@@ -872,22 +918,25 @@ class XYZTile(GeoContext):
         tuple: The ``(min_x, min_y, max_x, max_y)`` of the area covered by
         this XYZTile, in spherical Mercator coordinates (EPSG:3857).
         """
+
         return tuple(mercantile.xy_bounds(self._x, self._y, self._z))
 
     @property
     def crs(self):
         """
         str: Coordinate reference system into which scenes will be projected.
-        Always ``"EPSG:3857"`` (spherical Mercator, aka "Web Mercator")
+        Always :const:`EPSG:3857` (spherical Mercator, aka "Web Mercator")
         """
+
         return "EPSG:3857"
 
     @property
     def bounds_crs(self):
         """
-        str: The coordinate reference system of the ``bounds``.
-        Always ``"EPSG:3857"`` (spherical Mercator, aka "Web Mercator")
+        str: The coordinate reference system of the `bounds`.
+        Always :const:`EPSG:3857` (spherical Mercator, aka "Web Mercator")
         """
+
         return "EPSG:3857"
 
     @property
@@ -895,11 +944,13 @@ class XYZTile(GeoContext):
         """
         int: Length of each side of the tile, in pixels. Always 256.
         """
+
         return 256
 
     @property
     def __geo_interface__(self):
-        "dict: ``self.geometry`` as a GeoJSON Polygon"
+        "dict: `geometry` as a GeoJSON Polygon"
+
         return self.geometry.__geo_interface__
 
     @property
@@ -908,6 +959,7 @@ class XYZTile(GeoContext):
         dict: The properties of this XYZTile,
         as keyword arguments to use for `Raster.ndarray` or `Raster.raster`.
         """
+
         return {
             "bounds": self.bounds,
             "srs": self.crs,

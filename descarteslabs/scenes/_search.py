@@ -66,7 +66,7 @@ def search(aoi,
     limit : int or None, optional, default 100
         Maximum number of Scenes to return, or None for all results.
     sort_field : str, optional
-        Field name in ``Scene.properties`` by which to order the results
+        Field name in `Scene.properties` by which to order the results
     sort_order : str, optional, default 'asc'
         ``"asc"`` or ``"desc"``
     date_field : str, optional, default 'acquired'
@@ -88,7 +88,7 @@ def search(aoi,
 
     Returns
     -------
-    scenes : SceneCollection
+    scenes : `SceneCollection`
         Scenes matching your criteria.
     ctx: :class:`~descarteslabs.scenes.geocontext.GeoContext`
         The given ``aoi`` as a :class:`~descarteslabs.scenes.geocontext.GeoContext` (if it isn't one already),

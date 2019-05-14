@@ -188,9 +188,9 @@ class SceneCollection(Collection):
             or are invalid.
             If not all required parameters are specified in the :class:`~descarteslabs.scenes.geocontext.GeoContext`.
             If the SceneCollection is empty.
-        NotFoundError
+        `NotFoundError`
             If a Scene's ID cannot be found in the Descartes Labs catalog
-        BadRequestError
+        `BadRequestError`
             If the Descartes Labs platform is given unrecognized parameters
         """
         if len(self) == 0:
@@ -366,9 +366,9 @@ class SceneCollection(Collection):
             or are invalid.
             If not all required parameters are specified in the :class:`~descarteslabs.scenes.geocontext.GeoContext`.
             If the SceneCollection is empty.
-        NotFoundError
+        `NotFoundError`
             If a Scene's ID cannot be found in the Descartes Labs catalog
-        BadRequestError
+        `BadRequestError`
             If the Descartes Labs platform is given unrecognized parameters
         """
         if len(self) == 0:
@@ -560,9 +560,9 @@ class SceneCollection(Collection):
             If ``format`` is invalid, or a path has an invalid extension.
         TypeError
             If ``dest`` is not a string or a sequence type.
-        NotFoundError
+        `NotFoundError`
             If a Scene's ID cannot be found in the Descartes Labs catalog
-        BadRequestError
+        `BadRequestError`
             If the Descartes Labs platform is given unrecognized parameters
         """
         if len(self) == 0:
@@ -712,9 +712,9 @@ class SceneCollection(Collection):
             If not all required parameters are specified in the :class:`~descarteslabs.scenes.geocontext.GeoContext`.
             If the SceneCollection is empty.
             If ``format`` is invalid, or the path has an invalid extension.
-        NotFoundError
+        `NotFoundError`
             If a Scene's ID cannot be found in the Descartes Labs catalog
-        BadRequestError
+        `BadRequestError`
             If the Descartes Labs platform is given unrecognized parameters
         """
         if len(self) == 0:

@@ -10,7 +10,7 @@ raster services that makes most interactions easier.
 * :doc:`search <docs/search>`: search for Scenes
 * :doc:`display <docs/display>`: display ndarrays with matplotlib
 
-It's available under ``dl.scenes``.
+It's available under ``descarteslabs.scenes``.
 """
 
 from .geocontext import AOI, DLTile, XYZTile, GeoContext

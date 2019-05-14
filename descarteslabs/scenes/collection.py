@@ -27,6 +27,7 @@ class Collection(object):
     List-based sequence with convenience methods for mapping and filtering,
     and NumPy-style fancy indexing
     """
+
     def __init__(self, iterable=None):
         if iterable is None:
             self._list = []
@@ -39,6 +40,7 @@ class Collection(object):
         self[<list>] <--> Collection(self[i] for i in <list>)
         Can slice like a normal list, or with a list of indices to select
         """
+
         if isinstance(idx, list) or type(idx).__name__ == 'ndarray':
             subset = [self._list[i] for i in idx]
             return self._cast_and_copy_attrs_to(subset)
@@ -53,6 +55,7 @@ class Collection(object):
         Can assign a scalar, or a list of equal length to the slice,
         to any valid slice (including an list of indices)
         """
+
         if isinstance(idx, (list, slice)) or type(idx).__name__ == 'ndarray':
             if isinstance(idx, slice):
                 idx = list(range(*idx.indices(len(self))))
@@ -95,16 +98,20 @@ class Collection(object):
     @property
     def each(self):
         """
-        Any operations chained onto ``.each`` (attribute access, item access,
-        and calls) are applied to each item in the Collection.
+        Any operations chained onto
+        :attr:`~descarteslabs.scenes.collection.Collection.each` (attribute access,
+        item access, and calls) are applied to each item in the
+        :class:`~descarteslabs.scenes.collection.Collection`.
 
         Notes
         -----
-            * Add ``.combine()`` at the end of the operations chain
-              to combine the results into a list by default, or any
-              container type passed into ``.combine()``
-            * Use ``.pipe(f, *args, **kwargs)`` to yield
-              ``f(x, *args, **kwargs)`` for each item ``x`` yielded by the
+            * Add :meth:`~descarteslabs.scenes.collection.Eacher.combine`
+              at the end of the operations chain to combine the results into a
+              list by default, or any container type passed into
+              :meth:`~descarteslabs.scenes.collection.Eacher.combine`
+            * Use
+              :meth:`pipe(f, *args, **kwargs) <descarteslabs.scenes.collection.Eacher.pipe>`
+              to yield ``f(x, *args, **kwargs)`` for each item ``x`` yielded by the
               preceeding operations chain
 
         Examples
@@ -131,23 +138,27 @@ class Collection(object):
 
         Yields
         ------
-            item with all operations following ``.each`` applied to it
+            item with all operations following :attr:`~descarteslabs.scenes.collection.Collection.each` applied to it
+
         """
         return Eacher(iter(self._list))
 
     def map(self, f):
-        "Returns Collection of ``f`` applied to each item in self"
+        "Returns a :class:`~descarteslabs.scenes.collection.Collection` of ``f`` applied to each item"
+
         res = (f(x) for x in self._list)
         return self._cast_and_copy_attrs_to(res)
 
     def filter(self, predicate):
-        "Returns Collection of items in self for which ``predicate(item)`` is True"
+        "Returns a :class:`~descarteslabs.scenes.collection.Collection` of items for which ``predicate(item)`` is True"
+
         res = (x for x in self._list if predicate(x))
         return self._cast_and_copy_attrs_to(res)
 
     def sorted(self, *predicates, **reverse):
         """
-        Returns a copy of self, sorted by predicates in ascending order.
+        Returns a :class:`~descarteslabs.scenes.collection.Collection`,
+        sorted by predicates in ascending order.
 
         Each predicate can be a key function, or a string of dot-chained attributes
         to use as sort keys. The reverse flag returns results in descending order.
@@ -164,6 +175,7 @@ class Collection(object):
         >>> c.sorted("bar.x")
         Collection([FooBar(foo=1, bar=X(x='one')), FooBar(foo=3, bar=X(x='three')), FooBar(foo=2, bar=X(x='two'))])
         """
+
         if len(predicates) == 0:
             raise TypeError("No predicate(s) given to sorted")
         predicates = [self._str_to_predicate(p) if isinstance(p, six.string_types) else p for p in predicates]
@@ -179,7 +191,8 @@ class Collection(object):
     def groupby(self, *predicates):
         """
         Groups items by predicates and yields tuple of ``(group, items)``
-        for each group, where ``items`` is a Collection.
+        for each group, where ``items`` is a
+        :class:`~descarteslabs.scenes.collection.Collection`.
 
         Each predicate can be a key function, or a string of dot-chained attributes
         to use as sort keys.
@@ -205,6 +218,7 @@ class Collection(object):
         True
         Collection([FooBar(foo='a', bar=True)])
         """
+
         if len(predicates) == 0:
             raise TypeError("No predicate(s) given to groupby")
         predicates = [self._str_to_predicate(p) if isinstance(p, six.string_types) else p for p in predicates]
@@ -219,11 +233,13 @@ class Collection(object):
             yield group, self._cast_and_copy_attrs_to(items)
 
     def append(self, x):
-        "Append x to end of self"
+        "Append x to the end of this :class:`~descarteslabs.scenes.collection.Collection`"
+
         self._list.append(x)
 
     def extend(self, x):
-        "Extend self by appending elements from the iterable"
+        "Extend this :class:`~descarteslabs.scenes.collection.Collection` by appending elements from the iterable"
+
         self._list.extend(x)
 
     @staticmethod
@@ -240,6 +256,7 @@ class Collection(object):
 
 class Eacher(object):
     "Applies operations chained onto it to each item in an iterator"
+
     __slots__ = ("_iterable")
 
     def __init__(self, iterable):
@@ -259,10 +276,12 @@ class Eacher(object):
 
     def combine(self, collection=list):
         "``self.combine(collection) <--> collection(iter(self))``"
+
         return collection(iter(self))
 
     def pipe(self, callable, *args, **kwargs):
         "``self.pipe(f, *args, **kwargs) <--> f(x, *args, **kwargs) for x in self``"
+
         return Eacher(callable(x, *args, **kwargs) for x in self)
 
     def __repr__(self):
