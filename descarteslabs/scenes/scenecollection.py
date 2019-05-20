@@ -27,6 +27,7 @@ from descarteslabs.client.exceptions import NotFoundError, BadRequestError
 from .collection import Collection
 from .scene import Scene
 from . import _download
+from . import _helpers
 
 
 class SceneCollection(Collection):
@@ -103,6 +104,11 @@ class SceneCollection(Collection):
         Load bands from all scenes and stack them into a 4D ndarray,
         optionally masking invalid data.
 
+        If the selected bands and scenes have different data types the resulting
+        ndarray has the most general of those data types. See
+        `Scene.ndarray() <descarteslabs.scenes.scene.Scene.ndarray>` for details
+        on data type conversions.
+
         Parameters
         ----------
         bands : str or Sequence[str]
@@ -177,6 +183,8 @@ class SceneCollection(Collection):
             Returned array's shape is ``(scene, band, y, x)`` if bands_axis is 1,
             or ``(scene, y, x, band)`` if bands_axis is -1.
             If ``mask_nodata`` or ``mask_alpha`` is True, arr will be a masked array.
+            The data type ("dtype") of the array is the most general of the data
+            types among the scenes being rastered.
         raster_info : List[dict]
             If ``raster_info=True``, a list of raster information dicts for each scene
             is also returned
@@ -306,6 +314,11 @@ class SceneCollection(Collection):
         Where multiple scenes overlap, only data from the scene that comes last
         in the SceneCollection is used.
 
+        If the selected bands and scenes have different data types the resulting
+        ndarray has the most general of those data types. See
+        `Scene.ndarray() <descarteslabs.scenes.scene.Scene.ndarray>` for details
+        on data type conversions.
+
         Parameters
         ----------
         bands : str or Sequence[str]
@@ -356,6 +369,8 @@ class SceneCollection(Collection):
             Returned array's shape will be ``(band, y, x)`` if ``bands_axis``
             is 0, and ``(y, x, band)`` if ``bands_axis`` is -1.
             If ``mask_nodata`` or ``mask_alpha`` is True, arr will be a masked array.
+            The data type ("dtype") of the array is the most general of the data
+            types among the scenes being rastered.
         raster_info : dict
             If ``raster_info=True``, a raster information dict is also returned.
 
@@ -763,10 +778,14 @@ class SceneCollection(Collection):
             if common_data_type is None:
                 common_data_type = data_type
             else:
-                if data_type != common_data_type:
+                merged_data_type = _helpers.common_data_type(common_data_type, data_type)
+                if merged_data_type:
+                    common_data_type = merged_data_type
+                else:
                     raise ValueError(
-                        "Bands must all have the same dtype in every Scene. "
-                        "The requested bands in Scene {} have dtype '{}', but all prior Scenes had dtype '{}'"
+                        "Bands must all have compatible dtypes in every Scene. "
+                        "The requested bands in Scene {} have common dtype '{}', "
+                        "but all prior Scenes had common dtype '{}'"
                         .format(i, data_type, common_data_type)
                     )
         return common_data_type

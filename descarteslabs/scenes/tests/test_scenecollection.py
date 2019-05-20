@@ -140,7 +140,7 @@ class TestSceneCollection(unittest.TestCase):
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
-    def test_fails_with_different_dtypes(self):
+    def test_fails_with_incompatible_dtypes(self):
         scenes = ("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1", "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
         scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
 
@@ -148,7 +148,7 @@ class TestSceneCollection(unittest.TestCase):
         ctx = ctxs[0].assign(geometry=overlap, bounds="update", resolution=600)
 
         scenes = SceneCollection(scenes)
-        scenes[0].properties.bands.nir.dtype = "Byte"
+        scenes[0].properties.bands.nir.dtype = "Int16"
         with self.assertRaises(ValueError):
             mosaic, meta = scenes.mosaic("nir", ctx)
         with self.assertRaises(ValueError):

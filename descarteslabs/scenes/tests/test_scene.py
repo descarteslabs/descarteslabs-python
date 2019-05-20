@@ -275,6 +275,8 @@ class TestScene(unittest.TestCase):
                 "derived:three": dict(dtype="UInt16"),
                 "derived:one": dict(dtype="UInt16"),
                 "its_a_byte": dict(dtype="Byte"),
+                "signed": dict(dtype="Int16"),
+                "future_unknown_type": dict(dtype="FutureInt16"),
                 "alpha": dict(dtype="Byte"),
                 "no_dtype": {},
             }
@@ -286,14 +288,19 @@ class TestScene(unittest.TestCase):
         self.assertEqual(s._common_data_type_of_bands(["one", "alpha"]), "UInt16")  # alpha ignored from common datatype
         self.assertEqual(s._common_data_type_of_bands(["alpha"]), "Byte")
         self.assertEqual(s._common_data_type_of_bands(["one", "two", "derived:three", "derived:one"]), "UInt16")
+        self.assertEqual(s._common_data_type_of_bands(["one", "its_a_byte"]), "UInt16")
+        self.assertEqual(s._common_data_type_of_bands(["signed", "its_a_byte"]), "Int16")
+
         with self.assertRaisesRegexp(ValueError, "is not available"):
             s._common_data_type_of_bands(["one", "woohoo"])
         with self.assertRaisesRegexp(ValueError, "Did you mean"):
             s._common_data_type_of_bands(["one", "three"])  # should hint that derived:three exists
         with self.assertRaisesRegexp(ValueError, "has no 'dtype' field"):
             s._common_data_type_of_bands(["one", "no_dtype"])
-        with self.assertRaisesRegexp(ValueError, "Bands must all have the same dtype"):
-            s._common_data_type_of_bands(["one", "its_a_byte"])
+        with self.assertRaisesRegexp(ValueError, "Bands must all have"):
+            s._common_data_type_of_bands(["one", "signed"])
+        with self.assertRaisesRegexp(ValueError, "Bands must all have"):
+            s._common_data_type_of_bands(["its_a_byte", "future_unknown_type"])
 
     def test__naive_dateparse(self):
         self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00+00:00"))

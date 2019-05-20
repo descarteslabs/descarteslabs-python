@@ -355,6 +355,18 @@ class Scene(object):
         """
         Load bands from this scene as an ndarray, optionally masking invalid data.
 
+        If the selected bands have different data types the resulting ndarray
+        has the most general of those data types. This table defines which data types
+        can be cast to which more general data types:
+
+        * ``Byte`` to: ``UInt16``, ``UInt32``, ``Int16``, ``Int32``, ``Float32``, ``Float64``
+        * ``UInt16`` to: ``UInt32``, ``Int32``, ``Float32``, ``Float64``
+        * ``UInt32`` to: ``Float64``
+        * ``Int16`` to: ``Int32``, ``Float32``, ``Float64``
+        * ``Int32`` to: ``Float32``, ``Float64``
+        * ``Float32`` to: ``Float64``
+        * ``Float64`` to: No possible casts
+
         Parameters
         ----------
         bands : str or Sequence[str]
@@ -405,8 +417,10 @@ class Scene(object):
         -------
         arr : ndarray
             Returned array's shape will be ``(band, y, x)`` if bands_axis is 0,
-            ``(y, x, band)`` if bands_axis is -1
+            ``(y, x, band)`` if bands_axis is -1.
             If ``mask_nodata`` or ``mask_alpha`` is True, arr will be a masked array.
+            The data type ("dtype") of the array is the most general of the data
+            types among the bands being rastered.
         raster_info : dict
             If ``raster_info=True``, a raster information dict is also returned.
 
@@ -426,7 +440,7 @@ class Scene(object):
         ValueError
             If requested bands are unavailable.
             If band names are not given or are invalid.
-            If the requested bands have different dtypes.
+            If the requested bands have incompatible dtypes.
         `NotFoundError`
             If a Scene's ID cannot be found in the Descartes Labs catalog
         `BadRequestError`
@@ -608,7 +622,7 @@ class Scene(object):
         ValueError
             If requested bands are unavailable.
             If band names are not given or are invalid.
-            If the requested bands have different dtypes.
+            If the requested bands have incompatible dtypes.
             If ``format`` is invalid, or the path has an invalid extension.
         `NotFoundError`
             If a Scene's ID cannot be found in the Descartes Labs catalog
@@ -695,7 +709,7 @@ class Scene(object):
         return "\n".join(parts)
 
     def _common_data_type_of_bands(self, bands):
-        "Ensure all requested bands are available, and that they all have the same dtypes"
+        "Ensure all requested bands are available, and that they all have compatible dtypes"
         self_bands = self.properties["bands"]
         common_data_type = None
         for b in bands:
@@ -708,26 +722,27 @@ class Scene(object):
                 if as_derived in self_bands:
                     msg += ", but '{}' is. Did you mean that?".format(as_derived)
                 six.raise_from(ValueError(msg), None)
-            if not (len(bands) > 1 and b == "alpha"):  # allow alpha band to have a different dtype from the rest
-                try:
-                    data_type = band["dtype"]
-                except KeyError:
-                    six.raise_from(
-                        ValueError(
-                            "Band '{}' of product '{}' has no 'dtype' field. "
-                            "If you created this product, you can fix the metadata "
-                            "at https://catalog.descarteslabs.com.".format(b, self.properties["product"])
-                        ),
-                        None
-                    )
-                if common_data_type is None:
-                    common_data_type = data_type
+
+            data_type = band.get("dtype")
+            if not data_type:
+                raise ValueError(
+                    "Band '{}' of product '{}' has no 'dtype' field. "
+                    "If you created this product, you can fix the metadata "
+                    "at https://catalog.descarteslabs.com.".format(b, self.properties["product"])
+                )
+
+            if common_data_type is None:
+                common_data_type = data_type
+            else:
+                merged_data_type = _helpers.common_data_type(common_data_type, data_type)
+                if merged_data_type:
+                    common_data_type = merged_data_type
                 else:
-                    if data_type != common_data_type:
-                        raise ValueError(
-                            "Bands must all have the same dtype. The band '{}' has dtype '{}', "
-                            "but all bands before it had the dtype '{}'.".format(b, data_type, common_data_type)
-                        )
+                    raise ValueError(
+                        "Bands must all have compatible dtypes. The band '{}' has dtype '{}', "
+                        "but all bands before had the common dtype '{}'.".format(b, data_type, common_data_type)
+                    )
+
         return common_data_type
 
     @staticmethod

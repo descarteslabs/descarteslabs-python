@@ -9,6 +9,17 @@ except ImportError:
     import collections as abc
 
 
+_valid_data_type_casts = {
+    "Byte": {"UInt16", "UInt32", "Int16", "Int32", "Float32", "Float64"},
+    "UInt16": {"UInt32", "Int32", "Float32", "Float64"},
+    "UInt32": {"Float64"},
+    "Int16": {"Int32", "Float32", "Float64"},
+    "Int32": {"Float32", "Float64"},
+    "Float32": {"Float64"},
+    "Float64": {},
+}
+
+
 def polygon_from_bounds(bounds):
     "Return a GeoJSON Polygon dict from a (minx, miny, maxx, maxy) tuple"
     return {
@@ -142,3 +153,16 @@ def as_geojson_geometry(geojson_dict):
                     "feature in FeatureCollection not recognized as valid ({}): {}".format(str(ex), feature))
         geoj = geojson.GeometryCollection(features)
     return geoj
+
+
+def common_data_type(dtype1, dtype2):
+    """
+    Return the common (GDAL) data type that both of the given data types can be cast to, or
+    None if there is no common one.
+    """
+    if dtype1 == dtype2 or dtype1 in _valid_data_type_casts.get(dtype2, ()):
+        return dtype1
+    elif dtype2 in _valid_data_type_casts.get(dtype1, ()):
+        return dtype2
+    else:
+        return None

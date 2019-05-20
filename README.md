@@ -14,6 +14,7 @@ Changelog
 - Metadata, Catalog, and Scenes now support a new `storage_state` property for managing image metadata and filtering search results. `storage_state="available"` is the default for new images and indicates that the raster data for that scene is available on the Descartes Labs platform. `storage_state="remote"` indicates that the raster data has not yet been processed and made available to client users.
 
 ### Changed
+- Bands of different but compatible types can now be rastered together in `Scene.ndarray()` and `Scene.download()` as well as across multiple scenes in `SceneCollection.mosaic()`, `SceneCollection.stack()` and `SceneCollection.download()`. The result will have the most general data type.
 
 ### Fixed
 
