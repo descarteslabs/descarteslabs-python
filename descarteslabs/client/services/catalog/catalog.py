@@ -344,7 +344,8 @@ class Catalog(Service):
                           Must be 'Alpha' if `type` is 'mask'.
                           Must be 'Palette' if `colormap_name` or `colormap` is set.
         :param str colormap_name: A named colormap to use for this band, one of
-                                  ['plasma', 'magma', 'viridis', 'msw', 'inferno']
+                                  ['plasma', 'magma', 'viridis', 'msw', 'inferno',
+                                  'cool', 'coolwarm', 'hot', 'bwr', 'gist_earth', 'terrain']
         :param list(list(str)) colormap: A custom colormap to use for this band. Takes a list of lists, where each
                                          nested list is a 4-tuple of rgba values to map pixels whose value is the index
                                          of the tuple. i.e the colormap [["100", "20", "200", "255"]] would map pixels
