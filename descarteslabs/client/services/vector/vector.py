@@ -100,7 +100,7 @@ class Vector(JsonApiService):
     SEARCH_PAGE_SIZE = 1000
     properties = GenericProperties()
 
-    def __init__(self, url=None, auth=None):
+    def __init__(self, url=None, auth=None, retries=None):
         """
         The parent Service class implements authentication and exponential backoff/retry.
         Override the url parameter to use a different instance of the backing service.
@@ -116,7 +116,7 @@ class Vector(JsonApiService):
             )
         self._gcs_upload_service = ThirdPartyService()
 
-        super(Vector, self).__init__(url, auth=auth)
+        super(Vector, self).__init__(url, auth=auth, retries=retries)
 
     def list_products(self, page_size=100, page=1):
         """

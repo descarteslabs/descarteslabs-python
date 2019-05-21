@@ -89,7 +89,7 @@ class Tasks(Service):
     IMPORT_TEMPLATE = "from {module} import {obj}"
     IS_GLOB_PATTERN = re.compile(r'[\*\?\[]')
 
-    def __init__(self, url=None, auth=None):
+    def __init__(self, url=None, auth=None, retries=None):
         if auth is None:
             auth = Auth()
 
@@ -101,7 +101,7 @@ class Tasks(Service):
 
         self._gcs_upload_service = ThirdPartyService()
 
-        super(Tasks, self).__init__(url, auth=auth)
+        super(Tasks, self).__init__(url, auth=auth, retries=retries)
 
     def _create_namespace(self):
         """

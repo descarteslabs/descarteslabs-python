@@ -39,7 +39,7 @@ class Catalog(Service):
     ]
     TIMEOUT = (9.5, 30)
 
-    def __init__(self, url=None, auth=None, metadata=None):
+    def __init__(self, url=None, auth=None, metadata=None, retries=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
@@ -48,7 +48,7 @@ class Catalog(Service):
             auth = Auth()
 
         if metadata is None:
-            self._metadata = Metadata(auth=auth)
+            self._metadata = Metadata(auth=auth, retries=retries)
         else:
             self._metadata = metadata
 

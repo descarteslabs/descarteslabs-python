@@ -26,7 +26,7 @@ class Storage(Service):
 
     TIMEOUT = (9.5, 120)
 
-    def __init__(self, url=None, auth=None):
+    def __init__(self, url=None, auth=None, retries=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
@@ -43,7 +43,7 @@ class Storage(Service):
 
         self._gcs_upload_service = ThirdPartyService()
 
-        super(Storage, self).__init__(url, auth=auth)
+        super(Storage, self).__init__(url, auth=auth, retries=retries)
 
     def get_signed_url(self, key, storage_type="data"):
         r = self.session.get(

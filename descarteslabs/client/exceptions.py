@@ -46,6 +46,10 @@ class ConflictError(ClientError):
 class RateLimitError(ClientError):
     status = 429
 
+    def __init__(self, message, retry_after=None):
+        super(RateLimitError, self).__init__(message)
+        self.retry_after = retry_after
+
 
 class RetryWithError(ClientError):
     status = 449
