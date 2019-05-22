@@ -212,32 +212,6 @@ class Storage(Service):
             for item in r.json():
                 yield item
 
-    def copy_from_bucket(
-        self, src_bucket_name, src, dest, user_ns=None, storage_type="data"
-    ):
-        """Copy a file from a google cloud storage bucket to your descartes
-        data bucket. This requires that the dlstorage service account have
-        access to your 3rd party bucket.
-
-        :param str src_bucket_name: The name of the bucket from which you want to copy data.
-        :param str src: The path to the file you want to copy inside the src_bucket_name` bucket.
-        :param str dest: The new path of the file inside the descarteslabs data bucket.
-
-        """
-        if user_ns is None:
-            user_ns = self.auth.namespace
-        r = self.session.post(
-            "/copy/{user_ns}/src/{src_bucket}/{src}/dest/{storage_type}/{dest}".format(
-                user_ns=user_ns,
-                src_bucket=src_bucket_name,
-                src=src,
-                storage_type=storage_type,
-                dest=dest,
-            ),
-            json={},
-        )
-        return r.json()
-
     def set_file(self, key, file_obj, storage_type="data"):
         """
         Stores data from a file or file-like object at location ``key`` with storage
