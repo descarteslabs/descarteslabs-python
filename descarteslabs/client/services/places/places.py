@@ -28,9 +28,16 @@ class Places(Service):
     """Places and statistics service"""
 
     def __init__(self, url=None, auth=None, maxsize=10, ttl=600, retries=None):
-        """The parent Service class implements authentication and exponential
-        backoff/retry. Override the url parameter to use a different instance
-        of the backing service.
+        """
+        :param str url: A HTTP URL pointing to a version of the storage service
+            (defaults to current version)
+        :param Auth auth: A custom user authentication (defaults to the user
+            authenticated locally by token information on disk or by environment
+            variables)
+        :param int maxsize: Maximum size of the internal cache
+        :param int ttl: Maximum lifetime of entries in the internal cache in seconds
+        :param urllib3.util.retry.Retry retries: A custom retry configuration
+            used for all API requests (defaults to a reasonable amount of retries)
         """
         if auth is None:
             auth = Auth()

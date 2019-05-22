@@ -22,14 +22,22 @@ from descarteslabs.client.exceptions import NotFoundError
 
 
 class Storage(Service):
-    """Data Storage Service"""
+    """
+    The Storage API provides a mechanism to store arbitrary data and later retrieve it using
+    simple key-value pair semantics.
+    """
 
     TIMEOUT = (9.5, 120)
 
     def __init__(self, url=None, auth=None, retries=None):
-        """The parent Service class implements authentication and exponential
-        backoff/retry. Override the url parameter to use a different instance
-        of the backing service.
+        """
+        :param str url: A HTTP URL pointing to a version of the storage service
+            (defaults to current version)
+        :param Auth auth: A custom user authentication (defaults to the user
+            authenticated locally by token information on disk or by environment
+            variables)
+        :param urllib3.util.retry.Retry retries: A custom retry configuration
+            used for all API requests (defaults to a reasonable amount of retries)
         """
         if auth is None:
             auth = Auth()
@@ -46,6 +54,15 @@ class Storage(Service):
         super(Storage, self).__init__(url, auth=auth, retries=retries)
 
     def get_signed_url(self, key, storage_type="data"):
+        """
+        Gets a temporary signed URL for downloading data stored at a key.
+
+        :param str key: A key a storage blob
+        :param str storage_type: A type of data storage. Possible values:
+            ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
+        :return: A temporary signed URL used to download the data
+        :rtype: str
+        """
         r = self.session.get(
             "/{storage_type}/get_signed_url/{key}".format(
                 storage_type=storage_type, key=key
@@ -55,6 +72,15 @@ class Storage(Service):
         return r.content.decode("ascii")
 
     def get_upload_url(self, key, storage_type="data", **kwargs):
+        """
+        Gets a temporary signed URL for uploading data to a key.
+
+        :param str key: A key a storage blob
+        :param str storage_type: A type of data storage. Possible values:
+            ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
+        :return: A temporary signed URL used to upload data to
+        :rtype: str
+        """
         r = self.session.get(
             "/{storage_type}/new_resumable_url/{key}".format(
                 storage_type=storage_type, key=key
@@ -66,12 +92,14 @@ class Storage(Service):
 
     def delete(self, key, storage_type="data"):
         """
-        Delete the data stored at location `key` with storage type
-        `storage_type`
+        Deletes the data stored at location ``key`` with storage type
+        ``storage_type``.
 
-        :param str key: A unique string mapped to an existing storage blob
-        :param str storage_type: A type of data storage. Possible values: data", "tmp", "result".  Default: "data".
-
+        :param str key: A key identifying an existing storage blob
+        :param str storage_type: A type of data storage. Possible values:
+            ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
+        :raises descarteslabs.client.exceptions.NotFoundError: if no data exists
+            for the given key and storage type
         """
 
         self.session.delete(
@@ -80,12 +108,13 @@ class Storage(Service):
 
     def set(self, key, value, storage_type="data"):
         """
-        Store string `value` at location `key`, with storage type
-        `storage_type`
+        Stores a value at location ``key`` with storage type ``storage_type``.
 
-        :param str key: A unique string mapped to an existing storage blob
-        :param str value: bytes or file-like object to be stored at location `key`
-        :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
+        :param str key: A key identifying a storage blob
+        :param str|file-like value: A string value or file-like object to be stored
+            at location ``key``
+        :param str storage_type: A type of data storage. Possible values:
+            ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
         """
 
         rurl = self.get_upload_url(key, storage_type=storage_type)
@@ -95,15 +124,15 @@ class Storage(Service):
 
     def get(self, key, storage_type="data"):
         """
-        Retrieve data stored at location `key`, with storage type
-        `storage_type`
+        Retrieves data stored at location ``key`` with storage type ``storage_type``.
 
-        :param str key: A unique string mapped to an existing storage blob
-        :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
-
-        Returns:
-            The string that was stored at `key`
-
+        :param str key: A key identifying a storage blob
+        :param str storage_type: A type of data storage. Possible values:
+            ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
+        :return: the data stored at ``key`` as a string
+        :rtype: str
+        :raises descarteslabs.client.exceptions.NotFoundError: if no data exists
+            for the given key and storage type
         """
 
         r = self.session.get(
@@ -114,14 +143,15 @@ class Storage(Service):
 
     def exists(self, key, storage_type="data"):
         """
-        Determine if there is data stored at location `key` with storage type `storage_type`
+        Determine if there is data stored at location ``key`` with storage type
+        ``storage_type``.
 
-        :param str key: A unique string
-        :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
+        :param str key: A key identifying a storage blob
+        :param str storage_type: A type of data storage. Possible values:
+            ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
 
-        Returns:
-            A boolean value indicating whether there is data at location `key`
-
+        :return: whether there is data at location ``key``
+        :rtype: bool
         """
         r = None
         try:
@@ -135,14 +165,15 @@ class Storage(Service):
 
     def list(self, prefix=None, storage_type="data"):
         """
-        List keys that have been stored, with an optional `prefix` and `storage_type`.
+        Lists keys stored under the given ``storage_type``, optionally with a required
+        ``prefix``. Includes up to 1000 results, use :meth:`Storage.iter_list` to iterate
+        over more results.
 
-        :param str prefix: A prefix match of keys returned.
-        :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
-
-        Returns:
-            A list of keys.
-
+        :param str prefix: Only include keys with this prefix if given
+        :param str storage_type: A type of data storage. Possible values:
+            ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
+        :return: A list of matching keys
+        :rtype: list(str)
         """
 
         r = self.session.get(
@@ -154,14 +185,14 @@ class Storage(Service):
 
     def iter_list(self, prefix=None, storage_type="data"):
         """
-        Yield keys that have been stored, with an optional `prefix` and `storage_type`.
+        Yields keys stored under the given ``storage_type``, optionally with a required
+        ``prefix``.
 
-        :param str prefix: A prefix match of keys returned.
-        :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
-
-        Returns:
-            Yields keys in an iterable.
-
+        :param str prefix: Only include keys with this prefix if given
+        :param str storage_type: A type of data storage. Possible values:
+            ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
+        :return: An iterator over all matching keys
+        :rtype: generator(str)
         """
 
         r = self.session.get(
@@ -209,12 +240,14 @@ class Storage(Service):
 
     def set_file(self, key, file_obj, storage_type="data"):
         """
-        Store file-like object `file_obj` at location `key`, with storage type
-        `storage_type`
+        Stores data from a file or file-like object at location ``key`` with storage
+        type ``storage_type``.
 
-        :param str key: A unique string mapped to an existing storage blob
-        :param str file_obj: File-like object or name of file to be stored at location `key`
-        :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
+        :param str key: A key identifying a storage blob
+        :param str|file-like value: A file name or a file-like object with data to be
+            stored at location ``key``
+        :param str storage_type: A type of data storage. Possible values:
+            ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
         """
         rurl = self.get_upload_url(key, storage_type=storage_type)
 
@@ -228,14 +261,17 @@ class Storage(Service):
 
     def get_file(self, key, file_obj, storage_type="data"):
         """
-        Retrieve data stored at location `key`, with storage type
-        `storage_type` and store in file `file_obj`
+        Retrieves data stored at location ``key`` with storage type ``storage_type``
+        and write it to a file.
 
-        :param str key: A unique string mapped to an existing storage blob
-        :param str file_obj: File-like object or name of file in which retrieved data will be stored. If this is
-            a file-like object it must accept bytes (for example, a file opened in binary mode such as with
-            ``open(filename, 'wb')``).
-        :param str storage_type: A type of data storage. Possible values: "data", "tmp", "result".  Default: "data".
+        :param str key: A key identifying a storage blob
+        :param str|file-like file_obj: File-like object or name of file to which retrieved
+            data will be written. If this is a file-like object it must accept bytes (for
+            example, a file opened in binary mode such as with ``open(filename, 'wb')``).
+        :param str storage_type: A type of data storage. Possible values:
+            ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
+        :raises descarteslabs.client.exceptions.NotFoundError: if no data exists
+            for the given key and storage type
         """
         r = self.session.get(
             "/{storage_type}/get/{key}".format(storage_type=storage_type, key=key),
@@ -252,7 +288,6 @@ class Storage(Service):
             for chunk in r.iter_content(chunk_size=None):
                 if chunk:
                     file_obj.write(chunk)
-        return
 
 
 storage = Storage()
