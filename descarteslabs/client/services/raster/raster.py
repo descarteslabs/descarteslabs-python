@@ -78,7 +78,10 @@ def read_blosc_string(metadata, data):
 
 
 class Raster(Service):
-    """Raster"""
+    """
+    The Raster API has two purposes: retrieving data from the Descartes Labs Catalog,
+    and providing a consistent way of splitting that data into smaller tiles.
+    """
     TIMEOUT = (9.5, 300)
 
     def __init__(self, url=None, auth=None, retries=None):
@@ -101,23 +104,20 @@ class Raster(Service):
 
     # please keep default maxtiles value equal to MAXTILES in the service
     def iter_dltiles_from_shape(self, resolution, tilesize, pad, shape, maxtiles=5000):
-        """Return an iterator over a feature collection of DLTile GeoJSONs
-        that intersect a GeoJSON Geometry `shape`.
-
-        Utilizing paged requests to the Raster service, it is possible
-        to retrieve and consume very large shapes and/or very small tiles,
-        avoiding the 'Shape and tiling generate too many tiles' error.
+        """
+        Iterates over all DLTiles as GeoJSONs features that intersect the
+        GeoJSON geometry ``shape``.
 
         :param float resolution: Resolution of DLTile
         :param int tilesize: Number of valid pixels per DLTile
         :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
         :param str shape: A GeoJSON geometry specifying a shape over
             which to intersect DLTiles.
-        :param int maxtiles: Maximum number of tiles per paged request.
-            Defaults to 10000.
+        :param int maxtiles: Maximum number of tiles per paged request
 
-        :return: An iterator over a GeoJSON FeatureCollection of
-            intersecting DLTile geometries.
+        :return: An iterator over GeoJSON features representing
+            intersecting DLTiles
+        :rtype: generator(DotDict)
 
         Example::
 
@@ -201,15 +201,20 @@ class Raster(Service):
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
         Return a feature collection of DLTile GeoJSONs that intersect
-        a GeoJSON Geometry `shape`.
+        a GeoJSON geometry ``shape``.
 
         :param float resolution: Resolution of DLTile
         :param int tilesize: Number of valid pixels per DLTile
         :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
         :param str shape: A GeoJSON geometry specifying a shape over
-            which to intersect DLTiles.
+            which to intersect DLTiles
 
         :return: GeoJSON FeatureCollection of intersecting DLTile geometries.
+        :rtype: DotDict
+
+        :raises descarteslabs.client.exceptions.BadRequestError: if the given
+            parameters would generate too many tiles - use
+            :meth:`Raster.iter_dltiles_from_shape` to iterate over more
 
         Example::
 
@@ -284,6 +289,7 @@ class Raster(Service):
         :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
 
         :return: A DLTile GeoJSON Feature
+        :rtype: DotDict
 
         Example::
 
@@ -342,6 +348,10 @@ class Raster(Service):
         :param str key: A DLTile key that identifies a DLTile
 
         :return: A DLTile GeoJSON Feature
+        :rtype: DotDict
+
+        :raises descarteslabs.client.exceptions.BadRequestError: if the given key
+            is not a valid DLTile key
 
         Example::
 
@@ -413,18 +423,19 @@ class Raster(Service):
             outfile_basename=None,
             **pass_through_params
     ):
-        """Given a list of :class:`Metadata <descarteslabs.services.Metadata>` identifiers,
-        retrieve a translated and warped mosaic as an image file.
+        """
+        Given a list of catalog image identifiers, retrieve a translated and
+        warped mosaic as an image file.
 
-        :param inputs: List of :class:`Metadata` identifiers.
-        :param bands: List of requested bands. If the last item in the list is an alpha
-            band (with data range `[0, 1]`) it affects rastering of all other bands:
+        :param list(str) inputs: List of catalog image identifiers.
+        :param list(str) bands: List of requested bands. If the last item in the list is an alpha
+            band (with data range ``[0, 1]``) it affects rastering of all other bands:
             When rastering multiple images, they are combined image-by-image only where
-            each respective image's alpha band is `1` (pixels where the alpha band is not
-            `1` are "transparent" in the overlap between images). If a pixel is fully
-            masked considering all combined alpha bands it will be `0` in all non-alpha
+            each respective image's alpha band is ``1`` (pixels where the alpha band is not
+            ``1`` are "transparent" in the overlap between images). If a pixel is fully
+            masked considering all combined alpha bands it will be ``0`` in all non-alpha
             bands. Not specifying bands returns all bands in the product.
-        :param scales: List of tuples specifying the scaling to be applied to each band.
+        :param list(tuple()) scales: List of tuples specifying the scaling to be applied to each band.
             A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
             meaning values in the source range ``src_min`` to ``src_max`` will be scaled
             to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
@@ -440,12 +451,12 @@ class Raster(Service):
             ``UInt32``, ``Int32``, ``Float32``, ``Float64``).
         :param str srs: Output spatial reference system definition understood by GDAL.
         :param float resolution: Desired resolution in output SRS units. Incompatible with
-            `dimensions`
-        :param tuple dimensions: Desired output (width, height) in pixels within which
+            ``dimensions``
+        :param tuple dimensions: Desired output ``(width, height)`` in pixels within which
             the raster should fit; i.e. the longer side of the raster will be min(dimensions).
-            Incompatible with `resolution`.
+            Incompatible with ``resolution``.
         :param str cutline: A GeoJSON object to be used as a cutline, or WKT string.
-                            GeoJSON coordinates must be in WGS84 lat-lon.
+            GeoJSON coordinates must be in WGS84 lat-lon.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
         :param str bounds_srs:
@@ -461,16 +472,20 @@ class Raster(Service):
             products that support it, ``surface`` applies Descartes Labs' general surface
             reflectance algorithm to the output.
         :param bool save: Write resulting files to disk. Default: False
-        :param str outfile_basename: If 'save' is True, override default filename using
+        :param str outfile_basename: If ``save`` is True, override default filename using
             this string as a base.
 
-        :return: A dictionary with two keys, ``files`` and ``metadata``. The value for
-            ``files`` is a dictionary mapping file names to binary data for files (at the
-            moment there will always be only a single file with the appropriate file
-            extension based on the ``output_format`` requested). The value for ``metadata``
-            is a dictionary containing details about the raster operation that happened.
-            These details can be useful for debugging but shouldn't otherwise be relied on
-            (there are no guarantees that certain keys will be present).
+        :return: A dictionary with two keys, ``files`` and ``metadata``.
+
+            * ``files``: a dictionary mapping file names to binary data for files (at the
+              moment there will always be only a single file with the appropriate file
+              extension based on the ``output_format`` requested)
+            * ``metadata``: a dictionary containing details about the raster operation
+              that happened. These details can be useful for debugging but shouldn't
+              otherwise be relied on (there are no guarantees that certain keys will be
+              present).
+
+        :rtype: DotDict
         """
         cutline = as_json_string(cutline)
 
@@ -558,21 +573,21 @@ class Raster(Service):
     ):
         """Retrieve a raster as a NumPy array.
 
-        :param inputs: List of :class:`Metadata` identifiers.
-        :param bands: List of requested bands. If the last item in the list is an alpha
-            band (with data range `[0, 1]`) it affects rastering of all other bands:
+        :param list(str) inputs: List of catalog image identifiers.
+        :param list(str) bands: List of requested bands. If the last item in the list is an alpha
+            band (with data range ``[0, 1]``) it affects rastering of all other bands:
             When rastering multiple images, they are combined image-by-image only where
-            each respective image's alpha band is `1` (pixels where the alpha band is not
-            `1` are "transparent" in the overlap between images). If a pixel is fully
-            masked considering all combined alpha bands it will be `0` in all non-alpha
+            each respective image's alpha band is ``1`` (pixels where the alpha band is not
+            ``1`` are "transparent" in the overlap between images). If a pixel is fully
+            masked considering all combined alpha bands it will be ``0`` in all non-alpha
             bands. Not specifying bands returns all bands in the product.
-        :param scales: List of tuples specifying the scaling to be applied to each band.
+        :param list(tuple()) scales: List of tuples specifying the scaling to be applied to each band.
             A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
             meaning values in the source range ``src_min`` to ``src_max`` will be scaled
             to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
             ``(src_min, src_max)`` is also allowed, in which case the output range
             defaults to ``(0, 255)`` (a useful default for the common output type
-            ``Byte``).  If no scaling is desired for a band, use ``None``. This tuple
+            ``Byte``).  If no scaling is desired for a band, use ``None``.  This tuple
             format and behaviour is identical to GDAL's scales during translation.
             Example argument: ``[(0, 10000, 0, 127), (0, 1, 0, 1), (0, 10000)]`` - the first
             band will have source values 0-10000 scaled to 0-127, the second band will
@@ -581,12 +596,12 @@ class Raster(Service):
             ``UInt32``, ``Int32``, ``Float32``, ``Float64``).
         :param str srs: Output spatial reference system definition understood by GDAL.
         :param float resolution: Desired resolution in output SRS units. Incompatible with
-            `dimensions`
-        :param tuple dimensions: Desired output (width, height) in pixels within which
+            ``dimensions``
+        :param tuple dimensions: Desired output ``(width, height)`` in pixels within which
             the raster should fit; i.e. the longer side of the raster will be min(dimensions).
-            Incompatible with `resolution`.
+            Incompatible with ``resolution``.
         :param str cutline: A GeoJSON object to be used as a cutline, or WKT string.
-                            GeoJSON coordinates must be in WGS84 lat-lon.
+            GeoJSON coordinates must be in WGS84 lat-lon.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
         :param str bounds_srs:
@@ -596,19 +611,23 @@ class Raster(Service):
         :param str resampler: Resampling algorithm to be used during warping (``near``,
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
             ``max``, ``min``, ``med``, ``q1``, ``q3``).
-        :param str order: Order of the returned array. `image` returns arrays as
-            ``(row, column, band)`` while `gdal` returns arrays as ``(band, row, column)``.
+        :param str order: Order of the returned array. ``image`` returns arrays as
+            ``(row, column, band)`` while ``gdal`` returns arrays as ``(band, row, column)``.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str processing_level: How the processing level of the underlying data
             should be adjusted, one of ``toa`` (top of atmosphere) and ``surface``. For
             products that support it, ``surface`` applies Descartes Labs' general surface
             reflectance algorithm to the output.
 
-        :return: A tuple of ``(np_array, metadata)``. The first element (``np_array``) is
-            the rastered scene as a NumPy array. The second element (``metadata``) is a
-            dictionary containing details about the raster operation that happened. These
-            details can be useful for debugging but shouldn't otherwise be relied on (there
-            are no guarantees that certain keys will be present).
+        :return: A tuple of ``(np_array, metadata)``.
+
+            * ``np_array``: the rastered scene as a NumPy array
+            * ``metadata``: a dictionary containing details about the raster operation
+              that happened. These details can be useful for debugging but shouldn't
+              otherwise be relied on (there are no guarantees that certain keys will be
+              present).
+
+        :rtype: tuple(numpy.ndarray, DotDict)
         """
         cutline = as_json_string(cutline)
 
@@ -724,7 +743,8 @@ class Raster(Service):
             max_workers=None,
             **pass_through_params
     ):
-        """Retrieve a stack of rasters as a 4-D NumPy array.
+        """
+        Retrieve a stack of rasters as a 4-D NumPy array.
 
         To ensure every raster in the stack has the same shape and covers the same
         spatial extent, you must either:
@@ -732,25 +752,25 @@ class Raster(Service):
         * set ``dltile``, or
         * set [``resolution`` or ``dimensions``], ``srs``, and ``bounds``
 
-        :param inputs: List, or list of lists, of :class:`Metadata` identifiers.
+        :param list|list(list) inputs: List, or list of lists, of catalog image identifiers.
             The stack will follow the same order as this list.
-            Each element in the list is treated as a separate input to ``raster.ndarray``,
-            so if a list of lists is given, each sublist's identifiers will be mosaiced together
+            Each element in the list is treated as a separate input to :meth:`ndarray`,
+            so if a list of lists is given, each sublist's identifiers will be mosaicked together
             to become a single level in the stack.
-        :param bands: List of requested bands. If the last item in the list is an alpha
-            band (with data range `[0, 1]`) it affects rastering of all other bands:
+        :param list(str) bands: List of requested bands. If the last item in the list is an alpha
+            band (with data range ``[0, 1]``) it affects rastering of all other bands:
             When rastering multiple images, they are combined image-by-image only where
-            each respective image's alpha band is `1` (pixels where the alpha band is not
-            `1` are "transparent" in the overlap between images). If a pixel is fully
-            masked considering all combined alpha bands it will be `0` in all non-alpha
+            each respective image's alpha band is ``1`` (pixels where the alpha band is not
+            ``1`` are "transparent" in the overlap between images). If a pixel is fully
+            masked considering all combined alpha bands it will be ``0`` in all non-alpha
             bands. Not specifying bands returns all bands in the product.
-        :param scales: List of tuples specifying the scaling to be applied to each band.
+        :param list(tuple()) scales: List of tuples specifying the scaling to be applied to each band.
             A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
             meaning values in the source range ``src_min`` to ``src_max`` will be scaled
             to the output range ``out_min`` to ``out_max``. A tuple with 2 elements
             ``(src_min, src_max)`` is also allowed, in which case the output range
             defaults to ``(0, 255)`` (a useful default for the common output type
-            ``Byte``).  If no scaling is desired for a band, use ``None``. This tuple
+            ``Byte``).  If no scaling is desired for a band, use ``None``.  This tuple
             format and behaviour is identical to GDAL's scales during translation.
             Example argument: ``[(0, 10000, 0, 127), (0, 1, 0, 1), (0, 10000)]`` - the first
             band will have source values 0-10000 scaled to 0-127, the second band will
@@ -759,12 +779,12 @@ class Raster(Service):
             ``UInt32``, ``Int32``, ``Float32``, ``Float64``).
         :param str srs: Output spatial reference system definition understood by GDAL.
         :param float resolution: Desired resolution in output SRS units. Incompatible with
-            `dimensions`
-        :param tuple dimensions: Desired output (width, height) in pixels within which
+            ``dimensions``
+        :param tuple dimensions: Desired output ``(width, height)`` in pixels within which
             the raster should fit; i.e. the longer side of the raster will be min(dimensions).
-            Incompatible with `resolution`.
+            Incompatible with ``resolution``.
         :param str cutline: A GeoJSON object to be used as a cutline, or WKT string.
-                            GeoJSON coordinates must be in WGS84 lat-lon.
+            GeoJSON coordinates must be in WGS84 lat-lon.
         :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
         :param str bounds_srs:
@@ -774,26 +794,28 @@ class Raster(Service):
         :param str resampler: Resampling algorithm to be used during warping (``near``,
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
             ``max``, ``min``, ``med``, ``q1``, ``q3``).
-        :param str order: Order of the returned array. `image` returns arrays as
-            ``(scene, row, column, band)`` while `gdal` returns arrays as ``(scene, band, row, column)``.
+        :param str order: Order of the returned array. ``image`` returns arrays as
+            ``(scene, row, column, band)`` while ``gdal`` returns arrays as ``(scene, band, row, column)``.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str processing_level: How the processing level of the underlying data
             should be adjusted, one of ``toa`` (top of atmosphere) and ``surface``. For
             products that support it, ``surface`` applies Descartes Labs' general surface
             reflectance algorithm to the output.
         :param int max_workers: Maximum number of threads over which to
-            parallelize individual ndarray calls. If `None`, will be set to the minimum
-            of the number of inputs and `DEFAULT_MAX_WORKERS`.
+            parallelize individual ndarray calls. If ``None``, will be set to the minimum
+            of the number of inputs and ``DEFAULT_MAX_WORKERS``.
 
         :return: A tuple of ``(stack, metadata)``.
 
             * ``stack``: 4D ndarray. The axes are ordered ``(scene, y, x, band)``
               (or ``(scene, band, y, x)`` if ``order="gdal"``). The scenes in the outermost
               axis are in the same order as the list of identifiers given as ``inputs``.
-            * ``metadata``: List[dict] of the rasterization metadata for each element in ``inputs``.
+            * ``metadata``: list of the rasterization metadata for each element in ``inputs``.
               As with the metadata returned by :meth:`ndarray` and :meth:`raster`, these dictionaries
               contain useful information about the raster, such as its geotransform matrix and WKT
               of its coordinate system, but there are no guarantees that certain keys will be present.
+
+        :rtype: tuple(numpy.ndarray, list(DotDict))
         """
         if not isinstance(inputs, (list, tuple)):
             raise TypeError("Inputs must be a list or tuple, instead got '{}'".format(type(inputs)))
