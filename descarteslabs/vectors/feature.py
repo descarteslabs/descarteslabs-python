@@ -62,8 +62,8 @@ class Feature(object):
 
     @classmethod
     def _create_from_jsonapi(cls, response):
-        geometry = response.attributes.get('geometry')
-        properties = response.attributes.get('properties')
+        geometry = response.attributes.get("geometry")
+        properties = response.attributes.get("properties")
 
         self = cls(geometry=geometry, properties=properties, id=response.id)
 
@@ -73,6 +73,27 @@ class Feature(object):
     def geojson(self):
         """
         Returns the ``Feature`` as a GeoJSON dict.
+
+        Returns
+        -------
+        dict
+            GeoJSON Feature as a dict with the following keys:
+
+                .. highlight:: none
+
+                ::
+
+                    geometry:   GeoJSON geometry object. A dict with the following
+                                keys:
+
+                        coordinates: Coordinates of the GeoJSON object. A list,
+                                     list(list) or list(list(list)) depending on
+                                     the type of the geometry object.
+                        type:        GeoJSON object type.
+
+                    properties: A dict with feature properties.
+                    type:       "Feature"
+
 
         Example
         -------
@@ -100,11 +121,13 @@ class Feature(object):
 
         geometry = self.geometry.__geo_interface__
 
-        return dict(properties=properties, geometry=geometry, id=self.id, type=self.geojson_type)
+        return dict(
+            properties=properties, geometry=geometry, id=self.id, type=self.geojson_type
+        )
 
     @property
     def __geo_interface__(self):
-        return self.geojson['geometry']
+        return self.geojson["geometry"]
 
     def _repr_json_(self):
         return DotDict(self.geojson)

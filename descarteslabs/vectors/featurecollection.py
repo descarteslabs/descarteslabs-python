@@ -9,8 +9,12 @@ from descarteslabs.client.services.vector import Vector
 from descarteslabs.vectors.feature import Feature
 
 # import these exceptions for backwards compatibility
-from descarteslabs.vectors.exceptions import (InvalidQueryException,   # noqa
-    VectorException, FailedCopyError, WaitTimeoutError)
+from descarteslabs.vectors.exceptions import (  # noqa
+    InvalidQueryException,  # noqa
+    VectorException,  # noqa
+    FailedCopyError,  # noqa
+    WaitTimeoutError,  # noqa
+)
 from descarteslabs.vectors.async_job import DeleteJob, CopyJob
 import six
 
@@ -41,35 +45,35 @@ class FeatureCollection(object):
     having similar access controls, geometries and properties.  Such a
     grouping is named a ``product`` and identified by ``id``.
 
-    If creating a new `FeatureCollection` use `FeatureCollection.create()`
+    If creating a new ``FeatureCollection`` use :meth:`create`
     instead.
 
-    Features will not be retrieved from the `FeatureCollection` until
-    `FeatureCollection.features()` is called.
+    Features will not be retrieved from the ``FeatureCollection`` until
+    :meth:`features` is called.
 
     Attributes
     ----------
     id : str
-        The unique identifier for this `FeatureCollection`.
+        The unique identifier for this ``FeatureCollection``.
     name : str
         (Deprecated) Will be removed in future versions.
     title : str
         A more verbose and expressive name for display purposes.
     description : str
-        Information about the `FeatureCollection`, why it exists,
+        Information about the ``FeatureCollection``, why it exists,
         and what it provides.
     owners : list(str)
         User, group, or organization IDs that own
-        this FeatureCollection.  Defaults to
+        this ``FeatureCollection``.  Defaults to
         [``user:current_user``, ``org:current_org``].
         The owner can edit, delete, and change access to
-        this `FeatureCollection`.
+        this ``FeatureCollection``.
     readers : list(str)
         User, group, or organization IDs that can read
-        this `FeatureCollection`.
+        this ``FeatureCollection``.
     writers : list(str)
         User, group, or organization IDs that can edit
-        this `FeatureCollection` (includes read permission).
+        this ``FeatureCollection`` (includes read permission).
 
     Note
     ----
@@ -80,7 +84,7 @@ class FeatureCollection(object):
     assigns those privileges to everyone in that organization.
     """
 
-    ATTRIBUTES = ['owners', 'writers', 'readers', 'id', 'name', 'title', 'description']
+    ATTRIBUTES = ["owners", "writers", "readers", "id", "name", "title", "description"]
     COMPLETE_STATUSES = ["DONE", "SUCCESS", "FAILURE"]
     COMPLETION_POLL_INTERVAL_SECONDS = 5
 
@@ -105,7 +109,16 @@ class FeatureCollection(object):
 
     @classmethod
     @deprecate(renames={"name": "product_id"})
-    def create(cls, product_id, title, description, owners=None, readers=None, writers=None, vector_client=None):
+    def create(
+        cls,
+        product_id,
+        title,
+        description,
+        owners=None,
+        readers=None,
+        writers=None,
+        vector_client=None,
+    ):
         """
         Create a vector product in your catalog.
 
@@ -120,19 +133,33 @@ class FeatureCollection(object):
         title : str
             A more verbose and expressive name for display purposes.
         description : str
-            Information about the `FeatureCollection`, why it exists,
+            Information about the ``FeatureCollection``, why it exists,
             and what it provides.
         owners : list(str), optional
             User, group, or organization IDs that own
             the newly created FeatureCollection.  Defaults to
             [``current user``, ``current org``].
-            The owner can edit and delete this `FeatureCollection`.
+            The owner can edit and delete this ``FeatureCollection``.
         readers : list(str), optional
             User, group, or organization IDs that can read
-            the newly created `FeatureCollection`.
+            the newly created ``FeatureCollection``.
         writers : list(str), optional
             User, group, or organization IDs that can edit
-            the newly created `FeatureCollection` (includes read permission).
+            the newly created ``FeatureCollection`` (includes read permission).
+
+        Returns
+        -------
+        :class:`FeatureCollection`
+            A new ``FeatureCollection``.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.BadRequestError
+            Raised when the request is malformed, e.g. the supplied product id is already in use.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
 
         Example
         -------
@@ -153,17 +180,28 @@ class FeatureCollection(object):
         if vector_client is None:
             vector_client = Vector()
 
-        return cls._from_jsonapi(vector_client.create_product(**params).data, vector_client)
+        return cls._from_jsonapi(
+            vector_client.create_product(**params).data, vector_client
+        )
 
     @classmethod
     def list(cls, vector_client=None):
         """
-        List all `FeatureCollection` products that you have access to.
+        List all ``FeatureCollection`` products that you have access to.
 
         Returns
         -------
-        list(`FeatureCollection`)
+        list(:class:`FeatureCollection`)
             A list of all products that you have access to.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if subsequent pages cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
 
         Example
         -------
@@ -181,8 +219,9 @@ class FeatureCollection(object):
         response = vector_client.list_products(page=page)
 
         while len(response) > 0:
-            partial_list = [cls._from_jsonapi(fc, vector_client)
-                            for fc in response.data]
+            partial_list = [
+                cls._from_jsonapi(fc, vector_client) for fc in response.data
+            ]
             list.extend(partial_list)
             page += 1
 
@@ -201,20 +240,43 @@ class FeatureCollection(object):
         return self._vector_client
 
     def count(self):
-        """Return the number of features in this product"""
+        """
+        Return the number of features in the product, regardless of
+        what filters have been applied to the ``FeatureCollection``.
+
+        Returns
+        -------
+        int
+            Total number of features in the product.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
+
+        Example
+        -------
+        >>> from descarteslabs.vectors import FeatureCollection, properties as p
+        >>> all_us_cities = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
+        >>> count = all_us_cities.count()  # doctest: +SKIP
+        """
         return self.vector_client.count_features(self.id)
 
     def filter(self, geometry=None, properties=None):
         """
-        Include only the features matching the given geometry and properties.
-        Filters are not evaluated until iterating over the FeatureCollection,
+        Include only the features matching the given ``geometry`` and ``properties``.
+        Filters are not evaluated until iterating over the ``FeatureCollection``,
         and can be chained by calling filter multiple times.
 
         Parameters
         ----------
         geometry: GeoJSON-like dict, object with ``__geo_interface__``; optional
             Include features intersecting this geometry. If this
-            FeatureCollection is already filtered by a geometry,
+            ``FeatureCollection`` is already filtered by a geometry,
             the new geometry will override it -- they cannot be chained.
         properties : descarteslabs.common.property_filtering.Expression
             Include features having properties where the expression
@@ -227,8 +289,19 @@ class FeatureCollection(object):
 
         Returns
         -------
-        vectors.FeatureCollection
-            A new `FeatureCollection` with the given filter.
+        :class:`FeatureCollection`
+            A new ``FeatureCollection`` with the given filter.
+
+        Raises
+        ------
+        ~descarteslabs.vectors.exceptions.InvalidQueryException
+            Raised when there is a previously applied geometry filter and a new geometry was provided.
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
 
         Example
         -------
@@ -251,19 +324,21 @@ class FeatureCollection(object):
         copied_fc = copy.deepcopy(self)
 
         if geometry is not None:
-            copied_fc._query_geometry = getattr(geometry, '__geo_interface__', geometry)
+            copied_fc._query_geometry = getattr(geometry, "__geo_interface__", geometry)
 
         if properties is not None:
             if copied_fc._query_property_expression is None:
                 copied_fc._query_property_expression = properties
             else:
-                copied_fc._query_property_expression = copied_fc._query_property_expression & properties
+                copied_fc._query_property_expression = (
+                    copied_fc._query_property_expression & properties
+                )
 
         return copied_fc
 
     def limit(self, limit):
         """
-        Limit the number of `Feature` yielded in `FeatureCollection.features()`.
+        Limit the number of ``Feature`` yielded in :meth:`features`.
 
         Parameters
         ----------
@@ -272,8 +347,8 @@ class FeatureCollection(object):
 
         Returns
         -------
-        vectors.FeatureCollection
-            A new `FeatureCollection` with the given limit.
+        :class:`FeatureCollection`
+            A new ``FeatureCollection`` with the given limit.
 
         Example
         -------
@@ -288,18 +363,28 @@ class FeatureCollection(object):
 
     def features(self):
         """
-        Iterate through each `Feature` in the `FeatureCollection`, taking into
-        account calls to `FeatureCollection.filter()` and
-        `FeatureCollection.limit()`.
+        Iterate through each ``Feature`` in the ``FeatureCollection``, taking into
+        account calls to :meth:`filter` and :meth:`limit`.
 
-        A query or limit of some sort must be set, otherwise a BadRequestError
+        A query or limit of some sort must be set, otherwise a ``BadRequestError``
         will be raised.
 
         The length of the returned iterator indicates the full query size.
 
         Returns
         -------
-        `Iterator` which returns `Feature` and has a length
+        `Iterator` which returns :class:`Feature <descarteslabs.vectors.feature.Feature>` and has a length.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.BadRequestError
+            Raised when the request is malformed, e.g. the limit is not a number.
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
 
         Example
         -------
@@ -321,15 +406,17 @@ class FeatureCollection(object):
 
     # TODO: remove name from params
     @deprecate(renames={"name": None})
-    def update(self,
-               name=None,
-               title=None,
-               description=None,
-               owners=None,
-               readers=None,
-               writers=None):
+    def update(
+        self,
+        name=None,
+        title=None,
+        description=None,
+        owners=None,
+        readers=None,
+        writers=None,
+    ):
         """
-        Updates the attributes of the `FeatureCollection`.
+        Updates the attributes of the ``FeatureCollection``.
 
         Parameters
         ----------
@@ -338,19 +425,30 @@ class FeatureCollection(object):
         title : str, optional
             A more verbose and expressive name for display purposes.
         description : str, optional
-            Information about the `FeatureCollection`, why it exists,
+            Information about the ``FeatureCollection``, why it exists,
             and what it provides.
         owners : list(str), optional
             User, group, or organization IDs that own
             the FeatureCollection.  Defaults to
             [``current user``, ``current org``].
-            The owner can edit and delete this `FeatureCollection`.
+            The owner can edit and delete this ``FeatureCollection``.
         readers : list(str), optional
             User, group, or organization IDs that can read
-            the `FeatureCollection`.
+            the ``FeatureCollection``.
         writers : list(str), optional
             User, group, or organization IDs that can edit
-            the `FeatureCollection` (includes read permission).
+            the ``FeatureCollection`` (includes read permission).
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.BadRequestError
+            Raised when the request is malformed, e.g. the owners list is missing prefixes.
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
 
         Example
         -------
@@ -370,23 +468,23 @@ class FeatureCollection(object):
         params = {k: v for k, v in six.iteritems(params) if v is not None}
 
         response = self.vector_client.update_product(self.id, **params)
-        self.__dict__.update(response['data']['attributes'])
+        self.__dict__.update(response["data"]["attributes"])
 
     # TODO: remove name from params
     @deprecate(["title", "description"], renames={"name": None})
     def replace(
-            self,
-            name=None,
-            title=None,
-            description=None,
-            owners=None,
-            readers=None,
-            writers=None,
+        self,
+        name=None,
+        title=None,
+        description=None,
+        owners=None,
+        readers=None,
+        writers=None,
     ):
         """
-        Replaces the attributes of the `FeatureCollection`.
+        Replaces the attributes of the ``FeatureCollection``.
 
-        To change a single attribute, see `FeatureCollection.update()`.
+        To change a single attribute, see :meth:`update`.
 
         Parameters
         ----------
@@ -395,19 +493,31 @@ class FeatureCollection(object):
         title : str
             (Required) A more verbose name for display purposes.
         description : str
-            (Required) Information about the `FeatureCollection`, why it exists,
+            (Required) Information about the ``FeatureCollection``, why it exists,
             and what it provides.
         owners : list(str), optional
             User, group, or organization IDs that own
             the FeatureCollection.  Defaults to
             [``current user``, ``current org``].
-            The owner can edit and delete this `FeatureCollection`.
+            The owner can edit and delete this ``FeatureCollection``.
         readers : list(str), optional
             User, group, or organization IDs that can read
-            the `FeatureCollection`.
+            the ``FeatureCollection``.
         writers : list(str), optional
             User, group, or organization IDs that can edit
-            the `FeatureCollection` (includes read permission).
+            the ``FeatureCollection`` (includes read permission).
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.BadRequestError
+            Raised when the request is malformed, e.g. the owners list is missing prefixes.
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
+
 
         Example
         -------
@@ -427,11 +537,16 @@ class FeatureCollection(object):
         )
 
         response = self.vector_client.replace_product(self.id, **params)
-        self.__dict__.update(response['data']['attributes'])
+        self.__dict__.update(response["data"]["attributes"])
 
     def refresh(self):
         """
-        Loads the attributes for the `FeatureCollection`.
+        Loads the attributes for the ``FeatureCollection``.
+
+        Example
+        -------
+        >>> from descarteslabs.vectors import FeatureCollection
+        >>> FeatureCollection('foo').refresh()  # doctest: +SKIP
 
         """
         response = self.vector_client.get_product(self.id)
@@ -439,7 +554,7 @@ class FeatureCollection(object):
 
     def delete(self):
         """
-        Delete the `FeatureCollection` from the catalog.
+        Delete the ``FeatureCollection`` from the catalog.
 
         Example
         -------
@@ -450,13 +565,13 @@ class FeatureCollection(object):
 
         self.vector_client.delete_product(self.id)
 
-    def add(self, features, fix_geometry='accept'):
+    def add(self, features, fix_geometry="accept"):
         """
-        Add multiple features to an existing `FeatureCollection`.
+        Add multiple features to an existing ``FeatureCollection``.
 
         Parameters
         ----------
-        features : `Feature` or list(`Feature`)
+        features : ``Feature`` or list(``Feature``)
             A single feature or list of features to add. Collections
             of more than 100 features will be batched in groups of 100,
             but consider using upload() instead.
@@ -471,8 +586,21 @@ class FeatureCollection(object):
 
         Returns
         -------
-        list(`Feature`)
+        list(:class:`Feature <descarteslabs.vectors.feature.Feature>`)
             A copy of the given list of features that includes the ``id``.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.BadRequestError
+            Raised when the request is malformed.  May also indicate that too many features were included.
+            If more than 100 features were provided, some of these features may have been successfuly
+            inserted while others may not have been inserted.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
 
         Example
         -------
@@ -487,22 +615,27 @@ class FeatureCollection(object):
         if isinstance(features, Feature):
             features = [features]
 
-        attributes = [{k: v for k, v in f.geojson.items() if k in ['properties', 'geometry']} for f in features]
+        attributes = [
+            {k: v for k, v in f.geojson.items() if k in ["properties", "geometry"]}
+            for f in features
+        ]
 
-        documents = self.vector_client.create_features(self.id, attributes, fix_geometry=fix_geometry)
+        documents = self.vector_client.create_features(
+            self.id, attributes, fix_geometry=fix_geometry
+        )
 
         copied_features = copy.deepcopy(features)
 
         for feature, doc in zip(copied_features, documents.data):
             feature.id = doc.id
-            if fix_geometry == 'fix':
+            if fix_geometry == "fix":
                 feature.geometry = shape(doc.attributes.geometry)
 
         return copied_features
 
-    def upload(self, file_ref, max_errors=0, fix_geometry='accept'):
+    def upload(self, file_ref, max_errors=0, fix_geometry="accept"):
         """
-        Asynchonously add features from a file of
+        Asynchronously add features from a file of
         `Newline Delimited JSON <https://github.com/ndjson/ndjson-spec>`_
         features.  The file itself will be uploaded synchronously,
         but loading the features is done asynchronously.
@@ -524,19 +657,31 @@ class FeatureCollection(object):
 
         Returns
         -------
-        `UploadTask`
+        :class:`UploadTask <descarteslabs.common.tasks.uploadtask.UploadTask>`
             The upload task.  The details may take time to become available
             so asking for them before they're available will block
             until the details are available.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
+
+        Example
+        -------
+        >>> from descarteslabs.vectors import FeatureCollection, Feature
+        >>> fc = FeatureCollection("foo")   # doctest: +SKIP
+        >>> task = fc.upload("/path/to/features.ndjson")    # doctest: +SKIP
+
         """
         upload_id = self.vector_client.upload_features(
-            file_ref,
-            self.id,
-            max_errors=max_errors,
-            fix_geometry=fix_geometry
+            file_ref, self.id, max_errors=max_errors, fix_geometry=fix_geometry
         )
-        return UploadTask(self.id, upload_id=upload_id,
-                          client=self.vector_client)
+        return UploadTask(self.id, upload_id=upload_id, client=self.vector_client)
 
     def list_uploads(self, pending=True):
         """
@@ -545,41 +690,69 @@ class FeatureCollection(object):
         Parameters
         ----------
         pending : bool
-            If True then include pending/currently running upload tasks in the result,
-            otherwise only include complete upload tasks. Defaults to True.
+            If ``True`` then include pending/currently running upload tasks in the result,
+            otherwise only include complete upload tasks. Defaults to ``True``.
 
         Returns
         -------
-        list(`UploadTask`)
+        list(:class:`UploadTask <descarteslabs.common.tasks.uploadtask.UploadTask>`)
             The list of tasks for the product.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
+
+        Example
+        -------
+        >>> from descarteslabs.vectors import FeatureCollection, Feature
+        >>> fc = FeatureCollection("foo")   # doctest: +SKIP
+        >>> task = fc.upload("/path/to/features.ndjson")    # doctest: +SKIP
+        >>> uploads = fc.list_uploads()   # doctest: +SKIP
+
         """
         results = []
 
         for result in self.vector_client.get_upload_results(self.id, pending=pending):
             # PENDING tasks aren't really tasks yet, and the id is the upload_id, not the task_id
-            if result.attributes and result.attributes.get('status') == 'PENDING':
-                results.append(UploadTask(self.id, upload_id=result.id,
-                                          result_attrs=result.attributes,
-                                          client=self.vector_client))
+            if result.attributes and result.attributes.get("status") == "PENDING":
+                results.append(
+                    UploadTask(
+                        self.id,
+                        upload_id=result.id,
+                        result_attrs=result.attributes,
+                        client=self.vector_client,
+                    )
+                )
             else:
-                results.append(UploadTask(self.id, tuid=result.id,
-                                          result_attrs=result.attributes,
-                                          client=self.vector_client))
+                results.append(
+                    UploadTask(
+                        self.id,
+                        tuid=result.id,
+                        result_attrs=result.attributes,
+                        client=self.vector_client,
+                    )
+                )
 
         return results
 
     @deprecate(renames={"name": "product_id"})
-    def copy(self, product_id, title, description, owners=None, readers=None, writers=None):
+    def copy(
+        self, product_id, title, description, owners=None, readers=None, writers=None
+    ):
         """
         Apply a filter to an existing product and create a new vector product in your catalog
-        from the result, taking into account calls to `FeatureCollection.filter()`
-        and `FeatureCollection.limit()`.
+        from the result, taking into account calls to ``filter`` and ``limit``.
 
-        A query of some sort must be set, otherwise a BadRequestError will be raised.
+        A query of some sort must be set, otherwise a ``BadRequestError`` will be raised.
 
         Copies occur asynchronously and can take a long time to complete.  Features
-        will not be accessible in the new FeatureCollection until the copy completes.  Use
-        `FeatureCollection.wait_for_copy()` to block until the copy completes.
+        will not be accessible in the new ``FeatureCollection`` until the copy completes.  Use
+        :meth:`wait_for_copy` to block until the copy completes.
 
         Parameters
         ----------
@@ -592,24 +765,35 @@ class FeatureCollection(object):
         title : str
             A more verbose and expressive name for display purposes.
         description : str
-            Information about the `FeatureCollection`, why it exists,
+            Information about the ``FeatureCollection``, why it exists,
             and what it provides.
         owners : list(str), optional
             User, group, or organization IDs that own
             the newly created FeatureCollection.  Defaults to
             [``current user``, ``current org``].
-            The owner can edit and delete this `FeatureCollection`.
+            The owner can edit and delete this ``FeatureCollection``.
         readers : list(str), optional
             User, group, or organization IDs that can read
-            the newly created `FeatureCollection`.
+            the newly created ``FeatureCollection``.
         writers : list(str), optional
             User, group, or organization IDs that can edit
-            the newly created `FeatureCollection` (includes read permission).
+            the newly created ``FeatureCollection`` (includes read permission).
 
         Returns
         -------
-        vectors.FeatureCollection
-            A new `FeatureCollection`.
+        :class:`FeatureCollection`
+            A new ``FeatureCollection``.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.BadRequestError
+            Raised when the request is malformed, e.g. no query was specified.
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
 
         Example
         -------
@@ -638,7 +822,9 @@ class FeatureCollection(object):
             writers=writers,
         )
 
-        return self._from_jsonapi(self.vector_client.create_product_from_query(**params).data)
+        return self._from_jsonapi(
+            self.vector_client.create_product_from_query(**params).data
+        )
 
     def wait_for_copy(self, timeout=None):
         """
@@ -646,15 +832,28 @@ class FeatureCollection(object):
         and can take a long time to complete.  Features will not be accessible
         in the FeatureCollection until the copy completes.
 
-        If the product was not created using a copy job, a BadRequestError is raised.
+        If the product was not created using a copy job, a ``BadRequestError`` is raised.
         If the copy job ran, but failed, a FailedJobError is raised.
-        If a timeout is specified and the timeout is reached, a WaitTimeoutError is raised.
+        If a timeout is specified and the timeout is reached, a ``WaitTimeoutError`` is raised.
 
         Parameters
         ----------
         timeout : int
             Number of seconds to wait before the wait times out.  If not specified, will
             wait indefinitely.
+
+        Raises
+        ------
+        ~descarteslabs.vectors.exceptions.FailedJobError
+            Raised when the copy job fails to complete successfully.
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product or status cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
+        ~descarteslabs.vectors.exceptions.WaitTimeoutError
+            Raised when the copy job doesn't complete before the timeout is reached.
 
         Example
         -------
@@ -691,8 +890,20 @@ class FeatureCollection(object):
 
         Returns
         -------
-        :class:`ExportTask`
-            The export task
+        :class:`ExportTask <descarteslabs.common.tasks.exporttask.ExportTask>`
+            The export task.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.BadRequestError
+            Raised when the request is malformed, e.g. the query limit is not a number.
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
+
 
         Example
         -------
@@ -733,39 +944,84 @@ class FeatureCollection(object):
 
         Returns
         -------
-        list(`ExportTask`)
+        list(:class:`ExportTask <descarteslabs.common.tasks.exporttask.ExportTask>`)
             The list of tasks for the product.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
+
+        Example
+        -------
+        >>> from descarteslabs.vectors import FeatureCollection, properties as p
+        >>> aoi_geometry = {
+        ...    "type": "Polygon",
+        ...    "coordinates": [[ # A small area in Washington DC
+        ...        [-77.05501556396483, 38.90946877327506],
+        ...        [-77.0419692993164, 38.90946877327506],
+        ...        [-77.0419692993164, 38.91855139233948],
+        ...        [-77.05501556396483, 38.91855139233948],
+        ...        [-77.05501556396483, 38.90946877327506]
+        ...     ]]
+        ... }
+        >>> buildings = FeatureCollection(
+        ...     "a35126a241bd022c026e96ab9fe5e0ea23967d08:USBuildingFootprints")  # doctest: +SKIP
+        >>> filtered_buildings = filtered_cities.filter(geometry=aoi_geometry)  # doctest: +SKIP
+        >>> task = filtered_buildings.export("my_export")  # doctest: +SKIP
+        >>> exports = filtered_buildings.list_exports()   # doctest: +SKIP
+
         """
         results = []
 
         for result in self.vector_client.get_export_results(self.id):
-            results.append(ExportTask(
-                self.id,
-                tuid=result.id,
-                result_attrs=result.attributes,
-                client=self.vector_client
-            ))
+            results.append(
+                ExportTask(
+                    self.id,
+                    tuid=result.id,
+                    result_attrs=result.attributes,
+                    client=self.vector_client,
+                )
+            )
 
         return results
 
     def delete_features(self):
         """
         Apply a filter to a product and delete features that match the filter criteria,
-        taking into account calls to `FeatureCollection.filter()`.  Cannot be used with
-        calls to `FeatureCollection.limit()`
+        taking into account calls to :meth:`filter`.  Cannot be used with
+        calls to :meth:`limit`
 
-        A query of some sort must be set, otherwise a BadRequestError will be raised.
+        A query of some sort must be set, otherwise a ``BadRequestError`` will be raised.
 
         Delete jobs occur asynchronously and can take a long time to complete. You
-        can access `FeatureCollection.features()` while a delete job is running,
-        but you cannot issue another `FeatureCollection.delete_features()` until
-        the current job has completed running.  Use `DeleteJob.wait_for_completion()`
+        can access :meth:`features` while a delete job is running,
+        but you cannot issue another :meth:`delete_features` until
+        the current job has completed running.  Use
+        :meth:`DeleteJob.wait_for_completion() <descarteslabs.vectors.async_job.DeleteJob.wait_for_completion>`
         to block until the job is done.
 
-        Parameters
-        ----------
-        vectors.async_job.DeleteJob
+        Returns
+        -------
+        :class:`DeleteJob <descarteslabs.vectors.async_job.DeleteJob>`
             A new `DeleteJob`.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.BadRequestError
+            Raised when the request is malformed, e.g. the query limit is not a number.
+        ~descarteslabs.vectors.exceptions.InvalidQueryException
+            Raised when a limit was applied to the ``FeatureCollection``.
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
 
         Example
         -------
@@ -791,7 +1047,11 @@ class FeatureCollection(object):
         return DeleteJob(product.id)
 
     def _repr_json_(self):
-        return DotDict((k, v) for k, v in self.__dict__.items() if k in FeatureCollection.ATTRIBUTES)
+        return DotDict(
+            (k, v)
+            for k, v in self.__dict__.items()
+            if k in FeatureCollection.ATTRIBUTES
+        )
 
     def __repr__(self):
         return "FeatureCollection({})".format(repr(self._repr_json_()))
@@ -801,7 +1061,7 @@ class FeatureCollection(object):
         result = cls.__new__(cls)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
-            if k in ['_vector_client']:
+            if k in ["_vector_client"]:
                 setattr(result, k, v)
             else:
                 setattr(result, k, copy.deepcopy(v, memo))

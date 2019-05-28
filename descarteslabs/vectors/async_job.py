@@ -8,23 +8,8 @@ class AsyncJob(object):
     """
     Base class that provides helpers to access information about
     asynchronous jobs produced when interacting with a ``FeatureCollection``.
-
-    Attributes
-    ----------
-    id : str
-        The unique identifier for the `FeatureCollection` associated with the job.
-    state : str
-        The state of the job, possible values are ``PENDING``, ``RUNNING``,
-        ``DONE``, ``SUCCESS`` and ``FAILED``.
-    created : str
-        Time that the job was created in ISO 8601 format.
-    started : datetime
-        Time that the job started running in ISO 8601 format.
-    ended : datetime
-        Time that the job stopped running in ISO 8601 format.
-    errors : list(str)
-        List of errors encountered when running the job, if there were any.
     """
+
     COMPLETE_STATUSES = ["DONE", "SUCCESS", "FAILURE"]
     COMPLETION_POLL_INTERVAL_SECONDS = 5
 
@@ -43,9 +28,7 @@ class AsyncJob(object):
         return self._vector_client
 
     def refresh(self):
-        """
-        Refresh the job information.
-        """
+        """ Refresh the job information."""
         raise NotImplementedError("derived classes must implement refresh")
 
     def _properties_from_jsonapi(self, response):
@@ -76,6 +59,19 @@ class AsyncJob(object):
             Number of seconds to wait before the wait times out.  If not specified, will
             wait indefinitely.
 
+        Raises
+        ------
+        ~descarteslabs.vectors.exceptions.FailedJobError
+            Raised when the copy job fails to complete successfully.
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product or status cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
+        ~descarteslabs.vectors.exceptions.WaitTimeoutError
+            Raised when the timeout is exceeded before the job completes.
+
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
@@ -105,29 +101,29 @@ class AsyncJob(object):
     @property
     def state(self):
         """
-        The state of the job, possible values are ``PENDING``, ``RUNNING``,
+        str : The state of the job, possible values are ``PENDING``, ``RUNNING``,
         ``DONE``, ``SUCCESS`` and ``FAILED``.
         """
         return self._property("state")
 
     @property
     def created(self):
-        """UTC time that the job was created in ISO 8601 format."""
+        """str : UTC time that the job was created in ISO 8601 format."""
         return self._property("created")
 
     @property
     def started(self):
-        """UTC time that the job started running in ISO 8601 format."""
+        """str : UTC time that the job started running in ISO 8601 format."""
         return self._property("started")
 
     @property
     def ended(self):
-        """UTC time that the job stopped running in ISO 8601 format."""
+        """str : UTC time that the job stopped running in ISO 8601 format."""
         return self._property("ended")
 
     @property
     def errors(self):
-        """Rrrors encountered when running the job, if there were any as a ``list(str)``."""
+        """list(str) : Rrrors encountered when running the job, if there were any."""
         return self._property("errors")
 
 
@@ -155,7 +151,17 @@ class DeleteJob(AsyncJob):
     def refresh(self):
         """
         Refresh the job information.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
         """
+
         response = self.vector_client.get_delete_features_status(self.id)
         self._properties_from_jsonapi(response)
 
@@ -194,6 +200,15 @@ class CopyJob(AsyncJob):
     def refresh(self):
         """
         Refresh the job information.
+
+        Raises
+        ------
+        ~descarteslabs.client.exceptions.NotFoundError
+            Raised if the product or status cannot be found.
+        ~descarteslabs.client.exceptions.RateLimitError
+            Raised when too many requests have been made within a given time period.
+        ~descarteslabs.client.exceptions.ServerError
+            Raised when a unknown error occurred on the server.
         """
         response = self.vector_client.get_product_from_query_status(self.id)
         self._properties_from_jsonapi(response)
