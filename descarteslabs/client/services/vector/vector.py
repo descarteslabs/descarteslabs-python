@@ -13,15 +13,7 @@ from descarteslabs.common.dotdict import DotDict
 class _SearchFeaturesIterator(object):
     """Private iterator for search_features() that also returns length"""
 
-    def __init__(
-        self,
-        client,
-        product_id,
-        geometry,
-        query_expr,
-        query_limit,
-        **kwargs
-    ):
+    def __init__(self, client, product_id, geometry, query_expr, query_limit, **kwargs):
         self._client = client
         self._product_id = product_id
         self._geometry = geometry
@@ -100,7 +92,7 @@ class Vector(JsonApiService):
     SEARCH_PAGE_SIZE = 1000
     properties = GenericProperties()
 
-    def __init__(self, url=None, auth=None, retries=None):
+    def __init__(self, url=None, auth=None):
         """
         :param str url: A HTTP URL pointing to a version of the storage service
             (defaults to current version)
@@ -117,11 +109,11 @@ class Vector(JsonApiService):
         if url is None:
             url = os.environ.get(
                 "DESCARTESLABS_VECTOR_URL",
-                "https://platform.descarteslabs.com/vector/v2"
+                "https://platform.descarteslabs.com/vector/v2",
             )
         self._gcs_upload_service = ThirdPartyService()
 
-        super(Vector, self).__init__(url, auth=auth, retries=retries)
+        super(Vector, self).__init__(url, auth=auth)
 
     def list_products(self, page_size=100, page=1):
         """
@@ -139,10 +131,30 @@ class Vector(JsonApiService):
         :return: Available vector products and their properties,
             as a JSON API collection.  This dictionary contains the following keys:
 
+            .. highlight:: none
+
             ::
 
-                data:  A list of 'DotDict' instances.  For the keys
-                       please see the data key in get_product().
+                data:  A list of DotDict instances with the following keys:
+
+                    id:   The ID of the Vector product.
+                    type: "product".
+                    meta: A single DotDict instance with the following keys:
+
+                        created: Time that the task was created in ISO-8601 UTC.
+
+                    attributes: A single DotDict instance with the following keys:
+
+                        description: The description given to this product.
+                        owners:      The owners of this product (at a minimum
+                                     the organization and the user who created
+                                     this product).
+                        readers:     The users, groups, or organizations that
+                                     can read this product.
+                        title:       The title given to this product.
+                        writers:     The users, groups, or organizations that
+                                     can write into this product.
+
                 links: (Optional) A single DotDict instance with the
                        following keys if there is more than one page of products:
 
@@ -150,15 +162,20 @@ class Vector(JsonApiService):
                           if available.
                     prev: (Optional) A link to the previous page of products
                           if available.
-        """
 
-        params = dict(
-            limit=page_size,
-            page=page
-        )
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if
+            subsequent pages cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
+        """
+        params = dict(limit=page_size, page=page)
 
         # override the json api content type which is default.
-        r = self.session.get('/products', params=params, headers={'Content-Type': 'application/json'})
+        r = self.session.get(
+            "/products", params=params, headers={"Content-Type": "application/json"}
+        )
         return DotDict(r.json())
 
     def get_product(self, product_id):
@@ -170,40 +187,49 @@ class Vector(JsonApiService):
         :rtype: DotDict
         :return: The vector product, as a JSON API resource object. The keys are:
 
+            .. highlight:: none
+
             ::
 
-                data: A single 'DotDict' instance with the following keys:
+                data: A single "DotDict" instance with the following keys:
 
-                    id:   The ID of the Vectort product.
-                    type: 'product'.
+                    id:   The ID of the Vector product.
+                    type: "product".
                     meta: A single DotDict instance with the following keys:
 
-                        created: Time that the task was created in ISO-8601 UTC.
+                        created: Time that the task was created in
+                                 ISO-8601 UTC.
 
-                    attributes: A single DotDict instance with the following keys:
+                    attributes: A single DotDict instance with the
+                                following keys:
 
+                        description: The description given to this
+                                     product.
+                        owners:      The owners of this product
+                                     (at a minimum the organization
+                                     and the user who created this
+                                     product).
+                        readers:     The users, groups, or
+                                     organizations that can read
+                                     this product.
                         title:       The title given to this product.
-                        description: The description given to this product.
-                        owners:      The owners of this product (at a minimum
-                                     the organization and the user who created
-                                     this product).
-                        readers:     The users, groups, or organizations that
-                                     can read this product.
-                        writers:     The users, groups, or organizations that
-                                     can write into this product.
+                        writers:     The users, groups, or
+                                     organizations that can write
+                                     into this product.
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
-        r = self.session.get('/products/{}'.format(product_id))
+        r = self.session.get("/products/{}".format(product_id))
         return DotDict(r.json())
 
     @deprecate(renames={"name": "product_id"})
     def create_product(
-        self,
-        product_id,
-        title,
-        description,
-        owners=None,
-        readers=None,
-        writers=None
+        self, product_id, title, description, owners=None, readers=None, writers=None
     ):
         """Add a vector product to your catalog.
 
@@ -233,6 +259,14 @@ class Vector(JsonApiService):
         :rtype: DotDict
         :return: Created vector product, as a JSON API resource object. For
             a list of keys, please see :meth:`get_product`.
+
+        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+            the request is malformed, e.g. the supplied product id is already in
+            use.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
 
         params = dict(
@@ -240,23 +274,25 @@ class Vector(JsonApiService):
             description=description,
             owners=owners,
             readers=readers,
-            writers=writers
+            writers=writers,
         )
 
-        jsonapi = self.jsonapi_document(type="product", attributes=params, id=product_id)
-        r = self.session.post('/products', json=jsonapi)
+        jsonapi = self.jsonapi_document(
+            type="product", attributes=params, id=product_id
+        )
+        r = self.session.post("/products", json=jsonapi)
         return DotDict(r.json())
 
     @deprecate(required=["product_id", "title", "description"], renames={"name": None})
     def replace_product(
-            self,
-            product_id=None,
-            name=None,
-            title=None,
-            description=None,
-            owners=None,
-            readers=None,
-            writers=None
+        self,
+        product_id=None,
+        name=None,
+        title=None,
+        description=None,
+        owners=None,
+        readers=None,
+        writers=None,
     ):
         """Replace a vector product in your catalog.
 
@@ -284,6 +320,15 @@ class Vector(JsonApiService):
         :rtype: DotDict
         :return: Replaced vector product, as a JSON API resource object.  For a
             description of the keys, please see :meth:`get_product`.
+
+        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+            the request is malformed, e.g. the owners list is missing prefixes.
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
 
         # TODO: fully deprecate `name` and remove from params completely
@@ -295,20 +340,22 @@ class Vector(JsonApiService):
             writers=writers,
         )
 
-        jsonapi = self.jsonapi_document(type="product", attributes=params, id=product_id)
-        r = self.session.put('/products/{}'.format(product_id), json=jsonapi)
+        jsonapi = self.jsonapi_document(
+            type="product", attributes=params, id=product_id
+        )
+        r = self.session.put("/products/{}".format(product_id), json=jsonapi)
         return DotDict(r.json())
 
     @deprecate(renames={"name": None})
     def update_product(
-            self,
-            product_id,
-            name=None,
-            title=None,
-            description=None,
-            owners=None,
-            readers=None,
-            writers=None
+        self,
+        product_id,
+        name=None,
+        title=None,
+        description=None,
+        owners=None,
+        readers=None,
+        writers=None,
     ):
         """Update a vector product in your catalog using the given parameters.
         If a parameter is not provided, it will not change.  You cannot change the
@@ -338,6 +385,14 @@ class Vector(JsonApiService):
         :return: Updated vector product, as a JSON API resource object.  For a
             description of the keys please see :meth:`get_product`.
 
+        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+            the request is malformed, e.g. the owners list is missing prefixes.
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
 
         # TODO: fully deprecate name and remove from params completely
@@ -350,8 +405,10 @@ class Vector(JsonApiService):
         )
         params = {k: v for k, v in six.iteritems(params) if v is not None}
 
-        jsonapi = self.jsonapi_document(type="product", attributes=params, id=product_id)
-        r = self.session.patch('/products/{}'.format(product_id), json=jsonapi)
+        jsonapi = self.jsonapi_document(
+            type="product", attributes=params, id=product_id
+        )
+        r = self.session.patch("/products/{}".format(product_id), json=jsonapi)
         return DotDict(r.json())
 
     def delete_product(self, product_id):
@@ -359,17 +416,18 @@ class Vector(JsonApiService):
 
         :param str product_id: (Required) The ID of the Vector product to remove.
 
-        :raises NotFoundError: If the product cannot be found.
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
 
-        self.session.delete('/products/{}'.format(product_id))
+        self.session.delete("/products/{}".format(product_id))
 
     def create_feature(
-        self,
-        product_id,
-        geometry,
-        properties=None,
-        fix_geometry='accept'
+        self, product_id, geometry, properties=None, fix_geometry="accept"
     ):
         """Add a feature to an existing vector product.
 
@@ -401,40 +459,52 @@ class Vector(JsonApiService):
         :rtype: DotDict
         :return: Created Feature, as a JSON API resource collection.  The keys are:
 
+            .. highlight:: none
+
             ::
 
-                data: A 'DotDict' instance with the following keys:
+                data: A "DotDict" instance with the following keys:
 
                     id:        The ID of the feature.
-                    type:      'feature'.
+                    type:      "feature".
                     attributes: A DotDict instance with the following keys:
 
-                        created:    Time that the task was created in ISO-8601 UTC.
-                        properties: A DotDict instance.  The keys are user provided.
-                                    Supported values are strings, numbers, the
-                                    value 'None'.
+                        created:    Time that the task was created in
+                                    ISO-8601 UTC.
+                        properties: A DotDict instance.  The keys are
+                                    user provided.  Supported values
+                                    are strings, numbers, the value "None".
                         geometry:   A DotDict instance with the following keys:
 
-                            type:       The type of the feature, one of 'Polygon',
-                                         'MultiPolygon', 'Point', 'MultiPoint',
-                                         'LineString', 'MultiLineString', or
-                                         'GeometryCollection'.
-                            coordinates: A list of coordinates; the exact structure
-                                         of potentially nesting lists depends on
-                                         the given type.
+                            type:        The type of the feature, one of
+                                         ["Polygon", "MultiPolygon",
+                                         "Point", "MultiPoint",
+                                         "LineString", "MultiLineString",
+                                         or "GeometryCollection"].
+                            coordinates: A list of coordinates; the
+                                         exact structure of
+                                         potentially nesting lists
+                                         depends on the given type.
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+            the request is malformed, e.g. the owners list is missing prefixes.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
 
         params = dict(
-            geometry=geometry,
-            properties=properties,
-            fix_geometry=fix_geometry
+            geometry=geometry, properties=properties, fix_geometry=fix_geometry
         )
 
         jsonapi = self.jsonapi_document(type="feature", attributes=params)
-        r = self.session.post('/products/{}/features'.format(product_id), json=jsonapi)
+        r = self.session.post("/products/{}/features".format(product_id), json=jsonapi)
         return DotDict(r.json())
 
-    def create_features(self, product_id, features, fix_geometry='accept'):
+    def create_features(self, product_id, features, fix_geometry="accept"):
         """Add multiple features to an existing vector product.
 
         :param str product_id: (Required) The ID of the Vector product to which these
@@ -443,7 +513,7 @@ class Vector(JsonApiService):
         :param list(dict) features: (Required) Each feature must be a dict with a geometry
             and properties field. If you provide more than 100 features,
             they will be batched in
-            groups of 100, but consider using :meth:`upload_features()` instead.
+            groups of 100, but consider using :meth:`upload_features` instead.
 
         :param str fix_geometry: String specifying how to handle certain problem
             geometries, including those which do not follow counter-clockwise
@@ -457,29 +527,65 @@ class Vector(JsonApiService):
         :rtype: DotDict
         :return: The features as a JSON API resource object. The keys are:
 
+            .. highlight:: none
+
             ::
 
-                data: A list of 'DotDict' instances.  Each instance contains
-                      keys as described in create_feature().
+                data: A list of "DotDict" instances with the following keys:
 
-        :raises ClientError: A variety of http-related exceptions can
-            thrown. If more than 100 features were passed in, some
-            of these may have been successfully inserted, others not.
-            If this is a problem, then stick with <= 100 features.
+                    id:        The ID of the feature.
+                    type:      "feature".
+                    attributes: A DotDict instance with the following keys:
+
+                        created:    Time that the task was created in
+                                    ISO-8601 UTC.
+                        properties: A DotDict instance.  The keys are
+                                    user provided.  Supported values
+                                    are strings, numbers, the value "None".
+                        geometry:   A DotDict instance with the following keys:
+
+                            type:        The type of the feature, one of
+                                         ["Polygon", "MultiPolygon",
+                                         "Point", "MultiPoint",
+                                         "LineString", "MultiLineString",
+                                         or "GeometryCollection"].
+                            coordinates: A list of coordinates; the
+                                         exact structure of
+                                         potentially nesting lists
+                                         depends on the given type.
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+            the request is malformed.  May also indicate that too many features
+            were included.  If more than 100 features were provided, some of these
+            features may have been successfuly inserted while others may not have
+            been inserted.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
 
         if len(features) > 100:
             logging.warning(
-                'create_features: feature collection has more than 100 features,'
-                + ' will batch by 100 but consider using upload_features')
+                "create_features: feature collection has more than 100 features,"
+                + " will batch by 100 but consider using upload_features"  # noqa
+            )
 
         # forcibly pass a zero-length list for appropriate validation error
         for i in range(0, max(len(features), 1), 100):
-            attributes = [dict(feat, **{"fix_geometry": fix_geometry}) for feat in features[i:i + 100]]
-            jsonapi = self.jsonapi_collection(type="feature", attributes_list=attributes)
+            attributes = [
+                dict(feat, **{"fix_geometry": fix_geometry})
+                for feat in features[i : i + 100]
+            ]
+            jsonapi = self.jsonapi_collection(
+                type="feature", attributes_list=attributes
+            )
 
-            r = self.session.post('/products/{}/features'.format(product_id),
-                                  json=jsonapi)
+            r = self.session.post(
+                "/products/{}/features".format(product_id), json=jsonapi
+            )
             if i == 0:
                 result = DotDict(r.json())
             else:
@@ -487,7 +593,9 @@ class Vector(JsonApiService):
 
         return result
 
-    def upload_features(self, file_ish, product_id, max_errors=0, fix_geometry='accept'):
+    def upload_features(
+        self, file_ish, product_id, max_errors=0, fix_geometry="accept"
+    ):
         """
         Asynchonously upload a file or stream of
         `Newline Delimited JSON <https://github.com/ndjson/ndjson-spec>`_
@@ -500,7 +608,7 @@ class Vector(JsonApiService):
         be used.
 
         This is an asynchronous operation and you can query for the status
-        using :meth:`Vector.get_upload_result()` with the upload_id returned by
+        using :meth:`get_upload_result` with the upload_id returned by
         this method.
 
         :type file_ish: str or io.IOBase
@@ -524,34 +632,49 @@ class Vector(JsonApiService):
 
         :rtype: str
         :return: The upload id.
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
 
         if isinstance(file_ish, io.IOBase):
             return self._upload_features(file_ish, product_id, max_errors, fix_geometry)
         elif isinstance(file_ish, six.string_types):
-            with io.open(file_ish, 'rb') as stream:
-                return self._upload_features(stream, product_id, max_errors, fix_geometry)
+            with io.open(file_ish, "rb") as stream:
+                return self._upload_features(
+                    stream, product_id, max_errors, fix_geometry
+                )
         else:
-            raise Exception('Could not handle file: `{}`; pass a path or open IOBase instance'.format(file_ish))
+            raise Exception(
+                "Could not handle file: `{}`; pass a path or open IOBase instance".format(
+                    file_ish
+                )
+            )
 
     def _upload_features(self, iobase, product_id, max_errors, fix_geometry):
         jsonapi = self.jsonapi_document(
             type="features",
-            attributes={
-                'max_errors': max_errors,
-                'fix_geometry': fix_geometry}
+            attributes={"max_errors": max_errors, "fix_geometry": fix_geometry},
         )
-        r = self.session.post('/products/{}/features/uploads'.format(product_id), json=jsonapi)
+        r = self.session.post(
+            "/products/{}/features/uploads".format(product_id), json=jsonapi
+        )
         upload = r.json()
-        upload_url = upload['url']
+        upload_url = upload["url"]
         r = self._gcs_upload_service.session.put(upload_url, data=iobase)
-        return upload['upload_id']
+        return upload["upload_id"]
 
-    def _fetch_upload_result_page(self, product_id, continuation_token=None, pending=False):
+    def _fetch_upload_result_page(
+        self, product_id, continuation_token=None, pending=False
+    ):
         r = self.session.get(
-            '/products/{}/features/uploads'.format(product_id),
-            params={'pending': bool(pending), 'continuation_token': continuation_token},
-            headers={'Content-Type': 'application/json'},
+            "/products/{}/features/uploads".format(product_id),
+            params={"pending": bool(pending), "continuation_token": continuation_token},
+            headers={"Content-Type": "application/json"},
         )
         return DotDict(r.json())
 
@@ -571,31 +694,42 @@ class Vector(JsonApiService):
             :meth:`upload_features`, returning :class:`DotDict` instances with
             the following keys:
 
+            .. highlight:: none
+
             ::
 
                 id:         The ID of the upload task (which is not the upload
                             ID, but you can use it instead of the upload ID).
-                type:       'upload'.
-                attributes: A 'DotDict' instance with the following keys
+                type:       "upload".
+                attributes: A "DotDict" instance with the following keys
                             (note that this contains less information then the
-                            information returned by get_upload_result()):
+                            information returned by get_upload_result):
 
                     created:           Time that the task was created in ISO-8601 UTC.
                     exception_name:    The type of exception, if there is one,
-                                       'None' otherwise.
-                    failure_type:      'executable_failure' if resource limits are
-                                       reached, or 'exception' if an exception was
-                                       thrown, 'None' otherwise.
+                                       "None" otherwise.
+                    failure_type:      "executable_failure" if resource limits are
+                                       reached, or "exception" if an exception was
+                                       thrown, "None" otherwise.
                     peak_memory_usage: The amount of memory used by the task in bytes.
                     runtime:           The number of CPU seconds used by the task.
-                    status:            'RUNNING', 'SUCCESS' or 'FAILURE'.
+                    status:            "RUNNING", "SUCCESS" or "FAILURE".
                     labels:            A list of string labels.  The last value is
                                        the upload ID.
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
 
         continuation_token = None
         while True:
-            page = self._fetch_upload_result_page(product_id, continuation_token=continuation_token, pending=pending)
+            page = self._fetch_upload_result_page(
+                product_id, continuation_token=continuation_token, pending=pending
+            )
             for feature in page.data:
                 yield feature
             continuation_token = page.meta.continuation_token
@@ -612,7 +746,7 @@ class Vector(JsonApiService):
             the upload result.
 
         :param str upload_id: (Required) An id pertaining to this requested upload,
-            either returned by :meth:`Vector.get_upload_results` or
+            either returned by :meth:`get_upload_results` or
             :meth:`upload_features`.
 
         :param bool pending: If True, include pending upload jobs in the result.
@@ -621,39 +755,41 @@ class Vector(JsonApiService):
         :rtype DotDict:
         :return: The result as a JSON API resource object. The keys are:
 
+            .. highlight:: none
+
             ::
 
                 data: A DotDict instance with the following keys:
 
                     id:         The ID of the upload task (which is not the upload
                                 ID, but you can use it instead of the upload ID).
-                    type:       'upload'.
+                    type:       "upload".
                     attributes: A DotDict instance with the following keys:
 
                         created:           Time that the task was created in
                                            ISO-8601 UTC.
                         exception_name:    The type of exception, if there is one,
-                                           'None' otherwise.
-                        failure_type:      'executable_failure' if resource limits
-                                           are reached, or 'exception' if an exception
-                                           was thrown, 'None' otherwise.
+                                           "None" otherwise.
+                        failure_type:      "executable_failure" if resource limits
+                                           are reached, or "exception" if an exception
+                                           was thrown, "None" otherwise.
                         peak_memory_usage: The amount of memory used by the task
                                            in bytes.
                         runtime:           The number of CPU seconds used by the task.
-                        status:            'RUNNING', 'SUCCESS' or 'FAILURE'.
+                        status:            "RUNNING", "SUCCESS" or "FAILURE".
                         labels:            A list of string labels.  The last value is
                                            the upload ID.
                         load:              A DotDict instance describing the actual
                                            result of the load which continuous
                                            asynchronously after the task itself
                                            has completed (as indicated by the
-                                           'RUNNING`` status):
+                                           "RUNNING" status):
 
                             errors:      How many errors the load caused.
                             output_rows: The number of actual rows created during the
                                          load (which may differ from the number of rows
                                          given in the upload file).
-                            state:       'PENDING', 'RUNNING', or 'DONE'.
+                            state:       "PENDING", "RUNNING", or "DONE".
 
                         result: A DotDict instance describing the result of the Upload
                                 Task (which pre-processes the data before it's loaded):
@@ -662,14 +798,21 @@ class Vector(JsonApiService):
                             input_features: The number of valid rows in the upload file.
                             input_rows:     The number of rows that will be loaded
                                             (unless there are errors, this should be
-                                            identical to ``output_rows`` above).
+                                            identical to "output_rows" above).
                             job_id:         The internal job ID.
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product or upload cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
 
         r = self.session.get(
-            '/products/{}/features/uploads/{}'.format(product_id, upload_id),
-            params={'pending': bool(pending)},
-            headers={'Content-Type': 'application/json'},
+            "/products/{}/features/uploads/{}".format(product_id, upload_id),
+            params={"pending": bool(pending)},
+            headers={"Content-Type": "application/json"},
         )
         return DotDict(r.json())
 
@@ -696,25 +839,24 @@ class Vector(JsonApiService):
             collection.
         """
 
-        params = {k: v for k, v in dict(
-            kwargs,
-            geometry=geometry,
-            query_expr=(query_expr.serialize() if query_expr is not None else None),
-            limit=Vector.SEARCH_PAGE_SIZE,
-            query_limit=query_limit,
-            continuation_token=continuation_token,
-        ).items() if v is not None}
+        params = {
+            k: v
+            for k, v in dict(
+                kwargs,
+                geometry=geometry,
+                query_expr=(query_expr.serialize() if query_expr is not None else None),
+                limit=Vector.SEARCH_PAGE_SIZE,
+                query_limit=query_limit,
+                continuation_token=continuation_token,
+            ).items()
+            if v is not None
+        }
 
-        r = self.session.post('/products/{}/search'.format(product_id), json=params)
+        r = self.session.post("/products/{}/search".format(product_id), json=params)
         return DotDict(r.json())
 
     def search_features(
-        self,
-        product_id,
-        geometry=None,
-        query_expr=None,
-        query_limit=None,
-        **kwargs
+        self, product_id, geometry=None, query_expr=None, query_limit=None, **kwargs
     ):
         """Iterate over vector features within an existing product.
 
@@ -745,7 +887,7 @@ class Vector(JsonApiService):
             :obj:`p`, you can E.g ``query_expr=(p.temperature >= 50) &
             (p.hour_of_day > 18)``, or even more complicated expressions
             like ``query_expr=(100 > p.temperature >= 50) | ((p.month
-            != 10) & (p.day_of_month > 14))`` This expression gets
+            or != 10) & (p.day_of_month > 14))`` This expression gets
             serialized and applied to the properties mapping supplied
             with the features in the vector product. If you supply a
             property which doesn't exist as part of the expression that
@@ -761,10 +903,19 @@ class Vector(JsonApiService):
 
             :func:`len` can be used on the returned iterator to determine
             the query size.
-        """
 
+        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+            the request is malformed, e.g. the query limit is not a number.
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
+        """
         return _SearchFeaturesIterator(
-            self, product_id, geometry, query_expr, query_limit)
+            self, product_id, geometry, query_expr, query_limit
+        )
 
     @deprecate(renames={"name": "new_product_id"})
     def create_product_from_query(
@@ -778,7 +929,7 @@ class Vector(JsonApiService):
         writers=None,
         geometry=None,
         query_expr=None,
-        query_limit=None
+        query_limit=None,
     ):
         """
         Query vector features within an existing product and create a new
@@ -841,6 +992,16 @@ class Vector(JsonApiService):
         :rtype: DotDict
         :return: Created vector product, as a JSON API resource object.  For a
             description of the keys, please see :meth:`get_product`.
+
+        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+            the request is malformed, e.g. the supplied new product id is already in
+            use.
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
 
         product_params = dict(
@@ -849,21 +1010,24 @@ class Vector(JsonApiService):
             description=description,
             owners=owners,
             readers=readers,
-            writers=writers
+            writers=writers,
         )
 
-        query_params = {k: v for k, v in dict(
-            geometry=geometry,
-            query_expr=(query_expr.serialize() if query_expr is not None else None),
-            query_limit=query_limit,
-        ).items() if v is not None}
+        query_params = {
+            k: v
+            for k, v in dict(
+                geometry=geometry,
+                query_expr=(query_expr.serialize() if query_expr is not None else None),
+                query_limit=query_limit,
+            ).items()
+            if v is not None
+        }
 
-        params = dict(
-            product=product_params,
-            query=query_params
+        params = dict(product=product_params, query=query_params)
+
+        r = self.session.post(
+            "/products/{}/search/copy".format(product_id), json=params
         )
-
-        r = self.session.post('/products/{}/search/copy'.format(product_id), json=params)
         return DotDict(r.json())
 
     def get_product_from_query_status(self, product_id):
@@ -875,32 +1039,37 @@ class Vector(JsonApiService):
 
         :rtype: DotDict
         :return: A dictionary with information about the status.  The keys are
+
+            .. highlight:: none
+
             ::
 
-                data: A 'DotDict' instance with the following keys:
+                data: A "DotDict" instance with the following keys:
 
                     id:         The internal ID for this job.
-                    type:       'copy_job'.
+                    type:       "copy_job".
                     attributes: A DotDict instance with the following keys:
 
-                        created: Time that the task was created in ISO-8601 UTC.
-                        ended:   Time that the task completed in ISO-8601 UTC
-                                 (when available).
-                        started: Time that the start stared in ISO-8601 UTC
-                                 (when available).
-                        state:   'PENDING', 'RUNNING', or 'DONE'.
-        """
+                        created: Time that the task was created in
+                                 ISO-8601 UTC.
+                        ended:   Time that the task completed in
+                                 ISO-8601 UTC (when available).
+                        started: Time that the start stared in
+                                 ISO-8601 UTC (when available).
+                        state:   "PENDING", "RUNNING", or "DONE".
 
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product or status cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
+        """
         r = self.session.get("/products/{}/search/copy/status".format(product_id))
         return DotDict(r.json())
 
     def export_product_from_query(
-        self,
-        product_id,
-        key,
-        geometry=None,
-        query_expr=None,
-        query_limit=None
+        self, product_id, key, geometry=None, query_expr=None, query_limit=None
     ):
         """
         Query vector features within an existing product and export the result
@@ -911,8 +1080,8 @@ class Vector(JsonApiService):
 
         Note that the export is happening asynchronously and can take a
         while depending on the size of the product or query.  You can
-        request the status using :meth:`get_export_result()` or
-        :meth:`get_export_results()`.
+        request the status using :meth:`get_export_result` or
+        :meth:`get_export_results`.
 
         Once the export is complete, you can download the file from Descartes Labs
         Storage using :meth:`descarteslabs.client.services.storage.Storage.get_file`
@@ -956,27 +1125,38 @@ class Vector(JsonApiService):
 
         :rtype: str
         :return: The export id.
+
+        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+            the request is malformed, e.g. the query limit is not a number.
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
+        query_params = {
+            k: v
+            for k, v in dict(
+                geometry=geometry,
+                query_expr=(query_expr.serialize() if query_expr is not None else None),
+                query_limit=query_limit,
+            ).items()
+            if v is not None
+        }
 
-        query_params = {k: v for k, v in dict(
-            geometry=geometry,
-            query_expr=(query_expr.serialize() if query_expr is not None else None),
-            query_limit=query_limit,
-        ).items() if v is not None}
+        params = dict(key=key, query=query_params)
 
-        params = dict(
-            key=key,
-            query=query_params
+        r = self.session.post(
+            "/products/{}/search/export".format(product_id), json=params
         )
-
-        r = self.session.post('/products/{}/search/export'.format(product_id), json=params)
-        return r.json()['export_id']
+        return r.json()["export_id"]
 
     def _fetch_export_result_page(self, product_id, continuation_token=None):
         r = self.session.get(
-            '/products/{}/search/export'.format(product_id),
-            params={'continuation_token': continuation_token},
-            headers={'Content-Type': 'application/json'},
+            "/products/{}/search/export".format(product_id),
+            params={"continuation_token": continuation_token},
+            headers={"Content-Type": "application/json"},
         )
 
         return DotDict(r.json())
@@ -992,16 +1172,21 @@ class Vector(JsonApiService):
         :rtype: Iterator of :class:`DotDict` instances
         :return: An iterator returning :class:`DotDict` instances containing
             information about each completed export task created by
-            :meth:`Vector.export_product_from_query`.  See :meth:`get_export_result`
+            :meth:`export_product_from_query`.  See :meth:`get_export_result`
             under ``data`` for an explanation of the information returned.
-        """
 
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
+        """
         continuation_token = None
 
         while True:
             page = self._fetch_export_result_page(
-                product_id,
-                continuation_token=continuation_token
+                product_id, continuation_token=continuation_token
             )
 
             for result in page.data:
@@ -1024,15 +1209,17 @@ class Vector(JsonApiService):
 
         :param str export_id: (Required) The export ID for which to return
             the result, as previously returned by
-            :meth:`Vector.export_product_from_query`.
+            :meth:`export_product_from_query`.
 
         :rtype: DotDict
         :return: The information about the export task once the task has completed.
             The keys are:
 
+            .. highlight:: none
+
             ::
 
-                data: A single 'DotDict' instance with the following keys:
+                data: A single "DotDict" instance with the following keys:
 
                     id:         The id of the task.
                     type:       export.
@@ -1040,29 +1227,38 @@ class Vector(JsonApiService):
 
                         created:           Time that the task was created in
                                            ISO-8601 UTC.
-                        exception_name:    The type of exception, if there is one,
-                                           'None' otherwise.
-                        failure_type:      'executable_failure' if resource limits are
-                                           reached, or 'exception' if an exception was
-                                           thrown, 'None' otherwise.
-                        peak_memory_usage: The amount of memory used by the task in bytes.
-                        runtime:           The number of CPU seconds used by the task.
-                        status:            'SUCCESS' or 'FAILURE'.
-                        labels:            A list of string labels.  The last value is
-                                           the key.
+                        exception_name:    The type of exception, if there
+                                           is one, "None" otherwise.
+                        failure_type:      "executable_failure" if resource
+                                           limits are reached, or "exception"
+                                           if an exception was thrown,
+                                           "None" otherwise.
+                        peak_memory_usage: The amount of memory used by
+                                           the task in bytes.
+                        runtime:           The number of CPU seconds used
+                                           by the task.
+                        status:            "SUCCESS" or "FAILURE".
+                        labels:            A list of string labels.  The
+                                           last value is the key.
 
-        :raises NotFoundError: When the task is either not found or is
-            pending or running but has not completed yet.
+        :raises ~descarteslabs.client.exceptions.NotFoundError: When the task is
+            either not found or the task is pending or running but has not
+            completed yet.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
-
         r = self.session.get(
-            '/products/{}/search/export/{}'.format(product_id, export_id),
-            headers={'Content-Type': 'application/json'},
+            "/products/{}/search/export/{}".format(product_id, export_id),
+            headers={"Content-Type": "application/json"},
         )
 
         return DotDict(r.json())
 
-    def delete_features_from_query(self, product_id, geometry=None, query_expr=None, **kwargs):
+    def delete_features_from_query(
+        self, product_id, geometry=None, query_expr=None, **kwargs
+    ):
         """
         Query an existing Vector product and delete features that match
         the query results.
@@ -1100,14 +1296,28 @@ class Vector(JsonApiService):
         :rtype: DotDict
         :return: Vector product from which the features were deleted, as a JSON API
             resource object. For a list of keys, please see :meth:`get_product`.
+
+        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+            the request is malformed, e.g. the query limit is not a number.
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
+        query_params = {
+            k: v
+            for k, v in dict(
+                geometry=geometry,
+                query_expr=(query_expr.serialize() if query_expr is not None else None),
+            ).items()
+            if v is not None
+        }
 
-        query_params = {k: v for k, v in dict(
-            geometry=geometry,
-            query_expr=(query_expr.serialize() if query_expr is not None else None)
-        ).items() if v is not None}
-
-        r = self.session.delete("/products/{}/search".format(product_id), json=query_params)
+        r = self.session.delete(
+            "/products/{}/search".format(product_id), json=query_params
+        )
         return DotDict(r.json())
 
     def get_delete_features_status(self, product_id):
@@ -1119,7 +1329,14 @@ class Vector(JsonApiService):
         :rtype DotDict:
         :return: A dictionary with information about the status.  For a description
             of the keys, please see :meth:`get_product_from_query_status`.
-            Note that the ``type`` will be ``u'delete_job``.
+            Note that the ``type`` will be ``delete_job``.
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the product
+            cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
 
         r = self.session.get("/products/{}/search/delete/status".format(product_id))
@@ -1132,6 +1349,13 @@ class Vector(JsonApiService):
 
         :rtype: int
         :return: The total number of features in a product.
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            product cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
         """
         r = self.session.get("/products/{}/features/count".format(product_id))
         return r.json()
