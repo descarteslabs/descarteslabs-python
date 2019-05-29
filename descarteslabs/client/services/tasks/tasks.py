@@ -806,6 +806,25 @@ class Tasks(Service):
 
         return CloudFunction(group_info.id, name=name, client=self, retry_count=retry_count)
 
+    def get_function_by_id(self, group_id):
+        """
+        Get an asynchronous function by group id.
+
+        :param str group_id: The group id.
+
+        :rtype: :class:`CloudFunction`
+        :return: A :class:`CloudFunction`.
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            group cannot be found.
+        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+            too many requests have been made within a given time period.
+        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+            a unknown error occurred on the server.
+        """
+        group = self.get_group(group_id)
+        return CloudFunction(group.id, name=group.name, client=self)
+
     def get_function(self, name):
         """
         Gets an asynchronous function by name (the last function created with that

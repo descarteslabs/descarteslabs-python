@@ -10,7 +10,9 @@ Changelog
 
 ## [Unreleased]
 ### Added
-Scenes now supports a new 'save_image' function that allows a user to save a visualization given a filename and extension.
+- Scenes now supports a new 'save_image' function that allows a user to save a visualization given a filename and extension.
+- Tasks now allows you to unambiguously get a function by group id using `get_function_by_id`.
+
 
 ### Added
 - Metadata, Catalog, and Scenes now support a new `storage_state` property for managing image metadata and filtering search results. `storage_state="available"` is the default for new images and indicates that the raster data for that scene is available on the Descartes Labs platform. `storage_state="remote"` indicates that the raster data has not yet been processed and made available to client users.

@@ -128,6 +128,13 @@ class TasksTest(ClientTestCase):
         with self.assertRaises(GroupTerminalException):
             self.client.wait_for_completion('foo', show_progress=False)
 
+    @responses.activate
+    def test_get_function_by_id(self):
+        self.mock_response(responses.GET, {"id": "foo", "name": "bar"})
+
+        f = self.client.get_function_by_id("foo")
+        self.assertIsInstance(f, CloudFunction)
+
 
 class TasksPackagingTest(ClientTestCase):
 
@@ -198,7 +205,8 @@ class TasksPackagingTest(ClientTestCase):
         self.mock_response(responses.POST, status=201, json=resp_json)
         responses.add(responses.PUT, upload_url, status=200)
         with mock.patch("os.remove"):  # Don't delete bundle so we can read it back below
-            self.client.new_group(foo, 'task-image', include_data=[self.DATA_FILE_PATH], include_modules=[self.TEST_MODULE])
+            self.client.new_group(
+                foo, 'task-image', include_data=[self.DATA_FILE_PATH], include_modules=[self.TEST_MODULE])
 
         body = responses.calls[0].request.body.decode("utf-8")  # prior to 3.6, json does not accept bytes
         call_args = json.loads(body)
