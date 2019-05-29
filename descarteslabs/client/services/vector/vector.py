@@ -2,6 +2,7 @@ import os
 import six
 import io
 import logging
+from shapely.geometry import mapping
 
 from descarteslabs.common.property_filtering import GenericProperties
 from descarteslabs.client.deprecation import deprecate
@@ -435,7 +436,7 @@ class Vector(JsonApiService):
             feature will belong.
 
         :param dict geometry: (Required) Shape associated with this vector feature.
-            This accepts the following types of GeoJSON geometries:
+            This accepts the following types of GeoJSON or Shapely geometries:
 
             - Points
             - MultiPoints
@@ -497,7 +498,7 @@ class Vector(JsonApiService):
         """
 
         params = dict(
-            geometry=geometry, properties=properties, fix_geometry=fix_geometry
+            geometry=self._shapely_to_geojson(geometry), properties=properties, fix_geometry=fix_geometry
         )
 
         jsonapi = self.jsonapi_document(type="feature", attributes=params)
@@ -816,6 +817,13 @@ class Vector(JsonApiService):
         )
         return DotDict(r.json())
 
+    def _shapely_to_geojson(self, geometry):
+        # geometry is represented by a Shapely shape, convert it to GeoJSON geometry
+        # before making request to vector service
+        if hasattr(geometry, "__geo_interface__"):
+            geometry = mapping(geometry)
+        return geometry
+
     def _fetch_feature_page(
         self,
         product_id,
@@ -843,7 +851,7 @@ class Vector(JsonApiService):
             k: v
             for k, v in dict(
                 kwargs,
-                geometry=geometry,
+                geometry=self._shapely_to_geojson(geometry),
                 query_expr=(query_expr.serialize() if query_expr is not None else None),
                 limit=Vector.SEARCH_PAGE_SIZE,
                 query_limit=query_limit,
@@ -869,7 +877,7 @@ class Vector(JsonApiService):
         :param str product_id: (Required) The ID of the product within which to search.
 
         :param dict geometry: Search for Features intersecting this shape.
-            This accepts the following types of GeoJSON geometries:
+            This accepts the following types of GeoJSON or Shapely geometries:
 
             - Points
             - MultiPoints
@@ -962,7 +970,7 @@ class Vector(JsonApiService):
             product.  Each ID must be prefixed with ``user:``, ``group:``, or ``org:``.
 
         :param dict geometry: Search for Features intersecting this shape.
-            This accepts the following types of GeoJSON geometries:
+            This accepts the following types of GeoJSON or Shapely geometries:
 
             - Points
             - MultiPoints
@@ -1016,7 +1024,7 @@ class Vector(JsonApiService):
         query_params = {
             k: v
             for k, v in dict(
-                geometry=geometry,
+                geometry=self._shapely_to_geojson(geometry),
                 query_expr=(query_expr.serialize() if query_expr is not None else None),
                 query_limit=query_limit,
             ).items()
@@ -1096,7 +1104,7 @@ class Vector(JsonApiService):
             the key already exists.
 
         :param dict geometry: Search for Features intersecting this shape.
-            This accepts the following types of GeoJSON geometries:
+            This accepts the following types of GeoJSON or Shapely geometries:
 
             - Points
             - MultiPoints
@@ -1138,7 +1146,7 @@ class Vector(JsonApiService):
         query_params = {
             k: v
             for k, v in dict(
-                geometry=geometry,
+                geometry=self._shapely_to_geojson(geometry),
                 query_expr=(query_expr.serialize() if query_expr is not None else None),
                 query_limit=query_limit,
             ).items()
@@ -1269,7 +1277,7 @@ class Vector(JsonApiService):
             search for features to delete.
 
         :param dict geometry: Search for Features intersecting this shape.
-            This accepts the following types of GeoJSON geometries:
+            This accepts the following types of GeoJSON or Shapely geometries:
 
             - Points
             - MultiPoints
@@ -1309,7 +1317,7 @@ class Vector(JsonApiService):
         query_params = {
             k: v
             for k, v in dict(
-                geometry=geometry,
+                geometry=self._shapely_to_geojson(geometry),
                 query_expr=(query_expr.serialize() if query_expr is not None else None),
             ).items()
             if v is not None

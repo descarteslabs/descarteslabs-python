@@ -18,6 +18,7 @@ Scenes now supports a new 'save_image' function that allows a user to save a vis
 
 ### Changed
 - Bands of different but compatible types can now be rastered together in `Scene.ndarray()` and `Scene.download()` as well as across multiple scenes in `SceneCollection.mosaic()`, `SceneCollection.stack()` and `SceneCollection.download()`. The result will have the most general data type.
+- Vector client functions that accept a `geometry` argument now support passing Shapely shapes in addition to GeoJSON.
 
 ### Fixed
 

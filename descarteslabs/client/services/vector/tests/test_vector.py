@@ -17,6 +17,7 @@ import re
 import unittest
 import json
 import responses
+from shapely.geometry import shape
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.vector import Vector
@@ -162,6 +163,38 @@ class VectorsTest(ClientTestCase):
 
         with self.assertRaises(Exception):
             self.client.upload_features(s, 'test')
+
+    @responses.activate
+    def test_search_features(self):
+        self.mock_response(responses.POST, {
+            "meta": {"continuation_token": 1, "total_results": 10},
+            "data": []
+        })
+
+        self.client.search_features(
+            "test-product-id",
+            geometry=self.attrs["geometry"]
+        )
+
+        self.assertEqual(len(responses.calls), 1)
+        request = responses.calls[0].request
+        self.assertEqual(json.loads(request.body.decode('utf-8'))["geometry"], self.attrs["geometry"])
+
+    @responses.activate
+    def test_search_features_shapely(self):
+        self.mock_response(responses.POST, {
+            "meta": {"continuation_token": 1, "total_results": 10},
+            "data": []
+        })
+
+        self.client.search_features(
+            "test-product-id",
+            geometry=shape(self.attrs["geometry"])
+        )
+
+        self.assertEqual(len(responses.calls), 1)
+        request = responses.calls[0].request
+        self.assertEqual(json.loads(request.body.decode('utf-8'))["geometry"], self.attrs["geometry"])
 
     @responses.activate
     def test_create_product_from_query(self):
