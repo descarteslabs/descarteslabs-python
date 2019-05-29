@@ -69,6 +69,27 @@ def display(*imgs, **kwargs):
     ImportError
         If matplotlib is not installed.
     """
+    _display_or_save(None, *imgs, **kwargs)
+
+
+def save_image(filename, *imgs, **kwargs):
+    """
+    Save 2D and 3D ndarrays as images with matplotlib.
+
+    For an explanation of the rest of the arguments, please look under :func:`display`.
+    For an explanation of valid extension types, please look under matplotlib
+    :func:'savefig'.
+
+    Parameters
+    ----------
+    filename: str
+        The name and extension of the image to be saved.
+
+    """
+    _display_or_save(filename, *imgs, **kwargs)
+
+
+def _display_or_save(filename, *imgs, **kwargs):
     if len(imgs) == 0:
         return
 
@@ -78,6 +99,7 @@ def display(*imgs, **kwargs):
     robust = kwargs.pop("robust", True)
     interpolation = kwargs.pop("interpolation", "bilinear")
     colormap_name = kwargs.pop("colormap", None)
+
     if len(kwargs) > 0:
         raise TypeError("Unexpected keyword arguments for display: {}".format(', '.join(six.iterkeys(kwargs))))
 
@@ -190,4 +212,8 @@ def display(*imgs, **kwargs):
         if title is not None:
             ax.set_title(str(title))
     fig.tight_layout()
-    plt.show()
+
+    if filename is not None:
+        plt.savefig(filename)
+    else:
+        plt.show()

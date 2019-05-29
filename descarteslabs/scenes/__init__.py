@@ -14,10 +14,11 @@ It's available under ``descarteslabs.scenes``.
 """
 
 from .geocontext import AOI, DLTile, XYZTile, GeoContext
-from ._display import display
+from ._display import display, save_image
 from ._search import search
 from .scene import Scene
 from .collection import Collection
 from .scenecollection import SceneCollection
 
-__all__ = ["Scene", "SceneCollection", "Collection", "AOI", "DLTile", "XYZTile", "GeoContext", "search", "display"]
+__all__ = ["Scene", "SceneCollection", "Collection", "AOI", "DLTile", "XYZTile",
+           "GeoContext", "search", "display", "save_image"]
