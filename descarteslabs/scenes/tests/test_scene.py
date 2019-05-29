@@ -205,6 +205,47 @@ class TestScene(unittest.TestCase):
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    def test_mask_alpha_string(self):
+        scene, ctx = Scene.from_id("modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1")
+        arr = scene.ndarray([
+            'Clear_sky_days', 'Clear_sky_nights'],
+            ctx.assign(resolution=1000),
+            mask_alpha="Clear_sky_nights",
+            mask_nodata=False
+        )
+
+        self.assertTrue(hasattr(arr, "mask"))
+        self.assertEqual(arr.shape, (2, 688, 473))
+
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    def test_mask_missing_alpha(self):
+        scene, ctx = Scene.from_id("modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1")
+        with self.assertRaises(ValueError):
+            scene.ndarray([
+                'Clear_sky_days', 'Clear_sky_nights'],
+                ctx.assign(resolution=1000),
+                mask_alpha=True,
+                mask_nodata=False
+            )
+
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    def test_mask_missing_band(self):
+        scene, ctx = Scene.from_id("modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1")
+        with self.assertRaises(ValueError):
+            scene.ndarray([
+                'Clear_sky_days', 'Clear_sky_nights'],
+                ctx.assign(resolution=1000),
+                mask_alpha="missing_band",
+                mask_nodata=False
+            )
+
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_auto_mask_alpha_true(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr = scene.ndarray(["red", "green", "blue"], ctx.assign(resolution=1000), mask_nodata=False)

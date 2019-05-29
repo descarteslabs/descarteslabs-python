@@ -143,11 +143,12 @@ class SceneCollection(Collection):
         mask_nodata : bool, default True
             Whether to mask out values in each band of each scene that equal
             that band's ``nodata`` sentinel value.
-        mask_alpha : bool, default None
-            Whether to mask pixels in all bands of each scene where
-            the alpha band is 0. If the alpha band is available for all scenes in the
-            collection and ``mask_alpha`` is not specified, ``mask_alpha`` is set to
-            True. If not, mask_alpha is set to False.
+        mask_alpha : bool or str or None, default None
+            Whether to mask pixels in all bands where the alpha band of all scenes is 0.
+            Provide a string to use an alternate band name for masking.
+            If the alpha band is available for all scenes in the collection and
+            ``mask_alpha`` is None, ``mask_alpha`` is set to True. If not,
+            mask_alpha is set to False.
         bands_axis : int, default 1
             Axis along which bands should be located.
             If 1, the array will have shape ``(scene, band, y, x)``, if -1,
@@ -233,14 +234,17 @@ class SceneCollection(Collection):
         if raster_info:
             raster_infos = [None] * len(scenes)
 
-        if mask_alpha is None:
-            mask_alpha = self._collection_has_alpha()
+        alpha_band_name = "alpha"
+        if isinstance(mask_alpha, six.string_types):
+            alpha_band_name = mask_alpha
+        elif mask_alpha is None:
+            mask_alpha = self._collection_has_alpha(alpha_band_name)
 
         bands = Scene._bands_to_list(bands)
         pop_alpha = False
-        if mask_alpha and "alpha" not in bands:
+        if mask_alpha and alpha_band_name not in bands:
             pop_alpha = True
-            bands.append("alpha")
+            bands.append(alpha_band_name)
         # Pre-check that all bands and alpha are available in all Scenes, and all have the same dtypes
         self._common_data_type(bands)
         if pop_alpha:
@@ -332,10 +336,11 @@ class SceneCollection(Collection):
         mask_nodata : bool, default True
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
-        mask_alpha : bool, default None
+        mask_alpha : bool or str or None, default None
             Whether to mask pixels in all bands where the alpha band of all scenes is 0.
+            Provide a string to use an alternate band name for masking.
             If the alpha band is available for all scenes in the collection and
-            ``mask_alpha`` is not specified, ``mask_alpha`` is set to True. If not,
+            ``mask_alpha`` is None, ``mask_alpha`` is set to True. If not,
             mask_alpha is set to False.
         bands_axis : int, default 0
             Axis along which bands should be located in the returned array.
@@ -393,15 +398,17 @@ class SceneCollection(Collection):
             raise ValueError("Invalid bands_axis; axis {} would not exist in a 3D array".format(bands_axis))
 
         bands = Scene._bands_to_list(bands)
-
-        if mask_alpha is None:
-            mask_alpha = self._collection_has_alpha()
+        alpha_band_name = "alpha"
+        if isinstance(mask_alpha, six.string_types):
+            alpha_band_name = mask_alpha
+        elif mask_alpha is None:
+            mask_alpha = self._collection_has_alpha(alpha_band_name)
 
         if mask_alpha:
             try:
-                alpha_i = bands.index("alpha")
+                alpha_i = bands.index(alpha_band_name)
             except ValueError:
-                bands.append("alpha")
+                bands.append(alpha_band_name)
                 drop_alpha = True
             else:
                 if alpha_i != len(bands) - 1:
@@ -790,5 +797,5 @@ class SceneCollection(Collection):
                     )
         return common_data_type
 
-    def _collection_has_alpha(self):
-        return all(scene.has_alpha() for scene in self)
+    def _collection_has_alpha(self, alpha_band_name):
+        return all(scene.has_alpha(alpha_band_name) for scene in self)

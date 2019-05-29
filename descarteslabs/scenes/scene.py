@@ -381,10 +381,12 @@ class Scene(object):
         mask_nodata : bool, default True
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
-        mask_alpha : bool, default None
-            Whether to mask pixels in all bands where the alpha band is 0.
-            If the alpha band is available and ``mask_alpha`` is not specified,
-            ``mask_alpha`` is set to True. If not, ``mask_alpha`` is set to False.
+        mask_alpha : bool or str or None, default None
+            Whether to mask pixels in all bands where the alpha band of all scenes is 0.
+            Provide a string to use an alternate band name for masking.
+            If the alpha band is available for all scenes in the collection and
+            ``mask_alpha`` is None, ``mask_alpha`` is set to True. If not,
+            mask_alpha is set to False.
         bands_axis : int, default 0
             Axis along which bands should be located in the returned array.
             If 0, the array will have shape ``(band, y, x)``, if -1,
@@ -457,21 +459,24 @@ class Scene(object):
 
         self_bands = self.properties["bands"]
 
-        if mask_alpha is None:
+        alpha_band_name = "alpha"
+        if isinstance(mask_alpha, six.string_types):
+            alpha_band_name = mask_alpha
+        elif mask_alpha is None:
             # if user does not set mask_alpha, only attempt to mask_alpha if
             # alpha band is exists in the scene.
-            mask_alpha = self.has_alpha()
+            mask_alpha = self.has_alpha(alpha_band_name)
 
         if mask_alpha:
-            if not self.has_alpha():
+            if not self.has_alpha(alpha_band_name):
                 raise ValueError(
-                    "Cannot mask alpha: no alpha band for the product '{}'. "
-                    "Try setting 'mask_alpha=False'.".format(self.properties["product"])
+                    "Cannot mask alpha: no {} band for the product '{}'. "
+                    "Try setting 'mask_alpha=False'.".format(alpha_band_name, self.properties["product"])
                 )
             try:
-                alpha_i = bands.index("alpha")
+                alpha_i = bands.index(alpha_band_name)
             except ValueError:
-                bands.append("alpha")
+                bands.append(alpha_band_name)
                 drop_alpha = True
             else:
                 if alpha_i != len(bands) - 1:
@@ -535,8 +540,8 @@ class Scene(object):
         else:
             return arr
 
-    def has_alpha(self):
-        return "alpha" in self.properties["bands"]
+    def has_alpha(self, alpha_band_name):
+        return alpha_band_name in self.properties["bands"]
 
     def download(self,
                  bands,

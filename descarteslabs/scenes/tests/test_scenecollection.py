@@ -137,6 +137,33 @@ class TestSceneCollection(unittest.TestCase):
         with self.assertRaises(TypeError):
             scenes.mosaic("red", ctx, invalid_argument=True)
 
+        mask_non_alpha = mosaic_with_alpha = scenes.mosaic(["nir", "red"], ctx, mask_alpha="red")
+        self.assertTrue(hasattr(mask_non_alpha, "mask"))
+        self.assertEqual(mask_non_alpha.shape, (2, 122, 120))
+
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
+    def test_mosaic_no_alpha(self):
+        scenes = (
+            "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1",
+            "modis:mod11a2:006:meta_MOD11A2.A2000049.h08v05.006.2015058135046_v1"
+        )
+        scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
+        overlap = scenes[0].geometry.intersection(scenes[1].geometry)
+        ctx = ctxs[0].assign(geometry=overlap, bounds="update", resolution=600)
+
+        sc = SceneCollection(scenes)
+        no_mask = sc.mosaic(["Clear_sky_days", "Clear_sky_nights"], ctx, mask_nodata=False)
+        self.assertFalse(hasattr(no_mask, "mask"))
+
+        masked_alt_alpha_band = sc.mosaic(["Clear_sky_days", "Clear_sky_nights"], ctx, mask_alpha="Clear_sky_nights")
+        self.assertTrue(hasattr(masked_alt_alpha_band, "mask"))
+
+        # errors when alternate alpha band is provided but not available in the scene
+        with self.assertRaises(ValueError):
+            sc.mosaic(["Clear_sky_days", "Clear_sky_nights"], ctx, mask_alpha="alt-alpha")
+
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
