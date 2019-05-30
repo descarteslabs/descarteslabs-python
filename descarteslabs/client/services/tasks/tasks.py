@@ -81,13 +81,17 @@ class BoundGlobalError(NameError):
 
 
 class Tasks(Service):
+    """
+    The Tasks API allows you to easily execute parallel computations on cloud
+    infrastructure with high-throughput access to imagery.
+    """
 
     TASK_RESULT_BATCH_SIZE = 100
     RERUN_BATCH_SIZE = 200
     COMPLETION_POLL_INTERVAL_SECONDS = 5
-    ENTRYPOINT_TEMPLATE = "{source}\nmain = {function_name}\n"
-    IMPORT_TEMPLATE = "from {module} import {obj}"
-    IS_GLOB_PATTERN = re.compile(r'[\*\?\[]')
+    _ENTRYPOINT_TEMPLATE = "{source}\nmain = {function_name}\n"
+    _IMPORT_TEMPLATE = "from {module} import {obj}"
+    _IS_GLOB_PATTERN = re.compile(r'[\*\?\[]')
 
     def __init__(self, url=None, auth=None, retries=None):
         """
@@ -193,16 +197,19 @@ class Tasks(Service):
             modules in the task group, which can be imported by the entrypoint function, `function`.
         :param list(str) include_data: Non python data files to include in the task group. Data
             path must be descendant of system path or python path directories.
-        :param requirements: A list of Python dependencies required by this function
+        :param list(str) requirements: A list of Python dependencies required by this function
             or a path to a file listing those dependencies, in standard setuptools
             notation (see PEP 508 https://www.python.org/dev/peps/pep-0508/).
             For example, if the packages `foo` and `bar` are required, then
-            `['foo', 'bar']` or `['foo>2.0', 'bar>=1.0']` might be possible values.
+            `['foo', 'bar']` or `['foo>2.0', 'bar>=1.0']` are possible values.
 
         :return: A dictionary representing the group created.
+        :rtype: DotDict
 
-        :raises: ``BoundGlobalError`` if the given function refers to global
-            variables
+        :raises ~descarteslabs.client.services.tasks.tasks.BoundGlobalError:
+            Raised if the given function refers to global variables.
+        :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
+            the supplied parameters are invalid.
         """
 
         payload = {
@@ -288,6 +295,7 @@ class Tasks(Service):
         :return: A dictionary with two keys; `groups` containing the list of
             matching groups, `continuation_token` containting a string if there
             are further matching groups.
+        :rtype: DotDict
         """
         params = {'limit': limit}
         for field in ['status', 'created', 'updated', 'sort_field', 'sort_order', 'include', 'continuation_token']:
@@ -320,6 +328,7 @@ class Tasks(Service):
             `list_groups()`, which you can use to get the next page of results.
 
         :return: An iterator over matching task groups.
+        :rtype: generator(DotDict)
         """
         continuation_token = None
         while True:
@@ -338,11 +347,15 @@ class Tasks(Service):
         Retrieves a single task group by id.
 
         :param str group_id: The group id.
-        :param list[str] include: extra fields to include in groups in the response.
+        :param list(str) include: extra fields to include in groups in the response.
             allowed are: ['build_log_url, 'build_log']. Note that build logs over
             10 Mi will not be returned, request the build log url instead.
 
         :return: A dictionary representing the task group.
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            task group cannot be found.
         """
         r = self.session.get(
             "/groups/{}".format(group_id),
@@ -364,6 +377,7 @@ class Tasks(Service):
 
         :return: A dictionary representing the task group, or `None` if no group
             with the given name exists.
+        :rtype: DotDict
         """
         groups = self.iter_groups(status=status, sort_field="created", sort_order="desc")
         for g in groups:
@@ -379,6 +393,10 @@ class Tasks(Service):
         :param str group_id: The group id.
 
         :return: A dictionary representing the terminated task group.
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            task group cannot be found.
         """
         r = self.session.delete(
             "/groups/{uid}".format(uid=group_id)
@@ -432,6 +450,12 @@ class Tasks(Service):
 
         :return: A dictionary with one key `tasks` containing a list with
             one element representing the submitted task.
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            task group cannot be found.
+        :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
+            the supplied parameters are invalid.
         """
         return self.new_tasks(
             group_id,
@@ -461,6 +485,12 @@ class Tasks(Service):
 
         :return: A dictionary with one key `tasks` containing a list of
             dictionaries representing the submitted tasks.
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            task group cannot be found.
+        :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
+            the supplied parameters are invalid.
         """
         list_of_arguments = list_of_arguments if \
             list_of_arguments is not None else [[]]
@@ -501,6 +531,10 @@ class Tasks(Service):
             'result_url', 'logs_url'].
 
         :return: A dictionary representing the task result.
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            task group or task itself cannot be found.
         """
         params = {'include': include} if include is not None else {}
         r = self.session.get(
@@ -527,6 +561,7 @@ class Tasks(Service):
         :return: A dictionary with a key `results` containing the list of
             matching results. Results are in the order of the ids provided.
             Unknown ids are ignored.
+        :rtype: DotDict
         """
         data = {'ids': task_ids}
         if include is not None:
@@ -556,7 +591,7 @@ class Tasks(Service):
             continuation_token=None,
     ):
         """
-        Retrieves a limited list of task results matching the given criteria.
+        Retrieves a portion of task results matching the given criteria.
 
         :param str group_id: The group to get task results from.
         :param int limit: The number of results to get (max 1000 per page).
@@ -581,6 +616,7 @@ class Tasks(Service):
         :return: A dictionary with two keys; `results` containing the list of
             matching results, `continuation_token` containting a string if there
             are further matching results.
+        :rtype: DotDict
         """
         if offset is not None:
             warn(OFFSET_DEPRECATION_MESSAGE, DeprecationWarning)
@@ -631,6 +667,7 @@ class Tasks(Service):
         :param str sort_order: Allowed are ['asc', 'desc']. Default: 'asc'.
 
         :return: An iterator over matching task results.
+        :rtype: generator(DotDict)
         """
         params = {}
         for field in ['status', 'failure_type', 'updated', 'created', 'webhook', 'labels', 'include']:
@@ -649,8 +686,8 @@ class Tasks(Service):
 
     def rerun_failed_tasks(self, group_id, retry_count=0):
         """
-        Submits all failed tasks for a rerun, except for tasks that had an
-        out-of-memory or version mismatch failure.
+        Submits all failed tasks for a rerun, except for out-of-memory or
+        version mismatch failures.
         These tasks will be run again with the same arguments as before.
 
         Tasks that are currently already being rerun will be ignored.
@@ -660,6 +697,7 @@ class Tasks(Service):
                                 (maximum 5)
 
         :return: A list of dictionaries representing the tasks that have been submitted.
+        :rtype: DotList
         """
         rerun_tasks = []
         for failure_type in ['exception', 'timeout', 'internal', 'unknown']:
@@ -696,6 +734,7 @@ class Tasks(Service):
                                 (maximum 5)
 
         :return: A list of dictionaries representing the tasks that have been submitted.
+        :rtype: DotList
         """
         results = self.iter_task_results(group_id, status=status, failure_type=failure_type, updated=updated,
                                          created=created, webhook=webhook, labels=labels)
@@ -715,6 +754,10 @@ class Tasks(Service):
                                 (maximum 5)
 
         :return: A list of dictionaries representing the tasks that have been submitted.
+        :rtype: DotList
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            task group cannot be found.
         """
         rerun = []
         task_ids = list(itertools.islice(task_id_iterable, self.RERUN_BATCH_SIZE))
@@ -783,13 +826,17 @@ class Tasks(Service):
             modules in the task group, which can be imported by the entrypoint function, `function`.
         :param list(str) include_data: Non python data files to include in the task group. Data
             path must be descendant of system path or python path directories.
-        :param requirements: A list of Python dependencies required by this function
+        :param list(str) requirements: A list of Python dependencies required by this function
             or a path to a file listing those dependencies, in standard setuptools
             notation (see PEP 508 https://www.python.org/dev/peps/pep-0508/).
             For example, if the packages `foo` and `bar` are required, then
             `['foo', 'bar']` or `['foo>2.0', 'bar>=1.0']` might be possible values.
 
         :return: A :class:`CloudFunction`.
+        :rtype: :class:`CloudFunction`
+
+        :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
+            the supplied parameters are invalid.
         """
         group_info = self.new_group(
             f, container_image=image, name=name,
@@ -812,11 +859,11 @@ class Tasks(Service):
 
         :param str group_id: The group id.
 
-        :rtype: :class:`CloudFunction`
         :return: A :class:`CloudFunction`.
+        :rtype: :class:`CloudFunction`
 
         :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
-            group cannot be found.
+            task group cannot be found.
         :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
         :raises ~descarteslabs.client.exceptions.ServerError: Raised when
@@ -834,6 +881,7 @@ class Tasks(Service):
 
         :return: A :class:`CloudFunction`, or `None` if no function with the
             given name exists.
+        :rtype: :class:`CloudFunction`
         """
         warn(GET_FUNCTION_DEPRECATION_MESSAGE, DeprecationWarning)
 
@@ -891,6 +939,10 @@ class Tasks(Service):
             Default: 0. Maximum: 5.
 
         :return: A :class:`CloudFunction`.
+        :rtype: :class:`CloudFunction`
+
+        :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
+            the supplied parameters are invalid.
         """
 
         warn(CREATE_OR_GET_DEPRECATION_MESSAGE, DeprecationWarning)
@@ -1069,7 +1121,7 @@ class Tasks(Service):
         data_files = []
 
         for pattern in include_data:
-            is_glob = self.IS_GLOB_PATTERN.search(pattern)
+            is_glob = self._IS_GLOB_PATTERN.search(pattern)
             matched_paths = glob.glob(pattern)
 
             if not matched_paths:
@@ -1100,7 +1152,7 @@ class Tasks(Service):
                 raise ValueError("Tasks main function must be a callable: `{}`".format(f))
 
             # Simply import the module
-            source = self.IMPORT_TEMPLATE.format(
+            source = self._IMPORT_TEMPLATE.format(
                 module=".".join(module_path), obj=function_path[0])
             function_name = ".".join(function_path)
         else:
@@ -1126,7 +1178,7 @@ class Tasks(Service):
             except IOError as ioe:  # from the inpect.getsource call.
                 raise ValueError("Cannot get function source for {}: {}".format(f, ioe))
 
-        entrypoint_source = self.ENTRYPOINT_TEMPLATE.format(
+        entrypoint_source = self._ENTRYPOINT_TEMPLATE.format(
             source=source, function_name=function_name)
         archive.writestr('{}/{}'.format(DIST, ENTRYPOINT), entrypoint_source)
 
@@ -1269,7 +1321,8 @@ class CloudFunction(object):
         All positional and keyword arguments must be JSON-serializable (i.e.,
         booleans, numbers, strings, lists, dictionaries).
 
-        :return: A :class:`FutureTask` for the submitted task.
+        :return: The submitted task.
+        :rtype: descarteslabs.client.services.tasks.FutureTask
         """
         tasks = self.client.new_task(
             self.group_id,
@@ -1298,7 +1351,8 @@ class CloudFunction(object):
             to the items from all iterables in parallel (mimicking builtin
             `map()` behaviour).
 
-        :return: A list of :class:`FutureTask` for all submitted tasks.
+        :return: A list of all submitted tasks.
+        :rtype: list(descarteslabs.client.services.tasks.FutureTask)
         """
         arguments = zip_longest(args, *iterargs)
 
@@ -1353,7 +1407,8 @@ def as_completed(tasks, show_progress=True):
     If a task group stops accepting tasks, will raise
     :class:`GroupTerminalException` and stop waiting.
 
-    :param list tasks: List of :class:`FutureTask` objects.
+    :param list(descarteslabs.client.services.tasks.FutureTask) tasks: List of
+        :class:`descarteslabs.client.services.tasks.FutureTask` objects.
     :param bool show_progress: Whether to log progress information.
     """
     total_tasks = len(tasks)
