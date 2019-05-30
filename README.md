@@ -12,7 +12,7 @@ Changelog
 ### Added
 
 ### Changed
-
+- Tasks webhook methods no longer require a `group_id` if a webhook id is provided.
 
 ## [0.20.0] - 2019-06-04
 ### Added

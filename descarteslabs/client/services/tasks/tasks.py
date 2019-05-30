@@ -963,6 +963,38 @@ class Tasks(Service):
         )
 
     def create_webhook(self, group_id, name=None, label_path=None, label_separator=None):
+        """
+        Create a new webhook for submitting tasks to task group.
+
+        Once a POST request is made to the webhook's URL, a new task will be
+        submitted. If the request contains a valid JSON payload, that payload
+        will be used as the function's parameters (i.e, `f(**payload)`).
+
+        Optionally, `label_path` and `label_separator` provide a way to attach
+        labels to the submitted task for future filtering. The labels will be
+        extracted correspondingly from the request payload.
+
+        For example, given an invocation `{"a": {"b": "foo, bar"}}` with
+        `label_path` set to `a.b` and `label_separator` as `,`, the labels
+        `foo` and `bar` will be attached to the task. Note that the field used
+        for labels will not be removed from the invocation of the function.
+
+        :param str group_id: The task group id.
+        :param str name: Desired name for the webhook.
+        :param str label_path: An optional path to the field to be used as
+            task's labels. Note that JSONPath is not supported--a JSONPath
+            expression such as `$.foo.bar` must look like `foo.bar` instead.
+        :param str label_separator: An optional separator to be used if
+            `label_path` refers to a string. If not provided, the whole field
+            will be used as label(s).
+
+        :return: A dictionary with properties of the newly created webhook.
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            task group cannot be found.
+        """
+
         data = {}
         if name is not None:
             data['name'] = name
@@ -970,6 +1002,7 @@ class Tasks(Service):
             data['label_path'] = label_path
         if label_separator is not None:
             data['label_separator'] = label_separator
+
         r = self.session.post(
             '/groups/{group_id}/webhooks'.format(group_id=group_id),
             json=data
@@ -978,6 +1011,16 @@ class Tasks(Service):
         return DotDict(r.json())
 
     def list_webhooks(self, group_id):
+        """
+        List all webhooks for a task group.
+
+        :param str group_id: The task group id.
+
+        :return: A dictionary with one key `webhooks` containing a list of
+            dictionaries representing the webhooks.
+        :rtype: DotDict
+        """
+
         r = self.session.get(
             '/groups/{group_id}/webhooks'.format(group_id=group_id),
         )
@@ -986,10 +1029,20 @@ class Tasks(Service):
 
     get_webhooks = list_webhooks
 
-    def get_webhook(self, group_id, webhook_id):
+    def get_webhook(self, webhook_id):
+        """
+        Returns a webhook's configuration.
+
+        :param str webhook_id: The webhook id.
+
+        :return: A dictionary of the webhook's properties.
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            webhook cannot be found.
+        """
         r = self.session.get(
-            '/groups/{group_id}/webhooks/{webhook_id}'.format(
-                group_id=group_id,
+            '/webhooks/{webhook_id}'.format(
                 webhook_id=webhook_id,
             ),
         )
@@ -997,9 +1050,19 @@ class Tasks(Service):
         return DotDict(r.json())
 
     def delete_webhook(self, group_id, webhook_id):
+        """
+        Delete an existing webhook.
+
+        :param str webhook_id: The webhook id.
+
+        :return: A boolean indicating if the deletion was successful.
+        :rtype: bool
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            webhook cannot be found.
+        """
         r = self.session.delete(
-            '/groups/{group_id}/webhooks/{webhook_id}'.format(
-                group_id=group_id,
+            '/webhooks/{webhook_id}'.format(
                 webhook_id=webhook_id,
             ),
         )
