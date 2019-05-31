@@ -895,7 +895,7 @@ class Vector(JsonApiService):
             :obj:`p`, you can E.g ``query_expr=(p.temperature >= 50) &
             (p.hour_of_day > 18)``, or even more complicated expressions
             like ``query_expr=(100 > p.temperature >= 50) | ((p.month
-            or != 10) & (p.day_of_month > 14))`` This expression gets
+            != 10) & (p.day_of_month > 14))`` This expression gets
             serialized and applied to the properties mapping supplied
             with the features in the vector product. If you supply a
             property which doesn't exist as part of the expression that
