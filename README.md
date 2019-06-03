@@ -10,14 +10,19 @@ Changelog
 
 ## [Unreleased]
 ### Added
-- Scenes now supports a new 'save_image' function that allows a user to save a visualization given a filename and extension.
-- Tasks now allows you to unambiguously get a function by group id using `get_function_by_id`.
+
+### Changed
 
 
+## [0.20.0] - 2019-06-04
 ### Added
 - Metadata, Catalog, and Scenes now support a new `storage_state` property for managing image metadata and filtering search results. `storage_state="available"` is the default for new images and indicates that the raster data for that scene is available on the Descartes Labs platform. `storage_state="remote"` indicates that the raster data has not yet been processed and made available to client users.
 - The following additional colormaps are now supported for bands – 'cool', 'coolwarm', 'hot', 'bwr', 'gist_earth', 'terrain'. Find more details about the colormaps [here](https://matplotlib.org/gallery/color/colormap_reference.html).
 - `Scene.ndarray`, `SceneCollection.stack`, and `SceneCollection.mosaic` now support passing a string as the `mask_alpha` argument to allow users to specify an alternate band name to use for masking.
+- Scenes now supports a new `save_image` function that allows a user to save a visualization given a filename and extension.
+- Tasks now allows you to unambiguously get a function by group id using `get_function_by_id`.
+- All Client APIs now accept a `retries` argument to override the default retry configuration. The default remains
+the same as the prior behavior, which is to attempt 3 retries on errors which can be retried.
 
 ### Changed
 - Bands of different but compatible types can now be rastered together in `Scene.ndarray()` and `Scene.download()` as well as across multiple scenes in `SceneCollection.mosaic()`, `SceneCollection.stack()` and `SceneCollection.download()`. The result will have the most general data type.
