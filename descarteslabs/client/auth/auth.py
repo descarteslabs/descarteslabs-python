@@ -60,6 +60,9 @@ def makedirs_if_not_exists(path):
 
 
 class Auth:
+    """
+    Authentication client used to authenticate with all Descartes Labs service APIs.
+    """
 
     RETRY_CONFIG = Retry(
         total=5,
@@ -84,14 +87,20 @@ class Auth:
         """
         Helps retrieve JWT from a client id and refresh token for cli usage.
 
-        :param domain: endpoint for auth0
-        :param scope: the JWT fields to be included
-        :param leeway: JWT expiration leeway
-        :param token_info_path: path to a JSON file optionally holding auth information
+        :param str domain: The endpoint for auth0
+        :type scope: list(str) or None
+        :param scope: The JWT fields to be included
+        :param int leeway: JWT expiration leeway
+        :type token_info_path: str or None
+        :param token_info_path: Path to a JSON file optionally holding auth information
+        :type client_id: str or None
         :param client_id: JWT client id
+        :type client_secret: str or None
         :param client_secret: JWT client secret
-        :param jwt_token: the JWT token, if we already have one
-        :param refresh_token: the refresh token
+        :type jwt_token: str or None
+        :param jwt_token: The JWT token, if we already have one
+        :type refresh_token: str or None
+        :param refresh_token: The refresh token
         """
         self.token_info_path = token_info_path
 
@@ -200,15 +209,28 @@ class Auth:
         CLIENT_SECRET, JWT_TOKEN if they are set, or else from a JSON
         file at the given path.
 
-        :param domain: endpoint for auth0
-        :param scope: the JWT fields to be included
-        :param leeway: JWT expiration leeway
-        :param token_info_path: path to a JSON file optionally holding auth information
+        :param str domain: The endpoint for auth0
+        :type scope: list(str) or None
+        :param scope: The JWT fields to be included
+        :param int leeway: JWT expiration leeway
+        :type token_info_path: str or None
+        :param token_info_path: Path to a JSON file optionally holding auth information
         """
         return Auth(**kwargs)
 
     @property
     def token(self):
+        """
+        Gets the token.
+
+        :rtype: str
+        :return: The JWT token string.
+
+        :raises ~descarteslabs.client.exceptions.AuthError: Raised when
+            incomplete information has been provided.
+        :raises ~descarteslabs.client.exceptions.OauthError: Raised when
+            a token cannot be obtained or refreshed.
+        """
         if self._token is None:
             self._get_token()
         else:  # might have token but could be close to expiration
@@ -230,6 +252,30 @@ class Auth:
 
     @property
     def payload(self):
+        """
+        Gets the token payload.
+
+        :rtype: dict
+        :return: Dictionary containing the fields specified by scope, which may include:
+
+            .. highlight:: none
+
+            ::
+
+                name:           The name of the user.
+                groups:         Groups to which the user belongs.
+                org:            The organization to which the user belongs.
+                email:          The email address of the user.
+                email_verified: True if the user's email has been verified.
+                sub:            The user identifier.
+                exp:            The expiration time of the token, in seconds since
+                                the start of the unix epoch.
+
+        :raises ~descarteslabs.client.exceptions.AuthError: Raised when
+            incomplete information has been provided.
+        :raises ~descarteslabs.client.exceptions.OauthError: Raised when
+            a token cannot be obtained or refreshed.
+        """
         if self._token is None:
             self._get_token()
 
@@ -243,6 +289,12 @@ class Auth:
 
     @property
     def session(self):
+        """
+        Gets the request session used to communicate with the OAuth server.
+
+        :rtype: requests.Session
+        :return: Session object
+        """
         return self._session.get()
 
     def build_session(self):
@@ -323,6 +375,17 @@ class Auth:
 
     @property
     def namespace(self):
+        """
+        Gets the user namespace.
+
+        :rtype: str
+        :return: The user namespace
+
+        :raises ~descarteslabs.client.exceptions.AuthError: Raised when
+            incomplete information has been provided.
+        :raises ~descarteslabs.client.exceptions.OauthError: Raised when
+            a token cannot be obtained or refreshed.
+        """
         if self._namespace is None:
             self._namespace = sha1(self.payload["sub"].encode("utf-8")).hexdigest()
         return self._namespace

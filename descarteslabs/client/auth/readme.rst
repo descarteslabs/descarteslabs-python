@@ -4,4 +4,3 @@ Authentication
 --------------
 .. automodule:: descarteslabs.client.auth
    :members:
-   :undoc-members:
