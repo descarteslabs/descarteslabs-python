@@ -86,7 +86,9 @@ class Metadata(Service):
         :param int resolution: The resolution in meters per pixel e.g 30 of the data available in this band.
         :param list(str) tags: A list of tags that the band must have in its own tag list.
 
-
+        :return: List of dicts containing at most `limit` bands. Empty if there are no
+            bands matching query (e.g. product id not available).
+        :rtype: DotList(DotDict)
         """
         params = ["limit", "offset", "products", "wavelength", "resolution", "tags"]
 
@@ -107,11 +109,14 @@ class Metadata(Service):
         :param list(str) bands: Limit the derived bands to ones that can be
                                 computed using this list of spectral bands.
                                 e.g ["red", "nir", "swir1"]
-        :param bool require_bands: Control whether searched bands must contain
+        :param bool require_bands: Control whether searched bands *must* contain
                                    all the spectral bands passed in the bands param.
                                    Defaults to False.
         :param int limit: Number of results to return.
         :param int offset: Index to start at when returning results.
+
+        :return: List of dicts containing at most `limit` bands.
+        :rtype: DotList(DotDict)
         """
         params = ["bands", "require_bands", "limit", "offset"]
 
@@ -126,11 +131,23 @@ class Metadata(Service):
 
     def get_bands_by_id(self, id_):
         """
-        For a given source id, return the available bands.
+        For a given image source id, return the available bands.
 
-        :param str id_: A :class:`Metadata` identifier.
+        :param str id_: A :class:`Metadata` image identifier.
 
         :return: A dictionary of band entries and their metadata.
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if image id cannot
+            be found.
+
+        Example::
+
+            >>> from descarteslabs.client.services import Metadata
+            >>> bands = Metadata().get_bands_by_id('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1')
+            >>> ndvi_info = bands['derived:ndvi'] # View NDVI band information
+            >>> ndvi_info['physical_range']
+            [-1.0, 1.0]
         """
         r = self.session.get("/bands/id/{}".format(id_))
 
@@ -142,7 +159,9 @@ class Metadata(Service):
 
         :param str product_id: A product identifier.
 
-        :return: A dictionary mapping band IDs to dictionaries of their metadata.
+        :return: A dictionary mapping band ids to dictionaries of their metadata.
+            Returns empty dict if product id not found.
+        :rtype: DotDict
         """
         r = self.session.get("/bands/all/{}".format(product_id))
 
@@ -160,6 +179,9 @@ class Metadata(Service):
         :param str owner: Filter products by the owner's uuid.
         :param str text: Filter products by string match.
 
+        :return: List of dicts containing at most `limit` products. Empty if no matching
+            products are found.
+        :rtype: DotList(DotDict)
         """
         params = ["limit", "offset", "bands", "owner", "text"]
 
@@ -177,12 +199,14 @@ class Metadata(Service):
     def available_products(self):
         """Get the list of product identifiers you have access to.
 
+        :return: List of product ids
+        :rtype: DotList
+
         Example::
             >>> from descarteslabs.client.services import Metadata
             >>> products = Metadata().available_products()
             >>> products  # doctest: +SKIP
             ['landsat:LC08:PRE:TOAR']
-
         """
         r = self.session.get("/products")
 
@@ -237,7 +261,11 @@ class Metadata(Service):
         :param bool pixels: Whether to include pixel counts in summary calculations.
         :param str dltile: A dltile key used to specify the resolution, bounds, and srs.
 
-        Example usage::
+        :return: Dictionary containing summary of products that match query. Empty products list
+            if no matching products found.
+        :rtype: DotDict
+
+        Example::
 
             >>> from descarteslabs.client.services import Metadata
             >>> iowa_geom = {
@@ -410,9 +438,8 @@ class Metadata(Service):
             the returned FeatureCollection from a previous invocation of this method to page through a large
             result set.
 
-        return: GeoJSON ``FeatureCollection`` containing at most `limit` features.
-
-
+        :return: GeoJSON ``FeatureCollection`` containing at most `limit` features.
+        :rtype: DotDict
         """
         check_deprecated_kwargs(
             kwargs,
@@ -554,7 +581,8 @@ class Metadata(Service):
         :param str sort_order: Order of sort.
         :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
 
-        return: GeoJSON ``FeatureCollection``
+        :return: GeoJSON ``FeatureCollection``. Empty features list if no matching images found.
+        :rtype: DotDict
 
         Note that as of release 0.16.0 the ``continuation_token`` token has been removed. Please use the
         :py:func:`paged_search` if you require this feature.
@@ -657,7 +685,8 @@ class Metadata(Service):
         :param str sort_order: Order of sort.
         :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
 
-        :return: List of image identifiers.
+        :return: List of image identifiers. Empty list if no matching images found.
+        :rtype: DotList(str)
 
         Example::
 
@@ -688,7 +717,6 @@ class Metadata(Service):
 
             >>> ids  # doctest: +SKIP
             ['landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1', 'landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
-
         """
         result = self.search(
             sat_ids=sat_ids,
@@ -740,7 +768,8 @@ class Metadata(Service):
 
         :param int batch_size: Number of features to fetch per request.
 
-        :return: Generator of GeoJSON ``Feature`` objects.
+        :return: Generator of GeoJSON ``Feature`` objects. Empty if no matching images found.
+        :rtype: generator
 
         Example::
 
@@ -800,7 +829,10 @@ class Metadata(Service):
         :param str image_id: Image identifier.
 
         :return: A dictionary of metadata for a single image.
-        :rtype: dict
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if image id cannot
+             be found.
 
         Example::
 
@@ -820,16 +852,19 @@ class Metadata(Service):
         return DotDict(r.json())
 
     def get_by_ids(self, ids, fields=None, ignore_not_found=True, **kwargs):
-        """Get metadata for multiple images by id. The response contains found images in the
-        order of the given ids.
+        """Get metadata for multiple images by image id. The response contains list of
+        found images in the order of the given ids.
 
         :param list(str) ids: Image identifiers.
         :param list(str) fields: Properties to return.
         :param bool ignore_not_found: For image id lookups that fail: if :py:obj:`True`, ignore;
                                       if :py:obj:`False`, raise :py:exc:`NotFoundError`. Default is :py:obj:`True`.
 
-        :return: List of image metadata.
-        :rtype: list(dict)
+        :return: List of image metadata dicts.
+        :rtype: DotList(DotDict)
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if an image id cannot
+             be found and ignore_not_found set to `False` (default is `True`)
         """
         kwargs["ids"] = ids
         kwargs["ignore_not_found"] = ignore_not_found
@@ -845,7 +880,10 @@ class Metadata(Service):
         :param str product_id: Product Identifier.
 
         :return: A dictionary with metadata for a single product.
-        :rtype: dict
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if an product id
+            cannot be found.
         """
         r = self.session.get("/products/{}".format(product_id))
         return DotDict(r.json())
@@ -856,7 +894,10 @@ class Metadata(Service):
         :param str band_id: Band Identifier.
 
         :return: A dictionary with metadata for a single band.
-        :rtype: dict
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if an band id
+            cannot be found.
         """
         r = self.session.get("/bands/{}".format(band_id))
         return DotDict(r.json())
@@ -867,7 +908,10 @@ class Metadata(Service):
         :param str derived_band_id: Derived band identifier.
 
         :return: A dictionary with metadata for a single derived band.
-        :rtype: dict
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if an band id
+            cannot be found.
         """
         r = self.session.get("/bands/derived/{}".format(derived_band_id))
         return DotDict(r.json())
