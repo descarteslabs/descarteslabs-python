@@ -164,8 +164,8 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
-        >>> FeatureCollection.create(product_id='foo',
-        ...    title='My Foo Vector Collection',
+        >>> FeatureCollection.create(product_id='my-vector-product-id',
+        ...    title='My Vector Collection',
         ...    description='Just a test')  # doctest: +SKIP
         """
         params = dict(
@@ -353,7 +353,7 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
-        >>> fc = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
+        >>> fc = FeatureCollection('my-vector-product-id')  # doctest: +SKIP
         >>> fc = fc.limit(10)  # doctest: +SKIP
 
         """
@@ -389,8 +389,8 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
-        >>> fc = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
-        >>> features = fc.features()  #doctest: +SKIP
+        >>> fc = FeatureCollection("a35126a241bd022c026e96ab9fe5e0ea23967d08:USBuildingFootprints")  # doctest: +SKIP
+        >>> features = fc.limit(10).features()  #doctest: +SKIP
         >>> print(len(features))  #doctest: +SKIP
         >>> for feature in features:  # doctest: +SKIP
         ...    print(feature)  # doctest: +SKIP
@@ -454,7 +454,7 @@ class FeatureCollection(object):
         -------
         >>> attributes = dict(owners=['email:me@org.com'],
         ...    readers=['group:trusted'])
-        >>> FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24').update(**attributes)  # doctest: +SKIP
+        >>> FeatureCollection('my-vector-product-id').update(**attributes)  # doctest: +SKIP
 
         """
         params = dict(
@@ -526,7 +526,7 @@ class FeatureCollection(object):
         ...    owners=['email:you@org.com'],
         ...    readers=['group:readers'],
         ...    writers=[])
-        >>> FeatureCollection('foo').replace(**attributes)  # doctest: +SKIP
+        >>> FeatureCollection('my-vector-product-id').replace(**attributes)  # doctest: +SKIP
         """
         params = dict(
             title=title,
@@ -546,7 +546,7 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
-        >>> FeatureCollection('foo').refresh()  # doctest: +SKIP
+        >>> FeatureCollection('my-vector-product-id').refresh()  # doctest: +SKIP
 
         """
         response = self.vector_client.get_product(self.id)
@@ -559,7 +559,7 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection
-        >>> FeatureCollection('foo').delete()  # doctest: +SKIP
+        >>> FeatureCollection('my-vector-product-id').delete()  # doctest: +SKIP
 
         """
 
@@ -609,7 +609,7 @@ class FeatureCollection(object):
         ...    'type': 'Polygon',
         ...    'coordinates': [[[-95, 42],[-93, 42],[-93, 40],[-95, 41],[-95, 42]]]}
         >>> features = [Feature(geometry=polygon, properties={}) for _ in range(100)]
-        >>> FeatureCollection('foo').add(features)  # doctest: +SKIP
+        >>> FeatureCollection('my-vector-product-id').add(features)  # doctest: +SKIP
 
         """
         if isinstance(features, Feature):
@@ -674,7 +674,7 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection, Feature
-        >>> fc = FeatureCollection("foo")   # doctest: +SKIP
+        >>> fc = FeatureCollection('my-vector-product-id')   # doctest: +SKIP
         >>> task = fc.upload("/path/to/features.ndjson")    # doctest: +SKIP
 
         """
@@ -710,7 +710,7 @@ class FeatureCollection(object):
         Example
         -------
         >>> from descarteslabs.vectors import FeatureCollection, Feature
-        >>> fc = FeatureCollection("foo")   # doctest: +SKIP
+        >>> fc = FeatureCollection('my-vector-product-id')   # doctest: +SKIP
         >>> task = fc.upload("/path/to/features.ndjson")    # doctest: +SKIP
         >>> uploads = fc.list_uploads()   # doctest: +SKIP
 
@@ -805,7 +805,7 @@ class FeatureCollection(object):
         >>> filtered_cities = all_us_cities.filter(properties=(p.name.like("S%")))  # doctest: +SKIP
         >>> filtered_cities = filtered_cities.filter(geometry=aoi_geometry)  # doctest: +SKIP
         >>> filtered_cities = filtered_cities.filter(properties=(p.area_land_meters > 1000))  # doctest: +SKIP
-        >>> filtered_cities_fc = filtered_cities.copy(name='filtered-cities',
+        >>> filtered_cities_fc = filtered_cities.copy(product_id='filtered-cities',
         ...    title='My Filtered US Cities Vector Collection',
         ...    description='A collection of cities in the US')  # doctest: +SKIP
         """
@@ -863,7 +863,7 @@ class FeatureCollection(object):
         ...    'coordinates': [[[-109, 31], [-102, 31], [-102, 37], [-109, 37], [-109, 31]]]}
         >>> all_us_cities = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
         >>> filtered_cities = all_us_cities.filter(properties=(p.name.like("S%")))  # doctest: +SKIP
-        >>> filtered_cities_fc = filtered_cities.copy(name='filtered-cities',
+        >>> filtered_cities_fc = filtered_cities.copy(product_id='filtered-cities',
         ...    title='My Filtered US Cities Vector Collection',
         ...    description='A collection of cities in the US')  # doctest: +SKIP
         >>> filtered_cities_fc.wait_for_copy(timeout=120)  # doctest: +SKIP
@@ -921,7 +921,7 @@ class FeatureCollection(object):
         ... }
         >>> buildings = FeatureCollection(
         ...     "a35126a241bd022c026e96ab9fe5e0ea23967d08:USBuildingFootprints")  # doctest: +SKIP
-        >>> filtered_buildings = filtered_cities.filter(geometry=aoi_geometry)  # doctest: +SKIP
+        >>> filtered_buildings = buildings.filter(geometry=aoi_geometry)  # doctest: +SKIP
         >>> task = filtered_buildings.export("my_export")  # doctest: +SKIP
         >>> if task.is_success: # This waits for the task to complete
         ...     task.get_file("my_export", "some_local_file.geojson")  # doctest: +SKIP
@@ -971,7 +971,7 @@ class FeatureCollection(object):
         ... }
         >>> buildings = FeatureCollection(
         ...     "a35126a241bd022c026e96ab9fe5e0ea23967d08:USBuildingFootprints")  # doctest: +SKIP
-        >>> filtered_buildings = filtered_cities.filter(geometry=aoi_geometry)  # doctest: +SKIP
+        >>> filtered_buildings = buildings.filter(geometry=aoi_geometry)  # doctest: +SKIP
         >>> task = filtered_buildings.export("my_export")  # doctest: +SKIP
         >>> exports = filtered_buildings.list_exports()   # doctest: +SKIP
 
@@ -1029,7 +1029,7 @@ class FeatureCollection(object):
         >>> aoi_geometry = {
         ...    'type': 'Polygon',
         ...    'coordinates': [[[-109, 31], [-102, 31], [-102, 37], [-109, 37], [-109, 31]]]}
-        >>> fc = FeatureCollection('d1349cc2d8854d998aa6da92dc2bd24')  # doctest: +SKIP
+        >>> fc = FeatureCollection('my-vector-product-id')  # doctest: +SKIP
         >>> fc.filter(geometry=aoi_geometry)  # doctest: +SKIP
         >>> delete_job = fc.delete_features()  # doctest: +SKIP
         >>> delete_job.wait_for_completion()  # doctest: +SKIP
