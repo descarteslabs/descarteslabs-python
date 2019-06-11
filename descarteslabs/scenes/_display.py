@@ -191,14 +191,14 @@ def _display_or_save(filename, *imgs, **kwargs):
                 alpha = np.ones(disp.shape[:2]) * (not disp.mask)
             else:
                 alpha = (~disp.mask.any(axis=-1)).astype(disp.dtype)
-                if nbands == 1:
-                    if colormap:
-                        disp = colormap(disp[:, :, 0])
-                        disp = disp[:, :, :3]  # Removes the alpha channel the color map always adds
-                    else:
-                        # to use an alpha channel, matplotlib must have a 4-band image,
-                        # so just duplicate the 1 band for r, g, and b
-                        disp = np.concatenate([disp] * 3, axis=-1)  # TODO: unnecessary copy of disp's mask
+            if nbands == 1:
+                if colormap:
+                    disp = colormap(disp[:, :, 0])
+                    disp = disp[:, :, :3]  # Removes the alpha channel the color map always adds
+                else:
+                    # to use an alpha channel, matplotlib must have a 4-band image,
+                    # so just duplicate the 1 band for r, g, and b
+                    disp = np.concatenate([disp] * 3, axis=-1)  # TODO: unnecessary copy of disp's mask
             disp = np.concatenate([disp, alpha[:, :, np.newaxis]], axis=-1)
 
         if disp.shape[-1] == 1:
