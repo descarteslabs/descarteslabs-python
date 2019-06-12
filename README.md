@@ -10,6 +10,7 @@ Changelog
 
 ## [Unreleased]
 ### Added
+- Add support for user cython modules in tasks.
 
 ### Changed
 - Tasks webhook methods no longer require a `group_id` if a webhook id is provided.

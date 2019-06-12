@@ -145,6 +145,10 @@ class TasksPackagingTest(ClientTestCase):
     DATA_FILE_PATH = os.path.join(TEST_DATA_PATH, DATA_FILE_RELATIVE_PATH)
     TEST_MODULE = "{}.package.module".format(TEST_PACKAGE_NAME)
     TEST_MODULE_ZIP_PATH = "{}/package/module.py".format(TEST_PACKAGE_NAME)
+    TEST_MODULE_CYTHON = "{}.package.cython_module".format(TEST_PACKAGE_NAME)
+    TEST_MODULE_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(TEST_PACKAGE_NAME)
+    TEST_MODULE_LIST = [TEST_MODULE, TEST_MODULE_CYTHON]
+    TEST_MODULE_ZIP_PATH_LIST = [TEST_MODULE_ZIP_PATH, TEST_MODULE_CYTHON_ZIP_PATH]
     GLOBAL_STRING = 'A global var'
     LOCAL_STRING = 'A local var'
 
@@ -265,30 +269,35 @@ class TasksPackagingTest(ClientTestCase):
     def test_include_modules(self):
         with tempfile.NamedTemporaryFile(suffix='.zip') as f:
             with ZipFile(f, mode='w') as arc:
-                self.client._write_include_modules([self.TEST_MODULE], arc)
+                self.client._write_include_modules(
+                    self.TEST_MODULE_LIST, arc)
             f.seek(0)
             with ZipFile(f, mode='r') as arc:
-                path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
                 init_path = "{}/dl_test_package/package/__init__.py".format(DIST)
                 pkg_init_path = "{}/dl_test_package/__init__.py".format(DIST)
-                self.assertIn(path, arc.namelist())
                 self.assertIn(init_path, arc.namelist())
                 self.assertIn(pkg_init_path, arc.namelist())
-                with arc.open(path) as fixture_data:
-                    self.assertIn(b'def foo()', fixture_data.read())
+                for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
+                    path = "{}/{}".format(DIST, mod_zip_path)
+                    self.assertIn(path, arc.namelist())
+                    with arc.open(path) as fixture_data:
+                        self.assertIn(b'def foo()', fixture_data.read())
 
     @mock.patch.object(sys, "path", new=[os.path.relpath(TEST_DATA_PATH)])
     def test_include_modules_relative_sys_path(self):
         with tempfile.NamedTemporaryFile(suffix='.zip') as f:
             with ZipFile(f, mode='w') as arc:
-                self.client._write_include_modules([self.TEST_MODULE], arc)
+                self.client._write_include_modules(
+                    self.TEST_MODULE_LIST, arc)
             f.seek(0)
             with ZipFile(f, mode='r') as arc:
-                path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
-                self.assertIn(path, arc.namelist())
+                for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
+                    path = "{}/{}".format(DIST, mod_zip_path)
+                    self.assertIn(path, arc.namelist())
 
     def test_build_bundle(self):
         module_path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
+        cython_module_path = "{}/{}".format(DIST, self.TEST_MODULE_CYTHON_ZIP_PATH)
         data_path = "{}/{}".format(DATA, self.DATA_FILE_ZIP_PATH)
 
         def foo():
@@ -297,12 +306,13 @@ class TasksPackagingTest(ClientTestCase):
         zf = self.client._build_bundle(
             foo,
             [self.DATA_FILE_PATH],
-            [self.TEST_MODULE]
+            self.TEST_MODULE_LIST
         )
 
         try:
             with ZipFile(zf) as arc:
                 self.assertIn(module_path, arc.namelist())
+                self.assertIn(cython_module_path, arc.namelist())
                 self.assertIn(data_path, arc.namelist())
                 self.assertNotIn(REQUIREMENTS, arc.namelist())
         finally:
@@ -323,14 +333,14 @@ class TasksPackagingTest(ClientTestCase):
             self.client._build_bundle(
                 foo,
                 [self.DATA_FILE_PATH],
-                [self.TEST_MODULE]
+                self.TEST_MODULE_LIST
             )
 
         with self.assertRaises(BoundGlobalError):
             self.client._build_bundle(
                 Foo.bar,
                 [self.DATA_FILE_PATH],
-                [self.TEST_MODULE]
+                self.TEST_MODULE_LIST
             )
 
     def test_build_bundle_with_named_function(self):

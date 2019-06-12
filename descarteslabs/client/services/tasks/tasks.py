@@ -822,7 +822,7 @@ class Tasks(Service):
             Minimum: 10 seconds. Maximum: 24 hours.
         :param int retry_count: Number of times to retry a task if it fails
             Default: 0. Maximum: 5.
-        :param list(str) include_modules: Locally importable python names to include as
+        :param list(str) include_modules: Locally importable python (or cython) names to include as
             modules in the task group, which can be imported by the entrypoint function, `function`.
         :param list(str) include_data: Non python data files to include in the task group. Data
             path must be descendant of system path or python path directories.
@@ -1249,14 +1249,38 @@ class Tasks(Service):
         for path, archive_path in data_files:
             archive.write(path, archive_path)
 
+    def _find_module_file(self, mod_name):
+        """Search for module file in python path. Raise ImportError if not found"""
+
+        try:
+            mod = importlib.import_module(mod_name)
+            mod_file = mod.__file__.replace('.pyc', '.py', 1)
+            return mod_file
+
+        except ImportError as ie:
+            # Search for possible pyx file
+            mod_basename = '{}.pyx'.format(mod_name.replace('.', '/'))
+            for s in sys.path:
+                mod_file_option = os.path.join(s, mod_basename)
+                if os.path.isfile(mod_file_option):
+                    # Check that found cython source not in CWD (causes build problems)
+                    if os.getcwd() == os.path.dirname(os.path.abspath(mod_file_option)):
+                        raise ValueError(
+                            "Cannot include cython modules from working directory: `{}`.".format(mod_file_option))
+                    else:
+                        return mod_file_option
+
+            # Raise caught ImportError if we still haven't found the module
+            raise ie
+
     def _write_include_modules(self, include_modules, archive):
         for mod_name in include_modules:
-            mod = importlib.import_module(mod_name)
-            # detect system packages from distribution or virtualenv locations.
-            if re.match('.*(?:site|dist)-packages', mod.__file__) is not None:
-                raise ValueError("Cannot include system modules: `{}`.".format(mod.__file__))
+            mod_file = self._find_module_file(mod_name)
 
-            mod_file = mod.__file__.replace('.pyc', '.py', 1)
+            # detect system packages from distribution or virtualenv locations.
+            if re.match('.*(?:site|dist)-packages', mod_file) is not None:
+                raise ValueError("Cannot include system modules: `{}`.".format(mod_file))
+
             if not os.path.exists(mod_file):
                 raise IOError("Source code for module is missing, only byte code exists: `{}`.".format(mod_name))
             sys_path = self._sys_path_prefix(mod_file)
@@ -1266,7 +1290,7 @@ class Tasks(Service):
             # this is a package, get all decendants if they exist.
             if os.path.basename(mod_file) == '__init__.py':
                 for dirpath, dirnames, filenames in os.walk(os.path.dirname(mod_file)):
-                    for file_ in [f for f in filenames if f.endswith('.py')]:
+                    for file_ in [f for f in filenames if f.endswith(('.py', '.pyx'))]:
                         path = os.path.join(dirpath, file_)
                         arcname = self._archive_path(path, DIST, sys_path)
                         if arcname not in archive_names:
