@@ -71,7 +71,7 @@ class ExportTask(FutureTask):
 
         :raises TransientResultError: When the result is not ready yet (and not waiting).
 
-        :raises TimeoutError: When the timeout has been reached (if waiting and set).
+        :raises ~descarteslabs.common.tasks.TimeoutError: When the timeout has been reached (if waiting and set).
         """
 
         # We have to go through the vector service since we don't
