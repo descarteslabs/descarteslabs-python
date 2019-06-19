@@ -4,7 +4,7 @@ from shapely.geometry import shape
 from descarteslabs.common.dotdict import DotDict
 from descarteslabs.client.exceptions import NotFoundError
 from descarteslabs.client.deprecation import deprecate
-from descarteslabs.common.tasks import UploadTask, ExportTask
+from descarteslabs.common.tasks import UploadTask, ExportTask, TransientResultError
 from descarteslabs.client.services.vector import Vector
 from descarteslabs.vectors.feature import Feature
 
@@ -729,14 +729,19 @@ class FeatureCollection(object):
                     )
                 )
             else:
-                results.append(
-                    UploadTask(
-                        self.id,
-                        tuid=result.id,
-                        result_attrs=result.attributes,
-                        client=self.vector_client,
-                    )
+                upload = UploadTask(
+                    self.id,
+                    tuid=result.id,
+                    result_attrs=result.attributes,
+                    client=self.vector_client,
                 )
+                # get_upload_results does not (and cannot) include the task result,
+                # so force an update
+                try:
+                    upload.get_result(wait=False)
+                except TransientResultError:
+                    pass
+                results.append(upload)
 
         return results
 
