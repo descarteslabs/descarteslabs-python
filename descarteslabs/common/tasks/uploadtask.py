@@ -233,7 +233,7 @@ class UploadTask(FutureTask):
 
     def __repr__(self):
         s = "UploadTask\n"
-        if self._task_result is None:
+        if self._task_result is None or self._task_result.status == self.PENDING:
             s += "\tStatus: Pending\n"
         else:
             s += "\tStatus: {}\n".format(self._task_result.status)
@@ -241,6 +241,7 @@ class UploadTask(FutureTask):
                 self._task_result.peak_memory_usage / (1024 * 1024.)
             )
             s += "\tRuntime (s): {}\n".format(self._task_result.runtime)
-            s += "\tLoad State: {}\n".format(self._task_result.load.state)
+            if 'load' in self._task_result:
+                s += "\tLoad State: {}\n".format(self._task_result.load.state)
 
         return s
