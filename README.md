@@ -10,11 +10,18 @@ Changelog
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+## [0.21.0] - 2019-06-19
+### Added
 - Add support for user cython modules in tasks.
 
 ### Changed
 - Tasks webhook methods no longer require a `group_id` if a webhook id is provided.
 - `catalog_id` property on images is no longer supported by the API
+- Fix `scenes.display` handling of single band masked arrays with scalar masks
+- Fix problems with incomplete `UploadTask` instances returned by `vectors.FeatureCollection.list_uploads`
 
 ## [0.20.0] - 2019-06-04
 ### Added
