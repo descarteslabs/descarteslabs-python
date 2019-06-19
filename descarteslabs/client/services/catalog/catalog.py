@@ -1113,7 +1113,6 @@ class Catalog(Service):
                                                 reflectance greater than .4 in
                                                 the blue band.
                         bucket:                 Name of Google Cloud Bucket.
-                        catalog_id:             RapidEye catalog ID.
                         cirrus_fraction:        Fraction of pixel which are
                                                 distorted by cirrus clouds.
                         cloud_fraction:         Fraction of pixels which are
@@ -1229,7 +1228,6 @@ class Catalog(Service):
         :param list(float) bits_per_pixel: Average bits of data per pixel per band.
         :param float bright_fraction: Fraction of the image that has reflectance greater than .4 in the blue band.
         :param str bucket: Name of Google Cloud Bucket. Must be public bucket or Descartes Labs user bucket.
-        :param str catalog_id: RapidEye catalog ID.
         :param float cirrus_fraction: Fraction of pixel which are distorted by cirrus clouds.
         :param float cloud_fraction: Fraction of pixels which are obscured by clouds.
         :param float cloud_fraction_0: Fraction of pixels which are obscured by clouds.

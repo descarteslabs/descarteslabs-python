@@ -14,6 +14,7 @@ Changelog
 
 ### Changed
 - Tasks webhook methods no longer require a `group_id` if a webhook id is provided.
+- `catalog_id` property on images is no longer supported by the API
 
 ## [0.20.0] - 2019-06-04
 ### Added
