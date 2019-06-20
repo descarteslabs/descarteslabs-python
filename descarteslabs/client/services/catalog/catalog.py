@@ -268,9 +268,10 @@ class Catalog(Service):
                                        of the wavelength spread.
                 wavelength_max:        Maximum wavelength this band
                                        is sensitive to.
-                mavelength_min:        Minimum wavelength this band
+                wavelength_min:        Minimum wavelength this band
                                        is sensitive to.
-                wavelength_unit:       "nm".
+                wavelength_unit:       Must be "nm" if any wavelength
+                                       params defined. Otherwise None.
                 writers:               A list of groups, organizations
                                        or users having write access.
                                        Access Control List identifiers
@@ -833,9 +834,10 @@ class Catalog(Service):
                                                of the wavelength spread.
                         wavelength_max:        Maximum wavelength this band
                                                is sensitive to.
-                        mavelength_min:        Minimum wavelength this band
+                        wavelength_min:        Minimum wavelength this band
                                                is sensitive to.
-                        wavelength_unit:       "nm".
+                        wavelength_unit:       Must be "nm" if any wavelength
+                                               params defined. Otherwise None.
                         writers:               A list of groups, organizations
                                                or users having write access.
                                                Access Control List identifiers
