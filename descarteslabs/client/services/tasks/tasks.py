@@ -1192,7 +1192,7 @@ class Tasks(Service):
                     warn("Include data glob pattern had no matches: {}".format(pattern))
                 else:
                     raise ValueError("No data file found for path: {}".format(pattern))
-            for path in map(os.path.abspath, matched_paths):
+            for path in six.moves.map(os.path.abspath, matched_paths):
                 if os.path.exists(path):
                     sys_path = self._sys_path_prefix(path)
 

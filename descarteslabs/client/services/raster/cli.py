@@ -15,15 +15,18 @@
 
 import argparse
 import json
+
+import six
+
 from .raster import Raster
 
 
 def scales(s):
     if s.count(",") == 1:
-        mi, ma = map(float, s.split(","))
+        mi, ma = six.moves.map(float, s.split(","))
         return [mi, ma]
     elif s.count(",") == 3:
-        smi, sma, dmi, dma = map(float, s.split(","))
+        smi, sma, dmi, dma = six.moves.map(float, s.split(","))
         return [smi, sma, dmi, dma]
     else:
         raise argparse.ArgumentTypeError(
