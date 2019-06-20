@@ -1410,7 +1410,11 @@ class Catalog(Service):
         This is an asynchronous operation and you can query for the status
         using :meth:`upload_result` with the upload id returned by this
         method.  The upload id is the ``image_id``, which defaults to the
-        name of the file to be uploaded.
+        name of the file to be uploaded. The uploaded image can be accessed
+        with :class:`~descarteslabs.client.services.storage.Storage` using
+        the ``products`` storage type. (See the `Uploading Data to the Catalog
+        <https://docs.descarteslabs.com/guides/catalog.html#uploading-data-to-the-catalog>`_
+        for an example.)
 
         :type files: str or file or list(str) or list(file)
         :param files: (Required) a reference to the file to upload.
