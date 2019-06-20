@@ -81,7 +81,7 @@ class TestDotDict(unittest.TestCase):
 
     def test_str_none(self):
         d = DotDict({"none": None})
-        self.assertEquals("{\n  'none': None\n}", str(d))
+        self.assertEqual("{\n  'none': None\n}", str(d))
 
     def test_getattr_returns_dotdict(self):
         d = DotDict({"a": 1, "subdict": {"x": 0}})
