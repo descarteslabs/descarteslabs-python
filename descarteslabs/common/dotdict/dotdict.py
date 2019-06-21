@@ -101,7 +101,7 @@ class DotDict(dict):
         Values that are plain dicts or lists are returned as DotDicts or DotLists.
         """
         if six.PY2:
-            return list(self.iteritems())
+            return list(six.iteritems(self))
         else:
             return DotDict_items(self)
 
