@@ -1072,7 +1072,7 @@ class Tasks(Service):
     def _sys_paths(self):
         if not hasattr(self, '_cached_sys_paths'):
             # use longest matching path entries.
-            self._cached_sys_paths = sorted(map(os.path.abspath, sys.path), key=len, reverse=True)
+            self._cached_sys_paths = sorted(six.moves.map(os.path.abspath, sys.path), key=len, reverse=True)
         return self._cached_sys_paths
 
     def _get_globals(self, func):
