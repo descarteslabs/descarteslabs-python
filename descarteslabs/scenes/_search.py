@@ -72,9 +72,16 @@ def search(aoi,
     date_field : str, optional, default 'acquired'
         The field used when filtering by date
         (``"acquired"``, ``"processed"``, ``"published"``)
-    query : descarteslabs.common.property_filtering.Expression, optional
-        Expression used to filter Scenes by their properties, built from ``dl.properties``.
-        Example value:
+    query : ~descarteslabs.common.property_filtering.filtering.Expression, optional
+        Expression used to filter Scenes by their properties, built from
+        :class:`dl.properties <descarteslabs.common.property_filtering.filtering.GenericProperties>`.
+        You can construct filter expression using the ``==``, ``!=``, ``<``, ``>``,
+        ``<=`` and ``>=`` operators as well as the
+        :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
+        method. You cannot use the boolean keywords ``and`` and ``or`` because of
+        Python language limitations; instead you can combine filter expressions
+        with ``&`` (boolean "and") and ``|`` (boolean "or").
+        Example:
         ``150 < dl.properties.azimuth_angle < 160 & dl.properties.cloud_fraction < 0.5``
     randomize : bool, default False, optional
         Randomize the order of the results.

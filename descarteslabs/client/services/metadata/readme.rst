@@ -15,17 +15,28 @@ Filtering
         >>> from descarteslabs.client.services.metadata import Metadata, properties as p
         >>> metadata = Metadata()
 
-        >>> metadata.search(products=["sentinel-2:L1C"], q=[p.acquired > "2017", p.cloud_fraction < 0.25])
+        >>> metadata.summary(products=["sentinel-2:L1C"], q=(p.acquired > "2017"))
         {'bytes': 28174123929918, 'count': 330034, 'products': ['sentinel-2:L1C']}
 
-        >>> metadata.summary(products=["sentinel-2:L1C"], q=[p.acquired > "2017", p.cloud_fraction < 0.5, 150 < p.azimuth_angle < 160])
+    You can pass multiple filter conditions, all of which need to be true for results to be included:
+
+        >>> metadata.summary(
+        ...     products=["sentinel-2:L1C"],
+        ...     q=[
+        ...         p.acquired > "2017",
+        ...         p.cloud_fraction < 0.5,
+        ...         150 < p.azimuth_angle < 160
+        ...     ]
+        ... )
         {'bytes': 747678539408, 'count': 5979, 'products': ['sentinel-2:L1C']}
 
-        >>> metadata.summary(products=['modis:09:CREFL'], q=[p.sat_id == 'Aqua'])
-        {'bytes': 68425075256895, 'count': 7162652, 'products': ['modis:09:CREFL']}
+    You cannot use the boolean keywords ``and`` and ``or`` because of Python language limitations; use bitwise operators ``&`` and ``|`` instead to express more complex boolean logic. ``&`` stands for a boolean "and", ``|`` stands for a boolean "or":
 
-        >>> metadata.summary(products=['modis:09:CREFL'], q=[p.sat_id == 'Terra'])
-        {'bytes': 71211948012243, 'count': 7421542, 'products': ['modis:09:CREFL']}
+        >>> metadata.summary(
+        ...     products=["sentinel-2:L1C"],
+        ...     q=((p.acquired > "2017") & (p.acquired < "2018")) | (p.acquired > "2019")
+        ... )
+        {'bytes': 310745851027609, 'count': 3922704, 'products': [u'sentinel-2:L1C']}
 
     :var absolute_orbit:
 

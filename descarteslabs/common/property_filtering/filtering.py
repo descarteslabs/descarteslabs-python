@@ -223,7 +223,9 @@ class GenericProperties(object):
     You can construct filter expression using the ``==``, ``!=``, ``<``, ``>``,
     ``<=`` and ``>=`` operators as well as the
     :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
-    method.  You can combine filter expressions with ``&`` and ``|``.
+    method. You cannot use the boolean keywords ``and`` and ``or`` because of
+    Python language limitations; instead you can combine filter expressions
+    with ``&`` (boolean "and") and ``|`` (boolean "or").
     """
     def __getattr__(self, attr):
         return Property(attr)

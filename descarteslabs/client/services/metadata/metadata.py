@@ -256,8 +256,9 @@ class Metadata(Service):
         :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
         :param str storage_state: Filter results based on `storage_state` value. Allowed values are `"available"`,
             `"remote"`, or `None`, which returns all results regardless of `storage_state` value.
-        :param expr q: Expression for filtering the results. See
-            :py:attr:`descarteslabs.client.services.metadata.properties`.
+        :param ~descarteslabs.common.property_filtering.filtering.Expression q:
+            Expression for filtering the results. See
+            :py:attr:`~descarteslabs.client.services.metadata.properties`.
         :param bool pixels: Whether to include pixel counts in summary calculations.
         :param str dltile: A dltile key used to specify the resolution, bounds, and srs.
 
@@ -426,8 +427,9 @@ class Metadata(Service):
         :param str storage_state: Filter results based on `storage_state` value. Allowed values are
             `"available"`, `"remote"`, or `None`, which returns all results regardless of
             `storage_state` value.
-        :param expr q: Expression for filtering the results. See
-            :py:attr:`descarteslabs.client.services.metadata.properties`.
+        :param ~descarteslabs.common.property_filtering.filtering.Expression q:
+            Expression for filtering the results. See
+            :py:attr:`~descarteslabs.client.services.metadata.properties`.
         :param int limit: Maximum number of items per page to return.
         :param list(str) fields: Properties to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
@@ -572,8 +574,9 @@ class Metadata(Service):
         :param str storage_state: Filter results based on `storage_state` value. Allowed values are
             `"available"`, `"remote"`, or `None`, which returns all results regardless of
             `storage_state` value.
-        :param expr q: Expression for filtering the results. See
-            :py:attr:`descarteslabs.client.services.metadata.properties`.
+        :param ~descarteslabs.common.property_filtering.filtering.Expression q:
+            Expression for filtering the results. See
+            :py:attr:`~descarteslabs.client.services.metadata.properties`.
         :param int limit: Maximum number of items to return.
         :param list(str) fields: Properties to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
@@ -677,8 +680,9 @@ class Metadata(Service):
         :param str storage_state: Filter results based on `storage_state` value. Allowed values are
             `"available"`, `"remote"`, or `None`, which returns all results regardless of
             `storage_state` value.
-        :param expr q: Expression for filtering the results. See
-            :py:attr:`descarteslabs.client.services.metadata.properties`.
+        :param ~descarteslabs.common.property_filtering.filtering.Expression q:
+            Expression for filtering the results. See
+            :py:attr:`~descarteslabs.client.services.metadata.properties`.
         :param int limit: Number of items to return.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str sort_field: Property to sort on.

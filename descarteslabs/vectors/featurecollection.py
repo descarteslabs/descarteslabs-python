@@ -278,14 +278,23 @@ class FeatureCollection(object):
             Include features intersecting this geometry. If this
             ``FeatureCollection`` is already filtered by a geometry,
             the new geometry will override it -- they cannot be chained.
-        properties : descarteslabs.common.property_filtering.Expression
-            Include features having properties where the expression
-            evaluates as ``True``
-            E.g ``properties=(p.temperature >= 50) & (p.hour_of_day > 18)``,
-            or even more complicated expressions like
-            ``properties=(100 > p.temperature >= 50) | ((p.month != 10) & (p.day_of_month > 14))``
+        properties : ~descarteslabs.common.property_filtering.filtering.Expression; optional
+            Expression used to filter features by their properties, built from
+            :class:`dl.properties <descarteslabs.common.property_filtering.filtering.GenericProperties>`.
+            You can construct filter expression using the ``==``, ``!=``,
+            ``<``, ``>``, ``<=`` and ``>=`` operators as well as the
+            :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
+            method. You cannot use the boolean keywords ``and`` and ``or``
+            because of Python language limitations; instead you can combine
+            filter expressions with ``&`` (boolean "and") and ``|`` (boolean
+            "or").
+            Example (assuming ``from descarteslabs import properties as p``):
+            ``query_expr=(p.temperature >= 50) & (p.hour_of_day > 18)``.
+            More complex example:
+            ``query_expr=(100 > p.temperature >= 50) | ((p.month
+            != 10) & (p.day_of_month > 14))``.
             If you supply a property which doesn't exist as part of the
-            expression that comparison will evaluate to False.
+            expression that comparison will evaluate to ``False``.
 
         Returns
         -------
