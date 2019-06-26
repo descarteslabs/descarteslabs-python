@@ -51,6 +51,12 @@ try:
 except ImportError:
     pass
 
+try:
+  from . import catalog
+except ImportError:
+  pass
+
+
 descartes_auth = Auth.from_environment_or_token_json()
 metadata = Metadata(auth=descartes_auth)
 places = Places(auth=descartes_auth)

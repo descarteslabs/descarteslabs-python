@@ -35,6 +35,13 @@ class EqExpression(Expression):
     def serialize(self):
         return {'eq': {self.name: self.value}}
 
+    def jsonapi_serialize(self):
+        return {
+            'op': 'eq',
+            'name': self.name,
+            'val': self.value
+        }
+
 
 class NeExpression(Expression):
     def __init__(self, name, value):
@@ -43,6 +50,13 @@ class NeExpression(Expression):
 
     def serialize(self):
         return {'ne': {self.name: self.value}}
+
+    def jsonapi_serialize(self):
+        return {
+            'op': 'ne',
+            'name': self.name,
+            'val': self.value
+        }
 
 
 class RangeExpression(Expression):
@@ -53,6 +67,13 @@ class RangeExpression(Expression):
     def serialize(self):
         return {'range': {self.name: self.parts}}
 
+    def jsonapi_serialize(self):
+        return [{
+            'name': self.name,
+            'op': op,
+            'val': val
+        } for (op, val) in self.parts.items()]
+
 
 class LikeExpression(Expression):
     def __init__(self, name, value):
@@ -61,6 +82,13 @@ class LikeExpression(Expression):
 
     def serialize(self):
         return {'like': {self.name: self.value}}
+
+    def jsonapi_serialize(self):
+        return {
+            'name': self.name,
+            'op': 'ilike',
+            'val': self.value
+        }
 
 
 class AndExpression(object):
@@ -85,6 +113,9 @@ class AndExpression(object):
     def serialize(self):
         return {'and': [x.serialize() for x in self.parts]}
 
+    def jsonapi_serialize(self):
+        return {'and': flatten_filters(self.parts)}
+
 
 class OrExpression(object):
     def __init__(self, parts):
@@ -107,6 +138,21 @@ class OrExpression(object):
 
     def serialize(self):
         return {'or': [x.serialize() for x in self.parts]}
+
+    def jsonapi_serialize(self):
+        return {'or': flatten_filters(self.parts)}
+
+
+def flatten_filters(parts):
+    filters = []
+    for x in parts:
+        serialized = x.jsonapi_serialize()
+        if isinstance(serialized, list):
+            for s in serialized:
+                filters.append(s)
+        else:
+            filters.append(serialized)
+    return filters
 
 
 def range_expr(op):
