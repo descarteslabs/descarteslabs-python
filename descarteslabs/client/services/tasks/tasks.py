@@ -169,7 +169,7 @@ class Tasks(Service):
             the environment in which the function is executed.
         :param str name: An optional name used to later help identify the function.
         :param int cpus: The number of CPUs requested for a single task. A task
-            might be throttled if it uses more CPU. Default: 1. Maximum: 32.
+            might be throttled if it uses more CPU. Default: 1. Maximum: 16.
         :param int gpus: The number of GPUs requested for a single task. As of
             right now, a maximum of 1 GPU is supported. Default: 0. Maximum: 1.
         :param str memory: The maximum memory requirement for a single task. If a
