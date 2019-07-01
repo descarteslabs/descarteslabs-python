@@ -261,7 +261,8 @@ class Metadata(Service):
             Expression for filtering the results. See
             :py:attr:`~descarteslabs.client.services.metadata.properties`.
         :param bool pixels: Whether to include pixel counts in summary calculations.
-        :param str dltile: A dltile key used to specify the resolution, bounds, and srs.
+        :param str dltile: A dltile key used to specify the search geometry, an alternative
+            to the ``geom`` argument.
 
         :return: Dictionary containing summary of products that match query. Empty products list
             if no matching products found.
@@ -434,7 +435,8 @@ class Metadata(Service):
             :py:attr:`~descarteslabs.client.services.metadata.properties`.
         :param int limit: Maximum number of items per page to return.
         :param list(str) fields: Properties to return.
-        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str dltile: A dltile key used to specify the search geometry, an alternative
+            to the ``geom`` argument.
         :param str sort_field: Property to sort on.
         :param str sort_order: Order of sort.
         :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
@@ -582,7 +584,8 @@ class Metadata(Service):
             :py:attr:`~descarteslabs.client.services.metadata.properties`.
         :param int limit: Maximum number of items to return.
         :param list(str) fields: Properties to return.
-        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str dltile: A dltile key used to specify the search geometry, an alternative
+            to the ``geom`` argument.
         :param str sort_field: Property to sort on.
         :param str sort_order: Order of sort.
         :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
@@ -687,7 +690,8 @@ class Metadata(Service):
             Expression for filtering the results. See
             :py:attr:`~descarteslabs.client.services.metadata.properties`.
         :param int limit: Number of items to return.
-        :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
+        :param str dltile: A dltile key used to specify the search geometry, an alternative
+            to the ``geom`` argument.
         :param str sort_field: Property to sort on.
         :param str sort_order: Order of sort.
         :param bool randomize: Randomize the results. You may also use an `int` or `str` as an explicit seed.
