@@ -643,7 +643,7 @@ class Metadata(Service):
             sort_field=sort_field,
             sort_order=sort_order,
             randomize=randomize,
-            batch_size=min(limit, 1000),
+            batch_size=1000 if limit is None else min(limit, 1000),
             **kwargs
         )
         limited_features = itertools.islice(features_iter, limit)
