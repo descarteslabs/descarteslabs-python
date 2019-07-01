@@ -1561,6 +1561,10 @@ class Catalog(Service):
                 if failed:
                     raise error
 
+                # For ndarrays we add `.tif` to the upload id in the service
+                if not upload_id.endswith(".tif"):
+                    upload_id += ".tif"
+
                 return upload_id
             finally:
                 os.unlink(tmp.name)
