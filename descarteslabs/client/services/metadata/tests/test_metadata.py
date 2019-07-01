@@ -23,6 +23,8 @@ from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.metadata import Metadata
 from descarteslabs.client.services.raster import Raster
 
+from shapely.geometry import shape
+
 public_token = "header.e30.signature"
 
 
@@ -90,6 +92,21 @@ class MetadataTest(unittest.TestCase):
         self.assertEqual(features, collection.features)
 
     @responses.activate
+    def test_paged_search_shapely(self):
+        features = [{"id": "foo"}]
+        geom = {
+            "coordinates": [[[-94.01008346640455, 40.992358024242606], [-93.90737611136569, 40.99321227969176],
+                             [-93.908445279927, 41.0710332380541], [-94.01127360818097, 41.070176651899104],
+                             [-94.01008346640455, 40.992358024242606]]],
+            "type": "Polygon"
+        }
+        shape_geom = shape(geom)
+        self.mock_response(responses.GET, json={"geometry": geom})
+        self.mock_response(responses.POST, json=features)
+        collection = self.instance.paged_search(limit=100, geom=shape_geom)
+        self.assertEqual(features, collection.features)
+
+    @responses.activate
     def test_search(self):
         features = [{"id": "foo"}, {"id": "bar"}, {"id": "baz"}]
         self.mock_response(responses.POST, json=features)
@@ -149,6 +166,20 @@ class MetadataTest(unittest.TestCase):
         self.mock_response(responses.GET, json={"geometry": tile_geom})
         self.mock_response(responses.POST, json=summary)
         self.assertEqual(summary, self.instance.summary(dltile="256:16:30.0:15:-11:591"))
+
+    @responses.activate
+    def test_summary_shapely(self):
+        summary = {"count": 42}
+        geom = {
+            "coordinates": [[[-94.01008346640455, 40.992358024242606], [-93.90737611136569, 40.99321227969176],
+                             [-93.908445279927, 41.0710332380541], [-94.01127360818097, 41.070176651899104],
+                             [-94.01008346640455, 40.992358024242606]]],
+            "type": "Polygon"
+        }
+        shape_geom = shape(geom)
+        self.mock_response(responses.GET, json={"geometry": geom})
+        self.mock_response(responses.POST, json=summary)
+        self.assertEqual(summary, self.instance.summary(geom=shape_geom))
 
 
 if __name__ == "__main__":

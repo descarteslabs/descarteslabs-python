@@ -27,6 +27,7 @@ from descarteslabs.common.property_filtering.filtering import (
     GenericProperties,
 )
 from descarteslabs.common.dotdict import DotDict, DotList
+from descarteslabs.common.shapely_support import shapely_to_geojson
 
 
 class Metadata(Service):
@@ -248,7 +249,7 @@ class Metadata(Service):
             * ``minute`` or ``m``
             * ``product``
         :param str place: A slug identifier to be used as a region of interest.
-        :param str geom: A GeoJSON or WKT region of interest.
+        :param str geom: A GeoJSON or WKT region of interest or a Shapely shape object.
         :param str start_datetime: Desired starting timestamp, in any common format.
         :param str end_datetime: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
@@ -354,6 +355,7 @@ class Metadata(Service):
             kwargs["interval"] = interval
 
         if geom:
+            geom = shapely_to_geojson(geom)
             kwargs["geom"] = geom
 
         if start_datetime:
@@ -418,7 +420,7 @@ class Metadata(Service):
         :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (default is `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
-        :param str geom: A GeoJSON or WKT region of interest.
+        :param str geom: A GeoJSON or WKT region of interest or a Shapely shape object.
         :param str start_datetime: Desired starting timestamp, in any common format.
         :param str end_datetime: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
@@ -485,6 +487,7 @@ class Metadata(Service):
             kwargs["products"] = products
 
         if geom:
+            geom = shapely_to_geojson(geom)
             kwargs["geom"] = geom
 
         if start_datetime:

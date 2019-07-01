@@ -19,6 +19,7 @@ import re
 import sys
 import tempfile
 import unittest
+from shapely.geometry import shape
 
 from descarteslabs.client.addons import blosc, numpy as np, ThirdParty
 from descarteslabs.client.auth import Auth
@@ -82,6 +83,27 @@ class RasterTest(unittest.TestCase):
         self.assertEqual([1, 2], [t.properties.count for t in tiles.features])
 
     @responses.activate
+    def test_dltiles_from_shapely_shape(self):
+        self.mock_response(responses.POST, {
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "count": 1,
+                    },
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "count": 2,
+                    },
+                },
+            ]
+        })
+        tiles = self.raster.dltiles_from_shape(30.0, 2048, 16, shape(a_geometry))
+        self.assertEqual([1, 2], [t.properties.count for t in tiles.features])
+
+    @responses.activate
     def test_iter_dltiles_from_shape(self):
         self.mock_response(responses.POST, {
             "features": [
@@ -109,6 +131,36 @@ class RasterTest(unittest.TestCase):
             ]
         })
         tiles = self.raster.dltiles_from_shape(30.0, 2048, 16, a_geometry)
+        self.assertEqual([1, 2], [t.properties.count for t in tiles.features])
+
+    @responses.activate
+    def test_iter_dltiles_from_shapely_shape(self):
+        self.mock_response(responses.POST, {
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "count": 1,
+                    },
+                },
+            ],
+            "iterstate": {
+                "start_zone": None,
+                "start_ti": None,
+                "start_tj": None,
+            }
+        })
+        self.mock_response(responses.POST, {
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "count": 2,
+                    },
+                },
+            ]
+        })
+        tiles = self.raster.dltiles_from_shape(30.0, 2048, 16, shape(a_geometry))
         self.assertEqual([1, 2], [t.properties.count for t in tiles.features])
 
     def test_dltile_invalid(self):

@@ -2,13 +2,13 @@ import os
 import six
 import io
 import logging
-from shapely.geometry import mapping
 
 from descarteslabs.common.property_filtering import GenericProperties
 from descarteslabs.client.deprecation import deprecate
 from descarteslabs.client.services.service import JsonApiService, ThirdPartyService
 from descarteslabs.client.auth import Auth
 from descarteslabs.common.dotdict import DotDict
+from descarteslabs.common.shapely_support import shapely_to_geojson
 
 
 class _SearchFeaturesIterator(object):
@@ -498,7 +498,7 @@ class Vector(JsonApiService):
         """
 
         params = dict(
-            geometry=self._shapely_to_geojson(geometry), properties=properties, fix_geometry=fix_geometry
+            geometry=shapely_to_geojson(geometry), properties=properties, fix_geometry=fix_geometry
         )
 
         jsonapi = self.jsonapi_document(type="feature", attributes=params)
@@ -817,13 +817,6 @@ class Vector(JsonApiService):
         )
         return DotDict(r.json())
 
-    def _shapely_to_geojson(self, geometry):
-        # geometry is represented by a Shapely shape, convert it to GeoJSON geometry
-        # before making request to vector service
-        if hasattr(geometry, "__geo_interface__"):
-            geometry = mapping(geometry)
-        return geometry
-
     def _fetch_feature_page(
         self,
         product_id,
@@ -851,7 +844,7 @@ class Vector(JsonApiService):
             k: v
             for k, v in dict(
                 kwargs,
-                geometry=self._shapely_to_geojson(geometry),
+                geometry=shapely_to_geojson(geometry),
                 query_expr=(query_expr.serialize() if query_expr is not None else None),
                 limit=Vector.SEARCH_PAGE_SIZE,
                 query_limit=query_limit,
@@ -1032,7 +1025,7 @@ class Vector(JsonApiService):
         query_params = {
             k: v
             for k, v in dict(
-                geometry=self._shapely_to_geojson(geometry),
+                geometry=shapely_to_geojson(geometry),
                 query_expr=(query_expr.serialize() if query_expr is not None else None),
                 query_limit=query_limit,
             ).items()
@@ -1158,7 +1151,7 @@ class Vector(JsonApiService):
         query_params = {
             k: v
             for k, v in dict(
-                geometry=self._shapely_to_geojson(geometry),
+                geometry=shapely_to_geojson(geometry),
                 query_expr=(query_expr.serialize() if query_expr is not None else None),
                 query_limit=query_limit,
             ).items()
@@ -1333,7 +1326,7 @@ class Vector(JsonApiService):
         query_params = {
             k: v
             for k, v in dict(
-                geometry=self._shapely_to_geojson(geometry),
+                geometry=shapely_to_geojson(geometry),
                 query_expr=(query_expr.serialize() if query_expr is not None else None),
             ).items()
             if v is not None

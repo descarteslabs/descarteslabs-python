@@ -26,6 +26,7 @@ from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.service.service import Service
 from descarteslabs.client.exceptions import ServerError
 from descarteslabs.common.dotdict import DotDict
+from descarteslabs.common.shapely_support import shapely_to_geojson
 
 
 DEFAULT_MAX_WORKERS = 8
@@ -106,12 +107,12 @@ class Raster(Service):
     def iter_dltiles_from_shape(self, resolution, tilesize, pad, shape, maxtiles=5000):
         """
         Iterates over all DLTiles as GeoJSONs features that intersect the
-        GeoJSON geometry ``shape``.
+        GeoJSON geometry ``shape`` or Shapely shape object.
 
         :param float resolution: Resolution of DLTile
         :param int tilesize: Number of valid pixels per DLTile
         :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
-        :param str shape: A GeoJSON geometry specifying a shape over
+        :param str shape: A GeoJSON geometry or Shapely shape specifying a shape over
             which to intersect DLTiles.
         :param int maxtiles: Maximum number of tiles per paged request
 
@@ -175,7 +176,7 @@ class Raster(Service):
               'type': 'Feature'
             }
         """
-
+        shape = shapely_to_geojson(shape)
         shape = as_json_string(shape)
         params = {
             'resolution': resolution,
@@ -201,7 +202,7 @@ class Raster(Service):
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
         Return a feature collection of DLTile GeoJSONs that intersect
-        a GeoJSON geometry ``shape``.
+        a GeoJSON geometry ``shape`` or a Shapely shape object.
 
         :param float resolution: Resolution of DLTile
         :param int tilesize: Number of valid pixels per DLTile
@@ -274,7 +275,7 @@ class Raster(Service):
               'type': 'Feature'
             }
         """
-
+        shape = shapely_to_geojson(shape)
         return DotDict(type='FeatureCollection',
                        features=list(self.iter_dltiles_from_shape(resolution, tilesize, pad, shape)))
 

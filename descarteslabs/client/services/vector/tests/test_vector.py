@@ -275,11 +275,11 @@ class VectorsTest(ClientTestCase):
         expected_req_body = {
             "data": {
                 "attributes": {
+                    "fix_geometry": "fix",
                     "geometry": {
                         "type": "Polygon",
                         "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
                     },
-                    "fix_geometry": "fix",
                     "properties": None
                 },
                 "type": "feature"
@@ -295,8 +295,8 @@ class VectorsTest(ClientTestCase):
     def test_create_feature_error(self):
         self.mock_response(responses.POST, self.feature_response, status=400)
         non_ccw = {
-            'type': 'Polygon',
-            'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+            "type": "Polygon",
+            "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
         }
 
         with self.assertRaises(BadRequestError):
@@ -306,11 +306,11 @@ class VectorsTest(ClientTestCase):
             "data": {
                 "type": "feature",
                 "attributes": {
+                    "fix_geometry": "reject",
                     "geometry": {
                         "type": "Polygon",
                         "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
                     },
-                    "fix_geometry": "reject",
                     "properties": None
                 }
             }
@@ -327,15 +327,15 @@ class VectorsTest(ClientTestCase):
                 'type': 'Polygon',
                 'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
             }, {
-                "type": "MultiPolygon",
-                "coordinates": [
+                'type': 'MultiPolygon',
+                'coordinates': [
                     [[[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]],
                     [[[-91, 44], [-92, 43], [-91, 42], [-89, 43], [-91, 44]]],
                     [[[-97, 44], [-96, 42], [-95, 43], [-94, 43], [-95, 44], [-97, 44]]]
                 ]
             }, {
-                "type": "MultiLineString",
-                "coordinates": [
+                'type': 'MultiLineString',
+                'coordinates': [
                     [[-91, 44], [-89, 43], [-91, 42],  [-92, 43]],
                     [[-95, 42], [-93, 42],  [-93, 40], [-95, 41]]
                 ]

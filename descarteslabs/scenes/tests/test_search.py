@@ -2,6 +2,7 @@ import unittest
 import datetime
 
 from descarteslabs.scenes import geocontext, search
+from shapely.geometry import shape
 
 import mock
 from .mock_data import _metadata_search, _metadata_get_bands_by_product
@@ -25,6 +26,22 @@ class TestScenesSearch(unittest.TestCase):
         sc, ctx = search(self.geom, products="landsat:LC08:PRE:TOAR", limit=4)
         self.assertGreater(len(sc), 0)
         self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
+
+        self.assertIsInstance(ctx, geocontext.AOI)
+        self.assertEqual(ctx.__geo_interface__, self.geom)
+        self.assertEqual(ctx.resolution, 15)
+        self.assertEqual(ctx.crs, "EPSG:32615")
+
+        for scene in sc:
+            # allow for changes in publicly available data
+            self.assertAlmostEqual(len(scene.properties.bands), 24, delta=4)
+            self.assertIn("derived:ndvi", scene.properties.bands)
+
+    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
+    @mock.patch("descarteslabs.scenes._search.Metadata.get_bands_by_product", _metadata_get_bands_by_product)
+    def test_search_shapely(self):
+        sc, ctx = search(shape(self.geom), products="landsat:LC08:PRE:TOAR", limit=4)
+        self.assertEqual(len(sc), 2)
 
         self.assertIsInstance(ctx, geocontext.AOI)
         self.assertEqual(ctx.__geo_interface__, self.geom)
