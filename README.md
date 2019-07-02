@@ -10,6 +10,7 @@ Changelog
 
 ## [Unreleased]
 ### Added
+- Scenes API now supports band scaling and output type specification for rastering methods.
 
 ### Changed
 

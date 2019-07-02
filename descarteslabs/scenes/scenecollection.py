@@ -27,7 +27,7 @@ from descarteslabs.client.exceptions import NotFoundError, BadRequestError
 from .collection import Collection
 from .scene import Scene
 from . import _download
-from . import _helpers
+from . import _scaling
 
 
 class SceneCollection(Collection):
@@ -98,6 +98,8 @@ class SceneCollection(Collection):
               raster_info=False,
               resampler="near",
               processing_level=None,
+              scaling=None,
+              data_type=None,
               max_workers=None,
               ):
         """
@@ -170,6 +172,12 @@ class SceneCollection(Collection):
             values are ``toa`` (top of atmosphere) and ``surface``. For products that
             support it, ``surface`` applies Descartes Labs' general surface reflectance
             algorithm to the output.
+        scaling : None, str, list, dict
+            Band scaling specification. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
+        data_type : None, str
+            Output data type. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
         max_workers : int, default None
             Maximum number of threads to use to parallelize individual ndarray
             calls to each Scene.
@@ -245,8 +253,13 @@ class SceneCollection(Collection):
         if mask_alpha and alpha_band_name not in bands:
             pop_alpha = True
             bands.append(alpha_band_name)
-        # Pre-check that all bands and alpha are available in all Scenes, and all have the same dtypes
-        self._common_data_type(bands)
+
+        scaling, data_type = _scaling.multiproduct_scaling_parameters(
+            self._product_band_properties(), bands, scaling, data_type
+        )
+        kwargs['scaling'] = scaling
+        kwargs['data_type'] = data_type
+
         if pop_alpha:
             bands.pop(-1)
 
@@ -309,6 +322,8 @@ class SceneCollection(Collection):
                bands_axis=0,
                resampler="near",
                processing_level=None,
+               scaling=None,
+               data_type=None,
                raster_info=False,
                ):
         """
@@ -366,6 +381,12 @@ class SceneCollection(Collection):
             values are ``toa`` (top of atmosphere) and ``surface``. For products that
             support it, ``surface`` applies Descartes Labs' general surface reflectance
             algorithm to the output.
+        scaling : None, str, list, dict
+            Band scaling specification. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
+        data_type : None, str
+            Output data type. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
 
 
         Returns
@@ -415,20 +436,21 @@ class SceneCollection(Collection):
                     raise ValueError("Alpha must be the last band in order to reduce rasterization errors")
                 drop_alpha = False
 
-        common_data_type = self._common_data_type(bands)
+        scales, data_type = _scaling.multiproduct_scaling_parameters(
+            self._product_band_properties(), bands, scaling, data_type
+        )
 
         raster_params = ctx.raster_params
         full_raster_args = dict(
             inputs=[scene.properties["id"] for scene in self],
             order="gdal",
             bands=bands,
-            scales=None,
-            data_type=common_data_type,
+            scales=scales,
+            data_type=data_type,
             resampler=resampler,
             processing_level=processing_level,
             **raster_params
         )
-
         try:
             arr, info = self._raster_client.ndarray(**full_raster_args)
         except NotFoundError:
@@ -490,6 +512,8 @@ class SceneCollection(Collection):
                  format="tif",
                  resampler="near",
                  processing_level=None,
+                 scaling=None,
+                 data_type=None,
                  max_workers=None,
                  ):
         """
@@ -532,6 +556,12 @@ class SceneCollection(Collection):
             values are ``toa`` (top of atmosphere) and ``surface``. For products that
             support it, ``surface`` applies Descartes Labs' general surface reflectance
             algorithm to the output.
+        scaling : None, str, list, dict
+            Band scaling specification. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
+        data_type : None, str
+            Output data type. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
         max_workers : int, default None
             Maximum number of threads to use to parallelize individual ``download``
             calls to each Scene.
@@ -591,8 +621,9 @@ class SceneCollection(Collection):
             raise ValueError("This SceneCollection is empty")
 
         bands = Scene._bands_to_list(bands)
-        # Pre-check that all bands are available in all Scenes, and all have the same dtypes
-        self._common_data_type(bands)
+        scales, data_type = _scaling.multiproduct_scaling_parameters(
+            self._product_band_properties(), bands, scaling, data_type
+        )
 
         if _download._is_path_like(dest):
             default_pattern = "{scene.properties.id}-{bands}.{ext}"
@@ -634,6 +665,8 @@ class SceneCollection(Collection):
         download_args = dict(
             resampler=resampler,
             processing_level=processing_level,
+            scales=scales,
+            dtype=data_type,
             raster_client=self._raster_client,
         )
         try:
@@ -662,6 +695,8 @@ class SceneCollection(Collection):
                         format="tif",
                         resampler="near",
                         processing_level=None,
+                        scaling=None,
+                        data_type=None,
                         ):
         """
         Download all scenes as a single image file.
@@ -706,6 +741,12 @@ class SceneCollection(Collection):
             values are ``toa`` (top of atmosphere) and ``surface``. For products that
             support it, ``surface`` applies Descartes Labs' general surface reflectance
             algorithm to the output.
+        scaling : None, str, list, dict
+            Band scaling specification. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
+        data_type : None, str
+            Output data type. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
 
         Returns
         -------
@@ -743,18 +784,81 @@ class SceneCollection(Collection):
             raise ValueError("This SceneCollection is empty")
 
         bands = Scene._bands_to_list(bands)
-        common_data_type = self._common_data_type(bands)
+        scales, data_type = _scaling.multiproduct_scaling_parameters(
+            self._product_band_properties(), bands, scaling, data_type
+        )
 
         return _download._download(
             inputs=self.each.properties["id"].combine(),
             bands_list=bands,
             ctx=ctx,
-            dtype=common_data_type,
+            scales=scales,
+            dtype=data_type,
             dest=dest,
             format=format,
             resampler=resampler,
             processing_level=processing_level,
             raster_client=self._raster_client,
+        )
+
+    def scaling_parameters(self, bands, scaling=None, data_type=None):
+        """
+        Computes fully defaulted scaling parameters and output data_type
+        from provided specifications.
+
+        This method is provided as a convenience to the user to help with
+        understanding how ``scaling`` and ``data_type`` parameters passed
+        to other methods on this class (e.g. :meth:`stack` or :meth:`mosaic`)
+        will be interpreted. It would not usually be used in a normal
+        workflow.
+
+        A scene collection may contain scenes from more than one product,
+        introducing the possibility that the band properties for a band
+        of a given name may differ from product to product. This method
+        works in a similar fashion to the
+        :meth:`Scene.scaling_parameters <descarteslabs.scenes.scene.Scene.scaling_parameters>`
+        method, but it additionally ensures that the resulting scale
+        elements are compatible across the multiple products. If there
+        is an incompatibility, an appropriate ValueError will be raised.
+
+        Parameters
+        ----------
+        bands : list(str)
+            List of bands to be scaled.
+        scaling : None or str or list or dict
+            Band scaling specification. See
+            :meth:`Scene.scaling_parameters <descarteslabs.scenes.scene.Scene.scaling_parameters>`
+            for a full description of this parameter.
+        data_type : None or str
+            Result data type desired, as a standard data type string (e.g.
+            ``"Byte"``, ``"Uint16"``, or ``"Float64"``). If not specified,
+            will be deduced from the ``scaling`` specification. See
+            :meth:`Scene.scaling_parameters <descarteslabs.scenes.scene.Scene.scaling_parameters>`
+            for a full description of this parameter.
+
+        Returns
+        -------
+        scales : list(tuple)
+            The fully specified scaling parameter, compatible with the
+            :class:`~descarteslabs.client.services.raster.Raster` API and the
+            output data type.
+        data_type : str
+            The result data type as a standard GDAL type string.
+
+        Raises
+        ------
+        ValueError
+            If any invalid or incompatible value is passed to any of the
+            three parameters.
+
+        See Also
+        --------
+        :doc:`Scenes Guide </guides/scenes>` : This contains many examples of the use of
+        the ``scaling`` and ``data_type`` parameters.
+        """
+        bands = Scene._bands_to_list(bands)
+        return _scaling.multiproduct_scaling_parameters(
+            self._product_band_properties(), bands, scaling, data_type
         )
 
     def __repr__(self):
@@ -778,24 +882,13 @@ class SceneCollection(Collection):
 
         return "\n".join(parts)
 
-    def _common_data_type(self, bands):
-        data_types = [scene._common_data_type_of_bands(bands) for scene in self]
-        common_data_type = None
-        for i, data_type in enumerate(data_types):
-            if common_data_type is None:
-                common_data_type = data_type
-            else:
-                merged_data_type = _helpers.common_data_type(common_data_type, data_type)
-                if merged_data_type:
-                    common_data_type = merged_data_type
-                else:
-                    raise ValueError(
-                        "Bands must all have compatible dtypes in every Scene. "
-                        "The requested bands in Scene {} have common dtype '{}', "
-                        "but all prior Scenes had common dtype '{}'"
-                        .format(i, data_type, common_data_type)
-                    )
-        return common_data_type
-
     def _collection_has_alpha(self, alpha_band_name):
         return all(scene.has_alpha(alpha_band_name) for scene in self)
+
+    def _product_band_properties(self):
+        result = {}
+        for scene in self:
+            product = scene.properties["product"]
+            if product not in result:
+                result[product] = scene.properties["bands"]
+        return result

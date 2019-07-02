@@ -2,6 +2,7 @@ import unittest
 import mock
 import os.path
 import shapely.geometry
+import numpy as np
 
 from descarteslabs.client.addons import ThirdParty
 from descarteslabs.scenes import Scene, SceneCollection, geocontext
@@ -11,6 +12,99 @@ from .mock_data import _metadata_get, _metadata_get_bands, _raster_ndarray
 
 
 class TestSceneCollection(unittest.TestCase):
+
+    MOCK_RGBA_PROPERTIES = {
+        "product": "mock_product",
+        "id": "mock_id",
+        "bands": {
+            "red": {
+                "type": "spectral",
+                "dtype": "UInt16",
+                "data_range": [0, 10000],
+                "default_range": [0, 4000],
+                "physical_range": [0., 1.]
+            },
+            "green": {
+                "type": "spectral",
+                "dtype": "UInt16",
+                "data_range": [0, 10000],
+                "default_range": [0, 4000],
+                "physical_range": [0., 1.]
+            },
+            "blue": {
+                "type": "spectral",
+                "dtype": "UInt16",
+                "data_range": [0, 10000],
+                "default_range": [0, 4000],
+                "physical_range": [0., 1.]
+            },
+            "alpha": {
+                "type": "mask",
+                "dtype": "UInt16",
+                "data_range": [0, 1],
+            }
+        }
+    }
+
+    MOCK_RGBA_PROPERTIES2 = {
+        "product": "mock_product2",
+        "id": "mock_id2",
+        "bands": {
+            "red": {
+                "type": "spectral",
+                "dtype": "UInt16",
+                "data_range": [0, 10000],
+                "default_range": [0, 4000],
+                "physical_range": [0., 1.]
+            },
+            "green": {
+                "type": "spectral",
+                "dtype": "UInt16",
+                "data_range": [0, 10000],
+                "default_range": [0, 4000],
+                "physical_range": [0., 1.]
+            },
+            "blue": {
+                "type": "spectral",
+                "dtype": "UInt16",
+                "data_range": [0, 10000],
+                "default_range": [0, 4000],
+                "physical_range": [0., 1.]
+            },
+            "alpha": {
+                "type": "mask",
+                "dtype": "UInt16",
+                "data_range": [0, 1],
+            }
+        }
+    }
+
+    MOCK_RGBA_PROPERTIES3 = {
+        "product": "mock_product3",
+        "id": "mock_id2",
+        "bands": {
+            "red": {
+                "type": "spectral",
+                "dtype": "Int16",
+                "data_range": [0, 10000],
+                "default_range": [0, 4000],
+                "physical_range": [0., 1.]
+            },
+            "green": {
+                "type": "spectral",
+                "dtype": "UInt16",
+                "data_range": [0, 10000],
+                "default_range": [0, 4000],
+                "physical_range": [-1., 1.]
+            },
+            "alpha": {
+                "type": "mask",
+                "dtype": "UInt16",
+                "data_range": [0, 1],
+            }
+        }
+    }
+
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
@@ -167,7 +261,7 @@ class TestSceneCollection(unittest.TestCase):
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
-    def test_fails_with_incompatible_dtypes(self):
+    def test_incompatible_dtypes(self):
         scenes = ("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1", "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
         scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
 
@@ -176,10 +270,10 @@ class TestSceneCollection(unittest.TestCase):
 
         scenes = SceneCollection(scenes)
         scenes[0].properties.bands.nir.dtype = "Int16"
-        with self.assertRaises(ValueError):
-            mosaic, meta = scenes.mosaic("nir", ctx)
-        with self.assertRaises(ValueError):
-            stack, meta = scenes.stack("nir", ctx)
+        mosaic = scenes.mosaic("nir", ctx)
+        self.assertEqual(mosaic.dtype.type, np.int32)
+        stack, meta = scenes.stack("nir", ctx)
+        self.assertEqual(stack.dtype.type, np.int32)
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     def test_filter_coverage(self):
@@ -193,6 +287,73 @@ class TestSceneCollection(unittest.TestCase):
 
         self.assertEqual(len(scenes.filter_coverage(ctx)), 1)
 
+    def test_scaling_parameters_single(self):
+        sc = SceneCollection([MockScene({}, self.MOCK_RGBA_PROPERTIES)])
+        scales, data_type = sc.scaling_parameters("red green blue alpha")
+        self.assertIsNone(scales)
+        self.assertEqual(data_type, "UInt16")
+
+    def test_scaling_parameters_none(self):
+        sc = SceneCollection(
+            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
+             MockScene({}, self.MOCK_RGBA_PROPERTIES2)]
+        )
+        scales, data_type = sc.scaling_parameters("red green blue alpha")
+        self.assertIsNone(scales)
+        self.assertEqual(data_type, "UInt16")
+
+    def test_scaling_parameters_display(self):
+        sc = SceneCollection(
+            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
+             MockScene({}, self.MOCK_RGBA_PROPERTIES2)]
+        )
+        scales, data_type = sc.scaling_parameters("red green blue alpha", "display")
+        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None])
+        self.assertEqual(data_type, "Byte")
+
+    def test_scaling_parameters_missing_band(self):
+        sc = SceneCollection(
+            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
+             MockScene({}, self.MOCK_RGBA_PROPERTIES3)]
+        )
+        with self.assertRaisesRegexp(ValueError, "not available"):
+            scales, data_type = sc.scaling_parameters("red green blue alpha")
+
+    def test_scaling_parameters_none_data_type(self):
+        sc = SceneCollection(
+            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
+             MockScene({}, self.MOCK_RGBA_PROPERTIES3)]
+        )
+        scales, data_type = sc.scaling_parameters("red alpha")
+        self.assertIsNone(scales)
+        self.assertEqual(data_type, "Int32")
+
+    def test_scaling_parameters_display_range(self):
+        sc = SceneCollection(
+            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
+             MockScene({}, self.MOCK_RGBA_PROPERTIES3)]
+        )
+        scales, data_type = sc.scaling_parameters("red alpha", "display")
+        self.assertEquals(scales, [(0, 4000, 0, 255), None])
+        self.assertEqual(data_type, "Byte")
+
+    def test_scaling_parameters_raw_range(self):
+        sc = SceneCollection(
+            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
+             MockScene({}, self.MOCK_RGBA_PROPERTIES3)]
+        )
+        scales, data_type = sc.scaling_parameters("red alpha", "raw")
+        self.assertEquals(scales, [None, None])
+        self.assertEqual(data_type, "Int32")
+
+    def test_scaling_parameters_physical_incompatible(self):
+        sc = SceneCollection(
+            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
+             MockScene({}, self.MOCK_RGBA_PROPERTIES3)]
+        )
+        with self.assertRaisesRegexp(ValueError, "incompatible"):
+            scales, data_type = sc.scaling_parameters("green alpha", "physical")
+
 
 @mock.patch.object(MockScene, "download")
 class TestSceneCollectionDownload(unittest.TestCase):
@@ -202,7 +363,8 @@ class TestSceneCollectionDownload(unittest.TestCase):
             "bands": {
                 "nir": {"dtype": "UInt16"},
                 "yellow": {"dtype": "UInt16"},
-            }
+            },
+            "product": "foo"
         } for i in range(3)]
 
         self.scenes = SceneCollection([MockScene({}, p) for p in properties])
@@ -226,6 +388,8 @@ class TestSceneCollectionDownload(unittest.TestCase):
                 dest=path,
                 resampler="near",
                 processing_level=None,
+                scales=None,
+                dtype="UInt16",
                 raster_client=self.scenes._raster_client
             )
 
@@ -246,6 +410,8 @@ class TestSceneCollectionDownload(unittest.TestCase):
                 dest=path,
                 resampler="near",
                 processing_level=None,
+                scales=None,
+                dtype="UInt16",
                 raster_client=self.scenes._raster_client
             )
 

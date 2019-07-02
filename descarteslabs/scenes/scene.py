@@ -59,6 +59,7 @@ from descarteslabs.common.dotdict import DotDict
 from . import geocontext
 from . import _download
 from . import _helpers
+from . import _scaling
 
 
 def _strptime_helper(s):
@@ -350,6 +351,8 @@ class Scene(object):
                 raster_info=False,
                 resampler="near",
                 processing_level=None,
+                scaling=None,
+                data_type=None,
                 raster_client=None
                 ):
         """
@@ -411,6 +414,12 @@ class Scene(object):
             values are ``toa`` (top of atmosphere) and ``surface``. For products that
             support it, ``surface`` applies Descartes Labs' general surface reflectance
             algorithm to the output.
+        scaling : None, str, list, dict
+            Band scaling specification. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
+        data_type : None, str
+            Output data type. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
         raster_client : Raster, optional
             Unneeded in general use; lets you use a specific client instance
             with non-default auth and parameters.
@@ -455,9 +464,9 @@ class Scene(object):
             raise ValueError("Invalid bands_axis; axis {} would not exist in a 3D array".format(bands_axis))
 
         bands = self._bands_to_list(bands)
-        common_data_type = self._common_data_type_of_bands(bands)
-
         self_bands = self.properties["bands"]
+
+        scales, dtype = _scaling.scaling_parameters(self_bands, bands, scaling, data_type)
 
         alpha_band_name = "alpha"
         if isinstance(mask_alpha, six.string_types):
@@ -488,8 +497,8 @@ class Scene(object):
             inputs=self.properties["id"],
             order="gdal",
             bands=bands,
-            scales=None,
-            data_type=common_data_type,
+            scales=scales,
+            data_type=dtype,
             resampler=resampler,
             processing_level=processing_level,
             **raster_params
@@ -550,6 +559,8 @@ class Scene(object):
                  format="tif",
                  resampler="near",
                  processing_level=None,
+                 scaling=None,
+                 data_type=None,
                  raster_client=None,
                  ):
         """
@@ -594,6 +605,12 @@ class Scene(object):
             values are ``toa`` (top of atmosphere) and ``surface``. For products that
             support it, ``surface`` applies Descartes Labs' general surface reflectance
             algorithm to the output.
+        scaling : None, str, list, dict
+            Band scaling specification. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
+        data_type : None, str
+            Output data type. Please see :meth:`scaling_parameters` for a full
+            description of this parameter.
         raster_client : Raster, optional
             Unneeded in general use; lets you use a specific client instance
             with non-default auth and parameters.
@@ -635,19 +652,181 @@ class Scene(object):
             If the Descartes Labs platform is given invalid parameters
         """
         bands = self._bands_to_list(bands)
-        common_data_type = self._common_data_type_of_bands(bands)
+        scales, dtype = _scaling.scaling_parameters(self.properties["bands"], bands, scaling, data_type)
 
         return _download._download(
             inputs=[self.properties["id"]],
             bands_list=bands,
             ctx=ctx,
-            dtype=common_data_type,
+            dtype=dtype,
             dest=dest,
             format=format,
             resampler=resampler,
             processing_level=processing_level,
+            scales=scales,
             raster_client=raster_client,
         )
+
+    def scaling_parameters(self, bands, scaling=None, data_type=None):
+        """
+        Computes fully defaulted scaling parameters and output data_type
+        from provided specifications.
+
+        This method makes accessible the scales and data_type parameters
+        which will be generated and passed to the Raster API by methods
+        such as :meth:`ndarray` and :meth:`download`. It is provided
+        as a convenience to the user to aid in understanding how the
+        ``scaling`` and ``data_type`` parameters will be handled by
+        those methods. It would not usually be used in a normal workflow.
+
+        Parameters
+        ----------
+        bands : list
+            List of bands to be scaled.
+        scaling : None or str or list or dict, default None
+            Supplied scaling specification, see below.
+        data_type : None or str, default None
+            Result data type desired, as a standard data type string (e.g.
+            ``"Byte"``, ``"Uint16"``, or ``"Float64"``). If not specified,
+            will be deduced from the ``scaling`` specification. Typically
+            this is left unset and the appropriate type will be determined
+            automatically.
+
+        Returns
+        -------
+        scales : list(tuple)
+            The fully specified scaling parameter, compatible with the
+            :class:`~descarteslabs.client.services.raster.Raster` API and the
+            output data type.
+        data_type : str
+            The result data type as a standard GDAL type string.
+
+        Raises
+        ------
+        ValueError
+            If any invalid or incompatible value is passed to any of the
+            three parameters.
+
+
+        Scaling is determined on a band-by-band basis, incorporating the user
+        provided specification, the output data_type, and properties for the
+        band, such as the band type, the band data type, and the
+        ``default_range``, ``data_range``, and ``physical_range`` properties.
+        Ultimately the scaling for each band will be resolved to either
+        ``None`` or a tuple of numeric values of length 0, 2, or 4, as
+        accepted by the Raster API. The result is a list (with length equal
+        to the number of bands) of one of these values, or may be a None
+        value which is just a shorthand equivalent for a list of None values.
+
+        A ``None`` indicates that no scaling should be performed.
+
+        A 0-tuple ``()`` indicates that the band data should be automatically
+        scaled from the minimum and maximum values present in the image data
+        to the display range 0-255.
+
+        A 2-tuple ``(input-min, input-max)`` indicates that the band data
+        should be scaled from the specified input range to the display
+        range of 0-255.
+
+        A 4-tuple ``(input-min, input-max, output-min, output-max)``
+        indicates that the band data should be scaled from the input range
+        to the output range.
+
+        In all cases, the scaling will be performed as a multiply and add,
+        and the resulting values are only clipped as necessary to fit in
+        the output data type. As such, if the input and output ranges are
+        the same, it is effectively a no-op equivalent to ``None``.
+
+        The support for scaling parameters in the ``Scenes`` API includes
+        the concept of an automated scaling mode. The four supported modes
+        are as follows.
+
+        ``"raw"``:
+            Equivalent to a ``None``, the data should not be scaled.
+        ``"auto"``:
+            Equivalent to a 0-tuple, the data should be scaled by
+            the Raster service so that the actual range of data in the
+            input is scaled up to the full display range (0-255). It
+            is not possible to determine the bounds of this input range
+            in the Scenes API as the actual band data is not accessible.
+        ``"display"``:
+            The data should be scaled from any specified input bounds,
+            defaulting to the ``default_range`` property for the band,
+            to the output range, defaulting to 0-255.
+        ``"physical"``:
+            The data should be scaled from the input range, defaulting
+            to the ``data_range`` property for the band, to the output
+            range, defaulting to the ``physical_range`` property for
+            the band.
+
+        The mode may be explicitly specified, or it may be determined
+        implicitly from other characteristics such as the length
+        and contents of the tuples for each band, or from the output
+        data_type if this is explicitly specified (e.g. ``"Byte"``
+        implies display mode, ``"Float64"`` implies physical mode).
+
+        If it is not possible to infer the mode, and a mode is required
+        in order to fully determine the results of this method, an
+        error will be raised. It is also an error to explicitly
+        specify more than one mode, with several exceptions: auto
+        and display mode are compatible, while a raw display mode
+        for a band which is of type "mask" or type "class" does
+        not conflict with any other mode specification.
+
+        Normally the ``data_type`` parameter is not provided by the
+        user, and is instead determined from the mode as follows.
+
+        ``"raw"``:
+            The data type that best matches the data types of all
+            the bands, preserving the precision and range of the
+            original data.
+        ``"auto"`` and ``"display"``:
+            ``"Byte"``
+        ``"physical"``:
+            ``"Float64"``
+
+        The ``scaling`` parameter passed to this method can be any
+        of the following:
+
+        None:
+            No scaling for all bands. Equivalent to ``[None, ...]``.
+        str:
+            Any of the four supported automatic modes as
+            described above.
+        list or Iterable:
+            A list or similar iterable must contain a number of
+            elements equal to the number of bands specified. Each
+            element must either be a None, a 0-, 2-, or 4-tuple, or
+            one of the above four automatic mode strings. The
+            elements of each tuple must either be a numeric value
+            or a string containing a valid numerical string followed
+            by a "%" character. The latter will be interpreted as a
+            percentage of the appropriate range (e.g. ``default_range``,
+            ``data_range``, or ``physical_range``) according to the mode.
+            For example, a tuple of ``("25%", "75%")`` with a
+            ``default_range`` of ``[0, 4000]`` will yield ``(1000, 3000)``.
+        dict or Mapping:
+            A dictionary or similar mapping with keys corresponding to
+            band names and values as accepted as elements for each band
+            as with a list described above. Each band name is used to
+            lookup a value in the mapping. If none is found, and the
+            band is not of type "mask" or "class", then the special
+            key ``"default_"`` is looked up in the mapping if it exists.
+            Otherwise a value of ``None`` will be used for the band.
+            This is strictly a convenience for constructing a list of
+            scale values, one for each band, but can be useful if a
+            single general-purpose mapping is defined for all possible
+            or relevant bands and then reused across many calls to the
+            different methods in the Scenes API which accept a ``scaling``
+            parameter.
+
+        See Also
+        --------
+        :doc:`Scenes Guide </guides/scenes>` : This contains many examples of the use of
+        the ``scaling`` and ``data_type`` parameters.
+        """
+        bands = self._bands_to_list(bands)
+        return _scaling.scaling_parameters(self.properties["bands"], bands, scaling, data_type)
 
     @property
     def __geo_interface__(self):
@@ -712,43 +891,6 @@ class Scene(object):
                 if len(band_lines) > 0:
                     parts += ["  * Bands:"] + band_lines
         return "\n".join(parts)
-
-    def _common_data_type_of_bands(self, bands):
-        "Ensure all requested bands are available, and that they all have compatible dtypes"
-        self_bands = self.properties["bands"]
-        common_data_type = None
-        for b in bands:
-            try:
-                band = self_bands[b]
-            except KeyError:
-                msg = "Band '{}' is not available in the product '{}'".format(b, self.properties["product"])
-                # check if they maybe wanted a derived band but forgot the ``derived:`` prefix
-                as_derived = "derived:" + b
-                if as_derived in self_bands:
-                    msg += ", but '{}' is. Did you mean that?".format(as_derived)
-                six.raise_from(ValueError(msg), None)
-
-            data_type = band.get("dtype")
-            if not data_type:
-                raise ValueError(
-                    "Band '{}' of product '{}' has no 'dtype' field. "
-                    "If you created this product, you can fix the metadata "
-                    "at https://catalog.descarteslabs.com.".format(b, self.properties["product"])
-                )
-
-            if common_data_type is None:
-                common_data_type = data_type
-            else:
-                merged_data_type = _helpers.common_data_type(common_data_type, data_type)
-                if merged_data_type:
-                    common_data_type = merged_data_type
-                else:
-                    raise ValueError(
-                        "Bands must all have compatible dtypes. The band '{}' has dtype '{}', "
-                        "but all bands before had the common dtype '{}'.".format(b, data_type, common_data_type)
-                    )
-
-        return common_data_type
 
     @staticmethod
     def _bands_to_list(bands):

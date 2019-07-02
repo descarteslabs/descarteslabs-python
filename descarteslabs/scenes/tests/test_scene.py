@@ -26,6 +26,40 @@ class MockScene(Scene):
 
 
 class TestScene(unittest.TestCase):
+
+    MOCK_RGBA_PROPERTIES = {
+        "product": "mock_product",
+        "id": "mock_id",
+        "bands": {
+            "red": {
+                "type": "spectral",
+                "dtype": "UInt16",
+                "data_range": [0, 10000],
+                "default_range": [0, 4000],
+                "physical_range": [0., 1.]
+            },
+            "green": {
+                "type": "spectral",
+                "dtype": "UInt16",
+                "data_range": [0, 10000],
+                "default_range": [0, 4000],
+                "physical_range": [0., 1.]
+            },
+            "blue": {
+                "type": "spectral",
+                "dtype": "UInt16",
+                "data_range": [0, 10000],
+                "default_range": [0, 4000],
+                "physical_range": [0., 1.]
+            },
+            "alpha": {
+                "type": "mask",
+                "dtype": "UInt16",
+                "data_range": [0, 1],
+            }
+        }
+    }
+
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
     def test_init(self):
@@ -142,18 +176,12 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
-    def test_different_band_dtypes_fails(self):
+    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    def test_different_band_dtypes(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-        scene.properties.bands = {
-            "red": {
-                "dtype": "UInt16"
-            },
-            "green": {
-                "dtype": "Int16"
-            }
-        }
-        with self.assertRaises(ValueError):
-            scene.ndarray("red green", ctx)
+        scene.properties.bands["green"]["dtype"] = "Int16"
+        arr, info = scene.ndarray("red green", ctx.assign(resolution=600), mask_alpha=False)
+        self.assertEqual(arr.dtype.type, np.int32)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
@@ -307,7 +335,7 @@ class TestScene(unittest.TestCase):
         self.assertEqual(scenes_bands.ndvi, meta_bands["someproduct:ndvi"])
         self.assertEqual(scenes_bands["derived:ndvi"], meta_bands["derived:ndvi"])
 
-    def test_common_data_type_of_bands(self):
+    def test_raw_data_type(self):
         mock_properties = {
             "product": "mock_product",
             "bands": {
@@ -319,29 +347,28 @@ class TestScene(unittest.TestCase):
                 "signed": dict(dtype="Int16"),
                 "future_unknown_type": dict(dtype="FutureInt16"),
                 "alpha": dict(dtype="Byte"),
-                "no_dtype": {},
             }
         }
         s = MockScene({}, mock_properties)
-        self.assertEqual(s._common_data_type_of_bands(["its_a_byte"]), "Byte")
-        self.assertEqual(s._common_data_type_of_bands(["one", "two"]), "UInt16")
-        self.assertEqual(s._common_data_type_of_bands(["its_a_byte", "alpha"]), "Byte")
-        self.assertEqual(s._common_data_type_of_bands(["one", "alpha"]), "UInt16")  # alpha ignored from common datatype
-        self.assertEqual(s._common_data_type_of_bands(["alpha"]), "Byte")
-        self.assertEqual(s._common_data_type_of_bands(["one", "two", "derived:three", "derived:one"]), "UInt16")
-        self.assertEqual(s._common_data_type_of_bands(["one", "its_a_byte"]), "UInt16")
-        self.assertEqual(s._common_data_type_of_bands(["signed", "its_a_byte"]), "Int16")
+        self.assertEqual(s.scaling_parameters(["its_a_byte"], scaling=None)[1], "Byte")
+        self.assertEqual(s.scaling_parameters(["one", "two"], scaling=None)[1], "UInt16")
+        self.assertEqual(s.scaling_parameters(["its_a_byte", "alpha"], scaling=None)[1], "Byte")
+        # alpha ignored from common datatype
+        self.assertEqual(s.scaling_parameters(["one", "alpha"], scaling=None)[1], "UInt16")
+        self.assertEqual(s.scaling_parameters(["alpha"], scaling=None)[1], "Byte")
+        self.assertEqual(
+            s.scaling_parameters(["one", "two", "derived:three", "derived:one"], scaling=None)[1], "UInt16"
+        )
+        self.assertEqual(s.scaling_parameters(["one", "its_a_byte"], scaling=None)[1], "UInt16")
+        self.assertEqual(s.scaling_parameters(["signed", "its_a_byte"], scaling=None)[1], "Int16")
+        self.assertEqual(s.scaling_parameters(["one", "signed"], scaling=None)[1], "Int32")
 
         with self.assertRaisesRegexp(ValueError, "is not available"):
-            s._common_data_type_of_bands(["one", "woohoo"])
-        with self.assertRaisesRegexp(ValueError, "Did you mean"):
-            s._common_data_type_of_bands(["one", "three"])  # should hint that derived:three exists
-        with self.assertRaisesRegexp(ValueError, "has no 'dtype' field"):
-            s._common_data_type_of_bands(["one", "no_dtype"])
-        with self.assertRaisesRegexp(ValueError, "Bands must all have"):
-            s._common_data_type_of_bands(["one", "signed"])
-        with self.assertRaisesRegexp(ValueError, "Bands must all have"):
-            s._common_data_type_of_bands(["its_a_byte", "future_unknown_type"])
+            s.scaling_parameters(["one", "woohoo"], scaling=None)
+        with self.assertRaisesRegexp(ValueError, "did you mean"):
+            s.scaling_parameters(["one", "three"], scaling=None)  # should hint that derived:three exists
+        with self.assertRaisesRegexp(ValueError, "Invalid data type"):
+            s.scaling_parameters(["its_a_byte", "future_unknown_type"], scaling=None)
 
     def test__naive_dateparse(self):
         self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00+00:00"))
@@ -377,6 +404,154 @@ class TestScene(unittest.TestCase):
         ctx = geocontext.AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
         scene.download("nir yellow", ctx)
         mock_geotiff.assert_called_once()
+
+    def test_scaling_parameters_none(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters("red green blue alpha")
+        self.assertIsNone(scales)
+        self.assertEqual(data_type, "UInt16")
+
+    def test_scaling_parameters_dtype(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters("red green blue alpha", None, "UInt32")
+        self.assertIsNone(scales)
+        self.assertEqual(data_type, "UInt32")
+
+    def test_scaling_parameters_raw(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters("red green blue alpha", "raw")
+        self.assertEqual(scales, [None, None, None, None])
+        self.assertEqual(data_type, "UInt16")
+
+    def test_scaling_parameters_display(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters("red green blue alpha", "display")
+        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None])
+        self.assertEqual(data_type, "Byte")
+
+    def test_scaling_parameters_display_uint16(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters("red green blue alpha", "display", "UInt16")
+        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None])
+        self.assertEqual(data_type, "UInt16")
+
+    def test_scaling_parameters_auto(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters("red green blue alpha", "auto")
+        self.assertEqual(scales, [(), (), (), None])
+        self.assertEqual(data_type, "Byte")
+
+    def test_scaling_parameters_physical(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters("red green blue alpha", "physical")
+        self.assertEqual(scales, [(0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), None])
+        self.assertEqual(data_type, "Float64")
+
+    def test_scaling_parameters_physical_int32(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters("red green blue alpha", "physical", "Int32")
+        self.assertEqual(scales, [(0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), None])
+        self.assertEqual(data_type, "Int32")
+
+    def test_scaling_parameters_bad_mode(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        with self.assertRaises(ValueError):
+            scales, data_type = scene.scaling_parameters("red green blue alpha", "mode")
+
+    def test_scaling_parameters_list(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", [(0, 10000), "display", (), None]
+        )
+        self.assertEqual(scales, [(0, 10000, 0, 255), (0, 4000, 0, 255), (), None])
+        self.assertEqual(data_type, "Byte")
+
+    def test_scaling_parameters_list_alpha(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", [(0, 4000), (0, 4000), (0, 4000), "raw"]
+        )
+        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None])
+        self.assertEqual(data_type, "Byte")
+
+    def test_scaling_parameters_list_bad_length(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        with self.assertRaises(ValueError):
+            scales, data_type = scene.scaling_parameters("red green blue alpha", [(0, 10000), "display", ()])
+
+    def test_scaling_parameters_list_bad_mode(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        with self.assertRaises(ValueError):
+            scales, data_type = scene.scaling_parameters("red green blue alpha", [(0, 10000), "mode", (), None])
+
+    def test_scaling_parameters_dict(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", {"red": "display", "green": (0, 10000), "default_": "auto"}
+        )
+        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 10000, 0, 255), (), None])
+        self.assertEqual(data_type, "Byte")
+
+    def test_scaling_parameters_dict_default(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", {"red": (0, 4000, 0, 255), "default_": "raw"}
+        )
+        self.assertEqual(scales, [(0, 4000, 0, 255), None, None, None])
+        self.assertEqual(data_type, "UInt16")
+
+    def test_scaling_parameters_dict_default_none(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", {"red": "display", "green": "display"}
+        )
+        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), None, None])
+        self.assertEqual(data_type, "Byte")
+
+    def test_scaling_parameters_tuple_range(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", [(0, 10000, 0, 255), (0, 4000), (), None]
+        )
+        self.assertEqual(scales, [(0, 10000, 0, 255), (0, 4000, 0, 255), (), None])
+        self.assertEqual(data_type, "Byte")
+
+    def test_scaling_parameters_tuple_range_uint16(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", [(0, 10000, 0, 10000), (0, 4000), (), None]
+        )
+        self.assertEqual(scales, [(0, 10000, 0, 10000), (0, 4000, 0, 65535), (), None])
+        self.assertEqual(data_type, "UInt16")
+
+    def test_scaling_parameters_tuple_range_float(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", [(0, 10000, 0, 1.), (0, 4000), (0, 4000), None]
+        )
+        self.assertEqual(scales, [(0, 10000, 0, 1), (0, 4000, 0, 1), (0, 4000, 0, 1), None])
+        self.assertEqual(data_type, "Float64")
+
+    def test_scaling_parameters_tuple_pct(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", [("0%", "100%", "0%", "100%"), ("2%", "98%", "2%", "98%"), "display", None]
+        )
+        self.assertEqual(scales, [(0, 4000, 0, 255), (80, 3920, 5, 250), (0, 4000, 0, 255), None])
+        self.assertEqual(data_type, "Byte")
+
+    def test_scaling_parameters_tuple_pct_float(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", [("0%", "100%", "0%", "100%"), ("2%", "98%", "2%", "98%"), "physical", None],
+        )
+        self.assertEqual(scales, [(0, 10000, 0, 1), (200, 9800, 0.02, 0.98), (0, 10000, 0, 1), None])
+        self.assertEqual(data_type, "Float64")
+
+    def test_scaling_parameters_bad_data_type(self):
+        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
+        with self.assertRaises(ValueError):
+            scales, data_type = scene.scaling_parameters("red green blue alpha", None, "data_type")
 
 
 class TestSceneRepr(unittest.TestCase):
