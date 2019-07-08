@@ -938,7 +938,7 @@ class FeatureCollection(object):
         >>> filtered_buildings = buildings.filter(geometry=aoi_geometry)  # doctest: +SKIP
         >>> task = filtered_buildings.export("my_export")  # doctest: +SKIP
         >>> if task.is_success: # This waits for the task to complete
-        ...     task.get_file("my_export", "some_local_file.geojson")  # doctest: +SKIP
+        ...     task.get_file("some_local_file.geojson")  # doctest: +SKIP
         """
 
         params = dict(
