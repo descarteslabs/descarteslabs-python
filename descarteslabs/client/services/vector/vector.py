@@ -740,8 +740,13 @@ class Vector(JsonApiService):
 
     def get_upload_result(self, product_id, upload_id, pending=False):
         """
-        Get details about a specific upload job. Included information about
+        Get details about a specific upload job. Included is information about
         processing error streams, which can help debug failed uploads.
+
+        Note that the upload happens in 2 stages: the initial Upload Task which
+        preprocesses the data, and the final Upload Job which does the actual
+        upload.  The information about the final Upload Job can be found in
+        the ``load`` key of the upload result.
 
         :param str product_id: (Required) The ID of the product which to retrieve
             the upload result.
@@ -760,46 +765,72 @@ class Vector(JsonApiService):
 
             ::
 
-                data: A DotDict instance with the following keys:
+                data: A DotDict instance with the following keys.  Not
+                      all keys will available depending on the status
+                      of the upload job.  Specifically, the "load" key will
+                      be available once the "status" is "SUCCESS" and the
+                      "result" key will be available once the "status" is
+                      "SUCCESS" or "FAILURE".  Also be aware that the upload
+                      job is not complete until the "load.state" is "DONE".
 
-                    id:         The ID of the upload task (which is not the upload
-                                ID, but you can use it instead of the upload ID).
+                    id:         The ID of the upload task (which is not the
+                                upload ID, but you can use it instead of
+                                the upload ID).
                     type:       "upload".
                     attributes: A DotDict instance with the following keys:
 
-                        created:           Time that the task was created in
-                                           ISO-8601 UTC.
-                        exception_name:    The type of exception, if there is one,
-                                           "None" otherwise.
-                        failure_type:      "executable_failure" if resource limits
-                                           are reached, or "exception" if an exception
-                                           was thrown, "None" otherwise.
-                        peak_memory_usage: The amount of memory used by the task
-                                           in bytes.
-                        runtime:           The number of CPU seconds used by the task.
-                        status:            "RUNNING", "SUCCESS" or "FAILURE".
-                        labels:            A list of string labels.  The last value is
-                                           the upload ID.
-                        load:              A DotDict instance describing the actual
-                                           result of the load which continuous
-                                           asynchronously after the task itself
-                                           has completed (as indicated by the
-                                           "RUNNING" status):
+                        created:           Time that the task was created
+                                           in ISO-8601 UTC.
+                        exception_name:    The type of exception, if there
+                                           is one, "None" otherwise.
+                        failure_type:      "executable_failure" if resource
+                                           limits are reached, or
+                                           "exception" if an exception was
+                                           thrown, "None" otherwise.
+                        peak_memory_usage: The amount of memory used by the
+                                           task in bytes.
+                        runtime:           The number of CPU seconds used by
+                                           the task.
+                        status:            The status of the initial Upload
+                                           Task.  "PENDING", "RUNNING",
+                                           "SUCCESS" or "FAILURE".
+                        labels:            A list of string labels.  The
+                                           last value is the upload ID.
+                        load:              A DotDict instance describing the
+                                           actual result of the final Upload
+                                           Job which continues
+                                           asynchronously after the initial
+                                           Upload Task has completed.  The
+                                           upload is complete once
+                                           "load.state" is "DONE" or
+                                           "SKIPPED".  This key is only
+                                           available once "status" is
+                                           "SUCCESS":
 
                             errors:      How many errors the load caused.
-                            output_rows: The number of actual rows created during the
-                                         load (which may differ from the number of rows
-                                         given in the upload file).
-                            state:       "PENDING", "RUNNING", or "DONE".
+                            output_rows: The number of actual rows created
+                                         during the load (which may differ
+                                         from the number of rows given in
+                                         the upload file).
+                            state:       The status of the final Upload Job.
+                                         "SKIPPED", "PENDING", "RUNNING", or
+                                         "DONE".
 
-                        result: A DotDict instance describing the result of the Upload
-                                Task (which pre-processes the data before it's loaded):
+                        result:            A DotDict instance describing the
+                                           result of the initial Upload Task
+                                           (which pre-processes the data
+                                           before it's loaded).  This key is
+                                           only available once "status" is
+                                           "SUCCESS" or "FAILURE".
 
-                            errors:         A list of errors, potentially empty.
-                            input_features: The number of valid rows in the upload file.
-                            input_rows:     The number of rows that will be loaded
-                                            (unless there are errors, this should be
-                                            identical to "output_rows" above).
+                            errors:         A list of errors, potentially
+                                            empty.
+                            input_features: The number of valid rows in the
+                                            upload file.
+                            input_rows:     The number of rows that will be
+                                            loaded (unless there are errors,
+                                            this should be identical to
+                                            "output_rows" above).
                             job_id:         The internal job ID.
 
         :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
