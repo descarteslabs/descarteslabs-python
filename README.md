@@ -10,7 +10,14 @@ Changelog
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+## [0.22.0] - 2019-07-09
+### Added
 - Scenes API now supports band scaling and output type specification for rastering methods.
+- Methods in the Metadata, Raster, and Vector service clients that accepted GeoJSON geometries
+  now also accept Shapely geometries.
 
 ### Changed
 
