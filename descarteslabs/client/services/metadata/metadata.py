@@ -855,7 +855,7 @@ class Metadata(Service):
             ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket', 'cloud_fraction',
              'cloud_fraction_0', 'confidence_dlsr', 'cs_code', 'descartes_version', 'file_md5s', 'file_sizes',
              'files', 'fill_fraction', 'geolocation_accuracy', 'geometry', 'geotrans', 'id', 'identifier',
-             'key', 'processed', 'product', 'projcs', 'published', 'raster_size', 'reflectance_scale',
+             'key', 'processed', 'product', 'proj4', 'projcs', 'published', 'raster_size', 'reflectance_scale',
              'roll_angle', 'sat_id', 'solar_azimuth_angle', 'solar_elevation_angle', 'storage_state',
              'sw_version', 'terrain_correction', 'tile_id']
         """

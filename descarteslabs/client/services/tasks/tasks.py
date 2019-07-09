@@ -546,7 +546,7 @@ class Tasks(Service):
         r.raise_for_status()
         result = r.json()
         if 'result' in result:
-            result['result'] = base64.b64decode(result['result'])
+            result['result'] = base64.b64decode(result['result'] or '')
         return DotDict(result)
 
     def get_task_result_batch(self, group_id, task_ids, include=None):
