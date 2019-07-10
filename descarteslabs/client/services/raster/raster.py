@@ -536,9 +536,10 @@ class Raster(Service):
             data = raw.read(file_meta['length'])
 
             if outfile_basename:
-                outfilename = "{}.{}".format(
+                _, ext = os.path.splitext(os.path.basename(fn))
+                outfilename = "{}{}".format(
                     outfile_basename,
-                    ".".join(os.path.basename(fn).split(".")[1:])
+                    ext
                 )
             else:
                 outfilename = fn
