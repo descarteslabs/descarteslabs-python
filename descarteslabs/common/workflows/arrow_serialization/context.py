@@ -30,11 +30,28 @@ def _deserialize_numpy_masked_array(obj):
     return np.ma.MaskedArray(data, mask=mask, fill_value=fill_value, hard_mask=hardmask)
 
 
+def _serialize_numpy_masked_constant(obj):
+    # Workaround for "Changing the dtype of a 0d array is only supported if the itemsize is unchanged" error
+    return None
+
+
+def _deserialize_numpy_masked_constant(obj):
+    return np.ma.masked
+
+
 serialization_context = pa.SerializationContext()
 pa.register_default_serialization_handlers(serialization_context)
+
 serialization_context.register_type(
     np.ma.MaskedArray,
     "numpy.ma.core.MaskedArray",
     custom_serializer=_serialize_numpy_masked_array,
     custom_deserializer=_deserialize_numpy_masked_array,
+)
+
+serialization_context.register_type(
+    np.ma.core.MaskedConstant,
+    "numpy.ma.core.MaskedConstant",
+    custom_serializer=_serialize_numpy_masked_constant,
+    custom_deserializer=_deserialize_numpy_masked_constant,
 )
