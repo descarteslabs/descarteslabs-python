@@ -1,0 +1,23 @@
+syntax="proto3";
+
+package descarteslabs.workflows;
+
+enum ResultType {
+    Unknown = 0;
+    Image = 1;
+    ImageCollection = 2;
+    Feature = 3;
+    FeatureCollection = 4;
+    String = 5;
+    Number = 6;
+    List = 7;
+    Dictionary = 8;
+
+    Int = 9;
+    Float = 10;
+    Str = 11;
+    Tuple = 12;
+    Dict = 13;
+    Datetime = 14;
+    Timedelta = 15;
+}

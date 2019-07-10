@@ -1,0 +1,51 @@
+
+syntax="proto3";
+
+package descarteslabs.workflows;
+
+import "types.proto";
+import "parameters.proto";
+
+
+service WorkflowAPI {
+    rpc CreateWorkflow(CreateWorkflowRequest) returns (Workflow) {}
+    rpc ListWorkflows(ListWorkflowsRequest) returns (stream Workflow) {}
+    rpc GetWorkflow(GetWorkflowRequest) returns (Workflow) {}
+    rpc UpdateWorkflow(UpdateWorkflowRequest) returns (Workflow) {}
+}
+
+
+message Workflow {
+    string id = 1;
+    int64 created_timestamp = 2;
+    int64 updated_timestamp = 3;
+    string name = 7;
+    string description = 8;
+    ResultType type = 9;
+    string channel = 10;
+    string serialized_proxy_object = 16;
+    map<string, Parameter> parameters_spec = 17;
+
+    string serialized_graft = 21;
+    string serialized_typespec = 22;
+
+    string user = 23;
+    string org = 24;
+}
+
+message CreateWorkflowRequest {
+    Workflow workflow = 1;
+}
+
+message GetWorkflowRequest {
+    string id = 1;
+}
+
+message UpdateWorkflowRequest {
+    Workflow workflow = 1;
+}
+
+message ListWorkflowsRequest {
+    string start_datetime = 1;
+    string end_datetime = 2;
+}

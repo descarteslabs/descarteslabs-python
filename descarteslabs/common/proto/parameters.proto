@@ -1,0 +1,9 @@
+syntax="proto3";
+
+package descarteslabs.workflows;
+
+message Parameter {
+    string type = 1;
+    string description = 2;
+    string name = 3;
+}

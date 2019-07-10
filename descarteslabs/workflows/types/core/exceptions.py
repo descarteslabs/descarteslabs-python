@@ -1,0 +1,2 @@
+class ProxyTypeError(TypeError):
+    pass
