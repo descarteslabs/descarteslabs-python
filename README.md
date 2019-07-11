@@ -10,7 +10,7 @@ Changelog
 
 ## [Unreleased]
 ### Added
-- Alpha Workflows API client has been added. Access to the Workflows backend is restricted; contact [support](mailto:support@descarteslabs.com) for more information.
+- Alpha Workflows API client has been added. Access to the Workflows backend is restricted; contact [support](mailto:support@descarteslabs.com) for more information. Workflows support for Python 3 added in channel v0-5.
 
 ### Changed
 
