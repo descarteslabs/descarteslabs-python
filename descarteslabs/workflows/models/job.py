@@ -383,14 +383,14 @@ def _draw_progress_bar(finished, total, stage, status, width=6):
     else:
         bar = "#" * int(width * percent)
 
-    sys.stdout.write(
-        "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage:<9} | Status: {status:<7}".format(
-            bar=bar,
-            width=width,
-            finished=finished,
-            total=total,
-            stage=stage.replace("STAGE_", ""),
-            status=status.replace("STATUS_", ""),
-        )
+    output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage} | Status: {status}".format(
+        bar=bar,
+        width=width,
+        finished=finished,
+        total=total,
+        stage=stage.replace("STAGE_", ""),
+        status=status.replace("STATUS_", ""),
     )
+
+    sys.stdout.write("{:<79}".format(output))
     sys.stdout.flush()
