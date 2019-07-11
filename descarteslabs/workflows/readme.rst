@@ -7,10 +7,12 @@
 
 .. _workflows_api_reference:
 
-Workflows API
+Workflows
 -------------
 
 The tables below list the types and functions available through the Workflows API. For information on how these objects work together, checkout out the :ref:`Workflows Guide <workflows_guide>`.
+
+.. include:: /descarteslabs/workflows/docs/request.rst
 
 :workflow_api_nontoc_heading:`Geospatial`
 
@@ -142,3 +144,5 @@ The tables below list the types and functions available through the Workflows AP
   docs/exceptions
   docs/client
   docs/interactive
+  docs/request
+  /descarteslabs/common/retry/readme
