@@ -148,7 +148,7 @@ class Struct(GenericProxytype):
         if self._type_params is None:
             raise TypeError(
                 "Cannot instantiate a generic {}; the item types must be specified "
-                "(like Struct[{{'a': Str, 'b': Int}}])".format(type(self).__name__)
+                "(like Struct[{}])".format(type(self).__name__, "{'a': Str, 'b': Int}")
             )
         promoted = self._promote_kwargs(
             kwargs, optional=self._optional, read_only=self._read_only
@@ -193,6 +193,7 @@ class Struct(GenericProxytype):
         missing_args = (
             six.viewkeys(type_params) - six.viewkeys(kwargs) - optional - read_only
         )
+
         if len(missing_args) > 0:
             raise ProxyTypeError(
                 "Missing required keyword arguments to {}: {}".format(

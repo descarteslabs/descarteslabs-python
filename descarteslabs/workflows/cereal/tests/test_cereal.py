@@ -20,8 +20,8 @@ from ...types import (
 
 
 def test_deserialize_unknown():
-    with pytest.raises(ValueError, match="No known type 'Foo'"):
-        deserialize_typespec("Foo")
+    with pytest.raises(ValueError, match="No known type 'DoesNotExist'"):
+        deserialize_typespec("DoesNotExist")
 
 
 def test_deserialize_bad_type():

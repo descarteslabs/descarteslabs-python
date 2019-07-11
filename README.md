@@ -10,6 +10,7 @@ Changelog
 
 ## [Unreleased]
 ### Added
+- Alpha Workflows API client has been added. Access to the Workflows backend is restricted; contact [support](mailto:support@descarteslabs.com) for more information.
 
 ### Changed
 
@@ -123,7 +124,7 @@ This method should generally be avoided in favor of `Metadata.features` (or `Met
 - `Storage` class now has an `exists()` method that checks whether an object exists in storage at the location of a given `key` and returns a boolean.
 - `Scenes.search` allows `limit=None`
 - `FeatureCollection.delete_features` added to support deleting `Feature`s that match a `filter`
-- `FeatureCollection.delete_features` and `FeatureCollection.wait_for_copy` now use `AsyncJob` to poll for asynchronous job completion. 
+- `FeatureCollection.delete_features` and `FeatureCollection.wait_for_copy` now use `AsyncJob` to poll for asynchronous job completion.
 - `Vector.delete_features_from_query` and `Vector.get_delete_features_status` added to support new `FeatureCollection` and `AsyncJob` methods.
 
 ### Changed

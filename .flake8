@@ -1,3 +1,4 @@
 [flake8]
 max-line-length = 120
 extend-ignore = E203
+exclude = descarteslabs/third_party/, **/*_pb2*.py

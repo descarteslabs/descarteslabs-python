@@ -82,6 +82,11 @@ def do_setup():
         "geojson>=2.4.1",
         "shapely>=1.6.3,<2",
         "affine>=2.2.1",
+        "pyarrow==0.13.0",
+        "folium",
+        "boltons>=19.1.0,<20",
+        "grpcio>=1.16.1,<2",
+        "protobuf==3.8.0,<4",
     ]
 
     # Python < 2.7.9 needs requests[security] to avoid SSL issues

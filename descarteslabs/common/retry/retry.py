@@ -230,7 +230,7 @@ def _retry(
         # Raise RetryError if deadline exceeded
         if (
             deadline_datetime is not None
-            and deadline_datetime < datetime.datetime.utcnow()
+            and deadline_datetime <= datetime.datetime.utcnow()
         ):
             six.raise_from(
                 RetryError(

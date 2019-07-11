@@ -367,7 +367,7 @@ class GenericProxytype(Proxytype):
                 "{{{}}}".format(
                     ", ".join(
                         "{!r}: {}".format(k, param_cls.__name__)
-                        for k, param_cls in six.iteritems(type_param)
+                        for k, param_cls in sorted(six.iteritems(type_param))
                     )
                 )
                 if isinstance(type_param, dict)
