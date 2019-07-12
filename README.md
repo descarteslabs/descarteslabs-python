@@ -10,15 +10,19 @@ Changelog
 
 ## [Unreleased]
 ### Added
-- Alpha Workflows API client has been added. Access to the Workflows backend is restricted; contact [support](mailto:support@descarteslabs.com) for more information. Workflows support for Python 3 added in channel v0-5.
+### Changed
+
+## [0.23.0] - 2019-07-12
+### Added
+- Alpha Workflows API client has been added. Access to the Workflows backend is restricted; contact [support](https://descarteslabs.atlassian.net/servicedesk/customer/portals) for more information.
+- Workflows support for Python 3 added in channel v0-5.
 
 ### Changed
 
 ## [0.22.0] - 2019-07-09
 ### Added
 - Scenes API now supports band scaling and output type specification for rastering methods.
-- Methods in the Metadata, Raster, and Vector service clients that accepted GeoJSON geometries
-  now also accept Shapely geometries.
+- Methods in the Metadata, Raster, and Vector service clients that accepted GeoJSON geometries now also accept Shapely geometries.
 
 ### Changed
 
@@ -427,47 +431,3 @@ metadata.features for iterating over large search results
 ## [0.1.0] - 2017-03-24
 ### Added
 - Initial release of client library
-
-[Unreleased]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.3...HEAD
-[0.17.3]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.2...v0.17.3
-[0.17.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.1...v0.17.2
-[0.17.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.17.0...v0.17.1
-[0.17.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.16.0...v0.17.0
-[0.16.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.15.0...v0.16.0
-[0.15.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.14.1...v0.15.0
-[0.14.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.14.0...v0.14.1
-[0.14.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.2...v0.14.0
-[0.13.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.1...v0.13.2
-[0.13.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.13.0...v0.13.1
-[0.13.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.12.0...v0.13.0
-[0.12.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.2...v0.12.0
-[0.11.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.21...v0.11.2
-[0.11.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.11.0...v0.11.1
-[0.11.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.1...v0.11.0
-[0.10.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.10.0...v0.10.1
-[0.10.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.9.1...v0.10.0
-[0.9.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.9.0...v0.9.1
-[0.9.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.8.1...v0.9.0
-[0.8.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.8.0...v0.8.1
-[0.8.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.7.0...v0.8.0
-[0.7.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.2...v0.7.0
-[0.6.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.1...v0.6.2
-[0.6.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.6.0...v0.6.1
-[0.6.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.7...v0.5.0
-[0.4.7]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.6...v0.4.7
-[0.4.6]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.5...v0.4.6
-[0.4.5]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.4...v0.4.5
-[0.4.4]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.3...v0.4.4
-[0.4.3]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.2...v0.4.3
-[0.4.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.1...v0.4.2
-[0.4.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.4.0...v0.4.1
-[0.4.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.3.3...v0.4.0
-[0.3.3]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.3.2...v0.3.3
-[0.3.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.2.2...v0.3.0
-[0.2.2]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.2.1...v0.2.2
-[0.2.1]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/descarteslabs/descarteslabs-python/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/descarteslabs/descarteslabs-python/releases/tag/v0.1.0
