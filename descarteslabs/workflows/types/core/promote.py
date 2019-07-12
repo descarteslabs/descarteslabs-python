@@ -1,11 +1,17 @@
 import inspect
-import types
 import sys
+import types
+import warnings
 
 import six
-import boltons.funcutils
 
 from .exceptions import ProxyTypeError
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+    import boltons.funcutils
+
 
 try:
     # only after py3.4
