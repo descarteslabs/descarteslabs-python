@@ -73,7 +73,6 @@ class TestJob(object):
         job = Job.build(obj, parameters, channel="foo", client=client)
         message = job._message
 
-        assert message.serialized_proxy_object == ""
         assert message.workflow_id == ""
         assert message.channel == "foo"
 

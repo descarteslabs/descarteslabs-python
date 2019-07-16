@@ -71,7 +71,6 @@ message Job {
     string channel = 8;
 
     string parameters = 10;
-    string serialized_proxy_object = 16;
     ResultType type = 17;
     string workflow_id = 18;
 
@@ -86,7 +85,6 @@ message Job {
 }
 
 message CreateJobRequest {
-    string serialized_proxy_object = 1;
     string parameters = 2;
     string workflow_id = 3;
     ResultType type = 4;

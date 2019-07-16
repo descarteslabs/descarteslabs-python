@@ -4,7 +4,6 @@ syntax="proto3";
 package descarteslabs.workflows;
 
 import "types.proto";
-import "parameters.proto";
 
 
 service WorkflowAPI {
@@ -23,8 +22,6 @@ message Workflow {
     string description = 8;
     ResultType type = 9;
     string channel = 10;
-    string serialized_proxy_object = 16;
-    map<string, Parameter> parameters_spec = 17;
 
     string serialized_graft = 21;
     string serialized_typespec = 22;
