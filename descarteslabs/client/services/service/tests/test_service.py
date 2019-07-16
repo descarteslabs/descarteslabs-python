@@ -19,6 +19,7 @@ import mock
 
 from descarteslabs.client.services.service import JsonApiService, Service
 from descarteslabs.client.services.service.service import WrappedSession, requests
+from descarteslabs.common.http.authorization import add_bearer
 
 FAKE_URL = "http://localhost"
 FAKE_TOKEN = "foo.bar.sig"
@@ -27,7 +28,7 @@ FAKE_TOKEN = "foo.bar.sig"
 class TestService(unittest.TestCase):
     def test_session_token(self):
         service = Service("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
-        self.assertEqual(service.session.headers.get("Authorization"), FAKE_TOKEN)
+        self.assertEqual(service.session.headers.get("Authorization"), add_bearer(FAKE_TOKEN))
 
     def test_client_session_header(self):
         service = Service("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
@@ -37,7 +38,7 @@ class TestService(unittest.TestCase):
 class TestJsonApiService(unittest.TestCase):
     def test_session_token(self):
         service = JsonApiService("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
-        self.assertEqual(service.session.headers.get("Authorization"), FAKE_TOKEN)
+        self.assertEqual(service.session.headers.get("Authorization"), add_bearer(FAKE_TOKEN))
 
     def test_client_session_header(self):
         service = JsonApiService("foo", auth=mock.MagicMock(token=FAKE_TOKEN))

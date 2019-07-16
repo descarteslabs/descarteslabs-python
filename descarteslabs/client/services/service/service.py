@@ -35,6 +35,7 @@ from descarteslabs.client.exceptions import (
     ConflictError,
 )
 from descarteslabs.common.threading.local import ThreadLocalWrapper
+from descarteslabs.common.http.authorization import add_bearer
 
 
 class WrappedSession(requests.Session):
@@ -138,8 +139,9 @@ class Service(object):
     @property
     def session(self):
         session = self._session.get()
-        if session.headers.get("Authorization") != self.token:
-            session.headers["Authorization"] = self.token
+        auth = add_bearer(self.token)
+        if session.headers.get("Authorization") != auth:
+            session.headers["Authorization"] = auth
 
         return session
 
