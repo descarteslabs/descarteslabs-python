@@ -866,16 +866,16 @@ class Catalog(Service):
         name,
         srcband=None,
         dtype=None,
-        nbits=None,
         data_range=None,
         type=None,
         **kwargs
     ):
         for k, v in locals().items():
-            if k in ["name", "data_range", "dtype", "nbits", "srcband", "type"]:
+            if k in ["name", "data_range", "dtype", "srcband", "type"]:
                 if v is None:
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
+        check_deprecated_kwargs(kwargs, {"nbits": None})
         kwargs["id"] = name
         r = self.session.post("/core/products/{}/bands".format(product_id), json=kwargs)
         return r.json()
@@ -887,7 +887,6 @@ class Catalog(Service):
         add_namespace=False,
         srcband=None,
         dtype=None,
-        nbits=None,
         data_range=None,
         type=None,
         **kwargs
@@ -902,7 +901,6 @@ class Catalog(Service):
         :param int srcfile: If the product was processed into multiple files,
                             which one is this in. Defaults to 0 (first file).
         :param str dtype: (Required) The data type used to store this band e.g Byte or Uint16 or Float32.
-        :param int nbits: (Required) The number of bits of the dtype used to store this band.
         :param list(int) data_range: (Required) A list specifying the min and max values for the data in this band.
         :param str type: (Required) The data interpretation of the band. One of ['spectral', 'derived', 'mask', 'class']
 
@@ -964,14 +962,14 @@ class Catalog(Service):
         """
 
         for k, v in locals().items():
-            if k in ["name", "data_range", "dtype", "nbits", "srcband", "type"]:
+            if k in ["name", "data_range", "dtype", "srcband", "type"]:
                 if v is None:
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
         if add_namespace:
             check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
-        check_deprecated_kwargs(kwargs, {"id": "name"})
+        check_deprecated_kwargs(kwargs, {"id": "name", "nbits": None})
 
         r = self.session.post("/products/{}/bands".format(product_id), json=kwargs)
         return r.json()
@@ -982,7 +980,6 @@ class Catalog(Service):
         name,
         srcband=None,
         dtype=None,
-        nbits=None,
         data_range=None,
         add_namespace=False,
         type=None,
@@ -1012,10 +1009,11 @@ class Catalog(Service):
         """
 
         for k, v in locals().items():
-            if k in ["data_range", "dtype", "nbits", "srcband", "type"]:
+            if k in ["data_range", "dtype", "srcband", "type"]:
                 if v is None:
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
+        check_deprecated_kwargs(kwargs, {"nbits": None})
         if add_namespace:
             check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
