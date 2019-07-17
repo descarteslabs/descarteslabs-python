@@ -55,10 +55,10 @@ from descarteslabs.client.services.raster import Raster
 from descarteslabs.client.services.metadata import Metadata
 from descarteslabs.client.exceptions import NotFoundError, BadRequestError
 from descarteslabs.common.dotdict import DotDict
+from descarteslabs.common import shapely_support
 
 from . import geocontext
 from . import _download
-from . import _helpers
 from . import _scaling
 
 
@@ -337,7 +337,7 @@ class Scene(object):
         if isinstance(geom, geocontext.GeoContext):
             shape = geom.geometry
         else:
-            shape = _helpers.geometry_like_to_shapely(geom)
+            shape = shapely_support.geometry_like_to_shapely(geom)
 
         intersection = shape.intersection(self.geometry)
         return intersection.area / shape.area

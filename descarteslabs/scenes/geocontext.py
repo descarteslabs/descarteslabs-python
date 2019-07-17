@@ -48,6 +48,7 @@ from six.moves import reprlib
 
 from descarteslabs.client.addons import mercantile
 from descarteslabs.client.services.raster import Raster
+from descarteslabs.common import shapely_support
 
 from . import _helpers
 
@@ -412,7 +413,7 @@ class AOI(GeoContext):
     def _validate(self):
         # test that bounds are sane
         if self._bounds is not None:
-            _helpers.test_valid_bounds(self._bounds)
+            shapely_support.check_valid_bounds(self._bounds)
 
         # rough check that bounds values actually make sense for bounds_crs
         if self._bounds_crs is not None and self._bounds is not None:
@@ -507,7 +508,7 @@ class AOI(GeoContext):
                 ):
         # we use "unchanged" as a sentinel value, because None is a valid thing to set attributes to.
         if geometry is not None and geometry != "unchanged":
-            geometry = _helpers.geometry_like_to_shapely(geometry)
+            geometry = shapely_support.geometry_like_to_shapely(geometry)
 
         if bounds is not None and bounds != "unchanged":
             if bounds == "update":
