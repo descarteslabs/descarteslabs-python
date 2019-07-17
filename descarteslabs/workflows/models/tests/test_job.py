@@ -8,7 +8,7 @@ import responses
 
 from descarteslabs.workflows.client import Client
 
-from descarteslabs.common.proto import job_pb2, types_pb2
+from descarteslabs.common.proto import errors_pb2, job_pb2, types_pb2
 from descarteslabs.common.workflows.arrow_serialization import serialization_context
 from descarteslabs.common.graft import client as graft_client
 
@@ -210,7 +210,7 @@ class TestJob(object):
         assert job.done is True
 
         job._message.status = job_pb2.STATUS_FAILURE
-        job._message.error.code = job_pb2.ERROR_INVALID
+        job._message.error.code = errors_pb2.ERROR_INVALID
         job._message.error.message = "test"
 
         assert job.status == "STATUS_FAILURE"
@@ -256,7 +256,7 @@ class TestJob(object):
             id=id_,
             status=status,
             stage=job_pb2.STAGE_DONE,
-            error=job_pb2.JobError(code=job_pb2.ERROR_TERMINATED),
+            error=job_pb2.JobError(code=errors_pb2.ERROR_TERMINATED),
         )
 
         with pytest.raises(Exception):
@@ -283,7 +283,7 @@ class TestJob(object):
         message = job_pb2.Job(
             id="foo",
             status=job_pb2.STATUS_FAILURE,
-            error=job_pb2.JobError(code=job_pb2.ERROR_INVALID),
+            error=job_pb2.JobError(code=errors_pb2.ERROR_INVALID),
         )
 
         job = Job(message)
@@ -296,7 +296,7 @@ class TestJob(object):
             job_pb2.Job(
                 id="foo",
                 status=job_pb2.STATUS_SUCCESS,
-                error=job_pb2.JobError(code=job_pb2.ERROR_NONE),
+                error=job_pb2.JobError(code=errors_pb2.ERROR_NONE),
             )
         )
 

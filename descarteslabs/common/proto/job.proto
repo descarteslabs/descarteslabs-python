@@ -4,6 +4,7 @@ syntax="proto3";
 package descarteslabs.workflows;
 
 import "types.proto";
+import public "errors.proto"; // backwards compatible fix for ErrorCode
 
 
 service JobAPI {
@@ -28,16 +29,6 @@ enum JobStage {
     STAGE_SAVING = 4;
     STAGE_DONE = 5;
     STAGE_EXPIRED = 6;
-}
-
-enum ErrorCode {
-    ERROR_NONE = 0;
-    ERROR_UNKNOWN = 1;
-    ERROR_INVALID = 2;
-    ERROR_DEADLINE = 3;
-    ERROR_OOM = 9;
-    ERROR_INTERRUPT = 15;
-    ERROR_TERMINATED = 16;
 }
 
 message JobError {

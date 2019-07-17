@@ -1,0 +1,14 @@
+syntax="proto3";
+
+package descarteslabs.workflows;
+
+enum ErrorCode {
+    ERROR_NONE = 0;
+    ERROR_UNKNOWN = 1;
+    ERROR_INVALID = 2;
+    ERROR_DEADLINE = 3;
+    ERROR_OOM = 9;
+    ERROR_INTERRUPT = 15;
+    ERROR_TERMINATED = 16;
+    ERROR_AUTH = 17;
+}
