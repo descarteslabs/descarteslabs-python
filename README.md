@@ -10,6 +10,8 @@ Changelog
 
 ## [Unreleased]
 ### Added
+- `scenes.DLTile.assign(pad=...)` method added to ease creation of a tile in all ways indentical except for the padding.
+
 ### Changed
 - The parameter `nbits` has been deprecated for catalog bands.
 

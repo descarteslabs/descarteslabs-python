@@ -295,6 +295,34 @@ class TestDLTIle(unittest.TestCase):
             },
             'type': 'Feature'
         }
+        cls.key2 = '128:8:960.0:15:-1:37'
+        cls.dltile2_dict = {
+            'geometry': {
+                'coordinates': [[
+                    [-94.55216325894683, 40.99065655298372],
+                    [-92.90868033200002, 41.00107128418895],
+                    [-92.90690635754177, 42.246233215798036],
+                    [-94.58230042864014, 42.235355721757024],
+                    [-94.55216325894683, 40.99065655298372]
+                ]],
+                'type': 'Polygon'
+            },
+            'properties': {
+                'cs_code': 'EPSG:32615',
+                'geotrans': [369440.0, 960.0, 0, 4677120.0, 0, -960.0],
+                'key': '128:8:960.0:15:-1:37',
+                'outputBounds': [369440.0, 4538880.0, 507680.0, 4677120.0],
+                'pad': 8,
+                'proj4': '+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs ',
+                'resolution': 960.0,
+                'ti': -1,
+                'tilesize': 128,
+                'tj': 37,
+                'wkt': 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]',  # noqa
+                'zone': 15
+            },
+            'type': 'Feature'
+        }
 
     @mock.patch("descarteslabs.scenes.geocontext.Raster")
     def test_from_key(self, mock_raster):
@@ -316,6 +344,34 @@ class TestDLTIle(unittest.TestCase):
             "align_pixels": False,
         })
         self.assertEqual(tile.geotrans, (361760.0, 960, 0, 4684800.0, 0, -960))
+        self.assertEqual(tile.proj4, "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs ")
+        self.assertEqual(tile.wkt, 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]') # noqa
+
+    @mock.patch("descarteslabs.scenes.geocontext.Raster")
+    def test_assign(self, mock_raster):
+        mock_raster_instance = mock_raster.return_value
+        mock_raster_instance.dltile.return_value = self.dltile_dict
+
+        tile = geocontext.DLTile.from_key(self.key)
+        mock_raster_instance.dltile.assert_called_with(self.key)
+
+        mock_raster_instance.dltile.return_value = self.dltile2_dict
+
+        tile = tile.assign(8)
+        mock_raster_instance.dltile.assert_called_with(self.key2)
+
+        self.assertEqual(tile.key, self.key2)
+        self.assertEqual(tile.resolution, 960)
+        self.assertEqual(tile.pad, 8)
+        self.assertEqual(tile.tilesize, 128)
+        self.assertEqual(tile.crs, "EPSG:32615")
+        self.assertEqual(tile.bounds, (369440.0, 4538880.0, 507680.0, 4677120.0))
+        self.assertEqual(tile.bounds_crs, "EPSG:32615")
+        self.assertEqual(tile.raster_params, {
+            "dltile": self.key2,
+            "align_pixels": False,
+        })
+        self.assertEqual(tile.geotrans, (369440.0, 960.0, 0, 4677120.0, 0, -960.0))
         self.assertEqual(tile.proj4, "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs ")
         self.assertEqual(tile.wkt, 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]') # noqa
 

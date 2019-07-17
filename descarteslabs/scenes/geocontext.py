@@ -696,6 +696,19 @@ class DLTile(GeoContext):
         tile = raster_client.dltile(dltile_key)
         return cls(tile)
 
+    def assign(self, pad, raster_client=None):
+        """
+        Return a copy of the DLTile with the pad value modified.
+
+        Returns
+        -------
+        new : `DLTile`
+        """
+
+        key = self._key.split(':')
+        key[1] = str(int(pad))
+        return self.from_key(':'.join(key), raster_client=raster_client)
+
     @property
     def key(self):
         """
