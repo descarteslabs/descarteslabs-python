@@ -508,9 +508,9 @@ class Image(ImageBase, BandsMixin):
         Example
         -------
         >>> import descarteslabs.workflows as wf
-        >>> col = wf.ImageCollection("landsat:LC08:01:RT:TOAR")
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
         >>> nir, red = col.unpack_bands(["nir", "red"])
-        >>> ndvi = (nir - red) / (nir + red)
+        >>> ndvi = wf.normalized_difference(nir, red)
         >>> max_ndvi = ndvi.max()
         >>> max_ndvi.visualize(
         ...     name="My Cool Max NDVI",

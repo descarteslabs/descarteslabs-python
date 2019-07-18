@@ -22,7 +22,7 @@ from .geospatial import (
     Image,
     ImageCollection,
 )
-from .toplevel import log, log2, log10, sqrt, cos, sin, tan
+from .toplevel import log, log2, log10, sqrt, cos, sin, tan, normalized_difference
 from .constants import e, inf, nan, pi
 
 
@@ -74,6 +74,7 @@ __all__ = [
     "cos",
     "sin",
     "tan",
+    "normalized_difference",
     # .constants
     "e",
     "inf",

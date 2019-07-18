@@ -79,3 +79,19 @@ def tan(obj):
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
     return return_type._from_apply("tan", obj)
+
+
+def normalized_difference(x, y):
+    """
+    Normalized difference helper function for computing an index such
+    as NDVI.
+
+    Example
+    -------
+    >>> import descarteslabs.workflows as wf
+    >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
+    >>> nir, red = col.unpack_bands(["nir", "red"])
+    >>> ndvi = wf.normalized_difference(nir, red)
+    """
+
+    return (x - y) / (x + y)
