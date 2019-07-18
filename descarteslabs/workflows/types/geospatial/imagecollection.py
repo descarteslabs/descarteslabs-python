@@ -192,9 +192,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         Parameters
         ----------
-        other: Image, ImageCollection
-            If ``other`` is a single `Image`, its bands will be added to every image
-            in this `ImageCollection`.
+        other: ~.geospatial.Image, ImageCollection
+            If ``other`` is a single `~.geospatial.Image`, its bands will be added to
+            every image in this `ImageCollection`.
 
             If ``other`` is an `ImageCollection`, it must be the same length as ``self``.
 

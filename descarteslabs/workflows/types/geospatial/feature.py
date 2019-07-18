@@ -43,7 +43,7 @@ class Feature(FeatureStruct, GeometryMixin):
     @typecheck_promote(value=(Int, Float, Str), default_value=(Int, Float))
     def rasterize(self, value=1, default_value=1):
         """
-        Rasterize this `Feature` into an `.Image`
+        Rasterize this `Feature` into an `~.geospatial.Image`
 
         Parameters
         ----------
@@ -64,7 +64,7 @@ class Feature(FeatureStruct, GeometryMixin):
 
         Returns
         -------
-        rasterized: Image
+        rasterized: ~.geospatial.Image
             An Image with 1 band named ``"features"``, the same properties
             as this `Feature`, and empty bandinfo.
         """

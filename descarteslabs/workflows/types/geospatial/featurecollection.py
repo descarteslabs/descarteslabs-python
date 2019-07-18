@@ -57,7 +57,7 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
     )
     def rasterize(self, value=1, default_value=1, merge_algorithm="add"):
         """
-        Rasterize all Features into one `.Image`
+        Rasterize all Features into one `~.geospatial.Image`
 
         Parameters
         ----------
@@ -83,7 +83,7 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
 
         Returns
         -------
-        rasterized: Image
+        rasterized: ~.geospatial.Image
             An Image with 1 band named ``"features"``, and empty properties and bandinfo.
         """
         from .image import Image

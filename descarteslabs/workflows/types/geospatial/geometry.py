@@ -51,7 +51,7 @@ class Geometry(GeometryStruct, GeometryMixin):
     @typecheck_promote((Int, Float))
     def rasterize(self, value=1):
         """
-        Rasterize this Geometry into an Image
+        Rasterize this Geometry into an `~.geospatial.Image`
 
         Parameters
         ----------
@@ -67,7 +67,7 @@ class Geometry(GeometryStruct, GeometryMixin):
 
         Returns
         -------
-        rasterized: Image
+        rasterized: ~.geospatial.Image
             An Image with 1 band named ``"features"``, and empty properties and bandinfo.
         """
         from .image import Image

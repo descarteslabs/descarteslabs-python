@@ -49,7 +49,7 @@ class CollectionMixin:
             The return type is dependent on the ``func`` and the type of
             the element returned. For example, calling `map` over an
             `.ImageCollection` with a function that returns the date of the
-            `.Image` will now be a ``List[Datetime]``.
+            `~.geospatial.Image` will now be a ``List[Datetime]``.
 
         Example
         -------
