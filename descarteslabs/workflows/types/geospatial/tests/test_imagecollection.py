@@ -83,6 +83,7 @@ def test_all_methods():
     assert isinstance(col.mask(feature), ImageCollection)
     assert isinstance(col.mask(fc), ImageCollection)
     assert isinstance(col.getmask(), ImageCollection)
+    assert isinstance(col.colormap(), ImageCollection)
     assert isinstance(col.min(), Image)
     assert isinstance(col.max(), Image)
     assert isinstance(col.mean(), Image)

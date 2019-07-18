@@ -68,6 +68,7 @@ def test_all_methods():
     assert isinstance(img.mask(feature), Image)
     assert isinstance(img.mask(fc), Image)
     assert isinstance(img.getmask(), Image)
+    assert isinstance(img.colormap(), Image)
     assert isinstance(img.minpixels(), Dict[Str, Float])
     assert isinstance(img.maxpixels(), Dict[Str, Float])
     assert isinstance(img.meanpixels(), Dict[Str, Float])

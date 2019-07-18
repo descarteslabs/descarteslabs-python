@@ -176,6 +176,113 @@ class Image(ImageBase, BandsMixin):
         "Mask of this `Image`, as a new `Image` with one boolean band named ``'mask'``"
         return self._from_apply("getmask", self)
 
+    def colormap(self, named_colormap="viridis", vmin=None, vmax=None):
+        """
+        Apply a colormap to an `Image`. Image must have a single band.
+
+        Parameters
+        ----------
+        named_colormap: str, default "viridis"
+            The name of the Colormap registered with matplotlib.
+            See https://matplotlib.org/users/colormaps.html for colormap options.
+        vmin: float, default None
+            The minimum value of the range to normalize the bands within.
+            If specified, vmax must be specified as well.
+        vmax: float, default None
+            The maximum value of the range to normalize the bands within.
+            If specified, vmin must be specified as well.
+
+        Note: If neither vmin nor vmax are specified, the min and max values in the `Image` will be used.
+        """
+        if (vmin is not None and vmax is None) or (vmin is None and vmax is not None):
+            raise ValueError("Must specify both vmin and vmax, or neither.")
+        if named_colormap not in [
+            "viridis",
+            "plasma",
+            "inferno",
+            "magma",
+            "cividis",
+            "Greys",
+            "Purples",
+            "Blues",
+            "Greens",
+            "Oranges",
+            "Reds",
+            "YlOrBr",
+            "YlOrRd",
+            "OrRd",
+            "PuRd",
+            "RdPu",
+            "BuPu",
+            "GnBu",
+            "PuBu",
+            "YlGnBu",
+            "PuBuGn",
+            "BuGn",
+            "YlGn",
+            "binary",
+            "gist_yarg",
+            "gist_gray",
+            "gray",
+            "bone",
+            "pink",
+            "spring",
+            "summer",
+            "autumn",
+            "winter",
+            "cool",
+            "Wistia",
+            "hot",
+            "afmhot",
+            "gist_heat",
+            "copper",
+            "PiYG",
+            "PRGn",
+            "BrBG",
+            "PuOr",
+            "RdGy",
+            "RdBu",
+            "RdYlBu",
+            "RdYlGn",
+            "Spectral",
+            "coolwarm",
+            "bwr",
+            "seismic",
+            "twilight",
+            "twilight_shifted",
+            "hsv",
+            "Pastel1",
+            "Pastel2",
+            "Paired",
+            "Accent",
+            "Dark2",
+            "Set1",
+            "Set2",
+            "Set3",
+            "tab10",
+            "tab20",
+            "tab20b",
+            "tab20c",
+            "flag",
+            "prism",
+            "ocean",
+            "gist_earth",
+            "terrain",
+            "gist_stern",
+            "gnuplot",
+            "gnuplot2",
+            "CMRmap",
+            "cubehelix",
+            "brg",
+            "gist_rainbow",
+            "rainbow",
+            "jet",
+            "nipy_spectral",
+            "gist_ncar",
+        ]:
+            raise ValueError("Unknown colormap type: {}".format(named_colormap))
+        return self._from_apply("colormap", self, named_colormap, vmin, vmax)
+
     def minpixels(self):
         """
         Dict[Str, Float] of each band's minimum pixel value
