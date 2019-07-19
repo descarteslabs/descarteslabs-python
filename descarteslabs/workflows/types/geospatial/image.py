@@ -2,20 +2,18 @@ import json
 
 from descarteslabs import scenes
 
-from ... import env
-from ... import _channel
-
+from ... import _channel, env
 from ...cereal import serializable
+from ...interactive import LayerControl, Map, TileLayer
+from ...models import XYZ
+from ..containers import Dict, KnownDict, Struct, Tuple
 from ..core import typecheck_promote
-from ..primitives import Any, Str, Bool, Float, Int
-from ..containers import Tuple, Dict, Struct, KnownDict
 from ..datetimes import Datetime
-
-from .geometry import Geometry
+from ..primitives import Any, Bool, Float, Int, Str
 from .feature import Feature
 from .featurecollection import FeatureCollection
+from .geometry import Geometry
 from .mixins import BandsMixin
-from ...interactive import Map, LayerControl, TileLayer
 
 
 def _DelayedImageCollection():
@@ -664,13 +662,14 @@ class Image(ImageBase, BandsMixin):
         str
             The tile server URL.
         """
-        # TODO: separate publish and tiles?
-        workflow = self.publish(name="Tiles For {}".format(name))
+        xyz = XYZ.build(self, name=name)
+        xyz.save()
+
         tile_server_base_url = "https://workflows.descarteslabs.com/{}".format(
             _channel.__channel__
         )
-        url = "{}/workflows/{}/xyz/{{z}}/{{x}}/{{y}}.png".format(
-            tile_server_base_url, workflow.id
+        url = "{}/xyz/{}/{{z}}/{{x}}/{{y}}.png".format(
+            tile_server_base_url, xyz.id
         )
 
         if scales:
