@@ -46,6 +46,8 @@ from .models import (
     TimeoutError,
     Workflow,
     Job,
+    XYZ,
+    iter_tile_errors,
     compute,
     retrieve,
     use,
@@ -115,7 +117,9 @@ __all__ = [
     "TimeoutError",
     "Workflow",
     "Job",
+    "XYZ",
     "compute",
+    "iter_tile_errors",
     "retrieve",
     "use",
     # .env

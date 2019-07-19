@@ -2,12 +2,12 @@ import os
 
 import certifi
 import grpc
-
 from descarteslabs.client.auth import Auth
 from descarteslabs.common.proto import (
     health_pb2,
     health_pb2_grpc,
     job_pb2_grpc,
+    xyz_pb2_grpc,
     workflow_pb2_grpc,
 )
 from descarteslabs.common.retry import Retry
@@ -92,6 +92,7 @@ class Client:
             "Health": health_pb2_grpc.HealthStub(self.channel),
             "Workflow": workflow_pb2_grpc.WorkflowAPIStub(self.channel),
             "Job": job_pb2_grpc.JobAPIStub(self.channel),
+            "XYZ": xyz_pb2_grpc.XYZAPIStub(self.channel),
         }
 
         # TODO wrap these functions in retry
@@ -111,6 +112,18 @@ class Client:
             ),
             "UpdateWorkflow": wrap_stub(
                 self._stubs["Workflow"].UpdateWorkflow,
+                default_retry=self._default_retry,
+            ),
+            "CreateXYZ": wrap_stub(
+                self._stubs["XYZ"].CreateXYZ,
+                default_retry=self._default_retry,
+            ),
+            "GetXYZ": wrap_stub(
+                self._stubs["XYZ"].GetXYZ,
+                default_retry=self._default_retry,
+            ),
+            "GetXYZSessionErrors": wrap_stub(
+                self._stubs["XYZ"].GetXYZSessionErrors,
                 default_retry=self._default_retry,
             ),
             "CreateJob": wrap_stub(

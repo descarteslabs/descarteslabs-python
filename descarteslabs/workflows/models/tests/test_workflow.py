@@ -3,33 +3,20 @@ import json
 import hypothesis.strategies as st
 import mock
 import pytest
-from descarteslabs.common.graft import client
 from descarteslabs.common.proto import workflow_pb2
 from hypothesis import given
 
-from ... import _channel, cereal, types
+from ... import _channel, cereal
 from ...client import Client
 from .. import Workflow
 from ..utils import pb_milliseconds_to_datetime
 from . import utils
 
 
-@cereal.serializable()
-class Foo(types.Proxytype):
-    def __init__(self, x):
-        self.graft = client.apply_graft("foo", x=x)
-
-
-@cereal.serializable()
-class Bar(types.Proxytype):
-    def __init__(self, x):
-        self.graft = client.apply_graft("bar", x=x)
-
-
 @mock.patch("descarteslabs.common.proto.workflow_pb2_grpc.WorkflowAPIStub")
 class TestWorkflow(object):
     def test_build(self, stub):
-        obj = Foo(1)
+        obj = utils.Foo(1)
         wf = Workflow.build(obj, name="foo", description="a foo")
 
         assert wf._object is obj
@@ -43,7 +30,7 @@ class TestWorkflow(object):
         assert message.channel == _channel.__channel__
 
     def test_roundtrip_from_proto(self, stub):
-        obj = Bar(Foo(1))
+        obj = utils.Bar(utils.Foo(1))
         wf = Workflow.build(obj, name="bar", description="a bar")
         message = wf._message
 
@@ -54,7 +41,7 @@ class TestWorkflow(object):
         assert new_obj.graft == utils.json_normalize(obj.graft)
 
     def test_roundtrip_from_proto_no_graft(self, stub):
-        obj = Bar(Foo(1))
+        obj = utils.Bar(utils.Foo(1))
         wf = Workflow.build(obj, name="bar", description="a bar")
         message = wf._message
         message.id = "bar_id"
@@ -90,9 +77,11 @@ class TestWorkflow(object):
             "parallelize as far as I can tell."
         )
     )
-    @given(st.just(Bar(1)) | st.none(), st.text() | st.none(), st.text() | st.none())
+    @given(
+        st.just(utils.Bar(1)) | st.none(), st.text() | st.none(), st.text() | st.none()
+    )
     def test_update(self, stub, new_obj, new_name, new_description):
-        old_obj = Bar(Foo(1))
+        old_obj = utils.Bar(utils.Foo(1))
         old_name = "bar"
         old_description = "a bar"
         wf = Workflow.build(old_obj, name=old_name, description=old_description)
@@ -119,7 +108,7 @@ class TestWorkflow(object):
         new_message = "fake message"
         stub.return_value.CreateWorkflow.return_value = new_message
 
-        obj = Bar(Foo(1))
+        obj = utils.Bar(utils.Foo(1))
         wf = Workflow.build(obj, name="bar", description="a bar")
         old_message = wf._message
 
@@ -131,7 +120,7 @@ class TestWorkflow(object):
         )
 
     def test_properties(self, stub):
-        obj = Bar(Foo(1))
+        obj = utils.Bar(utils.Foo(1))
         wf = Workflow.build(obj, name="bar", description="a bar")
 
         assert wf.object == obj
@@ -152,7 +141,7 @@ class TestWorkflow(object):
         assert wf.updated_timestamp == pb_milliseconds_to_datetime(200)
 
     def test_incompatible_channel(self, stub):
-        obj = Foo(1)
+        obj = utils.Foo(1)
         wf = Workflow.build(obj, name="foo", description="a foo")
         wf._message.channel = "foobar"
 

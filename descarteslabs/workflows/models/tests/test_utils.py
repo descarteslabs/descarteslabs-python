@@ -1,15 +1,14 @@
 import datetime
 
-from ..utils import pb_milliseconds_to_datetime
+from ..utils import pb_milliseconds_to_datetime, pb_datetime_to_milliseconds
 
 
-def test_pb_milliseconds_to_datetime():
+def test_pb_milliseconds_to_datetime_helpers():
     assert pb_milliseconds_to_datetime(0) is None
-    assert pb_milliseconds_to_datetime(1) == datetime.datetime(
-        1970, 1, 1, 0, 0, 0, 1000
-    )
+    assert pb_datetime_to_milliseconds(pb_milliseconds_to_datetime(1)) == 1
 
-    now = datetime.datetime.utcnow()
-    now_timestamp = (now - datetime.datetime(1970, 1, 1)).total_seconds()
-    now_timestamp_ms = now_timestamp * 1e3
-    assert pb_milliseconds_to_datetime(now_timestamp_ms) == now
+    milliseconds = 123
+    now = datetime.datetime.utcnow().replace(microsecond=milliseconds*1000)
+
+    assert pb_milliseconds_to_datetime(pb_datetime_to_milliseconds(now)) == now
+    assert pb_datetime_to_milliseconds(now) % 1000 == milliseconds
