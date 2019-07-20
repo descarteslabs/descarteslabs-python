@@ -24,7 +24,7 @@ enum JobStatus {
 enum JobStage {
     STAGE_UNKNOWN = 0;
     STAGE_PENDING = 1;
-    STAGE_COMPILING = 2;
+    STAGE_PREPARING = 2;
     STAGE_RUNNING = 3;
     STAGE_SAVING = 4;
     STAGE_DONE = 5;
