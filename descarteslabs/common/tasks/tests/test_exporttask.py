@@ -18,14 +18,13 @@ public_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0
 class ClientTestCase(unittest.TestCase):
     def setUp(self):
         url = "http://example.com"
-        self.client = Vector(url=url,
-                             auth=Auth(jwt_token=public_token,
-                                       token_info_path=None))
+        self.client = Vector(
+            url=url, auth=Auth(jwt_token=public_token, token_info_path=None)
+        )
         self.match_url = re.compile(url)
 
     def mock_response(self, method, json, status=200, **kwargs):
-        responses.add(method, self.match_url, json=json, status=status,
-            **kwargs)
+        responses.add(method, self.match_url, json=json, status=status, **kwargs)
 
 
 group_id = "group-id"
@@ -46,15 +45,12 @@ class TestExportTask(ClientTestCase):
         self.mock_response(
             responses.GET,
             {
-                'data': {
-                    'id': export_id,
-                    'attributes': {
-                        'status': 'SUCCESS',
-                        'labels': [1, 2, 3, key]
-                    }
+                "data": {
+                    "id": export_id,
+                    "attributes": {"status": "SUCCESS", "labels": [1, 2, 3, key]},
                 }
-            }
+            },
         )
         task = ExportTask(group_id, tuid=task_id, client=self.client)
-        self.assertEqual(task.status, 'SUCCESS')
+        self.assertEqual(task.status, "SUCCESS")
         self.assertEqual(task.key, key)

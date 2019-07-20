@@ -9,13 +9,18 @@ class RequestsWithRetry(object):
     """
 
     """
+
     TIMEOUT = (1, 10)
 
-    RETRY_CONFIG = Retry(total=3,
-                         read=2,
-                         backoff_factor=random.uniform(1, 3),
-                         method_whitelist=frozenset(['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']),
-                         status_forcelist=[500, 502, 503, 504])
+    RETRY_CONFIG = Retry(
+        total=3,
+        read=2,
+        backoff_factor=random.uniform(1, 3),
+        method_whitelist=frozenset(
+            ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"]
+        ),
+        status_forcelist=[500, 502, 503, 504],
+    )
 
     ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
 

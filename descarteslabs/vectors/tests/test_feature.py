@@ -30,7 +30,9 @@ class TestFeature(unittest.TestCase):
         self.assertIsNotNone(feature.properties)
 
     def test__create_from_jsonapi(self):
-        r = DotDict(id='foo', attributes=dict(geometry=POINT, properties=dict(foo='bar')))
+        r = DotDict(
+            id="foo", attributes=dict(geometry=POINT, properties=dict(foo="bar"))
+        )
         feature = Feature._create_from_jsonapi(r)
 
         self.assertIsNotNone(feature.id)
@@ -44,10 +46,15 @@ class TestFeature(unittest.TestCase):
         for geometry in geometries:
             feature = Feature(geometry=geometry, properties=properties)
 
-            self.assertEqual(json.dumps(feature.geojson,
-                                        sort_keys=True),
-                             json.dumps({'geometry': geometry,
-                                         'id': None,
-                                         'properties': properties,
-                                         'type': 'Feature'},
-                                        sort_keys=True))
+            self.assertEqual(
+                json.dumps(feature.geojson, sort_keys=True),
+                json.dumps(
+                    {
+                        "geometry": geometry,
+                        "id": None,
+                        "properties": properties,
+                        "type": "Feature",
+                    },
+                    sort_keys=True,
+                ),
+            )

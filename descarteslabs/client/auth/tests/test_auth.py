@@ -65,13 +65,16 @@ def to_bytes(s):
 
 
 class TestAuth(unittest.TestCase):
-
     def tearDown(self):
         warnings.resetwarnings()
 
     def test_auth_client_refresh_match(self):
         with warnings.catch_warnings(record=True) as w:
-            auth = Auth(client_id="client_id", client_secret="secret", refresh_token="mismatched_refresh_token")
+            auth = Auth(
+                client_id="client_id",
+                client_secret="secret",
+                refresh_token="mismatched_refresh_token",
+            )
             self.assertEqual(1, len(w))
             self.assertEqual("mismatched_refresh_token", auth.refresh_token)
             self.assertEqual("mismatched_refresh_token", auth.client_secret)
@@ -237,7 +240,7 @@ class TestAuth(unittest.TestCase):
             CLIENT_ID="id_bar",
             DESCARTESLABS_CLIENT_SECRET="secret_foo",
             DESCARTESLABS_CLIENT_ID="id_foo",
-            DESCARTESLABS_REFRESH_TOKEN="refresh_foo"
+            DESCARTESLABS_REFRESH_TOKEN="refresh_foo",
         )
 
         # should work with direct var
@@ -258,7 +261,8 @@ class TestAuth(unittest.TestCase):
                 # when refresh_token and client_secret do not match,
                 # the Auth implementation sets both to the value of
                 # refresh_token
-                auth.client_secret, environ.get("DESCARTESLABS_REFRESH_TOKEN")
+                auth.client_secret,
+                environ.get("DESCARTESLABS_REFRESH_TOKEN"),
             )
             self.assertEqual(auth.client_id, environ.get("DESCARTESLABS_CLIENT_ID"))
 
@@ -272,7 +276,9 @@ class TestAuth(unittest.TestCase):
         # should fallback to legacy env vars
         with patch.dict("descarteslabs.client.auth.auth.os.environ", environ):
             auth = Auth()
-            self.assertEqual(auth.client_secret, environ.get("DESCARTESLABS_REFRESH_TOKEN"))
+            self.assertEqual(
+                auth.client_secret, environ.get("DESCARTESLABS_REFRESH_TOKEN")
+            )
             self.assertEqual(auth.client_id, environ.get("CLIENT_ID"))
 
 

@@ -10,7 +10,7 @@ def func_foo():
     return a_local + a_global
 
 
-class outer_class():
+class outer_class:
     class inner_class:
         @staticmethod
         def func_bar():

@@ -22,28 +22,24 @@ class TestSceneCollection(unittest.TestCase):
                 "dtype": "UInt16",
                 "data_range": [0, 10000],
                 "default_range": [0, 4000],
-                "physical_range": [0., 1.]
+                "physical_range": [0.0, 1.0],
             },
             "green": {
                 "type": "spectral",
                 "dtype": "UInt16",
                 "data_range": [0, 10000],
                 "default_range": [0, 4000],
-                "physical_range": [0., 1.]
+                "physical_range": [0.0, 1.0],
             },
             "blue": {
                 "type": "spectral",
                 "dtype": "UInt16",
                 "data_range": [0, 10000],
                 "default_range": [0, 4000],
-                "physical_range": [0., 1.]
+                "physical_range": [0.0, 1.0],
             },
-            "alpha": {
-                "type": "mask",
-                "dtype": "UInt16",
-                "data_range": [0, 1],
-            }
-        }
+            "alpha": {"type": "mask", "dtype": "UInt16", "data_range": [0, 1]},
+        },
     }
 
     MOCK_RGBA_PROPERTIES2 = {
@@ -55,28 +51,24 @@ class TestSceneCollection(unittest.TestCase):
                 "dtype": "UInt16",
                 "data_range": [0, 10000],
                 "default_range": [0, 4000],
-                "physical_range": [0., 1.]
+                "physical_range": [0.0, 1.0],
             },
             "green": {
                 "type": "spectral",
                 "dtype": "UInt16",
                 "data_range": [0, 10000],
                 "default_range": [0, 4000],
-                "physical_range": [0., 1.]
+                "physical_range": [0.0, 1.0],
             },
             "blue": {
                 "type": "spectral",
                 "dtype": "UInt16",
                 "data_range": [0, 10000],
                 "default_range": [0, 4000],
-                "physical_range": [0., 1.]
+                "physical_range": [0.0, 1.0],
             },
-            "alpha": {
-                "type": "mask",
-                "dtype": "UInt16",
-                "data_range": [0, 1],
-            }
-        }
+            "alpha": {"type": "mask", "dtype": "UInt16", "data_range": [0, 1]},
+        },
     }
 
     MOCK_RGBA_PROPERTIES3 = {
@@ -88,28 +80,29 @@ class TestSceneCollection(unittest.TestCase):
                 "dtype": "Int16",
                 "data_range": [0, 10000],
                 "default_range": [0, 4000],
-                "physical_range": [0., 1.]
+                "physical_range": [0.0, 1.0],
             },
             "green": {
                 "type": "spectral",
                 "dtype": "UInt16",
                 "data_range": [0, 10000],
                 "default_range": [0, 4000],
-                "physical_range": [-1., 1.]
+                "physical_range": [-1.0, 1.0],
             },
-            "alpha": {
-                "type": "mask",
-                "dtype": "UInt16",
-                "data_range": [0, 1],
-            }
-        }
+            "alpha": {"type": "mask", "dtype": "UInt16", "data_range": [0, 1]},
+        },
     }
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+    )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_stack(self):
-        scenes = ("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1", "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
+        scenes = (
+            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
+            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
+        )
         scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
 
         overlap = scenes[0].geometry.intersection(scenes[1].geometry)
@@ -139,13 +132,15 @@ class TestSceneCollection(unittest.TestCase):
         self.assertEqual(stack_axis_1.shape, (2, 2, 122, 120))
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+    )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_stack_flatten(self):
         scenes = (
             "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
             "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",  # note: just duplicated
-            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1"
+            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
         )
         scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
 
@@ -157,10 +152,7 @@ class TestSceneCollection(unittest.TestCase):
         unflattened = scenes.stack("nir", ctx)
 
         flattened, metas = scenes.stack(
-            "nir",
-            ctx,
-            flatten="properties.id",
-            raster_info=True,
+            "nir", ctx, flatten="properties.id", raster_info=True
         )
 
         self.assertEqual(len(flattened), 2)
@@ -178,11 +170,18 @@ class TestSceneCollection(unittest.TestCase):
         self.assertTrue((noflat == unflattened).all())
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+    )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
-    @mock.patch("descarteslabs.scenes.scenecollection.concurrent", ThirdParty("concurrent"))
+    @mock.patch(
+        "descarteslabs.scenes.scenecollection.concurrent", ThirdParty("concurrent")
+    )
     def test_stack_serial(self):
-        scenes = ("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1", "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
+        scenes = (
+            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
+            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
+        )
         scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
 
         overlap = scenes[0].geometry.intersection(scenes[1].geometry)
@@ -193,10 +192,15 @@ class TestSceneCollection(unittest.TestCase):
         self.assertEqual(stack.shape, (2, 1, 122, 120))
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+    )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_mosaic(self):
-        scenes = ("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1", "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
+        scenes = (
+            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
+            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
+        )
         scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
 
         overlap = scenes[0].geometry.intersection(scenes[1].geometry)
@@ -231,38 +235,53 @@ class TestSceneCollection(unittest.TestCase):
         with self.assertRaises(TypeError):
             scenes.mosaic("red", ctx, invalid_argument=True)
 
-        mask_non_alpha = mosaic_with_alpha = scenes.mosaic(["nir", "red"], ctx, mask_alpha="red")
+        mask_non_alpha = mosaic_with_alpha = scenes.mosaic(
+            ["nir", "red"], ctx, mask_alpha="red"
+        )
         self.assertTrue(hasattr(mask_non_alpha, "mask"))
         self.assertEqual(mask_non_alpha.shape, (2, 122, 120))
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+    )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_mosaic_no_alpha(self):
         scenes = (
             "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1",
-            "modis:mod11a2:006:meta_MOD11A2.A2000049.h08v05.006.2015058135046_v1"
+            "modis:mod11a2:006:meta_MOD11A2.A2000049.h08v05.006.2015058135046_v1",
         )
         scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
         overlap = scenes[0].geometry.intersection(scenes[1].geometry)
         ctx = ctxs[0].assign(geometry=overlap, bounds="update", resolution=600)
 
         sc = SceneCollection(scenes)
-        no_mask = sc.mosaic(["Clear_sky_days", "Clear_sky_nights"], ctx, mask_nodata=False)
+        no_mask = sc.mosaic(
+            ["Clear_sky_days", "Clear_sky_nights"], ctx, mask_nodata=False
+        )
         self.assertFalse(hasattr(no_mask, "mask"))
 
-        masked_alt_alpha_band = sc.mosaic(["Clear_sky_days", "Clear_sky_nights"], ctx, mask_alpha="Clear_sky_nights")
+        masked_alt_alpha_band = sc.mosaic(
+            ["Clear_sky_days", "Clear_sky_nights"], ctx, mask_alpha="Clear_sky_nights"
+        )
         self.assertTrue(hasattr(masked_alt_alpha_band, "mask"))
 
         # errors when alternate alpha band is provided but not available in the scene
         with self.assertRaises(ValueError):
-            sc.mosaic(["Clear_sky_days", "Clear_sky_nights"], ctx, mask_alpha="alt-alpha")
+            sc.mosaic(
+                ["Clear_sky_days", "Clear_sky_nights"], ctx, mask_alpha="alt-alpha"
+            )
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+    )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_incompatible_dtypes(self):
-        scenes = ("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1", "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1")
+        scenes = (
+            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
+            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
+        )
         scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
 
         overlap = scenes[0].geometry.intersection(scenes[1].geometry)
@@ -280,10 +299,12 @@ class TestSceneCollection(unittest.TestCase):
         polygon = shapely.geometry.Point(0.0, 0.0).buffer(1)
         ctx = geocontext.AOI(geometry=polygon)
 
-        scenes = SceneCollection([
-            Scene(dict(id='foo', geometry=polygon, properties={}), {}),
-            Scene(dict(id='bar', geometry=polygon.buffer(-0.1), properties={}), {}),
-        ])
+        scenes = SceneCollection(
+            [
+                Scene(dict(id="foo", geometry=polygon, properties={}), {}),
+                Scene(dict(id="bar", geometry=polygon.buffer(-0.1), properties={}), {}),
+            ]
+        )
 
         self.assertEqual(len(scenes.filter_coverage(ctx)), 1)
 
@@ -295,8 +316,10 @@ class TestSceneCollection(unittest.TestCase):
 
     def test_scaling_parameters_none(self):
         sc = SceneCollection(
-            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
-             MockScene({}, self.MOCK_RGBA_PROPERTIES2)]
+            [
+                MockScene({}, self.MOCK_RGBA_PROPERTIES),
+                MockScene({}, self.MOCK_RGBA_PROPERTIES2),
+            ]
         )
         scales, data_type = sc.scaling_parameters("red green blue alpha")
         self.assertIsNone(scales)
@@ -304,25 +327,33 @@ class TestSceneCollection(unittest.TestCase):
 
     def test_scaling_parameters_display(self):
         sc = SceneCollection(
-            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
-             MockScene({}, self.MOCK_RGBA_PROPERTIES2)]
+            [
+                MockScene({}, self.MOCK_RGBA_PROPERTIES),
+                MockScene({}, self.MOCK_RGBA_PROPERTIES2),
+            ]
         )
         scales, data_type = sc.scaling_parameters("red green blue alpha", "display")
-        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None])
+        self.assertEqual(
+            scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
+        )
         self.assertEqual(data_type, "Byte")
 
     def test_scaling_parameters_missing_band(self):
         sc = SceneCollection(
-            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
-             MockScene({}, self.MOCK_RGBA_PROPERTIES3)]
+            [
+                MockScene({}, self.MOCK_RGBA_PROPERTIES),
+                MockScene({}, self.MOCK_RGBA_PROPERTIES3),
+            ]
         )
         with self.assertRaisesRegexp(ValueError, "not available"):
             scales, data_type = sc.scaling_parameters("red green blue alpha")
 
     def test_scaling_parameters_none_data_type(self):
         sc = SceneCollection(
-            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
-             MockScene({}, self.MOCK_RGBA_PROPERTIES3)]
+            [
+                MockScene({}, self.MOCK_RGBA_PROPERTIES),
+                MockScene({}, self.MOCK_RGBA_PROPERTIES3),
+            ]
         )
         scales, data_type = sc.scaling_parameters("red alpha")
         self.assertIsNone(scales)
@@ -330,8 +361,10 @@ class TestSceneCollection(unittest.TestCase):
 
     def test_scaling_parameters_display_range(self):
         sc = SceneCollection(
-            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
-             MockScene({}, self.MOCK_RGBA_PROPERTIES3)]
+            [
+                MockScene({}, self.MOCK_RGBA_PROPERTIES),
+                MockScene({}, self.MOCK_RGBA_PROPERTIES3),
+            ]
         )
         scales, data_type = sc.scaling_parameters("red alpha", "display")
         self.assertEquals(scales, [(0, 4000, 0, 255), None])
@@ -339,8 +372,10 @@ class TestSceneCollection(unittest.TestCase):
 
     def test_scaling_parameters_raw_range(self):
         sc = SceneCollection(
-            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
-             MockScene({}, self.MOCK_RGBA_PROPERTIES3)]
+            [
+                MockScene({}, self.MOCK_RGBA_PROPERTIES),
+                MockScene({}, self.MOCK_RGBA_PROPERTIES3),
+            ]
         )
         scales, data_type = sc.scaling_parameters("red alpha", "raw")
         self.assertEquals(scales, [None, None])
@@ -348,8 +383,10 @@ class TestSceneCollection(unittest.TestCase):
 
     def test_scaling_parameters_physical_incompatible(self):
         sc = SceneCollection(
-            [MockScene({}, self.MOCK_RGBA_PROPERTIES),
-             MockScene({}, self.MOCK_RGBA_PROPERTIES3)]
+            [
+                MockScene({}, self.MOCK_RGBA_PROPERTIES),
+                MockScene({}, self.MOCK_RGBA_PROPERTIES3),
+            ]
         )
         with self.assertRaisesRegexp(ValueError, "incompatible"):
             scales, data_type = sc.scaling_parameters("green alpha", "physical")
@@ -358,27 +395,32 @@ class TestSceneCollection(unittest.TestCase):
 @mock.patch.object(MockScene, "download")
 class TestSceneCollectionDownload(unittest.TestCase):
     def setUp(self):
-        properties = [{
-            "id": "foo:bar" + str(i),
-            "bands": {
-                "nir": {"dtype": "UInt16"},
-                "yellow": {"dtype": "UInt16"},
-            },
-            "product": "foo"
-        } for i in range(3)]
+        properties = [
+            {
+                "id": "foo:bar" + str(i),
+                "bands": {"nir": {"dtype": "UInt16"}, "yellow": {"dtype": "UInt16"}},
+                "product": "foo",
+            }
+            for i in range(3)
+        ]
 
         self.scenes = SceneCollection([MockScene({}, p) for p in properties])
-        self.ctx = geocontext.AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
+        self.ctx = geocontext.AOI(
+            bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326"
+        )
 
     def test_directory(self, mock_download):
         dest = "rasters"
         paths = self.scenes.download("nir yellow", self.ctx, dest, format="png")
 
-        self.assertEqual(paths, [
-            os.path.join(dest, "foo:bar0-nir-yellow.png"),
-            os.path.join(dest, "foo:bar1-nir-yellow.png"),
-            os.path.join(dest, "foo:bar2-nir-yellow.png"),
-        ])
+        self.assertEqual(
+            paths,
+            [
+                os.path.join(dest, "foo:bar0-nir-yellow.png"),
+                os.path.join(dest, "foo:bar1-nir-yellow.png"),
+                os.path.join(dest, "foo:bar2-nir-yellow.png"),
+            ],
+        )
 
         self.assertEqual(mock_download.call_count, len(self.scenes))
         for scene, path in zip(self.scenes, paths):
@@ -390,7 +432,7 @@ class TestSceneCollectionDownload(unittest.TestCase):
                 processing_level=None,
                 scales=None,
                 dtype="UInt16",
-                raster_client=self.scenes._raster_client
+                raster_client=self.scenes._raster_client,
             )
 
     def test_custom_paths(self, mock_download):
@@ -412,15 +454,11 @@ class TestSceneCollectionDownload(unittest.TestCase):
                 processing_level=None,
                 scales=None,
                 dtype="UInt16",
-                raster_client=self.scenes._raster_client
+                raster_client=self.scenes._raster_client,
             )
 
     def test_non_unique_paths(self, mock_download):
-        nonunique_paths = [
-            "img.tif",
-            "img2.tif",
-            "img.tif"
-        ]
+        nonunique_paths = ["img.tif", "img2.tif", "img.tif"]
         with self.assertRaises(RuntimeError):
             self.scenes.download("nir yellow", self.ctx, nonunique_paths)
 

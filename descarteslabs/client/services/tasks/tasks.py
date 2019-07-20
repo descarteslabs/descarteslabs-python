@@ -77,6 +77,7 @@ class BoundGlobalError(NameError):
     Raised when a global is referenced in a function where it won't be available
     when executed remotely.
     """
+
     pass
 
 
@@ -91,7 +92,7 @@ class Tasks(Service):
     COMPLETION_POLL_INTERVAL_SECONDS = 5
     _ENTRYPOINT_TEMPLATE = "{source}\nmain = {function_name}\n"
     _IMPORT_TEMPLATE = "from {module} import {obj}"
-    _IS_GLOB_PATTERN = re.compile(r'[\*\?\[]')
+    _IS_GLOB_PATTERN = re.compile(r"[\*\?\[]")
 
     def __init__(self, url=None, auth=None, retries=None):
         """
@@ -108,8 +109,7 @@ class Tasks(Service):
 
         if url is None:
             url = os.environ.get(
-                "DESCARTESLABS_TASKS_URL",
-                "https://platform.descarteslabs.com/tasks/v1"
+                "DESCARTESLABS_TASKS_URL", "https://platform.descarteslabs.com/tasks/v1"
             )
 
         self._gcs_upload_service = ThirdPartyService()
@@ -125,10 +125,10 @@ class Tasks(Service):
         :return: `True` if successful, `False` otherwise.
         """
         data = {
-            'CLIENT_ID': self.auth.client_id,
-            'CLIENT_SECRET': self.auth.client_secret
+            "CLIENT_ID": self.auth.client_id,
+            "CLIENT_SECRET": self.auth.client_secret,
         }
-        r = self.session.post('/namespaces/secrets/auth', json=data)
+        r = self.session.post("/namespaces/secrets/auth", json=data)
         return r.status_code == 201
 
     def create_namespace(self):
@@ -143,21 +143,21 @@ class Tasks(Service):
         return self._create_namespace()
 
     def new_group(
-            self,
-            function,
-            container_image,
-            name=None,
-            cpus=1,
-            gpus=0,
-            memory='2Gi',
-            maximum_concurrency=None,
-            minimum_concurrency=None,
-            minimum_seconds=None,
-            task_timeout=1800,
-            include_modules=None,
-            include_data=None,
-            requirements=None,
-            **kwargs
+        self,
+        function,
+        container_image,
+        name=None,
+        cpus=1,
+        gpus=0,
+        memory="2Gi",
+        maximum_concurrency=None,
+        minimum_concurrency=None,
+        minimum_seconds=None,
+        task_timeout=1800,
+        include_modules=None,
+        include_data=None,
+        requirements=None,
+        **kwargs
     ):
         """
         Creates a new task group.
@@ -213,40 +213,48 @@ class Tasks(Service):
         """
 
         payload = {
-            'image': container_image,
-            'function_python_version': ".".join(str(part) for part in sys.version_info[:3]),
-            'cpu': cpus,
-            'gpu': gpus,
-            'mem': memory,
-            'worker_timeout': task_timeout,
-            'maximum_concurrency': maximum_concurrency,
-            'minimum_concurrency': minimum_concurrency,
-            'minimum_seconds': minimum_seconds,
+            "image": container_image,
+            "function_python_version": ".".join(
+                str(part) for part in sys.version_info[:3]
+            ),
+            "cpu": cpus,
+            "gpu": gpus,
+            "mem": memory,
+            "worker_timeout": task_timeout,
+            "maximum_concurrency": maximum_concurrency,
+            "minimum_concurrency": minimum_concurrency,
+            "minimum_seconds": minimum_seconds,
         }
 
         if name is not None:
-            payload['name'] = name
+            payload["name"] = name
 
         payload.update(kwargs)
 
         bundle_path = None
         try:
-            if include_data is not None or include_modules is not None or requirements is not None:
-                bundle_path = self._build_bundle(function, include_data, include_modules, requirements)
-                payload.update({
-                    'function_type': FunctionType.PY_BUNDLE
-                })
+            if (
+                include_data is not None
+                or include_modules is not None
+                or requirements is not None
+            ):
+                bundle_path = self._build_bundle(
+                    function, include_data, include_modules, requirements
+                )
+                payload.update({"function_type": FunctionType.PY_BUNDLE})
             else:
-                payload.update({
-                    'function': _serialize_function(function),
-                    'function_type': FunctionType.PY_PICKLE
-                })
+                payload.update(
+                    {
+                        "function": _serialize_function(function),
+                        "function_type": FunctionType.PY_PICKLE,
+                    }
+                )
 
             try:
                 r = self.session.post("/groups", json=payload)
             except ConflictError as e:
-                error_message = json.loads(str(e))['message']
-                if error_message != 'namespace is missing authentication':
+                error_message = json.loads(str(e))["message"]
+                if error_message != "namespace is missing authentication":
                     raise
 
                 if not self._create_namespace():
@@ -256,8 +264,8 @@ class Tasks(Service):
             group = r.json()
 
             if bundle_path is not None:
-                url = group.pop('upload_url')
-                with io.open(bundle_path, mode='rb') as bundle:
+                url = group.pop("upload_url")
+                with io.open(bundle_path, mode="rb") as bundle:
                     self._gcs_upload_service.session.put(url, data=bundle)
         finally:
             if bundle_path and os.path.exists(bundle_path):
@@ -297,8 +305,16 @@ class Tasks(Service):
             are further matching groups.
         :rtype: DotDict
         """
-        params = {'limit': limit}
-        for field in ['status', 'created', 'updated', 'sort_field', 'sort_order', 'include', 'continuation_token']:
+        params = {"limit": limit}
+        for field in [
+            "status",
+            "created",
+            "updated",
+            "sort_field",
+            "sort_order",
+            "include",
+            "continuation_token",
+        ]:
             if locals()[field] is not None:
                 params[field] = locals()[field]
         r = self.session.get("/groups", params=params)
@@ -306,12 +322,7 @@ class Tasks(Service):
         return DotDict(r.json())
 
     def iter_groups(
-        self,
-        status=None,
-        created=None,
-        updated=None,
-        sort_field=None,
-        sort_order="asc",
+        self, status=None, created=None, updated=None, sort_field=None, sort_order="asc"
     ):
         """
         Iterates over all task groups matching the given criteria.
@@ -332,9 +343,14 @@ class Tasks(Service):
         """
         continuation_token = None
         while True:
-            page = self.list_groups(status=status, created=created, updated=updated,
-                                    sort_field=sort_field, sort_order=sort_order,
-                                    continuation_token=continuation_token)
+            page = self.list_groups(
+                status=status,
+                created=created,
+                updated=updated,
+                sort_field=sort_field,
+                sort_order=sort_order,
+                continuation_token=continuation_token,
+            )
             for group in page.groups:
                 yield group
 
@@ -358,15 +374,14 @@ class Tasks(Service):
             task group cannot be found.
         """
         r = self.session.get(
-            "/groups/{}".format(group_id),
-            params={'include': include or ()},
+            "/groups/{}".format(group_id), params={"include": include or ()}
         )
         r.raise_for_status()
         return DotDict(r.json())
 
     get_group_by_id = get_group
 
-    def get_group_by_name(self, name, status='running'):
+    def get_group_by_name(self, name, status="running"):
         """
         Retrieves a single task group by name. Names are not unique; if there are
         multiple matches, returns the newest group.
@@ -379,7 +394,9 @@ class Tasks(Service):
             with the given name exists.
         :rtype: DotDict
         """
-        groups = self.iter_groups(status=status, sort_field="created", sort_order="desc")
+        groups = self.iter_groups(
+            status=status, sort_field="created", sort_order="desc"
+        )
         for g in groups:
             if g.name == name:
                 return g
@@ -398,9 +415,7 @@ class Tasks(Service):
         :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
             task group cannot be found.
         """
-        r = self.session.delete(
-            "/groups/{uid}".format(uid=group_id)
-        )
+        r = self.session.delete("/groups/{uid}".format(uid=group_id))
         r.raise_for_status()
         return DotDict(r.json())
 
@@ -422,7 +437,9 @@ class Tasks(Service):
         while queue.pending > 0:
             completed = queue.failures + queue.successes
             if show_progress:
-                logging.warning("Done with %i / %i tasks", completed, queue.pending + completed)
+                logging.warning(
+                    "Done with %i / %i tasks", completed, queue.pending + completed
+                )
             time.sleep(self.COMPLETION_POLL_INTERVAL_SECONDS)
 
             # check for terminal states
@@ -431,8 +448,9 @@ class Tasks(Service):
 
             queue = group.queue
 
-    def new_task(self, group_id, arguments=None, parameters=None,
-                 labels=None, retry_count=0):
+    def new_task(
+        self, group_id, arguments=None, parameters=None, labels=None, retry_count=0
+    ):
         """
         Submits a new task to a group. All positional and keyword arguments
         to the group's function must be JSON-serializable (i.e., booleans,
@@ -462,12 +480,17 @@ class Tasks(Service):
             list_of_arguments=[arguments or []],
             list_of_parameters=[parameters or {}],
             list_of_labels=[labels],
-            retry_count=retry_count
+            retry_count=retry_count,
         )
 
-    def new_tasks(self, group_id, list_of_arguments=None,
-                  list_of_parameters=None, list_of_labels=None,
-                  retry_count=0):
+    def new_tasks(
+        self,
+        group_id,
+        list_of_arguments=None,
+        list_of_parameters=None,
+        list_of_labels=None,
+        retry_count=0,
+    ):
         """
         Submits multiple tasks to a group. All positional and keyword arguments
         to the group's function must be JSON-serializable (i.e., booleans,
@@ -492,30 +515,28 @@ class Tasks(Service):
         :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
             the supplied parameters are invalid.
         """
-        list_of_arguments = list_of_arguments if \
-            list_of_arguments is not None else [[]]
-        list_of_parameters = list_of_parameters if \
-            list_of_parameters is not None else [{}]
-        list_of_labels = list_of_labels if \
-            list_of_labels is not None else [None]
+        list_of_arguments = list_of_arguments if list_of_arguments is not None else [[]]
+        list_of_parameters = (
+            list_of_parameters if list_of_parameters is not None else [{}]
+        )
+        list_of_labels = list_of_labels if list_of_labels is not None else [None]
         msgs = []
-        for args, kwargs, labels in zip_longest(list_of_arguments, list_of_parameters, list_of_labels, fillvalue=None):
+        for args, kwargs, labels in zip_longest(
+            list_of_arguments, list_of_parameters, list_of_labels, fillvalue=None
+        ):
             args = args or []
             params = kwargs or {}
-            attributes = {'labels': labels} if labels else {}
+            attributes = {"labels": labels} if labels else {}
             msg = {
-                'arguments': args,
-                'parameters': params,
-                'attributes': attributes,
-                'retry_count': retry_count,
+                "arguments": args,
+                "parameters": params,
+                "attributes": attributes,
+                "retry_count": retry_count,
             }
             msgs.append(msg)
 
         r = self.session.post(
-            "/groups/{group_id}/tasks".format(group_id=group_id),
-            json={
-                'tasks': msgs
-            }
+            "/groups/{group_id}/tasks".format(group_id=group_id), json={"tasks": msgs}
         )
         r.raise_for_status()
         return DotDict(r.json())
@@ -536,17 +557,17 @@ class Tasks(Service):
         :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
             task group or task itself cannot be found.
         """
-        params = {'include': include} if include is not None else {}
+        params = {"include": include} if include is not None else {}
         r = self.session.get(
-            '/groups/{uid}/tasks/{task_uid}/results'.format(
+            "/groups/{uid}/tasks/{task_uid}/results".format(
                 uid=group_id, task_uid=task_id
             ),
             params=params,
         )
         r.raise_for_status()
         result = r.json()
-        if 'result' in result:
-            result['result'] = base64.b64decode(result['result'] or '')
+        if "result" in result:
+            result["result"] = base64.b64decode(result["result"] or "")
         return DotDict(result)
 
     def get_task_result_batch(self, group_id, task_ids, include=None):
@@ -563,32 +584,31 @@ class Tasks(Service):
             Unknown ids are ignored.
         :rtype: DotDict
         """
-        data = {'ids': task_ids}
+        data = {"ids": task_ids}
         if include is not None:
-            data['include'] = include
+            data["include"] = include
         r = self.session.post(
-            '/groups/{uid}/results/batch'.format(uid=group_id),
-            json=data,
+            "/groups/{uid}/results/batch".format(uid=group_id), json=data
         )
         r.raise_for_status()
         results = r.json()
         return DotDict(results)
 
     def list_task_results(
-            self,
-            group_id,
-            limit=TASK_RESULT_BATCH_SIZE,
-            offset=None,
-            status=None,
-            failure_type=None,
-            updated=None,
-            created=None,
-            webhook=None,
-            labels=None,
-            include=None,
-            sort_field='created',
-            sort_order='asc',
-            continuation_token=None,
+        self,
+        group_id,
+        limit=TASK_RESULT_BATCH_SIZE,
+        offset=None,
+        status=None,
+        failure_type=None,
+        updated=None,
+        created=None,
+        webhook=None,
+        labels=None,
+        include=None,
+        sort_field="created",
+        sort_order="asc",
+        continuation_token=None,
     ):
         """
         Retrieves a portion of task results matching the given criteria.
@@ -621,14 +641,24 @@ class Tasks(Service):
         if offset is not None:
             warn(OFFSET_DEPRECATION_MESSAGE, DeprecationWarning)
 
-        params = {'limit': limit}
-        for field in ['offset', 'status', 'failure_type', 'updated', 'created', 'webhook',
-                      'labels', 'include', 'sort_field', 'sort_order', 'continuation_token']:
+        params = {"limit": limit}
+        for field in [
+            "offset",
+            "status",
+            "failure_type",
+            "updated",
+            "created",
+            "webhook",
+            "labels",
+            "include",
+            "sort_field",
+            "sort_order",
+            "continuation_token",
+        ]:
             if locals()[field] is not None:
                 params[field] = locals()[field]
         r = self.session.get(
-            '/groups/{uid}/results'.format(uid=group_id),
-            params=params
+            "/groups/{uid}/results".format(uid=group_id), params=params
         )
         r.raise_for_status()
         return DotDict(r.json())
@@ -636,17 +666,17 @@ class Tasks(Service):
     get_task_results = list_task_results
 
     def iter_task_results(
-            self,
-            group_id,
-            status=None,
-            failure_type=None,
-            updated=None,
-            created=None,
-            webhook=None,
-            labels=None,
-            include=None,
-            sort_field='created',
-            sort_order='asc',
+        self,
+        group_id,
+        status=None,
+        failure_type=None,
+        updated=None,
+        created=None,
+        webhook=None,
+        labels=None,
+        include=None,
+        sort_field="created",
+        sort_order="asc",
     ):
         """
         Iterates over all task results matching the given criteria.
@@ -670,13 +700,23 @@ class Tasks(Service):
         :rtype: generator(DotDict)
         """
         params = {}
-        for field in ['status', 'failure_type', 'updated', 'created', 'webhook', 'labels', 'include']:
+        for field in [
+            "status",
+            "failure_type",
+            "updated",
+            "created",
+            "webhook",
+            "labels",
+            "include",
+        ]:
             if locals()[field] is not None:
                 params[field] = locals()[field]
 
         continuation_token = None
         while True:
-            page = self.get_task_results(group_id, continuation_token=continuation_token, **params)
+            page = self.get_task_results(
+                group_id, continuation_token=continuation_token, **params
+            )
             for result in page.results:
                 yield result
 
@@ -700,20 +740,22 @@ class Tasks(Service):
         :rtype: DotList
         """
         rerun_tasks = []
-        for failure_type in ['exception', 'timeout', 'internal', 'unknown']:
-            rerun_tasks += self.rerun_matching_tasks(group_id, failure_type=failure_type, retry_count=retry_count)
+        for failure_type in ["exception", "timeout", "internal", "unknown"]:
+            rerun_tasks += self.rerun_matching_tasks(
+                group_id, failure_type=failure_type, retry_count=retry_count
+            )
         return rerun_tasks
 
     def rerun_matching_tasks(
-            self,
-            group_id,
-            status=None,
-            failure_type=None,
-            updated=None,
-            created=None,
-            webhook=None,
-            labels=None,
-            retry_count=0
+        self,
+        group_id,
+        status=None,
+        failure_type=None,
+        updated=None,
+        created=None,
+        webhook=None,
+        labels=None,
+        retry_count=0,
     ):
         """
         Submits all completed tasks matching the given search arguments for a rerun.
@@ -736,9 +778,18 @@ class Tasks(Service):
         :return: A list of dictionaries representing the tasks that have been submitted.
         :rtype: DotList
         """
-        results = self.iter_task_results(group_id, status=status, failure_type=failure_type, updated=updated,
-                                         created=created, webhook=webhook, labels=labels)
-        return self.rerun_tasks(group_id, (t.id for t in results), retry_count=retry_count)
+        results = self.iter_task_results(
+            group_id,
+            status=status,
+            failure_type=failure_type,
+            updated=updated,
+            created=created,
+            webhook=webhook,
+            labels=labels,
+        )
+        return self.rerun_tasks(
+            group_id, (t.id for t in results), retry_count=retry_count
+        )
 
     def rerun_tasks(self, group_id, task_id_iterable, retry_count=0):
         """
@@ -764,29 +815,31 @@ class Tasks(Service):
         while task_ids:
             r = self.session.post(
                 "/groups/{group_id}/tasks/rerun".format(group_id=group_id),
-                json={
-                    'task_ids': task_ids,
-                    'retry_count': retry_count,
-                }
+                json={"task_ids": task_ids, "retry_count": retry_count},
             )
             r.raise_for_status()
-            rerun += r.json()['tasks']
+            rerun += r.json()["tasks"]
             task_ids = list(itertools.islice(task_id_iterable, self.RERUN_BATCH_SIZE))
         return DotList(rerun)
 
-    def create_function(self, f, image, name=None, cpus=1,
-                        gpus=0,
-                        memory='2Gi',
-                        maximum_concurrency=None,
-                        minimum_concurrency=None,
-                        minimum_seconds=None,
-                        task_timeout=1800,
-                        retry_count=0,
-                        include_modules=None,
-                        include_data=None,
-                        requirements=None,
-                        **kwargs
-                        ):
+    def create_function(
+        self,
+        f,
+        image,
+        name=None,
+        cpus=1,
+        gpus=0,
+        memory="2Gi",
+        maximum_concurrency=None,
+        minimum_concurrency=None,
+        minimum_seconds=None,
+        task_timeout=1800,
+        retry_count=0,
+        include_modules=None,
+        include_data=None,
+        requirements=None,
+        **kwargs
+    ):
         """
         Creates a new task group from a function and returns an asynchronous
         function that can be called to submit tasks to the group.
@@ -839,8 +892,12 @@ class Tasks(Service):
             the supplied parameters are invalid.
         """
         group_info = self.new_group(
-            f, container_image=image, name=name,
-            cpus=cpus, gpus=gpus, memory=memory,
+            f,
+            container_image=image,
+            name=name,
+            cpus=cpus,
+            gpus=gpus,
+            memory=memory,
             maximum_concurrency=maximum_concurrency,
             minimum_concurrency=minimum_concurrency,
             minimum_seconds=minimum_seconds,
@@ -851,7 +908,9 @@ class Tasks(Service):
             **kwargs
         )
 
-        return CloudFunction(group_info.id, name=name, client=self, retry_count=retry_count)
+        return CloudFunction(
+            group_info.id, name=name, client=self, retry_count=retry_count
+        )
 
     def get_function_by_id(self, group_id):
         """
@@ -891,16 +950,21 @@ class Tasks(Service):
 
         return CloudFunction(group_info.id, name=name, client=self)
 
-    def create_or_get_function(self, f, image, name=None, cpus=1,
-                               gpus=0,
-                               memory='2Gi',
-                               maximum_concurrency=None,
-                               minimum_concurrency=None,
-                               minimum_seconds=None,
-                               task_timeout=1800,
-                               retry_count=0,
-                               **kwargs
-                               ):
+    def create_or_get_function(
+        self,
+        f,
+        image,
+        name=None,
+        cpus=1,
+        gpus=0,
+        memory="2Gi",
+        maximum_concurrency=None,
+        minimum_concurrency=None,
+        minimum_seconds=None,
+        task_timeout=1800,
+        retry_count=0,
+        **kwargs
+    ):
         """
         Creates or gets an asynchronous function. If a task group with the given
         name exists, returns an asynchronous function for the newest existing
@@ -952,8 +1016,12 @@ class Tasks(Service):
             if cached is not None:
                 return cached
         return self.create_function(
-            f, image=image, name=name, cpus=cpus,
-            gpus=gpus, memory=memory,
+            f,
+            image=image,
+            name=name,
+            cpus=cpus,
+            gpus=gpus,
+            memory=memory,
             maximum_concurrency=maximum_concurrency,
             minimum_concurrency=minimum_concurrency,
             minimum_seconds=minimum_seconds,
@@ -962,7 +1030,9 @@ class Tasks(Service):
             **kwargs
         )
 
-    def create_webhook(self, group_id, name=None, label_path=None, label_separator=None):
+    def create_webhook(
+        self, group_id, name=None, label_path=None, label_separator=None
+    ):
         """
         Create a new webhook for submitting tasks to task group.
 
@@ -997,15 +1067,14 @@ class Tasks(Service):
 
         data = {}
         if name is not None:
-            data['name'] = name
+            data["name"] = name
         if label_path is not None:
-            data['label_path'] = label_path
+            data["label_path"] = label_path
         if label_separator is not None:
-            data['label_separator'] = label_separator
+            data["label_separator"] = label_separator
 
         r = self.session.post(
-            '/groups/{group_id}/webhooks'.format(group_id=group_id),
-            json=data
+            "/groups/{group_id}/webhooks".format(group_id=group_id), json=data
         )
         r.raise_for_status()
         return DotDict(r.json())
@@ -1021,9 +1090,7 @@ class Tasks(Service):
         :rtype: DotDict
         """
 
-        r = self.session.get(
-            '/groups/{group_id}/webhooks'.format(group_id=group_id),
-        )
+        r = self.session.get("/groups/{group_id}/webhooks".format(group_id=group_id))
         r.raise_for_status()
         return DotDict(r.json())
 
@@ -1041,11 +1108,7 @@ class Tasks(Service):
         :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
             webhook cannot be found.
         """
-        r = self.session.get(
-            '/webhooks/{webhook_id}'.format(
-                webhook_id=webhook_id,
-            ),
-        )
+        r = self.session.get("/webhooks/{webhook_id}".format(webhook_id=webhook_id))
         r.raise_for_status()
         return DotDict(r.json())
 
@@ -1061,18 +1124,16 @@ class Tasks(Service):
         :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
             webhook cannot be found.
         """
-        r = self.session.delete(
-            '/webhooks/{webhook_id}'.format(
-                webhook_id=webhook_id,
-            ),
-        )
+        r = self.session.delete("/webhooks/{webhook_id}".format(webhook_id=webhook_id))
         r.raise_for_status()
         return True
 
     def _sys_paths(self):
-        if not hasattr(self, '_cached_sys_paths'):
+        if not hasattr(self, "_cached_sys_paths"):
             # use longest matching path entries.
-            self._cached_sys_paths = sorted(six.moves.map(os.path.abspath, sys.path), key=len, reverse=True)
+            self._cached_sys_paths = sorted(
+                six.moves.map(os.path.abspath, sys.path), key=len, reverse=True
+            )
         return self._cached_sys_paths
 
     def _get_globals(self, func):
@@ -1093,7 +1154,7 @@ class Tasks(Service):
         # Non-builtin globals are collected here
         globs = set()
 
-        for line in buffer.getvalue().split('\n'):
+        for line in buffer.getvalue().split("\n"):
             result = compiled_search.match(line)
 
             if result:
@@ -1116,7 +1177,7 @@ class Tasks(Service):
         object_path = []  # Fully qualified object path
 
         obj = None
-        parts = name.split('.')
+        parts = name.split(".")
 
         for part in parts:
             error = None
@@ -1132,10 +1193,10 @@ class Tasks(Service):
             else:
                 # If not found, assume it's a module that must be loaded
                 if object_path:
-                    error = "'{}' has no attribute '{}'".format(
-                        type(obj), part)
-                    raise NameError("Cannot resolve function name '{}': {}".format(
-                        name, error))
+                    error = "'{}' has no attribute '{}'".format(type(obj), part)
+                    raise NameError(
+                        "Cannot resolve function name '{}': {}".format(name, error)
+                    )
                 else:
                     module_path.append(part)
 
@@ -1146,26 +1207,27 @@ class Tasks(Service):
                         traceback = sys.exc_info()[2]
                         six.reraise(
                             NameError,
-                            NameError("Cannot resolve function name '{}', error importing module {}: {}".format(
-                                name, current_module_path, ex)),
-                            traceback
+                            NameError(
+                                "Cannot resolve function name '{}', error importing module {}: {}".format(
+                                    name, current_module_path, ex
+                                )
+                            ),
+                            traceback,
                         )
 
         # When we're at the end, we should have found a valid object
         return obj, module_path, object_path
 
     def _build_bundle(
-        self,
-        group_function,
-        include_data,
-        include_modules,
-        requirements=None
+        self, group_function, include_data, include_modules, requirements=None
     ):
         data_files = self._find_data_files(include_data or [])
 
         try:
-            with NamedTemporaryFile(delete=False, suffix='.zip', mode='wb') as f:
-                with zipfile.ZipFile(f, mode='w', compression=zipfile.ZIP_DEFLATED) as bundle:
+            with NamedTemporaryFile(delete=False, suffix=".zip", mode="wb") as f:
+                with zipfile.ZipFile(
+                    f, mode="w", compression=zipfile.ZIP_DEFLATED
+                ) as bundle:
                     self._write_main_function(group_function, bundle)
                     self._write_data_files(data_files, bundle)
 
@@ -1173,7 +1235,9 @@ class Tasks(Service):
                         self._write_include_modules(include_modules, bundle)
 
                     if requirements:
-                        bundle.writestr(REQUIREMENTS, self._requirements_string(requirements))
+                        bundle.writestr(
+                            REQUIREMENTS, self._requirements_string(requirements)
+                        )
             return f.name
         except Exception:
             if os.path.exists(f.name):
@@ -1197,11 +1261,19 @@ class Tasks(Service):
                     sys_path = self._sys_path_prefix(path)
 
                     if os.path.isdir(path):
-                        raise ValueError("Cannot pass directories as included data: `{}`".format(path))
+                        raise ValueError(
+                            "Cannot pass directories as included data: `{}`".format(
+                                path
+                            )
+                        )
                     else:
-                        data_files.append((path, self._archive_path(path, DATA, sys_path=sys_path)))
+                        data_files.append(
+                            (path, self._archive_path(path, DATA, sys_path=sys_path))
+                        )
                 else:
-                    raise ValueError("Data file location does not exist: {}".format(path))
+                    raise ValueError(
+                        "Data file location does not exist: {}".format(path)
+                    )
 
         return data_files
 
@@ -1212,19 +1284,26 @@ class Tasks(Service):
             f, module_path, function_path = self._find_object(f)
 
             if not callable(f):
-                raise ValueError("Tasks main function must be a callable: `{}`".format(f))
+                raise ValueError(
+                    "Tasks main function must be a callable: `{}`".format(f)
+                )
 
             # Simply import the module
             source = self._IMPORT_TEMPLATE.format(
-                module=".".join(module_path), obj=function_path[0])
+                module=".".join(module_path), obj=function_path[0]
+            )
             function_name = ".".join(function_path)
         else:
             if not inspect.isfunction(f):
-                raise ValueError("Tasks main function must be user-defined function: `{}`".format(f))
+                raise ValueError(
+                    "Tasks main function must be user-defined function: `{}`".format(f)
+                )
 
             # We can't get the code for a given lambda
-            if f.__name__ == '<lambda>':
-                raise ValueError("Task main function cannot be a lambda expression: `{}`".format(f))
+            if f.__name__ == "<lambda>":
+                raise ValueError(
+                    "Task main function cannot be a lambda expression: `{}`".format(f)
+                )
 
             # Furthermore, the given function cannot refer to globals
             bound_globals = self._get_globals(f)
@@ -1242,8 +1321,9 @@ class Tasks(Service):
                 raise ValueError("Cannot get function source for {}: {}".format(f, ioe))
 
         entrypoint_source = self._ENTRYPOINT_TEMPLATE.format(
-            source=source, function_name=function_name)
-        archive.writestr('{}/{}'.format(DIST, ENTRYPOINT), entrypoint_source)
+            source=source, function_name=function_name
+        )
+        archive.writestr("{}/{}".format(DIST, ENTRYPOINT), entrypoint_source)
 
     def _write_data_files(self, data_files, archive):
         for path, archive_path in data_files:
@@ -1254,19 +1334,22 @@ class Tasks(Service):
 
         try:
             mod = importlib.import_module(mod_name)
-            mod_file = mod.__file__.replace('.pyc', '.py', 1)
+            mod_file = mod.__file__.replace(".pyc", ".py", 1)
             return mod_file
 
         except ImportError as ie:
             # Search for possible pyx file
-            mod_basename = '{}.pyx'.format(mod_name.replace('.', '/'))
+            mod_basename = "{}.pyx".format(mod_name.replace(".", "/"))
             for s in sys.path:
                 mod_file_option = os.path.join(s, mod_basename)
                 if os.path.isfile(mod_file_option):
                     # Check that found cython source not in CWD (causes build problems)
                     if os.getcwd() == os.path.dirname(os.path.abspath(mod_file_option)):
                         raise ValueError(
-                            "Cannot include cython modules from working directory: `{}`.".format(mod_file_option))
+                            "Cannot include cython modules from working directory: `{}`.".format(
+                                mod_file_option
+                            )
+                        )
                     else:
                         return mod_file_option
 
@@ -1278,39 +1361,51 @@ class Tasks(Service):
             mod_file = self._find_module_file(mod_name)
 
             # detect system packages from distribution or virtualenv locations.
-            if re.match('.*(?:site|dist)-packages', mod_file) is not None:
-                raise ValueError("Cannot include system modules: `{}`.".format(mod_file))
+            if re.match(".*(?:site|dist)-packages", mod_file) is not None:
+                raise ValueError(
+                    "Cannot include system modules: `{}`.".format(mod_file)
+                )
 
             if not os.path.exists(mod_file):
-                raise IOError("Source code for module is missing, only byte code exists: `{}`.".format(mod_name))
+                raise IOError(
+                    "Source code for module is missing, only byte code exists: `{}`.".format(
+                        mod_name
+                    )
+                )
             sys_path = self._sys_path_prefix(mod_file)
 
             self._include_init_files(os.path.dirname(mod_file), archive, sys_path)
             archive_names = archive.namelist()
             # this is a package, get all decendants if they exist.
-            if os.path.basename(mod_file) == '__init__.py':
+            if os.path.basename(mod_file) == "__init__.py":
                 for dirpath, dirnames, filenames in os.walk(os.path.dirname(mod_file)):
-                    for file_ in [f for f in filenames if f.endswith(('.py', '.pyx'))]:
+                    for file_ in [f for f in filenames if f.endswith((".py", ".pyx"))]:
                         path = os.path.join(dirpath, file_)
                         arcname = self._archive_path(path, DIST, sys_path)
                         if arcname not in archive_names:
                             archive.write(path, arcname=arcname)
             else:
-                archive.write(mod_file, arcname=self._archive_path(mod_file, DIST, sys_path))
+                archive.write(
+                    mod_file, arcname=self._archive_path(mod_file, DIST, sys_path)
+                )
 
     def _include_init_files(self, dir_path, archive, sys_path):
         relative_dir_path = os.path.relpath(dir_path, sys_path)
         archive_names = archive.namelist()
         # have we walked this path before?
         if os.path.join(DIST, relative_dir_path, "__init__.py") not in archive_names:
-            partial_path = ''
+            partial_path = ""
             for path_part in relative_dir_path.split(os.sep):
                 partial_path = os.path.join(partial_path, path_part)
                 rel_init_location = os.path.join(partial_path, "__init__.py")
                 abs_init_location = os.path.join(sys_path, rel_init_location)
                 arcname = os.path.join(DIST, rel_init_location)
                 if not os.path.exists(abs_init_location):
-                    raise IOError("Source code for module is missing: `{}`.".format(abs_init_location))
+                    raise IOError(
+                        "Source code for module is missing: `{}`.".format(
+                            abs_init_location
+                        )
+                    )
                 if arcname not in archive_names:
                     archive.write(abs_init_location, arcname=arcname)
 
@@ -1337,7 +1432,9 @@ class Tasks(Service):
             try:
                 list(pkg_resources.parse_requirements(requirements_string))
             except ValueError as ex:
-                raise ValueError("Invalid Python requirement in file: {}".format(str(ex)))
+                raise ValueError(
+                    "Invalid Python requirement in file: {}".format(str(ex))
+                )
         return requirements_string
 
     def _requirements_list_string(self, requirements):
@@ -1349,7 +1446,9 @@ class Tasks(Service):
                 except ValueError:
                     bad_requirements.append(requirement)
             if bad_requirements:
-                raise ValueError("Invalid Python requirements: {}".format(",".join(bad_requirements)))
+                raise ValueError(
+                    "Invalid Python requirements: {}".format(",".join(bad_requirements))
+                )
         return "\n".join(requirements)
 
     def _sys_path_prefix(self, path):
@@ -1381,6 +1480,7 @@ class ResultType(object):
     """
     Possible types of return values for a function.
     """
+
     JSON = "json"
     LEGACY_PICKLE = "pickle"
 
@@ -1392,6 +1492,7 @@ class CloudFunction(object):
     given. A `map()` method allows submitting multiple tasks more efficiently
     than making individual function calls.
     """
+
     TASK_SUBMIT_SIZE = 100
 
     def __init__(self, group_id, name=None, client=None, retry_count=0):
@@ -1418,7 +1519,9 @@ class CloudFunction(object):
             retry_count=self.retry_count,
         )
         task_info = tasks.tasks[0]
-        return FutureTask(self.group_id, task_info.id, client=self.client, args=args, kwargs=kwargs)
+        return FutureTask(
+            self.group_id, task_info.id, client=self.client, args=args, kwargs=kwargs
+        )
 
     def map(self, args, *iterargs):
         """
@@ -1447,12 +1550,12 @@ class CloudFunction(object):
         batch = list(itertools.islice(arguments, self.TASK_SUBMIT_SIZE))
         while batch:
             tasks_info = self.client.new_tasks(
-                self.group_id,
-                list_of_arguments=batch,
-                retry_count=self.retry_count,
+                self.group_id, list_of_arguments=batch, retry_count=self.retry_count
             )
             futures += [
-                FutureTask(self.group_id, task_info.id, client=self.client, args=task_args)
+                FutureTask(
+                    self.group_id, task_info.id, client=self.client, args=task_args
+                )
                 for task_info, task_args in zip(tasks_info.tasks, batch)
             ]
             batch = list(itertools.islice(arguments, self.TASK_SUBMIT_SIZE))
@@ -1478,7 +1581,9 @@ def _raise_if_terminal_group(group_id, client, group=None):
     if group.status in ["terminated", "build_failed"]:
         msg = "Group no longer running tasks. Group status: {}.".format(group.status)
         if group.status == "build_failed":
-            msg = "{} Check the build log and fix any errors then resubmit your tasks.".format(msg)
+            msg = "{} Check the build log and fix any errors then resubmit your tasks.".format(
+                msg
+            )
         raise GroupTerminalException(msg)
 
 
@@ -1515,17 +1620,25 @@ def as_completed(tasks, show_progress=True):
 
             task_ids = [task.tuid for task in group_tasks]
             try:
-                results = client.get_task_result_batch(group_id, task_ids, include=['stacktrace'])
+                results = client.get_task_result_batch(
+                    group_id, task_ids, include=["stacktrace"]
+                )
             except BaseException:
-                logging.warning("Task retrieval for group %s failed with fatal error", group_id, exc_info=True)
+                logging.warning(
+                    "Task retrieval for group %s failed with fatal error",
+                    group_id,
+                    exc_info=True,
+                )
             else:
-                for result in results['results']:
+                for result in results["results"]:
                     task = remaining.pop((group_id, result.id))
                     task._task_result = result
                     yield task
 
         if show_progress:
-            logging.warning("Done with %i / %i tasks", total_tasks - len(remaining), total_tasks)
+            logging.warning(
+                "Done with %i / %i tasks", total_tasks - len(remaining), total_tasks
+            )
         time.sleep(Tasks.COMPLETION_POLL_INTERVAL_SECONDS)
 
 
@@ -1533,13 +1646,15 @@ def _serialize_function(function):
     # Note; In Py3 cloudpickle and base64 handle bytes objects only, so we need to
     # decode it into a string to be able to json dump it again later.
     cp_version = getattr(cloudpickle, "__version__", None)
-    if cp_version is None or cp_version != '0.4.0':
+    if cp_version is None or cp_version != "0.4.0":
         warn(
-            ("You must use version 0.4.0 of cloudpickle for compatibility with the Tasks client. {} found.")
-            .format(cp_version))
+            (
+                "You must use version 0.4.0 of cloudpickle for compatibility with the Tasks client. {} found."
+            ).format(cp_version)
+        )
 
     encoded_bytes = base64.b64encode(cloudpickle.dumps(function))
-    return encoded_bytes.decode('ascii')
+    return encoded_bytes.decode("ascii")
 
 
 def maybe_get_pkg_resources():
@@ -1551,6 +1666,7 @@ def maybe_get_pkg_resources():
     """
     try:
         import pkg_resources
+
         try:
             pkg_resources.Requirement.parse('foo[bar]==2.0;python_version>"2.7"')
         except (ValueError, AttributeError):

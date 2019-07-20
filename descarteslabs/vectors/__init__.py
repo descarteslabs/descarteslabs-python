@@ -16,9 +16,24 @@ It's available under ``descarteslabs.vectors``.
 from .feature import Feature
 from .featurecollection import FeatureCollection
 from descarteslabs.client.services.vector import properties
-from descarteslabs.vectors.exceptions import (VectorException, WaitTimeoutError,
-                                              FailedJobError, InvalidQueryException, FailedCopyError)
+from descarteslabs.vectors.exceptions import (
+    VectorException,
+    WaitTimeoutError,
+    FailedJobError,
+    InvalidQueryException,
+    FailedCopyError,
+)
 from descarteslabs.vectors.async_job import DeleteJob, CopyJob
 
-__all__ = ["Feature", "FeatureCollection", "properties", "WaitTimeoutError", "FailedJobError", "VectorException",
-           "InvalidQueryException", "DeleteJob", "CopyJob", "FailedCopyError"]
+__all__ = [
+    "Feature",
+    "FeatureCollection",
+    "properties",
+    "WaitTimeoutError",
+    "FailedJobError",
+    "VectorException",
+    "InvalidQueryException",
+    "DeleteJob",
+    "CopyJob",
+    "FailedCopyError",
+]

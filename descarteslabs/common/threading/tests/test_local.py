@@ -8,9 +8,10 @@ from descarteslabs.common.threading.local import ThreadLocalWrapper
 
 
 class ThreadLocalWrapperTest(unittest.TestCase):
-
     def setUp(self):
-        self.wrapper = ThreadLocalWrapper(lambda: (os.getpid(), threading.current_thread().ident))
+        self.wrapper = ThreadLocalWrapper(
+            lambda: (os.getpid(), threading.current_thread().ident)
+        )
 
     def _store_id(self):
         self.thread_id = self.wrapper.get()
@@ -66,6 +67,7 @@ class ThreadLocalWrapperTest(unittest.TestCase):
             process3 = multiprocessing.Process(target=self._send_id, args=(queue,))
             process3.start()
             process3.join()
+
         process1_id = self.wrapper.get()
         queue = multiprocessing.Queue()
         process = multiprocessing.Process(target=fork_another, args=(queue,))

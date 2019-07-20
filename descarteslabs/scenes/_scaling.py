@@ -90,7 +90,9 @@ class BandScale(object):
                 self._properties["type"] = BandType.OTHER.value
             else:
                 raise ValueError(
-                    "Invalid properties for band '{}' is missing 'type' field".format(name)
+                    "Invalid properties for band '{}' is missing 'type' field".format(
+                        name
+                    )
                 )
         if "dtype" not in self._properties:
             raise ValueError(
@@ -98,7 +100,9 @@ class BandScale(object):
             )
         if "data_range" not in self._properties:
             raise ValueError(
-                "Invalid properties for band '{}' is missing 'data_range' field".format(name)
+                "Invalid properties for band '{}' is missing 'data_range' field".format(
+                    name
+                )
             )
         # default_range isn't always populated
         if "default_range" not in self._properties:
@@ -112,7 +116,9 @@ class BandScale(object):
     def __getattr__(self, attr):
         if attr in self._properties:
             return self._properties[attr]
-        raise AttributeError("{} object has no '{}' attribute".format(self.__class__.__name__, attr))
+        raise AttributeError(
+            "{} object has no '{}' attribute".format(self.__class__.__name__, attr)
+        )
 
     def output_range(self):
         raise NotImplementedError
@@ -188,7 +194,9 @@ class TupleBandScale(BandScale):
                 is_float.append(True)
             else:
                 raise ValueError(
-                    "Invalid scaling value {} for band '{}' is not a number".format(t, name)
+                    "Invalid scaling value {} for band '{}' is not a number".format(
+                        t, name
+                    )
                 )
         if len(value) == 0:
             mode = ScalingMode.AUTO
@@ -211,7 +219,7 @@ class TupleBandScale(BandScale):
         if len(self._tuple) == 4:
             return [
                 None if self._is_pct[2] else self._tuple[2],
-                None if self._is_pct[3] else self._tuple[3]
+                None if self._is_pct[3] else self._tuple[3],
             ]
         else:
             return [0, 255]
@@ -233,13 +241,20 @@ class TupleBandScale(BandScale):
                 orange = self.physical_range
             else:
                 irange = self.default_range
-                orange = [0., 255.99]  # from GDAL, works for integer also
+                orange = [0.0, 255.99]  # from GDAL, works for integer also
             if len(self._tuple) == 2:
                 scale = (self._tuple[0], self._tuple[1], orange[0], orange[1])
             else:
                 scale = self._tuple
             # apply any percentage calculations across the tuple
-            return tuple(map(calc_pct, scale, (irange, irange, orange, orange), (ifloat, ifloat, ofloat, ofloat)))
+            return tuple(
+                map(
+                    calc_pct,
+                    scale,
+                    (irange, irange, orange, orange),
+                    (ifloat, ifloat, ofloat, ofloat),
+                )
+            )
 
 
 def make_band_scale(name, properties, value):
@@ -254,14 +269,20 @@ def make_band_scale(name, properties, value):
         try:
             mode = ScalingMode(value)
         except ValueError:
-            raise ValueError("Invalid scaling mode '{}' for band '{}'".format(value, name))
+            raise ValueError(
+                "Invalid scaling mode '{}' for band '{}'".format(value, name)
+            )
         if name.startswith("derived:"):
             band_type = BandType.OTHER
         else:
             try:
                 band_type = BandType(properties["type"])
             except ValueError:
-                raise ValueError("Invalid band type '{}' for band '{}'".format(properties["type"], name))
+                raise ValueError(
+                    "Invalid band type '{}' for band '{}'".format(
+                        properties["type"], name
+                    )
+                )
         if band_type in (BandType.MASK, BandType.CLASS):
             # do not scale these automatically, and make mode weak default
             return NoBandScale(name, properties, mode)
@@ -269,7 +290,9 @@ def make_band_scale(name, properties, value):
             return AutomaticBandScale(name, properties, mode)
     elif isinstance(value, tuple):
         if len(value) not in (0, 2, 4):
-            raise ValueError("Invalid scaling tuple {} for band '{}'".format(value, name))
+            raise ValueError(
+                "Invalid scaling tuple {} for band '{}'".format(value, name)
+            )
         return TupleBandScale(name, properties, value)
 
 
@@ -300,7 +323,9 @@ def parse_scaling(properties, bands, scaling):
                 try:
                     band_type = BandType(properties[band]["type"])
                 except ValueError:
-                    raise ValueError("Invalid band type '{}' for band '{}'".format(band_type, band))
+                    raise ValueError(
+                        "Invalid band type '{}' for band '{}'".format(band_type, band)
+                    )
                 if band_type in (BandType.MASK, BandType.CLASS):
                     bscale = None
                 else:
@@ -310,15 +335,11 @@ def parse_scaling(properties, bands, scaling):
         # list, tuple, etc.
         for i, bscale in enumerate(scaling):
             if i >= len(bands):
-                raise ValueError(
-                    "Invalid scaling value has more elements than bands"
-                )
+                raise ValueError("Invalid scaling value has more elements than bands")
             band = bands[i]
             scales.append(make_band_scale(band, properties[band], bscale))
         if i + 1 < len(bands):
-            raise ValueError(
-                "Invalid scaling value has fewer elements than bands"
-            )
+            raise ValueError("Invalid scaling value has fewer elements than bands")
     else:
         raise ValueError(
             "Invalid scaling value {} has unsupported type".format(scaling)
@@ -385,7 +406,7 @@ def calc_pct(value, bounds, is_float):
     Helper function to calculate a scaling tuple value from a percentage.
     """
     if isinstance(value, six.string_types):
-        value = float(value[:-1]) * (bounds[1] - bounds[0]) / 100. + bounds[0]
+        value = float(value[:-1]) * (bounds[1] - bounds[0]) / 100.0 + bounds[0]
     return value if is_float else int(value)
 
 
@@ -404,15 +425,19 @@ def check_modes(scales, implied=False):
             if mode is None:
                 mode = bscale.mode
             elif bscale.mode != mode:
-                if (bscale.mode in (ScalingMode.AUTO, ScalingMode.DISPLAY)
-                    and mode in (ScalingMode.AUTO, ScalingMode.DISPLAY)):  # noqa
+                if bscale.mode in (ScalingMode.AUTO, ScalingMode.DISPLAY) and mode in (
+                    ScalingMode.AUTO,
+                    ScalingMode.DISPLAY,
+                ):  # noqa
                     mode = ScalingMode.DISPLAY
                 elif implied:
                     # cannot determine implied mode on conflict
                     return None
                 else:
                     raise ValueError(
-                        "Conflicting modes in scaling: '{}' and '{}'".format(mode.value, bscale.mode.value)
+                        "Conflicting modes in scaling: '{}' and '{}'".format(
+                            mode.value, bscale.mode.value
+                        )
                     )
     return mode
 
@@ -457,9 +482,7 @@ def scaling_parameters(properties, bands, scaling, data_type):
 
     # validate data_type
     if data_type is not None and data_type not in valid_data_types:
-        raise ValueError(
-            "Invalid data_type value {}"
-        )
+        raise ValueError("Invalid data_type value {}")
 
     # handle this common case quickly
     if scaling is None:
@@ -524,24 +547,26 @@ def multiproduct_scaling_parameters(properties, bands, scaling, data_type):
     for band in bands:
         for product in properties:
             if band not in properties[product]:
-                message = "Invalid bands: band '{}' is not available in product '{}'".format(band, product)
+                message = "Invalid bands: band '{}' is not available in product '{}'".format(
+                    band, product
+                )
                 if "derived:{}".format(band) in properties[product]:
                     message += ", did you mean 'derived:{}'?".format(band)
                 raise ValueError(message)
 
     # validate data_type
     if data_type is not None and data_type not in valid_data_types:
-        raise ValueError(
-            "Invalid data_type value {}"
-        )
+        raise ValueError("Invalid data_type value {}")
 
     # handle this common case quickly
     if scaling is None:
         if data_type is None:
             data_type = common_data_type(
-                [properties[product][band]["dtype"]
-                 for band in bands
-                 for product in properties]
+                [
+                    properties[product][band]["dtype"]
+                    for band in bands
+                    for product in properties
+                ]
             )
         return scaling, data_type
 
@@ -579,9 +604,11 @@ def multiproduct_scaling_parameters(properties, bands, scaling, data_type):
     elif data_type is None:
         if mode == ScalingMode.RAW:
             data_type = common_data_type(
-                [properties[product][band]["dtype"]
-                 for band in bands
-                 for product in properties]
+                [
+                    properties[product][band]["dtype"]
+                    for band in bands
+                    for product in properties
+                ]
             )
         elif mode == ScalingMode.PHYSICAL:
             data_type = "Float64"
@@ -603,6 +630,6 @@ def multiproduct_scaling_parameters(properties, bands, scaling, data_type):
                     )
                 )
 
-    scales = scales[0:len(bands)]
+    scales = scales[0 : len(bands)]
 
     return scales, data_type

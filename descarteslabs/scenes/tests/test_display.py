@@ -8,7 +8,6 @@ from descarteslabs.scenes import display
 
 
 class TestDisplay(unittest.TestCase):
-
     @staticmethod
     def make_mock_subplots(mock_matplotlib_importer, n_imgs):
         mock_matplotlib = mock.Mock()
@@ -23,7 +22,9 @@ class TestDisplay(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
     def test_display_2d(self, mock_matplotlib_importer):
-        mock_plt, mock_fig, mock_axs = self.make_mock_subplots(mock_matplotlib_importer, 1)
+        mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
+            mock_matplotlib_importer, 1
+        )
 
         img = np.arange(6).reshape((3, 2))
 
@@ -39,7 +40,9 @@ class TestDisplay(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
     def test_display_3d_masked(self, mock_matplotlib_importer):
-        mock_plt, mock_fig, mock_axs = self.make_mock_subplots(mock_matplotlib_importer, 1)
+        mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
+            mock_matplotlib_importer, 1
+        )
 
         img = np.arange(3 * 3 * 2).reshape((3, 3, 2))
         mask = np.zeros_like(img).astype(bool)
@@ -64,7 +67,9 @@ class TestDisplay(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
     def test_display_3d_multiple(self, mock_matplotlib_importer):
-        mock_plt, mock_fig, mock_axs = self.make_mock_subplots(mock_matplotlib_importer, 5)
+        mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
+            mock_matplotlib_importer, 5
+        )
 
         img = np.arange(len(mock_axs) * 3 * 3 * 2).reshape((len(mock_axs), 3, 3, 2))
         with self.assertRaisesRegexp(TypeError, "To display a 4D ndarray"):
@@ -81,7 +86,9 @@ class TestDisplay(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
     def test_fails_2band(self, mock_matplotlib_importer):
-        mock_plt, mock_fig, mock_axs = self.make_mock_subplots(mock_matplotlib_importer, 1)
+        mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
+            mock_matplotlib_importer, 1
+        )
 
         img = np.arange(2 * 4 * 2).reshape((2, 4, 2))
 
@@ -90,7 +97,9 @@ class TestDisplay(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
     def test_fails_wrong_num_titles(self, mock_matplotlib_importer):
-        mock_plt, mock_fig, mock_axs = self.make_mock_subplots(mock_matplotlib_importer, 5)
+        mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
+            mock_matplotlib_importer, 5
+        )
 
         img = np.arange(len(mock_axs) * 3 * 3 * 2).reshape((len(mock_axs), 3, 3, 2))
         with self.assertRaisesRegexp(ValueError, "titles"):

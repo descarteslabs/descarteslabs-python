@@ -24,21 +24,22 @@ from .scenecollection import SceneCollection
 from . import geocontext
 
 
-def search(aoi,
-           products=None,
-           start_datetime=None,
-           end_datetime=None,
-           cloud_fraction=None,
-           storage_state=None,
-           limit=100,
-           sort_field=None,
-           sort_order='asc',
-           date_field='acquired',
-           query=None,
-           randomize=False,
-           raster_client=None,
-           metadata_client=None
-           ):
+def search(
+    aoi,
+    products=None,
+    start_datetime=None,
+    end_datetime=None,
+    cloud_fraction=None,
+    storage_state=None,
+    limit=100,
+    sort_field=None,
+    sort_order="asc",
+    date_field="acquired",
+    query=None,
+    randomize=False,
+    raster_client=None,
+    metadata_client=None,
+):
     """
     Search for Scenes in the Descartes Labs catalog.
 
@@ -116,8 +117,10 @@ def search(aoi,
     if isinstance(aoi, geocontext.GeoContext):
         ctx = aoi
         if ctx.bounds is None and ctx.geometry is None:
-            raise ValueError("Unspecified where to search, "
-                             "since the GeoContext given for ``aoi`` has neither geometry nor bounds set")
+            raise ValueError(
+                "Unspecified where to search, "
+                "since the GeoContext given for ``aoi`` has neither geometry nor bounds set"
+            )
     else:
         ctx = geocontext.AOI(geometry=aoi)
 
@@ -147,7 +150,7 @@ def search(aoi,
         sort_order=sort_order,
         date=date_field,
         q=query,
-        randomize=randomize
+        randomize=randomize,
     )
 
     metadata = metadata_client.search(**metadata_params)
@@ -160,9 +163,11 @@ def search(aoi,
     }
 
     scenes = SceneCollection(
-        (Scene(meta, product_bands[meta["properties"]["product"]])
-            for meta in metadata["features"]),
-        raster_client=raster_client
+        (
+            Scene(meta, product_bands[meta["properties"]["product"]])
+            for meta in metadata["features"]
+        ),
+        raster_client=raster_client,
     )
 
     if len(scenes) > 0 and isinstance(ctx, geocontext.AOI):
@@ -170,15 +175,23 @@ def search(aoi,
         if ctx.resolution is None and ctx.shape is None:
             resolutions = filter(
                 None,
-                (b.get("resolution") for band in six.itervalues(product_bands) for b in six.itervalues(band))
+                (
+                    b.get("resolution")
+                    for band in six.itervalues(product_bands)
+                    for b in six.itervalues(band)
+                ),
             )
             try:
                 assign_ctx["resolution"] = min(resolutions)
             except ValueError:
-                assign_ctx["resolution"] = None  # from min of an empty sequence; no band defines resolution
+                assign_ctx[
+                    "resolution"
+                ] = None  # from min of an empty sequence; no band defines resolution
 
         if ctx.crs is None:
-            assign_ctx["crs"] = collections.Counter(scene.properties["crs"] for scene in scenes).most_common(1)[0][0]
+            assign_ctx["crs"] = collections.Counter(
+                scene.properties["crs"] for scene in scenes
+            ).most_common(1)[0][0]
 
         if len(assign_ctx) > 0:
             ctx = ctx.assign(**assign_ctx)

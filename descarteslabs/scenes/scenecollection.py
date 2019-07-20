@@ -41,6 +41,7 @@ class SceneCollection(Collection):
     `stack` and `mosaic` rasterize all contained Scenes into an ndarray
     using the a :class:`~descarteslabs.scenes.geocontext.GeoContext`.
     """
+
     def __init__(self, iterable=None, raster_client=None):
         super(SceneCollection, self).__init__(iterable)
         self._raster_client = raster_client if raster_client is not None else Raster()
@@ -88,20 +89,21 @@ class SceneCollection(Collection):
 
         return self.filter(lambda scene: scene.coverage(geom) >= minimum_coverage)
 
-    def stack(self,
-              bands,
-              ctx,
-              flatten=None,
-              mask_nodata=True,
-              mask_alpha=None,
-              bands_axis=1,
-              raster_info=False,
-              resampler="near",
-              processing_level=None,
-              scaling=None,
-              data_type=None,
-              max_workers=None,
-              ):
+    def stack(
+        self,
+        bands,
+        ctx,
+        flatten=None,
+        mask_nodata=True,
+        mask_alpha=None,
+        bands_axis=1,
+        raster_info=False,
+        resampler="near",
+        processing_level=None,
+        scaling=None,
+        data_type=None,
+        max_workers=None,
+    ):
         """
         Load bands from all scenes and stack them into a 4D ndarray,
         optionally masking invalid data.
@@ -228,12 +230,16 @@ class SceneCollection(Collection):
                 "If you require this shape, try ``np.moveaxis(my_stack, 1, 0)`` on the returned ndarray."
             )
         elif bands_axis > 0:
-            kwargs['bands_axis'] = bands_axis - 1  # the bands axis for each component ndarray call in the stack
+            kwargs["bands_axis"] = (
+                bands_axis - 1
+            )  # the bands axis for each component ndarray call in the stack
 
         if flatten is not None:
             if isinstance(flatten, six.string_types) or not hasattr(flatten, "__len__"):
                 flatten = [flatten]
-            scenes = [sc if len(sc) > 1 else sc[0] for group, sc in self.groupby(*flatten)]
+            scenes = [
+                sc if len(sc) > 1 else sc[0] for group, sc in self.groupby(*flatten)
+            ]
         else:
             scenes = self
 
@@ -257,8 +263,8 @@ class SceneCollection(Collection):
         scaling, data_type = _scaling.multiproduct_scaling_parameters(
             self._product_band_properties(), bands, scaling, data_type
         )
-        kwargs['scaling'] = scaling
-        kwargs['data_type'] = data_type
+        kwargs["scaling"] = scaling
+        kwargs["data_type"] = data_type
 
         if pop_alpha:
             bands.pop(-1)
@@ -269,7 +275,9 @@ class SceneCollection(Collection):
                 if isinstance(scene_or_scenecollection, self.__class__):
                     return lambda: scene_or_scenecollection.mosaic(bands, ctx, **kwargs)
                 else:
-                    return lambda: scene_or_scenecollection.ndarray(bands, ctx, **ndarray_kwargs)
+                    return lambda: scene_or_scenecollection.ndarray(
+                        bands, ctx, **ndarray_kwargs
+                    )
 
             try:
                 futures = concurrent.futures
@@ -278,12 +286,16 @@ class SceneCollection(Collection):
                     "Failed to import concurrent.futures. ndarray calls will be serial."
                 )
                 for i, scene_or_scenecollection in enumerate(scenes):
-                    yield i, data_loader(scene_or_scenecollection, bands, ctx, **kwargs)()
+                    yield i, data_loader(
+                        scene_or_scenecollection, bands, ctx, **kwargs
+                    )()
             else:
                 with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                     future_ndarrays = {}
                     for i, scene_or_scenecollection in enumerate(scenes):
-                        future_ndarray = executor.submit(data_loader(scene_or_scenecollection, bands, ctx, **kwargs))
+                        future_ndarray = executor.submit(
+                            data_loader(scene_or_scenecollection, bands, ctx, **kwargs)
+                        )
                         future_ndarrays[future_ndarray] = i
                     for future in futures.as_completed(future_ndarrays):
                         i = future_ndarrays[future]
@@ -314,18 +326,19 @@ class SceneCollection(Collection):
         else:
             return full_stack
 
-    def mosaic(self,
-               bands,
-               ctx,
-               mask_nodata=True,
-               mask_alpha=None,
-               bands_axis=0,
-               resampler="near",
-               processing_level=None,
-               scaling=None,
-               data_type=None,
-               raster_info=False,
-               ):
+    def mosaic(
+        self,
+        bands,
+        ctx,
+        mask_nodata=True,
+        mask_alpha=None,
+        bands_axis=0,
+        resampler="near",
+        processing_level=None,
+        scaling=None,
+        data_type=None,
+        raster_info=False,
+    ):
         """
         Load bands from all scenes, combining them into a single 3D ndarray
         and optionally masking invalid data.
@@ -416,7 +429,11 @@ class SceneCollection(Collection):
             raise ValueError("This SceneCollection is empty")
 
         if not (-3 < bands_axis < 3):
-            raise ValueError("Invalid bands_axis; axis {} would not exist in a 3D array".format(bands_axis))
+            raise ValueError(
+                "Invalid bands_axis; axis {} would not exist in a 3D array".format(
+                    bands_axis
+                )
+            )
 
         bands = Scene._bands_to_list(bands)
         alpha_band_name = "alpha"
@@ -433,7 +450,9 @@ class SceneCollection(Collection):
                 drop_alpha = True
             else:
                 if alpha_i != len(bands) - 1:
-                    raise ValueError("Alpha must be the last band in order to reduce rasterization errors")
+                    raise ValueError(
+                        "Alpha must be the last band in order to reduce rasterization errors"
+                    )
                 drop_alpha = False
 
         scales, data_type = _scaling.multiproduct_scaling_parameters(
@@ -455,13 +474,17 @@ class SceneCollection(Collection):
             arr, info = self._raster_client.ndarray(**full_raster_args)
         except NotFoundError:
             raise NotFoundError(
-                "Some or all of these IDs don't exist in the Descartes catalog: {}".format(full_raster_args["inputs"])
+                "Some or all of these IDs don't exist in the Descartes catalog: {}".format(
+                    full_raster_args["inputs"]
+                )
             )
         except BadRequestError as e:
-            msg = ("Error with request:\n"
-                   "{err}\n"
-                   "For reference, dl.Raster.ndarray was called with these arguments:\n"
-                   "{args}")
+            msg = (
+                "Error with request:\n"
+                "{err}\n"
+                "For reference, dl.Raster.ndarray was called with these arguments:\n"
+                "{args}"
+            )
             msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))
             six.raise_from(BadRequestError(msg), None)
 
@@ -486,7 +509,9 @@ class SceneCollection(Collection):
                 for scene in self:
                     scene_bands = scene.properties["bands"]
                     for bandname in bands:
-                        band_nodata_values[bandname].add(scene_bands[bandname].get('nodata'))
+                        band_nodata_values[bandname].add(
+                            scene_bands[bandname].get("nodata")
+                        )
 
                 for i, bandname in enumerate(bands):
                     for nodata in band_nodata_values[bandname]:
@@ -505,17 +530,18 @@ class SceneCollection(Collection):
         else:
             return arr
 
-    def download(self,
-                 bands,
-                 ctx,
-                 dest,
-                 format="tif",
-                 resampler="near",
-                 processing_level=None,
-                 scaling=None,
-                 data_type=None,
-                 max_workers=None,
-                 ):
+    def download(
+        self,
+        bands,
+        ctx,
+        dest,
+        format="tif",
+        resampler="near",
+        processing_level=None,
+        scaling=None,
+        data_type=None,
+        max_workers=None,
+    ):
         """
         Download scenes as image files in parallel.
 
@@ -630,7 +656,12 @@ class SceneCollection(Collection):
             bands_str = "-".join(bands)
             try:
                 dest = [
-                    os.path.join(dest, default_pattern.format(scene=scene, bands=bands_str, ext=format))
+                    os.path.join(
+                        dest,
+                        default_pattern.format(
+                            scene=scene, bands=bands_str, ext=format
+                        ),
+                    )
                     for scene in self
                 ]
             except Exception as e:
@@ -639,26 +670,34 @@ class SceneCollection(Collection):
                         "Error while generating default filenames:\n{}\n"
                         "This is likely due to missing or unexpected data "
                         "in Scenes in this SceneCollection.".format(e)
-                    ), None
+                    ),
+                    None,
                 )
 
         try:
             if len(dest) != len(self):
                 raise ValueError(
-                    "`dest` contains {} items, but the SceneCollection contains {}".format(len(dest), len(self))
+                    "`dest` contains {} items, but the SceneCollection contains {}".format(
+                        len(dest), len(self)
+                    )
                 )
         except TypeError:
-            six.raise_from(TypeError(
-                "`dest` should be a sequence of strings or path-like objects; "
-                "instead found type {}, which has no length".format(type(dest))
-            ), None)
+            six.raise_from(
+                TypeError(
+                    "`dest` should be a sequence of strings or path-like objects; "
+                    "instead found type {}, which has no length".format(type(dest))
+                ),
+                None,
+            )
 
         # check for duplicate paths to prevent the confusing situation where
         # multiple rasters overwrite the same filename
         unique = set()
         for path in dest:
             if path in unique:
-                raise RuntimeError("Paths must be unique, but '{}' occurs multiple times".format(path))
+                raise RuntimeError(
+                    "Paths must be unique, but '{}' occurs multiple times".format(path)
+                )
             else:
                 unique.add(path)
 
@@ -688,16 +727,17 @@ class SceneCollection(Collection):
                 concurrent.futures.wait(futures)
         return dest
 
-    def download_mosaic(self,
-                        bands,
-                        ctx,
-                        dest=None,
-                        format="tif",
-                        resampler="near",
-                        processing_level=None,
-                        scaling=None,
-                        data_type=None,
-                        ):
+    def download_mosaic(
+        self,
+        bands,
+        ctx,
+        dest=None,
+        format="tif",
+        resampler="near",
+        processing_level=None,
+        scaling=None,
+        data_type=None,
+    ):
         """
         Download all scenes as a single image file.
         Where multiple scenes overlap, only data from the scene that comes last
@@ -862,7 +902,11 @@ class SceneCollection(Collection):
         )
 
     def __repr__(self):
-        parts = ["SceneCollection of {} scene{}".format(len(self), "" if len(self) == 1 else "s")]
+        parts = [
+            "SceneCollection of {} scene{}".format(
+                len(self), "" if len(self) == 1 else "s"
+            )
+        ]
         try:
             first = min(self.each.properties.date)
             last = max(self.each.properties.date)
@@ -874,7 +918,9 @@ class SceneCollection(Collection):
         try:
             products = self.each.properties.product.combine(collections.Counter)
             if len(products) > 0:
-                products = ", ".join("{}: {}".format(k, v) for k, v in six.iteritems(products))
+                products = ", ".join(
+                    "{}: {}".format(k, v) for k, v in six.iteritems(products)
+                )
                 products = "  * Products: {}".format(products)
                 parts.append(products)
         except Exception:

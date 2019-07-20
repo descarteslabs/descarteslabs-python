@@ -1,6 +1,6 @@
 ENTRYPOINT = "__dlentrypoint__.py"
-DIST = 'dist'
-DATA = 'data'
+DIST = "dist"
+DATA = "data"
 REQUIREMENTS = "requirements.txt"
 
 

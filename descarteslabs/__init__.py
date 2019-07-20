@@ -52,9 +52,9 @@ except ImportError:
     pass
 
 try:
-  from . import catalog
+    from . import catalog
 except ImportError:
-  pass
+    pass
 
 
 descartes_auth = Auth.from_environment_or_token_json()
@@ -63,5 +63,13 @@ places = Places(auth=descartes_auth)
 raster = Raster(auth=descartes_auth)
 properties = GenericProperties()
 
-__all__ = ["descartes_auth", "metadata", "places", "raster", "properties", "Auth", "exceptions"] + services.__all__
+__all__ = [
+    "descartes_auth",
+    "metadata",
+    "places",
+    "raster",
+    "properties",
+    "Auth",
+    "exceptions",
+] + services.__all__
 __author__ = "Descartes Labs"

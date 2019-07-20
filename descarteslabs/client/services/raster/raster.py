@@ -44,34 +44,37 @@ def as_json_string(str_or_dict):
 def read_blosc_buffer(data):
     header = data.read(16)
 
-    _, size, _, compressed_size = struct.unpack('<IIII', header)
+    _, size, _, compressed_size = struct.unpack("<IIII", header)
     body = data.read(compressed_size - 16)
 
     return size, header + body
 
 
 def read_blosc_array(metadata, data):
-    output = np.empty(metadata['shape'], dtype=np.dtype(metadata['dtype']))
-    ptr = output.__array_interface__['data'][0]
+    output = np.empty(metadata["shape"], dtype=np.dtype(metadata["dtype"]))
+    ptr = output.__array_interface__["data"][0]
 
-    for _ in metadata['chunks']:
+    for _ in metadata["chunks"]:
         raw_size, buffer = read_blosc_buffer(data)
         blosc.decompress_ptr(buffer, ptr)
         ptr += raw_size
 
-    bytes_received = ptr - output.__array_interface__['data'][0]
+    bytes_received = ptr - output.__array_interface__["data"][0]
 
     if bytes_received != output.nbytes:
-        raise ServerError("Did not receive complete array (got {}, expected {})".format(
-            bytes_received, output.nbytes))
+        raise ServerError(
+            "Did not receive complete array (got {}, expected {})".format(
+                bytes_received, output.nbytes
+            )
+        )
 
     return output
 
 
 def read_blosc_string(metadata, data):
-    output = b''
+    output = b""
 
-    for _ in metadata['chunks']:
+    for _ in metadata["chunks"]:
         _, buffer = read_blosc_buffer(data)
         output += blosc.decompress(buffer)
 
@@ -83,6 +86,7 @@ class Raster(Service):
     The Raster API has two purposes: retrieving data from the Descartes Labs Catalog,
     and providing a consistent way of splitting that data into smaller tiles.
     """
+
     TIMEOUT = (9.5, 300)
 
     def __init__(self, url=None, auth=None, retries=None):
@@ -99,7 +103,10 @@ class Raster(Service):
             auth = Auth()
 
         if url is None:
-            url = os.environ.get("DESCARTESLABS_RASTER_URL", "https://platform.descarteslabs.com/raster/v1")
+            url = os.environ.get(
+                "DESCARTESLABS_RASTER_URL",
+                "https://platform.descarteslabs.com/raster/v1",
+            )
 
         super(Raster, self).__init__(url, auth=auth, retries=retries)
 
@@ -179,23 +186,23 @@ class Raster(Service):
         shape = shapely_to_geojson(shape)
         shape = as_json_string(shape)
         params = {
-            'resolution': resolution,
-            'tilesize': tilesize,
-            'pad': pad,
-            'shape': shape,
-            'maxtiles': maxtiles
+            "resolution": resolution,
+            "tilesize": tilesize,
+            "pad": pad,
+            "shape": shape,
+            "maxtiles": maxtiles,
         }
 
         while True:
-            r = self.session.post('/dlkeys/from_shape', json=params)
+            r = self.session.post("/dlkeys/from_shape", json=params)
             fc = DotDict(r.json())
             for t in fc.features:
                 yield t
-            iterstate = fc.get('iterstate', None)
+            iterstate = fc.get("iterstate", None)
             if iterstate:
-                params['start_zone'] = iterstate.start_zone
-                params['start_ti'] = iterstate.start_ti
-                params['start_tj'] = iterstate.start_tj
+                params["start_zone"] = iterstate.start_zone
+                params["start_ti"] = iterstate.start_ti
+                params["start_tj"] = iterstate.start_tj
             else:
                 break
 
@@ -276,8 +283,12 @@ class Raster(Service):
             }
         """
         shape = shapely_to_geojson(shape)
-        return DotDict(type='FeatureCollection',
-                       features=list(self.iter_dltiles_from_shape(resolution, tilesize, pad, shape)))
+        return DotDict(
+            type="FeatureCollection",
+            features=list(
+                self.iter_dltiles_from_shape(resolution, tilesize, pad, shape)
+            ),
+        )
 
     def dltile_from_latlon(self, lat, lon, resolution, tilesize, pad):
         """
@@ -332,13 +343,9 @@ class Raster(Service):
               'type': 'Feature'
             }
         """
-        params = {
-            'resolution': resolution,
-            'tilesize': tilesize,
-            'pad': pad,
-        }
+        params = {"resolution": resolution, "tilesize": tilesize, "pad": pad}
 
-        r = self.session.get('/dlkeys/from_latlon/%f/%f' % (lat, lon), params=params)
+        r = self.session.get("/dlkeys/from_latlon/%f/%f" % (lat, lon), params=params)
 
         return DotDict(r.json())
 
@@ -396,33 +403,33 @@ class Raster(Service):
         """
 
         if not key:
-            raise ValueError('Invalid key')
+            raise ValueError("Invalid key")
 
-        r = self.session.get('/dlkeys/%s' % key)
+        r = self.session.get("/dlkeys/%s" % key)
 
         return DotDict(r.json())
 
     def raster(
-            self,
-            inputs,
-            bands=None,
-            scales=None,
-            data_type=None,
-            output_format='GTiff',
-            srs=None,
-            dimensions=None,
-            resolution=None,
-            bounds=None,
-            bounds_srs=None,
-            cutline=None,
-            place=None,
-            align_pixels=False,
-            resampler=None,
-            dltile=None,
-            processing_level=None,
-            save=False,
-            outfile_basename=None,
-            **pass_through_params
+        self,
+        inputs,
+        bands=None,
+        scales=None,
+        data_type=None,
+        output_format="GTiff",
+        srs=None,
+        dimensions=None,
+        resolution=None,
+        bounds=None,
+        bounds_srs=None,
+        cutline=None,
+        place=None,
+        align_pixels=False,
+        resampler=None,
+        dltile=None,
+        processing_level=None,
+        save=False,
+        outfile_basename=None,
+        **pass_through_params
     ):
         """
         Given a list of catalog image identifiers, retrieve a translated and
@@ -493,85 +500,82 @@ class Raster(Service):
         if place:
             places = Places()
             places.auth = self.auth
-            shape = places.shape(place, geom='low')
-            cutline = json.dumps(shape['geometry'])
+            shape = places.shape(place, geom="low")
+            cutline = json.dumps(shape["geometry"])
 
         params = {
-            'ids': inputs,
-            'bands': bands,
-            'scales': scales,
-            'ot': data_type,
-            'of': output_format,
-            'srs': srs,
-            'resolution': resolution,
-            'shape': cutline,
-            'outputBounds': bounds,
-            'outputBoundsSRS': bounds_srs,
-            'outsize': dimensions,
-            'targetAlignedPixels': align_pixels,
-            'resampleAlg': resampler,
-            'processing_level': processing_level,
+            "ids": inputs,
+            "bands": bands,
+            "scales": scales,
+            "ot": data_type,
+            "of": output_format,
+            "srs": srs,
+            "resolution": resolution,
+            "shape": cutline,
+            "outputBounds": bounds,
+            "outputBoundsSRS": bounds_srs,
+            "outsize": dimensions,
+            "targetAlignedPixels": align_pixels,
+            "resampleAlg": resampler,
+            "processing_level": processing_level,
         }
         params.update(pass_through_params)
 
         if dltile is not None:
             if isinstance(dltile, dict):
-                params['dltile'] = dltile['properties']['key']
+                params["dltile"] = dltile["properties"]["key"]
             else:
-                params['dltile'] = dltile
+                params["dltile"] = dltile
 
-        r = self.session.post('/raster', json=params)
+        r = self.session.post("/raster", json=params)
 
         raw = BytesIO(r.content)
 
-        json_resp = json.loads(raw.readline().decode('utf-8').strip())
+        json_resp = json.loads(raw.readline().decode("utf-8").strip())
 
-        num_files = json_resp['files']
-        json_resp['files'] = {}
+        num_files = json_resp["files"]
+        json_resp["files"] = {}
 
         for _ in range(num_files):
-            file_meta = json.loads(raw.readline().decode('utf-8').strip())
+            file_meta = json.loads(raw.readline().decode("utf-8").strip())
 
-            fn = file_meta['name']
-            data = raw.read(file_meta['length'])
+            fn = file_meta["name"]
+            data = raw.read(file_meta["length"])
 
             if outfile_basename:
                 _, ext = os.path.splitext(os.path.basename(fn))
-                outfilename = "{}{}".format(
-                    outfile_basename,
-                    ext
-                )
+                outfilename = "{}{}".format(outfile_basename, ext)
             else:
                 outfilename = fn
 
-            json_resp['files'][outfilename] = data
+            json_resp["files"][outfilename] = data
 
         if save:
-            for filename, data in six.iteritems(json_resp['files']):
+            for filename, data in six.iteritems(json_resp["files"]):
                 with open(filename, "wb") as f:
                     f.write(data)
 
         return DotDict(json_resp)
 
     def ndarray(
-            self,
-            inputs,
-            bands=None,
-            scales=None,
-            data_type=None,
-            srs=None,
-            resolution=None,
-            dimensions=None,
-            cutline=None,
-            place=None,
-            bounds=None,
-            bounds_srs=None,
-            align_pixels=False,
-            resampler=None,
-            order='image',
-            dltile=None,
-            processing_level=None,
-            **pass_through_params
+        self,
+        inputs,
+        bands=None,
+        scales=None,
+        data_type=None,
+        srs=None,
+        resolution=None,
+        dimensions=None,
+        cutline=None,
+        place=None,
+        bounds=None,
+        bounds_srs=None,
+        align_pixels=False,
+        resampler=None,
+        order="image",
+        dltile=None,
+        processing_level=None,
+        **pass_through_params
     ):
         """Retrieve a raster as a NumPy array.
 
@@ -635,54 +639,54 @@ class Raster(Service):
 
         if place is not None:
             places = Places(auth=self.auth)
-            shape = places.shape(place, geom='low')
-            cutline = json.dumps(shape['geometry'])
+            shape = places.shape(place, geom="low")
+            cutline = json.dumps(shape["geometry"])
 
         params = {
-            'ids': inputs,
-            'bands': bands,
-            'scales': scales,
-            'ot': data_type,
-            'srs': srs,
-            'resolution': resolution,
-            'shape': cutline,
-            'outputBounds': bounds,
-            'outputBoundsSRS': bounds_srs,
-            'outsize': dimensions,
-            'targetAlignedPixels': align_pixels,
-            'resampleAlg': resampler,
-            'processing_level': processing_level,
+            "ids": inputs,
+            "bands": bands,
+            "scales": scales,
+            "ot": data_type,
+            "srs": srs,
+            "resolution": resolution,
+            "shape": cutline,
+            "outputBounds": bounds,
+            "outputBoundsSRS": bounds_srs,
+            "outsize": dimensions,
+            "targetAlignedPixels": align_pixels,
+            "resampleAlg": resampler,
+            "processing_level": processing_level,
         }
         params.update(pass_through_params)
 
         if dltile is not None:
             if isinstance(dltile, dict):
-                params['dltile'] = dltile['properties']['key']
+                params["dltile"] = dltile["properties"]["key"]
             else:
-                params['dltile'] = dltile
+                params["dltile"] = dltile
 
         can_blosc = not isinstance(blosc, ThirdParty)
 
         if can_blosc:
-            params['of'] = 'blosc'
+            params["of"] = "blosc"
         else:
-            params['of'] = 'npz'
+            params["of"] = "npz"
 
-        r = self.session.post('/npz', json=params, stream=True)
+        r = self.session.post("/npz", json=params, stream=True)
 
         if can_blosc:
-            metadata = json.loads(r.raw.readline().decode('utf-8').strip())
-            array_meta = json.loads(r.raw.readline().decode('utf-8').strip())
+            metadata = json.loads(r.raw.readline().decode("utf-8").strip())
+            array_meta = json.loads(r.raw.readline().decode("utf-8").strip())
             array = read_blosc_array(array_meta, r.raw)
         else:
             npz = np.load(BytesIO(r.content))
-            array = npz['data']
-            metadata = json.loads(npz['metadata'].tostring().decode('utf-8'))
+            array = npz["data"]
+            metadata = json.loads(npz["metadata"].tostring().decode("utf-8"))
 
         if len(array.shape) > 2:
-            if order == 'image':
+            if order == "image":
                 return array.transpose((1, 2, 0)), metadata
-            elif order == 'gdal':
+            elif order == "gdal":
                 return array, metadata
         else:
             return array, DotDict(metadata)
@@ -698,8 +702,7 @@ class Raster(Service):
         `kwargs` for each raster.ndarray call.
         """
         max_workers = kwargs.pop(
-            "max_workers",
-            min(len(id_groups), DEFAULT_MAX_WORKERS)
+            "max_workers", min(len(id_groups), DEFAULT_MAX_WORKERS)
         )
         try:
             futures = concurrent.futures
@@ -715,8 +718,8 @@ class Raster(Service):
         with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_ndarrays = {}
             for i, id_group in enumerate(id_groups):
-                future_ndarrays[executor.submit(
-                    self.ndarray, id_group, *args, **kwargs)
+                future_ndarrays[
+                    executor.submit(self.ndarray, id_group, *args, **kwargs)
                 ] = i
 
             for future in futures.as_completed(future_ndarrays):
@@ -725,25 +728,25 @@ class Raster(Service):
                 yield i, arr, meta
 
     def stack(
-            self,
-            inputs,
-            bands=None,
-            scales=None,
-            data_type="UInt16",
-            srs=None,
-            resolution=None,
-            dimensions=None,
-            cutline=None,
-            place=None,
-            bounds=None,
-            bounds_srs=None,
-            align_pixels=False,
-            resampler=None,
-            order='image',
-            dltile=None,
-            processing_level=None,
-            max_workers=None,
-            **pass_through_params
+        self,
+        inputs,
+        bands=None,
+        scales=None,
+        data_type="UInt16",
+        srs=None,
+        resolution=None,
+        dimensions=None,
+        cutline=None,
+        place=None,
+        bounds=None,
+        bounds_srs=None,
+        align_pixels=False,
+        resampler=None,
+        order="image",
+        dltile=None,
+        processing_level=None,
+        max_workers=None,
+        **pass_through_params
     ):
         """
         Retrieve a stack of rasters as a 4-D NumPy array.
@@ -820,7 +823,9 @@ class Raster(Service):
         :rtype: tuple(numpy.ndarray, list(DotDict))
         """
         if not isinstance(inputs, (list, tuple)):
-            raise TypeError("Inputs must be a list or tuple, instead got '{}'".format(type(inputs)))
+            raise TypeError(
+                "Inputs must be a list or tuple, instead got '{}'".format(type(inputs))
+            )
 
         params = dict(
             bands=bands,
@@ -859,7 +864,11 @@ class Raster(Service):
                 elif order == "gdal":
                     arr = np.expand_dims(arr, 0)
                 else:
-                    raise ValueError("Unknown order '{}'; should be one of 'image' or 'gdal'".format(order))
+                    raise ValueError(
+                        "Unknown order '{}'; should be one of 'image' or 'gdal'".format(
+                            order
+                        )
+                    )
             if full_stack is None:
                 stack_shape = (len(inputs),) + arr.shape
                 full_stack = np.empty(stack_shape, dtype=arr.dtype)

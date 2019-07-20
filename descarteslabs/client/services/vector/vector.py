@@ -498,7 +498,9 @@ class Vector(JsonApiService):
         """
 
         params = dict(
-            geometry=shapely_to_geojson(geometry), properties=properties, fix_geometry=fix_geometry
+            geometry=shapely_to_geojson(geometry),
+            properties=properties,
+            fix_geometry=fix_geometry,
         )
 
         jsonapi = self.jsonapi_document(type="feature", attributes=params)

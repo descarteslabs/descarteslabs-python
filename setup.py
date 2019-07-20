@@ -22,24 +22,29 @@ from setuptools import find_packages, setup
 
 # Parse the docstring out of descarteslabs/__init__.py
 _docstring_re = re.compile(r'"""((.|\n)*)\n"""', re.MULTILINE)
-with open('descarteslabs/__init__.py', 'rb') as f:
-    __doc__ = _docstring_re.search(f.read().decode('utf-8')).group(1)
+with open("descarteslabs/__init__.py", "rb") as f:
+    __doc__ = _docstring_re.search(f.read().decode("utf-8")).group(1)
 
 DOCLINES = __doc__.split("\n")
 
 # Parse version out of descarteslabs/client/version.py
-_version_re = re.compile(r'__version__\s+=\s+(.*)')
-with open('descarteslabs/client/version.py', 'rb') as f:
-    version = str(ast.literal_eval(_version_re.search(f.read().decode('utf-8')).group(1)))
+_version_re = re.compile(r"__version__\s+=\s+(.*)")
+with open("descarteslabs/client/version.py", "rb") as f:
+    version = str(
+        ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
+    )
 
 
 def check_setuptools():
     import pkg_resources
+
     try:
         list(pkg_resources.parse_requirements('foo;platform_system!="Windows"'))
     except pkg_resources.RequirementParseError:
-        exit('Your Python is using an outdated version of `setuptools`. Please '
-             'run `pip install -U setuptools` and try again.')
+        exit(
+            "Your Python is using an outdated version of `setuptools`. Please "
+            "run `pip install -U setuptools` and try again."
+        )
 
 
 def do_setup():
@@ -49,13 +54,16 @@ def do_setup():
     sys.path.insert(0, src_path)
 
     kwargs = {}
-    kwargs['name'] = 'descarteslabs'
-    kwargs['description'] = DOCLINES[0]
-    kwargs['long_description'] = "\n".join(DOCLINES[2:])
-    kwargs['author'] = 'Descartes Labs'
-    kwargs['author_email'] = 'hello@descarteslabs.com'
-    kwargs['url'] = 'https://github.com/descarteslabs/descarteslabs-python'
-    kwargs['download_url'] = "https://github.com/descarteslabs/descarteslabs-python/archive/v%s.tar.gz" % version
+    kwargs["name"] = "descarteslabs"
+    kwargs["description"] = DOCLINES[0]
+    kwargs["long_description"] = "\n".join(DOCLINES[2:])
+    kwargs["author"] = "Descartes Labs"
+    kwargs["author_email"] = "hello@descarteslabs.com"
+    kwargs["url"] = "https://github.com/descarteslabs/descarteslabs-python"
+    kwargs["download_url"] = (
+        "https://github.com/descarteslabs/descarteslabs-python/archive/v%s.tar.gz"
+        % version
+    )
 
     clssfrs = [
         "Programming Language :: Python",
@@ -66,15 +74,15 @@ def do_setup():
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
     ]
-    kwargs['classifiers'] = clssfrs
-    kwargs['version'] = version
-    kwargs['packages'] = find_packages('.')
-    kwargs['entry_points'] = {
-        'console_scripts': [
-            'descarteslabs = descarteslabs.client.scripts.__main__:main',
-        ],
+    kwargs["classifiers"] = clssfrs
+    kwargs["version"] = version
+    kwargs["packages"] = find_packages(".")
+    kwargs["entry_points"] = {
+        "console_scripts": [
+            "descarteslabs = descarteslabs.client.scripts.__main__:main"
+        ]
     }
-    kwargs['install_requires'] = [
+    kwargs["install_requires"] = [
         "cloudpickle==0.4.0",
         "six",
         "cachetools>=2.0.1",
@@ -90,21 +98,21 @@ def do_setup():
 
     # Python < 2.7.9 needs requests[security] to avoid SSL issues
     # macOS ships with ancient OpenSSL which causes different SSL issues
-    if sys.version_info[0:3] >= (2, 7, 9) and sys.platform != 'darwin':
-        kwargs["install_requires"].append('requests>=2.20.1,<3')
+    if sys.version_info[0:3] >= (2, 7, 9) and sys.platform != "darwin":
+        kwargs["install_requires"].append("requests>=2.20.1,<3")
     else:
-        kwargs["install_requires"].append('requests[security]>=2.20.1,<3')
+        kwargs["install_requires"].append("requests[security]>=2.20.1,<3")
 
-    kwargs['extras_require'] = {
+    kwargs["extras_require"] = {
         "complete": [
             'blosc;platform_system!="Windows"',
             "numpy>=1.10.0",
             "matplotlib>=2.1.0",
             "mercantile>=1.0.4",
-        ],
+        ]
     }
-    kwargs['license'] = 'Apache 2.0'
-    kwargs['zip_safe'] = False
+    kwargs["license"] = "Apache 2.0"
+    kwargs["zip_safe"] = False
 
     try:
         setup(**kwargs)

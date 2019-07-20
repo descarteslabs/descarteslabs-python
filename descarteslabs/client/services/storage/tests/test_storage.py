@@ -22,15 +22,16 @@ from descarteslabs.client.services.storage import Storage
 from descarteslabs.client.exceptions import ServerError
 
 
-public_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0sImlzcyI6Imh0dHBzOi8vZGVzY2FydGVzbGFicy5hdXRoMC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMTExMzg1NTY1MjQ4MTIzOTU3MTIiLCJhdWQiOiJaT0JBaTRVUk9sNWdLWklweHhsd09FZng4S3BxWGYyYyIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNDc4MjAxNDE5fQ.sbSzD9ACNZvaxSgClZCnZMpee_p5MBaKV9uHZQonD6Q" # noqa
+public_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0sImlzcyI6Imh0dHBzOi8vZGVzY2FydGVzbGFicy5hdXRoMC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMTExMzg1NTY1MjQ4MTIzOTU3MTIiLCJhdWQiOiJaT0JBaTRVUk9sNWdLWklweHhsd09FZng4S3BxWGYyYyIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNDc4MjAxNDE5fQ.sbSzD9ACNZvaxSgClZCnZMpee_p5MBaKV9uHZQonD6Q"  # noqa
 
 
 class StorageClientTestCase(unittest.TestCase):
-
     def setUp(self):
         url = "http://example.com"
         self.url = url
-        self.client = Storage(url=url, auth=Auth(jwt_token=public_token, token_info_path=None))
+        self.client = Storage(
+            url=url, auth=Auth(jwt_token=public_token, token_info_path=None)
+        )
         self.match_url = re.compile(url)
 
     def mock_response(self, method, body, status=200):
@@ -38,17 +39,16 @@ class StorageClientTestCase(unittest.TestCase):
 
 
 class TestStorage(StorageClientTestCase):
-
     @responses.activate
     def test_set_file(self):
-        upload_url = 'http://example.com/'
+        upload_url = "http://example.com/"
         self.mock_response(responses.GET, upload_url)
-        self.mock_response(responses.PUT, '')
+        self.mock_response(responses.PUT, "")
 
         with NamedTemporaryFile() as tmp:
-            tmp.write(b'hello world')
+            tmp.write(b"hello world")
 
-            self.client.set_file('foo', tmp)
+            self.client.set_file("foo", tmp)
             self.assertEqual(upload_url, responses.calls[1].request.url)
 
     @responses.activate
@@ -57,24 +57,24 @@ class TestStorage(StorageClientTestCase):
         self.mock_response(responses.GET, data)
 
         with NamedTemporaryFile() as tmp:
-            self.client.get_file('foo', tmp)
+            self.client.get_file("foo", tmp)
             self.assertEqual(len(data), tmp.tell())
 
     @responses.activate
     def test_exists_true(self):
         self.mock_response(responses.HEAD, None, 200)
-        self.assertTrue(self.client.exists('foo'))
+        self.assertTrue(self.client.exists("foo"))
 
     @responses.activate
     def test_exists_false(self):
         self.mock_response(responses.HEAD, None, 404)
-        self.assertFalse(self.client.exists('foo'))
+        self.assertFalse(self.client.exists("foo"))
 
     @responses.activate
     def test_exists_bad_req(self):
         self.mock_response(responses.HEAD, None, 500)
         with self.assertRaises(ServerError):
-            self.client.exists('foo')
+            self.client.exists("foo")
 
 
 if __name__ == "__main__":

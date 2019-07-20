@@ -101,7 +101,11 @@ def _display_or_save(filename, *imgs, **kwargs):
     colormap_name = kwargs.pop("colormap", None)
 
     if len(kwargs) > 0:
-        raise TypeError("Unexpected keyword arguments for display: {}".format(', '.join(six.iterkeys(kwargs))))
+        raise TypeError(
+            "Unexpected keyword arguments for display: {}".format(
+                ", ".join(six.iterkeys(kwargs))
+            )
+        )
 
     np = descarteslabs.client.addons.numpy
     matplotlib = descarteslabs.client.addons.import_matplotlib_pyplot()
@@ -109,9 +113,13 @@ def _display_or_save(filename, *imgs, **kwargs):
 
     if len(imgs) == 1:
         if isinstance(imgs[0], (list, tuple)):
-            raise TypeError("To display a sequence of images, unpack it: `display(*images_list)`")
+            raise TypeError(
+                "To display a sequence of images, unpack it: `display(*images_list)`"
+            )
         elif isinstance(imgs[0], np.ndarray) and len(imgs[0].shape) == 4:
-            raise TypeError("To display a 4D ndarray (image stack), unpack it: `display(*stack)`")
+            raise TypeError(
+                "To display a 4D ndarray (image stack), unpack it: `display(*stack)`"
+            )
 
     # TODO: facet grid
     # TODO: leaves huge gaps between images that aren't very square
@@ -165,7 +173,9 @@ def _display_or_save(filename, *imgs, **kwargs):
         # calculate min and max
         if robust:
             if hasattr(spectrals, "mask"):
-                spectrals = spectrals.compressed()  # don't include masked values in percentile
+                spectrals = (
+                    spectrals.compressed()
+                )  # don't include masked values in percentile
             vmin, vmax = np.nanpercentile(spectrals, 2), np.nanpercentile(spectrals, 98)
             if vmin == vmax:
                 robust = False
@@ -178,7 +188,7 @@ def _display_or_save(filename, *imgs, **kwargs):
 
         # rescale
         disp -= vmin
-        disp /= (vmax - vmin)
+        disp /= vmax - vmin
         np.clip(disp, 0, 1, out=disp)  # to coerce away any floating-point errors
 
         if hasattr(disp, "mask"):
@@ -194,11 +204,15 @@ def _display_or_save(filename, *imgs, **kwargs):
             if nbands == 1:
                 if colormap:
                     disp = colormap(disp[:, :, 0])
-                    disp = disp[:, :, :3]  # Removes the alpha channel the color map always adds
+                    disp = disp[
+                        :, :, :3
+                    ]  # Removes the alpha channel the color map always adds
                 else:
                     # to use an alpha channel, matplotlib must have a 4-band image,
                     # so just duplicate the 1 band for r, g, and b
-                    disp = np.concatenate([disp] * 3, axis=-1)  # TODO: unnecessary copy of disp's mask
+                    disp = np.concatenate(
+                        [disp] * 3, axis=-1
+                    )  # TODO: unnecessary copy of disp's mask
             disp = np.concatenate([disp, alpha[:, :, np.newaxis]], axis=-1)
 
         if disp.shape[-1] == 1:

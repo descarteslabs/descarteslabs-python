@@ -63,7 +63,10 @@ class TestCollection(unittest.TestCase):
         self.assertEqual(c.each.combine(), c)
         self.assertEqual(c.each["index"].combine(), list(range(10)))
         self.assertEqual(c.each.get("index").combine(), list(range(10)))
-        self.assertEqual(c.each["index"].pipe(str).zfill(2).combine(), [str(i).zfill(2) for i in range(10)])
+        self.assertEqual(
+            c.each["index"].pipe(str).zfill(2).combine(),
+            [str(i).zfill(2) for i in range(10)],
+        )
 
     def test_cast_and_copy_attrs_to(self):
         c = Collection([])
@@ -133,4 +136,18 @@ class TestCollection(unittest.TestCase):
             self.assertEqual(items.attr, "baz")
 
         groups, items = zip(*c.groupby("bar", "foo"))
-        self.assertEqual(groups, ((0, 0), (0, 2), (0, 4), (0, 6), (0, 8), (1, 1), (1, 3), (1, 5), (1, 7), (1, 9)))
+        self.assertEqual(
+            groups,
+            (
+                (0, 0),
+                (0, 2),
+                (0, 4),
+                (0, 6),
+                (0, 8),
+                (1, 1),
+                (1, 3),
+                (1, 5),
+                (1, 7),
+                (1, 9),
+            ),
+        )

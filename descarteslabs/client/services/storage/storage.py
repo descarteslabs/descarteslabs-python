@@ -226,7 +226,7 @@ class Storage(Service):
         rurl = self.get_upload_url(key, storage_type=storage_type)
 
         if isinstance(file_obj, six.string_types):
-            with open(file_obj, 'rb') as f:
+            with open(file_obj, "rb") as f:
                 self._gcs_upload_service.session.put(rurl, data=f)
         else:
             self._gcs_upload_service.session.put(rurl, data=file_obj)
@@ -249,12 +249,12 @@ class Storage(Service):
         """
         r = self.session.get(
             "/{storage_type}/get/{key}".format(storage_type=storage_type, key=key),
-            stream=True
+            stream=True,
         )
         r.raise_for_status()
 
         if isinstance(file_obj, six.string_types):
-            with open(file_obj, 'wb') as f:
+            with open(file_obj, "wb") as f:
                 for chunk in r.iter_content(chunk_size=None):
                     if chunk:
                         f.write(chunk)

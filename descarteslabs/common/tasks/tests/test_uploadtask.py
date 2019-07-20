@@ -18,14 +18,13 @@ public_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0
 class ClientTestCase(unittest.TestCase):
     def setUp(self):
         url = "http://example.com"
-        self.client = Vector(url=url,
-                             auth=Auth(jwt_token=public_token,
-                                       token_info_path=None))
+        self.client = Vector(
+            url=url, auth=Auth(jwt_token=public_token, token_info_path=None)
+        )
         self.match_url = re.compile(url)
 
     def mock_response(self, method, json, status=200, **kwargs):
-        responses.add(method, self.match_url, json=json, status=status,
-            **kwargs)
+        responses.add(method, self.match_url, json=json, status=status, **kwargs)
 
 
 group_id = "group-id"
@@ -48,115 +47,187 @@ class TestUploadTask(ClientTestCase):
     def test_ready(self):
         task = UploadTask(group_id, upload_id=upload_id, client=self.client)
 
-        self.mock_response(responses.GET,
-                           {'data': {'id': upload_id, 'attributes': {'status': 'PENDING'}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': upload_id, 'attributes': {'status': 'PENDING'}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': task_id, 'attributes': {'status': 'SUCCESS', 'load': {'state': 'RUNNING'}}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': task_id, 'attributes': {'status': 'SUCCESS', 'load': {'state': 'RUNNING'}}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': task_id, 'attributes': {'status': 'SUCCESS', 'load': {'state': 'SUCCESS'}}}})
-                           
+        self.mock_response(
+            responses.GET,
+            {"data": {"id": upload_id, "attributes": {"status": "PENDING"}}},
+        )
+        self.mock_response(
+            responses.GET,
+            {"data": {"id": upload_id, "attributes": {"status": "PENDING"}}},
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "id": task_id,
+                    "attributes": {"status": "SUCCESS", "load": {"state": "RUNNING"}},
+                }
+            },
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "id": task_id,
+                    "attributes": {"status": "SUCCESS", "load": {"state": "RUNNING"}},
+                }
+            },
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "id": task_id,
+                    "attributes": {"status": "SUCCESS", "load": {"state": "SUCCESS"}},
+                }
+            },
+        )
+
         self.assertFalse(task.ready)
-        self.assertEqual(task.status, 'PENDING')
+        self.assertEqual(task.status, "PENDING")
         self.assertIsNone(task.tuid)
 
         self.assertFalse(task.ready)
-        self.assertEqual(task.status, 'RUNNING')
+        self.assertEqual(task.status, "RUNNING")
         self.assertEqual(task.tuid, task_id)
 
         self.assertTrue(task.ready)
-        self.assertEqual(task.status, 'SUCCESS')
+        self.assertEqual(task.status, "SUCCESS")
 
     @responses.activate
     def test_ready_failure(self):
         task = UploadTask(group_id, upload_id=upload_id, client=self.client)
 
-        self.mock_response(responses.GET,
-                           {'data': {'id': upload_id, 'attributes': {'status': 'PENDING'}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': upload_id, 'attributes': {'status': 'PENDING'}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': task_id, 'attributes': {'status': 'FAILURE'}}})
+        self.mock_response(
+            responses.GET,
+            {"data": {"id": upload_id, "attributes": {"status": "PENDING"}}},
+        )
+        self.mock_response(
+            responses.GET,
+            {"data": {"id": upload_id, "attributes": {"status": "PENDING"}}},
+        )
+        self.mock_response(
+            responses.GET,
+            {"data": {"id": task_id, "attributes": {"status": "FAILURE"}}},
+        )
 
         self.assertFalse(task.ready)
-        self.assertEqual(task.status, 'PENDING')
+        self.assertEqual(task.status, "PENDING")
         self.assertIsNone(task.tuid)
 
         self.assertTrue(task.ready)
-        self.assertEqual(task.status, 'FAILURE')
+        self.assertEqual(task.status, "FAILURE")
         self.assertEqual(task.tuid, task_id)
 
     @responses.activate
     def test_ready_skipped(self):
         task = UploadTask(group_id, upload_id=upload_id, client=self.client)
 
-        self.mock_response(responses.GET,
-                           {'data': {'id': upload_id, 'attributes': {'status': 'PENDING'}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': upload_id, 'attributes': {'status': 'PENDING'}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': task_id, 'attributes': {'status': 'SUCCESS', 'load': {'state': 'SKIPPED'}}}})
+        self.mock_response(
+            responses.GET,
+            {"data": {"id": upload_id, "attributes": {"status": "PENDING"}}},
+        )
+        self.mock_response(
+            responses.GET,
+            {"data": {"id": upload_id, "attributes": {"status": "PENDING"}}},
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "id": task_id,
+                    "attributes": {"status": "SUCCESS", "load": {"state": "SKIPPED"}},
+                }
+            },
+        )
 
         self.assertFalse(task.ready)
-        self.assertEqual(task.status, 'PENDING')
+        self.assertEqual(task.status, "PENDING")
         self.assertIsNone(task.tuid)
 
         self.assertTrue(task.ready)
-        self.assertEqual(task.status, 'SUCCESS')
+        self.assertEqual(task.status, "SUCCESS")
         self.assertEqual(task.tuid, task_id)
 
     @responses.activate
     def test_ready_failure_bq(self):
         task = UploadTask(group_id, upload_id=upload_id, client=self.client)
 
-        self.mock_response(responses.GET,
-                           {'data': {'id': upload_id, 'attributes': {'status': 'PENDING'}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': upload_id, 'attributes': {'status': 'PENDING'}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': task_id, 'attributes': {'status': 'SUCCESS', 'load': {'state': 'PENDING'}}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': task_id, 'attributes': {'status': 'SUCCESS', 'load': {'state': 'PENDING'}}}})
-        self.mock_response(responses.GET,
-                           {'data': {'id': task_id, 'attributes': {'status': 'SUCCESS', 'load': {'state': 'FAILURE'}}}})
+        self.mock_response(
+            responses.GET,
+            {"data": {"id": upload_id, "attributes": {"status": "PENDING"}}},
+        )
+        self.mock_response(
+            responses.GET,
+            {"data": {"id": upload_id, "attributes": {"status": "PENDING"}}},
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "id": task_id,
+                    "attributes": {"status": "SUCCESS", "load": {"state": "PENDING"}},
+                }
+            },
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "id": task_id,
+                    "attributes": {"status": "SUCCESS", "load": {"state": "PENDING"}},
+                }
+            },
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "id": task_id,
+                    "attributes": {"status": "SUCCESS", "load": {"state": "FAILURE"}},
+                }
+            },
+        )
 
         self.assertFalse(task.ready)
-        self.assertEqual(task.status, 'PENDING')
+        self.assertEqual(task.status, "PENDING")
         self.assertIsNone(task.tuid)
 
         self.assertFalse(task.ready)
-        self.assertEqual(task.status, 'PENDING')
+        self.assertEqual(task.status, "PENDING")
         self.assertEqual(task.tuid, task_id)
 
         self.assertTrue(task.ready)
-        self.assertEqual(task.status, 'FAILURE')
+        self.assertEqual(task.status, "FAILURE")
 
     @responses.activate
     def test_results(self):
         task = UploadTask(group_id, upload_id=upload_id, client=self.client)
 
-        self.mock_response(responses.GET, {
-            'data': {
-                'id': upload_id,
-                'attributes': {
-                    'status': 'SUCCESS',
-                    'result': {
-                        'errors': ['invalid geometry'],
-                        'input_features': 1,
-                        'input_rows': 1
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "id": upload_id,
+                    "attributes": {
+                        "status": "SUCCESS",
+                        "result": {
+                            "errors": ["invalid geometry"],
+                            "input_features": 1,
+                            "input_rows": 1,
+                        },
+                        "load": {
+                            "state": "DONE",
+                            "errors": ["some BQ error"],
+                            "output_rows": 1,
+                        },
                     },
-                    'load': {
-                        'state': 'DONE',
-                        'errors': ['some BQ error'],
-                        'output_rows': 1
-                    },
-                }}})
+                }
+            },
+        )
 
         self.assertTrue(task.ready)
-        self.assertEqual(task.status, 'SUCCESS')
+        self.assertEqual(task.status, "SUCCESS")
         self.assertEqual(task.error_rows, 2)
         self.assertEqual(len(task.errors), 2)
         self.assertEqual(task.input_features, 1)

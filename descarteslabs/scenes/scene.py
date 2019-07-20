@@ -64,11 +64,11 @@ from . import _scaling
 
 def _strptime_helper(s):
     formats = [
-        '%Y-%m-%dT%H:%M:%S.%fZ',
-        '%Y-%m-%dT%H:%M:%SZ',
-        '%Y-%m-%dT%H:%M:%S.%f+00:00',
-        '%Y-%m-%dT%H:%M:%S+00:00',
-        '%Y-%m-%dT%H:%M:%S'
+        "%Y-%m-%dT%H:%M:%S.%fZ",
+        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%dT%H:%M:%S.%f+00:00",
+        "%Y-%m-%dT%H:%M:%S+00:00",
+        "%Y-%m-%dT%H:%M:%S",
     ]
 
     for fmt in formats:
@@ -161,11 +161,13 @@ class Scene(object):
         properties = scene_dict["properties"]
         properties["id"] = scene_dict["id"]
         properties["bands"] = self._scenes_bands_dict(bands_dict)
-        properties["crs"] = (properties.pop("cs_code")
-                             if "cs_code" in properties
-                             else properties.get("proj4"))
+        properties["crs"] = (
+            properties.pop("cs_code")
+            if "cs_code" in properties
+            else properties.get("proj4")
+        )
 
-        if 'acquired' in properties:
+        if "acquired" in properties:
             properties["date"] = _strptime_helper(properties["acquired"])
         else:
             properties["date"] = None
@@ -227,7 +229,7 @@ class Scene(object):
             "geometry": metadata.pop("geometry"),
             "id": metadata.pop("id"),
             "key": metadata.pop("key"),
-            "properties": metadata
+            "properties": metadata,
         }
 
         bands = metadata_client.get_bands_by_id(scene_id)
@@ -266,9 +268,9 @@ class Scene(object):
         resolution = None
         bounds = None
         bounds_crs = None
-        crs = self.properties.get('crs')
+        crs = self.properties.get("crs")
 
-        geotrans = self.properties.get('geotrans')
+        geotrans = self.properties.get("geotrans")
         if geotrans is not None:
             geotrans = Affine.from_gdal(*geotrans)
             if not geotrans.is_rectilinear:
@@ -292,7 +294,7 @@ class Scene(object):
                     "Use `shape` instead for more predictable results."
                 )
 
-            raster_size = self.properties.get('raster_size')
+            raster_size = self.properties.get("raster_size")
             if raster_size is not None:
                 cols, rows = raster_size
                 # upper-left, upper-right, lower-left, lower-right in pixel coordinates
@@ -342,19 +344,20 @@ class Scene(object):
         intersection = shape.intersection(self.geometry)
         return intersection.area / shape.area
 
-    def ndarray(self,
-                bands,
-                ctx,
-                mask_nodata=True,
-                mask_alpha=None,
-                bands_axis=0,
-                raster_info=False,
-                resampler="near",
-                processing_level=None,
-                scaling=None,
-                data_type=None,
-                raster_client=None
-                ):
+    def ndarray(
+        self,
+        bands,
+        ctx,
+        mask_nodata=True,
+        mask_alpha=None,
+        bands_axis=0,
+        raster_info=False,
+        resampler="near",
+        processing_level=None,
+        scaling=None,
+        data_type=None,
+        raster_client=None,
+    ):
         """
         Load bands from this scene as an ndarray, optionally masking invalid data.
 
@@ -461,12 +464,18 @@ class Scene(object):
             raster_client = Raster()
 
         if not (-3 < bands_axis < 3):
-            raise ValueError("Invalid bands_axis; axis {} would not exist in a 3D array".format(bands_axis))
+            raise ValueError(
+                "Invalid bands_axis; axis {} would not exist in a 3D array".format(
+                    bands_axis
+                )
+            )
 
         bands = self._bands_to_list(bands)
         self_bands = self.properties["bands"]
 
-        scales, dtype = _scaling.scaling_parameters(self_bands, bands, scaling, data_type)
+        scales, dtype = _scaling.scaling_parameters(
+            self_bands, bands, scaling, data_type
+        )
 
         alpha_band_name = "alpha"
         if isinstance(mask_alpha, six.string_types):
@@ -480,7 +489,9 @@ class Scene(object):
             if not self.has_alpha(alpha_band_name):
                 raise ValueError(
                     "Cannot mask alpha: no {} band for the product '{}'. "
-                    "Try setting 'mask_alpha=False'.".format(alpha_band_name, self.properties["product"])
+                    "Try setting 'mask_alpha=False'.".format(
+                        alpha_band_name, self.properties["product"]
+                    )
                 )
             try:
                 alpha_i = bands.index(alpha_band_name)
@@ -489,7 +500,9 @@ class Scene(object):
                 drop_alpha = True
             else:
                 if alpha_i != len(bands) - 1:
-                    raise ValueError("Alpha must be the last band in order to reduce rasterization errors")
+                    raise ValueError(
+                        "Alpha must be the last band in order to reduce rasterization errors"
+                    )
                 drop_alpha = False
 
         raster_params = ctx.raster_params
@@ -508,13 +521,20 @@ class Scene(object):
             arr, info = raster_client.ndarray(**full_raster_args)
         except NotFoundError:
             six.raise_from(
-                NotFoundError("'{}' does not exist in the Descartes catalog".format(self.properties["id"])), None
+                NotFoundError(
+                    "'{}' does not exist in the Descartes catalog".format(
+                        self.properties["id"]
+                    )
+                ),
+                None,
             )
         except BadRequestError as e:
-            msg = ("Error with request:\n"
-                   "{err}\n"
-                   "For reference, dl.Raster.ndarray was called with these arguments:\n"
-                   "{args}")
+            msg = (
+                "Error with request:\n"
+                "{err}\n"
+                "For reference, dl.Raster.ndarray was called with these arguments:\n"
+                "{args}"
+            )
             msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))
             six.raise_from(BadRequestError(msg), None)
 
@@ -533,7 +553,7 @@ class Scene(object):
 
             if mask_nodata:
                 for i, bandname in enumerate(bands):
-                    nodata = self_bands[bandname].get('nodata')
+                    nodata = self_bands[bandname].get("nodata")
                     if nodata is not None:
                         mask[i] = arr[i] == nodata
 
@@ -552,17 +572,18 @@ class Scene(object):
     def has_alpha(self, alpha_band_name):
         return alpha_band_name in self.properties["bands"]
 
-    def download(self,
-                 bands,
-                 ctx,
-                 dest=None,
-                 format="tif",
-                 resampler="near",
-                 processing_level=None,
-                 scaling=None,
-                 data_type=None,
-                 raster_client=None,
-                 ):
+    def download(
+        self,
+        bands,
+        ctx,
+        dest=None,
+        format="tif",
+        resampler="near",
+        processing_level=None,
+        scaling=None,
+        data_type=None,
+        raster_client=None,
+    ):
         """
         Save bands from this scene as a GeoTIFF, PNG, or JPEG, writing to a path or file-like object.
 
@@ -652,7 +673,9 @@ class Scene(object):
             If the Descartes Labs platform is given invalid parameters
         """
         bands = self._bands_to_list(bands)
-        scales, dtype = _scaling.scaling_parameters(self.properties["bands"], bands, scaling, data_type)
+        scales, dtype = _scaling.scaling_parameters(
+            self.properties["bands"], bands, scaling, data_type
+        )
 
         return _download._download(
             inputs=[self.properties["id"]],
@@ -826,7 +849,9 @@ class Scene(object):
         the ``scaling`` and ``data_type`` parameters.
         """
         bands = self._bands_to_list(bands)
-        return _scaling.scaling_parameters(self.properties["bands"], bands, scaling, data_type)
+        return _scaling.scaling_parameters(
+            self.properties["bands"], bands, scaling, data_type
+        )
 
     @property
     def __geo_interface__(self):
@@ -837,10 +862,7 @@ class Scene(object):
             return self.geometry
 
     def _dict(self):
-        return dict(
-            geometry=self.__geo_interface__,
-            properties=self.properties,
-        )
+        return dict(geometry=self.__geo_interface__, properties=self.properties)
 
     def __repr__(self):
         parts = [
@@ -850,7 +872,7 @@ class Scene(object):
         ]
 
         try:
-            date = '  * Date: {:%c}'.format(self.properties.get("date"))
+            date = "  * Date: {:%c}".format(self.properties.get("date"))
             parts.append(date)
         except Exception:
             pass
@@ -862,11 +884,11 @@ class Scene(object):
             else:
                 # strings will be formatted with a band dict as available fields
                 part_format_strings = [
-                    '{resolution}',
-                    '{resolution_unit},',
-                    '{dtype},',
-                    '{data_range}',
-                    '-> {physical_range}',
+                    "{resolution}",
+                    "{resolution_unit},",
+                    "{dtype},",
+                    "{data_range}",
+                    "-> {physical_range}",
                     'in units "{data_unit}"',
                 ]
 
@@ -897,7 +919,11 @@ class Scene(object):
         if isinstance(bands, six.string_types):
             return bands.split(" ")
         if not isinstance(bands, (list, tuple)):
-            raise TypeError("Expected list or tuple of band names, instead got {}".format(type(bands)))
+            raise TypeError(
+                "Expected list or tuple of band names, instead got {}".format(
+                    type(bands)
+                )
+            )
         if len(bands) == 0:
             raise ValueError("No bands specified to load")
         return list(bands)
@@ -908,7 +934,9 @@ class Scene(object):
         Convert bands dict from metadata client ({id: band_meta})
         to {<name, or ID if derived>: band_meta}
         """
-        return DotDict({
-            id if id.startswith("derived") else meta["name"]: meta
-            for id, meta in six.iteritems(metadata_bands)
-        })
+        return DotDict(
+            {
+                id if id.startswith("derived") else meta["name"]: meta
+                for id, meta in six.iteritems(metadata_bands)
+            }
+        )

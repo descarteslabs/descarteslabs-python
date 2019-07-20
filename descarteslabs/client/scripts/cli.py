@@ -37,9 +37,7 @@ auth_parser.add_argument(
 # Metadata Group
 metadata_parser = subparsers.add_parser("metadata")
 metadata_parser.add_argument(
-    "command",
-    choices=["summary", "search", "keys", "get"],
-    help="The action to take",
+    "command", choices=["summary", "search", "keys", "get"], help="The action to take"
 )
 metadata_parser.add_argument("argument", nargs="?")
 metadata_parser.add_argument("-url", help="The url of the service")

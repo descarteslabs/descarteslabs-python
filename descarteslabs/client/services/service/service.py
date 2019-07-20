@@ -53,9 +53,9 @@ class WrappedSession(requests.Session):
             kwargs["timeout"] = self.timeout
 
         if "headers" not in kwargs:
-            kwargs['headers'] = {}
+            kwargs["headers"] = {}
 
-        kwargs['headers']['X-Request-Group'] = uuid.uuid4().hex
+        kwargs["headers"]["X-Request-Group"] = uuid.uuid4().hex
 
         resp = super(WrappedSession, self).request(
             method, self.base_url + url, **kwargs
@@ -73,7 +73,7 @@ class WrappedSession(requests.Session):
         elif resp.status_code == 409:
             raise ConflictError(resp.text)
         elif resp.status_code == 429:
-            raise RateLimitError(resp.text, retry_after=resp.headers.get('Retry-After'))
+            raise RateLimitError(resp.text, retry_after=resp.headers.get("Retry-After"))
         elif resp.status_code == 504:
             raise GatewayTimeoutError(
                 "Your request timed out on the server. "

@@ -8,7 +8,11 @@ import responses
 import unittest
 
 from descarteslabs.client.auth import Auth
-from descarteslabs.client.services.tasks import Tasks, as_completed, GroupTerminalException
+from descarteslabs.client.services.tasks import (
+    Tasks,
+    as_completed,
+    GroupTerminalException,
+)
 from descarteslabs.common.tasks import FutureTask, TransientResultError, TimeoutError
 
 # flake8: noqa
@@ -18,14 +22,13 @@ public_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0
 class ClientTestCase(unittest.TestCase):
     def setUp(self):
         url = "http://example.com"
-        self.client = Tasks(url=url,
-                            auth=Auth(jwt_token=public_token,
-                                      token_info_path=None))
+        self.client = Tasks(
+            url=url, auth=Auth(jwt_token=public_token, token_info_path=None)
+        )
         self.match_url = re.compile(url)
 
     def mock_response(self, method, json, status=200, **kwargs):
-        responses.add(method, self.match_url, json=json, status=status,
-            **kwargs)
+        responses.add(method, self.match_url, json=json, status=status, **kwargs)
 
 
 guid = "some_guid"
@@ -79,7 +82,7 @@ class TestFutureTask(ClientTestCase):
         ft = FutureTask(guid=guid, tuid=tuid, client=self.client)
 
         self.mock_response(responses.GET, {}, status=404)
-        self.mock_response(responses.GET, {'id': tuid, 'result_type': 'json'})
+        self.mock_response(responses.GET, {"id": tuid, "result_type": "json"})
 
         self.assertFalse(ft.ready)
         self.assertTrue(ft.ready)
@@ -88,47 +91,70 @@ class TestFutureTask(ClientTestCase):
     @mock.patch.object(Tasks, "COMPLETION_POLL_INTERVAL_SECONDS", 0)
     @mock.patch.object(Tasks, "TASK_RESULT_BATCH_SIZE", 3)
     def test_as_completed(self):
-        tasks = [FutureTask("group_id", str(n), client=self.client)
-            for n in range(5)]
+        tasks = [FutureTask("group_id", str(n), client=self.client) for n in range(5)]
 
-        response1 = [{'id': str(n), 'result_type': 'json'} for n in range(3)]
-        response2 = [{'id': str(n), 'result_type': 'json'} for n in range(3, 5)]
+        response1 = [{"id": str(n), "result_type": "json"} for n in range(3)]
+        response2 = [{"id": str(n), "result_type": "json"} for n in range(3, 5)]
 
-        self.mock_response(responses.GET, {'id': 'foo', 'queue': {'pending': 3,
-                                                                  'successes': 0, 'failures': 0}, 'status': 'running'})
-        self.mock_response(responses.GET, {'id': 'foo', 'queue': {'pending': 3,
-                                                                  'successes': 0, 'failures': 0}, 'status': 'running'})
-                                                                  
-        self.mock_response(responses.POST, {'results': response1})
-        self.mock_response(responses.POST, {'results': response2})
+        self.mock_response(
+            responses.GET,
+            {
+                "id": "foo",
+                "queue": {"pending": 3, "successes": 0, "failures": 0},
+                "status": "running",
+            },
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "id": "foo",
+                "queue": {"pending": 3, "successes": 0, "failures": 0},
+                "status": "running",
+            },
+        )
+
+        self.mock_response(responses.POST, {"results": response1})
+        self.mock_response(responses.POST, {"results": response2})
 
         completed_tasks = list(as_completed(tasks, show_progress=False))
 
         self.assertEqual(5, len(completed_tasks))
-        self.assertEqual(list(range(5)), [int(r._task_result['id'])
-            for r in completed_tasks])
+        self.assertEqual(
+            list(range(5)), [int(r._task_result["id"]) for r in completed_tasks]
+        )
 
     @responses.activate
     @mock.patch.object(Tasks, "COMPLETION_POLL_INTERVAL_SECONDS", 0)
     @mock.patch.object(Tasks, "TASK_RESULT_BATCH_SIZE", 3)
     def test_as_completed_exception(self):
-        tasks = [FutureTask("group_id", str(n), client=self.client)
-            for n in range(5)]
+        tasks = [FutureTask("group_id", str(n), client=self.client) for n in range(5)]
 
-        response1 = [{'id': str(n), 'result_type': 'json'} for n in range(3)]
-        response2 = [{'id': str(n), 'result_type': 'json'} for n in range(3, 5)]
+        response1 = [{"id": str(n), "result_type": "json"} for n in range(3)]
+        response2 = [{"id": str(n), "result_type": "json"} for n in range(3, 5)]
 
-        self.mock_response(responses.GET, {'id': 'foo', 'queue': {'pending': 3,
-                                                                  'successes': 0, 'failures': 0}, 'status': 'running'})
-        self.mock_response(responses.GET, {'id': 'foo', 'queue': {'pending': 3,
-                                                                  'successes': 0, 'failures': 0}, 'status': 'terminated'})
-                                                                  
-        self.mock_response(responses.POST, {'results': response1})
-        self.mock_response(responses.POST, {'results': response2})
+        self.mock_response(
+            responses.GET,
+            {
+                "id": "foo",
+                "queue": {"pending": 3, "successes": 0, "failures": 0},
+                "status": "running",
+            },
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "id": "foo",
+                "queue": {"pending": 3, "successes": 0, "failures": 0},
+                "status": "terminated",
+            },
+        )
+
+        self.mock_response(responses.POST, {"results": response1})
+        self.mock_response(responses.POST, {"results": response2})
 
         with self.assertRaises(GroupTerminalException):
             list(as_completed(tasks, show_progress=False))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

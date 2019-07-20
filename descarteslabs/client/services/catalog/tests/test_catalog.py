@@ -107,7 +107,9 @@ class TestCatalog(unittest.TestCase):
     def test_upload_image(self):
         product = "foo:product_id"
         gcs_upload_url = "https://gcs_upload_url.com"
-        upload_url = "http://www.example.com/metadata/v1/catalog/products/{}/images/upload/{}"
+        upload_url = (
+            "http://www.example.com/metadata/v1/catalog/products/{}/images/upload/{}"
+        )
         with NamedTemporaryFile(delete=False) as tmp:
             try:
                 tmp.write(b"foo")
@@ -127,7 +129,9 @@ class TestCatalog(unittest.TestCase):
     def test_upload_ndarray(self):
         product = "foo:product_id"
         gcs_upload_url = "https://gcs_upload_url.com"
-        upload_url = "http://www.example.com/metadata/v1/catalog/products/{}/images/upload/key"
+        upload_url = (
+            "http://www.example.com/metadata/v1/catalog/products/{}/images/upload/key"
+        )
         responses.add(responses.POST, upload_url.format(product), body=gcs_upload_url)
         responses.add_callback(
             responses.PUT, gcs_upload_url, callback=self.validate_ndarray_callback
@@ -140,7 +144,9 @@ class TestCatalog(unittest.TestCase):
         self.mock_response(responses.POST, json={})
         self.instance.add_image("product", "fake_image_id")
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body.decode('utf-8'))["storage_state"], "available")
+        self.assertEqual(
+            json.loads(request.body.decode("utf-8"))["storage_state"], "available"
+        )
 
 
 if __name__ == "__main__":

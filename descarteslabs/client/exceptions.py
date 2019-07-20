@@ -15,36 +15,43 @@
 
 class ClientError(Exception):
     """ Base class for all client exceptions."""
+
     pass
 
 
 class AuthError(ClientError):
     """Authentication error, improperly supplied credentials."""
+
     pass
 
 
 class OauthError(AuthError):
     """Authentication error, failure from OAuth authentication service."""
+
     pass
 
 
 class ServerError(Exception):
     """Server or service failure."""
+
     status = 500
 
 
 class BadRequestError(ClientError):
     """Client request with invalid or incorrect parameters."""
+
     status = 400
 
 
 class NotFoundError(ClientError):
     """Resource not found."""
+
     status = 404
 
 
 class ConflictError(ClientError):
     """Client request conflicts with existing state."""
+
     status = 409
 
 
@@ -55,6 +62,7 @@ class RateLimitError(ClientError):
     The retry_after member will contain any time limit returned
     in the response.
     """
+
     status = 429
 
     def __init__(self, message, retry_after=None):
@@ -72,9 +80,11 @@ class RateLimitError(ClientError):
 
 class RetryWithError(ClientError):
     """Vector service query request timed out."""
+
     status = 449
 
 
 class GatewayTimeoutError(ServerError):
     """Timeout from the gateway after failing to route request to destination service."""
+
     status = 504

@@ -115,12 +115,10 @@ class Client:
                 default_retry=self._default_retry,
             ),
             "CreateXYZ": wrap_stub(
-                self._stubs["XYZ"].CreateXYZ,
-                default_retry=self._default_retry,
+                self._stubs["XYZ"].CreateXYZ, default_retry=self._default_retry
             ),
             "GetXYZ": wrap_stub(
-                self._stubs["XYZ"].GetXYZ,
-                default_retry=self._default_retry,
+                self._stubs["XYZ"].GetXYZ, default_retry=self._default_retry
             ),
             "GetXYZSessionErrors": wrap_stub(
                 self._stubs["XYZ"].GetXYZSessionErrors,

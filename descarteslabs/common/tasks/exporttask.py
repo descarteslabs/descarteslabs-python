@@ -2,11 +2,7 @@ import time
 
 from descarteslabs.client.exceptions import NotFoundError
 from descarteslabs.client.services.storage import Storage
-from descarteslabs.common.tasks import (
-    FutureTask,
-    TransientResultError,
-    TimeoutError,
-)
+from descarteslabs.common.tasks import FutureTask, TransientResultError, TimeoutError
 
 
 class ExportTask(FutureTask):
@@ -39,7 +35,7 @@ class ExportTask(FutureTask):
         if key is not None:
             self.key = key
         elif self._task_result is not None:
-            labels = self._result_attribute('labels')
+            labels = self._result_attribute("labels")
 
             if labels is not None:
                 self.key = labels[3]
@@ -81,9 +77,7 @@ class ExportTask(FutureTask):
 
             while timeout is None or (time.time() - start) < timeout:
                 try:
-                    result = self.client.get_export_result(
-                        self.guid, self.tuid
-                    )
+                    result = self.client.get_export_result(self.guid, self.tuid)
                     self._task_result = result.data.attributes
                     self._set_key(None)
                 except NotFoundError:

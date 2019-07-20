@@ -25,11 +25,12 @@ class TestFormat(unittest.TestCase):
 @mock.patch("descarteslabs.scenes._download.open", new_callable=mock.mock_open)
 @mock.patch("descarteslabs.scenes._download.os.makedirs")
 # wrap return value in lambda so individual tests can safely mutate it
-@mock.patch("descarteslabs.scenes._download.Raster.raster", side_effect=lambda *args, **kwargs: {
-    "files": {
-        "foo:bar_nir-yellow.tiff": b"i'm a geotiff!"
-    }
-})
+@mock.patch(
+    "descarteslabs.scenes._download.Raster.raster",
+    side_effect=lambda *args, **kwargs: {
+        "files": {"foo:bar_nir-yellow.tiff": b"i'm a geotiff!"}
+    },
+)
 class TestDownload(unittest.TestCase):
     id = "foo:bar"
     bands = ["nir", "yellow"]
@@ -103,23 +104,32 @@ class TestDownload(unittest.TestCase):
 
     def test_default_filename_single_scene(self, mock_raster, mock_makedirs, mock_open):
         result = self.download(None)
-        self.assertEqual(result, "{id}-{bands}.tif".format(id=self.id, bands="-".join(self.bands)))
+        self.assertEqual(
+            result, "{id}-{bands}.tif".format(id=self.id, bands="-".join(self.bands))
+        )
         result = self.download(None, format="jpg")
-        self.assertEqual(result, "{id}-{bands}.jpg".format(id=self.id, bands="-".join(self.bands)))
+        self.assertEqual(
+            result, "{id}-{bands}.jpg".format(id=self.id, bands="-".join(self.bands))
+        )
         with self.assertRaises(ValueError):
             self.download(None, format="baz")
 
     def test_default_filename_mosaic(self, mock_raster, mock_makedirs, mock_open):
         result = self.download_mosaic(None)
-        self.assertEqual(result, "mosaic-{bands}.tif".format(bands="-".join(self.bands)))
+        self.assertEqual(
+            result, "mosaic-{bands}.tif".format(bands="-".join(self.bands))
+        )
         result = self.download_mosaic(None, format="jpg")
-        self.assertEqual(result, "mosaic-{bands}.jpg".format(bands="-".join(self.bands)))
+        self.assertEqual(
+            result, "mosaic-{bands}.jpg".format(bands="-".join(self.bands))
+        )
         with self.assertRaises(ValueError):
             self.download_mosaic(None, format="baz")
 
     @unittest.skipIf(sys.version_info[:2] < (3, 6), "PathLike ABC introduced in 3.6")
     def test_to_pathlib(self, mock_raster, mock_makedirs, mock_open):
         import pathlib
+
         path = pathlib.Path("foo/bar.tif")
         self.download(path)
         mock_open.assert_called_once_with(path, "wb")
@@ -128,23 +138,20 @@ class TestDownload(unittest.TestCase):
 
     def test_weird_response(self, mock_raster, mock_makedirs, mock_open):
         mock_raster.side_effect = lambda *args, **kwargs: {
-            "files": {
-                "file1": "",
-                "file2": "",
-            }
+            "files": {"file1": "", "file2": ""}
         }
         with self.assertRaisesRegexp(RuntimeError, "multiple files"):
             self.download("file.tif")
 
-        mock_raster.side_effect = lambda *args, **kwargs: {
-            "files": {}
-        }
+        mock_raster.side_effect = lambda *args, **kwargs: {"files": {}}
         with self.assertRaisesRegexp(RuntimeError, "missing results"):
             self.download("file.tif")
 
     def test_raster_not_found(self, mock_raster, mock_makedirs, mock_open):
         mock_raster.side_effect = NotFoundError("there is no foo")
-        with self.assertRaisesRegexp(NotFoundError, "does not exist in the Descartes catalog"):
+        with self.assertRaisesRegexp(
+            NotFoundError, "does not exist in the Descartes catalog"
+        ):
             self.download("file.tif")
 
     def test_raster_bad_request(self, mock_raster, mock_makedirs, mock_open):

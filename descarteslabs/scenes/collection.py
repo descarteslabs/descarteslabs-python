@@ -41,7 +41,7 @@ class Collection(object):
         Can slice like a normal list, or with a list of indices to select
         """
 
-        if isinstance(idx, list) or type(idx).__name__ == 'ndarray':
+        if isinstance(idx, list) or type(idx).__name__ == "ndarray":
             subset = [self._list[i] for i in idx]
             return self._cast_and_copy_attrs_to(subset)
         else:
@@ -56,14 +56,20 @@ class Collection(object):
         to any valid slice (including an list of indices)
         """
 
-        if isinstance(idx, (list, slice)) or type(idx).__name__ == 'ndarray':
+        if isinstance(idx, (list, slice)) or type(idx).__name__ == "ndarray":
             if isinstance(idx, slice):
                 idx = list(range(*idx.indices(len(self))))
-            if isinstance(item, six.string_types) or not isinstance(item, collections.Sequence):  # if scalar
+            if isinstance(item, six.string_types) or not isinstance(
+                item, collections.Sequence
+            ):  # if scalar
                 item = [item] * len(idx)
             item = list(item)
             if len(idx) != len(item):
-                raise ValueError("Cannot assign {} items to a slice {} items long".format(len(item), len(idx)))
+                raise ValueError(
+                    "Cannot assign {} items to a slice {} items long".format(
+                        len(item), len(idx)
+                    )
+                )
             for i, x in zip(idx, item):
                 self._list[i] = x
         else:
@@ -178,14 +184,18 @@ class Collection(object):
 
         if len(predicates) == 0:
             raise TypeError("No predicate(s) given to sorted")
-        predicates = [self._str_to_predicate(p) if isinstance(p, six.string_types) else p for p in predicates]
+        predicates = [
+            self._str_to_predicate(p) if isinstance(p, six.string_types) else p
+            for p in predicates
+        ]
         if len(predicates) == 1:
             predicate = predicates[0]
         else:
+
             def predicate(v):
                 return tuple(p(v) for p in predicates)
 
-        res = (sorted(self, key=predicate, **reverse))
+        res = sorted(self, key=predicate, **reverse)
         return self._cast_and_copy_attrs_to(res)
 
     def groupby(self, *predicates):
@@ -221,10 +231,14 @@ class Collection(object):
 
         if len(predicates) == 0:
             raise TypeError("No predicate(s) given to groupby")
-        predicates = [self._str_to_predicate(p) if isinstance(p, six.string_types) else p for p in predicates]
+        predicates = [
+            self._str_to_predicate(p) if isinstance(p, six.string_types) else p
+            for p in predicates
+        ]
         if len(predicates) == 1:
             predicate = predicates[0]
         else:
+
             def predicate(v):
                 return tuple(p(v) for p in predicates)
 
@@ -251,13 +265,14 @@ class Collection(object):
             for attr in attrs:
                 result = getattr(result, attr)
             return result
+
         return predicate
 
 
 class Eacher(object):
     "Applies operations chained onto it to each item in an iterator"
 
-    __slots__ = ("_iterable")
+    __slots__ = "_iterable"
 
     def __init__(self, iterable):
         self._iterable = iterable
@@ -290,7 +305,7 @@ class Eacher(object):
         try:
             head = [repr(x) for x in objs]
         except Exception:
-            return '<%s instance at %#x>' % (self.__class__.__name__, id(self))
+            return "<%s instance at %#x>" % (self.__class__.__name__, id(self))
         else:
             s = "\n".join(head)
             if len(head) == max_length:

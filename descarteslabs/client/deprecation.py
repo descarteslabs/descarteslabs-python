@@ -120,7 +120,9 @@ def deprecate(required=None, renames=None):
             if len(args) > len(func_spec.args):
                 raise TypeError(
                     "{}() takes {} arguments "
-                    "but {} were given.".format(f.__name__, len(args), len(func_spec.args))
+                    "but {} were given.".format(
+                        f.__name__, len(args), len(func_spec.args)
+                    )
                 )
             kwargs.update(dict(zip(func_spec.args, args)))
 
@@ -130,19 +132,25 @@ def deprecate(required=None, renames=None):
                     continue
 
                 if new is None:
-                    msg = ("Parameter `{old}` is deprecated and will be removed completely "
-                           "in future versions.").format(old=old)
+                    msg = (
+                        "Parameter `{old}` is deprecated and will be removed completely "
+                        "in future versions."
+                    ).format(old=old)
                     kwargs.pop(old)
                 elif new not in kwargs:
                     kwargs[new] = kwargs.pop(old)
-                    msg = ("Parameter `{old}` has been renamed to `{new}`, and "
-                           "will be removed in future versions. Use "
-                           "`{new}` instead.").format(old=old, new=new)
+                    msg = (
+                        "Parameter `{old}` has been renamed to `{new}`, and "
+                        "will be removed in future versions. Use "
+                        "`{new}` instead."
+                    ).format(old=old, new=new)
 
                 else:
-                    msg = ("Parameter `{old}` has been renamed to `{new}`, and "
-                           "will be removed in future versions. Do not specify both "
-                           "parameters, and use only `{new}`.").format(old=old, new=new)
+                    msg = (
+                        "Parameter `{old}` has been renamed to `{new}`, and "
+                        "will be removed in future versions. Do not specify both "
+                        "parameters, and use only `{new}`."
+                    ).format(old=old, new=new)
                     raise SyntaxError(msg)
 
                 warnings.warn(msg, DeprecationWarning)
@@ -152,5 +160,7 @@ def deprecate(required=None, renames=None):
                     raise SyntaxError("Missing required parameter {}".format(key))
 
             return f(**kwargs)
+
         return wrapped
+
     return wrapper

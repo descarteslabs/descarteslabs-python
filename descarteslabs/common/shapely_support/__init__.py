@@ -30,15 +30,21 @@ def geometry_like_to_shapely(geometry):
             geometry = geometry.__geo_interface__
         except AttributeError:
             six.raise_from(
-                TypeError("geometry object is not a GeoJSON dict, nor has a `__geo_interface__`: {}".format(geometry)),
-                None
+                TypeError(
+                    "geometry object is not a GeoJSON dict, nor has a `__geo_interface__`: {}".format(
+                        geometry
+                    )
+                ),
+                None,
             )
 
     geoj = as_geojson_geometry(geometry)
     try:
         shape = shapely.geometry.shape(geoj)
     except Exception:
-        raise ValueError("Could not interpret this geometry as a Shapely shape: {}".format(geometry))
+        raise ValueError(
+            "Could not interpret this geometry as a Shapely shape: {}".format(geometry)
+        )
 
     # test that geometry is in WGS84
     check_valid_bounds(shape.bounds)
@@ -52,7 +58,11 @@ def as_geojson_geometry(geojson_dict):
     try:
         geoj = geojson.GeoJSON.to_instance(geojson_dict, strict=True)
     except (TypeError, KeyError, UnicodeEncodeError) as ex:
-        raise ValueError("geometry not recognized as valid GeoJSON ({}): {}".format(str(ex), geojson_dict))
+        raise ValueError(
+            "geometry not recognized as valid GeoJSON ({}): {}".format(
+                str(ex), geojson_dict
+            )
+        )
     # Shapely cannot handle GeoJSON Features or FeatureCollections
     if isinstance(geoj, geojson.Feature):
         geoj = geoj.geometry
@@ -60,10 +70,15 @@ def as_geojson_geometry(geojson_dict):
         features = []
         for feature in geoj.features:
             try:
-                features.append(geojson.GeoJSON.to_instance(feature, strict=True).geometry)
+                features.append(
+                    geojson.GeoJSON.to_instance(feature, strict=True).geometry
+                )
             except (TypeError, KeyError, UnicodeEncodeError) as ex:
                 raise ValueError(
-                    "feature in FeatureCollection not recognized as valid ({}): {}".format(str(ex), feature))
+                    "feature in FeatureCollection not recognized as valid ({}): {}".format(
+                        str(ex), feature
+                    )
+                )
         geoj = geojson.GeometryCollection(features)
     return geoj
 
@@ -76,7 +91,11 @@ def check_valid_bounds(bounds):
     """
     try:
         if not isinstance(bounds, (list, tuple)):
-            raise TypeError("Bounds must be a list or tuple, instead got type {}".format(type(bounds)))
+            raise TypeError(
+                "Bounds must be a list or tuple, instead got type {}".format(
+                    type(bounds)
+                )
+            )
 
         if len(bounds) != 4:
             raise ValueError(
@@ -85,11 +104,19 @@ def check_valid_bounds(bounds):
             )
     except TypeError:
         six.raise_from(
-            TypeError("Bounds must a sequence of (minx, miny, maxx, maxy), got {}".format(type(bounds))),
-            None
+            TypeError(
+                "Bounds must a sequence of (minx, miny, maxx, maxy), got {}".format(
+                    type(bounds)
+                )
+            ),
+            None,
         )
 
     if bounds[0] >= bounds[2]:
-        raise ValueError("minx >= maxx in given bounds, should be (minx, miny, maxx, maxy)")
+        raise ValueError(
+            "minx >= maxx in given bounds, should be (minx, miny, maxx, maxy)"
+        )
     if bounds[1] >= bounds[3]:
-        raise ValueError("miny >= maxy in given bounds, should be (minx, miny, maxx, maxy)")
+        raise ValueError(
+            "miny >= maxy in given bounds, should be (minx, miny, maxx, maxy)"
+        )

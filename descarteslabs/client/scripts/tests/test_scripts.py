@@ -39,8 +39,13 @@ class TestScripts(unittest.TestCase):
             refresh_token = refresh_token or cls.old_token.get("refresh_token")
 
         cls.token = base64.b64encode(
-            json.dumps({"client_id": client_id, "client_secret": client_secret, "refresh_token": refresh_token})
-            .encode("utf-8")
+            json.dumps(
+                {
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "refresh_token": refresh_token,
+                }
+            ).encode("utf-8")
         )
 
     @classmethod

@@ -20,6 +20,7 @@ metadata_client = Metadata()
 
 class MockScene(Scene):
     "Circumvent __init__ method to create a Scene with arbitrary geometry and properties objects"
+
     def __init__(self, geometry, properties):
         self.geometry = DotDict(geometry)
         self.properties = DotDict(properties)
@@ -36,32 +37,31 @@ class TestScene(unittest.TestCase):
                 "dtype": "UInt16",
                 "data_range": [0, 10000],
                 "default_range": [0, 4000],
-                "physical_range": [0., 1.]
+                "physical_range": [0.0, 1.0],
             },
             "green": {
                 "type": "spectral",
                 "dtype": "UInt16",
                 "data_range": [0, 10000],
                 "default_range": [0, 4000],
-                "physical_range": [0., 1.]
+                "physical_range": [0.0, 1.0],
             },
             "blue": {
                 "type": "spectral",
                 "dtype": "UInt16",
                 "data_range": [0, 10000],
                 "default_range": [0, 4000],
-                "physical_range": [0., 1.]
+                "physical_range": [0.0, 1.0],
             },
-            "alpha": {
-                "type": "mask",
-                "dtype": "UInt16",
-                "data_range": [0, 1],
-            }
-        }
+            "alpha": {"type": "mask", "dtype": "UInt16", "data_range": [0, 1]},
+        },
     }
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     def test_init(self):
         scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
         metadata = metadata_client.get(scene_id)
@@ -72,7 +72,7 @@ class TestScene(unittest.TestCase):
             "geometry": metadata.pop("geometry"),
             "id": metadata.pop("id"),
             "key": metadata.pop("key"),
-            "properties": metadata
+            "properties": metadata,
         }
 
         scene = Scene(metadata, bands)
@@ -91,59 +91,96 @@ class TestScene(unittest.TestCase):
         self.assertEqual(ctx, geocontext.AOI(bounds_crs=None, align_pixels=False))
 
         # no geotrans
-        ctx = MockScene({}, {
-            'crs': 'EPSG:4326'
-        }).default_ctx()
-        self.assertEqual(ctx, geocontext.AOI(crs="EPSG:4326", bounds_crs=None, align_pixels=False))
+        ctx = MockScene({}, {"crs": "EPSG:4326"}).default_ctx()
+        self.assertEqual(
+            ctx, geocontext.AOI(crs="EPSG:4326", bounds_crs=None, align_pixels=False)
+        )
 
         # north-up geotrans - resolution
         with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")  # otherwise, the duplicate warning is suppressed the second time
-            ctx = MockScene({}, {
-                'crs': 'EPSG:4326',
-                # origin: (0, 0), pixel size: 2, rotation: 0 degrees
-                'geotrans': [0, 2, 0, 0, 0, -2],
-            }).default_ctx()
+            warnings.simplefilter(
+                "always"
+            )  # otherwise, the duplicate warning is suppressed the second time
+            ctx = MockScene(
+                {},
+                {
+                    "crs": "EPSG:4326",
+                    # origin: (0, 0), pixel size: 2, rotation: 0 degrees
+                    "geotrans": [0, 2, 0, 0, 0, -2],
+                },
+            ).default_ctx()
             self.assertEqual(len(w), 0)
         self.assertEqual(ctx.resolution, 2)
 
         # non-north-up geotrans - resolution
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            ctx = MockScene({}, {
-                'crs': 'EPSG:4326',
-                # origin: (0, 0), pixel size: 2, rotation: 30 degrees
-                'geotrans': (0.0, 1.7320508075688774, -1, 0.0, 1, 1.7320508075688774)
-            }).default_ctx()
+            ctx = MockScene(
+                {},
+                {
+                    "crs": "EPSG:4326",
+                    # origin: (0, 0), pixel size: 2, rotation: 30 degrees
+                    "geotrans": (
+                        0.0,
+                        1.7320508075688774,
+                        -1,
+                        0.0,
+                        1,
+                        1.7320508075688774,
+                    ),
+                },
+            ).default_ctx()
             warning = w[0]
-            self.assertIn("The GeoContext will *not* return this Scene's original data", str(warning.message))
+            self.assertIn(
+                "The GeoContext will *not* return this Scene's original data",
+                str(warning.message),
+            )
         self.assertEqual(ctx.resolution, 2)
 
         # north-up geotrans - bounds
-        ctx = MockScene({}, {
-            'crs': 'EPSG:4326',
-            # origin: (10, 20), pixel size: 2, rotation: 0 degrees
-            'geotrans': [10, 2, 0, 20, 0, -2],
-            'raster_size': [1, 2]
-        }).default_ctx()
+        ctx = MockScene(
+            {},
+            {
+                "crs": "EPSG:4326",
+                # origin: (10, 20), pixel size: 2, rotation: 0 degrees
+                "geotrans": [10, 2, 0, 20, 0, -2],
+                "raster_size": [1, 2],
+            },
+        ).default_ctx()
         self.assertEqual(ctx.bounds, (10, 16, 12, 20))
 
         # non-north-up geotrans - bounds
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            ctx = MockScene({}, {
-                'crs': 'EPSG:4326',
-                # origin: (0, 0), pixel size: 2, rotation: 45 degrees
-                'geotrans': (0.0, np.sqrt(2), np.sqrt(2), 0.0, np.sqrt(2), -np.sqrt(2)),
-                'raster_size': [1, 1]
-            }).default_ctx()
+            ctx = MockScene(
+                {},
+                {
+                    "crs": "EPSG:4326",
+                    # origin: (0, 0), pixel size: 2, rotation: 45 degrees
+                    "geotrans": (
+                        0.0,
+                        np.sqrt(2),
+                        np.sqrt(2),
+                        0.0,
+                        np.sqrt(2),
+                        -np.sqrt(2),
+                    ),
+                    "raster_size": [1, 1],
+                },
+            ).default_ctx()
             warning = w[0]
-            self.assertIn("The GeoContext will *not* return this Scene's original data", str(warning.message))
-        diagonal = np.sqrt(2**2 + 2**2)
+            self.assertIn(
+                "The GeoContext will *not* return this Scene's original data",
+                str(warning.message),
+            )
+        diagonal = np.sqrt(2 ** 2 + 2 ** 2)
         self.assertEqual(ctx.bounds, (0, -diagonal / 2, diagonal, diagonal / 2))
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     def test_from_id(self):
         scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
         scene, ctx = Scene.from_id(scene_id)
@@ -153,7 +190,10 @@ class TestScene(unittest.TestCase):
         self.assertIsInstance(ctx, geocontext.AOI)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_one_band(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
@@ -168,23 +208,34 @@ class TestScene(unittest.TestCase):
             scene.ndarray("blue", ctx, invalid_argument=True)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     def test_nonexistent_band_fails(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         with self.assertRaises(ValueError):
             scene.ndarray("blue yellow", ctx)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_different_band_dtypes(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         scene.properties.bands["green"]["dtype"] = "Int16"
-        arr, info = scene.ndarray("red green", ctx.assign(resolution=600), mask_alpha=False)
+        arr, info = scene.ndarray(
+            "red green", ctx.assign(resolution=600), mask_alpha=False
+        )
         self.assertEqual(arr.dtype.type, np.int32)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_multiband(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
@@ -195,94 +246,143 @@ class TestScene(unittest.TestCase):
         self.assertFalse((arr.mask[:, 115, 116]).all())
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_multiband_axis_last(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-        arr = scene.ndarray("red green blue", ctx.assign(resolution=1000), bands_axis=-1)
+        arr = scene.ndarray(
+            "red green blue", ctx.assign(resolution=1000), bands_axis=-1
+        )
 
         self.assertEqual(arr.shape, (239, 235, 3))
         self.assertTrue((arr.mask[2, 2, :]).all())
         self.assertFalse((arr.mask[115, 116, :]).all())
 
         with self.assertRaises(ValueError):
-            arr = scene.ndarray("red green blue", ctx.assign(resolution=1000), bands_axis=3)
+            arr = scene.ndarray(
+                "red green blue", ctx.assign(resolution=1000), bands_axis=3
+            )
         with self.assertRaises(ValueError):
-            arr = scene.ndarray("red green blue", ctx.assign(resolution=1000), bands_axis=-3)
+            arr = scene.ndarray(
+                "red green blue", ctx.assign(resolution=1000), bands_axis=-3
+            )
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_nomask(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-        arr = scene.ndarray(["red", "nir"], ctx.assign(resolution=1000), mask_nodata=False, mask_alpha=False)
+        arr = scene.ndarray(
+            ["red", "nir"],
+            ctx.assign(resolution=1000),
+            mask_nodata=False,
+            mask_alpha=False,
+        )
 
         self.assertFalse(hasattr(arr, "mask"))
         self.assertEqual(arr.shape, (2, 239, 235))
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_auto_mask_alpha_false(self):
-        scene, ctx = Scene.from_id("modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1")
-        arr = scene.ndarray(['Clear_sky_days', 'Clear_sky_nights'], ctx.assign(resolution=1000), mask_nodata=False)
+        scene, ctx = Scene.from_id(
+            "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1"
+        )
+        arr = scene.ndarray(
+            ["Clear_sky_days", "Clear_sky_nights"],
+            ctx.assign(resolution=1000),
+            mask_nodata=False,
+        )
 
         self.assertFalse(hasattr(arr, "mask"))
         self.assertEqual(arr.shape, (2, 688, 473))
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_mask_alpha_string(self):
-        scene, ctx = Scene.from_id("modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1")
-        arr = scene.ndarray([
-            'Clear_sky_days', 'Clear_sky_nights'],
+        scene, ctx = Scene.from_id(
+            "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1"
+        )
+        arr = scene.ndarray(
+            ["Clear_sky_days", "Clear_sky_nights"],
             ctx.assign(resolution=1000),
             mask_alpha="Clear_sky_nights",
-            mask_nodata=False
+            mask_nodata=False,
         )
 
         self.assertTrue(hasattr(arr, "mask"))
         self.assertEqual(arr.shape, (2, 688, 473))
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_mask_missing_alpha(self):
-        scene, ctx = Scene.from_id("modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1")
+        scene, ctx = Scene.from_id(
+            "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1"
+        )
         with self.assertRaises(ValueError):
-            scene.ndarray([
-                'Clear_sky_days', 'Clear_sky_nights'],
+            scene.ndarray(
+                ["Clear_sky_days", "Clear_sky_nights"],
                 ctx.assign(resolution=1000),
                 mask_alpha=True,
-                mask_nodata=False
+                mask_nodata=False,
             )
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_mask_missing_band(self):
-        scene, ctx = Scene.from_id("modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1")
+        scene, ctx = Scene.from_id(
+            "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1"
+        )
         with self.assertRaises(ValueError):
-            scene.ndarray([
-                'Clear_sky_days', 'Clear_sky_nights'],
+            scene.ndarray(
+                ["Clear_sky_days", "Clear_sky_nights"],
                 ctx.assign(resolution=1000),
                 mask_alpha="missing_band",
-                mask_nodata=False
+                mask_nodata=False,
             )
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_auto_mask_alpha_true(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-        arr = scene.ndarray(["red", "green", "blue"], ctx.assign(resolution=1000), mask_nodata=False)
+        arr = scene.ndarray(
+            ["red", "green", "blue"], ctx.assign(resolution=1000), mask_nodata=False
+        )
 
         self.assertTrue(hasattr(arr, "mask"))
         self.assertEqual(arr.shape, (3, 239, 235))
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get_bands_by_id", _metadata_get_bands)
+    @mock.patch(
+        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
+        _metadata_get_bands,
+    )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def with_alpha(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
@@ -302,7 +402,9 @@ class TestScene(unittest.TestCase):
         self.assertEqual(Scene._bands_to_list("one"), ["one"])
         self.assertEqual(Scene._bands_to_list(["one"]), ["one"])
         self.assertEqual(Scene._bands_to_list("one two three"), ["one", "two", "three"])
-        self.assertEqual(Scene._bands_to_list(["one", "two", "three"]), ["one", "two", "three"])
+        self.assertEqual(
+            Scene._bands_to_list(["one", "two", "three"]), ["one", "two", "three"]
+        )
         with self.assertRaises(TypeError):
             Scene._bands_to_list(1)
         with self.assertRaises(ValueError):
@@ -310,27 +412,14 @@ class TestScene(unittest.TestCase):
 
     def test_scenes_bands_dict(self):
         meta_bands = {
-            "someproduct:red": {
-                "name": "red",
-                "id": "someproduct:red"
-            },
-            "someproduct:green": {
-                "name": "green",
-                "id": "someproduct:green"
-            },
-            "someproduct:ndvi": {
-                "name": "ndvi",
-                "id": "someproduct:ndvi"
-            },
-            "derived:ndvi": {
-                "name": "ndvi",
-                "id": "derived:ndvi"
-            },
+            "someproduct:red": {"name": "red", "id": "someproduct:red"},
+            "someproduct:green": {"name": "green", "id": "someproduct:green"},
+            "someproduct:ndvi": {"name": "ndvi", "id": "someproduct:ndvi"},
+            "derived:ndvi": {"name": "ndvi", "id": "derived:ndvi"},
         }
         scenes_bands = Scene._scenes_bands_dict(meta_bands)
         self.assertEqual(
-            set(scenes_bands.keys()),
-            {"red", "green", "ndvi", "derived:ndvi"}
+            set(scenes_bands.keys()), {"red", "green", "ndvi", "derived:ndvi"}
         )
         self.assertEqual(scenes_bands.ndvi, meta_bands["someproduct:ndvi"])
         self.assertEqual(scenes_bands["derived:ndvi"], meta_bands["derived:ndvi"])
@@ -347,26 +436,43 @@ class TestScene(unittest.TestCase):
                 "signed": dict(dtype="Int16"),
                 "future_unknown_type": dict(dtype="FutureInt16"),
                 "alpha": dict(dtype="Byte"),
-            }
+            },
         }
         s = MockScene({}, mock_properties)
         self.assertEqual(s.scaling_parameters(["its_a_byte"], scaling=None)[1], "Byte")
-        self.assertEqual(s.scaling_parameters(["one", "two"], scaling=None)[1], "UInt16")
-        self.assertEqual(s.scaling_parameters(["its_a_byte", "alpha"], scaling=None)[1], "Byte")
+        self.assertEqual(
+            s.scaling_parameters(["one", "two"], scaling=None)[1], "UInt16"
+        )
+        self.assertEqual(
+            s.scaling_parameters(["its_a_byte", "alpha"], scaling=None)[1], "Byte"
+        )
         # alpha ignored from common datatype
-        self.assertEqual(s.scaling_parameters(["one", "alpha"], scaling=None)[1], "UInt16")
+        self.assertEqual(
+            s.scaling_parameters(["one", "alpha"], scaling=None)[1], "UInt16"
+        )
         self.assertEqual(s.scaling_parameters(["alpha"], scaling=None)[1], "Byte")
         self.assertEqual(
-            s.scaling_parameters(["one", "two", "derived:three", "derived:one"], scaling=None)[1], "UInt16"
+            s.scaling_parameters(
+                ["one", "two", "derived:three", "derived:one"], scaling=None
+            )[1],
+            "UInt16",
         )
-        self.assertEqual(s.scaling_parameters(["one", "its_a_byte"], scaling=None)[1], "UInt16")
-        self.assertEqual(s.scaling_parameters(["signed", "its_a_byte"], scaling=None)[1], "Int16")
-        self.assertEqual(s.scaling_parameters(["one", "signed"], scaling=None)[1], "Int32")
+        self.assertEqual(
+            s.scaling_parameters(["one", "its_a_byte"], scaling=None)[1], "UInt16"
+        )
+        self.assertEqual(
+            s.scaling_parameters(["signed", "its_a_byte"], scaling=None)[1], "Int16"
+        )
+        self.assertEqual(
+            s.scaling_parameters(["one", "signed"], scaling=None)[1], "Int32"
+        )
 
         with self.assertRaisesRegexp(ValueError, "is not available"):
             s.scaling_parameters(["one", "woohoo"], scaling=None)
         with self.assertRaisesRegexp(ValueError, "did you mean"):
-            s.scaling_parameters(["one", "three"], scaling=None)  # should hint that derived:three exists
+            s.scaling_parameters(
+                ["one", "three"], scaling=None
+            )  # should hint that derived:three exists
         with self.assertRaisesRegexp(ValueError, "Invalid data type"):
             s.scaling_parameters(["its_a_byte", "future_unknown_type"], scaling=None)
 
@@ -379,7 +485,7 @@ class TestScene(unittest.TestCase):
     def test_coverage(self):
         scene_geometry = shapely.geometry.Point(0.0, 0.0).buffer(1)
 
-        scene = Scene(dict(id='foo', geometry=scene_geometry, properties={}), {})
+        scene = Scene(dict(id="foo", geometry=scene_geometry, properties={}), {})
 
         # same geometry (as a GeoJSON)
         self.assertEqual(scene.coverage(scene_geometry.__geo_interface__), 1.0)
@@ -394,13 +500,13 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes.scene._download._download")
     def test_download(self, mock_geotiff):
-        scene = MockScene({}, {
-            "id": "foo:bar",
-            "bands": {
-                "nir": {"dtype": "UInt16"},
-                "yellow": {"dtype": "UInt16"},
-            }
-        })
+        scene = MockScene(
+            {},
+            {
+                "id": "foo:bar",
+                "bands": {"nir": {"dtype": "UInt16"}, "yellow": {"dtype": "UInt16"}},
+            },
+        )
         ctx = geocontext.AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
         scene.download("nir yellow", ctx)
         mock_geotiff.assert_called_once()
@@ -413,7 +519,9 @@ class TestScene(unittest.TestCase):
 
     def test_scaling_parameters_dtype(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters("red green blue alpha", None, "UInt32")
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", None, "UInt32"
+        )
         self.assertIsNone(scales)
         self.assertEqual(data_type, "UInt32")
 
@@ -426,13 +534,19 @@ class TestScene(unittest.TestCase):
     def test_scaling_parameters_display(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters("red green blue alpha", "display")
-        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None])
+        self.assertEqual(
+            scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
+        )
         self.assertEqual(data_type, "Byte")
 
     def test_scaling_parameters_display_uint16(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters("red green blue alpha", "display", "UInt16")
-        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None])
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", "display", "UInt16"
+        )
+        self.assertEqual(
+            scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
+        )
         self.assertEqual(data_type, "UInt16")
 
     def test_scaling_parameters_auto(self):
@@ -444,13 +558,21 @@ class TestScene(unittest.TestCase):
     def test_scaling_parameters_physical(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters("red green blue alpha", "physical")
-        self.assertEqual(scales, [(0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), None])
+        self.assertEqual(
+            scales,
+            [(0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), None],
+        )
         self.assertEqual(data_type, "Float64")
 
     def test_scaling_parameters_physical_int32(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters("red green blue alpha", "physical", "Int32")
-        self.assertEqual(scales, [(0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), None])
+        scales, data_type = scene.scaling_parameters(
+            "red green blue alpha", "physical", "Int32"
+        )
+        self.assertEqual(
+            scales,
+            [(0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), None],
+        )
         self.assertEqual(data_type, "Int32")
 
     def test_scaling_parameters_bad_mode(self):
@@ -471,23 +593,30 @@ class TestScene(unittest.TestCase):
         scales, data_type = scene.scaling_parameters(
             "red green blue alpha", [(0, 4000), (0, 4000), (0, 4000), "raw"]
         )
-        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None])
+        self.assertEqual(
+            scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
+        )
         self.assertEqual(data_type, "Byte")
 
     def test_scaling_parameters_list_bad_length(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         with self.assertRaises(ValueError):
-            scales, data_type = scene.scaling_parameters("red green blue alpha", [(0, 10000), "display", ()])
+            scales, data_type = scene.scaling_parameters(
+                "red green blue alpha", [(0, 10000), "display", ()]
+            )
 
     def test_scaling_parameters_list_bad_mode(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         with self.assertRaises(ValueError):
-            scales, data_type = scene.scaling_parameters("red green blue alpha", [(0, 10000), "mode", (), None])
+            scales, data_type = scene.scaling_parameters(
+                "red green blue alpha", [(0, 10000), "mode", (), None]
+            )
 
     def test_scaling_parameters_dict(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", {"red": "display", "green": (0, 10000), "default_": "auto"}
+            "red green blue alpha",
+            {"red": "display", "green": (0, 10000), "default_": "auto"},
         )
         self.assertEqual(scales, [(0, 4000, 0, 255), (0, 10000, 0, 255), (), None])
         self.assertEqual(data_type, "Byte")
@@ -527,31 +656,46 @@ class TestScene(unittest.TestCase):
     def test_scaling_parameters_tuple_range_float(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", [(0, 10000, 0, 1.), (0, 4000), (0, 4000), None]
+            "red green blue alpha", [(0, 10000, 0, 1.0), (0, 4000), (0, 4000), None]
         )
-        self.assertEqual(scales, [(0, 10000, 0, 1), (0, 4000, 0, 1), (0, 4000, 0, 1), None])
+        self.assertEqual(
+            scales, [(0, 10000, 0, 1), (0, 4000, 0, 1), (0, 4000, 0, 1), None]
+        )
         self.assertEqual(data_type, "Float64")
 
     def test_scaling_parameters_tuple_pct(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", [("0%", "100%", "0%", "100%"), ("2%", "98%", "2%", "98%"), "display", None]
+            "red green blue alpha",
+            [("0%", "100%", "0%", "100%"), ("2%", "98%", "2%", "98%"), "display", None],
         )
-        self.assertEqual(scales, [(0, 4000, 0, 255), (80, 3920, 5, 250), (0, 4000, 0, 255), None])
+        self.assertEqual(
+            scales, [(0, 4000, 0, 255), (80, 3920, 5, 250), (0, 4000, 0, 255), None]
+        )
         self.assertEqual(data_type, "Byte")
 
     def test_scaling_parameters_tuple_pct_float(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", [("0%", "100%", "0%", "100%"), ("2%", "98%", "2%", "98%"), "physical", None],
+            "red green blue alpha",
+            [
+                ("0%", "100%", "0%", "100%"),
+                ("2%", "98%", "2%", "98%"),
+                "physical",
+                None,
+            ],
         )
-        self.assertEqual(scales, [(0, 10000, 0, 1), (200, 9800, 0.02, 0.98), (0, 10000, 0, 1), None])
+        self.assertEqual(
+            scales, [(0, 10000, 0, 1), (200, 9800, 0.02, 0.98), (0, 10000, 0, 1), None]
+        )
         self.assertEqual(data_type, "Float64")
 
     def test_scaling_parameters_bad_data_type(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         with self.assertRaises(ValueError):
-            scales, data_type = scene.scaling_parameters("red green blue alpha", None, "data_type")
+            scales, data_type = scene.scaling_parameters(
+                "red green blue alpha", None, "data_type"
+            )
 
 
 class TestSceneRepr(unittest.TestCase):
@@ -565,23 +709,31 @@ class TestSceneRepr(unittest.TestCase):
             "product": "prod",
             "crs": "EPSG:32615",
             "date": date,
-            "bands": collections.OrderedDict([  # necessary to ensure deterministic order in tests
-                ("blue", {
-                    "resolution": 5,
-                    "resolution_unit": "smoot",
-                    "dtype": "UInt16",
-                    "data_range": [0, 10000],
-                    "physical_range": [0, 1],
-                    "data_unit": "TOAR",
-                }),
-                ("alpha", {
-                    "resolution": 5,
-                    "resolution_unit": "smoot",
-                    "dtype": "UInt8",
-                    "data_range": [0, 1],
-                    "physical_range": [0, 1],
-                })
-            ])
+            "bands": collections.OrderedDict(
+                [  # necessary to ensure deterministic order in tests
+                    (
+                        "blue",
+                        {
+                            "resolution": 5,
+                            "resolution_unit": "smoot",
+                            "dtype": "UInt16",
+                            "data_range": [0, 10000],
+                            "physical_range": [0, 1],
+                            "data_unit": "TOAR",
+                        },
+                    ),
+                    (
+                        "alpha",
+                        {
+                            "resolution": 5,
+                            "resolution_unit": "smoot",
+                            "dtype": "UInt8",
+                            "data_range": [0, 1],
+                            "physical_range": [0, 1],
+                        },
+                    ),
+                ]
+            ),
         }
         properties = DotDict(properties)
         self.scene = MockScene({}, properties)
@@ -595,7 +747,9 @@ class TestSceneRepr(unittest.TestCase):
           * Date: {}
           * Bands:
             * blue: 5 smoot, UInt16, [0, 10000] -> [0, 1] in units "TOAR"
-            * alpha: 5 smoot, UInt8, [0, 1] -> [0, 1]""".format(self.date_str)
+            * alpha: 5 smoot, UInt8, [0, 1] -> [0, 1]""".format(
+            self.date_str
+        )
 
         self.assertEqual(repr_str, textwrap.dedent(match_str))
 
@@ -610,7 +764,9 @@ class TestSceneRepr(unittest.TestCase):
           * Date: {}
           * Bands:
             * blue: 5 smoot, [0, 10000] in units "TOAR"
-            * alpha: 5 smoot, UInt8, [0, 1] -> [0, 1]""".format(self.date_str)
+            * alpha: 5 smoot, UInt8, [0, 1] -> [0, 1]""".format(
+            self.date_str
+        )
 
         self.assertEqual(repr_str, textwrap.dedent(match_str))
 
@@ -624,7 +780,9 @@ class TestSceneRepr(unittest.TestCase):
           * Date: {}
           * Bands:
             * blue: 5 smoot, UInt16, [0, 10000] -> [0, 1] in units "TOAR"
-            * alpha""".format(self.date_str)
+            * alpha""".format(
+            self.date_str
+        )
 
         self.assertEqual(repr_str, textwrap.dedent(match_str))
 
@@ -635,7 +793,9 @@ class TestSceneRepr(unittest.TestCase):
         Scene "prod:foo"
           * Product: "prod"
           * CRS: "EPSG:32615"
-          * Date: {}""".format(self.date_str)
+          * Date: {}""".format(
+            self.date_str
+        )
 
         self.assertEqual(repr_str, textwrap.dedent(match_str))
 
@@ -647,6 +807,8 @@ class TestSceneRepr(unittest.TestCase):
           * Product: "prod"
           * CRS: "EPSG:32615"
           * Date: {}
-          * Bands: 102""".format(self.date_str)
+          * Bands: 102""".format(
+            self.date_str
+        )
 
         self.assertEqual(repr_str, textwrap.dedent(match_str))

@@ -28,15 +28,15 @@ class UploadTask(FutureTask):
     and :meth:`FeatureCollection.list_uploads <descarteslabs.vectors.featurecollection.FeatureCollection.list_uploads>`.
     """
 
-    PENDING = 'PENDING'
-    RUNNING = 'RUNNING'
-    _SKIPPED = 'SKIPPED'
-    _DONE = 'DONE'
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    _SKIPPED = "SKIPPED"
+    _DONE = "DONE"
 
-    def __init__(self, guid, tuid=None, client=None, upload_id=None,
-                 result_attrs=None):
+    def __init__(self, guid, tuid=None, client=None, upload_id=None, result_attrs=None):
         if client is None:
             from descarteslabs.client.services.vector import Vector  # circular import
+
             client = Vector()
 
         super(UploadTask, self).__init__(guid, tuid, client=client)
@@ -67,17 +67,25 @@ class UploadTask(FutureTask):
         # Things are complicated compared to FutureTask, because the upload task
         # can have completed, but the BigQuery upload process may not yet have terminated.
         # We wait for termination of the BigQuery upload.
-        if (self._task_result is None or
-            self._task_result.status == self.PENDING or
-            (self._task_result.status == self.SUCCESS and
-             ('load' not in self._task_result or
-              self._task_result.load.state in (self.PENDING, self.RUNNING)))):  # noqa
+        if (
+            self._task_result is None
+            or self._task_result.status == self.PENDING
+            or (
+                self._task_result.status == self.SUCCESS
+                and (
+                    "load" not in self._task_result
+                    or self._task_result.load.state in (self.PENDING, self.RUNNING)
+                )
+            )
+        ):  # noqa
             if self._upload_id:
                 id = self._upload_id
             elif self.tuid:
                 id = self.tuid
             else:
-                raise ValueError("Cannot retrieve upload task without task id or upload id")
+                raise ValueError(
+                    "Cannot retrieve upload task without task id or upload id"
+                )
 
             start = time.time()
 
@@ -87,10 +95,11 @@ class UploadTask(FutureTask):
                     # we have actual task results
                     id = self.tuid = result.data.id
                 self._task_result = result.data.attributes
-                if (self._task_result.status == self.FAILURE or
-                    (self._task_result.status == self.SUCCESS and
-                     'load' in self._task_result and
-                     self._task_result.load.state not in (self.PENDING, self.RUNNING))):  # noqa
+                if self._task_result.status == self.FAILURE or (
+                    self._task_result.status == self.SUCCESS
+                    and "load" in self._task_result
+                    and self._task_result.load.state not in (self.PENDING, self.RUNNING)
+                ):  # noqa
                     break
                 if not wait:
                     raise TransientResultError()
@@ -124,7 +133,7 @@ class UploadTask(FutureTask):
         :return: The id of the upload that resulted in this task.
         """
         if self._upload_id is None:
-            labels = self._result_attribute('labels')
+            labels = self._result_attribute("labels")
             if labels is not None:
                 self._upload_id = labels[2]
 
@@ -140,8 +149,9 @@ class UploadTask(FutureTask):
         :rtype: int
         :return: The number of rows that could not be loaded.
         """
-        return (len(self._result_attribute('result', {}).get('errors', [])) +
-                len(self._result_attribute('load', {}).get('errors') or []))
+        return len(self._result_attribute("result", {}).get("errors", [])) + len(
+            self._result_attribute("load", {}).get("errors") or []
+        )
 
     @property
     def errors(self):
@@ -153,8 +163,9 @@ class UploadTask(FutureTask):
         :rtype: list or None
         :return: Error records from upload.
         """
-        result = (self._result_attribute('result', {}).get('errors', []) +
-                  (self._result_attribute('load', {}).get('errors') or []))
+        result = self._result_attribute("result", {}).get("errors", []) + (
+            self._result_attribute("load", {}).get("errors") or []
+        )
         if len(result) == 0:
             return None
         return result
@@ -169,7 +180,7 @@ class UploadTask(FutureTask):
         :rtype: int
         :return: The number of features to insert.
         """
-        return self._result_attribute('result', {}).get('input_features', 0)
+        return self._result_attribute("result", {}).get("input_features", 0)
 
     @property
     def input_rows(self):
@@ -180,7 +191,7 @@ class UploadTask(FutureTask):
         :rtype: int
         :return: The number of rows to insert.
         """
-        return self._result_attribute('result', {}).get('input_rows', 0)
+        return self._result_attribute("result", {}).get("input_rows", 0)
 
     @property
     def output_rows(self):
@@ -191,7 +202,7 @@ class UploadTask(FutureTask):
         :rtype: int
         :return: The number of rows that were added.
         """
-        return self._result_attribute('load', {}).get('output_rows', 0)
+        return self._result_attribute("load", {}).get("output_rows", 0)
 
     @property
     def status(self):
@@ -238,10 +249,10 @@ class UploadTask(FutureTask):
         else:
             s += "\tStatus: {}\n".format(self._task_result.status)
             s += "\tMemory usage (MiB): {:.2f}\n".format(
-                self._task_result.peak_memory_usage / (1024 * 1024.)
+                self._task_result.peak_memory_usage / (1024 * 1024.0)
             )
             s += "\tRuntime (s): {}\n".format(self._task_result.runtime)
-            if 'load' in self._task_result:
+            if "load" in self._task_result:
                 s += "\tLoad State: {}\n".format(self._task_result.load.state)
 
         return s

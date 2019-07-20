@@ -44,6 +44,7 @@ class ResultType(object):
     """
     Possible types of return values for a function.
     """
+
     JSON = "json"
     LEGACY_PICKLE = "pickle"
 
@@ -56,14 +57,15 @@ class FutureTask(object):
     """
 
     COMPLETION_POLL_INTERVAL_SECONDS = 3
-    SUCCESS = 'SUCCESS'
-    FAILURE = 'FAILURE'
+    SUCCESS = "SUCCESS"
+    FAILURE = "FAILURE"
 
     def __init__(self, guid, tuid, client=None, args=None, kwargs=None):
         self.guid = guid
         self.tuid = tuid
         if client is None:
             from descarteslabs.client.services.tasks import Tasks  # circular import
+
             client = Tasks()
 
         self.client = client
@@ -91,11 +93,11 @@ class FutureTask(object):
         if self._task_result is None:
             start = time.time()
 
-            while timeout is None or \
-                    (time.time() - start) < timeout:
+            while timeout is None or (time.time() - start) < timeout:
                 try:
                     self._task_result = self.client.get_task_result(
-                        self.guid, self.tuid, include=['stacktrace'])
+                        self.guid, self.tuid, include=["stacktrace"]
+                    )
                 except NotFoundError:
                     if not wait:
                         raise TransientResultError()
@@ -137,8 +139,10 @@ class FutureTask(object):
             return None
 
         if not self._is_return_value_loaded:
-            return_value = Storage().get(self._task_result.result_key, storage_type='result')
-            result_type = self._task_result.get('result_type', ResultType.LEGACY_PICKLE)
+            return_value = Storage().get(
+                self._task_result.result_key, storage_type="result"
+            )
+            result_type = self._task_result.get("result_type", ResultType.LEGACY_PICKLE)
 
             if result_type == ResultType.LEGACY_PICKLE:
                 return_value = cloudpickle.loads(return_value)
@@ -146,11 +150,11 @@ class FutureTask(object):
                 if isinstance(return_value, dict):
                     # For backwards-compatibility reasons, for legacy pickles the result is
                     # wrapped in a dictionary.
-                    self._return_value = return_value['result']
+                    self._return_value = return_value["result"]
                 else:
                     self._return_value = return_value
             elif result_type == ResultType.JSON:
-                self._return_value = json.loads(return_value.decode('utf-8'))
+                self._return_value = json.loads(return_value.decode("utf-8"))
             else:
                 raise RuntimeError("Unknown result type: %s - update your tasks client")
 
@@ -168,9 +172,11 @@ class FutureTask(object):
         """
         self.get_result(wait=True)
 
-        if not self._is_log_loaded and self._task_result.get('log_size_bytes', 1) > 0:
+        if not self._is_log_loaded and self._task_result.get("log_size_bytes", 1) > 0:
             try:
-                self._log = Storage().get(self._task_result.result_key, storage_type='logs')
+                self._log = Storage().get(
+                    self._task_result.result_key, storage_type="logs"
+                )
             except NotFoundError:
                 self._log = None
 
@@ -186,7 +192,7 @@ class FutureTask(object):
         :rtype: int
         :return: The peak memory usage
         """
-        return self._result_attribute('peak_memory_usage')
+        return self._result_attribute("peak_memory_usage")
 
     @property
     def runtime(self):
@@ -197,7 +203,7 @@ class FutureTask(object):
         :rtype: int
         :return: The time spent executing the function
         """
-        return self._result_attribute('runtime')
+        return self._result_attribute("runtime")
 
     @property
     def status(self):
@@ -208,7 +214,7 @@ class FutureTask(object):
         :rtype: str
         :return: The status for this completed task.
         """
-        return self._result_attribute('status')
+        return self._result_attribute("status")
 
     @property
     def is_success(self):
@@ -229,7 +235,7 @@ class FutureTask(object):
         :rtype: str
         :return: The name of the exception or :const:`None`
         """
-        return self._result_attribute('exception_name')
+        return self._result_attribute("exception_name")
 
     exception = exception_name
 
@@ -242,7 +248,7 @@ class FutureTask(object):
         :rtype: str
         :return: The stacktrace of the exception or :const:`None`
         """
-        return self._result_attribute('stacktrace')
+        return self._result_attribute("stacktrace")
 
     traceback = stacktrace
 
@@ -254,7 +260,7 @@ class FutureTask(object):
         :rtype: str
         :return: The failure type
         """
-        return self._result_attribute('failure_type')
+        return self._result_attribute("failure_type")
 
     def __eq__(self, other):
         return self.guid == other.guid and self.tuid == other.tuid
@@ -264,7 +270,7 @@ class FutureTask(object):
         if self.ready:
             s += "\tStatus: {}\n".format(self._task_result.status)
             s += "\tMemory usage (MiB): {:.2f}\n".format(
-                self._task_result.peak_memory_usage / (1024 * 1024.)
+                self._task_result.peak_memory_usage / (1024 * 1024.0)
             )
             s += "\tRuntime (s): {}\n".format(self._task_result.runtime)
         else:

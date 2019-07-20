@@ -29,23 +29,21 @@ def scales(s):
         smi, sma, dmi, dma = six.moves.map(float, s.split(","))
         return [smi, sma, dmi, dma]
     else:
-        raise argparse.ArgumentTypeError(
-            "Scales must be mi,ma or smi,sma,dmi,dma"
-        )
+        raise argparse.ArgumentTypeError("Scales must be mi,ma or smi,sma,dmi,dma")
 
 
 def raster_handler(args):
     params = {
-        'inputs': args.inputs,
-        'bands': args.bands,
-        'scales': args.scales,
-        'resolution': args.resolution,
-        'data_type': args.data_type,
-        'output_format': args.output_format,
-        'srs': args.srs,
-        'place': args.place,
-        'save': True,
-        'outfile_basename': args.outfile_basename,
+        "inputs": args.inputs,
+        "bands": args.bands,
+        "scales": args.scales,
+        "resolution": args.resolution,
+        "data_type": args.data_type,
+        "output_format": args.output_format,
+        "srs": args.srs,
+        "place": args.place,
+        "save": True,
+        "outfile_basename": args.outfile_basename,
     }
     response = Raster().raster(**params)
-    print(json.dumps(response['metadata'], indent=2))
+    print(json.dumps(response["metadata"], indent=2))

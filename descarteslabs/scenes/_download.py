@@ -6,15 +6,13 @@ from descarteslabs.client.services.raster import Raster
 from descarteslabs.client.exceptions import NotFoundError, BadRequestError
 
 
-ext_to_format = {
-    "tif": "GTiff",
-    "png": "PNG",
-    "jpg": "JPEG",
-}
+ext_to_format = {"tif": "GTiff", "png": "PNG", "jpg": "JPEG"}
 
 
 def _is_path_like(dest):
-    return isinstance(dest, six.string_types) or (hasattr(os, "PathLike") and isinstance(dest, os.PathLike))
+    return isinstance(dest, six.string_types) or (
+        hasattr(os, "PathLike") and isinstance(dest, os.PathLike)
+    )
 
 
 def _format_from_path(path):
@@ -27,13 +25,27 @@ def _get_format(ext):
         return ext_to_format[ext]
     except KeyError:
         six.raise_from(
-            ValueError("Unknown format '{}'. Possible values are {}.".format(format, ", ".join(ext_to_format))),
-            None
+            ValueError(
+                "Unknown format '{}'. Possible values are {}.".format(
+                    format, ", ".join(ext_to_format)
+                )
+            ),
+            None,
         )
 
 
-def _download(inputs, bands_list, ctx, dtype, dest, format, resampler="near",
-              processing_level=None, scales=None, raster_client=None):
+def _download(
+    inputs,
+    bands_list,
+    ctx,
+    dtype,
+    dest,
+    format,
+    resampler="near",
+    processing_level=None,
+    scales=None,
+    raster_client=None,
+):
     """
     Download inputs as an image file and save to file or path-like `dest`.
     Code shared by Scene.download and SceneCollection.download_mosaic
@@ -47,7 +59,9 @@ def _download(inputs, bands_list, ctx, dtype, dest, format, resampler="near",
         bands_str = "-".join(bands_list)
         if len(inputs) == 1:
             # default filename for a single scene
-            dest = "{id}-{bands}.{ext}".format(id=inputs[0], bands=bands_str, ext=format)
+            dest = "{id}-{bands}.{ext}".format(
+                id=inputs[0], bands=bands_str, ext=format
+            )
         else:
             # default filename for a mosaic
             dest = "mosaic-{bands}.{ext}".format(bands=bands_str, ext=format)
@@ -81,13 +95,17 @@ def _download(inputs, bands_list, ctx, dtype, dest, format, resampler="near",
         if len(inputs) == 1:
             msg = "'{}' does not exist in the Descartes catalog".format(inputs[0])
         else:
-            msg = "Some or all of these IDs don't exist in the Descartes catalog: {}".format(inputs)
+            msg = "Some or all of these IDs don't exist in the Descartes catalog: {}".format(
+                inputs
+            )
         six.raise_from(NotFoundError(msg), None)
     except BadRequestError as e:
-        msg = ("Error with request:\n"
-               "{err}\n"
-               "For reference, dl.Raster.raster was called with these arguments:\n"
-               "{args}")
+        msg = (
+            "Error with request:\n"
+            "{err}\n"
+            "For reference, dl.Raster.raster was called with these arguments:\n"
+            "{args}"
+        )
         msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))
         six.raise_from(BadRequestError(msg), None)
 
@@ -96,7 +114,11 @@ def _download(inputs, bands_list, ctx, dtype, dest, format, resampler="near",
     if len(filenames) == 0:
         raise RuntimeError("Unexpected missing results from raster call")
     elif len(filenames) > 1:
-        raise RuntimeError("Unexpected multiple files returned from single raster call: {}".format(filenames))
+        raise RuntimeError(
+            "Unexpected multiple files returned from single raster call: {}".format(
+                filenames
+            )
+        )
     else:
         file = result["files"][filenames[0]]
 
@@ -109,4 +131,8 @@ def _download(inputs, bands_list, ctx, dtype, dest, format, resampler="near",
         try:
             dest.write(file)
         except Exception as e:
-            raise TypeError("Unable to write to the file-like object {} provided as `dest`:\n{}".format(dest, e))
+            raise TypeError(
+                "Unable to write to the file-like object {} provided as `dest`:\n{}".format(
+                    dest, e
+                )
+            )

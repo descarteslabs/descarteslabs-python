@@ -27,75 +27,79 @@ public_token = "header.e30.signature"
 
 
 class ClientTestCase(unittest.TestCase):
-
     def setUp(self):
         self.url = "http://example.vector.com"
         self.gcs_url = "http://example.gcs.com"
 
-        self.client = Vector(url=self.url, auth=Auth(jwt_token=public_token, token_info_path=None))
+        self.client = Vector(
+            url=self.url, auth=Auth(jwt_token=public_token, token_info_path=None)
+        )
 
         self.match_url = re.compile(self.url)
         self.match_gcs_url = re.compile(self.gcs_url)
 
         self.attrs = {
-            'geometry': {'coordinates': [
-                [
-                    [-113.40087890624999, 40.069664523297774],
-                    [-111.434326171875, 40.069664523297774],
-                    [-111.434326171875, 41.918628865183045],
-                    [-113.40087890624999, 41.918628865183045],
-                    [-113.40087890624999, 40.069664523297774]
-                ]
-            ], 'type': 'Polygon'},
-            'properties': {'baz': 1.0, 'foo': 'bar'}
+            "geometry": {
+                "coordinates": [
+                    [
+                        [-113.40087890624999, 40.069664523297774],
+                        [-111.434326171875, 40.069664523297774],
+                        [-111.434326171875, 41.918628865183045],
+                        [-113.40087890624999, 41.918628865183045],
+                        [-113.40087890624999, 40.069664523297774],
+                    ]
+                ],
+                "type": "Polygon",
+            },
+            "properties": {"baz": 1.0, "foo": "bar"},
         }
 
         self.product_response = {
-            'data': {
-                'attributes': {
-                    'description': 'bar',
-                    'name': 'new-test-product',
-                    'owners': [
-                        'org:descarteslabs',
-                        'user:3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1'
+            "data": {
+                "attributes": {
+                    "description": "bar",
+                    "name": "new-test-product",
+                    "owners": [
+                        "org:descarteslabs",
+                        "user:3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1",
                     ],
-                    'readers': [],
-                    'title': 'Test Product',
-                    'writers': []
+                    "readers": [],
+                    "title": "Test Product",
+                    "writers": [],
                 },
-                'id': '2b4552ff4b8a4bb5bb278c94005db50',
-                'meta': {
-                    'created': '2018-12-27T17:01:16.197369'
-                },
-                'type': 'product'
+                "id": "2b4552ff4b8a4bb5bb278c94005db50",
+                "meta": {"created": "2018-12-27T17:01:16.197369"},
+                "type": "product",
             }
         }
 
         self.status_response = {
-            'data': {
-                'attributes': {
-                    'created': '2019-01-03T20:07:51.720000+00:00',
-                    'started': '2019-01-03T20:07:51.903000+00:00',
-                    'status': 'RUNNING'
+            "data": {
+                "attributes": {
+                    "created": "2019-01-03T20:07:51.720000+00:00",
+                    "started": "2019-01-03T20:07:51.903000+00:00",
+                    "status": "RUNNING",
                 },
-                'id': 'c589d688-3230-4caf-9f9d-18854f71e91d',
-                'type': 'copy_query'
+                "id": "c589d688-3230-4caf-9f9d-18854f71e91d",
+                "type": "copy_query",
             }
         }
 
         self.feature_response = {
-            'data': [
+            "data": [
                 {
-                    'attributes': {
-                        'created': '2019-03-28T23:08:24.991729+00:00',
-                        'geometry': {
-                            'coordinates': [[[-95, 42], [-95, 41], [-93, 40], [-93, 42],  [-95, 42]]],
-                            'type': 'Polygon'
+                    "attributes": {
+                        "created": "2019-03-28T23:08:24.991729+00:00",
+                        "geometry": {
+                            "coordinates": [
+                                [[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]
+                            ],
+                            "type": "Polygon",
                         },
-                        'properties': {}
+                        "properties": {},
                     },
-                    'id': '7d724ae48d1fab595bc95b6091b005c920327',
-                    'type': 'feature'
+                    "id": "7d724ae48d1fab595bc95b6091b005c920327",
+                    "type": "feature",
                 }
             ]
         }
@@ -108,104 +112,89 @@ class ClientTestCase(unittest.TestCase):
 
 
 class VectorsTest(ClientTestCase):
-
     @responses.activate
     def test_upload_bytesio(self):
-        self.mock_response(responses.POST, {
-            'upload_id': 'xyz',
-            'url': self.gcs_url
-        })
+        self.mock_response(responses.POST, {"upload_id": "xyz", "url": self.gcs_url})
 
         self.mock_gcs(responses.PUT, {})
 
         s = io.BytesIO()
 
         for i in range(10):
-            s.write(b'{')
-            s.write('{}'.format(self.attrs).encode('utf-8'))
-            s.write(b'}\n')
+            s.write(b"{")
+            s.write("{}".format(self.attrs).encode("utf-8"))
+            s.write(b"}\n")
 
-        self.client.upload_features(s, 'test')
+        self.client.upload_features(s, "test")
 
     @responses.activate
     def test_upload_stringio(self):
-        self.mock_response(responses.POST, {
-            'upload_id': 'xyz',
-            'url': self.gcs_url
-        })
+        self.mock_response(responses.POST, {"upload_id": "xyz", "url": self.gcs_url})
 
         self.mock_gcs(responses.PUT, {})
 
         s = io.StringIO()
 
         for i in range(10):
-            s.write(u'{')
-            s.write(u'{}'.format(self.attrs))
-            s.write(u'}\n')
+            s.write(u"{")
+            s.write(u"{}".format(self.attrs))
+            s.write(u"}\n")
 
-        self.client.upload_features(s, 'test')
+        self.client.upload_features(s, "test")
 
     @responses.activate
     def test_bad_upload(self):
-        self.mock_response(responses.POST, {
-            'upload_id': 'xyz',
-            'url': self.gcs_url
-        })
+        self.mock_response(responses.POST, {"upload_id": "xyz", "url": self.gcs_url})
 
         self.mock_gcs(responses.PUT, {})
 
         s = ""
 
         for i in range(10):
-            s += '{'
-            s += '{}'.format(self.attrs)
-            s += '}\n'
+            s += "{"
+            s += "{}".format(self.attrs)
+            s += "}\n"
 
         with self.assertRaises(Exception):
-            self.client.upload_features(s, 'test')
+            self.client.upload_features(s, "test")
 
     @responses.activate
     def test_search_features(self):
-        self.mock_response(responses.POST, {
-            "meta": {"continuation_token": 1, "total_results": 10},
-            "data": []
-        })
-
-        self.client.search_features(
-            "test-product-id",
-            geometry=self.attrs["geometry"]
+        self.mock_response(
+            responses.POST,
+            {"meta": {"continuation_token": 1, "total_results": 10}, "data": []},
         )
+
+        self.client.search_features("test-product-id", geometry=self.attrs["geometry"])
 
         self.assertEqual(len(responses.calls), 1)
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body.decode('utf-8'))["geometry"], self.attrs["geometry"])
+        self.assertEqual(
+            json.loads(request.body.decode("utf-8"))["geometry"], self.attrs["geometry"]
+        )
 
     @responses.activate
     def test_search_features_shapely(self):
-        self.mock_response(responses.POST, {
-            "meta": {"continuation_token": 1, "total_results": 10},
-            "data": []
-        })
+        self.mock_response(
+            responses.POST,
+            {"meta": {"continuation_token": 1, "total_results": 10}, "data": []},
+        )
 
         self.client.search_features(
-            "test-product-id",
-            geometry=shape(self.attrs["geometry"])
+            "test-product-id", geometry=shape(self.attrs["geometry"])
         )
 
         self.assertEqual(len(responses.calls), 1)
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body.decode('utf-8'))["geometry"], self.attrs["geometry"])
+        self.assertEqual(
+            json.loads(request.body.decode("utf-8"))["geometry"], self.attrs["geometry"]
+        )
 
     @responses.activate
     def test_create_product_from_query(self):
         self.mock_response(responses.POST, self.product_response, status=201)
 
-        r = self.client.create_product_from_query(
-            "foo",
-            "Foo",
-            "Foo is a bar",
-            "baz"
-        )
+        r = self.client.create_product_from_query("foo", "Foo", "Foo is a bar", "baz")
 
         self.assertEqual("2b4552ff4b8a4bb5bb278c94005db50", r.data.id)
 
@@ -214,12 +203,7 @@ class VectorsTest(ClientTestCase):
         self.mock_response(responses.POST, {}, status=400)
 
         with self.assertRaises(BadRequestError):
-            self.client.create_product_from_query(
-                "foo",
-                "Foo",
-                "Foo is a bar",
-                "baz"
-            )
+            self.client.create_product_from_query("foo", "Foo", "Foo is a bar", "baz")
 
     @responses.activate
     def test_get_product_from_query_status(self):
@@ -269,8 +253,8 @@ class VectorsTest(ClientTestCase):
     def test_create_feature_correct_wo(self):
         self.mock_response(responses.POST, self.feature_response, status=200)
         non_ccw = {
-            'type': 'Polygon',
-            'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+            "type": "Polygon",
+            "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]],
         }
         expected_req_body = {
             "data": {
@@ -278,29 +262,35 @@ class VectorsTest(ClientTestCase):
                     "fix_geometry": "fix",
                     "geometry": {
                         "type": "Polygon",
-                        "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+                        "coordinates": [
+                            [[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]
+                        ],
                     },
-                    "properties": None
+                    "properties": None,
                 },
-                "type": "feature"
+                "type": "feature",
             }
         }
 
-        self.client.create_feature("2b4552ff4b8a4bb5bb278c94005db50", non_ccw, fix_geometry='fix')
+        self.client.create_feature(
+            "2b4552ff4b8a4bb5bb278c94005db50", non_ccw, fix_geometry="fix"
+        )
 
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body.decode('utf-8')), expected_req_body)
+        self.assertEqual(json.loads(request.body.decode("utf-8")), expected_req_body)
 
     @responses.activate
     def test_create_feature_error(self):
         self.mock_response(responses.POST, self.feature_response, status=400)
         non_ccw = {
             "type": "Polygon",
-            "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+            "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]],
         }
 
         with self.assertRaises(BadRequestError):
-            self.client.create_feature("2b4552ff4b8a4bb5bb278c94005db50", non_ccw, fix_geometry='reject')
+            self.client.create_feature(
+                "2b4552ff4b8a4bb5bb278c94005db50", non_ccw, fix_geometry="reject"
+            )
 
         expected_req_body = {
             "data": {
@@ -309,111 +299,161 @@ class VectorsTest(ClientTestCase):
                     "fix_geometry": "reject",
                     "geometry": {
                         "type": "Polygon",
-                        "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
+                        "coordinates": [
+                            [[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]
+                        ],
                     },
-                    "properties": None
-                }
+                    "properties": None,
+                },
             }
         }
 
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body.decode('utf-8')), expected_req_body)
+        self.assertEqual(json.loads(request.body.decode("utf-8")), expected_req_body)
 
     @responses.activate
     def test_create_features_correct_wo(self):
         self.mock_response(responses.POST, self.feature_response, status=200)
         non_ccw_list = [
             {
-                'type': 'Polygon',
-                'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
-            }, {
-                'type': 'MultiPolygon',
-                'coordinates': [
+                "type": "Polygon",
+                "coordinates": [
+                    [[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]
+                ],
+            },
+            {
+                "type": "MultiPolygon",
+                "coordinates": [
                     [[[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]],
                     [[[-91, 44], [-92, 43], [-91, 42], [-89, 43], [-91, 44]]],
-                    [[[-97, 44], [-96, 42], [-95, 43], [-94, 43], [-95, 44], [-97, 44]]]
-                ]
-            }, {
-                'type': 'MultiLineString',
-                'coordinates': [
-                    [[-91, 44], [-89, 43], [-91, 42],  [-92, 43]],
-                    [[-95, 42], [-93, 42],  [-93, 40], [-95, 41]]
-                ]
-            }
+                    [
+                        [
+                            [-97, 44],
+                            [-96, 42],
+                            [-95, 43],
+                            [-94, 43],
+                            [-95, 44],
+                            [-97, 44],
+                        ]
+                    ],
+                ],
+            },
+            {
+                "type": "MultiLineString",
+                "coordinates": [
+                    [[-91, 44], [-89, 43], [-91, 42], [-92, 43]],
+                    [[-95, 42], [-93, 42], [-93, 40], [-95, 41]],
+                ],
+            },
         ]
 
-        self.client.create_features("2b4552ff4b8a4bb5bb278c94005db50", non_ccw_list, fix_geometry='fix')
+        self.client.create_features(
+            "2b4552ff4b8a4bb5bb278c94005db50", non_ccw_list, fix_geometry="fix"
+        )
         expected_req_body = {
-            "data": [{
+            "data": [
+                {
                     "type": "feature",
                     "attributes": {
-                        "fix_geometry": 'fix',
+                        "fix_geometry": "fix",
                         "type": "Polygon",
-                        "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
-                    }
-                }, {
+                        "coordinates": [
+                            [[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]
+                        ],
+                    },
+                },
+                {
                     "type": "feature",
                     "attributes": {
-                        "fix_geometry": 'fix',
+                        "fix_geometry": "fix",
                         "type": "MultiPolygon",
                         "coordinates": [
                             [[[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]],
                             [[[-91, 44], [-92, 43], [-91, 42], [-89, 43], [-91, 44]]],
-                            [[[-97, 44], [-96, 42], [-95, 43], [-94, 43], [-95, 44], [-97, 44]]]
-                        ]
-                    }
-                }, {
+                            [
+                                [
+                                    [-97, 44],
+                                    [-96, 42],
+                                    [-95, 43],
+                                    [-94, 43],
+                                    [-95, 44],
+                                    [-97, 44],
+                                ]
+                            ],
+                        ],
+                    },
+                },
+                {
                     "type": "feature",
                     "attributes": {
-                        "fix_geometry": 'fix',
+                        "fix_geometry": "fix",
                         "type": "MultiLineString",
                         "coordinates": [
                             [[-91, 44], [-89, 43], [-91, 42], [-92, 43]],
-                            [[-95, 42], [-93, 42], [-93, 40], [-95, 41]]
-                        ]
-                    }
-                }
+                            [[-95, 42], [-93, 42], [-93, 40], [-95, 41]],
+                        ],
+                    },
+                },
             ]
         }
 
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body.decode('utf-8')), expected_req_body)
+        self.assertEqual(json.loads(request.body.decode("utf-8")), expected_req_body)
 
     @responses.activate
     def test_create_features_error(self):
         self.mock_response(responses.POST, self.feature_response, status=400)
         non_ccw_list = [
             {
-                'type': 'Polygon',
-                'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
-            }, {
+                "type": "Polygon",
+                "coordinates": [
+                    [[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]
+                ],
+            },
+            {
                 "type": "MultiPolygon",
                 "coordinates": [
                     [[[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]],
                     [[[-91, 44], [-92, 43], [-91, 42], [-89, 43], [-91, 44]]],
-                    [[[-97, 44], [-96, 42], [-95, 43], [-94, 43], [-95, 44], [-97, 44]]]
-                ]
-            }, {
+                    [
+                        [
+                            [-97, 44],
+                            [-96, 42],
+                            [-95, 43],
+                            [-94, 43],
+                            [-95, 44],
+                            [-97, 44],
+                        ]
+                    ],
+                ],
+            },
+            {
                 "type": "MultiLineString",
                 "coordinates": [
-                    [[-91, 44], [-89, 43], [-91, 42],  [-92, 43]],
-                    [[-95, 42], [-93, 42],  [-93, 40], [-95, 41]]
-                ]
-            }
+                    [[-91, 44], [-89, 43], [-91, 42], [-92, 43]],
+                    [[-95, 42], [-93, 42], [-93, 40], [-95, 41]],
+                ],
+            },
         ]
 
         with self.assertRaises(BadRequestError):
-            self.client.create_features("2b4552ff4b8a4bb5bb278c94005db50", non_ccw_list, fix_geometry='reject')
+            self.client.create_features(
+                "2b4552ff4b8a4bb5bb278c94005db50", non_ccw_list, fix_geometry="reject"
+            )
 
         expected_req_body = {
-            "data": [{
+            "data": [
+                {
                     "type": "feature",
                     "attributes": {
                         "fix_geometry": "reject",
                         "type": "Polygon",
-                        "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]
-                    }
-                }, {
+                        "coordinates": [
+                            [[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]
+                        ],
+                    },
+                },
+                {
                     "type": "feature",
                     "attributes": {
                         "fix_geometry": "reject",
@@ -421,24 +461,34 @@ class VectorsTest(ClientTestCase):
                         "coordinates": [
                             [[[-95, 42], [-95, 41], [-93, 40], [-93, 42], [-95, 42]]],
                             [[[-91, 44], [-92, 43], [-91, 42], [-89, 43], [-91, 44]]],
-                            [[[-97, 44], [-96, 42], [-95, 43], [-94, 43], [-95, 44], [-97, 44]]]
-                        ]
-                    }
-                }, {
+                            [
+                                [
+                                    [-97, 44],
+                                    [-96, 42],
+                                    [-95, 43],
+                                    [-94, 43],
+                                    [-95, 44],
+                                    [-97, 44],
+                                ]
+                            ],
+                        ],
+                    },
+                },
+                {
                     "type": "feature",
                     "attributes": {
                         "fix_geometry": "reject",
                         "type": "MultiLineString",
                         "coordinates": [
                             [[-91, 44], [-89, 43], [-91, 42], [-92, 43]],
-                            [[-95, 42], [-93, 42], [-93, 40], [-95, 41]]
-                        ]
-                    }
-                }
+                            [[-95, 42], [-93, 42], [-93, 40], [-95, 41]],
+                        ],
+                    },
+                },
             ]
         }
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body.decode('utf-8')), expected_req_body)
+        self.assertEqual(json.loads(request.body.decode("utf-8")), expected_req_body)
 
 
 if __name__ == "__main__":

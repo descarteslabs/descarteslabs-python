@@ -77,9 +77,7 @@ class TestJob(object):
         assert message.channel == "foo"
 
         assert json.loads(message.parameters) == json_normalize(
-            {
-                "foo": graft_client.value_graft(parameters["foo"]),
-            }
+            {"foo": graft_client.value_graft(parameters["foo"])}
         )
         assert json.loads(message.serialized_graft) == json_normalize(obj.graft)
         assert message.serialized_typespec == json.dumps("Int")
@@ -180,9 +178,7 @@ class TestJob(object):
         assert json_normalize(job_from_msg.object.graft) == json_normalize(obj.graft)
         assert job_from_msg.type is type(job_from_msg.object) is type(obj)  # noqa: E721
         assert job.result_type == "Int"
-        assert job.parameters == {
-            "foo": graft_client.value_graft(parameters["foo"]),
-        }
+        assert job.parameters == {"foo": graft_client.value_graft(parameters["foo"])}
 
         assert job.id is None
         assert job.channel == "foo"

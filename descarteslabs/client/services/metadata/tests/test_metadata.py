@@ -29,10 +29,11 @@ public_token = "header.e30.signature"
 
 
 class MetadataTest(unittest.TestCase):
-
     def setUp(self):
         self.url = "http://example.com/metadata"
-        self.instance = Metadata(url=self.url, auth=Auth(jwt_token=public_token, token_info_path=None))
+        self.instance = Metadata(
+            url=self.url, auth=Auth(jwt_token=public_token, token_info_path=None)
+        )
         self.instance._raster = Raster(url=self.url, auth=self.instance.auth)
         self.match_url = re.compile(self.url)
 
@@ -62,7 +63,9 @@ class MetadataTest(unittest.TestCase):
     def test_paged_search(self):
         features = [{"id": "foo"}]
         token = "token"
-        self.mock_response(responses.POST, json=features, headers={"x-continuation-token": token})
+        self.mock_response(
+            responses.POST, json=features, headers={"x-continuation-token": token}
+        )
         collection = self.instance.paged_search(limit=100)
         self.assertEqual(features, collection.features)
         self.assertEqual(token, collection.properties.continuation_token)
@@ -81,24 +84,38 @@ class MetadataTest(unittest.TestCase):
     def test_paged_search_dltile(self):
         features = [{"id": "foo"}]
         tile_geom = {
-            "coordinates": [[[-94.01008346640455, 40.992358024242606], [-93.90737611136569, 40.99321227969176],
-                             [-93.908445279927, 41.0710332380541], [-94.01127360818097, 41.070176651899104],
-                             [-94.01008346640455, 40.992358024242606]]],
-            "type": "Polygon"
+            "coordinates": [
+                [
+                    [-94.01008346640455, 40.992358024242606],
+                    [-93.90737611136569, 40.99321227969176],
+                    [-93.908445279927, 41.0710332380541],
+                    [-94.01127360818097, 41.070176651899104],
+                    [-94.01008346640455, 40.992358024242606],
+                ]
+            ],
+            "type": "Polygon",
         }
         self.mock_response(responses.GET, json={"geometry": tile_geom})
         self.mock_response(responses.POST, json=features)
-        collection = self.instance.paged_search(limit=100, dltile="256:16:30.0:15:-11:591")
+        collection = self.instance.paged_search(
+            limit=100, dltile="256:16:30.0:15:-11:591"
+        )
         self.assertEqual(features, collection.features)
 
     @responses.activate
     def test_paged_search_shapely(self):
         features = [{"id": "foo"}]
         geom = {
-            "coordinates": [[[-94.01008346640455, 40.992358024242606], [-93.90737611136569, 40.99321227969176],
-                             [-93.908445279927, 41.0710332380541], [-94.01127360818097, 41.070176651899104],
-                             [-94.01008346640455, 40.992358024242606]]],
-            "type": "Polygon"
+            "coordinates": [
+                [
+                    [-94.01008346640455, 40.992358024242606],
+                    [-93.90737611136569, 40.99321227969176],
+                    [-93.908445279927, 41.0710332380541],
+                    [-94.01127360818097, 41.070176651899104],
+                    [-94.01008346640455, 40.992358024242606],
+                ]
+            ],
+            "type": "Polygon",
         }
         shape_geom = shape(geom)
         self.mock_response(responses.GET, json={"geometry": geom})
@@ -112,7 +129,7 @@ class MetadataTest(unittest.TestCase):
         self.mock_response(responses.POST, json=features)
         collection = self.instance.search(limit=2)
         req = responses.calls[0].request
-        self.assertNotIn("storage_state", json.loads(req.body.decode('utf-8')))
+        self.assertNotIn("storage_state", json.loads(req.body.decode("utf-8")))
         self.assertEqual(features[:2], collection.features)
 
     @responses.activate
@@ -122,20 +139,28 @@ class MetadataTest(unittest.TestCase):
         collection = self.instance.search(limit=2, storage_state="available")
         self.assertEqual(features[:2], collection.features)
         req = responses.calls[0].request
-        self.assertIn("storage_state", json.loads(req.body.decode('utf-8')))
+        self.assertIn("storage_state", json.loads(req.body.decode("utf-8")))
 
     @responses.activate
     def test_features(self):
         features = [{"id": "foo"}, {"id": "bar"}, {"id": "baz"}]
-        self.mock_response(responses.POST, json=features[:2], headers={"x-continuation-token": "token"})
-        self.mock_response(responses.POST, json=features[2:], headers={"x-continuation-token": "token2"})
+        self.mock_response(
+            responses.POST, json=features[:2], headers={"x-continuation-token": "token"}
+        )
+        self.mock_response(
+            responses.POST,
+            json=features[2:],
+            headers={"x-continuation-token": "token2"},
+        )
         # Note: Unfortunately the client has historically been written in such a way that it always
         # expects a token header, even if the end of the search was reached, so an extra request
         # with 0 results happens in practice.
-        self.mock_response(responses.POST, json=[], headers={"x-continuation-token": "token3"})
+        self.mock_response(
+            responses.POST, json=[], headers={"x-continuation-token": "token3"}
+        )
         self.assertEqual(features, list(self.instance.features()))
         req = responses.calls[0].request
-        self.assertNotIn("storage_state", json.loads(req.body.decode('utf-8')))
+        self.assertNotIn("storage_state", json.loads(req.body.decode("utf-8")))
 
     @responses.activate
     def test_summary_default(self):
@@ -143,7 +168,7 @@ class MetadataTest(unittest.TestCase):
         self.mock_response(responses.POST, json=summary)
         self.assertEqual(summary, self.instance.summary())
         req = responses.calls[0].request
-        self.assertNotIn("storage_state", json.loads(req.body.decode('utf-8')))
+        self.assertNotIn("storage_state", json.loads(req.body.decode("utf-8")))
 
     @responses.activate
     def test_summary_storage_state(self):
@@ -152,29 +177,43 @@ class MetadataTest(unittest.TestCase):
         self.assertEqual(summary, self.instance.summary(storage_state="available"))
         expected_req = {"date": "acquired", "storage_state": "available"}
         req = responses.calls[0].request
-        self.assertEqual(json.loads(req.body.decode('utf-8')), expected_req)
+        self.assertEqual(json.loads(req.body.decode("utf-8")), expected_req)
 
     @responses.activate
     def test_summary_dltile(self):
         summary = {"count": 42}
         tile_geom = {
-            "coordinates": [[[-94.01008346640455, 40.992358024242606], [-93.90737611136569, 40.99321227969176],
-                             [-93.908445279927, 41.0710332380541], [-94.01127360818097, 41.070176651899104],
-                             [-94.01008346640455, 40.992358024242606]]],
-            "type": "Polygon"
+            "coordinates": [
+                [
+                    [-94.01008346640455, 40.992358024242606],
+                    [-93.90737611136569, 40.99321227969176],
+                    [-93.908445279927, 41.0710332380541],
+                    [-94.01127360818097, 41.070176651899104],
+                    [-94.01008346640455, 40.992358024242606],
+                ]
+            ],
+            "type": "Polygon",
         }
         self.mock_response(responses.GET, json={"geometry": tile_geom})
         self.mock_response(responses.POST, json=summary)
-        self.assertEqual(summary, self.instance.summary(dltile="256:16:30.0:15:-11:591"))
+        self.assertEqual(
+            summary, self.instance.summary(dltile="256:16:30.0:15:-11:591")
+        )
 
     @responses.activate
     def test_summary_shapely(self):
         summary = {"count": 42}
         geom = {
-            "coordinates": [[[-94.01008346640455, 40.992358024242606], [-93.90737611136569, 40.99321227969176],
-                             [-93.908445279927, 41.0710332380541], [-94.01127360818097, 41.070176651899104],
-                             [-94.01008346640455, 40.992358024242606]]],
-            "type": "Polygon"
+            "coordinates": [
+                [
+                    [-94.01008346640455, 40.992358024242606],
+                    [-93.90737611136569, 40.99321227969176],
+                    [-93.908445279927, 41.0710332380541],
+                    [-94.01127360818097, 41.070176651899104],
+                    [-94.01008346640455, 40.992358024242606],
+                ]
+            ],
+            "type": "Polygon",
         }
         shape_geom = shape(geom)
         self.mock_response(responses.GET, json={"geometry": geom})

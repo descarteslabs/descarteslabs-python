@@ -88,7 +88,11 @@ class GeoContext(object):
 
     def __getstate__(self):
         # Lock objects shouldn't be pickled or deepcopied
-        return {attr: getattr(self, attr) for attr in self.__slots__ if not attr.endswith("_")}
+        return {
+            attr: getattr(self, attr)
+            for attr in self.__slots__
+            if not attr.endswith("_")
+        }
 
     def __setstate__(self, state):
         for attr, val in six.iteritems(state):
@@ -122,7 +126,8 @@ class GeoContext(object):
         delim = ",\n" + " " * (len(classname) + 1)
         props = delim.join(
             "{}={}".format(attr.lstrip("_"), reprlib.repr(getattr(self, attr)))
-            for attr in self.__slots__ if not attr.endswith("_")
+            for attr in self.__slots__
+            if not attr.endswith("_")
         )
         return "{}({})".format(classname, props)
 
@@ -143,6 +148,7 @@ class AOI(GeoContext):
         aoi_without_auto_bounds = dl.scenes.AOI(geometry=my_geometry, resolution=15, bounds=(-40, 35, -39, 36))
         aoi_with_specific_pixel_dimensions = dl.scenes.AOI(geometry=my_geometry, shape=(200, 400))
     """
+
     __slots__ = (
         "_geometry",
         "_resolution",
@@ -153,15 +159,16 @@ class AOI(GeoContext):
         "_shape",
     )
 
-    def __init__(self,
-                 geometry=None,
-                 resolution=None,
-                 crs=None,
-                 align_pixels=True,
-                 bounds=None,
-                 bounds_crs="EPSG:4326",
-                 shape=None,
-                 ):
+    def __init__(
+        self,
+        geometry=None,
+        resolution=None,
+        crs=None,
+        align_pixels=True,
+        bounds=None,
+        bounds_crs="EPSG:4326",
+        shape=None,
+    ):
         """
         Parameters
         ----------
@@ -213,15 +220,7 @@ class AOI(GeoContext):
             bounds = "update"
 
         # If no bounds were given, use the bounds of the geometry
-        self._assign(
-            geometry,
-            resolution,
-            crs,
-            align_pixels,
-            bounds,
-            bounds_crs,
-            shape,
-        )
+        self._assign(geometry, resolution, crs, align_pixels, bounds, bounds_crs, shape)
         self._validate()
 
     @property
@@ -331,9 +330,13 @@ class AOI(GeoContext):
         with self._geometry_lock_:
             # see comment in `GeoContext.__init__` for why we need to prevent
             # parallel access to `self._geometry.__geo_interface__`
-            cutline = self._geometry.__geo_interface__ if self._geometry is not None else None
+            cutline = (
+                self._geometry.__geo_interface__ if self._geometry is not None else None
+            )
 
-        dimensions = (self._shape[1], self._shape[0]) if self._shape is not None else None
+        dimensions = (
+            (self._shape[1], self._shape[0]) if self._shape is not None else None
+        )
 
         return {
             "cutline": cutline,
@@ -342,7 +345,7 @@ class AOI(GeoContext):
             "bounds_srs": self._bounds_crs,
             "align_pixels": self._align_pixels,
             "bounds": self._bounds,
-            "dimensions": dimensions
+            "dimensions": dimensions,
         }
 
     @property
@@ -367,15 +370,16 @@ class AOI(GeoContext):
                 "to have a __geo_interface__"
             )
 
-    def assign(self,
-               geometry="unchanged",
-               resolution="unchanged",
-               crs="unchanged",
-               align_pixels="unchanged",
-               bounds="unchanged",
-               bounds_crs="unchanged",
-               shape="unchanged",
-               ):
+    def assign(
+        self,
+        geometry="unchanged",
+        resolution="unchanged",
+        crs="unchanged",
+        align_pixels="unchanged",
+        bounds="unchanged",
+        bounds_crs="unchanged",
+        shape="unchanged",
+    ):
         """
         Return a copy of the AOI with the given values assigned.
 
@@ -398,15 +402,7 @@ class AOI(GeoContext):
         """
 
         new = copy.deepcopy(self)
-        new._assign(
-            geometry,
-            resolution,
-            crs,
-            align_pixels,
-            bounds,
-            bounds_crs,
-            shape,
-        )
+        new._assign(geometry, resolution, crs, align_pixels, bounds, bounds_crs, shape)
         new._validate()
         return new
 
@@ -435,7 +431,6 @@ class AOI(GeoContext):
                         "Bounds appear to be in lat-lon decimal degrees, but the `bounds_crs` "
                         "does not seem to be a geographic coordinate reference system "
                         "(i.e. its units are not degrees, but meters, feet, etc.).\n\n"
-
                         "If this is unexpected, set `bounds_crs='EPSG:4326'`."
                     )
 
@@ -448,7 +443,9 @@ class AOI(GeoContext):
         if self._resolution is not None:
             if not isinstance(self._resolution, (int, float)):
                 raise TypeError(
-                    "Resolution must be an int or float, got type '{}'".format(type(self._resolution).__name__)
+                    "Resolution must be an int or float, got type '{}'".format(
+                        type(self._resolution).__name__
+                    )
                 )
             if self._resolution <= 0:
                 raise ValueError("Resolution must be greater than zero")
@@ -458,7 +455,11 @@ class AOI(GeoContext):
             raise ValueError("Cannot set both resolution and shape")
 
         # check that bounds and geometry actually intersect (if bounds in wgs84)
-        if self._geometry is not None and self._bounds is not None and _helpers.is_wgs84_crs(self._bounds_crs):
+        if (
+            self._geometry is not None
+            and self._bounds is not None
+            and _helpers.is_wgs84_crs(self._bounds_crs)
+        ):
             bounds_shp = shapely.geometry.box(*self._bounds)
             if not bounds_shp.intersects(self._geometry):
                 raise ValueError(
@@ -493,19 +494,27 @@ class AOI(GeoContext):
                 msg += "\nSince your CRS is in lat-lon coordinates, resolution must be given in decimal degrees."
 
             if crs_width < self._resolution:
-                raise ValueError(msg.format(dim="width", dim_len=crs_width, res=self._resolution, dim_adj="wide"))
+                raise ValueError(
+                    msg.format(
+                        dim="width",
+                        dim_len=crs_width,
+                        res=self._resolution,
+                        dim_adj="wide",
+                    )
+                )
             if crs_height < self._resolution:
-                raise ValueError(msg.format(dim="height", dim_len=crs_height, res=self._resolution, dim_adj="tall"))
+                raise ValueError(
+                    msg.format(
+                        dim="height",
+                        dim_len=crs_height,
+                        res=self._resolution,
+                        dim_adj="tall",
+                    )
+                )
 
-    def _assign(self,
-                geometry,
-                resolution,
-                crs,
-                align_pixels,
-                bounds,
-                bounds_crs,
-                shape,
-                ):
+    def _assign(
+        self, geometry, resolution, crs, align_pixels, bounds, bounds_crs, shape
+    ):
         # we use "unchanged" as a sentinel value, because None is a valid thing to set attributes to.
         if geometry is not None and geometry != "unchanged":
             geometry = shapely_support.geometry_like_to_shapely(geometry)
@@ -515,10 +524,8 @@ class AOI(GeoContext):
                 if bounds_crs not in (None, "unchanged", "EPSG:4326"):
                     raise ValueError(
                         "Can't compute bounds from a geometry while also explicitly setting a `bounds_crs`.\n\n"
-
                         "To resolve: don't set `bounds_crs`. It will be set to 'EPSG:4326' for you. "
                         "(Though you can do so explicitly if you'd like.)\n\n"
-
                         "Explanation: the coordinates in a geometry are latitudes and longitudes "
                         "in decimal degrees, defined in the WGS84 coordinate reference system "
                         "(referred to by the code EPSG:4326). When we infer `bounds` from a `geometry`, "
@@ -529,7 +536,9 @@ class AOI(GeoContext):
                 if geometry is not None and geometry != "unchanged":
                     bounds = geometry.bounds
                 else:
-                    raise ValueError("A geometry must be given with which to update the bounds")
+                    raise ValueError(
+                        "A geometry must be given with which to update the bounds"
+                    )
             else:
                 bounds = tuple(bounds)
 
@@ -558,6 +567,7 @@ class DLTile(GeoContext):
     and overlap that can cover the globe.
     DLTiles are always in a UTM projection.
     """
+
     __slots__ = (
         "_key",
         "_resolution",
@@ -584,8 +594,8 @@ class DLTile(GeoContext):
         """
 
         super(DLTile, self).__init__()
-        self._geometry = shapely.geometry.shape(dltile_dict['geometry'])
-        properties = dltile_dict['properties']
+        self._geometry = shapely.geometry.shape(dltile_dict["geometry"])
+        properties = dltile_dict["properties"]
         self._key = properties["key"]
         self._resolution = properties["resolution"]
         self._tilesize = properties["tilesize"]
@@ -670,7 +680,9 @@ class DLTile(GeoContext):
         if hasattr(shape, "__geo_interface__"):
             shape = shape.__geo_interface__
 
-        tiles_fc = raster_client.dltiles_from_shape(resolution=resolution, tilesize=tilesize, pad=pad, shape=shape)
+        tiles_fc = raster_client.dltiles_from_shape(
+            resolution=resolution, tilesize=tilesize, pad=pad, shape=shape
+        )
         return [cls(tile) for tile in tiles_fc["features"]]
 
     @classmethod
@@ -705,9 +717,9 @@ class DLTile(GeoContext):
         new : `DLTile`
         """
 
-        key = self._key.split(':')
+        key = self._key.split(":")
         key[1] = str(int(pad))
-        return self.from_key(':'.join(key), raster_client=raster_client)
+        return self.from_key(":".join(key), raster_client=raster_client)
 
     @property
     def key(self):
@@ -866,11 +878,7 @@ class XYZTile(GeoContext):
     Requires the optional ``mercantile`` package.
     """
 
-    __slots__ = (
-        "_x",
-        "_y",
-        "_z",
-    )
+    __slots__ = ("_x", "_y", "_z")
 
     def __init__(self, x, y, z):
         """
@@ -915,7 +923,9 @@ class XYZTile(GeoContext):
     def children(self):
         "List of child XYZTiles contained within this one"
 
-        return [self.__class__(*t) for t in mercantile.children(self._x, self._y, self._z)]
+        return [
+            self.__class__(*t) for t in mercantile.children(self._x, self._y, self._z)
+        ]
 
     @property
     def geometry(self):
@@ -979,5 +989,5 @@ class XYZTile(GeoContext):
             "srs": self.crs,
             "bounds_srs": self.bounds_crs,
             "align_pixels": False,
-            "dimensions": (self.tilesize, self.tilesize)
+            "dimensions": (self.tilesize, self.tilesize),
         }

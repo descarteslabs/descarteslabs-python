@@ -36,9 +36,7 @@ def auth_handler(args):
 
     if args.command == "login":
 
-        print(
-            "Follow this link to login {}".format(LOGIN_URL)
-        )
+        print("Follow this link to login {}".format(LOGIN_URL))
 
         s = input("...then come back here and paste the generated token: ")
         if isinstance(s, six.text_type):

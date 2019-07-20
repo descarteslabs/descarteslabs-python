@@ -33,14 +33,10 @@ class EqExpression(Expression):
         self.value = value
 
     def serialize(self):
-        return {'eq': {self.name: self.value}}
+        return {"eq": {self.name: self.value}}
 
     def jsonapi_serialize(self):
-        return {
-            'op': 'eq',
-            'name': self.name,
-            'val': self.value
-        }
+        return {"op": "eq", "name": self.name, "val": self.value}
 
 
 class NeExpression(Expression):
@@ -49,14 +45,10 @@ class NeExpression(Expression):
         self.value = value
 
     def serialize(self):
-        return {'ne': {self.name: self.value}}
+        return {"ne": {self.name: self.value}}
 
     def jsonapi_serialize(self):
-        return {
-            'op': 'ne',
-            'name': self.name,
-            'val': self.value
-        }
+        return {"op": "ne", "name": self.name, "val": self.value}
 
 
 class RangeExpression(Expression):
@@ -65,14 +57,13 @@ class RangeExpression(Expression):
         self.parts = parts
 
     def serialize(self):
-        return {'range': {self.name: self.parts}}
+        return {"range": {self.name: self.parts}}
 
     def jsonapi_serialize(self):
-        return [{
-            'name': self.name,
-            'op': op,
-            'val': val
-        } for (op, val) in self.parts.items()]
+        return [
+            {"name": self.name, "op": op, "val": val}
+            for (op, val) in self.parts.items()
+        ]
 
 
 class LikeExpression(Expression):
@@ -81,14 +72,10 @@ class LikeExpression(Expression):
         self.value = value
 
     def serialize(self):
-        return {'like': {self.name: self.value}}
+        return {"like": {self.name: self.value}}
 
     def jsonapi_serialize(self):
-        return {
-            'name': self.name,
-            'op': 'ilike',
-            'val': self.value
-        }
+        return {"name": self.name, "op": "ilike", "val": self.value}
 
 
 class AndExpression(object):
@@ -108,13 +95,13 @@ class AndExpression(object):
     __rand__ = __and__
 
     def __repr__(self):
-        return '<AndExpression {}>'.format(self.parts)
+        return "<AndExpression {}>".format(self.parts)
 
     def serialize(self):
-        return {'and': [x.serialize() for x in self.parts]}
+        return {"and": [x.serialize() for x in self.parts]}
 
     def jsonapi_serialize(self):
-        return {'and': flatten_filters(self.parts)}
+        return {"and": flatten_filters(self.parts)}
 
 
 class OrExpression(object):
@@ -134,13 +121,13 @@ class OrExpression(object):
     __ror__ = __or__
 
     def __repr__(self):
-        return '<OrExpression {}>'.format(self.parts)
+        return "<OrExpression {}>".format(self.parts)
 
     def serialize(self):
-        return {'or': [x.serialize() for x in self.parts]}
+        return {"or": [x.serialize() for x in self.parts]}
 
     def jsonapi_serialize(self):
-        return {'or': flatten_filters(self.parts)}
+        return {"or": flatten_filters(self.parts)}
 
 
 def flatten_filters(parts):
@@ -161,6 +148,7 @@ def range_expr(op):
         # such as 10 < a < 20
         self.parts[op] = other
         return RangeExpression(self.name, self.parts.copy())
+
     return f
 
 
@@ -171,10 +159,10 @@ class Property(object):
         self.name = name
         self.parts = parts or {}
 
-    __ge__ = range_expr('gte')
-    __gt__ = range_expr('gt')
-    __le__ = range_expr('lte')
-    __lt__ = range_expr('lt')
+    __ge__ = range_expr("gte")
+    __gt__ = range_expr("gt")
+    __le__ = range_expr("lte")
+    __lt__ = range_expr("lt")
 
     def __eq__(self, other):
         return EqExpression(self.name, other)
@@ -183,7 +171,7 @@ class Property(object):
         return NeExpression(self.name, other)
 
     def __repr__(self):
-        return '<Property {}>'.format(self.name)
+        return "<Property {}>".format(self.name)
 
     def like(self, other):
         """Compare against a wildcard string.
@@ -213,8 +201,7 @@ class Properties(object):
         if attr in self.props:
             return Property(attr)
 
-        raise AttributeError(
-            "'Properties' object has no attribute '{}'".format(attr))
+        raise AttributeError("'Properties' object has no attribute '{}'".format(attr))
 
 
 class GenericProperties(object):
@@ -227,5 +214,6 @@ class GenericProperties(object):
     Python language limitations; instead you can combine filter expressions
     with ``&`` (boolean "and") and ``|`` (boolean "or").
     """
+
     def __getattr__(self, attr):
         return Property(attr)

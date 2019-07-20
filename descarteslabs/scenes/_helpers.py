@@ -5,22 +5,26 @@ def polygon_from_bounds(bounds):
     "Return a GeoJSON Polygon dict from a (minx, miny, maxx, maxy) tuple"
     return {
         "type": "Polygon",
-        "coordinates": ((
-            (bounds[2], bounds[1]),
-            (bounds[2], bounds[3]),
-            (bounds[0], bounds[3]),
-            (bounds[0], bounds[1]),
-            (bounds[2], bounds[1]),
-        ),)
+        "coordinates": (
+            (
+                (bounds[2], bounds[1]),
+                (bounds[2], bounds[3]),
+                (bounds[0], bounds[3]),
+                (bounds[0], bounds[1]),
+                (bounds[2], bounds[1]),
+            ),
+        ),
     }
 
 
 def valid_latlon_bounds(bounds):
     "Return whether bounds fall within [-180, 180] for x and [-90, 90] for y"
-    return (-180 <= bounds[0] <= 180 and
-            -90 <= bounds[1] <= 90 and
-            -180 <= bounds[2] <= 180 and
-            -90 <= bounds[3] <= 90)
+    return (
+        -180 <= bounds[0] <= 180
+        and -90 <= bounds[1] <= 90
+        and -180 <= bounds[2] <= 180
+        and -90 <= bounds[3] <= 90
+    )
 
 
 def is_geographic_crs(crs):
@@ -28,7 +32,8 @@ def is_geographic_crs(crs):
         return False
     lower_crs = crs.lower()
     return (
-        lower_crs == "epsg:4326"  # WGS84 geodetic CRS. Other geodetic EPSG codes (e.g. NAD27) are incorrectly rejected.
+        lower_crs
+        == "epsg:4326"  # WGS84 geodetic CRS. Other geodetic EPSG codes (e.g. NAD27) are incorrectly rejected.
         or lower_crs.startswith("+proj=longlat")  # PROJ.4
         # OGC WKT
         or lower_crs.startswith("geogcs[")  # deprecated
