@@ -1,4 +1,5 @@
 import json
+import uuid
 
 from descarteslabs import scenes
 
@@ -668,12 +669,12 @@ class Image(ImageBase, BandsMixin):
         tile_server_base_url = "https://workflows.descarteslabs.com/{}".format(
             _channel.__channel__
         )
-        url = "{}/xyz/{}/{{z}}/{{x}}/{{y}}.png".format(
-            tile_server_base_url, xyz.id
+        url = "{}/xyz/{}/{{z}}/{{x}}/{{y}}.png?session_id={}".format(
+            tile_server_base_url, xyz.id, uuid.uuid4().hex[:6]
         )
 
         if scales:
-            url += "?scales={}".format(json.dumps(scales))
+            url += "&scales={}".format(json.dumps(scales))
 
         return url
 
