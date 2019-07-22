@@ -1455,7 +1455,7 @@ class Catalog(Service):
                 )
         else:
             failed, upload_id, error = self._do_upload(
-                files, product_id, metadata=metadata, add_namespace=add_namespace
+                files, product_id, image_id, metadata=metadata, add_namespace=add_namespace
             )
 
         if failed:
@@ -1770,7 +1770,7 @@ class Catalog(Service):
 
         return failed, upload_id, error
 
-    def _do_upload(self, file_ish, product_id, metadata=None, add_namespace=False):
+    def _do_upload(self, file_ish, product_id, image_id=None, metadata=None, add_namespace=False):
         # kwargs are treated as metadata fields and restricted to primitives
         # for the key val pairs.
         fd = None
@@ -1808,7 +1808,7 @@ class Catalog(Service):
             return True, upload_id, e
 
         try:
-            upload_id = metadata.pop("image_id", None) or os.path.basename(fd.name)
+            upload_id = image_id or metadata.pop("image_id", None) or os.path.basename(fd.name)
 
             r = self.session.post(
                 "/products/{}/images/upload/{}".format(product_id, upload_id),
