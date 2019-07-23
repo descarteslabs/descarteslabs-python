@@ -61,7 +61,7 @@ def test_all_methods():
     assert isinstance(img.pick_bands(["red", "green", "blue"]), Image)
     assert isinstance(img.unpack_bands("red green blue"), tuple)
     assert isinstance(img.unpack_bands(["red", "green", "blue"]), tuple)
-    assert isinstance(img.concat(img2), Image)
+    assert isinstance(img.concat_bands(img2), Image)
     assert isinstance(img.mask(img2), Image)
     assert isinstance(img.mask(img2, replace=True), Image)
     assert isinstance(img.mask(geom), Image)

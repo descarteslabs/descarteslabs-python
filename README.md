@@ -14,6 +14,7 @@ Changelog
 
 ### Changed
 - The parameter `nbits` has been deprecated for catalog bands.
+- Workflows `Image.concat` renamed `Image.concat_bands`.
 
 ## [0.23.0] - 2019-07-12
 ### Added

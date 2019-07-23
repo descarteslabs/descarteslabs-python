@@ -136,13 +136,13 @@ class Image(ImageBase, BandsMixin):
         return cls.from_id(scene.properties["id"])
 
     @typecheck_promote(lambda: Image)
-    def concat(self, other_image):
+    def concat_bands(self, other_image):
         """
         New `Image`, with the bands in ``other_image`` appended to this one.
 
         If band names overlap, the band from the *other* `Image` will be suffixed with "_1".
         """
-        return self._from_apply("Image.concat", self, other_image)
+        return self._from_apply("Image.concat_bands", self, other_image)
 
     @typecheck_promote(
         (lambda: Image, Geometry, Feature, FeatureCollection), replace=Bool
