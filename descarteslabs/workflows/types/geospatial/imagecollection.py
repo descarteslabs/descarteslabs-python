@@ -114,7 +114,29 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         end_datetime=(Datetime, NoneType),
         limit=(Int, NoneType),
     )
-    def from_id(cls, product_id, start_datetime=None, end_datetime=None, limit=None):
+    def from_id(
+        cls,
+        product_id,
+        start_datetime=None,
+        end_datetime=None,
+        limit=None,
+        resampler=None,
+    ):
+        if resampler is not None and resampler not in [
+            "near",
+            "bilinear",
+            "cubic",
+            "cubicsplice",
+            "lanczos",
+            "average",
+            "mode",
+            "max",
+            "min",
+            "med",
+            "q1",
+            "q3",
+        ]:
+            raise ValueError("Unknown resampler type: {}".format(resampler))
         return cls._from_apply(
             "ImageCollection.from_id",
             product_id,
@@ -123,6 +145,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             start_datetime=start_datetime,
             end_datetime=end_datetime,
             limit=limit,
+            resampler=resampler,
         )
 
     def pick_bands(self, bands):

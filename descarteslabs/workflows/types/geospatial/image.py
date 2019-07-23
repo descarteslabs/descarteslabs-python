@@ -124,10 +124,29 @@ class Image(ImageBase, BandsMixin):
 
     @classmethod
     @typecheck_promote(Str)
-    def from_id(cls, image_id):
+    def from_id(cls, image_id, resampler=None):
         "Create a proxy `Image` from an ID in the Descartes Labs catalog"
+        if resampler is not None and resampler not in [
+            "near",
+            "bilinear",
+            "cubic",
+            "cubicsplice",
+            "lanczos",
+            "average",
+            "mode",
+            "max",
+            "min",
+            "med",
+            "q1",
+            "q3",
+        ]:
+            raise ValueError("Unknown resampler type: {}".format(resampler))
         return cls._from_apply(
-            "Image.load", image_id, geocontext=env.geoctx, token=env._token
+            "Image.load",
+            image_id,
+            geocontext=env.geoctx,
+            token=env._token,
+            resampler=resampler,
         )
 
     @classmethod
