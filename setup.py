@@ -91,7 +91,6 @@ def do_setup():
         "shapely>=1.6.3,<2",
         "affine>=2.2.1",
         "pyarrow==0.13.0",
-        "folium",
         "grpcio>=1.16.1,<2",
         "protobuf==3.8.0,<4",
     ]
@@ -109,7 +108,10 @@ def do_setup():
             "numpy>=1.10.0",
             "matplotlib>=2.1.0",
             "mercantile>=1.0.4",
-        ]
+            "ipyleaflet==0.11.1",
+            "ipywidgets==7.5.0",
+            "traitlets==4.3.2",
+        ],
     }
     kwargs["license"] = "Apache 2.0"
     kwargs["zip_safe"] = False

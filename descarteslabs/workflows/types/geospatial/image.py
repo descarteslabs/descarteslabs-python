@@ -5,7 +5,6 @@ from descarteslabs import scenes
 
 from ... import _channel, env
 from ...cereal import serializable
-from ...interactive import LayerControl, Map, TileLayer
 from ...models import XYZ
 from ..containers import Dict, KnownDict, Struct, Tuple
 from ..core import typecheck_promote
@@ -585,31 +584,67 @@ class Image(ImageBase, BandsMixin):
     def __rpow__(self, other):
         return _result_type(other)._from_apply("rpow", self, other)
 
-    def visualize(self, name=None, scales=None, location=None, zoom_start=5, m=None):
+    def tile_layer(self, name=None, scales=None, colormap=None):
         """
-        Visualize this image on a slippy map widget, within a Jupyter Notebook cell.
-        The map will be centered at the provided ``location`` and set at the provided ``zoom``
-        level, at which point you will be able to pan and zoom around the map.
+        A `.WorkflowsLayer` for this `Image`.
+
+        Generally, use `Image.visualize` for displaying on map.
+        Only use this method if you're managing your own ipyleaflet Map instances,
+        and creating more custom visualizations.
 
         Parameters
         ----------
-        name: str, default None
-            The name of the published workflow that will encapsulate this image.
+        name: str
+            The name of the layer.
         scales: list of lists, default None
-            The scaling to apply to each band in the image.
-        location: list of ints or floats, default None
-            Latitude/longitude of where the map should initially be centered.
-        zoom_start: int, default 5
-            The initial zoom level for the map.
-        m: Map, default None
-            The `~descarteslabs.workflows.interactive.Map` to which we'll add a tile layer
-            containing the outputs of the image workflow.
+            The scaling to apply to each band in the `Image`.
+
+            If `Image` contains 3 bands, ``scales`` must be a list like ``[(0, 1), (0, 1), (-1, 1)]``.
+
+            If `Image` contains 1 band, ``scales`` must be a list like ``[(0, 1)]``,
+            or just ``(0, 1)`` for convenience
+        colormap: str, default None
+            The name of the colormap to apply to the `Image`. Only valid if the `Image` has a single band.
 
         Returns
         -------
-        Map
-            The `~descarteslabs.workflows.interactive.Map` instance containing a tile layer for
-            this image workflow, that will be rendered by the Jupyter Notebook.
+        layer: `.WorkflowsLayer`
+        """
+        from ... import interactive
+
+        layer = interactive.WorkflowsLayer(self, name=name)
+        layer.set_scales(scales, new_colormap=colormap)
+
+        return layer
+
+    def visualize(self, name, scales=None, colormap=None, map=None):
+        """
+        Add this `Image` to `wf.map <.interactive.map>`, or replace a layer with the same name.
+
+        Parameters
+        ----------
+        name: str
+            The name of the layer.
+
+            If a layer with this name already exists on `wf.map <.interactive.map>`,
+            it will be replaced with this `Image`, scales, and colormap.
+            This allows you to re-run cells in Jupyter calling `visualize`
+            without adding duplicate layers to the map.
+        scales: list of lists, default None
+            The scaling to apply to each band in the `Image`.
+
+            If `Image` contains 3 bands, ``scales`` must be a list like ``[(0, 1), (0, 1), (-1, 1)]``.
+
+            If `Image` contains 1 band, ``scales`` must be a list like ``[(0, 1)]``,
+            or just ``(0, 1)`` for convenience
+
+            If None, each 256x256 tile will be scaled independently
+            based on the min and max values of its data.
+        colormap: str, default None
+            The name of the colormap to apply to the `Image`. Only valid if the `Image` has a single band.
+        map: `.Map` or `.MapApp`, optional, default None
+            The `.Map` (or plain ipyleaflet Map) instance on which to show the `Image`.
+            If None (default), uses `wf.map <.interactive.map>`, the singleton Workflows `.MapApp` object.
 
         Example
         -------
@@ -620,36 +655,32 @@ class Image(ImageBase, BandsMixin):
         >>> max_ndvi = ndvi.max()
         >>> max_ndvi.visualize(
         ...     name="My Cool Max NDVI",
-        ...     location=[-105.93780, 35.6870],
-        ...     zoom_start=14
+        ...     scales=[(-1, 1)],
+        ...     colormap="viridis",
         ... )  # doctest: +SKIP
+        >>> wf.map  # doctest: +SKIP
+        >>> # `wf.map` actually displays the map; right click and open in new view in JupyterLab
         """
-        if location is None:
-            # Defaults to Santa Fe, New Mexico.
-            location = [-105.93780, 35.6870]
+        from ... import interactive
 
-        if m is None:
-            m = Map(tiles="Stamen Terrain", zoom_start=zoom_start, location=location)
+        if map is None:
+            map = interactive.map
 
-        if name is None:
-            name = "    "
-
-        TileLayer(
-            self.tile_url(name, scales=scales),
-            name=name,
-            attr="Descartes Labs",
-            active=True,
-            overlay=True,
-        ).add_to(m)
-
-        # FIXME: This should only be added if no map provided but it did not show up if layers added afterwards
-        LayerControl().add_to(m)
-
-        return m
+        for layer in map.layers:
+            if layer.name == name:
+                with layer.hold_trait_notifications():
+                    layer.image = self
+                    layer.set_scales(scales, new_colormap=colormap)
+                break
+        else:
+            layer = self.tile_layer(name=name, scales=scales, colormap=colormap)
+            map.add_layer(layer)
 
     def tile_url(self, name=None, scales=None):
         """
-        Get the tile server URL for this image workflow.
+        Generate a new tile server URL for this `Image`.
+
+        Publishes ``self`` as a `Workflow`.
 
         Parameters
         ----------

@@ -91,6 +91,18 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.types.constants.constants.nan
   ~descarteslabs.workflows.types.constants.constants.pi
 
+:workflow_api_nontoc_heading:`Interactive`
+
+.. autosummary::
+  :nosignatures:
+
+  ~descarteslabs.workflows.interactive.map
+  ~descarteslabs.workflows.interactive.Map
+  ~descarteslabs.workflows.interactive.MapApp
+  ~descarteslabs.workflows.interactive.WorkflowsLayer
+  ~descarteslabs.workflows.interactive.LayerController
+  ~descarteslabs.workflows.interactive.LayerControllerList
+
 :workflow_api_nontoc_heading:`Execution`
 
 .. autosummary::
@@ -122,17 +134,6 @@ The tables below list the types and functions available through the Workflows AP
   :hidden:
   :glob:
 
-:workflow_api_nontoc_heading:`Interactive`
-
-.. autosummary::
-  :nosignatures:
-
-  ~descarteslabs.workflows.interactive.Map
-
-.. toctree::
-  :hidden:
-  :glob:
-
   docs/types/geospatial
   docs/types/primitives
   docs/types/containers
@@ -140,9 +141,8 @@ The tables below list the types and functions available through the Workflows AP
   docs/types/function
   docs/types/toplevel
   docs/types/constants
+  docs/interactive
   docs/execution
   docs/exceptions
   docs/client
-  docs/interactive
-  docs/request
   /descarteslabs/common/retry/readme

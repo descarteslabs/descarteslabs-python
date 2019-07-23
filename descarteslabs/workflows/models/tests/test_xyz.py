@@ -133,3 +133,24 @@ class TestXYZ(object):
             match=r"^The serialized .* XYZ 'foo'\. To share objects with others, please use a Workflow instead\.$",
         ):
             XYZ._from_proto(message)
+
+    def test_url(self, stub):
+        obj = utils.Foo(1)
+        xyz = XYZ.build(obj)
+
+        with pytest.raises(ValueError, match="has not been persisted"):
+            xyz.url()
+
+        xyz._message.id = "baz"
+        xyz._message.channel = "v0-0"
+
+        url_base = "{}/v0-0/xyz/baz/{{z}}/{{x}}/{{y}}.png".format(xyz.BASE_URL)
+
+        assert xyz.url() == url_base
+        assert xyz.url("foo") == url_base + "?session_id=foo"
+        assert xyz.url(arg="bar") == url_base + "?arg=bar"
+
+        # ugh nondeterministic py2 dict order
+        base, params = xyz.url("foo", arg="bar").split("?")
+        assert base == url_base
+        assert set(params.split("&")) == {"session_id=foo", "arg=bar"}

@@ -54,7 +54,7 @@ from .models import (
     publish as _publish,
 )
 
-from .interactive import Map, LayerControl
+from .interactive import map, Map, WorkflowsLayer, LayerController, LayerControllerList
 
 from . import env
 from ._channel import __channel__, _set_channel
@@ -132,8 +132,11 @@ __all__ = [
     # __init__
     "publish",
     # .interactive
+    "map",
     "Map",
-    "LayerControl",
+    "WorkflowsLayer",
+    "LayerController",
+    "LayerControllerList",
 ]
 
 # NOTE(gabe): we monkey-patch these `.compute` and `.persist` methods onto the base

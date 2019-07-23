@@ -1,14 +1,18 @@
 import json
 
-from descarteslabs.common.proto import xyz_pb2
-from .. import _channel
+import six
 
+from descarteslabs.common.proto import xyz_pb2
+
+from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec
 from ..client import Client
 from .utils import pb_datetime_to_milliseconds, pb_milliseconds_to_datetime
 
 
 class XYZ(object):
+    BASE_URL = "https://workflows.descarteslabs.com"
+
     def __init__(self, proxy_object, proto_message, client=None):
         """
         Construct a XYZ object from a proxy object and Protobuf message.
@@ -127,7 +131,65 @@ class XYZ(object):
         )
         self._message = message
 
+    def url(self, session_id=None, **query_args):
+        """
+        XYZ tile URL format-string, like ``https://workflows.descarteslabs.com/v0-5/xyz/1234567/{z}/{x}/{y}.png``
+
+        Parameters
+        ----------
+        session_id: str, optional, default None
+            Unique, client-generated ID that error logs will be stored under.
+            Since multiple users may access tiles from the same `XYZ` object,
+            each user should set their own ``session_id`` to get individual error logs.
+        query_args: dict[str, str], optional, default None
+            Additional query arguments to add to the URL. Keys and values must be strings.
+
+        Returns
+        -------
+        url: str
+
+        Raises
+        ------
+        ValueError
+            If the `XYZ` object has no `id` and `.save` has not been called yet.
+        """
+        if self.id is None:
+            raise ValueError(
+                "This XYZ object has not been persisted yet; call .save() to do so."
+            )
+        url = "{base}/{channel}/xyz/{id}/{{z}}/{{x}}/{{y}}.png".format(
+            base=self.BASE_URL, channel=self.channel, id=self.id
+        )
+        if session_id:
+            query_args["session_id"] = session_id
+
+        if query_args:
+            url = (
+                url
+                + "?"
+                + "&".join(
+                    arg + "=" + value for arg, value in six.iteritems(query_args)
+                )
+            )
+        return url
+
     def iter_tile_errors(self, session_id, start_datetime=None):
+        """
+        Iterator over errors generated while computing tiles
+
+        Parameters
+        ----------
+        session_id: str
+            Unique, client-generated that error logs are stored under.
+        start_datetime: datetime.datetime
+            Only return errors occuring after this datetime
+
+        Yields
+        ------
+        error: descarteslabs.common.proto.xyz_pb2.XYZError
+            Errors in protobuf message objects,
+            with fields ``code``, ``message``, ``timestamp``, ``session_id``.
+        """
         return iter_tile_errors(
             self.id, session_id, start_datetime, client=self._client
         )
