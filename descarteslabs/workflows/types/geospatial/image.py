@@ -676,7 +676,7 @@ class Image(ImageBase, BandsMixin):
             layer = self.tile_layer(name=name, scales=scales, colormap=colormap)
             map.add_layer(layer)
 
-    def tile_url(self, name=None, scales=None):
+    def tile_url(self, name=None, scales=None, colormap=None):
         """
         Generate a new tile server URL for this `Image`.
 
@@ -688,6 +688,8 @@ class Image(ImageBase, BandsMixin):
             The name of the published workflow that will encapsulate this image.
         scales: list of lists, default None
             The scaling to apply to each band in the image.
+        colormap: str, default None
+            The colormap to apply to the image.
 
         Returns
         -------
@@ -706,6 +708,8 @@ class Image(ImageBase, BandsMixin):
 
         if scales:
             url += "&scales={}".format(json.dumps(scales))
+        if colormap:
+            url += "&colormap={}".format(colormap)
 
         return url
 
