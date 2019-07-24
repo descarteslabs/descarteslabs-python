@@ -134,16 +134,15 @@ class LayerControllerRow(widgets.Box):
     # so we could decide to show the colormap box vs scales control automatically
 
     def __init__(self, layer, map):
+        if layer.error_output is None:
+            layer.error_output = map.error_log
+
         self.layer = layer
         self.map = map
         self._widgets = {}
 
         visible = widgets.Checkbox(
-            value=layer.visible,
-            layout=initial_width,
-            indent=False,
-            # FIXME(gabe): ipywidgets inserts some awful `label.widget-label` element with `min-width: 100px`
-            # before the checkbox containing a `&#8203;` (zero-width space) which you can't seem to remove
+            value=layer.visible, layout=initial_width, indent=False
         )
         widgets.jslink((visible, "value"), (layer, "visible"))
         self._widgets["visible"] = visible
@@ -204,19 +203,19 @@ class LayerControllerRow(widgets.Box):
         self._widgets["autoscale"] = autoscale
 
         move_up = widgets.Button(
-            description="↑", tooltip="Move layer up", layout=initial_width
+            description=u"↑", tooltip="Move layer up", layout=initial_width
         )
         move_up.on_click(self.move_up)
         self._widgets["move_up"] = move_up
 
         move_down = widgets.Button(
-            description="↓", tooltip="Move layer down", layout=initial_width
+            description=u"↓", tooltip="Move layer down", layout=initial_width
         )
         move_down.on_click(self.move_down)
         self._widgets["move_down"] = move_down
 
         remove = widgets.Button(
-            description="✖︎", tooltip="Remove layer", layout=initial_width
+            description=u"✖︎", tooltip="Remove layer", layout=initial_width
         )
         remove.on_click(self.remove)
         self._widgets["remove"] = remove
@@ -297,4 +296,7 @@ class LayerControllerRow(widgets.Box):
 
     def remove(self, _):
         "``on_click`` handler to remove ``self.layer`` from ``self.map``"
+        if self.layer.error_output is self.map.error_log:
+            # stops the error listener
+            self.layer.error_output = None
         self.map.remove_layer(self.layer)

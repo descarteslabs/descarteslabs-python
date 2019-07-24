@@ -1,7 +1,7 @@
 from .exceptions import JobComputeError, TimeoutError
 from .workflow import Workflow
 from .job import Job
-from .xyz import XYZ, iter_tile_errors
+from .xyz import XYZ, XYZErrorListener
 from .toplevel import compute, publish, retrieve, use
 
 __all__ = [
@@ -14,7 +14,7 @@ __all__ = [
     "Job",
     # .xyz
     "XYZ",
-    "iter_tile_errors",
+    "XYZErrorListener",
     # .toplevel
     "compute",
     "publish",

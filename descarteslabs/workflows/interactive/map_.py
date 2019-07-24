@@ -5,6 +5,7 @@ import traitlets
 from ..types import GeoContext
 
 from .lonlat import PositionController
+from .clearable import ClearableOutput
 from .utils import tuple_move
 
 app_layout = widgets.Layout(height="100%", padding="0 0 8px 0")
@@ -16,6 +17,7 @@ class MapApp(widgets.VBox):
 
     Forwards attributes and methods to ``self.map``.
     """
+
     _forward_attrs_to_map = {
         "center",
         "zoom_start",
@@ -55,6 +57,9 @@ class MapApp(widgets.VBox):
         "layers",
         "bounds",
         "bounds_polygon",
+        # from subclass
+        "output_log",
+        "error_log",
         # methods
         "move_layer",
         "move_layer_up",
@@ -83,16 +88,33 @@ class MapApp(widgets.VBox):
         self.controller_list = layer_controller_list
         self.position_controller = position_controller
 
+        def on_clear():
+            for layer in self.map.layers:
+                try:
+                    layer.forget_errors()
+                except AttributeError:
+                    pass
+
+        self.errors = ClearableOutput(
+            map.error_log,
+            on_clear=on_clear,
+        )
+
         super(MapApp, self).__init__(
-            [map, map.output_log, position_controller, layer_controller_list],
+            [
+                map,
+                self.errors,
+                map.output_log,
+                position_controller,
+                layer_controller_list,
+            ],
             layout=app_layout,
         )
 
     def __getattr__(self, attr):
         if attr in self._forward_attrs_to_map:
             return getattr(self.__dict__["map"], attr)
-        else:
-            return super(MapApp, self).__getattr__(attr)
+        raise AttributeError(attr)
 
     def __setattr__(self, attr, x):
         if attr in self._forward_attrs_to_map:
@@ -125,6 +147,12 @@ class Map(ipyleaflet.Map):
     scroll_wheel_zoom = traitlets.Bool(
         True, help="Whether the map can be zoomed by using the mouse wheel"
     ).tag(sync=True, o=True)
+
+    error_log = traitlets.Instance(
+        widgets.Output,
+        args=(),
+        help="Widget where tiles layers can write their error messages.",
+    )
 
     output_log = traitlets.Instance(
         widgets.Output,

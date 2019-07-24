@@ -110,6 +110,8 @@ The tables below list the types and functions available through the Workflows AP
 
   ~descarteslabs.workflows.models.Workflow
   ~descarteslabs.workflows.models.Job
+  ~descarteslabs.workflows.models.XYZ
+  ~descarteslabs.workflows.models.XYZErrorListener
   ~descarteslabs.workflows.models.compute
   ~descarteslabs.workflows.models.publish
   ~descarteslabs.workflows.models.use

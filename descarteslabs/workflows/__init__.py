@@ -47,7 +47,7 @@ from .models import (
     Workflow,
     Job,
     XYZ,
-    iter_tile_errors,
+    XYZErrorListener,
     compute,
     retrieve,
     use,
@@ -119,7 +119,7 @@ __all__ = [
     "Job",
     "XYZ",
     "compute",
-    "iter_tile_errors",
+    "XYZErrorListener",
     "retrieve",
     "use",
     # .env

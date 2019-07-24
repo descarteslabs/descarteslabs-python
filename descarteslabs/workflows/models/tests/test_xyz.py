@@ -1,14 +1,17 @@
 import datetime
 import json
 
+from six.moves import queue
+
+import grpc
 import mock
 import pytest
 from descarteslabs.common.proto import xyz_pb2
 
 from ... import _channel
 from ...client import Client
-from .. import XYZ
-from ..utils import pb_milliseconds_to_datetime, pb_datetime_to_milliseconds
+from .. import XYZ, XYZErrorListener
+from ..utils import pb_datetime_to_milliseconds, pb_milliseconds_to_datetime
 from . import utils
 
 
@@ -154,3 +157,46 @@ class TestXYZ(object):
         base, params = xyz.url("foo", arg="bar").split("?")
         assert base == url_base
         assert set(params.split("&")) == {"session_id=foo", "arg=bar"}
+
+
+@mock.patch("descarteslabs.workflows.models.xyz._tile_error_stream")
+def test_xyz_error_listener(error_stream_mock):
+    class FakeRendezvous(object):
+        def __init__(self, q):
+            self.q = q
+
+        def __iter__(self):
+            while True:
+                msg = self.q.get()
+                if msg != "cancel":
+                    yield msg
+                    self.q.task_done()
+                else:
+                    self.q.task_done()
+                    raise grpc.RpcError
+
+        def cancel(self):
+            self.q.put("cancel")
+
+    q = queue.Queue()
+    rendezvous = FakeRendezvous(q)
+    error_stream_mock.return_value = rendezvous
+
+    listener = XYZErrorListener("foobar")
+
+    msgs = []
+    listener.add_callback(lambda msg: msgs.append(msg))
+    listener.listen("foobar")
+
+    error_stream_mock.assert_called_once()
+
+    # simulate incoming messages
+    q.put("first")
+    q.put("second")
+    q.join()  # avoid possible race condition in test
+    assert msgs == ["first", "second"]
+
+    stopped = listener.stop(timeout=1)
+    assert stopped
+    assert not listener.running()
+    assert len(msgs) == 2

@@ -1,11 +1,14 @@
+import datetime
 import json
 import uuid
+import threading
 
 import ipyleaflet
+import ipywidgets as widgets
 import traitlets
 
-from ..types import Image
 from ..models import XYZ
+from ..types import Image
 
 
 class ScaleFloat(traitlets.CFloat):
@@ -50,6 +53,9 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         Min value for scaling the blue band.
     b_max: float, optional, default None
         Max value for scaling the blue band.
+    error_output: ipywidgets.Output, optional, default None
+        If set, write unique errors from tiles computation to this output area
+        from a background thread. Setting to None stops the listener thread.
     """
 
     attribution = traitlets.Unicode("Descartes Labs").tag(sync=True, o=True)
@@ -72,11 +78,17 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     cmap_min = ScaleFloat(None, allow_none=True)
     cmap_max = ScaleFloat(None, allow_none=True)
 
+    error_output = traitlets.Instance(widgets.Output, allow_none=True)
+
     def __init__(self, image, *args, **kwargs):
         super(WorkflowsLayer, self).__init__(*args, **kwargs)
         with self.hold_trait_notifications():
             self.image = image
             self.set_trait("session_id", uuid.uuid4().hex)
+
+        self._error_listener = None
+        self._known_errors = set()
+        self._known_errors_lock = threading.Lock()
 
     def make_url(self):
         """
@@ -133,6 +145,54 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     )
     def _update_url(self, change):
         self.set_trait("url", self.make_url())
+
+    @traitlets.observe("xyz_obj", "session_id")
+    def _update_error_logger(self, change):
+        if self.error_output is None:
+            return
+
+        if self._error_listener is not None:
+            self._error_listener.stop(timeout=1)
+
+        listener = self.xyz_obj.error_listener()
+        listener.add_callback(self._log_errors_callback)
+        listener.listen(self.session_id, datetime.datetime.now())
+
+        self._error_listener = listener
+
+    def _stop_error_logger(self):
+        if self._error_listener is not None:
+            self._error_listener.stop(timeout=1)
+            self._error_listener = None
+
+    @traitlets.observe("error_output")
+    def _toggle_error_listener_if_output(self, change):
+        if change["new"] is None:
+            self._stop_error_logger()
+        else:
+            if self._error_listener is None:
+                self._update_error_logger({})
+
+    def _log_errors_callback(self, msg):
+        message = msg.message
+
+        with self._known_errors_lock:
+            if message in self._known_errors:
+                return
+            else:
+                self._known_errors.add(message)
+
+        error = "{}: {}\n".format(self.name, message)
+        self.error_output.append_stdout(error)
+
+    def __del__(self):
+        self._stop_error_logger()
+        super(WorkflowsLayer, self).__del__()
+
+    def forget_errors(self):
+        "Clear the set of known errors, so they are re-displayed if they occur again"
+        with self._known_errors_lock:
+            self._known_errors.clear()
 
     def set_scales(self, scales, new_colormap=False):
         """
