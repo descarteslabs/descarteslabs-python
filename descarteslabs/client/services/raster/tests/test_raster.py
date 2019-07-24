@@ -245,7 +245,6 @@ class RasterTest(unittest.TestCase):
         )
         resolution = 960
         dimensions = (128, 128)
-        srs = "EPSG:32615"
 
         with self.assertRaises(ValueError):
             self.raster.stack(keys)
@@ -255,14 +254,6 @@ class RasterTest(unittest.TestCase):
             self.raster.stack(keys, dimensions=dimensions)
         with self.assertRaises(ValueError):
             self.raster.stack(keys, bounds=bounds)
-        with self.assertRaises(ValueError):
-            self.raster.stack(keys, resolution=resolution, cutline=a_geometry)
-        with self.assertRaises(ValueError):
-            self.raster.stack(
-                keys, resolution=resolution, cutline=a_geometry, bounds=bounds
-            )
-        with self.assertRaises(ValueError):
-            self.raster.stack(keys, resolution=resolution, cutline=a_geometry, srs=srs)
         with self.assertRaises(ValueError):
             self.raster.stack(keys, resolution=resolution, place=place)
 

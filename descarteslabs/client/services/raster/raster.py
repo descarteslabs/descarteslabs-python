@@ -850,10 +850,11 @@ class Raster(Service):
         if dltile is None:
             if resolution is None and dimensions is None:
                 raise ValueError("Must set `resolution` or `dimensions`")
-            if srs is None:
-                raise ValueError("Must set `srs`")
-            if bounds is None:
-                raise ValueError("Must set `bounds`")
+            if cutline is None:
+                if bounds is None:
+                    raise ValueError("Must set `bounds`")
+                if srs is None:
+                    raise ValueError("Must set `srs`")
 
         full_stack = None
         metadata = [None] * len(inputs)
