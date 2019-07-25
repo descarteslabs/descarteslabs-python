@@ -20,7 +20,7 @@ try:
     Calling `.Image.visualize` will by default add new layers to this map.
     """
 
-except ImportError as e:
+except Exception as e:
     error = e
 
     class MissingImports(object):
