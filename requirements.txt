@@ -16,3 +16,4 @@ grpcio>=1.16.1,<2
 protobuf==3.8.0,<4
 hypothesis[numpy]==4.24.5
 chainmap==1.0.2;python_version=="2.7"
+pytz==2019.1
