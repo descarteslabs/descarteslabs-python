@@ -8,11 +8,6 @@ from ..datetime_ import Datetime, _binary_op_casts_to
 from ..timedelta import Timedelta
 
 
-def test_init_not_allowed():
-    with pytest.raises(TypeError):
-        Datetime()
-
-
 def test_from_string():
     assert isinstance(Datetime.from_string(""), Datetime)
 
@@ -35,11 +30,9 @@ def test_from_timestamp(seconds):
     assert isinstance(Datetime.from_timestamp(seconds), Datetime)
 
 
-def test_from_components():
+def test_init():
     assert isinstance(
-        Datetime.from_components(
-            year=0, month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-        ),
+        Datetime(year=0, month=1, day=1, hour=0, minute=0, second=0, microsecond=0),
         Datetime,
     )
 

@@ -34,6 +34,12 @@ DatetimeStruct = Struct[
 
 @serializable(is_named_concrete_type=True)
 class Datetime(DatetimeStruct):
+    """
+    Proxy Datetime object, similar to Python's datetime.
+
+    Note: Datetimes are always in UTC.
+    """
+
     _doc = {
         "month": "1 <= month <= 12",
         "day": "1 <= day <= number of days in the given month and year",
@@ -42,10 +48,18 @@ class Datetime(DatetimeStruct):
         "second": "0 <= second < 60",
         "microsecond": "0 <= microsecond < 1000000",
     }
+    _constructor = "datetime.from_components"
 
-    def __init__(self):
-        raise TypeError(
-            "Please use classmethods to construct '{}'".format(self.__class__.__name__)
+    def __init__(self, year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
+        "Construct a `Datetime` from a components. All parts are optional besides ``year``."
+        super(Datetime, self).__init__(
+            year=year,
+            month=month,
+            day=day,
+            hour=hour,
+            minute=minute,
+            second=second,
+            microsecond=microsecond,
         )
 
     @classmethod
@@ -70,29 +84,6 @@ class Datetime(DatetimeStruct):
     @typecheck_promote(Str)
     def from_string(cls, string):
         return cls._from_apply("datetime.from_string", string)
-
-    @classmethod
-    @typecheck_promote(
-        year=Int, month=Int, day=Int, hour=Int, minute=Int, second=Int, microsecond=Int
-    )
-    def from_components(
-        cls, year=0, month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-    ):
-        """
-        Construct a `Datetime`
-
-        Note: Datetimes are always in UTC
-        """
-        return cls._from_apply(
-            "datetime.from_components",
-            year=year,
-            month=month,
-            day=day,
-            hour=hour,
-            minute=minute,
-            second=second,
-            microsecond=microsecond,
-        )
 
     @typecheck_promote(Timedelta)
     def __add__(self, other):
