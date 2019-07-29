@@ -16,4 +16,3 @@ Scenes
 
 .. include top-level docstring from __init__.py:
 .. automodule:: descarteslabs.scenes
-
