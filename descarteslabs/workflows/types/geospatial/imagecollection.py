@@ -121,6 +121,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         end_datetime=None,
         limit=None,
         resampler=None,
+        processing_level=None,
     ):
         if resampler is not None and resampler not in [
             "near",
@@ -137,6 +138,12 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             "q3",
         ]:
             raise ValueError("Unknown resampler type: {}".format(resampler))
+        if processing_level is not None and processing_level not in ("toa", "surface"):
+            raise ValueError(
+                "Unknown processing level: {!r}. Must be None, 'toa', or 'surface'.".format(
+                    processing_level
+                )
+            )
         return cls._from_apply(
             "ImageCollection.from_id",
             product_id,
@@ -146,6 +153,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             end_datetime=end_datetime,
             limit=limit,
             resampler=resampler,
+            processing_level=processing_level,
         )
 
     def pick_bands(self, bands):

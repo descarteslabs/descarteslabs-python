@@ -124,7 +124,7 @@ class Image(ImageBase, BandsMixin):
 
     @classmethod
     @typecheck_promote(Str)
-    def from_id(cls, image_id, resampler=None):
+    def from_id(cls, image_id, resampler=None, processing_level=None):
         "Create a proxy `Image` from an ID in the Descartes Labs catalog"
         if resampler is not None and resampler not in [
             "near",
@@ -141,12 +141,19 @@ class Image(ImageBase, BandsMixin):
             "q3",
         ]:
             raise ValueError("Unknown resampler type: {}".format(resampler))
+        if processing_level is not None and processing_level not in ("toa", "surface"):
+            raise ValueError(
+                "Unknown processing level: {!r}. Must be None, 'toa', or 'surface'.".format(
+                    processing_level
+                )
+            )
         return cls._from_apply(
             "Image.load",
             image_id,
             geocontext=env.geoctx,
             token=env._token,
             resampler=resampler,
+            processing_level=processing_level,
         )
 
     @classmethod
