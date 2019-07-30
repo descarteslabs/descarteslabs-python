@@ -616,6 +616,50 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         return arithmetic.tan(self)
 
+    @typecheck_promote(
+        (Int, Float, NoneType, List[Int], List[Float], List[NoneType]),
+        (Int, Float, NoneType, List[Int], List[Float], List[NoneType]),
+    )
+    def clip_values(self, min=None, max=None):
+        """
+        Given an interval, band values outside the interval are clipped to the interval edge.
+
+        Parameters
+        ----------
+        min: float or list, default None
+            Minimum value of clipping interval. If None, clipping is not performed on the lower interval edge.
+        max: float or list, default None
+            Maximum value of clipping interval. If None, clipping is not performed on the upper interval edge.
+            Different per-band clip values can be given by using lists for ``min`` or ``max``,
+            in which case they must be the same length as the number of bands.
+
+        Note: ``min`` and ``max`` cannot both be None. At least one must be specified.
+        """
+        if min is None and max is None:
+            raise ValueError(
+                "min and max cannot both be None. At least one must be specified."
+            )
+        return self._from_apply("clip_values", self, min, max)
+
+    def scale_values(self, range_min, range_max, domain_min=None, domain_max=None):
+        """
+        Given an interval, band values will be scaled to the interval.
+
+        Parameters
+        ----------
+        range_min: float
+            Minimum value of output range.
+        range_max: float
+            Maximum value of output range.
+        domain_min: float, default None
+            Minimum value of the domain. If None, the band minimum is used.
+        domain_max: float, default None
+            Maximum value of the domain. If None, the band maximum is used.
+        """
+        return self._from_apply(
+            "scale_values", self, range_min, range_max, domain_min, domain_max
+        )
+
     def __neg__(self):
         return self._from_apply("neg", self)
 
