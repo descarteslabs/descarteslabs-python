@@ -259,15 +259,19 @@ class SceneCollection(Collection):
         if mask_alpha and alpha_band_name not in bands:
             pop_alpha = True
             bands.append(alpha_band_name)
+            scaling = _scaling.append_alpha_scaling(scaling)
 
-        scaling, data_type = _scaling.multiproduct_scaling_parameters(
+        scales, data_type = _scaling.multiproduct_scaling_parameters(
             self._product_band_properties(), bands, scaling, data_type
         )
-        kwargs["scaling"] = scaling
-        kwargs["data_type"] = data_type
 
         if pop_alpha:
             bands.pop(-1)
+            if scales:
+                scales.pop(-1)
+
+        kwargs["scaling"] = scales
+        kwargs["data_type"] = data_type
 
         def threaded_ndarrays():
             def data_loader(scene_or_scenecollection, bands, ctx, **kwargs):
@@ -448,6 +452,7 @@ class SceneCollection(Collection):
             except ValueError:
                 bands.append(alpha_band_name)
                 drop_alpha = True
+                scaling = _scaling.append_alpha_scaling(scaling)
             else:
                 if alpha_i != len(bands) - 1:
                     raise ValueError(

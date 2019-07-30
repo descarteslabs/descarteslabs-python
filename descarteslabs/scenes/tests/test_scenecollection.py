@@ -136,6 +136,34 @@ class TestSceneCollection(unittest.TestCase):
         "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
     )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
+    def test_stack_scaling(self):
+        scenes = (
+            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
+            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
+        )
+        scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
+
+        overlap = scenes[0].geometry.intersection(scenes[1].geometry)
+        ctx = ctxs[0].assign(geometry=overlap, bounds="update", resolution=600)
+        scenes = SceneCollection(scenes)
+
+        stack = scenes.stack("nir alpha", ctx, scaling="raw")
+        self.assertEqual(stack.shape, (2, 2, 122, 120))
+        self.assertEqual(stack.dtype, np.uint16)
+
+        stack = scenes.stack("nir", ctx, scaling="raw")
+        self.assertEqual(stack.shape, (2, 1, 122, 120))
+        self.assertEqual(stack.dtype, np.uint16)
+
+        stack = scenes.stack("nir", ctx, scaling=[None])
+        self.assertEqual(stack.shape, (2, 1, 122, 120))
+        self.assertEqual(stack.dtype, np.uint16)
+
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
+    @mock.patch(
+        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+    )
+    @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_stack_flatten(self):
         scenes = (
             "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
@@ -240,6 +268,34 @@ class TestSceneCollection(unittest.TestCase):
         )
         self.assertTrue(hasattr(mask_non_alpha, "mask"))
         self.assertEqual(mask_non_alpha.shape, (2, 122, 120))
+
+    @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
+    @mock.patch(
+        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+    )
+    @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
+    def test_mosaic_scaling(self):
+        scenes = (
+            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
+            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
+        )
+        scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
+
+        overlap = scenes[0].geometry.intersection(scenes[1].geometry)
+        ctx = ctxs[0].assign(geometry=overlap, bounds="update", resolution=600)
+        scenes = SceneCollection(scenes)
+
+        mosaic = scenes.mosaic("nir alpha", ctx, scaling="raw")
+        self.assertEqual(mosaic.shape, (2, 122, 120))
+        self.assertEqual(mosaic.dtype, np.uint16)
+
+        mosaic = scenes.mosaic("nir", ctx, scaling="raw")
+        self.assertEqual(mosaic.shape, (1, 122, 120))
+        self.assertEqual(mosaic.dtype, np.uint16)
+
+        mosaic = scenes.mosaic("nir", ctx, scaling=[None])
+        self.assertEqual(mosaic.shape, (1, 122, 120))
+        self.assertEqual(mosaic.dtype, np.uint16)
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(

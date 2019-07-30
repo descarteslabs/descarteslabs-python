@@ -309,7 +309,7 @@ def parse_scaling(properties, bands, scaling):
     if scaling is None:
         # no scaling
         scales = None
-    if isinstance(scaling, six.string_types):
+    elif isinstance(scaling, six.string_types):
         # automatic mode for all
         for band in bands:
             scales.append(make_band_scale(band, properties[band], scaling))
@@ -346,6 +346,22 @@ def parse_scaling(properties, bands, scaling):
         )
 
     return scales
+
+
+def append_alpha_scaling(scaling):
+    """
+    If the scaling parameter is an iterable (list), add a
+    None on the end to match an alpha band which has been
+    added to the end of the band list by the caller.
+    """
+    if (
+        scaling is None
+        or isinstance(scaling, six.string_types)
+        or isinstance(scaling, abc.Mapping)
+        or not isinstance(scaling, abc.Iterable)
+    ):
+        return scaling
+    return list(scaling) + [None]
 
 
 def common_data_type(data_types):
