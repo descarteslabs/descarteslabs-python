@@ -1,11 +1,13 @@
+import textwrap
+
 import ipyleaflet
+import IPython
 import ipywidgets as widgets
 import traitlets
 
 from ..types import GeoContext
-
-from .lonlat import PositionController
 from .clearable import ClearableOutput
+from .lonlat import PositionController
 from .utils import tuple_move
 
 app_layout = widgets.Layout(height="100%", padding="0 0 8px 0")
@@ -95,10 +97,7 @@ class MapApp(widgets.VBox):
                 except AttributeError:
                     pass
 
-        self.errors = ClearableOutput(
-            map.error_log,
-            on_clear=on_clear,
-        )
+        self.errors = ClearableOutput(map.error_log, on_clear=on_clear)
 
         super(MapApp, self).__init__(
             [
@@ -124,6 +123,46 @@ class MapApp(widgets.VBox):
 
     def __dir__(self):
         return super(MapApp, self).__dir__() + list(self._forward_attrs_to_map)
+
+    def __repr__(self):
+        msg = """
+        `ipyleaflet` and/or `ipywidgets` Jupyter extensions are not installed! (or you're not in a Jupyter notebook.)
+        To install for JupyterLab, run this in a cell:
+            !jupyter labextension install jupyter-leaflet @jupyter-widgets/jupyterlab-manager
+        To install for plain Jupyter Notebook, run this in a cell:
+            !jupyter nbextension enable --py --sys-prefix ipyleaflet
+        Then, restart Jupyter and re-run this notebook.
+        """
+        return textwrap.dedent(msg)
+
+    def _ipython_display_(self, **kwargs):
+        """
+        Called when `IPython.display.display` is called on the widget.
+
+        Copied verbatim from
+        https://github.com/jupyter-widgets/ipywidgets/blob/master/ipywidgets/widgets/widget.py#L709-L729,
+        but with truncation 110-character repr truncation removed, so we can display a helpful message when necessary
+        extensions aren't installed.
+        """
+
+        plaintext = repr(self)
+        # removed 110-character truncation here
+        data = {"text/plain": plaintext}
+        if self._view_name is not None:
+            # The 'application/vnd.jupyter.widget-view+json' mimetype has not been registered yet.
+            # See the registration process and naming convention at
+            # http://tools.ietf.org/html/rfc6838
+            # and the currently registered mimetypes at
+            # http://www.iana.org/assignments/media-types/media-types.xhtml.
+            data["application/vnd.jupyter.widget-view+json"] = {
+                "version_major": 2,
+                "version_minor": 0,
+                "model_id": self._model_id,
+            }
+        IPython.display.display(data, raw=True)
+
+        if self._view_name is not None:
+            self._handle_displayed(**kwargs)
 
 
 class Map(ipyleaflet.Map):

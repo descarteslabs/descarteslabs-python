@@ -55,6 +55,15 @@ ImageBase = Struct[
 
 @serializable(is_named_concrete_type=True)
 class Image(ImageBase, BandsMixin):
+    """
+    Proxy Image; construct with `~.Image.from_id` or `~.Image.from_scenes`.
+
+    An Image is a proxy object holding multiple (ordered) bands of raster data,
+    plus some metadata.
+
+    Images don't have a set spatial extent, CRS, resolution, etc:
+    that's determined at computation time by the `~.geospatial.GeoContext` passsed in.
+    """
     _doc = {
         "properties": """\
             Metadata for the `Image`.
@@ -125,7 +134,27 @@ class Image(ImageBase, BandsMixin):
     @classmethod
     @typecheck_promote(Str)
     def from_id(cls, image_id, resampler=None, processing_level=None):
-        "Create a proxy `Image` from an ID in the Descartes Labs catalog"
+        """
+        Create a proxy `Image` from an ID in the Descartes Labs catalog.
+
+        Parameters
+        ----------
+        image_id: Str
+            ID of the image
+        resampler: str, optional, default None
+            Algorithm used to interpolate pixel values when scaling and transforming
+            the image to the resolution and CRS eventually defined by a `~.geospatial.GeoContext`.
+            Possible values are ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
+            ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
+        processing_level : str, optional
+            Reflectance processing level. Possible values are ``'toa'`` (top of atmosphere)
+            and ``'surface'``. For products that support it, ``'surface'`` applies
+            Descartes Labs' general surface reflectance algorithm to the output.
+
+        Returns
+        -------
+        img: ~.geospatial.Image
+        """
         if resampler is not None and resampler not in [
             "near",
             "bilinear",

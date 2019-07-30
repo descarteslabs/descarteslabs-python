@@ -26,12 +26,17 @@ except Exception as e:
     class MissingImports(object):
         def _error(self, *args, **kwargs):
             err = ImportError(
-                "Missing optional dependencies needed for map visualization. "
-                "Please install `ipyleaflet`, or better, `pip install --upgrade 'descarteslabs[complete]'` and rerun."
+                "Optional dependencies needed for map visualization are missing.\n"
+                "Please install `ipyleaflet`, or better:\n"
+                "$ pip install --upgrade 'descarteslabs[complete]'\n"
+                "Then, install the Jupyter extensions:\n"
+                "$ jupyter labextension install jupyter-leaflet @jupyter-widgets/jupyterlab-manager\n"
+                "$ jupyter nbextension enable --py --sys-prefix ipyleaflet\n"
+                "Finally, restart Jupyter and re-run the notebook."
             )
             six.raise_from(err, error)
 
-        __getattr__ = __getitem__ = __call__ = __dir__ = _error
+        __getattr__ = __getitem__ = __call__ = __dir__ = __repr__ = _error
 
     map = MissingImports()
     WorkflowsLayer = map

@@ -14,7 +14,19 @@ Changelog
 
 ### Changed
 - The parameter `nbits` has been deprecated for catalog bands.
+
+### Workflows (channel `v0-6`) - Added
+- New interactive map, with GUI controls for multiple layers, scaling, and colormaps.
+- Colormaps for single-band images.
+- Map interface displays errors that occur while the backend is rendering images.
+- ImageCollection compositing no longer changes band names (`red` does not become `red_mean`, for example).
+- Support specifying raster resampler method.
+- Support specifying raster processing level: `toa` (top-of-atmosphere) or `surface` [surface reflectance).
+
+### Workflows - Changed
 - Workflows `Image.concat` renamed `Image.concat_bands`.
+- Data are left in `data_range` values if `physical_range` is not set, instead of scaling to the range `0..1`.
+- Reduced `DeprecationWarning`s in Python 3.7
 
 ## [0.23.0] - 2019-07-12
 ### Added

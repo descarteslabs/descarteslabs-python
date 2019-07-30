@@ -41,6 +41,7 @@ ImageCollectionBase = Struct[
 
 @serializable(is_named_concrete_type=True)
 class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
+    "Proxy object representing a stack of Images; typically construct with `~.ImageCollection.from_id`"
     _doc = {
         "properties": """Metadata for each `Image` in the `ImageCollection`.
 
@@ -123,6 +124,47 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         resampler=None,
         processing_level=None,
     ):
+        """
+        Create a proxy `ImageCollection` representing an entire product in the Descartes Labs catalog.
+
+        This `ImageCollection` represents every `Image` in the product, everywhere.
+        But when a `~.geospatial.GeoContext` is supplied at computation time
+        (either by passing one into `compute`, or implicitly from the map view area
+        when using `.Image.visualize`), the actual metadata lookup and computation
+        only happens within that area of interest.
+
+        Note there are two ways of filtering dates: using the ``start_datetime`` and ``end_datetime`` arguments here,
+        and calling `filter` (like ``imgs.filter(lambda img: img.properties['date'].month > 5)``).
+        We recommend using ``start_datetime`` and ``end_datetime`` for giving a coarse date window
+        (at the year level, for example), then using `filter` to do more sophisticated filtering
+        within that subset if necessary.
+
+        Parameters
+        ----------
+        product_id: Str
+            ID of the product
+        start_datetime: Datetime or None, optional, default None
+            Restrict the `ImageCollection` to Images acquired after this timestamp.
+        end_datetime: Datetime or None, optional, default None
+            Restrict the `ImageCollection` to Images before after this timestamp.
+        limit: Int or None, optional, default None
+            Maximum number of Images to include. If None (default),
+            uses the Workflows default of 10,000. Note that specifying no limit
+            is not supported.
+        resampler: str, optional, default None
+            Algorithm used to interpolate pixel values when scaling and transforming
+            the image to the resolution and CRS eventually defined by a `~.geospatial.GeoContext`.
+            Possible values are ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
+            ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
+        processing_level : str, optional
+            Reflectance processing level. Possible values are ``'toa'`` (top of atmosphere)
+            and ``'surface'``. For products that support it, ``'surface'`` applies
+            Descartes Labs' general surface reflectance algorithm to the output.
+
+        Returns
+        -------
+        imgs: ImageCollection
+        """
         if resampler is not None and resampler not in [
             "near",
             "bilinear",
