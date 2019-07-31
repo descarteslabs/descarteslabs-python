@@ -78,6 +78,8 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     cmap_min = ScaleFloat(None, allow_none=True)
     cmap_max = ScaleFloat(None, allow_none=True)
 
+    checkerboard = traitlets.Bool(True)
+
     error_output = traitlets.Instance(widgets.Output, allow_none=True)
 
     def __init__(self, image, *args, **kwargs):
@@ -116,6 +118,9 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         if len(scales) > 0:
             query_args["scales"] = json.dumps(scales)
 
+        if self.checkerboard:
+            query_args["checkerboard"] = "true"
+
         return self.xyz_obj.url(**query_args)
 
     @traitlets.observe("image", "colormap", "cmap_min", "cmap_max")
@@ -134,6 +139,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
 
     @traitlets.observe(
         "visible",
+        "checkerboard",
         "r_min",
         "r_max",
         "g_min",

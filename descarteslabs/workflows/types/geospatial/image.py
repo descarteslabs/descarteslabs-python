@@ -683,7 +683,7 @@ class Image(ImageBase, BandsMixin):
     def __rpow__(self, other):
         return _result_type(other)._from_apply("rpow", self, other)
 
-    def tile_layer(self, name=None, scales=None, colormap=None):
+    def tile_layer(self, name=None, scales=None, colormap=None, checkerboard=True):
         """
         A `.WorkflowsLayer` for this `Image`.
 
@@ -704,6 +704,8 @@ class Image(ImageBase, BandsMixin):
             or just ``(0, 1)`` for convenience
         colormap: str, default None
             The name of the colormap to apply to the `Image`. Only valid if the `Image` has a single band.
+        checkerboard: bool, default True
+            Whether to display a checkerboarded background for missing or masked data.
 
         Returns
         -------
@@ -713,10 +715,11 @@ class Image(ImageBase, BandsMixin):
 
         layer = interactive.WorkflowsLayer(self, name=name)
         layer.set_scales(scales, new_colormap=colormap)
+        layer.checkerboard = checkerboard
 
         return layer
 
-    def visualize(self, name, scales=None, colormap=None, map=None):
+    def visualize(self, name, scales=None, colormap=None, checkerboard=True, map=None):
         """
         Add this `Image` to `wf.map <.interactive.map>`, or replace a layer with the same name.
 
@@ -741,6 +744,8 @@ class Image(ImageBase, BandsMixin):
             based on the min and max values of its data.
         colormap: str, default None
             The name of the colormap to apply to the `Image`. Only valid if the `Image` has a single band.
+        checkerboard: bool, default True
+            Whether to display a checkerboarded background for missing or masked data.
         map: `.Map` or `.MapApp`, optional, default None
             The `.Map` (or plain ipyleaflet Map) instance on which to show the `Image`.
             If None (default), uses `wf.map <.interactive.map>`, the singleton Workflows `.MapApp` object.
@@ -770,9 +775,10 @@ class Image(ImageBase, BandsMixin):
                 with layer.hold_trait_notifications():
                     layer.image = self
                     layer.set_scales(scales, new_colormap=colormap)
+                    layer.checkerboard = checkerboard
                 break
         else:
-            layer = self.tile_layer(name=name, scales=scales, colormap=colormap)
+            layer = self.tile_layer(name=name, scales=scales, colormap=colormap, checkerboard=checkerboard)
             map.add_layer(layer)
 
     def tile_url(self, name=None, scales=None, colormap=None):

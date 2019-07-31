@@ -11,7 +11,8 @@ from .layer import WorkflowsLayer
 
 
 initial_width = widgets.Layout(width="initial")
-scale_width = widgets.Layout(min_width="2em", max_width="4em")
+scale_width = widgets.Layout(min_width="1.3em", max_width="4em", width="initial")
+button_layout = widgets.Layout(width="initial", overflow="visible")
 
 colormaps = [
     "viridis",
@@ -122,6 +123,8 @@ class LayerControllerRow(widgets.Box):
         Whether to show the button for autoscaling
     colormappable: Bool, default True
         Whether to show controls for selecting the colormap
+    checkerboardable: Bool, default True
+        Whether to show controls for toggling checkerboards for transparent/missing data
     """
 
     map = traitlets.Instance(Map)
@@ -130,6 +133,7 @@ class LayerControllerRow(widgets.Box):
     scaleable = traitlets.Bool(True)
     autoscaleable = traitlets.Bool(True)
     colormappable = traitlets.Bool(True)
+    checkerboardable = traitlets.Bool(True)
     # TODO(gabe): would be sweet to be able to compute if the image was 1 vs 3 bands on __init__,
     # so we could decide to show the colormap box vs scales control automatically
 
@@ -154,7 +158,7 @@ class LayerControllerRow(widgets.Box):
             step=0.01,
             continuous_update=True,
             readout=False,
-            layout=widgets.Layout(max_width="75px", min_width="35px"),
+            layout=widgets.Layout(max_width="50px", min_width="20px"),
         )
         widgets.jslink((opacity, "value"), (layer, "opacity"))
         self._widgets["opacity"] = opacity
@@ -183,7 +187,9 @@ class LayerControllerRow(widgets.Box):
         self._widgets["scales"] = [r_min, r_max, g_min, g_max, b_min, b_max]
 
         colormap = widgets.Dropdown(
-            options=[None] + colormaps, value=layer.colormap, layout=initial_width
+            options=[None] + colormaps,
+            value=layer.colormap,
+            layout=widgets.Layout(width="initial", max_width="7vh"),
         )
         widgets.link((colormap, "value"), (layer, "colormap"))
         colormap.observe(self._observe_supported_controls, names="value")
@@ -196,26 +202,36 @@ class LayerControllerRow(widgets.Box):
 
         self._widgets["cmap_scales"] = [cmap_min, cmap_max]
 
+        checkerboard = widgets.ToggleButton(
+            value=True,
+            description="",
+            tooltip="Checkerboard missing data",
+            icon="th",
+            layout=button_layout,
+        )
+        widgets.link((checkerboard, "value"), (layer, "checkerboard"))
+        self._widgets["checkerboard"] = checkerboard
+
         autoscale = widgets.Button(
-            description="", tooltip="Enhance!", icon="magic", layout=initial_width
+            description="", tooltip="Enhance!", icon="magic", layout=button_layout
         )
         autoscale.on_click(self.autoscale)
         self._widgets["autoscale"] = autoscale
 
         move_up = widgets.Button(
-            description=u"↑", tooltip="Move layer up", layout=initial_width
+            description=u"↑", tooltip="Move layer up", layout=button_layout
         )
         move_up.on_click(self.move_up)
         self._widgets["move_up"] = move_up
 
         move_down = widgets.Button(
-            description=u"↓", tooltip="Move layer down", layout=initial_width
+            description=u"↓", tooltip="Move layer down", layout=button_layout
         )
         move_down.on_click(self.move_down)
         self._widgets["move_down"] = move_down
 
         remove = widgets.Button(
-            description=u"✖︎", tooltip="Remove layer", layout=initial_width
+            description=u"✖︎", tooltip="Remove layer", layout=button_layout
         )
         remove.on_click(self.remove)
         self._widgets["remove"] = remove
@@ -242,6 +258,9 @@ class LayerControllerRow(widgets.Box):
                 children.extend(widgets["cmap_scales"])
         if self.colormappable:
             children.append(widgets["colormap"])
+            widgets["colormap"].layout.width = "2em" if self.layer.colormap is None else ""
+        if self.checkerboardable:
+            children.append(widgets["checkerboard"])
         if self.autoscaleable:
             children.append(widgets["autoscale"])
 
