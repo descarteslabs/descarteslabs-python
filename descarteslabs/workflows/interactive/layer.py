@@ -239,7 +239,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             scales_len = 1 if colormap is not None else 3
             if len(scales) != scales_len:
                 msg = "Expected {} scales, but got {}.".format(scales_len, len(scales))
-                if len(scales) == (1, 2):
+                if len(scales) in (1, 2):
                     msg += " If displaying a 1-band Image, use a colormap."
                 elif colormap:
                     msg += " Colormaps cannot be used with multi-band images."

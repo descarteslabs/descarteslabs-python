@@ -67,8 +67,6 @@ class MapApp(widgets.VBox):
         "move_layer_up",
         "move_layer_down",
         "add_layer",
-        "remove_layer",
-        "clear_layers",
         "add_control",
         "remove_control",
         "clear_controls",
@@ -109,6 +107,19 @@ class MapApp(widgets.VBox):
             ],
             layout=app_layout,
         )
+
+    def remove_layer(self, layer_name):
+        "Remove a named layer from the map"
+        for lyr in self.map.layers:
+            if lyr.name == layer_name:
+                self.map.remove_layer(layer_name)
+                break
+        else:
+            raise ValueError("Layer {} does not exist on the map".format(layer_name))
+
+    def clear_layers(self):
+        "Remove all layers from the map (besides the base layer)"
+        self.map.layers = tuple(lyr for lyr in self.map.layers if lyr.base)
 
     def __getattr__(self, attr):
         if attr in self._forward_attrs_to_map:
