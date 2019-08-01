@@ -292,10 +292,13 @@ class XYZErrorListener(object):
 
     Example
     -------
+    >>> import descarteslabs.workflows as wf
     >>> xyz = wf.XYZ.build(wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"))
     >>> xyz.save()  # doctest: +SKIP
     >>> listener = xyz.error_listener()
-    >>> listener.add_callback(lambda msg: print(msg.code, msg.message))
+    >>> def callback(msg):
+    ...     print(msg.code, msg.message)
+    >>> listener.add_callback(callback)
     >>> listener.listen("my_session_id", start_datetime=datetime.datetime.now())  # doctest: +SKIP
     >>> # later
     >>> listener.stop()  # doctest: +SKIP

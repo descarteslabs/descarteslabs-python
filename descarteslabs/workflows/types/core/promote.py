@@ -112,6 +112,8 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
 
     Example
     -------
+    >>> from descarteslabs.workflows import List, Str, Int, Float
+    >>> from descarteslabs.workflows.types import typecheck_promote
     >>> @typecheck_promote(Int, List[Str], optional=Float)
     ... def my_function(an_int, a_list_of_str, optional=None):
     ...     assert isinstance(an_int, Int)
@@ -122,7 +124,9 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
     ... # the arguments are automatically promoted from Python types,
     ... # so inside `my_function`, they're all Proxytypes
     >>> my_function('not_an_int', ['a', 'b'])
-    TypeError: Argument 'an_int' to function my_function():
+    Traceback (most recent call last):
+        ...
+    TypeError: Argument 'an_int' to function my_function(): \
     expected Int or an object promotable to that, but got str: 'not_an_int'
     """
     # assert all(isinstance(arg_type, Proxytype) for arg_type in expected_arg_types)

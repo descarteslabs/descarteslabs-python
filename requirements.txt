@@ -2,6 +2,9 @@ affine>=2.2.1
 blosc;platform_system!="Windows"
 cachetools>=2.0.1
 futures;python_version=="2.7"
+ipyleaflet==0.11.1
+ipywidgets==7.5.0
+traitlets==4.3.2
 mock
 requests>=2.20.1,<3
 responses
@@ -11,7 +14,6 @@ geojson>=2.4.1
 shapely>=1.6.3,<2
 mercantile>=1.0.4
 pyarrow==0.13.0
-folium
 grpcio>=1.16.1,<2
 protobuf==3.8.0,<4
 hypothesis[numpy]==4.24.5

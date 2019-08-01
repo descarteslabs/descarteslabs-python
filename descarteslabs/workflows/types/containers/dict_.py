@@ -23,9 +23,13 @@ class Dict(GenericProxytype):
 
     Examples
     --------
+    >>> from descarteslabs.workflows import Dict, List, Str, Int, Float
     >>> Dict[Str, Int](a=1, b=2)
+    <descarteslabs.workflows.types.containers.dict_.Dict[Str, Int] object at 0x...>
     >>> Dict[Str, Int]({'a': 1, 'b': 2}, b=100, c=3)
+    <descarteslabs.workflows.types.containers.dict_.Dict[Str, Int] object at 0x...>
     >>> Dict[Str, List[Float]](a=[1.1, 2.2], b=[3.3])
+    <descarteslabs.workflows.types.containers.dict_.Dict[Str, List[Float]] object at 0x...>
     """
 
     def __init__(self, *dct, **kwargs):

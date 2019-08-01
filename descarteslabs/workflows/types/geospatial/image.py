@@ -81,15 +81,16 @@ class Image(ImageBase, BandsMixin):
 
             Example
             -------
+            >>> import descarteslabs.workflows as wf
             >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
             >>> img.properties['date']
-            <descarteslabs.workflows.types.datetimes.datetime_.Datetime at 0x7f45e8a3d5d0>
+            <descarteslabs.workflows.types.datetimes.datetime_.Datetime object at 0x...>
             >>> img.properties['date'].year
-            <descarteslabs.workflows.types.primitives.number.Int at 0x7f45c6808cd0>
+            <descarteslabs.workflows.types.primitives.number.Int object at 0x...>
             >>> img.properties['id']
-            <descarteslabs.workflows.types.primitives.string.Str at 0x7f45c9e37250>
+            <descarteslabs.workflows.types.primitives.string.Str object at 0x...>
             >>> img.properties['foobar']  # almost certainly a compute-time error
-            <descarteslabs.workflows.types.primitives.any_.Any at 0x7f45c6808650>
+            <descarteslabs.workflows.types.primitives.any_.Any object at 0x...>
             """,
         "bandinfo": """\
             Metadata about the bands of the `Image`.
@@ -110,13 +111,14 @@ class Image(ImageBase, BandsMixin):
 
             Example
             -------
+            >>> import descarteslabs.workflows as wf
             >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-            >>> img.bandinfo['red']['data_rage']
-            <descarteslabs.workflows.types.containers.tuple_.Tuple[Float, Float] at 0x7f45c6801950>
+            >>> img.bandinfo['red']['data_range']
+            <descarteslabs.workflows.types.containers.tuple_.Tuple[Float, Float] object at 0x...>
             >>> img.bandinfo['red']['foobar']  # almost certainly a compute-time error
-            <descarteslabs.workflows.types.primitives.any_.Any at 0x7f45c681be50>
+            <descarteslabs.workflows.types.primitives.any_.Any object at 0x...>
             >>> img.bandinfo['foobar']['id']  # also likely a compute-time error
-            <descarteslabs.workflows.types.primitives.any_.Any at 0x7f45c681be50>
+            <descarteslabs.workflows.types.primitives.string.Str object at 0x...>
             """,
     }
 

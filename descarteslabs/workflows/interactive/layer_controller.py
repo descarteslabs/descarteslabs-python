@@ -50,7 +50,8 @@ class LayerController(ipyleaflet.WidgetControl):
 
     Example
     -------
-    >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1).pick_bands("red green blue")
+    >>> import descarteslabs.workflows as wf
+    >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red green blue")
     >>> map = wf.Map()  # doctest: +SKIP
     >>> layer = wf.WorkflowsLayer(img)  # doctest: +SKIP
     >>> map.add_layer(layer)  # doctest: +SKIP

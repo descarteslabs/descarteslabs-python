@@ -20,13 +20,16 @@ Changelog
 - Colormaps for single-band images.
 - Map interface displays errors that occur while the backend is rendering images.
 - ImageCollection compositing no longer changes band names (`red` does not become `red_mean`, for example).
+- `.clip()` and `.scale()` methods for Image/ImageCollection.
 - Support specifying raster resampler method.
 - Support specifying raster processing level: `toa` (top-of-atmosphere) or `surface` [surface reflectance).
+- No more tiles 400s for missing data; missing/masked pixels can optionally be filled with a checkerboard pattern.
 
 ### Workflows - Changed
 - Workflows `Image.concat` renamed `Image.concat_bands`.
 - Data are left in `data_range` values if `physical_range` is not set, instead of scaling to the range `0..1`.
-- Reduced `DeprecationWarning`s in Python 3.7
+- Selecting the same band name twice (`img.pick_bands("vv vv")`) properly raises an error.
+- Reduced `DeprecationWarning`s in Python 3.7.
 
 ## [0.23.0] - 2019-07-12
 ### Added

@@ -105,6 +105,11 @@ class GenericProxytypeMetaclass(type):
 
     This ensures that:
 
+    >>> from descarteslabs.workflows import List, Int
+    >>> class MyIntSubclass(Int):
+    ...     pass
+    >>> class MyListSubclass(List):
+    ...     pass
     >>> issubclass(List[MyIntSubclass], List[Int])
     True
     >>> issubclass(MyListSubclass[Int], List[Int])

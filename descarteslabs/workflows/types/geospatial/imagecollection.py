@@ -61,16 +61,17 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
             Example
             -------
+            >>> import descarteslabs.workflows as wf
             >>> imgs = wf.ImageCollection.from_id("landsat:LC08:PRE:TOAR")
-            >>> result = imgs.properties.compute(ctx)
-            >>> type(result)
+            >>> result = imgs.properties.compute(ctx)  # doctest: +SKIP
+            >>> type(result)  # doctest: +SKIP
             list
             >>> imgs.properties[0]['date']
-            <descarteslabs.workflows.types.datetimes.datetime_.Datetime at 0x7f7ab0da2190>
+            <descarteslabs.workflows.types.datetimes.datetime_.Datetime object at 0x...>
             >>> imgs.properties.map(lambda p: p['crs'])
-            <descarteslabs.workflows.types.containers.list_.List[Str] at 0x7f7ab0da2a90>
+            <descarteslabs.workflows.types.containers.list_.List[Str] object at 0x...>
             >>> imgs.properties[-1]['foobar']  # almost certainly a compute-time error
-            <descarteslabs.workflows.types.primitives.any_.Any at 0x7f7ab12a4bd0>
+            <descarteslabs.workflows.types.primitives.any_.Any object at 0x...>
             """,
         "bandinfo": """\
             Metadata about the bands of the `ImageCollection`.
@@ -91,13 +92,14 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
             Example
             -------
+            >>> import descarteslabs.workflows as wf
             >>> imgs = wf.ImageCollection.from_id("landsat:LC08:PRE:TOAR")
-            >>> imgs.bandinfo['red']['data_rage']
-            <descarteslabs.workflows.types.containers.tuple_.Tuple[Float, Float] at 0x7f45c6801950>
+            >>> imgs.bandinfo['red']['data_range']
+            <descarteslabs.workflows.types.containers.tuple_.Tuple[Float, Float] object at 0x...>
             >>> imgs.bandinfo['red']['foobar']  # almost certainly a compute-time error
-            <descarteslabs.workflows.types.primitives.any_.Any at 0x7f45c681be50>
+            <descarteslabs.workflows.types.primitives.any_.Any object at 0x...>
             >>> imgs.bandinfo['foobar']['id']  # also likely a compute-time error
-            <descarteslabs.workflows.types.primitives.any_.Any at 0x7f45c681be50>
+            <descarteslabs.workflows.types.primitives.string.Str object at 0x...>
             """,
     }
     _element_type = Image

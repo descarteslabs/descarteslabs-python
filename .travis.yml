@@ -26,7 +26,7 @@ install:
 - pip install -r requirements.txt
 - pip install flake8 mock responses shapely numpy pytest==4.3.1
 script:
-- pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" descarteslabs && flake8
+- pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs && flake8
 - pip install .
 notifications:
   slack:

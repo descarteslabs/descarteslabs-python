@@ -57,7 +57,7 @@ class CollectionMixin:
         >>> col = wf.ImageCollection.from_id("sentinel-2:L1C")
         >>> dates = col.map(lambda img: img.properties["date"])
         >>> type(dates).__name__
-        List[Datetime]
+        'List[Datetime]'
         """
         delayed_func = Function._delay(func, None, self._element_type)
 
@@ -90,7 +90,7 @@ class CollectionMixin:
         -------
         >>> import descarteslabs.workflows as wf
         >>> col = wf.ImageCollection.from_id("sentinel-2:L1C")
-        >>> filtered = col.filter(lambda img: img.properties["date"].year = 2018)
+        >>> filtered = col.filter(lambda img: img.properties["date"].year == 2018)
         """
         delayed_func = Function._delay(func, Bool, self._element_type)
 
@@ -125,7 +125,7 @@ class CollectionMixin:
         >>> def add(accumulated, current):
         ...     return accumulated + current
         >>> l = wf.List[wf.Int]([1, 2])
-        >>> reduced = l.reduce(add, initial=10)
+        >>> reduced = l.reduce(add, initial=wf.Int(10))
         >>> reduced.compute()  # doctest: +SKIP
         13
         """

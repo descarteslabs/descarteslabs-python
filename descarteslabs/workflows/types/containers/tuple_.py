@@ -19,8 +19,11 @@ class Tuple(GenericProxytype):
 
     Examples
     --------
+    >>> from descarteslabs.workflows import Tuple, Int, Float, Str, Bool
     >>> Tuple[Int, Float]([1, 2.2])
+    <descarteslabs.workflows.types.containers.tuple_.Tuple[Int, Float] object at 0x...>
     >>> Tuple[Str, Tuple[Int, Bool]](["foo", (1, True)])
+    <descarteslabs.workflows.types.containers.tuple_.Tuple[Str, Tuple[Int, Bool]] object at 0x...>
     """
 
     def __init__(self, iterable):

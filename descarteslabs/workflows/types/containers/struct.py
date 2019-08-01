@@ -67,6 +67,7 @@ class Struct(GenericProxytype):
 
     Examples
     --------
+    >>> from descarteslabs.workflows import Struct, Str, Int
     >>> MyStructType = Struct[{'str_field': Str, 'int_field': Int}]
     >>> instance = MyStructType(str_field="foo", int_field=1)
 

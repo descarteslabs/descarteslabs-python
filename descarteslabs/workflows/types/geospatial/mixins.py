@@ -56,6 +56,7 @@ class BandsMixin:
 
         Example
         -------
+        >>> import descarteslabs.workflows as wf
         >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
         >>> red, green, blue = img.unpack_bands("red green blue")
         """

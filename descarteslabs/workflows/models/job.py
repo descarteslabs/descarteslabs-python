@@ -52,7 +52,7 @@ class Job(object):
     -------
     >>> import descarteslabs.workflows as wf
     >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-    >>> job = img.compute(aoi, block=False)
+    >>> job = img.compute(geoctx, block=False)  # doctest: +SKIP
     >>> result = job.result()  # doctest: +SKIP
     """
 
@@ -220,7 +220,7 @@ class Job(object):
         Example
         -------
         >>> import descarteslabs.workflows as wf
-        >>> job = wf.Int(1).compute()
+        >>> job = wf.Int(1).compute()  # doctest: +SKIP
         >>> job.result(timeout=10)  # doctest: +SKIP
         1
         """

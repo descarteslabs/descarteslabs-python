@@ -20,8 +20,11 @@ class List(GenericProxytype, CollectionMixin):
 
     Examples
     --------
+    >>> from descarteslabs.workflows import List, Str, Int
     >>> List[Str](["foo", "bar", "baz"])
+    <descarteslabs.workflows.types.containers.list_.List[Str] object at 0x...>
     >>> List[List[Int]]([[1, 2], [-1], [10, 11, 12]])
+    <descarteslabs.workflows.types.containers.list_.List[List[Int]] object at 0x...>
     """
 
     def __init__(self, iterable):
