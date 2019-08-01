@@ -37,6 +37,16 @@ def test_resolve_lambdas():
     assert _resolve_lambdas(Int) is Int
 
 
+def test_resolve_lambdas_self_reference():
+    assert _resolve_lambdas(lambda: Int, "foo") == Int
+    assert _resolve_lambdas(lambda self: self, Int) == Int
+    assert _resolve_lambdas(lambda self: self._type_params[0], List[Int]) == Int
+    assert _resolve_lambdas((Float, lambda self: self._type_params[0]), List[Int]) == (
+        Float,
+        Int,
+    )
+
+
 @typecheck_promote(Int, Tuple[Float, Str], x=List[Bool], y=NoneType)
 def func(a1, a2, x=None, y=None):
     assert isinstance(a1, Int)
@@ -118,8 +128,23 @@ class TestDecorator(object):
         func([1, 2, 3])
         func()
 
+    def test_no_self(self):
+        @typecheck_promote(lambda self: self)
+        def func(x):
+            pass
+
+        with pytest.raises(
+            TypeError,
+            match="takes exactly 1 argument"
+            if six.PY2
+            else "missing 1 required positional argument",
+        ):
+            func(1)
+
 
 class WithPromotedMethods(Proxytype):
+    member_type = Bool
+
     @typecheck_promote(Int, x=Float)
     def basic(self, an_int, x=None):
         assert isinstance(self, WithPromotedMethods)
@@ -140,6 +165,14 @@ class WithPromotedMethods(Proxytype):
         assert isinstance(x, Float)
         assert isinstance(y, WithPromotedMethods)
 
+    @typecheck_promote(lambda self: self.member_type)
+    def lambda_with_self(self, x):
+        assert isinstance(x, self.member_type)
+
+    @typecheck_promote(x=lambda self: self.member_type)
+    def lambda_with_self_kwarg(self, x=True):
+        assert isinstance(x, self.member_type)
+
     @classmethod
     @typecheck_promote(Int)
     def a_classmethod(cls, x):
@@ -152,6 +185,11 @@ class WithPromotedMethods(Proxytype):
         assert cls is WithPromotedMethods
         assert isinstance(x, Int)
         assert isinstance(my_own_type, WithPromotedMethods)
+
+    @classmethod
+    @typecheck_promote(lambda cls: cls.member_type)
+    def a_classmethod_lambda_with_self(cls, x):
+        assert isinstance(x, cls.member_type)
 
 
 class TestDecoratorOnClasses(object):
@@ -191,6 +229,11 @@ class TestDecoratorOnClasses(object):
         ):
             obj.uses_lambda_kwarg(1, x=2.2, y="wrong_type")
 
+    def test_method_decorator_lambda_self(self):
+        obj = WithPromotedMethods()
+        obj.lambda_with_self(False)
+        obj.lambda_with_self_kwarg(x=False)
+
     def test_classmethod(self):
         obj = WithPromotedMethods()
         obj.a_classmethod(1)
@@ -204,3 +247,7 @@ class TestDecoratorOnClasses(object):
             match=r"Argument 'my_own_type' to function a_classmethod_lambda\(\): expected WithPromotedMethods",
         ):
             obj.a_classmethod_lambda(1, 2)
+
+    def test_classmethod_lambda_self(self):
+        obj = WithPromotedMethods()
+        obj.a_classmethod_lambda_with_self(False)

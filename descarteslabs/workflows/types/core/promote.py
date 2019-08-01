@@ -68,14 +68,22 @@ def _is_method(func):
         return spec and spec.args and spec.args[0] in ("self", "cls")
 
 
-def _resolve_lambdas(to_classes):
+def _resolve_lambdas(to_classes, self_reference=None):
     # NOTE: we cannot use callable(to_classes)
     if isinstance(to_classes, types.FunctionType):
+        if self_reference is not None:
+            try:
+                return to_classes(self_reference)
+            except TypeError:
+                # function doesn't accept a positional argument; drop to calling without
+                pass
         return to_classes()
     if isinstance(to_classes, abc.Mapping):
-        return {k: _resolve_lambdas(v) for k, v in six.iteritems(to_classes)}
+        return {
+            k: _resolve_lambdas(v, self_reference) for k, v in six.iteritems(to_classes)
+        }
     elif isinstance(to_classes, abc.Sequence):
-        return tuple(_resolve_lambdas(item) for item in to_classes)
+        return tuple(_resolve_lambdas(item, self_reference) for item in to_classes)
     else:
         return to_classes
 
@@ -89,22 +97,36 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
     Expected types can be given as:
 
     * Proxytypes (``Dict[Str, Float]``)
-    * Zero-argument functions that evaluate to Proxytypes (``lambda: Int``)
+    * Functions that evaluate to Proxytypes
+      (``lambda: Int`` or ``lambda self: self._type_params[0]``)
 
       This is useful when writing a class and wanting to typecheck
       for instances of that class. Using the class's name directly
       in the decorator would be a ``NameError``; this way, you can
       defer the lookup with a lambda.
+
+      When decorating methods, the function can take one argument,
+      in which case it's passed the ``self`` or ``cls`` argument
+      that the decorated method recieves. This is meant for generic
+      Proxytypes: you can typecheck arguments based on the ``_type_params``
+      of a concrete subtype. For example, a Dict could do:
+
+        @typecheck_promote(lambda self: self._type_params[0])
+        def __getitem__(self, idx):
+            return self._type_params[1]._from_apply("getitem", self, idx)
+
+      to typecheck that arguments to __getitem__ are of the correct
+      key type.
     * Lists or tuples of the two above, to represent multiple options
       for a parameter (``[Int, Float]``)
 
       It'll attempt to promote the argument to each type in order,
       using the first that succeeds.
 
-    When used on instance methods or classmethods, the ``self``
-    or ``cls`` argument is skipped. Note that on classmethods,
-    the `typecheck_promote` decorator must go _before_ (below)
-    the ``@classmethod`` decorator.
+    When used on instance methods or classmethods, promotion of
+    the ``self`` or ``cls`` argument is skipped.
+    Note that on classmethods, the `typecheck_promote` decorator
+    must go _before_ (below) the ``@classmethod`` decorator.
 
     Note that default values will _also_ be promoted,
     so if the default value for an argument is incompatible with
@@ -153,10 +175,11 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
     def decorator(func):
         func_name = "{}()".format(func.__name__)
         func_signature = signature(func)
+        is_method = _is_method(func)
 
         # insert placeholder for `self`/`cls`, so `bind` doesn't raise a TypeError
         expected_arg_types_with_self = (
-            expected_arg_types if not _is_method(func) else (None,) + expected_arg_types
+            expected_arg_types if not is_method else (None,) + expected_arg_types
         )
 
         # this will raise TypeError if the expected arguments
@@ -168,7 +191,10 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
         @boltons.funcutils.wraps(func)
         def typechecked_func(*args, **kwargs):
             if not have_resolved_lambdas:
-                bound_expected_args.update(_resolve_lambdas(bound_expected_args))
+                self_reference = args[0] if is_method else None
+                bound_expected_args.update(
+                    _resolve_lambdas(bound_expected_args, self_reference)
+                )
                 # ^ use `.update()` to mutate in-place
                 have_resolved_lambdas.append(True)  # non-empty means True
 
