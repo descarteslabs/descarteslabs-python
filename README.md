@@ -10,6 +10,11 @@ Changelog
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+## [0.24.0] - 2019-08-01
+### Added
 - `scenes.DLTile.assign(pad=...)` method added to ease creation of a tile in all ways indentical except for the padding.
 
 ### Changed
