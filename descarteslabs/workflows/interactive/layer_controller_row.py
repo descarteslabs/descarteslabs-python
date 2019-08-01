@@ -268,7 +268,7 @@ class LayerControllerRow(widgets.Box):
 
         return children
 
-    @traitlets.observe("autoscaleable", "colormappable", "scaleable")
+    @traitlets.observe("autoscaleable", "colormappable", "scaleable", "checkerboardable")
     def _observe_supported_controls(self, change):
         self.children = self._make_children()
 
