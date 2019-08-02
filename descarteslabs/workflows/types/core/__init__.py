@@ -1,6 +1,6 @@
 from .core import Castable, Proxytype, GenericProxytype
 from .exceptions import ProxyTypeError
-from .promote import typecheck_promote
+from .promote import typecheck_promote, _resolve_lambdas
 
 __all__ = [
     # .core
@@ -11,4 +11,5 @@ __all__ = [
     "ProxyTypeError",
     # .promote
     "typecheck_promote",
+    "_resolve_lambdas",
 ]

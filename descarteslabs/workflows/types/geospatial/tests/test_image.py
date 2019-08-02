@@ -1,11 +1,12 @@
 import pytest
 import mock
+import six
 
 from descarteslabs import scenes
 from ...core.tests import utils
 
 from .... import env
-from ...core import ProxyTypeError
+from ...core import ProxyTypeError, _resolve_lambdas
 from ...primitives import Str, Float, Int, Bool, NoneType, Any
 from ...containers import Dict
 
@@ -46,6 +47,17 @@ def test_promote(from_id_wrapper):
         Image._promote("")
 
 
+def test_stats_return_type():
+    for axis, return_type in six.iteritems(_resolve_lambdas(Image._STATS_RETURN_TYPES)):
+        assert Image._stats_return_type(axis) == return_type
+
+    with pytest.raises(ValueError):
+        Image._stats_return_type(5)
+
+    with pytest.raises(ValueError):
+        Image._stats_return_type("foo")
+
+
 def test_all_methods():
     img = Image.from_id("foo")
     img2 = Image.from_id("bar")
@@ -72,18 +84,34 @@ def test_all_methods():
     assert isinstance(img.mask(fc), Image)
     assert isinstance(img.getmask(), Image)
     assert isinstance(img.colormap(), Image)
-    assert isinstance(img.minpixels(), Dict[Str, Float])
-    assert isinstance(img.maxpixels(), Dict[Str, Float])
-    assert isinstance(img.meanpixels(), Dict[Str, Float])
-    assert isinstance(img.medianpixels(), Dict[Str, Float])
-    assert isinstance(img.sumpixels(), Dict[Str, Float])
-    assert isinstance(img.stdpixels(), Dict[Str, Float])
-    assert isinstance(img.countpixels(), Dict[Str, Float])
-    # assert isinstance(img.minbands(), Image)
-    # assert isinstance(img.maxbands(), Image)
-    # assert isinstance(img.meanbands(), Image)
-    # assert isinstance(img.sumbands(), Image)
-    # assert isinstance(img.stdbands(), Image)
+    assert isinstance(img.min(axis="pixels"), Dict[Str, Float])
+    assert isinstance(img.min(axis="bands"), Image)
+    assert isinstance(img.min(axis=None), Float)
+    assert isinstance(img.min(), Float)
+    assert isinstance(img.max(axis="pixels"), Dict[Str, Float])
+    assert isinstance(img.max(axis="bands"), Image)
+    assert isinstance(img.max(axis=None), Float)
+    assert isinstance(img.max(), Float)
+    assert isinstance(img.mean(axis="pixels"), Dict[Str, Float])
+    assert isinstance(img.mean(axis="bands"), Image)
+    assert isinstance(img.mean(axis=None), Float)
+    assert isinstance(img.mean(), Float)
+    assert isinstance(img.median(axis="pixels"), Dict[Str, Float])
+    assert isinstance(img.median(axis="bands"), Image)
+    assert isinstance(img.median(axis=None), Float)
+    assert isinstance(img.median(), Float)
+    assert isinstance(img.sum(axis="pixels"), Dict[Str, Float])
+    assert isinstance(img.sum(axis="bands"), Image)
+    assert isinstance(img.sum(axis=None), Float)
+    assert isinstance(img.sum(), Float)
+    assert isinstance(img.std(axis="pixels"), Dict[Str, Float])
+    assert isinstance(img.std(axis="bands"), Image)
+    assert isinstance(img.std(axis=None), Float)
+    assert isinstance(img.std(), Float)
+    assert isinstance(img.count(axis="pixels"), Dict[Str, Float])
+    assert isinstance(img.count(axis="bands"), Image)
+    assert isinstance(img.count(axis=None), Float)
+    assert isinstance(img.count(), Float)
 
 
 img = Image.from_id("bar")

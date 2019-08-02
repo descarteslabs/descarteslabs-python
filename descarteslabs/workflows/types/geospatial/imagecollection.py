@@ -3,7 +3,7 @@ from descarteslabs.common.graft import client
 from ... import env
 from ...cereal import serializable
 from ..containers import CollectionMixin, List, Tuple, Dict, KnownDict, Struct
-from ..core import typecheck_promote
+from ..core import typecheck_promote, _resolve_lambdas
 from ..datetimes import Datetime
 
 from ..primitives import Any, Str, Int, Float, Bool, NoneType
@@ -267,8 +267,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         Parameters
         ----------
-        other: ~.geospatial.Image, ImageCollection
-            If ``other`` is a single `~.geospatial.Image`, its bands will be added to
+        other: `.Image`, ImageCollection
+            If ``other`` is a single `.Image`, its bands will be added to
             every image in this `ImageCollection`.
 
             If ``other`` is an `ImageCollection`, it must be the same length as ``self``.
@@ -425,85 +425,375 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             raise ValueError("Unknown colormap type: {}".format(named_colormap))
         return self._from_apply("colormap", self, named_colormap, vmin, vmax)
 
-    def count(self):
+    # Axis tuple to return type mapping.
+    _STATS_RETURN_TYPES = {
+        frozenset((None,)): Float,
+        frozenset(("images",)): lambda: Image,
+        frozenset(("bands",)): lambda: ImageCollection,
+        frozenset(("pixels",)): List[Dict[Str, Float]],
+        frozenset(("images", "pixels")): Dict[Str, Float],
+        frozenset(("bands", "pixels")): List[Float],
+        frozenset(("images", "bands")): lambda: Image,
+        frozenset(("images", "bands", "pixels")): Float,
+    }
+
+    # To be resolved on first call.
+    _RESOLVED_STATS_RETURN_TYPES = None
+
+    @classmethod
+    def _stats_return_type(cls, axis):
+        if cls._RESOLVED_STATS_RETURN_TYPES is None:
+            cls._RESOLVED_STATS_RETURN_TYPES = _resolve_lambdas(cls._STATS_RETURN_TYPES)
+
+        axis_ = axis if isinstance(axis, tuple) else (axis,)
+
+        try:
+            return cls._RESOLVED_STATS_RETURN_TYPES[frozenset(axis_)]
+        except KeyError:
+            raise ValueError(
+                "Invalid axis argument {!r}, should be None, one of the strings "
+                "'images', 'bands', or 'pixels', or a tuple containing some "
+                "combination of 'images', 'bands', and 'pixels'.".format(axis)
+            )
+
+    def min(self, axis=None):
         """
-        An `Image` containing the temporal number of unmasked pixels in this
-        `ImageCollection`.
+        Minimum pixel value across the provided ``axis``, or across all pixels in the image
+        collection if no ``axis`` argument is provided.
 
-        A given pixel in a given band contains the number of unmasked pixels, for that
-        pixel and that band, across the time dimension.
+        Parameters
+        ----------
+        axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
+            A Python string indicating the axis along which to take the minimum.
 
-        Note: Each band name will have '_get_mask_sum' appended to it.
+            Options:
+
+            * ``"images"``: Returns an `.Image`
+              containing the minimum value for each pixel in each band, across all
+              scenes (i.e., a temporal minimum composite.)
+            * ``"bands"``: Returns a new `ImageCollection` with one band, ``"min"``,
+              containing the minimum value for each pixel across all bands in each
+              scene.
+            * ``"pixels"`` Returns a ``List[Dict[Str, Float]]`` containing each band's
+              minimum pixel value for each scene in the collection.
+            * ``None``: Returns a `.Float` that represents the minimum pixel value of the
+              entire `ImageCollection`, across all scenes, bands, and pixels.
+            * ``("images", "pixels")``: Returns a ``Dict[Str, Float]`` of the minimum pixel value for
+              each band across all scenes, keyed by band name.
+            * ``("bands", "pixels")``: Returns a ``List[Float]`` of the minimum pixel value for
+              each scene across all bands.
+            * ``("images", "bands")``: Returns an `.Image` containing the minimum value
+              across all scenes and bands.
+
+        Returns
+        -------
+        ``Dict[Str, Float]``, ``List[Float]``, ``List[Dict[Str, Float]]``, `.ImageCollection`, `.Image` or `.Float`
+            Minimum pixel values across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
+        >>> min_composite = col.min(axis="images")
+        >>> min_col = col.min(axis="bands")
+        >>> band_mins_per_scene = col.min(axis="pixels")
+        >>> scene_mins = col.min(axis=("bands", "pixels"))
+        >>> band_mins = col.min(axis=("images", "pixels"))
+        >>> min_pixel = col.min(axis=None)
         """
-        return Image._from_apply("count", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("min", self, axis)
 
-    def sum(self):
+    def max(self, axis=None):
         """
-        An `Image` containing the temporal sum of this `ImageCollection`.
+        Maximum pixel value across the provided ``axis``, or across all pixels in the image
+        collection if no ``axis`` argument is provided.
 
-        A given pixel in a given band contains the sum of the pixel values, for that
-        pixel and that band, across the time dimension.
+        Parameters
+        ----------
+        axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
+            A Python string indicating the axis along which to take the maximum.
 
-        Note: Each band name will have '_sum' appended to it.
+            Options:
+
+            * ``"images"``: Returns an `.Image`
+              containing the maximum value for each pixel in each band, across all
+              scenes (i.e., a temporal maximum composite.)
+            * ``"bands"``: Returns a new `ImageCollection` with one band, ``"max"``,
+              containing the maximum value for each pixel across all bands in each scene.
+            * ``"pixels"`` Returns a ``List[Dict[Str, Float]]`` containing each band's
+              maximum pixel value for each scene in the collection.
+            * ``None``: Returns a `.Float` that represents the maximum pixel value of the
+              entire `ImageCollection`, across all scenes, bands, and pixels.
+            * ``("images", "pixels")``: Returns a ``Dict[Str, Float]`` of the maximum pixel value for
+              each band across all scenes, keyed by band name.
+            * ``("bands", "pixels")``: Returns a ``List[Float]`` of the maximum pixel value for
+              each scene across all bands.
+            * ``("images", "bands")``: Returns an `.Image` containing the maximum value
+              across all scenes and bands.
+
+        Returns
+        -------
+        ``Dict[Str, Float]``, ``List[Float]``, ``List[Dict[Str, Float]]``, `.ImageCollection`, `.Image` or `.Float`
+            Maximum pixel values across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
+        >>> max_composite = col.max(axis="images")
+        >>> max_col = col.max(axis="bands")
+        >>> band_maxs_per_scene = col.max(axis="pixels")
+        >>> scene_maxs = col.max(axis=("bands", "pixels"))
+        >>> band_maxs = col.max(axis=("images", "pixels"))
+        >>> max_pixel = col.max(axis=None)
         """
-        return Image._from_apply("sum", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("max", self, axis)
 
-    def min(self):
+    def mean(self, axis=None):
         """
-        An `Image` containing the temporal minimum of this `ImageCollection`.
+        Mean pixel value across the provided ``axis``, or across all pixels in the image
+        collection if no ``axis`` argument is provided.
 
-        A given pixel in a given band contains the minimum of the pixel values, for that
-        pixel and that band, across the time dimension.
+        Parameters
+        ----------
+        axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
+            A Python string indicating the axis along which to take the mean.
 
-        Note: Each band name will have '_min' appended to it.
+            Options:
+
+            * ``"images"``: Returns an `.Image`
+              containing the mean value for each pixel in each band, across all scenes
+            * ``"bands"``: Returns a new `ImageCollection` with one band, ``"mean"``,
+              containing the mean value for each pixel across all bands in each scene.
+            * ``"pixels"`` Returns a ``List[Dict[Str, Float]]`` containing each band's
+              mean pixel value for each scene in the collection.
+              (i.e., a temporal mean composite.)
+            * ``None``: Returns a `.Float` that represents the mean pixel value of the entire
+              `ImageCollection`, across all scenes, bands, and pixels.
+            * ``("images", "pixels")``: Returns a ``Dict[Str, Float]`` of the mean pixel value for
+              each band across all scenes, keyed by band name.
+            * ``("bands", "pixels")``: Returns a ``List[Float]`` of the mean pixel value for
+              each scene across all bands.
+            * ``("images", "bands")``: Returns an `.Image` containing the mean value
+              across all scenes and bands.
+
+        Returns
+        -------
+        ``Dict[Str, Float]``, ``List[Float]``, ``List[Dict[Str, Float]]``, `.ImageCollection`, `.Image` or `.Float`
+            Mean pixel value across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
+        >>> mean_composite = col.mean(axis="images")
+        >>> mean_col = col.mean(axis="bands")
+        >>> band_means_per_scene = col.mean(axis="pixels")
+        >>> scene_means = col.mean(axis=("bands", "pixels"))
+        >>> band_means = col.mean(axis=("images", "pixels"))
+        >>> mean_pixel = col.mean(axis=None)
         """
-        return Image._from_apply("min", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("mean", self, axis)
 
-    def max(self):
+    def median(self, axis=None):
         """
-        An `Image` containing the temporal maximum of this `ImageCollection`.
+        Median pixel value across the provided ``axis``, or across all pixels in the image
+        collection if no ``axis`` argument is provided.
 
-        A given pixel in a given band contains the maximum of the pixel values, for that
-        pixel and that band, across the time dimension.
+        Parameters
+        ----------
+        axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
+            A Python string indicating the axis along which to take the median.
 
-        Note: Each band name will have '_max' appended to it.
+            Options:
+
+            * ``"images"``: Returns an `.Image`
+              containing the median value for each pixel in each band, across all
+              scenes (i.e., a temporal median composite.)
+            * ``"bands"``: Returns a new `ImageCollection` with one band, ``"median"``,
+              containing the median value for each pixel across all bands in each scene.
+            * ``"pixels"`` Returns a ``List[Dict[Str, Float]]`` containing each band's
+              median pixel value for each scene in the collection.
+            * ``None``: Returns a `.Float` that represents the median pixel value of the
+              entire `ImageCollection`, across all scenes, bands, and pixels.
+            * ``("images", "pixels")``: Returns a ``Dict[Str, Float]`` of the median pixel value for
+              each band across all scenes, keyed by band name.
+            * ``("bands", "pixels")``: Returns a ``List[Float]`` of the median pixel value for
+              each scene across all bands.
+            * ``("images", "bands")``: Returns an `.Image` containing the median value
+              across all scenes and bands.
+
+        Returns
+        -------
+        ``Dict[Str, Float]``, ``List[Float]``, ``List[Dict[Str, Float]]``, `.ImageCollection`, `.Image` or `.Float`
+            Median pixel value across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
+        >>> median_composite = col.median(axis="images")
+        >>> median_col = col.median(axis="bands")
+        >>> band_medians_per_scene = col.median(axis="pixels")
+        >>> scene_medians = col.median(axis=("bands", "pixels"))
+        >>> band_medians = col.median(axis=("images", "pixels"))
+        >>> median_pixel = col.median(axis=None)
         """
-        return Image._from_apply("max", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("median", self, axis)
 
-    def mean(self):
+    def sum(self, axis=None):
         """
-        An `Image` containing the temporal mean of this `ImageCollection`.
+        Sum of pixel values across the provided ``axis``, or across all pixels in the image
+        collection if no ``axis`` argument is provided.
 
-        A given pixel in a given band contains the mean of the pixel values, for that
-        pixel and that band, across the time dimension.
+        Parameters
+        ----------
+        axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
+            A Python string indicating the axis along which to take the sum.
 
-        Note: Each band name will have '_mean' appended to it.
+            Options:
+
+            * ``"images"``: Returns an `.Image`
+              containing the sum across all scenes for each pixel in each band (i.e., a
+              temporal sum composite.)
+            * ``"bands"``: Returns a new `ImageCollection` with one band, ``"sum"``,
+              containing the sum across all bands for each pixel and each scene.
+            * ``"pixels"`` Returns a ``List[Dict[Str, Float]]`` containing the sum of
+              the pixel values for each band in each scene.
+            * ``None``: Returns a `.Float` that represents the sum of all pixel values in the
+              `ImageCollection`, across all scenes, bands, and pixels.
+            * ``("images", "pixels")``: Returns a ``Dict[Str, Float]`` containing the sum of the
+              pixel values for each band across all scenes, keyed by band name.
+            * ``("bands", "pixels")``: Returns a ``List[Float]`` contianing the sum of the
+              pixel values for each scene across all bands.
+            * ``("images", "bands")``: Returns an `.Image` containing the sum across
+              all scenes and bands.
+
+        Returns
+        -------
+        ``Dict[Str, Float]``, ``List[Float]``, ``List[Dict[Str, Float]]``, `.ImageCollection`, `.Image` or `.Float`
+            Sum of pixel values across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
+        >>> sum_composite = col.sum(axis="images")
+        >>> sum_col = col.sum(axis="bands")
+        >>> band_sums_per_scene = col.sum(axis="pixels")
+        >>> scene_sums = col.sum(axis=("bands", "pixels"))
+        >>> band_sums = col.sum(axis=("images", "pixels"))
+        >>> sum_pixel = col.sum(axis=None)
         """
-        return Image._from_apply("mean", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("sum", self, axis)
 
-    def median(self):
+    def std(self, axis=None):
         """
-        An `Image` containing the temporal median of this `ImageCollection`.
+        Standard deviation along the provided ``axis``, or across all pixels in the image
+        collection if no ``axis`` argument is provided.
 
-        A given pixel in a given band contains the median of the pixel values, for that
-        pixel and that band, across the time dimension.
+        Parameters
+        ----------
+        axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
+            A Python string indicating the axis along which to take the standard deviation.
 
-        Note: Each band name will have '_median' appended to it.
+            Options:
+
+            * ``"images"``: Returns an `.Image`
+              containing standard deviation across all scenes, for each pixel in each
+              band (i.e., a temporal standard deviation composite.)
+            * ``"bands"``: Returns a new `ImageCollection` with one band, ``"std"``,
+              containing the standard deviation across all bands, for each pixel in each
+              scene.
+            * ``"pixels"`` Returns a ``List[Dict[Str, Float]]`` containing each band's
+              standard deviation, for each scene in the collection.
+            * ``None``: Returns a `.Float` that represents the standard deviation of the
+              entire `ImageCollection`, across all scenes, bands, and pixels.
+            * ``("images", "pixels")``: Returns a ``Dict[Str, Float]`` containing the standard
+              deviation across all scenes, for each band, keyed by band name.
+            * ``("bands", "pixels")``: Returns a ``List[Float]`` containing the standard
+              deviation across all bands, for each scene.
+            * ``("images", "bands")``: Returns an `.Image` containing the standard
+              deviation across all scenes and bands.
+
+        Returns
+        -------
+        ``Dict[Str, Float]``, ``List[Float]``, ``List[Dict[Str, Float]]``, `.ImageCollection`, `.Image` or `.Float`
+            Standard deviation along the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
+        >>> std_composite = col.std(axis="images")
+        >>> std_col = col.std(axis="bands")
+        >>> band_stds_per_scene = col.std(axis="pixels")
+        >>> scene_stds = col.std(axis=("bands", "pixels"))
+        >>> band_stds = col.std(axis=("images", "pixels"))
+        >>> std = col.std(axis=None)
         """
-        return Image._from_apply("median", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("std", self, axis)
 
-    def std(self):
+    def count(self, axis=None):
         """
-        An `Image` containing the temporal standard deviation of this
-        `ImageCollection`.
+        Count of valid (unmasked) pixels across the provided ``axis``, or across all pixels
+        in the `ImageCollection` if no ``axis`` argument is provided.
 
-        A given pixel in a given band contains the standard deviation of
-        the pixel values, for that pixel and that band, across the time
-        dimension.
+        Parameters
+        ----------
+        axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
+            A Python string indicating the axis along which to take the valid pixel count.
 
-        Note: Each band name will have '_std' appended to it.
+            Options:
+
+            * ``"images"``: Returns an `.Image`
+              containing the count of valid pixels across all scenes for each pixel in
+              each band (i.e., a temporal count composite.)
+            * ``"bands"``: Returns a new `ImageCollection` with one band, ``"count"``,
+              containing the count of valid pixels across all bands for each pixel and
+              each scene.
+            * ``"pixels"``: Returns a ``List[Dict[Str, Float]]`` containing the count of
+              valid pixels in each band in each scene.
+            * ``None``: Returns a `.Float` that represents the valid pixel count for the
+              entire `ImageCollection`, across all scenes, bands, and pixels.
+            * ``("images", "pixels")``: Returns a ``Dict[Str, Float]`` containing the count of valid
+              pixels in each band across all scenes, keyed by band name.
+            * ``("bands", "pixels")``: Returns a ``List[Float]`` contianing the count of  valid
+              pixels in each scene across all bands.
+            * ``("images", "bands")``: Returns an `.Image` containing the count of
+              valid pixels across all scenes and bands.
+
+        Returns
+        -------
+        ``Dict[Str, Float]``, ``List[Float]``, ``List[Dict[Str, Float]]``, `.ImageCollection`, `.Image` or `.Float`
+            Count of valid pixels across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
+        >>> count_composite = col.count(axis="images")
+        >>> count_col = col.count(axis="bands")
+        >>> band_counts_per_scene = col.count(axis="pixels")
+        >>> scene_counts = col.count(axis=("bands", "pixels"))
+        >>> band_counts = col.count(axis=("images", "pixels"))
+        >>> count = col.count(axis=None)
         """
-        return Image._from_apply("std", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("count", self, axis)
 
     # Binary comparators
     @typecheck_promote((Image, lambda: ImageCollection, Int, Float))

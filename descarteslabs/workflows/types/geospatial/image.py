@@ -1,4 +1,5 @@
 import json
+import six
 import uuid
 
 from descarteslabs import scenes
@@ -7,7 +8,7 @@ from ... import _channel, env
 from ...cereal import serializable
 from ...models import XYZ
 from ..containers import Dict, KnownDict, Struct, Tuple, List
-from ..core import typecheck_promote
+from ..core import typecheck_promote, _resolve_lambdas
 from ..datetimes import Datetime
 from ..primitives import Any, Bool, Float, Int, Str, NoneType
 from .feature import Feature
@@ -64,6 +65,7 @@ class Image(ImageBase, BandsMixin):
     Images don't have a set spatial extent, CRS, resolution, etc:
     that's determined at computation time by the `~.geospatial.GeoContext` passsed in.
     """
+
     _doc = {
         "properties": """\
             Metadata for the `Image`.
@@ -338,117 +340,285 @@ class Image(ImageBase, BandsMixin):
             raise ValueError("Unknown colormap type: {}".format(named_colormap))
         return self._from_apply("colormap", self, named_colormap, vmin, vmax)
 
-    def minpixels(self):
+    _STATS_RETURN_TYPES = {
+        None: Float,
+        "pixels": Dict[Str, Float],
+        "bands": lambda: Image,
+        ("pixels", "bands"): Float,
+        ("bands", "pixels"): Float,
+    }
+    _RESOLVED_STATS_RETURN_TYPES = None
+
+    @classmethod
+    def _stats_return_type(cls, axis):
+        if cls._RESOLVED_STATS_RETURN_TYPES is None:
+            cls._RESOLVED_STATS_RETURN_TYPES = _resolve_lambdas(cls._STATS_RETURN_TYPES)
+
+        try:
+            return cls._RESOLVED_STATS_RETURN_TYPES[axis]
+        except KeyError:
+            raise ValueError(
+                "Invalid axis argument {!r}, should be one of {}.".format(
+                    axis,
+                    ", ".join(
+                        map(repr, six.viewkeys(cls._RESOLVED_STATS_RETURN_TYPES))
+                    ),
+                )
+            )
+
+    def min(self, axis=None):
         """
-        Dict[Str, Float] of each band's minimum pixel value
+        Minimum pixel value across the provided ``axis``, or across all pixels in the image
+        if no ``axis`` argument is provided.
 
-        Note: Each band name in the dictionary will have '_amin' appended to it.
+        Parameters
+        ----------
+        axis: {None, "pixels", "bands"}
+            A Python string indicating the axis along which to take the minimum.
+
+            Options:
+
+            * ``"pixels"``: Returns a ``Dict[Str, Float]`` of each band's minimum pixel value.
+            * ``"bands"``: Returns a new `.Image` with
+              one band, ``"min"``, containing the minimum value for each pixel across
+              all bands.
+            * ``None``: Returns a `.Float` that represents the minimum pixel value of the
+              entire image.
+
+        Returns
+        -------
+        ``Dict[Str, Float]`` or `.Image` or `.Float`
+            Minimum pixel values across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> min_img = img.min(axis="bands")
+        >>> band_mins = img.min(axis="pixels")
+        >>> min_pixel = img.min(axis=None)
         """
-        return Dict[Str, Float]._from_apply("min", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("min", self, axis)
 
-    # def minbands(self):
-    #     """
-    #     New Image with 1 band, 'min',
-    #     containing the minimum value for each pixel across all bands
-    #     """
-    #     raise NotImplementedError()
-    #     return self._from_apply("Image.minbands", self)
-
-    def maxpixels(self):
+    def max(self, axis=None):
         """
-        Dict[Str, Float] of each band's maximum pixel value
+        Maximum pixel value across the provided ``axis``, or across all pixels in the image
+        if no ``axis`` argument is provided.
 
-        Note: Each band name in the dictionary will have '_amax' appended to it.
+        Parameters
+        ----------
+        axis: {None, "pixels", "bands"}
+            A Python string indicating the axis along which to take the maximum.
+
+            Options:
+
+            * ``"pixels"``: Returns a ``Dict[Str, Float]`` of each band's maximum pixel value.
+            * ``"bands"``: Returns a new `.Image` with
+              one band, ``"max"``, containing the maximum value for each pixel across
+              all bands.
+            * ``None``: Returns a `.Float` that represents the maximum pixel value of the
+              entire image.
+
+        Returns
+        -------
+        ``Dict[Str, Float]`` or `.Image` or `.Float`
+            Maximum pixel values across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> max_img = img.max(axis="bands")
+        >>> band_maxs = img.max(axis="pixels")
+        >>> max_pixel = img.max(axis=None)
         """
-        return Dict[Str, Float]._from_apply("max", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("max", self, axis)
 
-    # def maxbands(self):
-    #     """
-    #     New Image with 1 band, 'max',
-    #     containing the maximum value for each pixel across all bands
-    #     """
-    #     raise NotImplementedError()
-    #     return self._from_apply("Image.maxbands", self)
-
-    def meanpixels(self):
+    def mean(self, axis=None):
         """
-        Dict[Str, Float] of each band's mean pixel value
+        Mean pixel value across the provided ``axis``, or across all pixels in the image
+        if no ``axis`` argument is provided.
 
-        Note: Each band name in the dictionary will have '_mean' appended to it.
+        Parameters
+        ----------
+        axis: {None, "pixels", "bands"}
+            A Python string indicating the axis along which to take the mean.
+
+            Options:
+
+            * ``"pixels"``: Returns a ``Dict[Str, Float]`` of each band's mean pixel value.
+            * ``"bands"``: Returns a new `.Image` with
+              one band, ``"mean"``, containing the mean value for each pixel across all
+              bands.
+            * ``None``: Returns a `.Float` that represents the mean pixel value of the entire
+              image.
+
+        Returns
+        -------
+        ``Dict[Str, Float]`` or `.Image` or `.Float`
+            Mean pixel values across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> mean_img = img.mean(axis="bands")
+        >>> band_means = img.mean(axis="pixels")
+        >>> mean_pixel = img.mean(axis=None)
         """
-        return Dict[Str, Float]._from_apply("mean", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("mean", self, axis)
 
-    # def meanbands(self):
-    #     """
-    #     New Image with 1 band, 'mean',
-    #     containing the mean value for each pixel across all bands
-    #     """
-    #     raise NotImplementedError()
-    #     return self._from_apply("Image.meanbands", self)
-
-    def medianpixels(self):
+    def median(self, axis=None):
         """
-        Dict[Str, Float] of each band's median pixel value
+        Median pixel value across the provided ``axis``, or across all pixels in the image
+        if no ``axis`` argument is provided.
 
-        Note: Each band name in the dictionary will have '_median' appended to it.
+        Parameters
+        ----------
+        axis: {None, "pixels", "bands"}
+            A Python string indicating the axis along which to take the median.
+
+            Options:
+
+            * ``"pixels"``: Returns a ``Dict[Str, Float]`` of each band's median pixel value.
+            * ``"bands"``: Returns a new `.Image` with
+              one band, ``"median"``, containing the median value for each pixel across
+              all bands.
+            * ``None``: Returns a `.Float` that represents the median pixel value of the
+              entire image.
+
+        Returns
+        -------
+        ``Dict[Str, Float]`` or `.Image` or `.Float`
+            Median pixel values across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> median_img = img.median(axis="bands")
+        >>> band_medians = img.median(axis="pixels")
+        >>> median_pixel = img.median(axis=None)
         """
-        return Dict[Str, Float]._from_apply("median", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("median", self, axis)
 
-    # def medianbands(self):
-    #     """
-    #     New Image with 1 band, 'median',
-    #     containing the median value for each pixel across all bands
-    #     """
-    #     raise NotImplementedError()
-    #     return self._from_apply("Image.medianbands", self)
-
-    def sumpixels(self):
+    def sum(self, axis=None):
         """
-        Dict[Str, Float] of each band's sum pixel value
+        Sum of pixel values across the provided ``axis``, or across all pixels in the image
+        if no ``axis`` argument is provided.
 
-        Note: Each band name in the dictionary will have '_sum' appended to it.
+        Parameters
+        ----------
+        axis: {None, "pixels", "bands"}
+            A Python string indicating the axis along which to take the sum.
+
+            Options:
+
+            * ``"pixels"``: Returns a ``Dict[Str, Float]`` containing the sum of the pixel
+              values for each band.
+            * ``"bands"``: Returns a new `.Image` with
+              one band, ``"sum"``, containing the sum across all bands for each pixel.
+            * ``None``: Returns a `.Float` that represents the sum of all pixels in the
+              image.
+
+        Returns
+        -------
+        ``Dict[Str, Float]`` or `.Image` or `.Float`
+            Sum of pixel values across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> sum_img = img.sum(axis="bands")
+        >>> band_sums = img.sum(axis="pixels")
+        >>> sum_pixels = img.sum(axis=None)
         """
-        return Dict[Str, Float]._from_apply("sum", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("sum", self, axis)
 
-    # def sumbands(self):
-    #     """
-    #     New Image with 1 band, 'sum',
-    #     containing the sum for each pixel across all bands
-    #     """
-    #     raise NotImplementedError()
-    #     return self._from_apply("Image.sumbands", self)
-
-    def stdpixels(self):
+    def std(self, axis=None):
         """
-        Dict[Str, Float] of each band's std pixel value
+        Standard deviation along the provided ``axis``, or across all pixels in the image
+        if no ``axis`` argument is provided.
 
-        Note: Each band name in the dictionary will have '_std' appended to it.
+        Parameters
+        ----------
+        axis: {None, "pixels", "bands"}
+            A Python string indicating the axis along which to take the standard deviation.
+
+            Options:
+
+            * ``"pixels"``: Returns a ``Dict[Str, Float]`` containing the standard deviation
+              across each band.
+            * ``"bands"``: Returns a new `.Image` with
+              one band, ``"std"``, containing the standard deviation across all bands
+              for each pixel.
+            * ``None``: Returns a `.Float` that represents the standard deviation of the
+              entire image.
+
+        Returns
+        -------
+        ``Dict[Str, Float]`` or `.Image` or `.Float`
+            Standard deviation along the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> std_img = img.std(axis="bands")
+        >>> band_stds = img.std(axis="pixels")
+        >>> std = img.std(axis=None)
         """
-        return Dict[Str, Float]._from_apply("std", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("std", self, axis)
 
-    # def stdbands(self):
-    #     """
-    #     New Image with 1 band, 'std',
-    #     containing the standard deviation for each pixel across all bands
-    #     """
-    #     raise NotImplementedError()
-    #     return self._from_apply("Image.stdbands", self)
-
-    def countpixels(self):
+    def count(self, axis=None):
         """
-        Dict[Str, Float] of each band's count pixel value
+        Count of valid (unmasked) pixels across the provided ``axis``, or across all pixels
+        in the image if no ``axis`` argument is provided.
 
-        Note: Each band name in the dictionary will have '_get_mask_sum' appended to it.
+        Parameters
+        ----------
+        axis: {None, "pixels", "bands"}
+            A Python string indicating the axis along which to take the valid pixel count.
+
+            Options:
+
+            * ``"pixels"``: Returns a ``Dict[Str, Float]`` containing the count of valid
+              pixels in each band.
+            * ``"bands"``: Returns a new `.Image` with
+              one band, ``"count"``, containing the count of valid pixels across all
+              bands, for each pixel.
+            * ``None``: Returns a `.Float` that represents the count of valid pixels in the
+              image.
+
+        Returns
+        -------
+        ``Dict[Str, Float]`` or `.Image` or `.Float`
+            Count of valid pixels across the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> count_img = img.count(axis="bands")
+        >>> band_counts = img.count(axis="pixels")
+        >>> count = img.count(axis=None)
         """
-        return Dict[Str, Float]._from_apply("count", self)
-
-    # def countbands(self):
-    #     """
-    #     New Image with 1 band, 'count',
-    #     containing the number of unmasked pixels across all bands
-    #     """
-    #     raise NotImplementedError()
-    #     return self._from_apply("Image.countbands", self)
+        return_type = self._stats_return_type(axis)
+        return return_type._from_apply("count", self, axis)
 
     # Binary comparators
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
@@ -780,7 +950,9 @@ class Image(ImageBase, BandsMixin):
                     layer.checkerboard = checkerboard
                 break
         else:
-            layer = self.tile_layer(name=name, scales=scales, colormap=colormap, checkerboard=checkerboard)
+            layer = self.tile_layer(
+                name=name, scales=scales, colormap=colormap, checkerboard=checkerboard
+            )
             map.add_layer(layer)
 
     def tile_url(self, name=None, scales=None, colormap=None):

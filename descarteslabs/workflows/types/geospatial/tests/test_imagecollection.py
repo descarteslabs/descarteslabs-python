@@ -1,13 +1,22 @@
 import pytest
 import mock
+import six
 
+from ...core import _resolve_lambdas
 from ...core.tests import utils
 
 from .... import env
+from ...containers import Dict, List
 from ...primitives import Float, Int, Bool, NoneType, Any
-from ...containers import List, Dict
 
 from .. import Image, ImageCollection, Geometry, Feature, FeatureCollection
+
+
+def thaw_axis(frozen_axis):
+    axis = tuple(frozen_axis)
+    if len(axis) == 1:
+        axis = axis[0]
+    return axis
 
 
 def test_init():
@@ -63,7 +72,20 @@ def test_from_id_with_limit(mock_geoctx, mock_token):
     mock_token_graft.assert_called()
 
 
-def test_all_methods():
+def test_stats_return_type():
+    for axis, return_type in six.iteritems(
+        _resolve_lambdas(ImageCollection._STATS_RETURN_TYPES)
+    ):
+        assert ImageCollection._stats_return_type(thaw_axis(axis)) == return_type
+
+    with pytest.raises(ValueError):
+        Image._stats_return_type(5)
+
+    with pytest.raises(ValueError):
+        Image._stats_return_type("foo")
+
+
+def test_all_methods_nonstats():
     col = ImageCollection.from_id("foo")
     col2 = ImageCollection.from_id("bar")
     img = Image.from_id("baz")
@@ -87,12 +109,21 @@ def test_all_methods():
     assert isinstance(col.mask(fc), ImageCollection)
     assert isinstance(col.getmask(), ImageCollection)
     assert isinstance(col.colormap(), ImageCollection)
-    assert isinstance(col.min(), Image)
-    assert isinstance(col.max(), Image)
-    assert isinstance(col.mean(), Image)
-    assert isinstance(col.median(), Image)
-    assert isinstance(col.sum(), Image)
-    assert isinstance(col.count(), Image)
+
+
+@pytest.mark.parametrize(
+    "stats_func_name", ["min", "max", "mean", "median", "sum", "std", "count"]
+)
+def test_all_stats_methods(stats_func_name):
+    col = ImageCollection.from_id("foo")
+    stats_func = getattr(col, stats_func_name)
+
+    # NOTE: This assumes the correct construction of
+    #       `ImageCollection._RESOLVED_STATS_RETURN_TYPES`.
+    for axis, return_type in six.iteritems(
+        ImageCollection._RESOLVED_STATS_RETURN_TYPES
+    ):
+        assert isinstance(stats_func(axis=thaw_axis(axis)), return_type)
 
 
 def test_properties():
