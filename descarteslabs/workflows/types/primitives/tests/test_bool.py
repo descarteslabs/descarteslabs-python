@@ -27,6 +27,10 @@ def test_all_operators_int(operator, accepted_types, return_type):
     operator_test(Bool(True), all_values_to_try, operator, accepted_types, return_type)
 
 
+def test_invert():
+    assert isinstance(~Bool(True), Bool)
+
+
 def test_helpful_error():
     b = Bool(True)
 

@@ -20,6 +20,9 @@ class Bool(Primitive):
 
     __nonzero__ = __bool__  # for python 2
 
+    def __invert__(self):
+        return self._from_apply("not", self)
+
     @typecheck_promote(lambda: Bool)
     def __eq__(self, other):
         return self._from_apply("eq", self, other)
