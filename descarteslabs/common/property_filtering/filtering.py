@@ -27,6 +27,11 @@ class Expression(object):
         return OrExpression([other]) | self
 
 
+# A convention was added to allow for serialization of catalog V2 attributes
+# If a model is given, the model class method `serialize_attribute` will be
+# called to retrieve the serialized value of an attribute.
+
+
 class EqExpression(Expression):
     def __init__(self, name, value):
         self.name = name
@@ -35,8 +40,11 @@ class EqExpression(Expression):
     def serialize(self):
         return {"eq": {self.name: self.value}}
 
-    def jsonapi_serialize(self):
-        return {"op": "eq", "name": self.name, "val": self.value}
+    def jsonapi_serialize(self, model=None):
+        value = (
+            model.serialize_attribute(self.name, self.value) if model else self.value
+        )
+        return {"op": "eq", "name": self.name, "val": value}
 
 
 class NeExpression(Expression):
@@ -47,8 +55,11 @@ class NeExpression(Expression):
     def serialize(self):
         return {"ne": {self.name: self.value}}
 
-    def jsonapi_serialize(self):
-        return {"op": "ne", "name": self.name, "val": self.value}
+    def jsonapi_serialize(self, model=None):
+        value = (
+            model.serialize_attribute(self.name, self.value) if model else self.value
+        )
+        return {"op": "ne", "name": self.name, "val": value}
 
 
 class RangeExpression(Expression):
@@ -59,7 +70,7 @@ class RangeExpression(Expression):
     def serialize(self):
         return {"range": {self.name: self.parts}}
 
-    def jsonapi_serialize(self):
+    def jsonapi_serialize(self, model=None):
         return [
             {"name": self.name, "op": op, "val": val}
             for (op, val) in self.parts.items()
@@ -74,8 +85,11 @@ class LikeExpression(Expression):
     def serialize(self):
         return {"like": {self.name: self.value}}
 
-    def jsonapi_serialize(self):
-        return {"name": self.name, "op": "ilike", "val": self.value}
+    def jsonapi_serialize(self, model=None):
+        value = (
+            model.serialize_attribute(self.name, self.value) if model else self.value
+        )
+        return {"name": self.name, "op": "ilike", "val": value}
 
 
 class AndExpression(object):
@@ -100,8 +114,8 @@ class AndExpression(object):
     def serialize(self):
         return {"and": [x.serialize() for x in self.parts]}
 
-    def jsonapi_serialize(self):
-        return {"and": flatten_filters(self.parts)}
+    def jsonapi_serialize(self, model=None):
+        return {"and": flatten_filters(self.parts, model=model)}
 
 
 class OrExpression(object):
@@ -126,14 +140,14 @@ class OrExpression(object):
     def serialize(self):
         return {"or": [x.serialize() for x in self.parts]}
 
-    def jsonapi_serialize(self):
-        return {"or": flatten_filters(self.parts)}
+    def jsonapi_serialize(self, model=None):
+        return {"or": flatten_filters(self.parts, model=model)}
 
 
-def flatten_filters(parts):
+def flatten_filters(parts, model=None):
     filters = []
     for x in parts:
-        serialized = x.jsonapi_serialize()
+        serialized = x.jsonapi_serialize(model)
         if isinstance(serialized, list):
             for s in serialized:
                 filters.append(s)
