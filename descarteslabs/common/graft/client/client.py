@@ -14,6 +14,11 @@ NO_INITIAL = "_no_initial_"
 PARAM = "__param__"
 GUID_COUNTER = 0
 
+RESERVED_WORDS = (
+    "parmeters",
+    "returns",
+)
+
 
 def guid():
     global GUID_COUNTER
@@ -63,7 +68,7 @@ def value_graft(value, key=None):
 
 def keyref_graft(key):
     """
-    Graft for a referring to an arbitrary key.
+    Graft for referring to an arbitrary key.
 
     Useful for referring to parameters of functions, or builtins.
 
@@ -71,6 +76,14 @@ def keyref_graft(key):
     ----------
     key: str
     """
+    if not syntax.is_key(key):
+        raise TypeError("Key must be of type str")
+
+    if key in RESERVED_WORDS:
+        raise ValueError(
+            "Key cannot be a reserved graft keyword (one of {})".format(RESERVED_WORDS)
+        )
+
     return {"returns": key}
 
 

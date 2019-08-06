@@ -1,4 +1,4 @@
-from .core import Castable, Proxytype, GenericProxytype
+from .core import Castable, Proxytype, GenericProxytype, is_generic
 from .exceptions import ProxyTypeError
 from .promote import typecheck_promote, _resolve_lambdas
 
@@ -7,6 +7,7 @@ __all__ = [
     "Castable",
     "Proxytype",
     "GenericProxytype",
+    "is_generic",
     # .exceptions
     "ProxyTypeError",
     # .promote

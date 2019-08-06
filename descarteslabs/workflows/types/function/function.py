@@ -7,6 +7,7 @@ from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..core import GenericProxytype, ProxyTypeError
 from ..primitives import Any
+from ..identifier import identifier
 from ..proxify import proxify
 
 if sys.version_info[:2] >= (3, 5):
@@ -187,7 +188,7 @@ class Function(GenericProxytype):
         bound_expected_args = func_signature.bind(*expected_arg_types).arguments
 
         args = {
-            name: type_._from_graft(client.keyref_graft(name))
+            name: identifier(name, type_)
             for name, type_ in six.iteritems(bound_expected_args)
         }
 

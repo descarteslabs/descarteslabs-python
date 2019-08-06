@@ -1,6 +1,6 @@
 from ..core import _type_params_issubclass
-from .. import Proxytype, GenericProxytype
-
+from .. import Proxytype, GenericProxytype, is_generic
+from ... import List, Int
 
 # NOTE: we test with non-Proxytype classes for this first test to be a little more hermetic,
 # since the GenericProxytypeMetaclass messes around with `isinstance` (to recursively call `_type_params_issubclass`)
@@ -203,3 +203,23 @@ def test_init_subclass():
 
     assert not hasattr(InitSubclasser, "foo")
     assert not hasattr(InitSubclasser, "bar")
+
+
+def test_is_generic_list():
+    assert is_generic(List)
+
+
+def test_not_is_generic_int():
+    assert not is_generic(Int)
+
+
+def test_not_is_generic_list_of_ints():
+    assert not is_generic(List[Int])
+
+
+def test_is_generic_on_list_of_generic_list():
+    assert is_generic(List[List])
+
+
+def test_not_is_generic_on_list_of_list():
+    assert not is_generic(List[List[Int]])

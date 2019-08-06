@@ -410,3 +410,16 @@ class GenericProxytype(Proxytype):
         if isinstance(obj, cls):
             return obj
         return cls(obj)
+
+
+def is_generic(type_):
+    """
+    Returns true if `type_` is generic, meaning it is a subclass of
+    `GenericProxytype` and has no specified type parameters, or any of its type parameters are are also generic
+    """
+    type_parameters = getattr(type_, "_type_params", None)
+
+    if type_parameters is not None:
+        return any(map(is_generic, type_parameters))
+
+    return issubclass(type_, GenericProxytype)

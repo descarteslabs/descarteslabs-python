@@ -1,18 +1,18 @@
-from descarteslabs.common.graft import client as graft_client
-
+from ..identifier import identifier
 from ..primitives import Float
 
-e = Float._from_graft(graft_client.keyref_graft("constants.e"))
+
+e = identifier("constants.e", Float)
 "e = 2.71828182845904523536028747135266249775724709369995..."
 
 
-inf = Float._from_graft(graft_client.keyref_graft("constants.inf"))
+inf = identifier("constants.inf", Float)
 "Floating point representation of positive infinity."
 
 
-nan = Float._from_graft(graft_client.keyref_graft("constants.nan"))
+nan = identifier("constants.nan", Float)
 "Floating point representation of Not a Number."
 
 
-pi = Float._from_graft(graft_client.keyref_graft("constants.pi"))
+pi = identifier("constants.pi", Float)
 "pi = 3.1415926535897932384626433..."

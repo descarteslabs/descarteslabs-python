@@ -40,6 +40,7 @@ from .types import (
     inf,
     nan,
     pi,
+    parameter,
 )
 
 from .models import (
@@ -75,6 +76,7 @@ __all__ = [
     # .types
     "Proxytype",
     "ProxyTypeError",
+    "parameter",
     "proxify",
     "Function",
     "Primitive",
@@ -162,6 +164,7 @@ def _compute_mixin(
     progress_bar=None,
     channel=None,
     client=None,
+    **params
 ):
     """
     Compute this proxy object and wait for its result.
@@ -197,6 +200,8 @@ def _compute_mixin(
     client : `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
+    **params: Proxytype
+        Parameters under which to run the computation.
 
     Returns
     -------
@@ -205,7 +210,6 @@ def _compute_mixin(
         either as a plain Python type, or object from
         ``descarteslabs.common.workflows.containers``.
     """
-    params = {}
     if geoctx is not None:
         params["geoctx"] = GeoContext._promote(geoctx)
 

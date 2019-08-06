@@ -34,7 +34,7 @@ from .toplevel import (
     where,
 )
 from .constants import e, inf, nan, pi
-
+from .identifier import parameter, identifier
 
 __all__ = [
     # .core
@@ -86,6 +86,9 @@ __all__ = [
     "tan",
     "normalized_difference",
     "where",
+    # .identifier
+    "parameter",
+    "identifier",
     # .constants
     "e",
     "inf",

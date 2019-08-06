@@ -103,6 +103,13 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.interactive.LayerController
   ~descarteslabs.workflows.interactive.LayerControllerList
 
+:workflow_api_nontoc_heading:`Parameter`
+
+.. autosummary::
+    :nosignatures:
+    
+    ~descarteslabs.workflows.types.identifier.identifier.parameter
+
 :workflow_api_nontoc_heading:`Execution`
 
 .. autosummary::
