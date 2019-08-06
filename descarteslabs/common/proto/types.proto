@@ -20,4 +20,6 @@ enum ResultType {
     Dict = 13;
     Datetime = 14;
     Timedelta = 15;
+    Bool = 16;
+    Geometry = 17;
 }
