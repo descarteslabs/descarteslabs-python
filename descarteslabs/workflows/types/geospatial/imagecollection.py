@@ -279,6 +279,25 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         return self._from_apply("ImageCollection.concat_bands", self, other)
 
+    @typecheck_promote(lambda: ImageCollection)
+    def concat(self, other):
+        """
+        New `ImageCollection` with ``other`` concatenated to this one.
+
+        Images, properties, and bandinfo are concatenated. Both collections
+        must have the same number of bands with identical names. If ``other``
+        is empty it will not be concatenated.
+
+        Parameters
+        ----------
+        other: ImageCollection
+
+        Returns
+        -------
+        concatenated: ImageCollection
+        """
+        return self._from_apply("ImageCollection.concat", self, other)
+
     def one(self):
         "A single `Image` from the `ImageCollection`"
         return Image._from_apply("ImageCollection.one", self)
