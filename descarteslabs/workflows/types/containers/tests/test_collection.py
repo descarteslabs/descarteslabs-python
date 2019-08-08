@@ -1,10 +1,12 @@
 import pytest
 
 from ... import (
+    Any,
     Bool,
     CollectionMixin,
     Feature,
     FeatureCollection,
+    Image,
     Float,
     Int,
     List,
@@ -86,3 +88,36 @@ def test__initial_reduce_type_with_initial():
 def test__initial_reduce_type_value_no_promotion():
     with pytest.raises(ProxyTypeError):
         _initial_reduce_type(0, Int)
+
+
+@pytest.mark.parametrize("col", [FeatureCollection([]), List[Int]([0, 1, 2])])
+def test_sorted(col):
+    sorted_ = col.sorted()
+    assert isinstance(sorted_, type(col))
+
+    elem_type = col._element_type
+
+    def sorter(x):
+        assert isinstance(x, elem_type)
+        return Int(1)
+
+    sorted_ = col.sorted(key=sorter)
+    assert isinstance(sorted_, type(col))
+
+
+def test_sorted_any():
+    col = List[Any]([0, "foo", 2])
+
+    assert isinstance(col.sorted(lambda x: x + 1), type(col))
+
+
+def test_sorted_bad_key():
+    col = List[Int]([0, 1, 2])
+
+    with pytest.raises(TypeError, match="Key function produced non-orderable type"):
+        # < operator fails
+        col.sorted(key=lambda x: List[Int]([x]))
+
+    with pytest.raises(TypeError, match="Key function produced non-orderable type"):
+        # < operator doesn't produce Bool
+        col.sorted(key=lambda x: Image.from_id("foo") + x)

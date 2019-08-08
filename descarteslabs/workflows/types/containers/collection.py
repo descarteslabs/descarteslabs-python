@@ -1,6 +1,6 @@
 from ..function import Function
-from ..primitives import Bool, Int
-from ..core import Proxytype, ProxyTypeError
+from ..primitives import Any, Bool, Int
+from ..core import Proxytype, ProxyTypeError, typecheck_promote
 
 
 REDUCE_INITIAL_DEFAULT = "__NO_INITIAL_REDUCE_VALUE__"
@@ -164,3 +164,27 @@ class CollectionMixin:
             A Bool Proxytype
         """
         return Bool._from_apply("contains", self, other)
+
+    @typecheck_promote(key=None, reverse=Bool)
+    def sorted(self, key=None, reverse=False):
+        """
+        Copy of this collection, sorted by a key function.
+
+        Parameters
+        ----------
+        key: Function
+            Function which takes an element and returns a value to sort by
+        reverse: Bool, default False
+            Sorts in ascending order if False (default), descending if True.
+        """
+        if key is not None:
+            key = Function._delay(key, None, self._element_type)
+            try:
+                if type(key < key) not in (Any, Bool):
+                    raise TypeError("Comparison did not result in Bool")
+            except TypeError:
+                raise TypeError(
+                    "Key function produced non-orderable type {}".format(type(key))
+                )
+
+        return self._from_apply("sorted", self, key, reverse)
