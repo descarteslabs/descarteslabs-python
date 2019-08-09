@@ -62,7 +62,10 @@ class BandsMixin:
         """
         if isinstance(bands, six.string_types):
             bands = bands.split()
-        return tuple(self.pick_bands(band) for band in bands)
+        if len(bands) == 1:
+            return self.pick_bands(bands[0])
+        else:
+            return tuple(self.pick_bands(band) for band in bands)
 
     def rename_bands(self, *new_positional_names, **new_names):
         """
