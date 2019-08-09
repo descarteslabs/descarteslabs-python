@@ -1,3 +1,5 @@
+import six
+
 from descarteslabs.common.graft import client
 
 from ... import env
@@ -6,13 +8,13 @@ from ..containers import CollectionMixin, List, Tuple, Dict, KnownDict, Struct
 from ..core import typecheck_promote, _resolve_lambdas
 from ..datetimes import Datetime
 
-from ..primitives import Any, Str, Int, Float, Bool, NoneType
-from .geometry import Geometry
+from ..function import Function
+from ..primitives import Any, Bool, Float, Int, NoneType, Str
 from .feature import Feature
 from .featurecollection import FeatureCollection
+from .geometry import Geometry
 from .image import Image
 from .mixins import BandsMixin
-
 
 ImageCollectionBase = Struct[
     {
@@ -443,6 +445,46 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         ]:
             raise ValueError("Unknown colormap type: {}".format(named_colormap))
         return self._from_apply("colormap", self, named_colormap, vmin, vmax)
+
+    def groupby(self, func=None, dates=None):
+        """
+        Group the `ImageCollection` by a key value for each `Image`.
+
+        ``func`` must take an `Image`, and return which group that `Image` belongs to.
+        (The return type of ``func`` can be anything; the unique values returned by ``func``
+        over every `Image` become the groups.)
+
+        For convenience, ``dates`` can be given instead as a field name, or tuple of field names,
+        to pull from the ``"date"`` field of `.Image.properties`.
+
+        Creates an `ImageCollectionGroupby` object, which can be used
+        to aggregate the groups.
+
+        Within the `ImageCollectionGroupby`, every `Image` in every `ImageCollection` group
+        also gets the field ``"group"`` added to its `~.Image.properties`, which identifies which group
+        it belongs to.
+
+        Type-theoretically: ``groupby(func: Function[Image, {}, T]) -> ImageCollectionGroupby[T]``
+        """
+        from .groupby import ImageCollectionGroupby
+
+        if func and dates:
+            raise TypeError("Only one of `func` or `dates` may be given")
+
+        if dates:
+            if isinstance(dates, six.string_types):
+                dates = (dates,)
+
+            # consider implementing this on the backend instead; may be more performant
+            def func(img):
+                date = img.properties["date"]
+                fields = tuple(getattr(date, field) for field in dates)
+                return fields[0] if len(fields) == 1 else fields
+
+        delayed_func = Function.from_callable(func, Image)
+        key_type = delayed_func._type_params[-1]
+
+        return ImageCollectionGroupby[key_type](self, delayed_func)
 
     # Axis tuple to return type mapping.
     _STATS_RETURN_TYPES = {

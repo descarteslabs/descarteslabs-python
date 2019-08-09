@@ -3,6 +3,7 @@ from .featurecollection import FeatureCollection
 from .load_geojson import load_geojson, load_geojson_file
 from .geometry import Geometry, GeometryCollection
 from .geocontext import GeoContext
+from .groupby import ImageCollectionGroupby
 from .image import Image
 from .imagecollection import ImageCollection
 
@@ -17,4 +18,5 @@ __all__ = [
     "GeoContext",
     "Image",
     "ImageCollection",
+    "ImageCollectionGroupby",
 ]

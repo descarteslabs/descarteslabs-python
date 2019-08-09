@@ -9,7 +9,14 @@ from .... import env
 from ...containers import Dict, List
 from ...primitives import Float, Int, Bool, NoneType, Any
 
-from .. import Image, ImageCollection, Geometry, Feature, FeatureCollection
+from .. import (
+    Image,
+    ImageCollection,
+    ImageCollectionGroupby,
+    Geometry,
+    Feature,
+    FeatureCollection,
+)
 
 
 def thaw_axis(frozen_axis):
@@ -109,6 +116,7 @@ def test_all_methods_nonstats():
     assert isinstance(col.mask(fc), ImageCollection)
     assert isinstance(col.getmask(), ImageCollection)
     assert isinstance(col.colormap(), ImageCollection)
+    assert isinstance(col.groupby(dates="year"), ImageCollectionGroupby)
 
 
 @pytest.mark.parametrize(

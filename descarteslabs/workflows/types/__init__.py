@@ -21,6 +21,7 @@ from .geospatial import (
     GeoContext,
     Image,
     ImageCollection,
+    ImageCollectionGroupby,
 )
 from .toplevel import (
     log,
@@ -76,6 +77,7 @@ __all__ = [
     "GeoContext",
     "Image",
     "ImageCollection",
+    "ImageCollectionGroupby",
     # .toplevel
     "log",
     "log2",

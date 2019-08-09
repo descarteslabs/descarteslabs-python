@@ -25,6 +25,7 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.types.geospatial.Geometry
   ~descarteslabs.workflows.types.geospatial.Image
   ~descarteslabs.workflows.types.geospatial.ImageCollection
+  ~descarteslabs.workflows.types.geospatial.ImageCollectionGroupby
   ~descarteslabs.workflows.types.geospatial.load_geojson
   ~descarteslabs.workflows.types.geospatial.load_geojson_file
 
