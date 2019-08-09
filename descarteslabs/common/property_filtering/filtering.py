@@ -26,16 +26,25 @@ class Expression(object):
     def __ror__(self, other):
         return OrExpression([other]) | self
 
+    def _convert_name_value_pair(self, name, value):
+        if hasattr(value, "id"):
+            return name + "_id", value.id
+        else:
+            return name, value
+
 
 # A convention was added to allow for serialization of catalog V2 attributes
 # If a model is given, the model class method `serialize_attribute` will be
 # called to retrieve the serialized value of an attribute.
 
+# A second convention was added to allow for Catalog V2 object to be used
+# instead of the name for == and != operations, and to convert
+# that into the `id` field of the object.
+
 
 class EqExpression(Expression):
     def __init__(self, name, value):
-        self.name = name
-        self.value = value
+        self.name, self.value = self._convert_name_value_pair(name, value)
 
     def serialize(self):
         return {"eq": {self.name: self.value}}
@@ -49,8 +58,7 @@ class EqExpression(Expression):
 
 class NeExpression(Expression):
     def __init__(self, name, value):
-        self.name = name
-        self.value = value
+        self.name, self.value = self._convert_name_value_pair(name, value)
 
     def serialize(self):
         return {"ne": {self.name: self.value}}
