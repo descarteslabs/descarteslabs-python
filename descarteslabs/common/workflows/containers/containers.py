@@ -1,6 +1,8 @@
 import collections
 
 import numpy as np
+import datetime
+
 from descarteslabs.common.workflows import unmarshal
 
 unmarshal.register("Number", unmarshal.identity)
@@ -15,6 +17,8 @@ unmarshal.register("Str", unmarshal.astype(str))
 unmarshal.register("List", unmarshal.astype(list))
 unmarshal.register("Tuple", unmarshal.astype(tuple))
 unmarshal.register("Dict", unmarshal.astype(dict))
+unmarshal.register("Datetime", datetime.datetime)
+unmarshal.register("Timedelta", datetime.timedelta)
 
 
 class EqualityMixin(object):
