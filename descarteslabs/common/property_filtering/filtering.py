@@ -80,7 +80,11 @@ class RangeExpression(Expression):
 
     def jsonapi_serialize(self, model=None):
         return [
-            {"name": self.name, "op": op, "val": val}
+            {
+                "name": self.name,
+                "op": op,
+                "val": model.serialize_attribute(self.name, val) if model else val,
+            }
             for (op, val) in self.parts.items()
         ]
 
