@@ -488,7 +488,7 @@ class TestScene(unittest.TestCase):
         scene = Scene(dict(id="foo", geometry=scene_geometry, properties={}), {})
 
         # same geometry (as a GeoJSON)
-        self.assertEqual(scene.coverage(scene_geometry.__geo_interface__), 1.0)
+        self.assertAlmostEqual(scene.coverage(scene_geometry.__geo_interface__), 1.0, places=6)
 
         # geom is larger
         geom_larger = shapely.geometry.Point(0.0, 0.0).buffer(2)

@@ -4,6 +4,7 @@ import multiprocessing
 import concurrent.futures
 import copy
 import warnings
+from six import assertCountEqual
 
 from descarteslabs.scenes import geocontext
 import shapely.geometry
@@ -68,26 +69,31 @@ class TestAOI(unittest.TestCase):
         resolution = 40
         ctx = geocontext.AOI(collection, resolution=resolution)
         self.assertEqual(ctx.resolution, resolution)
-        self.assertEqual(ctx.bounds, bounds_wgs84)
+        self.assertEqual(
+            tuple(round(e, 5) for e in ctx.bounds),
+            tuple(round(e, 5) for e in bounds_wgs84),
+        )
         self.assertEqual(ctx.bounds_crs, "EPSG:4326")
         self.assertIsInstance(ctx.geometry, shapely.geometry.GeometryCollection)
         self.assertEqual(ctx.__geo_interface__["type"], "GeometryCollection")
-        self.assertEqual(ctx.__geo_interface__["geometries"][0], feature["geometry"])
+        assertCountEqual(
+            self, ctx.__geo_interface__["geometries"][0], feature["geometry"]
+        )
 
     def test_raster_params(self):
         geom = {
             "coordinates": (
                 (
-                    (-93.52300099792355, 41.241436141055345),
-                    (-93.7138666, 40.703737),
-                    (-94.37053769704536, 40.83098709945576),
-                    (-94.2036617, 41.3717716),
-                    (-93.52300099792355, 41.241436141055345),
+                    (-93.523, 41.2414),
+                    (-93.7139, 40.703737),
+                    (-94.37054, 40.83099),
+                    (-94.2036617, 41.3718),
+                    (-93.523, 41.2414),
                 ),
             ),
             "type": "Polygon",
         }
-        bounds_wgs84 = (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716)
+        bounds_wgs84 = (-94.37054, 40.703737, -93.523, 41.3718)
         resolution = 40
         crs = "EPSG:32615"
         align_pixels = False
@@ -120,7 +126,11 @@ class TestAOI(unittest.TestCase):
         }
         ctx = geocontext.AOI(resolution=40)
         ctx2 = ctx.assign(geometry=geom)
-        self.assertEqual(ctx2.geometry, shapely.geometry.shape(geom))
+        assertCountEqual(
+            self,
+            ctx2.geometry.__geo_interface__,
+            shapely.geometry.shape(geom).__geo_interface__,
+        )
         self.assertEqual(ctx2.resolution, 40)
         self.assertEqual(ctx2.align_pixels, True)
         self.assertEqual(ctx2.shape, None)
