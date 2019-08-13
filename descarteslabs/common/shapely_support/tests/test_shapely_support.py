@@ -1,5 +1,6 @@
 import unittest
 import mock
+from six import assertCountEqual
 
 import shapely.geometry
 import geojson
@@ -56,12 +57,12 @@ class ShapelySupportTest(unittest.TestCase):
     def test_as_geojson_geometry(self):
         geoj = as_geojson_geometry(self.feature["geometry"])
         self.assertIsInstance(geoj, geojson.Polygon)
-        self.assertEqual(geoj, self.feature["geometry"])
+        assertCountEqual(self, geoj, self.feature["geometry"])
 
     def test_as_geojson_geometry_feature(self):
         geoj = as_geojson_geometry(self.feature)
         self.assertIsInstance(geoj, geojson.Polygon)
-        self.assertEqual(geoj, self.feature["geometry"])
+        assertCountEqual(self, geoj, self.feature["geometry"])
 
     def test_as_geojson_geometry_featurecollection(self):
         fc = {
@@ -78,7 +79,7 @@ class ShapelySupportTest(unittest.TestCase):
         }
         geoj = as_geojson_geometry(fc)
         self.assertIsInstance(geoj, geojson.GeometryCollection)
-        self.assertEqual(geoj, gc)
+        assertCountEqual(self, geoj, gc)
 
     def test_as_geojson_geometry_invalid(self):
         self.assertRaises(ValueError, as_geojson_geometry, 1.2)
@@ -116,7 +117,7 @@ class ShapelySupportTest(unittest.TestCase):
         obj.__geo_interface__ = shape.__geo_interface__
         as_shapely = geometry_like_to_shapely(obj)
         self.assertIsInstance(as_shapely, shapely.geometry.Polygon)
-        self.assertEqual(shape, as_shapely)
+        assertCountEqual(self, shape.__geo_interface__, as_shapely.__geo_interface__)
 
     def test_geometry_like_to_shapely_not_mapping_or_geo_interface(self):
         unhelpful = (1, 2, 3, 4)
@@ -141,4 +142,7 @@ class ShapelySupportTest(unittest.TestCase):
         }
         as_shapely = geometry_like_to_shapely(fc)
         self.assertIsInstance(as_shapely, shapely.geometry.GeometryCollection)
-        self.assertEqual(as_shapely, shapely.geometry.GeometryCollection(shapes))
+        for converted, shape in zip(
+            list(as_shapely), list(shapely.geometry.GeometryCollection(shapes))
+        ):
+            assertCountEqual(self, converted.__geo_interface__, shape.__geo_interface__)

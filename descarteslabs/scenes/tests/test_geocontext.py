@@ -4,6 +4,7 @@ import multiprocessing
 import concurrent.futures
 import copy
 import warnings
+from six import assertCountEqual
 
 from descarteslabs.scenes import geocontext
 import shapely.geometry
@@ -68,11 +69,16 @@ class TestAOI(unittest.TestCase):
         resolution = 40
         ctx = geocontext.AOI(collection, resolution=resolution)
         self.assertEqual(ctx.resolution, resolution)
-        self.assertEqual(ctx.bounds, bounds_wgs84)
+        self.assertEqual(
+            tuple(round(e, 5) for e in ctx.bounds),
+            tuple(round(e, 5) for e in bounds_wgs84),
+        )
         self.assertEqual(ctx.bounds_crs, "EPSG:4326")
         self.assertIsInstance(ctx.geometry, shapely.geometry.GeometryCollection)
         self.assertEqual(ctx.__geo_interface__["type"], "GeometryCollection")
-        self.assertEqual(ctx.__geo_interface__["geometries"][0], feature["geometry"])
+        assertCountEqual(
+            self, ctx.__geo_interface__["geometries"][0], feature["geometry"]
+        )
 
     def test_raster_params(self):
         geom = {
@@ -103,7 +109,7 @@ class TestAOI(unittest.TestCase):
             "bounds": bounds_wgs84,
             "dimensions": None,
         }
-        self.assertEqual(raster_params, expected)
+        assertCountEqual(self, raster_params, expected)
 
     def test_assign(self):
         geom = {
@@ -120,7 +126,11 @@ class TestAOI(unittest.TestCase):
         }
         ctx = geocontext.AOI(resolution=40)
         ctx2 = ctx.assign(geometry=geom)
-        self.assertEqual(ctx2.geometry, shapely.geometry.shape(geom))
+        assertCountEqual(
+            self,
+            ctx2.geometry.__geo_interface__,
+            shapely.geometry.shape(geom).__geo_interface__,
+        )
         self.assertEqual(ctx2.resolution, 40)
         self.assertEqual(ctx2.align_pixels, True)
         self.assertEqual(ctx2.shape, None)
