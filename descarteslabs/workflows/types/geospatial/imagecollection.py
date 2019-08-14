@@ -856,6 +856,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         return_type = self._stats_return_type(axis)
         return return_type._from_apply("count", self, axis)
 
+    def __reversed__(self):
+        return self._from_apply("reversed", self)
+
     # Binary comparators
     @typecheck_promote((Image, lambda: ImageCollection, Int, Float))
     def __lt__(self, other):

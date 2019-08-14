@@ -164,6 +164,7 @@ base_types = [ImageCollection, Image, Int, Any]
         ["cos", (), ImageCollection],
         ["sin", (), ImageCollection],
         ["tan", (), ImageCollection],
+        ["__reversed__", (), ImageCollection],
         ["__lt__", base_types + [Float], ImageCollection],
         ["__le__", base_types + [Float], ImageCollection],
         ["__eq__", base_types + [Float, Bool], ImageCollection],
