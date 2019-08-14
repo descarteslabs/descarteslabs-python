@@ -6,7 +6,7 @@ from ...core import _resolve_lambdas
 from ...core.tests import utils
 
 from .... import env
-from ...containers import Dict, List
+from ...containers import Dict, List, Tuple
 from ...primitives import Float, Int, Bool, NoneType, Any
 
 from .. import (
@@ -165,6 +165,7 @@ base_types = [ImageCollection, Image, Int, Any]
         ["sin", (), ImageCollection],
         ["tan", (), ImageCollection],
         ["__reversed__", (), ImageCollection],
+        ["__getitem__", [Any, Int], Image],
         ["__lt__", base_types + [Float], ImageCollection],
         ["__le__", base_types + [Float], ImageCollection],
         ["__eq__", base_types + [Float, Bool], ImageCollection],
@@ -207,3 +208,18 @@ def test_all_operators(operator, accepted_types, return_type):
     utils.operator_test(
         ImageCollection([]), all_values_to_try, operator, accepted_types, return_type
     )
+
+
+def test_head():
+    col = ImageCollection.from_id("foo")
+    assert isinstance(col.head(0), ImageCollection)
+
+
+def test_tail():
+    col = ImageCollection.from_id("foo")
+    assert isinstance(col.tail(0), ImageCollection)
+
+
+def test_partition():
+    col = ImageCollection.from_id("foo")
+    assert isinstance(col.partition(0), Tuple[ImageCollection, ImageCollection])

@@ -300,9 +300,58 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         return self._from_apply("ImageCollection.concat", self, other)
 
-    def one(self):
-        "A single `Image` from the `ImageCollection`"
-        return Image._from_apply("ImageCollection.one", self)
+    @typecheck_promote(Int)
+    def head(self, n):
+        """
+        `ImageCollection` of the first ``n`` Images
+
+        Parameters
+        ----------
+        n: Int
+            Can be longer than the `ImageCollection` without error,
+            in which case the whole `ImageCollection` is returned.
+
+        Returns
+        -------
+        imgs: ImageCollection
+        """
+        return ImageCollection._from_apply("ImageCollection.head", self, n)
+
+    @typecheck_promote(Int)
+    def tail(self, n):
+        """
+        `ImageCollection` of the last ``n`` Images
+
+        Parameters
+        ----------
+        n: Int
+            Can be longer than the `ImageCollection` without error,
+            in which case the whole `ImageCollection` is returned.
+
+        Returns
+        -------
+        imgs: ImageCollection
+        """
+        return ImageCollection._from_apply("ImageCollection.tail", self, n)
+
+    @typecheck_promote(Int)
+    def partition(self, i):
+        """
+        Split this `ImageCollection` into two collections at index ``i``.
+
+        Parameters
+        ----------
+        i: Int
+            The first `ImageCollection` will contain all Images up to but not including index ``i``.
+            The second will contain the `Image` at index ``i`` and all subsequent ones.
+
+        Returns
+        -------
+        Tuple[ImageCollection, ImageCollection]
+        """
+        return Tuple[ImageCollection, ImageCollection]._from_apply(
+            "ImageCollection.partition", self, i
+        )
 
     @typecheck_promote(
         (lambda: ImageCollection, Image, Geometry, Feature, FeatureCollection),
@@ -858,6 +907,11 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
     def __reversed__(self):
         return self._from_apply("reversed", self)
+
+    @typecheck_promote(Int)
+    def __getitem__(self, item):
+        # TODO(gabe): slices
+        return Image._from_apply("getitem", self, item)
 
     # Binary comparators
     @typecheck_promote((Image, lambda: ImageCollection, Int, Float))
