@@ -19,6 +19,9 @@ unmarshal.register("Tuple", unmarshal.astype(tuple))
 unmarshal.register("Dict", unmarshal.astype(dict))
 unmarshal.register("Datetime", datetime.datetime)
 unmarshal.register("Timedelta", datetime.timedelta)
+unmarshal.register("AOI", unmarshal.astype(dict))
+unmarshal.register("DLTile", unmarshal.astype(dict))
+unmarshal.register("XYZTile", unmarshal.astype(dict))
 
 
 class EqualityMixin(object):
