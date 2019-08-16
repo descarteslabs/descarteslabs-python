@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import six
 import timeit
 import collections
@@ -67,7 +69,7 @@ def get(key, body, env, debug=None):
         if debug is not None:
             indents = "|   " * debug.depth
             formatted_expr = repr(expr)[: max(10, 80 - len(indents))]
-            print("{}|-- {!r}: {}".format(indents, key, formatted_expr))
+            print("{}┌── {!r}: {}".format(indents, key, formatted_expr))
             debug = DebugState(debug.depth + 1)
             start = timeit.default_timer()
 
@@ -79,7 +81,7 @@ def get(key, body, env, debug=None):
                 "\n", " "
             )
             print(
-                "{}|-- {!r}: {:.3f}s -> {}".format(
+                "{}└── {!r}: {:.3f}s -> {}".format(
                     indents, key, elapsed, formatted_result
                 )
             )
@@ -97,7 +99,7 @@ def get(key, body, env, debug=None):
             formatted_result = repr(precomputed)[: max(10, 80 - len(indents))].replace(
                 "\n", " "
             )
-            print("{}|-- Precomputed {!r}: {}".format(indents, key, formatted_result))
+            print("{}  * Precomputed {!r}: {}".format(indents, key, formatted_result))
 
         return precomputed
 
