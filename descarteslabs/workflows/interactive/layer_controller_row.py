@@ -296,7 +296,8 @@ class LayerControllerRow(widgets.Box):
 
                 with self.layer.hold_trait_notifications():
                     for band, (scale_min, scale_max) in zip(arr, scales_attrs):
-                        data = band.compressed()  # drop masked data
+                        if isinstance(band, np.ma.MaskedArray):
+                            data = band.compressed()  # drop masked data
                         min, max = np.percentile(data, [2, 98])
 
                         setattr(self.layer, scale_min, min)
