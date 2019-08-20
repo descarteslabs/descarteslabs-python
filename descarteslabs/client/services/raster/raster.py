@@ -30,6 +30,7 @@ from descarteslabs.common.shapely_support import shapely_to_geojson
 
 
 DEFAULT_MAX_WORKERS = 8
+MAXIMUM_MAX_WORKERS = 25
 
 
 def as_json_string(str_or_dict):
@@ -704,6 +705,17 @@ class Raster(Service):
         max_workers = kwargs.pop(
             "max_workers", min(len(id_groups), DEFAULT_MAX_WORKERS)
         )
+        if max_workers is None:
+            max_workers = DEFAULT_MAX_WORKERS
+
+        if max_workers > MAXIMUM_MAX_WORKERS:
+            logging.warning(
+                "max_workers greater than {max_workers}. Setting max workers from {original} to {max_workers}".format(
+                    max_workers=MAXIMUM_MAX_WORKERS, original=max_workers
+                )
+            )
+            max_workers = MAXIMUM_MAX_WORKERS
+
         try:
             futures = concurrent.futures
         except ImportError:
@@ -808,7 +820,8 @@ class Raster(Service):
             reflectance algorithm to the output.
         :param int max_workers: Maximum number of threads over which to
             parallelize individual ndarray calls. If ``None``, will be set to the minimum
-            of the number of inputs and ``DEFAULT_MAX_WORKERS``.
+            of the number of inputs and ``DEFAULT_MAX_WORKERS``. Maximum number of workers allowed
+            is 25.
 
         :return: A tuple of ``(stack, metadata)``.
 

@@ -12,6 +12,7 @@ Changelog
 ### Added
 
 ### Changed
+- `Raster.stack` `max_workers` is limited to 25 workers, and will raise a warning and set the value to 25 if a value more than 25 is specified.
 
 ## [0.24.0] - 2019-08-01
 ### Added
