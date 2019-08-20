@@ -61,6 +61,9 @@ descartes_auth = Auth.from_environment_or_token_json()
 metadata = Metadata(auth=descartes_auth)
 places = Places(auth=descartes_auth)
 raster = Raster(auth=descartes_auth)
+storage = Storage(auth=descartes_auth)
+tasks = Tasks(auth=descartes_auth)
+vector = Vector(auth=descartes_auth)
 properties = GenericProperties()
 
 __all__ = [
@@ -68,8 +71,11 @@ __all__ = [
     "metadata",
     "places",
     "raster",
+    "storage",
+    "tasks",
+    "vector",
     "properties",
     "Auth",
-    "exceptions",
+    "exceptions"
 ] + services.__all__
 __author__ = "Descartes Labs"
