@@ -203,7 +203,7 @@ class LayerControllerRow(widgets.Box):
         self._widgets["cmap_scales"] = [cmap_min, cmap_max]
 
         checkerboard = widgets.ToggleButton(
-            value=True,
+            value=layer.checkerboard,
             description="",
             tooltip="Checkerboard missing data",
             icon="th",
