@@ -28,9 +28,7 @@ FAKE_TOKEN = "foo.bar.sig"
 class TestService(unittest.TestCase):
     def test_session_token(self):
         service = Service("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
-        self.assertEqual(
-            service.session.headers.get("Authorization"), add_bearer(FAKE_TOKEN)
-        )
+        assert service.session.headers.get("Authorization") == add_bearer(FAKE_TOKEN)
 
     def test_client_session_header(self):
         service = Service("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
@@ -40,9 +38,7 @@ class TestService(unittest.TestCase):
 class TestJsonApiService(unittest.TestCase):
     def test_session_token(self):
         service = JsonApiService("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
-        self.assertEqual(
-            service.session.headers.get("Authorization"), add_bearer(FAKE_TOKEN)
-        )
+        assert service.session.headers.get("Authorization") == add_bearer(FAKE_TOKEN)
 
     def test_client_session_header(self):
         service = JsonApiService("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
@@ -52,9 +48,9 @@ class TestJsonApiService(unittest.TestCase):
 class TestWrappedSession(unittest.TestCase):
     def test_pickling(self):
         session = WrappedSession(FAKE_URL, timeout=10)
-        self.assertEqual(10, session.timeout)
+        assert 10 == session.timeout
         unpickled = pickle.loads(pickle.dumps(session))
-        self.assertEqual(10, unpickled.timeout)
+        assert 10 == unpickled.timeout
 
     @mock.patch.object(requests.Session, "request")
     def test_request_group_header_none(self, request):

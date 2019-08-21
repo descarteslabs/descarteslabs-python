@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+import pytest
 import unittest
 import os
 import sys
@@ -52,13 +53,10 @@ class TestCatalog(unittest.TestCase):
         unsupported_dtypes = ["uint64"]
 
         for dtype in unsupported_dtypes:
-            self.assertRaises(
-                TypeError,
-                self.instance.upload_ndarray,
-                np.zeros((10, 10), dtype=dtype),
-                "product",
-                "key",
-            )
+            with pytest.raises(TypeError):
+                self.instance.upload_ndarray(
+                    np.zeros((10, 10), dtype=dtype), "product", "key"
+                )
 
         for dtype in Catalog.UPLOAD_NDARRAY_SUPPORTED_DTYPES:
             self.instance.upload_ndarray(
@@ -66,42 +64,37 @@ class TestCatalog(unittest.TestCase):
             )
 
     def test_upload_invalid_id(self):
-        self.assertRaises(
-            TypeError,
-            self.instance.upload_ndarray,
-            np.zeros((10, 10)),
-            # invalid product id
-            {"foo": "bar"},
-            "key",
-        )
+        with pytest.raises(TypeError):
+            self.instance.upload_ndarray(
+                np.zeros((10, 10)),
+                # invalid product id
+                {"foo": "bar"},
+                "key",
+            )
 
     @unittest.skipIf(sys.version_info.major == 3, "Test only makes sense in py2")
     def test_upload_image_deprecated_file_type(self):
         # in py2 NamedTemporaryFile produces a file object not a IOBase object
         with NamedTemporaryFile() as tmp:
-            self.assertRaises(Exception, self.instance.upload_image, tmp, "product")
+            with pytest.raises(Exception):
+                self.instance.upload_image(tmp, "product")
 
     def test_upload_image_bad_path(self):
         name = None
         with NamedTemporaryFile() as tmp:
             name = tmp.file
-        self.assertRaises(Exception, self.instance.upload_image, name, "product")
+        with pytest.raises(Exception):
+            self.instance.upload_image(name, "product")
 
     def test_upload_image_multi_file_no_list(self):
         with NamedTemporaryFile() as tmp:
-            self.assertRaises(
-                ValueError, self.instance.upload_image, tmp.name, "product", multi=True
-            )
+            with pytest.raises(ValueError):
+                self.instance.upload_image(tmp.name, "product", multi=True)
 
     def test_upload_image_multi_file_no_image_id(self):
         with NamedTemporaryFile() as tmp:
-            self.assertRaises(
-                ValueError,
-                self.instance.upload_image,
-                [tmp.name, tmp.name],
-                "product",
-                multi=True,
-            )
+            with pytest.raises(ValueError):
+                self.instance.upload_image([tmp.name, tmp.name], "product", multi=True)
 
     @responses.activate
     def test_upload_image(self):
@@ -144,9 +137,7 @@ class TestCatalog(unittest.TestCase):
         self.mock_response(responses.POST, json={})
         self.instance.add_image("product", "fake_image_id")
         request = responses.calls[0].request
-        self.assertEqual(
-            json.loads(request.body.decode("utf-8"))["storage_state"], "available"
-        )
+        assert json.loads(request.body.decode("utf-8"))["storage_state"] == "available"
 
 
 if __name__ == "__main__":

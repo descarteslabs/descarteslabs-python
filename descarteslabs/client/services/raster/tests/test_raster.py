@@ -18,6 +18,7 @@ import os
 import re
 import sys
 import tempfile
+import pytest
 import unittest
 from shapely.geometry import shape
 
@@ -79,7 +80,7 @@ class RasterTest(unittest.TestCase):
             },
         )
         tiles = self.raster.dltiles_from_shape(30.0, 2048, 16, a_geometry)
-        self.assertEqual([1, 2], [t.properties.count for t in tiles.features])
+        assert [1, 2] == [t.properties.count for t in tiles.features]
 
     @responses.activate
     def test_dltiles_from_shapely_shape(self):
@@ -93,7 +94,7 @@ class RasterTest(unittest.TestCase):
             },
         )
         tiles = self.raster.dltiles_from_shape(30.0, 2048, 16, shape(a_geometry))
-        self.assertEqual([1, 2], [t.properties.count for t in tiles.features])
+        assert [1, 2] == [t.properties.count for t in tiles.features]
 
     @responses.activate
     def test_iter_dltiles_from_shape(self):
@@ -109,7 +110,7 @@ class RasterTest(unittest.TestCase):
             {"features": [{"type": "Feature", "properties": {"count": 2}}]},
         )
         tiles = self.raster.dltiles_from_shape(30.0, 2048, 16, a_geometry)
-        self.assertEqual([1, 2], [t.properties.count for t in tiles.features])
+        assert [1, 2] == [t.properties.count for t in tiles.features]
 
     @responses.activate
     def test_iter_dltiles_from_shapely_shape(self):
@@ -125,12 +126,12 @@ class RasterTest(unittest.TestCase):
             {"features": [{"type": "Feature", "properties": {"count": 2}}]},
         )
         tiles = self.raster.dltiles_from_shape(30.0, 2048, 16, shape(a_geometry))
-        self.assertEqual([1, 2], [t.properties.count for t in tiles.features])
+        assert [1, 2] == [t.properties.count for t in tiles.features]
 
     def test_dltile_invalid(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.raster.dltile(None)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.raster.dltile("")
 
     @responses.activate
@@ -143,8 +144,8 @@ class RasterTest(unittest.TestCase):
         )
         self.mock_response(responses.POST, json=None, body=response)
         raster = self.raster.raster(["fakeid"])
-        self.assertEqual(file_data.encode("utf-8"), raster["files"]["mosaic.tiff"])
-        self.assertEqual(raster_meta["metadata"], raster["metadata"])
+        assert file_data.encode("utf-8") == raster["files"]["mosaic.tiff"]
+        assert raster_meta["metadata"] == raster["metadata"]
 
     @responses.activate
     def test_raster_save(self):
@@ -161,9 +162,9 @@ class RasterTest(unittest.TestCase):
             raster = self.raster.raster(
                 ["fakeid"], outfile_basename=os.path.splitext(temp.name)[0], save=True
             )
-            self.assertEqual(file_data.encode("utf-8"), raster["files"][temp.name])
+            assert file_data.encode("utf-8") == raster["files"][temp.name]
             with open(temp.name) as data:
-                self.assertEqual(file_data, data.read())
+                assert file_data == data.read()
 
     @responses.activate
     @mock.patch.object(
@@ -180,7 +181,7 @@ class RasterTest(unittest.TestCase):
         )
         self.mock_response(responses.POST, json=None, body=content.getvalue())
         array, meta = self.raster.ndarray(["fakeid"])
-        self.assertEqual(expected_metadata, meta)
+        assert expected_metadata == meta
         np.testing.assert_array_equal(expected_array, array)
 
     @unittest.skipIf(sys.platform.startswith("win"), "no blosc on Windows")
@@ -191,7 +192,7 @@ class RasterTest(unittest.TestCase):
         content = self.create_blosc_response(expected_metadata, expected_array)
         self.mock_response(responses.POST, json=None, body=content, stream=True)
         array, meta = self.raster.ndarray(["fakeid"])
-        self.assertEqual(expected_metadata, meta)
+        assert expected_metadata == meta
         np.testing.assert_array_equal(expected_array, array)
 
     @responses.activate
@@ -205,7 +206,7 @@ class RasterTest(unittest.TestCase):
         )
         np.testing.assert_array_equal(expected_array, stack[0, :])
         np.testing.assert_array_equal(expected_array, stack[1, :])
-        self.assertEqual([expected_metadata] * 2, meta)
+        assert [expected_metadata] * 2 == meta
 
     @unittest.skipIf(sys.platform.startswith("win"), "no blosc on Windows")
     @mock.patch.object(
@@ -246,15 +247,15 @@ class RasterTest(unittest.TestCase):
         resolution = 960
         dimensions = (128, 128)
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.raster.stack(keys)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.raster.stack(keys, resolution=resolution)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.raster.stack(keys, dimensions=dimensions)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.raster.stack(keys, bounds=bounds)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.raster.stack(keys, resolution=resolution, place=place)
 
 
@@ -263,10 +264,10 @@ class UtilitiesTest(unittest.TestCase):
         d = {"a": "b"}
         truth = json.dumps(d)
 
-        self.assertEqual(as_json_string(d), truth)
+        assert as_json_string(d) == truth
         s = '{"a": "b"}'
-        self.assertEqual(as_json_string(s), truth)
-        self.assertEqual(as_json_string(None), None)
+        assert as_json_string(s) == truth
+        assert as_json_string(None) is None
 
 
 if __name__ == "__main__":

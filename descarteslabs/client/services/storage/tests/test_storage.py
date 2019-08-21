@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pytest
 import unittest
 import responses
 from tempfile import NamedTemporaryFile
@@ -49,7 +50,7 @@ class TestStorage(StorageClientTestCase):
             tmp.write(b"hello world")
 
             self.client.set_file("foo", tmp)
-            self.assertEqual(upload_url, responses.calls[1].request.url)
+            assert upload_url == responses.calls[1].request.url
 
     @responses.activate
     def test_get_file(self):
@@ -58,22 +59,22 @@ class TestStorage(StorageClientTestCase):
 
         with NamedTemporaryFile() as tmp:
             self.client.get_file("foo", tmp)
-            self.assertEqual(len(data), tmp.tell())
+            assert len(data) == tmp.tell()
 
     @responses.activate
     def test_exists_true(self):
         self.mock_response(responses.HEAD, None, 200)
-        self.assertTrue(self.client.exists("foo"))
+        assert self.client.exists("foo")
 
     @responses.activate
     def test_exists_false(self):
         self.mock_response(responses.HEAD, None, 404)
-        self.assertFalse(self.client.exists("foo"))
+        assert not self.client.exists("foo")
 
     @responses.activate
     def test_exists_bad_req(self):
         self.mock_response(responses.HEAD, None, 500)
-        with self.assertRaises(ServerError):
+        with pytest.raises(ServerError):
             self.client.exists("foo")
 
 

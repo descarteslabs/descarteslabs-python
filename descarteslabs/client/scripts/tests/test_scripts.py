@@ -61,7 +61,7 @@ class TestScripts(unittest.TestCase):
 
         with mock.patch("sys.stdout", new_callable=StringIO) as out:
             handle(parser.parse_args(["auth", "groups"]))
-            self.assertEqual(out.getvalue().strip(), '["public"]')
+            assert out.getvalue().strip() == '["public"]'
 
     def test_places_find(self):
         with mock.patch("sys.stdout", new_callable=StringIO) as out:
@@ -76,4 +76,4 @@ class TestScripts(unittest.TestCase):
                     "placetype": "region",
                 }
             ]
-            self.assertEqual(json.loads(out.getvalue().strip()), iowa)
+            assert json.loads(out.getvalue().strip()) == iowa

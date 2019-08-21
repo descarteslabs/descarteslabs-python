@@ -15,6 +15,7 @@
 import base64
 import datetime
 import json
+import pytest
 import unittest
 import warnings
 import six
@@ -75,9 +76,9 @@ class TestAuth(unittest.TestCase):
                 client_secret="secret",
                 refresh_token="mismatched_refresh_token",
             )
-            self.assertEqual(1, len(w))
-            self.assertEqual("mismatched_refresh_token", auth.refresh_token)
-            self.assertEqual("mismatched_refresh_token", auth.client_secret)
+            assert 1 == len(w)
+            assert "mismatched_refresh_token" == auth.refresh_token
+            assert "mismatched_refresh_token" == auth.client_secret
 
     @responses.activate
     def test_get_token(self):
@@ -92,7 +93,7 @@ class TestAuth(unittest.TestCase):
         )
         auth._get_token()
 
-        self.assertEqual("access_token", auth._token)
+        assert "access_token" == auth._token
 
     @responses.activate
     def test_get_token_legacy(self):
@@ -107,18 +108,18 @@ class TestAuth(unittest.TestCase):
         )
         auth._get_token()
 
-        self.assertEqual("id_token", auth._token)
+        assert "id_token" == auth._token
 
     @patch("descarteslabs.client.auth.Auth.payload", new=dict(sub="asdf"))
     def test_get_namespace(self):
         auth = Auth(
             token_info_path=None, client_secret="client_secret", client_id="client_id"
         )
-        self.assertEqual(auth.namespace, "3da541559918a808c2402bba5012f6c60b27661c")
+        assert auth.namespace == "3da541559918a808c2402bba5012f6c60b27661c"
 
     def test_init_token_no_path(self):
         auth = Auth(jwt_token="token", token_info_path=None, client_id="foo")
-        self.assertEqual("token", auth._token)
+        assert "token" == auth._token
 
     @responses.activate
     def test_get_token_schema_internal_only(self):
@@ -132,14 +133,14 @@ class TestAuth(unittest.TestCase):
         )
         auth._get_token()
 
-        self.assertEqual("access_token", auth._token)
+        assert "access_token" == auth._token
 
         auth = Auth(
             token_info_path=None, client_secret="refresh_token", client_id="client_id"
         )
         auth._get_token()
 
-        self.assertEqual("access_token", auth._token)
+        assert "access_token" == auth._token
 
     @responses.activate
     def test_get_token_schema_legacy_internal_only(self):
@@ -154,7 +155,7 @@ class TestAuth(unittest.TestCase):
             client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
         )
         auth._get_token()
-        self.assertEqual("id_token", auth._token)
+        assert "id_token" == auth._token
 
     @patch("descarteslabs.client.auth.Auth._get_token")
     def test_token(self, _get_token):
@@ -171,7 +172,7 @@ class TestAuth(unittest.TestCase):
         )
         auth._token = token
 
-        self.assertEqual(auth.token, token)
+        assert auth.token == token
         _get_token.assert_not_called()
 
     @patch("descarteslabs.client.auth.Auth._get_token")
@@ -189,7 +190,7 @@ class TestAuth(unittest.TestCase):
         )
         auth._token = token
 
-        self.assertEqual(auth.token, token)
+        assert auth.token == token
         _get_token.assert_called_once()
 
     @patch("descarteslabs.client.auth.Auth._get_token", side_effect=AuthError("error"))
@@ -207,7 +208,7 @@ class TestAuth(unittest.TestCase):
         )
         auth._token = token
 
-        with self.assertRaises(AuthError):
+        with pytest.raises(AuthError):
             auth.token
         _get_token.assert_called_once()
 
@@ -229,7 +230,7 @@ class TestAuth(unittest.TestCase):
         )
         auth._token = token
 
-        self.assertEqual(auth.token, token)
+        assert auth.token == token
         _get_token.assert_called_once()
 
     def test_auth_init_env_vars(self):
@@ -251,20 +252,18 @@ class TestAuth(unittest.TestCase):
                 refresh_token="client_secret",
                 jwt_token="jwt_token",
             )
-            self.assertEqual(auth.client_secret, "client_secret")
-            self.assertEqual(auth.client_id, "client_id")
+            assert auth.client_secret == "client_secret"
+            assert auth.client_id == "client_id"
 
         # should work with namespaced env vars
         with patch.dict("descarteslabs.client.auth.auth.os.environ", environ):
             auth = Auth()
-            self.assertEqual(
-                # when refresh_token and client_secret do not match,
-                # the Auth implementation sets both to the value of
-                # refresh_token
-                auth.client_secret,
-                environ.get("DESCARTESLABS_REFRESH_TOKEN"),
-            )
-            self.assertEqual(auth.client_id, environ.get("DESCARTESLABS_CLIENT_ID"))
+            # when refresh_token and client_secret do not match,
+            # the Auth implementation sets both to the value of
+            # refresh_token
+            assert auth.client_secret == \
+                environ.get("DESCARTESLABS_REFRESH_TOKEN")
+            assert auth.client_id == environ.get("DESCARTESLABS_CLIENT_ID")
 
         # remove the namespaced ones, except the refresh token because
         # Auth does not recognize a REFRESH_TOKEN environment variable
@@ -276,10 +275,8 @@ class TestAuth(unittest.TestCase):
         # should fallback to legacy env vars
         with patch.dict("descarteslabs.client.auth.auth.os.environ", environ):
             auth = Auth()
-            self.assertEqual(
-                auth.client_secret, environ.get("DESCARTESLABS_REFRESH_TOKEN")
-            )
-            self.assertEqual(auth.client_id, environ.get("CLIENT_ID"))
+            assert auth.client_secret == environ.get("DESCARTESLABS_REFRESH_TOKEN")
+            assert auth.client_id == environ.get("CLIENT_ID")
 
 
 if __name__ == "__main__":

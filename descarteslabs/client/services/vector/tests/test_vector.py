@@ -14,6 +14,7 @@
 
 import io
 import re
+import pytest
 import unittest
 import json
 import responses
@@ -155,7 +156,7 @@ class VectorsTest(ClientTestCase):
             s += "{}".format(self.attrs)
             s += "}\n"
 
-        with self.assertRaises(Exception):
+        with pytest.raises(Exception):
             self.client.upload_features(s, "test")
 
     @responses.activate
@@ -167,11 +168,9 @@ class VectorsTest(ClientTestCase):
 
         self.client.search_features("test-product-id", geometry=self.attrs["geometry"])
 
-        self.assertEqual(len(responses.calls), 1)
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        self.assertEqual(
-            json.loads(request.body.decode("utf-8"))["geometry"], self.attrs["geometry"]
-        )
+        assert json.loads(request.body.decode("utf-8"))["geometry"] == self.attrs["geometry"]
 
     @responses.activate
     def test_search_features_shapely(self):
@@ -184,11 +183,9 @@ class VectorsTest(ClientTestCase):
             "test-product-id", geometry=shape(self.attrs["geometry"])
         )
 
-        self.assertEqual(len(responses.calls), 1)
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        self.assertEqual(
-            json.loads(request.body.decode("utf-8"))["geometry"], self.attrs["geometry"]
-        )
+        assert json.loads(request.body.decode("utf-8"))["geometry"] == self.attrs["geometry"]
 
     @responses.activate
     def test_create_product_from_query(self):
@@ -196,13 +193,13 @@ class VectorsTest(ClientTestCase):
 
         r = self.client.create_product_from_query("foo", "Foo", "Foo is a bar", "baz")
 
-        self.assertEqual("2b4552ff4b8a4bb5bb278c94005db50", r.data.id)
+        assert "2b4552ff4b8a4bb5bb278c94005db50" == r.data.id
 
     @responses.activate
     def test_create_product_from_query_exception(self):
         self.mock_response(responses.POST, {}, status=400)
 
-        with self.assertRaises(BadRequestError):
+        with pytest.raises(BadRequestError):
             self.client.create_product_from_query("foo", "Foo", "Foo is a bar", "baz")
 
     @responses.activate
@@ -211,13 +208,13 @@ class VectorsTest(ClientTestCase):
 
         r = self.client.get_product_from_query_status("2b4552ff4b8a4bb5bb278c94005db50")
 
-        self.assertEqual(r.data.id, "c589d688-3230-4caf-9f9d-18854f71e91d")
+        assert r.data.id == "c589d688-3230-4caf-9f9d-18854f71e91d"
 
     @responses.activate
     def test_get_product_from_query_status_not_found(self):
         self.mock_response(responses.GET, self.status_response, status=404)
 
-        with self.assertRaises(NotFoundError):
+        with pytest.raises(NotFoundError):
             self.client.get_product_from_query_status("2b4552ff4b8a4bb5bb278c94005db50")
 
     @responses.activate
@@ -226,13 +223,13 @@ class VectorsTest(ClientTestCase):
 
         r = self.client.delete_features_from_query("foo", "bar", "baz")
 
-        self.assertEqual("2b4552ff4b8a4bb5bb278c94005db50", r.data.id)
+        assert "2b4552ff4b8a4bb5bb278c94005db50" == r.data.id
 
     @responses.activate
     def delete_features_from_query_bad_request(self):
         self.mock_response(responses.DELETE, self.product_response, status=400)
 
-        with self.assertRaises(BadRequestError):
+        with pytest.raises(BadRequestError):
             self.client.delete_features_from_query("foo", "bar", "baz")
 
     @responses.activate
@@ -240,13 +237,13 @@ class VectorsTest(ClientTestCase):
         self.mock_response(responses.GET, self.status_response, status=200)
 
         r = self.client.get_product_from_query_status("2b4552ff4b8a4bb5bb278c94005db50")
-        self.assertEqual(r.data.id, "c589d688-3230-4caf-9f9d-18854f71e91d")
+        assert r.data.id == "c589d688-3230-4caf-9f9d-18854f71e91d"
 
     @responses.activate
     def test_get_delete_features_status_not_found(self):
         self.mock_response(responses.GET, self.status_response, status=404)
 
-        with self.assertRaises(NotFoundError):
+        with pytest.raises(NotFoundError):
             self.client.get_product_from_query_status("2b4552ff4b8a4bb5bb278c94005db50")
 
     @responses.activate
@@ -277,7 +274,7 @@ class VectorsTest(ClientTestCase):
         )
 
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body.decode("utf-8")), expected_req_body)
+        assert json.loads(request.body.decode("utf-8")) == expected_req_body
 
     @responses.activate
     def test_create_feature_error(self):
@@ -287,7 +284,7 @@ class VectorsTest(ClientTestCase):
             "coordinates": [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]],
         }
 
-        with self.assertRaises(BadRequestError):
+        with pytest.raises(BadRequestError):
             self.client.create_feature(
                 "2b4552ff4b8a4bb5bb278c94005db50", non_ccw, fix_geometry="reject"
             )
@@ -309,7 +306,7 @@ class VectorsTest(ClientTestCase):
         }
 
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body.decode("utf-8")), expected_req_body)
+        assert json.loads(request.body.decode("utf-8")) == expected_req_body
 
     @responses.activate
     def test_create_features_correct_wo(self):
@@ -398,7 +395,7 @@ class VectorsTest(ClientTestCase):
         }
 
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body.decode("utf-8")), expected_req_body)
+        assert json.loads(request.body.decode("utf-8")) == expected_req_body
 
     @responses.activate
     def test_create_features_error(self):
@@ -436,7 +433,7 @@ class VectorsTest(ClientTestCase):
             },
         ]
 
-        with self.assertRaises(BadRequestError):
+        with pytest.raises(BadRequestError):
             self.client.create_features(
                 "2b4552ff4b8a4bb5bb278c94005db50", non_ccw_list, fix_geometry="reject"
             )
@@ -488,7 +485,7 @@ class VectorsTest(ClientTestCase):
             ]
         }
         request = responses.calls[0].request
-        self.assertEqual(json.loads(request.body.decode("utf-8")), expected_req_body)
+        assert json.loads(request.body.decode("utf-8")) == expected_req_body
 
 
 if __name__ == "__main__":

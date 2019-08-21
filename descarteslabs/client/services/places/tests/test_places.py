@@ -38,36 +38,36 @@ class TestPlaces(unittest.TestCase):
     def test_placetypes(self):
         self.mock_response(responses.GET, ["continent", "country"])
         data = self.instance.placetypes()
-        self.assertEqual(2, len(data))
+        assert 2 == len(data)
 
     @responses.activate
     def test_find(self):
         self.mock_response(responses.GET, [{"id": 85632693}])
         r = self.instance.find("united-states_iowa")
-        self.assertEqual(1, len(r))
+        assert 1 == len(r)
 
     @responses.activate
     def test_search(self):
         self.mock_response(responses.GET, [{"id": 85632693}])
         r = self.instance.search("texas")
-        self.assertEqual(1, len(r))
+        assert 1 == len(r)
 
         r = self.instance.search("texas", country="united-states")
-        self.assertEqual(1, len(r))
+        assert 1 == len(r)
 
         r = self.instance.search("texas", country="united-states", placetype="county")
-        self.assertEqual(1, len(r))
+        assert 1 == len(r)
 
         r = self.instance.search(
             "texas", country="united-states", region="oklahoma", placetype="county"
         )
-        self.assertEqual(1, len(r))
+        assert 1 == len(r)
 
     @responses.activate
     def test_shape(self):
         self.mock_response(responses.GET, {"id": 85632693})
         r = self.instance.shape("north-america_united-states_iowa")
-        self.assertEqual(85632693, r["id"])
+        assert 85632693 == r["id"]
 
     @responses.activate
     def test_prefix(self):
@@ -76,12 +76,12 @@ class TestPlaces(unittest.TestCase):
             responses.GET, {"type": "FeatureCollection", "features": [{"id": 85632693}]}
         )
         r = self.instance.prefix("north-america_united-states_iowa")
-        self.assertEqual(1, len(r["features"]))
+        assert 1 == len(r["features"])
 
         r = self.instance.prefix(
             "north-america_united-states_iowa", placetype="district"
         )
-        self.assertEqual(1, len(r["features"]))
+        assert 1 == len(r["features"])
 
 
 if __name__ == "__main__":

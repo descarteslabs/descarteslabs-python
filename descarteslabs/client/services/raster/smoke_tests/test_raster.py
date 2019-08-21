@@ -15,6 +15,7 @@
 import os
 import tempfile
 import shutil
+import pytest
 import unittest
 import json
 import mock
@@ -43,12 +44,10 @@ class TestRaster(unittest.TestCase):
             bands=["red", "green", "blue", "alpha"],
             resolution=960,
         )
-        self.assertTrue("metadata" in r)
-        self.assertTrue("files" in r)
-        self.assertTrue(
-            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif"
+        assert "metadata" in r
+        assert "files" in r
+        assert "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif" \
             in r["files"]
-        )
 
         # test with scene id
         r = self.raster.raster(
@@ -56,12 +55,10 @@ class TestRaster(unittest.TestCase):
             bands=["red", "green", "blue", "alpha"],
             resolution=960,
         )
-        self.assertTrue("metadata" in r)
-        self.assertTrue("files" in r)
-        self.assertTrue(
-            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif"
+        assert "metadata" in r
+        assert "files" in r
+        assert "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif" \
             in r["files"]
-        )
 
     def test_raster_save(self):
         tmpdir = tempfile.mkdtemp()
@@ -76,9 +73,7 @@ class TestRaster(unittest.TestCase):
             with open("{}/my-raster.tif".format(tmpdir), "rb") as f:
                 f.seek(0, os.SEEK_END)
                 length = f.tell()
-            self.assertEqual(
-                length, len(response["files"]["{}/my-raster.tif".format(tmpdir)])
-            )
+            assert length == len(response["files"]["{}/my-raster.tif".format(tmpdir)])
         finally:
             shutil.rmtree(tmpdir)
 
@@ -88,9 +83,9 @@ class TestRaster(unittest.TestCase):
             bands=["red", "green", "blue", "alpha"],
             resolution=960,
         )
-        self.assertEqual(data.shape, (249, 245, 4))
-        self.assertEqual(data.dtype, np.uint16)
-        self.assertEqual(len(metadata["bands"]), 4)
+        assert data.shape == (249, 245, 4)
+        assert data.dtype == np.uint16
+        assert len(metadata["bands"]) == 4
 
     def test_ndarray_single_band(self):
         data, metadata = self.raster.ndarray(
@@ -98,9 +93,9 @@ class TestRaster(unittest.TestCase):
             bands=["red"],
             resolution=960,
         )
-        self.assertEqual(data.shape, (249, 245))
-        self.assertEqual(data.dtype, np.uint16)
-        self.assertEqual(len(metadata["bands"]), 1)
+        assert data.shape == (249, 245)
+        assert data.dtype == np.uint16
+        assert len(metadata["bands"]) == 1
 
     def test_ndarray_no_blosc(self):
         args = dict(
@@ -119,7 +114,7 @@ class TestRaster(unittest.TestCase):
             r2, meta2 = self.raster.ndarray(**args)
 
         np.testing.assert_array_equal(r, r2)
-        self.assertEqual(meta, meta2)
+        assert meta == meta2
 
     def test_stack_dltile(self):
         dltile = "128:16:960.0:15:-2:37"
@@ -131,10 +126,10 @@ class TestRaster(unittest.TestCase):
         stack, metadata = self.raster.stack(
             keys, dltile=dltile, bands=["red", "green", "blue", "alpha"]
         )
-        self.assertEqual(stack.shape, (2, 160, 160, 4))
-        self.assertEqual(stack.dtype, np.uint16)
-        self.assertEqual(len(metadata), 2)
-        self.assertNotEqual(metadata[0], metadata[1])
+        assert stack.shape == (2, 160, 160, 4)
+        assert stack.dtype == np.uint16
+        assert len(metadata) == 2
+        assert metadata[0] != metadata[1]
 
     def test_stack_dltile_gdal_order(self):
         dltile = "128:16:960.0:15:-2:37"
@@ -146,10 +141,10 @@ class TestRaster(unittest.TestCase):
         stack, metadata = self.raster.stack(
             keys, dltile=dltile, bands=["red", "green", "blue", "alpha"], order="gdal"
         )
-        self.assertEqual(stack.shape, (2, 4, 160, 160))
-        self.assertEqual(stack.dtype, np.uint16)
-        self.assertEqual(len(metadata), 2)
-        self.assertNotEqual(metadata[0], metadata[1])
+        assert stack.shape == (2, 4, 160, 160)
+        assert stack.dtype == np.uint16
+        assert len(metadata) == 2
+        assert metadata[0] != metadata[1]
 
     def test_stack_one_image(self):
         dltile = "128:16:960.0:15:-2:37"
@@ -158,18 +153,18 @@ class TestRaster(unittest.TestCase):
         stack, metadata = self.raster.stack(
             keys, dltile=dltile, bands=["red", "green", "blue", "alpha"]
         )
-        self.assertEqual(stack.shape, (1, 160, 160, 4))
-        self.assertEqual(stack.dtype, np.uint16)
-        self.assertEqual(len(metadata), 1)
+        assert stack.shape == (1, 160, 160, 4)
+        assert stack.dtype == np.uint16
+        assert len(metadata) == 1
 
     def test_stack_one_band(self):
         dltile = "128:16:960.0:15:-2:37"
         keys = ["landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"]
 
         stack, metadata = self.raster.stack(keys, dltile=dltile, bands=["red"])
-        self.assertEqual(stack.shape, (1, 160, 160, 1))
-        self.assertEqual(stack.dtype, np.uint16)
-        self.assertEqual(len(metadata), 1)
+        assert stack.shape == (1, 160, 160, 1)
+        assert stack.dtype == np.uint16
+        assert len(metadata) == 1
 
     def test_stack_one_band_gdal_order(self):
         dltile = "128:16:960.0:15:-2:37"
@@ -178,8 +173,8 @@ class TestRaster(unittest.TestCase):
         stack, metadata = self.raster.stack(
             keys, dltile=dltile, bands=["red"], order="gdal"
         )
-        self.assertEqual(stack.shape, (1, 1, 160, 160))
-        self.assertEqual(stack.dtype, np.uint16)
+        assert stack.shape == (1, 1, 160, 160)
+        assert stack.dtype == np.uint16
 
     def test_stack_res_cutline_utm(self):
         geom = {
@@ -207,8 +202,8 @@ class TestRaster(unittest.TestCase):
             bounds=(277280.0, 4569600.0, 354080.0, 4646400.0),
             bands=["red", "green", "blue", "alpha"],
         )
-        self.assertEqual(stack.shape, (2, 80, 80, 4))
-        self.assertEqual(stack.dtype, np.uint16)
+        assert stack.shape == (2, 80, 80, 4)
+        assert stack.dtype == np.uint16
 
     def test_stack_res_cutline_wgs84(self):
         geom = {
@@ -242,8 +237,8 @@ class TestRaster(unittest.TestCase):
             bounds_srs="EPSG:4326",
             bands=["red", "green", "blue", "alpha"],
         )
-        self.assertEqual(stack.shape, (2, 80, 84, 4))
-        self.assertEqual(stack.dtype, np.uint16)
+        assert stack.shape == (2, 80, 84, 4)
+        assert stack.dtype == np.uint16
 
     def test_cutline_dict(self):
         shape = {
@@ -267,9 +262,9 @@ class TestRaster(unittest.TestCase):
                 resolution=960,
                 cutline=shape,
             )
-            self.assertEqual(data.shape, (245, 238))
-            self.assertEqual(data.dtype, np.uint16)
-            self.assertEqual(len(metadata["bands"]), 1)
+            assert data.shape == (245, 238)
+            assert data.dtype == np.uint16
+            assert len(metadata["bands"]) == 1
         except ImportError:
             pass
 
@@ -295,9 +290,9 @@ class TestRaster(unittest.TestCase):
                 resolution=960,
                 cutline=json.dumps(shape),
             )
-            self.assertEqual(data.shape, (245, 238))
-            self.assertEqual(data.dtype, np.uint16)
-            self.assertEqual(len(metadata["bands"]), 1)
+            assert data.shape == (245, 238)
+            assert data.dtype == np.uint16
+            assert len(metadata["bands"]) == 1
         except ImportError:
             pass
 
@@ -310,13 +305,11 @@ class TestRaster(unittest.TestCase):
             output_format="PNG",
             data_type="Byte",
         )
-        self.assertTrue("metadata" in r)
-        self.assertTrue("files" in r)
-        self.assertIsNotNone(
-            r["files"][
+        assert "metadata" in r
+        assert "files" in r
+        assert r["files"][
                 "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.png"
-            ]
-        )
+            ] is not None
 
     def test_iter_dltiles_from_place(self):
         n = 0
@@ -324,25 +317,25 @@ class TestRaster(unittest.TestCase):
             30.0, 2048, 16, iowa_geom, maxtiles=4
         ):
             n += 1
-        self.assertEqual(n, 58)
+        assert n == 58
 
     def test_dltiles_from_place(self):
         dltiles_feature_collection = self.raster.dltiles_from_shape(
             30.0, 2048, 16, iowa_geom
         )
-        self.assertEqual(len(dltiles_feature_collection["features"]), 58)
+        assert len(dltiles_feature_collection["features"]) == 58
 
     def test_dltiles_from_latlon(self):
         dltile_feature = self.raster.dltile_from_latlon(45.0, -90.0, 30.0, 2048, 16)
-        self.assertEqual(dltile_feature["properties"]["key"], "2048:16:30.0:16:-4:81")
+        assert dltile_feature["properties"]["key"] == "2048:16:30.0:16:-4:81"
 
     def test_dltile(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.raster.dltile(None)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.raster.dltile("")
         dltile_feature = self.raster.dltile("2048:16:30.0:16:-4:81")
-        self.assertEqual(dltile_feature["properties"]["key"], "2048:16:30.0:16:-4:81")
+        assert dltile_feature["properties"]["key"] == "2048:16:30.0:16:-4:81"
 
     def test_raster_dltile(self):
         dltile_feature = self.raster.dltile_from_latlon(41.0, -94.0, 30.0, 256, 16)
@@ -351,9 +344,9 @@ class TestRaster(unittest.TestCase):
             bands=["red", "green", "blue", "alpha"],
             dltile=dltile_feature["properties"]["key"],
         )
-        self.assertEqual(arr.shape[0], 256 + 2 * 16)
-        self.assertEqual(arr.shape[1], 256 + 2 * 16)
-        self.assertEqual(arr.shape[2], 4)
+        assert arr.shape[0] == 256 + 2 * 16
+        assert arr.shape[1] == 256 + 2 * 16
+        assert arr.shape[2] == 4
 
     def test_raster_dltile_dict(self):
         dltile_feature = self.raster.dltile_from_latlon(41.0, -94.0, 30.0, 256, 16)
@@ -362,9 +355,9 @@ class TestRaster(unittest.TestCase):
             bands=["red", "green", "blue", "alpha"],
             dltile=dltile_feature,
         )
-        self.assertEqual(arr.shape[0], 256 + 2 * 16)
-        self.assertEqual(arr.shape[1], 256 + 2 * 16)
-        self.assertEqual(arr.shape[2], 4)
+        assert arr.shape[0] == 256 + 2 * 16
+        assert arr.shape[1] == 256 + 2 * 16
+        assert arr.shape[2] == 4
 
 
 if __name__ == "__main__":

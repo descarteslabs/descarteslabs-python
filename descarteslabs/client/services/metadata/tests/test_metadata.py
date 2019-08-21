@@ -57,7 +57,7 @@ class MetadataTest(unittest.TestCase):
             ]
         }
 
-        self.assertEqual(q.serialize(), expected_q)
+        assert q.serialize() == expected_q
 
     @responses.activate
     def test_paged_search(self):
@@ -67,8 +67,8 @@ class MetadataTest(unittest.TestCase):
             responses.POST, json=features, headers={"x-continuation-token": token}
         )
         collection = self.instance.paged_search(limit=100)
-        self.assertEqual(features, collection.features)
-        self.assertEqual(token, collection.properties.continuation_token)
+        assert features == collection.features
+        assert token == collection.properties.continuation_token
 
     @responses.activate
     def test_paged_search_deprecated_args(self):
@@ -76,9 +76,9 @@ class MetadataTest(unittest.TestCase):
         self.mock_response(responses.POST, json=features)
         with warnings.catch_warnings(record=True) as w:
             collection = self.instance.paged_search(limit=100, start_time="2017-07-08")
-            self.assertEqual(1, len(w))
-            self.assertEqual(w[0].category, DeprecationWarning)
-        self.assertEqual(features, collection.features)
+            assert 1 == len(w)
+            assert w[0].category == DeprecationWarning
+        assert features == collection.features
 
     @responses.activate
     def test_paged_search_dltile(self):
@@ -100,7 +100,7 @@ class MetadataTest(unittest.TestCase):
         collection = self.instance.paged_search(
             limit=100, dltile="256:16:30.0:15:-11:591"
         )
-        self.assertEqual(features, collection.features)
+        assert features == collection.features
 
     @responses.activate
     def test_paged_search_shapely(self):
@@ -121,7 +121,7 @@ class MetadataTest(unittest.TestCase):
         self.mock_response(responses.GET, json={"geometry": geom})
         self.mock_response(responses.POST, json=features)
         collection = self.instance.paged_search(limit=100, geom=shape_geom)
-        self.assertEqual(features, collection.features)
+        assert features == collection.features
 
     @responses.activate
     def test_search(self):
@@ -129,17 +129,17 @@ class MetadataTest(unittest.TestCase):
         self.mock_response(responses.POST, json=features)
         collection = self.instance.search(limit=2)
         req = responses.calls[0].request
-        self.assertNotIn("storage_state", json.loads(req.body.decode("utf-8")))
-        self.assertEqual(features[:2], collection.features)
+        assert "storage_state" not in json.loads(req.body.decode("utf-8"))
+        assert features[:2] == collection.features
 
     @responses.activate
     def test_search_storage_state(self):
         features = [{"id": "foo"}, {"id": "bar"}, {"id": "baz"}]
         self.mock_response(responses.POST, json=features)
         collection = self.instance.search(limit=2, storage_state="available")
-        self.assertEqual(features[:2], collection.features)
+        assert features[:2] == collection.features
         req = responses.calls[0].request
-        self.assertIn("storage_state", json.loads(req.body.decode("utf-8")))
+        assert "storage_state" in json.loads(req.body.decode("utf-8"))
 
     @responses.activate
     def test_features(self):
@@ -158,26 +158,26 @@ class MetadataTest(unittest.TestCase):
         self.mock_response(
             responses.POST, json=[], headers={"x-continuation-token": "token3"}
         )
-        self.assertEqual(features, list(self.instance.features()))
+        assert features == list(self.instance.features())
         req = responses.calls[0].request
-        self.assertNotIn("storage_state", json.loads(req.body.decode("utf-8")))
+        assert "storage_state" not in json.loads(req.body.decode("utf-8"))
 
     @responses.activate
     def test_summary_default(self):
         summary = {"count": 42}
         self.mock_response(responses.POST, json=summary)
-        self.assertEqual(summary, self.instance.summary())
+        assert summary == self.instance.summary()
         req = responses.calls[0].request
-        self.assertNotIn("storage_state", json.loads(req.body.decode("utf-8")))
+        assert "storage_state" not in json.loads(req.body.decode("utf-8"))
 
     @responses.activate
     def test_summary_storage_state(self):
         summary = {"count": 42}
         self.mock_response(responses.POST, json=summary)
-        self.assertEqual(summary, self.instance.summary(storage_state="available"))
+        assert summary == self.instance.summary(storage_state="available")
         expected_req = {"date": "acquired", "storage_state": "available"}
         req = responses.calls[0].request
-        self.assertEqual(json.loads(req.body.decode("utf-8")), expected_req)
+        assert json.loads(req.body.decode("utf-8")) == expected_req
 
     @responses.activate
     def test_summary_dltile(self):
@@ -196,9 +196,7 @@ class MetadataTest(unittest.TestCase):
         }
         self.mock_response(responses.GET, json={"geometry": tile_geom})
         self.mock_response(responses.POST, json=summary)
-        self.assertEqual(
-            summary, self.instance.summary(dltile="256:16:30.0:15:-11:591")
-        )
+        assert summary == self.instance.summary(dltile="256:16:30.0:15:-11:591")
 
     @responses.activate
     def test_summary_shapely(self):
@@ -218,7 +216,7 @@ class MetadataTest(unittest.TestCase):
         shape_geom = shape(geom)
         self.mock_response(responses.GET, json={"geometry": geom})
         self.mock_response(responses.POST, json=summary)
-        self.assertEqual(summary, self.instance.summary(geom=shape_geom))
+        assert summary == self.instance.summary(geom=shape_geom)
 
 
 if __name__ == "__main__":
