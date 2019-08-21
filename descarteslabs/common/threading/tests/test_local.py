@@ -21,12 +21,12 @@ class ThreadLocalWrapperTest(unittest.TestCase):
 
     def test_thread_thread(self):
         main_thread_id = self.wrapper.get()
-        self.assertEqual(main_thread_id, self.wrapper.get())
+        assert main_thread_id == self.wrapper.get()
 
         thread = threading.Thread(target=self._store_id)
         thread.start()
         thread.join()
-        self.assertNotEqual(main_thread_id, self.thread_id)
+        assert main_thread_id != self.thread_id
 
     # Note on Windows: fork is not available so multiprocessing pickles the multiprocessing
     # function and arguments. ThreadLocalWrapper isn't picklable, so the following tests
@@ -39,15 +39,15 @@ class ThreadLocalWrapperTest(unittest.TestCase):
         thread = threading.Thread(target=self._store_id)
         thread.start()
         thread.join()
-        self.assertNotEqual(main_thread_id, self.thread_id)
+        assert main_thread_id != self.thread_id
 
         queue = multiprocessing.Queue()
         process = multiprocessing.Process(target=self._send_id, args=(queue,))
         process.start()
         process_id = queue.get()
         process.join()
-        self.assertNotEqual(main_thread_id, process_id)
-        self.assertNotEqual(self.thread_id, process_id)
+        assert main_thread_id != process_id
+        assert self.thread_id != process_id
 
     @unittest.skipIf(sys.platform.startswith("win"), "forking not a concern on Windows")
     def test_wrapper_unused_in_main_process(self):
@@ -56,7 +56,7 @@ class ThreadLocalWrapperTest(unittest.TestCase):
         process.start()
         process_id = queue.get()
         process.join()
-        self.assertNotEqual(process_id, self.wrapper.get())
+        assert process_id != self.wrapper.get()
 
     @unittest.skipIf(sys.platform.startswith("win"), "forking not a concern on Windows")
     def test_fork_from_fork(self):
@@ -75,6 +75,6 @@ class ThreadLocalWrapperTest(unittest.TestCase):
         process2_id = queue.get()
         process3_id = queue.get()
         process.join()
-        self.assertNotEqual(process1_id, process2_id)
-        self.assertNotEqual(process2_id, process3_id)
-        self.assertNotEqual(process1_id, process3_id)
+        assert process1_id != process2_id
+        assert process2_id != process3_id
+        assert process1_id != process3_id

@@ -10,7 +10,7 @@ class TestRequestsWithRetry(unittest.TestCase):
     def test_headers_set_on_session(self):
         token = "token"
         client = RequestsWithRetry(headers=dict(authorization=token))
-        self.assertEqual(client.session.headers["authorization"], token)
+        assert client.session.headers["authorization"] == token
 
         def request_callback(request):
             if request.headers["authorization"] == token:
@@ -21,12 +21,10 @@ class TestRequestsWithRetry(unittest.TestCase):
             responses.add_callback(
                 method, "https://platform.descarteslabs.com", callback=request_callback
             )
-            self.assertEqual(
-                getattr(client, method.lower())(
+            assert getattr(client, method.lower())(
                     "https://platform.descarteslabs.com"
-                ).status_code,
-                200,
-            )
+                ).status_code == \
+                200
 
 
 if __name__ == "__main__":

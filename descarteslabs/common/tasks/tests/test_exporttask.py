@@ -37,7 +37,7 @@ class TestExportTask(ClientTestCase):
         key = "my_key"
         task = ExportTask(group_id, tuid=task_id, key=key, client=self.client)
 
-        self.assertEqual(task.key, key)
+        assert task.key == key
 
     @responses.activate
     def test_from_attributes(self):
@@ -52,5 +52,5 @@ class TestExportTask(ClientTestCase):
             },
         )
         task = ExportTask(group_id, tuid=task_id, client=self.client)
-        self.assertEqual(task.status, "SUCCESS")
-        self.assertEqual(task.key, key)
+        assert task.status == "SUCCESS"
+        assert task.key == key

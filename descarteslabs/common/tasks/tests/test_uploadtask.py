@@ -36,12 +36,12 @@ class TestUploadTask(ClientTestCase):
     def test_from_guid_upload_id(self):
         task = UploadTask(group_id, upload_id=upload_id, client=self.client)
 
-        self.assertEqual(task.upload_id, upload_id)
+        assert task.upload_id == upload_id
 
     def test_from_guid_tuid(self):
         task = UploadTask(group_id, tuid=task_id, client=self.client)
 
-        self.assertEqual(task.tuid, task_id)
+        assert task.tuid == task_id
 
     @responses.activate
     def test_ready(self):
@@ -83,16 +83,16 @@ class TestUploadTask(ClientTestCase):
             },
         )
 
-        self.assertFalse(task.ready)
-        self.assertEqual(task.status, "PENDING")
-        self.assertIsNone(task.tuid)
+        assert not task.ready
+        assert task.status == "PENDING"
+        assert task.tuid is None
 
-        self.assertFalse(task.ready)
-        self.assertEqual(task.status, "RUNNING")
-        self.assertEqual(task.tuid, task_id)
+        assert not task.ready
+        assert task.status == "RUNNING"
+        assert task.tuid == task_id
 
-        self.assertTrue(task.ready)
-        self.assertEqual(task.status, "SUCCESS")
+        assert task.ready
+        assert task.status == "SUCCESS"
 
     @responses.activate
     def test_ready_failure(self):
@@ -111,13 +111,13 @@ class TestUploadTask(ClientTestCase):
             {"data": {"id": task_id, "attributes": {"status": "FAILURE"}}},
         )
 
-        self.assertFalse(task.ready)
-        self.assertEqual(task.status, "PENDING")
-        self.assertIsNone(task.tuid)
+        assert not task.ready
+        assert task.status == "PENDING"
+        assert task.tuid is None
 
-        self.assertTrue(task.ready)
-        self.assertEqual(task.status, "FAILURE")
-        self.assertEqual(task.tuid, task_id)
+        assert task.ready
+        assert task.status == "FAILURE"
+        assert task.tuid == task_id
 
     @responses.activate
     def test_ready_skipped(self):
@@ -141,13 +141,13 @@ class TestUploadTask(ClientTestCase):
             },
         )
 
-        self.assertFalse(task.ready)
-        self.assertEqual(task.status, "PENDING")
-        self.assertIsNone(task.tuid)
+        assert not task.ready
+        assert task.status == "PENDING"
+        assert task.tuid is None
 
-        self.assertTrue(task.ready)
-        self.assertEqual(task.status, "SUCCESS")
-        self.assertEqual(task.tuid, task_id)
+        assert task.ready
+        assert task.status == "SUCCESS"
+        assert task.tuid == task_id
 
     @responses.activate
     def test_ready_failure_bq(self):
@@ -189,16 +189,16 @@ class TestUploadTask(ClientTestCase):
             },
         )
 
-        self.assertFalse(task.ready)
-        self.assertEqual(task.status, "PENDING")
-        self.assertIsNone(task.tuid)
+        assert not task.ready
+        assert task.status == "PENDING"
+        assert task.tuid is None
 
-        self.assertFalse(task.ready)
-        self.assertEqual(task.status, "PENDING")
-        self.assertEqual(task.tuid, task_id)
+        assert not task.ready
+        assert task.status == "PENDING"
+        assert task.tuid == task_id
 
-        self.assertTrue(task.ready)
-        self.assertEqual(task.status, "FAILURE")
+        assert task.ready
+        assert task.status == "FAILURE"
 
     @responses.activate
     def test_results(self):
@@ -226,10 +226,10 @@ class TestUploadTask(ClientTestCase):
             },
         )
 
-        self.assertTrue(task.ready)
-        self.assertEqual(task.status, "SUCCESS")
-        self.assertEqual(task.error_rows, 2)
-        self.assertEqual(len(task.errors), 2)
-        self.assertEqual(task.input_features, 1)
-        self.assertEqual(task.input_rows, 1)
-        self.assertEqual(task.output_rows, 1)
+        assert task.ready
+        assert task.status == "SUCCESS"
+        assert task.error_rows == 2
+        assert len(task.errors) == 2
+        assert task.input_features == 1
+        assert task.input_rows == 1
+        assert task.output_rows == 1

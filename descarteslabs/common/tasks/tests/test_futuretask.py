@@ -3,6 +3,7 @@ try:
 except ImportError:
     from unittest import mock
 
+import pytest
 import re
 import responses
 import unittest
@@ -40,41 +41,41 @@ class TestFutureTask(ClientTestCase):
         ft = FutureTask(guid, tuid)
         ft2 = FutureTask(guid, tuid)
 
-        self.assertEqual(ft, ft2)
-        self.assertIsInstance(ft, FutureTask)
-        self.assertIsInstance(ft, object)
+        assert ft == ft2
+        assert isinstance(ft, FutureTask)
+        assert isinstance(ft, object)
 
     def test_getattr_access(self):
         ft = FutureTask(guid=guid, tuid=tuid)
 
-        self.assertEqual(ft.guid, guid)
-        self.assertEqual(ft.tuid, tuid)
+        assert ft.guid == guid
+        assert ft.tuid == tuid
 
-        with self.assertRaises(AttributeError):
+        with pytest.raises(AttributeError):
             ft.nonexistent
 
     def test_without_guid(self):
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             ft = FutureTask(tuid=tuid)
 
     def test_without_tuid(self):
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             ft = FutureTask(guid=guid)
 
     def test_without_guid_tuid(self):
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             ft = FutureTask()
 
     def test_transient_result(self):
         ft = FutureTask(guid=guid, tuid=tuid, client=self.client)
 
-        with self.assertRaises(TransientResultError):
+        with pytest.raises(TransientResultError):
             ft.get_result(wait=False)
 
     def test_getattr_access(self):
         ft = FutureTask(guid=guid, tuid=tuid, client=self.client)
 
-        with self.assertRaises(TimeoutError):
+        with pytest.raises(TimeoutError):
             ft.get_result(wait=True, timeout=1)
 
     @responses.activate
@@ -84,8 +85,8 @@ class TestFutureTask(ClientTestCase):
         self.mock_response(responses.GET, {}, status=404)
         self.mock_response(responses.GET, {"id": tuid, "result_type": "json"})
 
-        self.assertFalse(ft.ready)
-        self.assertTrue(ft.ready)
+        assert not ft.ready
+        assert ft.ready
 
     @responses.activate
     @mock.patch.object(Tasks, "COMPLETION_POLL_INTERVAL_SECONDS", 0)
@@ -118,10 +119,8 @@ class TestFutureTask(ClientTestCase):
 
         completed_tasks = list(as_completed(tasks, show_progress=False))
 
-        self.assertEqual(5, len(completed_tasks))
-        self.assertEqual(
-            list(range(5)), [int(r._task_result["id"]) for r in completed_tasks]
-        )
+        assert 5 == len(completed_tasks)
+        assert list(range(5)) == [int(r._task_result["id"]) for r in completed_tasks]
 
     @responses.activate
     @mock.patch.object(Tasks, "COMPLETION_POLL_INTERVAL_SECONDS", 0)
@@ -152,7 +151,7 @@ class TestFutureTask(ClientTestCase):
         self.mock_response(responses.POST, {"results": response1})
         self.mock_response(responses.POST, {"results": response2})
 
-        with self.assertRaises(GroupTerminalException):
+        with pytest.raises(GroupTerminalException):
             list(as_completed(tasks, show_progress=False))
 
 

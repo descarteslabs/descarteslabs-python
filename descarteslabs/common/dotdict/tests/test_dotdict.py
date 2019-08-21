@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import textwrap
 import random
 import string
@@ -13,140 +14,140 @@ class TestDotDict(unittest.TestCase):
     def test_from_dict(self):
         template = {"a": 1, "b": 2, "c": [0, -1]}
         d = DotDict(template)
-        self.assertEqual(d, template)
-        self.assertIsInstance(d, DotDict)
-        self.assertIsInstance(d, dict)
+        assert d == template
+        assert isinstance(d, DotDict)
+        assert isinstance(d, dict)
 
     def test_getitem_access(self):
         d = DotDict(alpha=1, beta=2)
-        self.assertEqual(d["alpha"], 1)
-        with self.assertRaises(KeyError):
+        assert d["alpha"] == 1
+        with pytest.raises(KeyError):
             d["nonexistent"]
 
     def test_getattr_access(self):
         d = DotDict(alpha=1, beta=2)
-        self.assertEqual(d.alpha, 1)
-        with self.assertRaises((KeyError, AttributeError)):
+        assert d.alpha == 1
+        with pytest.raises((KeyError, AttributeError)):
             d["nonexistent"]
 
     def test_setattr(self):
         d = DotDict()
         d.key = "value"
-        self.assertEqual(d.key, "value")
-        self.assertEqual(d["key"], "value")
+        assert d.key == "value"
+        assert d["key"] == "value"
 
     def test_delattr(self):
         d = DotDict(delete=0)
         del d.delete
-        self.assertNotIn("delete", d)
-        with self.assertRaises(AttributeError):
+        assert "delete" not in d
+        with pytest.raises(AttributeError):
             del d.delete
         pass
 
     def test_mutable(self):
         d = DotDict({"a": 1, "subdict": {"x": 0}})
         d.subdict.y = 4
-        self.assertEqual(d["subdict"]["y"], 4)
+        assert d["subdict"]["y"] == 4
         d.subdict.x = -1
-        self.assertEqual(d["subdict"]["x"], -1)
+        assert d["subdict"]["x"] == -1
 
     def test_dir(self):
         d = DotDict({"a": 1, "b": 2, "c": [0, -1]})
         _dir = dir(d)
         properDir = sorted(dir(dict) + list(d.keys()))
-        self.assertEqual(properDir, _dir)
+        assert properDir == _dir
 
     def test_repr(self):
         d = DotDict(long=list(range(100)))
         # long lists should be truncated with "..."
-        with self.assertRaises((SyntaxError, ValueError)):
+        with pytest.raises((SyntaxError, ValueError)):
             ast.literal_eval(repr(d))
 
         d = DotDict({i: i for i in range(100)})
         # a long top-level dict should not be truncated
-        self.assertEqual(d, {i: i for i in range(100)})
+        assert d == {i: i for i in range(100)}
 
         # short lists and dicts should not be truncated
         d = DotDict(short=list(range(2)), other_key=list(range(3)))
-        self.assertEqual(d, ast.literal_eval(repr(d)))
+        assert d == ast.literal_eval(repr(d))
 
     def test_str(self):
         d = DotDict({"a": 1, "b": 2, "c": [0, -1]})
-        self.assertEqual(ast.literal_eval(str(d)), d)
+        assert ast.literal_eval(str(d)) == d
 
     def test_untruncated_str(self):
         d = DotDict(long=[[list(range(100))]])
         _ = d.long[0][0][0]  # force list to be converted to DotList  # noqa: F841
-        self.assertEqual(d, ast.literal_eval(str(d)))
+        assert d == ast.literal_eval(str(d))
 
     def test_str_none(self):
         d = DotDict({"none": None})
-        self.assertEqual("{\n  'none': None\n}", str(d))
+        assert "{\n  'none': None\n}" == str(d)
 
     def test_getattr_returns_dotdict(self):
         d = DotDict({"a": 1, "subdict": {"x": 0}})
         subdict = d.subdict
-        self.assertIsInstance(subdict, DotDict)
-        self.assertEqual(subdict.x, 0)
+        assert isinstance(subdict, DotDict)
+        assert subdict.x == 0
 
     def test_getitem_returns_dotdict(self):
         d = DotDict({"a": 1, "subdict": {"x": 0}})
         subdict = d["subdict"]
-        self.assertIsInstance(subdict, DotDict)
-        self.assertEqual(subdict.x, 0)
+        assert isinstance(subdict, DotDict)
+        assert subdict.x == 0
 
     def test_getattr_returns_dotlist(self):
         d = DotDict({"a": 1, "sublist": [{"x": 0}]})
         sublist = d.sublist
-        self.assertIsInstance(sublist, DotList)
-        self.assertEqual(sublist[0].x, 0)
+        assert isinstance(sublist, DotList)
+        assert sublist[0].x == 0
 
     def test_getitem_returns_dotlist(self):
         d = DotDict({"a": 1, "sublist": [{"x": 0}]})
         sublist = d["sublist"]
-        self.assertIsInstance(sublist, DotList)
-        self.assertEqual(sublist[0].x, 0)
+        assert isinstance(sublist, DotList)
+        assert sublist[0].x == 0
 
     def test_nested_lists(self):
         d = DotDict(x=[[{"sublist": [{"key": "value"}]}]])
-        self.assertEqual(d.x[0][0]["sublist"][0].key, "value")
+        assert d.x[0][0]["sublist"][0].key == "value"
 
     def test_jsonable(self):
         d = DotDict(long=[[list(range(100))]])
         _ = d.long[0][0][0]  # force list to be converted to DotList  # noqa: F841
         from_json = json.loads(json.dumps(d))
-        self.assertEqual(from_json, d)
+        assert from_json == d
 
     def test_six_iteritems(self):
         d = DotDict({"a": 1, "subdict": {"x": 0, "z": -1}, "sublist": [{"y": "foo"}]})
         iterator = six.iteritems(d)
-        self.assertNotIsInstance(iterator, list)
+        assert not isinstance(iterator, list)
         for k, v in iterator:
             if isinstance(v, dict):
-                self.assertIsInstance(v, DotDict)
+                assert isinstance(v, DotDict)
                 v.foo = "bar"
             if isinstance(v, list):
-                self.assertIsInstance(v, DotList)
+                assert isinstance(v, DotList)
                 v.append(None)
-        self.assertEqual(d.subdict.foo, "bar")
-        self.assertEqual(d.sublist[1], None)
+        assert d.subdict.foo == "bar"
+        assert d.sublist[1] is None
 
     def test_items(self):
         d = DotDict({"a": 1, "subdict": {"x": 0, "z": -1}, "sublist": [{"y": "foo"}]})
         items = d.items()
         if six.PY2:
-            self.assertIsInstance(items, list)
+            assert isinstance(items, list)
         elif six.PY3:
-            self.assertIsInstance(items, DotDict_items)
+            assert isinstance(items, DotDict_items)
         for k, v in items:
             if isinstance(v, dict):
-                self.assertIsInstance(v, DotDict)
+                assert isinstance(v, DotDict)
                 v.foo = "bar"
             if isinstance(v, list):
-                self.assertIsInstance(v, DotList)
+                assert isinstance(v, DotList)
                 v.append(None)
-        self.assertEqual(d.subdict.foo, "bar")
-        self.assertEqual(d.sublist[1], None)
+        assert d.subdict.foo == "bar"
+        assert d.sublist[1] is None
 
     @unittest.skipIf(six.PY2, "Dict view objects only exist in py3")
     def test_DotDict_view(self):
@@ -155,81 +156,81 @@ class TestDotDict(unittest.TestCase):
 
         items1 = d1.items()
         items2 = d2.items()
-        self.assertEqual(len(items1), 2)
-        self.assertIn(("a", 0), items1)
-        self.assertNotIn(("c", 2), items1)
-        self.assertFalse(items1.isdisjoint(items2))
-        self.assertTrue(items1.isdisjoint([]))
+        assert len(items1) == 2
+        assert ("a", 0) in items1
+        assert ("c", 2) not in items1
+        assert not items1.isdisjoint(items2)
+        assert items1.isdisjoint([])
 
-        self.assertEqual(items1 & items2, {("a", 0)})
-        self.assertEqual(items1 | items2, {("a", 0), ("b", 1), ("c", 2)})
-        self.assertEqual(items1 ^ items2, {("b", 1), ("c", 2)})
-        self.assertEqual(items1 - items2, {("b", 1)})
-        self.assertEqual({("b", 1)} - items1, set())
-        self.assertEqual(items1, items1)
-        self.assertNotEqual(items1, items2)
+        assert items1 & items2 == {("a", 0)}
+        assert items1 | items2 == {("a", 0), ("b", 1), ("c", 2)}
+        assert items1 ^ items2 == {("b", 1), ("c", 2)}
+        assert items1 - items2 == {("b", 1)}
+        assert {("b", 1)} - items1 == set()
+        assert items1 == items1
+        assert items1 != items2
 
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             hash(items1)
 
-        with self.assertRaises(AttributeError):
+        with pytest.raises(AttributeError):
             items1.foo()
 
     def test_six_itervalues(self):
         d = DotDict({"subdictA": {"x": 0}, "subdictB": {"x": 1}})
         iterator = six.itervalues(d)
-        self.assertNotIsInstance(iterator, list)
+        assert not isinstance(iterator, list)
         for v in iterator:
-            self.assertIsInstance(v.x, int)
+            assert isinstance(v.x, int)
             v.foo = "bar"
-        self.assertEqual(d.subdictA.foo, "bar")
-        self.assertEqual(d.subdictB.foo, "bar")
+        assert d.subdictA.foo == "bar"
+        assert d.subdictB.foo == "bar"
 
     def test_values(self):
         d = DotDict({"subdictA": {"x": 0}, "subdictB": {"x": 1}})
         values = d.values()
         if six.PY2:
-            self.assertIsInstance(values, list)
+            assert isinstance(values, list)
         elif six.PY3:
-            self.assertIsInstance(values, DotDict_values)
+            assert isinstance(values, DotDict_values)
         for v in values:
-            self.assertIsInstance(v.x, int)
+            assert isinstance(v.x, int)
             v.foo = "bar"
-        self.assertEqual(d.subdictA.foo, "bar")
-        self.assertEqual(d.subdictB.foo, "bar")
+        assert d.subdictA.foo == "bar"
+        assert d.subdictB.foo == "bar"
 
     def test_get(self):
         d = DotDict({"subdict": {"x": 0}})
         subdict = d.get("subdict")
-        self.assertEqual(subdict.x, 0)
+        assert subdict.x == 0
         subdict.foo = "bar"
-        self.assertEqual(d.subdict.foo, "bar")
+        assert d.subdict.foo == "bar"
         default = d.get("not_here", {"foo": 1})
-        self.assertEqual(default.foo, 1)
+        assert default.foo == 1
 
     def test_pop(self):
         d = DotDict({"subdict": {"x": 0}})
         subdict = d.pop("subdict")
-        self.assertEqual(subdict.x, 0)
+        assert subdict.x == 0
         default = d.pop("subdict", {"foo": 1})
-        self.assertEqual(default.foo, 1)
+        assert default.foo == 1
 
     def test_popitem(self):
         d = DotDict({"subdict": {"x": 0}})
         k, v = d.popitem()
-        self.assertEqual(k, "subdict")
-        self.assertEqual(v.x, 0)
-        self.assertEqual(len(d), 0)
+        assert k == "subdict"
+        assert v.x == 0
+        assert len(d) == 0
 
     def test_setdefault(self):
         d = DotDict({"subdict": {"x": 0}})
         default = d.setdefault("subdict", {})
-        self.assertEqual(default.x, 0)
+        assert default.x == 0
         default.foo = "bar"
-        self.assertEqual(d.subdict.foo, "bar")
+        assert d.subdict.foo == "bar"
         missing = d.setdefault("missing", {"foo": 1})
-        self.assertEqual(missing.foo, 1)
-        self.assertEqual(d.missing.foo, 1)
+        assert missing.foo == 1
+        assert d.missing.foo == 1
 
 
 class TestUnbox(unittest.TestCase):
@@ -265,21 +266,21 @@ class TestUnbox(unittest.TestCase):
         d = DotDict({"a": 1, "b": 2})
 
         unboxed = d.asdict()
-        self.assertEqual(type(unboxed), dict)
-        self.assertEqual(unboxed, d)
+        assert type(unboxed) == dict
+        assert unboxed == d
 
         obj = DotDict(a=d)
         unboxed = obj.asdict()
-        self.assertEqual(type(unboxed["a"]), dict)
+        assert type(unboxed["a"]) == dict
 
         obj = DotList(DotDict(i=i) for i in range(10))
         unboxed = obj.aslist()
-        self.assertEqual(type(unboxed), list)
-        self.assertTrue(all(type(x) is dict for x in unboxed))
+        assert type(unboxed) == list
+        assert all(type(x) is dict for x in unboxed)
 
         obj = DotDict({i: DotList(range(i)) for i in range(10)})
         unboxed = obj.asdict()
-        self.assertTrue(all(type(x) is list for x in six.itervalues(unboxed)))
+        assert all(type(x) is list for x in six.itervalues(unboxed))
 
     def test_random_nested_container(self):
         obj = 0
@@ -288,9 +289,9 @@ class TestUnbox(unittest.TestCase):
 
         unboxed = obj.asdict() if isinstance(obj, DotDict) else obj.aslist()
 
-        self.assertFalse(self.is_unboxed(obj))
-        self.assertTrue(self.is_unboxed(unboxed))
-        self.assertEqual(obj, unboxed)
+        assert not self.is_unboxed(obj)
+        assert self.is_unboxed(unboxed)
+        assert obj == unboxed
 
     @unittest.expectedFailure
     def test_dottype_within_plain(self):
@@ -300,7 +301,7 @@ class TestUnbox(unittest.TestCase):
         obj = DotDict(sub=sub)
 
         unboxed = obj.asdict()
-        self.assertTrue(self.is_unboxed(unboxed))
+        assert self.is_unboxed(unboxed)
 
     @unittest.skip("results in RuntimeError since recursive structures are not handled")
     def test_recursive_container(self):
@@ -308,39 +309,37 @@ class TestUnbox(unittest.TestCase):
 
         d.loop = d
         unboxed = d.asdict()
-        self.assertEqual(type(unboxed["loop"]), dict)
+        assert type(unboxed["loop"]) == dict
 
 
 class TestDotList(unittest.TestCase):
     def test_from_list(self):
         template = list(range(10))
         dotlist = DotList(template)
-        self.assertEqual(dotlist, template)
-        self.assertIsInstance(dotlist, DotList)
-        self.assertIsInstance(dotlist, list)
+        assert dotlist == template
+        assert isinstance(dotlist, DotList)
+        assert isinstance(dotlist, list)
 
     def test_slice(self):
         d = DotList([[1, 2], {"foo": "bar"}])
         sliced = d[0:2]
-        self.assertIsInstance(sliced, DotList)
-        self.assertEqual(2, len(sliced))
+        assert isinstance(sliced, DotList)
+        assert 2 == len(sliced)
 
     def test_iterate(self):
         d = DotList([{"foo": "bar"}, {"foo": "baz"}])
         foos = [foo.foo for foo in d]
-        self.assertEqual(["bar", "baz"], foos)
+        assert ["bar", "baz"] == foos
 
     def test_pop(self):
         d = DotList([{"foo": "bar"}, {"foo": "baz"}])
         item = d.pop()
-        self.assertEqual(item.foo, "baz")
+        assert item.foo == "baz"
 
 
 class TestIndentedRepr(unittest.TestCase):
     def test_idr_short(self):
-        self.assertEqual(
-            idr.indent, 2, "indented repr indent has changed, other tests will fail"
-        )
+        assert idr.indent == 2, "indented repr indent has changed, other tests will fail"
         obj = [{u"key": 1.01, "bool": False, (1, (2, 3)): {"a", "b", "c"}}, [4, 5, 6]]
         unicode_prefix = ""
         set_start = "{"
@@ -355,22 +354,20 @@ class TestIndentedRepr(unittest.TestCase):
 
         # The order is not guaranteed.  Look for individual lines.
         # Since the comma depends on the position, skip those.
-        self.assertIn("[\n", output)
-        self.assertIn("  {\n", output)
-        self.assertIn("\n    {}'key': 1.01".format(unicode_prefix), output)
-        self.assertIn("\n    'bool': False", output)
-        self.assertIn(
-            "\n    (1, (2, 3)): {}'a', 'b', 'c'{}".format(set_start, set_end), output
-        )
-        self.assertIn("\n  }", output)
-        self.assertIn("\n  [4, 5, 6]", output)
-        self.assertIn("\n]", output)
+        assert "[\n" in output
+        assert "  {\n" in output
+        assert "\n    {}'key': 1.01".format(unicode_prefix) in output
+        assert "\n    'bool': False" in output
+        assert "\n    (1, (2, 3)): {}'a', 'b', 'c'{}".format(set_start, set_end) in output
+        assert "\n  }" in output
+        assert "\n  [4, 5, 6]" in output
+        assert "\n]" in output
 
     def test_idr_truncates_str(self):
         idr = IndentedRepr()
         idr.maxstring = 8
         s = "abcdefghijkl"
-        self.assertEqual(idr.repr(s), "'a...kl'")
+        assert idr.repr(s) == "'a...kl'"
 
     def test_idr_toplevel_untruncated(self):
         idr = IndentedRepr()
@@ -390,7 +387,7 @@ class TestIndentedRepr(unittest.TestCase):
           9
         ]"""
         expected = textwrap.dedent(expected)
-        self.assertEqual(idr.repr(obj), expected)
+        assert idr.repr(obj) == expected
 
         idr.maxdict = 5
         obj = {i: i for i in range(10)}
@@ -409,7 +406,7 @@ class TestIndentedRepr(unittest.TestCase):
           9: 9
         }"""
         expected = textwrap.dedent(expected)
-        self.assertEqual(idr.repr(obj), expected)
+        assert idr.repr(obj) == expected
 
     def test_idr_truncates_list(self):
         idr = IndentedRepr()
@@ -427,7 +424,7 @@ class TestIndentedRepr(unittest.TestCase):
           ]
         ]"""
         expected = textwrap.dedent(expected)
-        self.assertEqual(idr.repr(obj), expected)
+        assert idr.repr(obj) == expected
 
     def test_idr_doesnt_truncate_dict(self):
         obj = [{i: i for i in range(10)}]
@@ -447,14 +444,14 @@ class TestIndentedRepr(unittest.TestCase):
           }
         ]"""
         expected = textwrap.dedent(expected)
-        self.assertEqual(idr.repr(obj), expected)
+        assert idr.repr(obj) == expected
 
     def test_idr_truncates_level(self):
         idr = IndentedRepr()
         idr.maxlevel = 3
         obj = [[[[True]]]]
         expected = "[[[[...]]]]"
-        self.assertEqual(idr.repr(obj), expected)
+        assert idr.repr(obj) == expected
 
     def test_untruncated(self):
         long_idr = IndentedRepr()
@@ -472,19 +469,19 @@ class TestIndentedRepr(unittest.TestCase):
 
         # dict
         obj = [{i: i for i in range(10)}]
-        self.assertEqual(untruncated_idr.repr(obj), long_idr.repr(obj))
+        assert untruncated_idr.repr(obj) == long_idr.repr(obj)
         # list
         obj = [list(range(50))]
-        self.assertEqual(untruncated_idr.repr(obj), long_idr.repr(obj))
+        assert untruncated_idr.repr(obj) == long_idr.repr(obj)
         # tuple
         obj = [tuple(range(50))]
-        self.assertEqual(untruncated_idr.repr(obj), long_idr.repr(obj))
+        assert untruncated_idr.repr(obj) == long_idr.repr(obj)
         # set
         obj = [frozenset(range(50))]
-        self.assertEqual(untruncated_idr.repr(obj), long_idr.repr(obj))
+        assert untruncated_idr.repr(obj) == long_idr.repr(obj)
         # long
         obj = int("".join(str(x) for x in range(50)))
-        self.assertEqual(untruncated_idr.repr(obj), long_idr.repr(obj))
+        assert untruncated_idr.repr(obj) == long_idr.repr(obj)
         # string
         obj = "".join(random.choice(string.ascii_letters) for i in range(50))
-        self.assertEqual(untruncated_idr.repr(obj), long_idr.repr(obj))
+        assert untruncated_idr.repr(obj) == long_idr.repr(obj)
