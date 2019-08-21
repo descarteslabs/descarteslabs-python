@@ -77,7 +77,3 @@ class TestScripts(unittest.TestCase):
                 }
             ]
             self.assertEqual(json.loads(out.getvalue().strip()), iowa)
-
-
-if __name__ == "__main__":
-    unittest.main()

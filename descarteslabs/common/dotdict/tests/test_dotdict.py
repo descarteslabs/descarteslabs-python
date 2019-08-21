@@ -488,7 +488,3 @@ class TestIndentedRepr(unittest.TestCase):
         # string
         obj = "".join(random.choice(string.ascii_letters) for i in range(50))
         self.assertEqual(untruncated_idr.repr(obj), long_idr.repr(obj))
-
-
-if __name__ == "__main__":
-    unittest.main()
