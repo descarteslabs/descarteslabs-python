@@ -281,24 +281,25 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         return self._from_apply("ImageCollection.concat_bands", self, other)
 
-    @typecheck_promote(lambda: ImageCollection)
-    def concat(self, other):
+    @typecheck_promote(lambda: Tuple[ImageCollection])
+    def concat(self, *imgs):
         """
-        New `ImageCollection` with ``other`` concatenated to this one.
+        New `ImageCollection` with ``imgs`` concatenated to this one, where
+        ``imgs`` is a variable number of `ImageCollection` objects.
 
-        Images, properties, and bandinfo are concatenated. Both collections
-        must have the same number of bands with identical names. If ``other``
-        is empty it will not be concatenated.
+        Images, properties, and bandinfo are concatenated. All collections
+        must have the same number of bands with identical names. Any empty
+        `ImageCollections` will not be concatenated.
 
         Parameters
         ----------
-        other: ImageCollection
+        *imgs: variable number of `ImageCollection` objects
 
         Returns
         -------
         concatenated: ImageCollection
         """
-        return self._from_apply("ImageCollection.concat", self, other)
+        return self._from_apply("ImageCollection.concat", self, *imgs)
 
     @typecheck_promote(Int)
     def head(self, n):
