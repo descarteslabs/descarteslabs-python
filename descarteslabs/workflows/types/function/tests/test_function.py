@@ -1,11 +1,13 @@
 import operator
 import pytest
+import mock
 
 from descarteslabs.common.graft import client, interpreter
 
 from ...core import ProxyTypeError
 from ...primitives import Any, Int, Str, Float
 from ...containers import Dict, Tuple
+from ...identifier import parameter
 
 from .. import Function
 
@@ -178,7 +180,7 @@ class TestFunction(object):
 
     def test_returns_closure(self):
         def outer(a):
-            b = a + 1
+            b = a + parameter("global", Int)  # 1; use to track closure correctness
 
             def inner(x, y):
                 return (x + y) / b
@@ -187,14 +189,24 @@ class TestFunction(object):
 
         func = Function[Int, {}, Function[Int, Int, {}, Float]](outer)
 
+        global_value = 1
+        first_call_arg = 4
+
         proxy_inner = func(4)
         assert isinstance(proxy_inner, Function[Int, Int, {}, Float])
-        result = proxy_inner(6, 4)
+        result_2 = proxy_inner(6, 4)
+        result_3 = proxy_inner(10, 5)
+        result = result_2 + result_3
+
+        m = mock.MagicMock()
+        m.__radd__.side_effect = lambda other: other + global_value
 
         interpreted = interpreter.interpret(
-            result.graft, builtins={"add": operator.add, "div": operator.truediv}
+            result.graft,
+            builtins={"add": operator.add, "div": operator.truediv, "global": m},
         )()
-        assert interpreted == 2
+        assert interpreted == 5
+        m.__radd__.assert_called_once_with(first_call_arg)
 
     def test_takes_function(self):
         def main(a, b, helper):
@@ -207,3 +219,58 @@ class TestFunction(object):
             result.graft, builtins={"add": operator.add, "div": operator.truediv}
         )()
         assert interpreted == 2
+
+    def test_very_higher_order(self):
+        ext1_value = -1
+        ext2_value = -10
+
+        def make_function(proxy=True):
+            ext1 = parameter("ext1", Int) if proxy else ext1_value
+
+            def func_a(a_1):
+                x = a_1 + ext1
+
+                def func_b(b_1, b_2):
+                    y = b_1 - b_2 + (parameter("ext2", Int) if proxy else ext2_value)
+
+                    def func_c(c_1):
+                        return x + y + c_1 + ext1
+
+                    return func_c
+
+                return func_b
+
+            return func_a
+
+        func = Function[Int, {}, Function[Int, Int, {}, Function[Int, {}, Int]]](
+            make_function()
+        )
+
+        def do_operation(f):
+            b = f(2)
+            c1 = b(1, 3)
+            c2 = b(2, 4)
+            result = c1(0) - c1(5) + c2(10) + c2(3)
+            return result
+
+        proxy_result = do_operation(func)
+        real_result = do_operation(make_function(proxy=False))
+
+        ext1 = mock.MagicMock()
+        ext1.__radd__.side_effect = lambda other: ext1_value + other
+        ext2 = mock.MagicMock()
+        ext2.__radd__.side_effect = lambda other: ext2_value + other
+
+        interpreted = interpreter.interpret(
+            proxy_result.graft,
+            builtins={
+                "add": operator.add,
+                "sub": operator.sub,
+                "ext1": ext1,
+                "ext2": ext2,
+            },
+        )()
+
+        assert interpreted == real_result
+        assert len(ext1.__radd__.mock_calls) == 5  # 4 `c` calls + 1 to construct `x`
+        assert len(ext2.__radd__.mock_calls) == 2  # 2 `b` calls

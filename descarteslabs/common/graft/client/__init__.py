@@ -5,6 +5,7 @@ from .client import (
     apply_graft,
     function_graft,
     merge_value_grafts,
+    guid,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "apply_graft",
     "function_graft",
     "merge_value_grafts",
+    "guid",
 ]

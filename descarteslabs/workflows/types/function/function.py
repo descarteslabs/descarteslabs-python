@@ -192,6 +192,7 @@ class Function(GenericProxytype):
             for name, type_ in six.iteritems(bound_expected_args)
         }
 
+        first_guid = client.guid()
         result = func(**args)
 
         if returns is not None:
@@ -207,5 +208,7 @@ class Function(GenericProxytype):
             result = proxify(result)
 
         return type(result)._from_graft(
-            client.function_graft(result, *tuple(func_signature.parameters))
+            client.function_graft(
+                result, *tuple(func_signature.parameters), first_guid=first_guid
+            )
         )
