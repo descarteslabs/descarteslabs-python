@@ -4,10 +4,9 @@ from descarteslabs.common.graft import client
 
 from ... import env
 from ...cereal import serializable
-from ..containers import CollectionMixin, List, Tuple, Dict, KnownDict, Struct
-from ..core import typecheck_promote, _resolve_lambdas
+from ..containers import CollectionMixin, Dict, KnownDict, List, Struct, Tuple
+from ..core import _resolve_lambdas, typecheck_promote
 from ..datetimes import Datetime
-
 from ..function import Function
 from ..primitives import Any, Bool, Float, Int, NoneType, Str
 from .feature import Feature
@@ -227,6 +226,52 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         return super(ImageCollection, self).rename_bands(
             *new_positional_names, **new_names
+        )
+
+    @typecheck_promote(None, back=Int, fwd=Int)
+    def map_window(self, func, back=0, fwd=0):
+        """
+        Map a function over a sliding window of this `ImageCollection`.
+
+        The function must take 3 arguments:
+
+        * ``back``: `ImageCollection` of N prior images
+        * ``current``: current `Image`
+        * ``fwd``: `ImageCollection` of N subsequent images
+
+        The window slides over the `ImageCollection`, starting at
+        index ``back`` and ending ``fwd`` images before the end.
+
+        Note that the total length of the window is ``back + 1 + fwd``.
+        Specifying a window longer than the `ImageCollection` will cause an error.
+
+        Parameters
+        ----------
+        back: Int, optional, default 0
+            Number of previous Images to pass as ``back`` to the function.
+        fwd: Int, optional, default 0
+            Number of subsequent Images to pass as ``fwd`` to the function.
+
+        Returns
+        -------
+        mapped: ImageCollection or List
+            If ``func`` returns an `ImageCollection` or `Image`,
+            all of them are concatenated together and returned as one `ImageCollection`.
+
+            Otherwise, returns a `List` of the values returned by ``func``.
+        """
+        delayed_func = Function.from_callable(
+            func, ImageCollection, Image, ImageCollection
+        )
+        return_type = delayed_func._type_params[-1]
+
+        out_type = (
+            ImageCollection
+            if return_type in (Image, ImageCollection)
+            else List[return_type]
+        )
+        return out_type._from_apply(
+            "ImageCollection.map_window", self, delayed_func, back, fwd
         )
 
     def map_bands(self, func):

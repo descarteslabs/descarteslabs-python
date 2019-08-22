@@ -7,7 +7,7 @@ from ...core.tests import utils
 
 from .... import env
 from ...containers import Dict, List, Tuple
-from ...primitives import Float, Int, Bool, NoneType, Any
+from ...primitives import Float, Int, Str, Bool, NoneType, Any
 
 from .. import (
     Image,
@@ -117,6 +117,27 @@ def test_all_methods_nonstats():
     assert isinstance(col.getmask(), ImageCollection)
     assert isinstance(col.colormap(), ImageCollection)
     assert isinstance(col.groupby(dates="year"), ImageCollectionGroupby)
+    assert isinstance(col.head(0), ImageCollection)
+    assert isinstance(col.tail(0), ImageCollection)
+    assert isinstance(col.partition(0), Tuple[ImageCollection, ImageCollection])
+    assert isinstance(
+        col.map_window(
+            lambda back, img, fwd: back.min(axis="images")
+            + img
+            + fwd.min(axis="images"),
+            back=1,
+            fwd=1,
+        ),
+        ImageCollection,
+    )
+    assert isinstance(
+        col.map_window(lambda back, img, fwd: back.concat(fwd), back=1, fwd=1),
+        ImageCollection,
+    )
+    assert isinstance(
+        col.map_window(lambda back, img, fwd: img.properties["id"], back=1, fwd=1),
+        List[Str],
+    )
 
 
 @pytest.mark.parametrize(
@@ -208,18 +229,3 @@ def test_all_operators(operator, accepted_types, return_type):
     utils.operator_test(
         ImageCollection([]), all_values_to_try, operator, accepted_types, return_type
     )
-
-
-def test_head():
-    col = ImageCollection.from_id("foo")
-    assert isinstance(col.head(0), ImageCollection)
-
-
-def test_tail():
-    col = ImageCollection.from_id("foo")
-    assert isinstance(col.tail(0), ImageCollection)
-
-
-def test_partition():
-    col = ImageCollection.from_id("foo")
-    assert isinstance(col.partition(0), Tuple[ImageCollection, ImageCollection])
