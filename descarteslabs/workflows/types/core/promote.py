@@ -31,8 +31,6 @@ def _promote(obj, to_classes, argument_id, name):
         if not isinstance(to_classes, (tuple, list)):
             to_classes = (to_classes,)
 
-        # TODO(gabe): actually use errors to provide a more useful message here
-        # (possibly need `sys.exc_info()` for full traceback)
         errors = []
         for to_cls in to_classes:
             try:
@@ -42,7 +40,7 @@ def _promote(obj, to_classes, argument_id, name):
 
         to_classes_str = ", ".join(cls.__name__ for cls in to_classes)
 
-        raise TypeError(
+        msg = (
             "Argument {arg_id!r} to function {name}: "
             "expected {to_classes_str} or an object promotable to {that_those}, "
             "but got {type_obj}: {obj!r}".format(
@@ -54,6 +52,17 @@ def _promote(obj, to_classes, argument_id, name):
                 obj=obj,
             )
         )
+
+        error_msgs = [
+            "{}: {}".format(to_cls.__name__, error.args[0])
+            for to_cls, error in zip(to_classes, errors)
+        ]
+
+        full_msg = "{}\n\nWhile promoting, these errors occured:\n\n{}".format(
+            msg, "\n\n".join(error_msgs)
+        )
+
+        raise TypeError(full_msg)
 
 
 # inspired by https://github.com/mrocklin/multipledispatch/blob/master/multipledispatch/core.py#L73-L84
@@ -68,22 +77,23 @@ def _is_method(func):
         return spec and spec.args and spec.args[0] in ("self", "cls")
 
 
-def _resolve_lambdas(to_classes, self_reference=None):
-    # NOTE: we cannot use callable(to_classes)
+def _requires_self(func):
+    # NOTE: we cannot use callable(to_classes); many things are callable
+    if isinstance(func, types.FunctionType):
+        sig = signature(func)
+        return len(sig.parameters) > 0
+    else:
+        return False
+
+
+def _resolve_lambdas(to_classes):
+    # NOTE: we cannot use callable(to_classes); many things are callable
     if isinstance(to_classes, types.FunctionType):
-        if self_reference is not None:
-            try:
-                return to_classes(self_reference)
-            except TypeError:
-                # function doesn't accept a positional argument; drop to calling without
-                pass
         return to_classes()
     if isinstance(to_classes, abc.Mapping):
-        return {
-            k: _resolve_lambdas(v, self_reference) for k, v in six.iteritems(to_classes)
-        }
+        return {k: _resolve_lambdas(v) for k, v in six.iteritems(to_classes)}
     elif isinstance(to_classes, abc.Sequence):
-        return tuple(_resolve_lambdas(item, self_reference) for item in to_classes)
+        return tuple(_resolve_lambdas(item) for item in to_classes)
     else:
         return to_classes
 
@@ -150,6 +160,7 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
         ...
     TypeError: Argument 'an_int' to function my_function(): \
     expected Int or an object promotable to that, but got str: 'not_an_int'
+        ...
     """
     # assert all(isinstance(arg_type, Proxytype) for arg_type in expected_arg_types)
     # assert all(isinstance(arg_type, Proxytype) for arg_type in six.itervalues(expected_kwarg_types))
@@ -170,6 +181,9 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
     # the dict `bound_expected_args`, replacing params that were functions
     # with their returned values. Once that's done once, we never have to do it again.
 
+    # Any lambdas that depend on `self` are recomputed every time the function is called,
+    # because of course, `self` might change.
+
     have_resolved_lambdas = []  # empty means False
 
     def decorator(func):
@@ -188,22 +202,47 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
             *expected_arg_types_with_self, **expected_kwarg_types
         ).arguments
 
+        if is_method:
+            # split out lambdas that depend on `self`,
+            # so we can recompute them on every function call,
+            # unlike the primary `bound_expected_args` that can just be
+            # computed once.
+            self_lambdas = {
+                name: func
+                for name, func in six.iteritems(bound_expected_args)
+                if _requires_self(func)
+            }
+
+            for name in self_lambdas:
+                del bound_expected_args[name]
+
         @boltons.funcutils.wraps(func)
         def typechecked_func(*args, **kwargs):
             if not have_resolved_lambdas:
-                self_reference = args[0] if is_method else None
-                bound_expected_args.update(
-                    _resolve_lambdas(bound_expected_args, self_reference)
-                )
+                bound_expected_args.update(_resolve_lambdas(bound_expected_args))
                 # ^ use `.update()` to mutate in-place
                 have_resolved_lambdas.append(True)  # non-empty means True
+
+            if is_method and len(self_lambdas) > 0:
+                # there are argtypes that depend on `self`;
+                # we need to recompute these on every function call
+                self_reference = args[0]
+                expected_types = dict(
+                    bound_expected_args,
+                    **{
+                        name: func(self_reference)
+                        for name, func in six.iteritems(self_lambdas)
+                    }
+                )
+            else:
+                expected_types = bound_expected_args
 
             bound_args = func_signature.bind(*args, **kwargs)
             # ^ this will raise TypeError if incompatible arguments are given for `func`
             bound_args.apply_defaults()
             bound_args_dict = bound_args.arguments
 
-            for name, argtype in six.iteritems(bound_expected_args):
+            for name, argtype in six.iteritems(expected_types):
                 if argtype is None:
                     # it's a placeholder for `self`
                     continue

@@ -37,16 +37,6 @@ def test_resolve_lambdas():
     assert _resolve_lambdas(Int) is Int
 
 
-def test_resolve_lambdas_self_reference():
-    assert _resolve_lambdas(lambda: Int, "foo") == Int
-    assert _resolve_lambdas(lambda self: self, Int) == Int
-    assert _resolve_lambdas(lambda self: self._type_params[0], List[Int]) == Int
-    assert _resolve_lambdas((Float, lambda self: self._type_params[0]), List[Int]) == (
-        Float,
-        Int,
-    )
-
-
 @typecheck_promote(Int, Tuple[Float, Str], x=List[Bool], y=NoneType)
 def func(a1, a2, x=None, y=None):
     assert isinstance(a1, Int)
@@ -143,7 +133,10 @@ class TestDecorator(object):
 
 
 class WithPromotedMethods(Proxytype):
-    member_type = Bool
+    cls_member_type = Bool
+
+    def __init__(self, member_type=Bool):
+        self.member_type = member_type
 
     @typecheck_promote(Int, x=Float)
     def basic(self, an_int, x=None):
@@ -187,9 +180,9 @@ class WithPromotedMethods(Proxytype):
         assert isinstance(my_own_type, WithPromotedMethods)
 
     @classmethod
-    @typecheck_promote(lambda cls: cls.member_type)
+    @typecheck_promote(lambda cls: cls.cls_member_type)
     def a_classmethod_lambda_with_self(cls, x):
-        assert isinstance(x, cls.member_type)
+        assert isinstance(x, cls.cls_member_type)
 
 
 class TestDecoratorOnClasses(object):
@@ -234,6 +227,10 @@ class TestDecoratorOnClasses(object):
         obj.lambda_with_self(False)
         obj.lambda_with_self_kwarg(x=False)
 
+        obj2 = WithPromotedMethods(Str)
+        obj2.lambda_with_self("foo")
+        obj2.lambda_with_self_kwarg(x="bar")
+
     def test_classmethod(self):
         obj = WithPromotedMethods()
         obj.a_classmethod(1)
@@ -249,5 +246,5 @@ class TestDecoratorOnClasses(object):
             obj.a_classmethod_lambda(1, 2)
 
     def test_classmethod_lambda_self(self):
-        obj = WithPromotedMethods()
+        obj = WithPromotedMethods(Int)
         obj.a_classmethod_lambda_with_self(False)
