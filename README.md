@@ -12,7 +12,25 @@ Changelog
 ### Added
 
 ### Changed
+
+## [0.25.0] - 2019-08-22
+### Added
+
+### Changed
 - `Raster.stack` `max_workers` is limited to 25 workers, and will raise a warning and set the value to 25 if a value more than 25 is specified.
+
+### Workflows (channel `v0-7`) - Added
+- Interactive maps: `clear_layers` and `remove_layer` methods
+- ImageCollections: `concat` and `sorted` methods
+- ImageCollections: `head`, `tail`, and `partition` methods for slicing
+- DateTime, Timedelta, Geocontext, Bool, and Geometry are now computable
+- ImageCollectionGroupby ProxyObject for grouping ImageCollection by properties, and applying functions over groups
+- ImageCollections: `groupby` method
+- `parameter` constructor
+
+### Workflows - Changed
+- Interactive maps: autoscaling is now done in the background
+- Tiles requests can now include parameters
 
 ## [0.24.0] - 2019-08-01
 ### Added
