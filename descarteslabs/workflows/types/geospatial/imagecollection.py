@@ -556,11 +556,17 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         if cls._RESOLVED_STATS_RETURN_TYPES is None:
             cls._RESOLVED_STATS_RETURN_TYPES = _resolve_lambdas(cls._STATS_RETURN_TYPES)
 
-        axis_ = axis if isinstance(axis, tuple) else (axis,)
+        axis_ = (
+            axis
+            if isinstance(axis, tuple)
+            else tuple(axis)
+            if isinstance(axis, list)
+            else (axis,)
+        )
 
         try:
             return cls._RESOLVED_STATS_RETURN_TYPES[frozenset(axis_)]
-        except KeyError:
+        except (KeyError, TypeError):
             raise ValueError(
                 "Invalid axis argument {!r}, should be None, one of the strings "
                 "'images', 'bands', or 'pixels', or a tuple containing some "
