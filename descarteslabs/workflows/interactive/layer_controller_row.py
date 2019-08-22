@@ -3,6 +3,7 @@
 import ipywidgets as widgets
 import traitlets
 import numpy as np
+import threading
 
 from ..models import JobComputeError
 
@@ -258,7 +259,9 @@ class LayerControllerRow(widgets.Box):
                 children.extend(widgets["cmap_scales"])
         if self.colormappable:
             children.append(widgets["colormap"])
-            widgets["colormap"].layout.width = "2em" if self.layer.colormap is None else ""
+            widgets["colormap"].layout.width = (
+                "2em" if self.layer.colormap is None else ""
+            )
         if self.checkerboardable:
             children.append(widgets["checkerboard"])
         if self.autoscaleable:
@@ -268,12 +271,13 @@ class LayerControllerRow(widgets.Box):
 
         return children
 
-    @traitlets.observe("autoscaleable", "colormappable", "scaleable", "checkerboardable")
+    @traitlets.observe(
+        "autoscaleable", "colormappable", "scaleable", "checkerboardable"
+    )
     def _observe_supported_controls(self, change):
         self.children = self._make_children()
 
-    def autoscale(self, widget):
-        "``on_click`` handler to perform autoscaling."
+    def _autoscale(self, widget):
         with self.map.output_log:
             old_icon = widget.icon
             widget.icon = "spinner"
@@ -305,6 +309,11 @@ class LayerControllerRow(widgets.Box):
             finally:
                 widget.icon = old_icon
                 widget.disabled = False
+
+    def autoscale(self, widget):
+        "``on_click`` handler to perform autoscaling."
+        thread = threading.Thread(target=self._autoscale, args=(widget,), daemon=True)
+        thread.start()
 
     def move_up(self, _):
         "``on_click`` handler to move ``self.layer`` up on ``self.map``"

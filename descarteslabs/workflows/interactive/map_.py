@@ -213,7 +213,6 @@ class Map(ipyleaflet.Map):
         can log their output.
         """,
     )
-    # Output widget that functions executed by the map (e.g. `compute` calls) can write to
 
     def move_layer(self, layer, new_index):
         """
