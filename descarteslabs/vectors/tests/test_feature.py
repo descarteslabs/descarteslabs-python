@@ -25,9 +25,9 @@ class TestFeature(unittest.TestCase):
     def test___init__(self):
         feature = Feature(geometry=POINT, properties={})
 
-        self.assertIsNone(feature.id)
-        self.assertIsNotNone(feature.geometry)
-        self.assertIsNotNone(feature.properties)
+        assert feature.id is None
+        assert feature.geometry is not None
+        assert feature.properties is not None
 
     def test__create_from_jsonapi(self):
         r = DotDict(
@@ -35,9 +35,9 @@ class TestFeature(unittest.TestCase):
         )
         feature = Feature._create_from_jsonapi(r)
 
-        self.assertIsNotNone(feature.id)
-        self.assertIsNotNone(feature.geometry)
-        self.assertIsNotNone(feature.properties)
+        assert feature.id is not None
+        assert feature.geometry is not None
+        assert feature.properties is not None
 
     def test_geojson_geometries(self):
         geometries = [POLYGON, POINT]
@@ -46,15 +46,12 @@ class TestFeature(unittest.TestCase):
         for geometry in geometries:
             feature = Feature(geometry=geometry, properties=properties)
 
-            self.assertEqual(
-                json.dumps(feature.geojson, sort_keys=True),
-                json.dumps(
-                    {
-                        "geometry": geometry,
-                        "id": None,
-                        "properties": properties,
-                        "type": "Feature",
-                    },
-                    sort_keys=True,
-                ),
+            assert json.dumps(feature.geojson, sort_keys=True) == json.dumps(
+                {
+                    "geometry": geometry,
+                    "id": None,
+                    "properties": properties,
+                    "type": "Feature",
+                },
+                sort_keys=True,
             )

@@ -1,3 +1,4 @@
+import pytest
 import unittest
 import mock
 import os.path
@@ -110,26 +111,26 @@ class TestSceneCollection(unittest.TestCase):
 
         scenes = SceneCollection(scenes)
         stack, metas = scenes.stack("nir", ctx, raster_info=True)
-        self.assertEqual(stack.shape, (2, 1, 122, 120))
-        self.assertTrue((stack.mask[:, 0, 2, 2]).all())
-        self.assertEqual(len(metas), 2)
-        self.assertTrue(all(len(m["geoTransform"]) == 6 for m in metas))
+        assert stack.shape == (2, 1, 122, 120)
+        assert (stack.mask[:, 0, 2, 2]).all()
+        assert len(metas) == 2
+        assert all(len(m["geoTransform"]) == 6 for m in metas)
 
         img_stack = scenes.stack("nir red", ctx, bands_axis=-1)
-        self.assertEqual(img_stack.shape, (2, 122, 120, 2))
+        assert img_stack.shape == (2, 122, 120, 2)
 
         # no_alpha = scenes.stack("nir", mask_alpha=False)
         # # assert raster not called with alpha once mocks exist
 
         no_mask = scenes.stack("nir", ctx, mask_alpha=False, mask_nodata=False)
-        self.assertFalse(hasattr(no_mask, "mask"))
-        self.assertEqual(no_mask.shape, (2, 1, 122, 120))
+        assert not hasattr(no_mask, "mask")
+        assert no_mask.shape == (2, 1, 122, 120)
 
-        with self.assertRaises(NotImplementedError):
+        with pytest.raises(NotImplementedError):
             scenes.stack("nir red", ctx, bands_axis=0)
 
         stack_axis_1 = scenes.stack("nir red", ctx, bands_axis=1)
-        self.assertEqual(stack_axis_1.shape, (2, 2, 122, 120))
+        assert stack_axis_1.shape == (2, 2, 122, 120)
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
@@ -148,16 +149,16 @@ class TestSceneCollection(unittest.TestCase):
         scenes = SceneCollection(scenes)
 
         stack = scenes.stack("nir alpha", ctx, scaling="raw")
-        self.assertEqual(stack.shape, (2, 2, 122, 120))
-        self.assertEqual(stack.dtype, np.uint16)
+        assert stack.shape == (2, 2, 122, 120)
+        assert stack.dtype == np.uint16
 
         stack = scenes.stack("nir", ctx, scaling="raw")
-        self.assertEqual(stack.shape, (2, 1, 122, 120))
-        self.assertEqual(stack.dtype, np.uint16)
+        assert stack.shape == (2, 1, 122, 120)
+        assert stack.dtype == np.uint16
 
         stack = scenes.stack("nir", ctx, scaling=[None])
-        self.assertEqual(stack.shape, (2, 1, 122, 120))
-        self.assertEqual(stack.dtype, np.uint16)
+        assert stack.shape == (2, 1, 122, 120)
+        assert stack.dtype == np.uint16
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
@@ -183,19 +184,19 @@ class TestSceneCollection(unittest.TestCase):
             "nir", ctx, flatten="properties.id", raster_info=True
         )
 
-        self.assertEqual(len(flattened), 2)
-        self.assertEqual(len(metas), 2)
+        assert len(flattened) == 2
+        assert len(metas) == 2
 
         mosaic = scenes.mosaic("nir", ctx)
         allflat = scenes.stack("nir", ctx, flatten="properties.product")
-        self.assertTrue((mosaic == allflat).all())
+        assert (mosaic == allflat).all()
 
         for i, scene in enumerate(scenes):
             scene.properties.foo = i
 
         noflat = scenes.stack("nir", ctx, flatten="properties.foo")
-        self.assertEqual(len(noflat), len(scenes))
-        self.assertTrue((noflat == unflattened).all())
+        assert len(noflat) == len(scenes)
+        assert (noflat == unflattened).all()
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
@@ -217,7 +218,7 @@ class TestSceneCollection(unittest.TestCase):
 
         scenes = SceneCollection(scenes)
         stack, metas = scenes.stack("nir", ctx, raster_info=True)
-        self.assertEqual(stack.shape, (2, 1, 122, 120))
+        assert stack.shape == (2, 1, 122, 120)
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
@@ -236,38 +237,38 @@ class TestSceneCollection(unittest.TestCase):
 
         scenes = SceneCollection(scenes)
         mosaic, meta = scenes.mosaic("nir", ctx, raster_info=True)
-        self.assertEqual(mosaic.shape, (1, 122, 120))
-        self.assertTrue((mosaic.mask[:, 2, 2]).all())
-        self.assertEqual(len(meta["geoTransform"]), 6)
+        assert mosaic.shape == (1, 122, 120)
+        assert (mosaic.mask[:, 2, 2]).all()
+        assert len(meta["geoTransform"]) == 6
 
         img_mosaic = scenes.mosaic("nir red", ctx, bands_axis=-1)
-        self.assertEqual(img_mosaic.shape, (122, 120, 2))
+        assert img_mosaic.shape == (122, 120, 2)
 
         mosaic_with_alpha = scenes.mosaic(["red", "alpha"], ctx)
-        self.assertEqual(mosaic_with_alpha.shape, (2, 122, 120))
+        assert mosaic_with_alpha.shape == (2, 122, 120)
 
         mosaic_only_alpha = scenes.mosaic("alpha", ctx)
-        self.assertEqual(mosaic_only_alpha.shape, (1, 122, 120))
-        self.assertTrue(((mosaic_only_alpha.data == 0) == mosaic_only_alpha.mask).all())
+        assert mosaic_only_alpha.shape == (1, 122, 120)
+        assert ((mosaic_only_alpha.data == 0) == mosaic_only_alpha.mask).all()
 
         # no_alpha = scenes.mosaic("nir", mask_alpha=False)
         # # assert raster not called with alpha once mocks exist
 
         no_mask = scenes.mosaic("nir", ctx, mask_alpha=False, mask_nodata=False)
-        self.assertFalse(hasattr(no_mask, "mask"))
-        self.assertEqual(no_mask.shape, (1, 122, 120))
+        assert not hasattr(no_mask, "mask")
+        assert no_mask.shape == (1, 122, 120)
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             scenes.mosaic("alpha red", ctx)
 
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             scenes.mosaic("red", ctx, invalid_argument=True)
 
         mask_non_alpha = mosaic_with_alpha = scenes.mosaic(
             ["nir", "red"], ctx, mask_alpha="red"
         )
-        self.assertTrue(hasattr(mask_non_alpha, "mask"))
-        self.assertEqual(mask_non_alpha.shape, (2, 122, 120))
+        assert hasattr(mask_non_alpha, "mask")
+        assert mask_non_alpha.shape == (2, 122, 120)
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
@@ -286,16 +287,16 @@ class TestSceneCollection(unittest.TestCase):
         scenes = SceneCollection(scenes)
 
         mosaic = scenes.mosaic("nir alpha", ctx, scaling="raw")
-        self.assertEqual(mosaic.shape, (2, 122, 120))
-        self.assertEqual(mosaic.dtype, np.uint16)
+        assert mosaic.shape == (2, 122, 120)
+        assert mosaic.dtype == np.uint16
 
         mosaic = scenes.mosaic("nir", ctx, scaling="raw")
-        self.assertEqual(mosaic.shape, (1, 122, 120))
-        self.assertEqual(mosaic.dtype, np.uint16)
+        assert mosaic.shape == (1, 122, 120)
+        assert mosaic.dtype == np.uint16
 
         mosaic = scenes.mosaic("nir", ctx, scaling=[None])
-        self.assertEqual(mosaic.shape, (1, 122, 120))
-        self.assertEqual(mosaic.dtype, np.uint16)
+        assert mosaic.shape == (1, 122, 120)
+        assert mosaic.dtype == np.uint16
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
@@ -315,15 +316,15 @@ class TestSceneCollection(unittest.TestCase):
         no_mask = sc.mosaic(
             ["Clear_sky_days", "Clear_sky_nights"], ctx, mask_nodata=False
         )
-        self.assertFalse(hasattr(no_mask, "mask"))
+        assert not hasattr(no_mask, "mask")
 
         masked_alt_alpha_band = sc.mosaic(
             ["Clear_sky_days", "Clear_sky_nights"], ctx, mask_alpha="Clear_sky_nights"
         )
-        self.assertTrue(hasattr(masked_alt_alpha_band, "mask"))
+        assert hasattr(masked_alt_alpha_band, "mask")
 
         # errors when alternate alpha band is provided but not available in the scene
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             sc.mosaic(
                 ["Clear_sky_days", "Clear_sky_nights"], ctx, mask_alpha="alt-alpha"
             )
@@ -346,9 +347,9 @@ class TestSceneCollection(unittest.TestCase):
         scenes = SceneCollection(scenes)
         scenes[0].properties.bands.nir.dtype = "Int16"
         mosaic = scenes.mosaic("nir", ctx)
-        self.assertEqual(mosaic.dtype.type, np.int32)
+        assert mosaic.dtype.type == np.int32
         stack, meta = scenes.stack("nir", ctx)
-        self.assertEqual(stack.dtype.type, np.int32)
+        assert stack.dtype.type == np.int32
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     def test_filter_coverage(self):
@@ -362,13 +363,13 @@ class TestSceneCollection(unittest.TestCase):
             ]
         )
 
-        self.assertEqual(len(scenes.filter_coverage(ctx)), 1)
+        assert len(scenes.filter_coverage(ctx)) == 1
 
     def test_scaling_parameters_single(self):
         sc = SceneCollection([MockScene({}, self.MOCK_RGBA_PROPERTIES)])
         scales, data_type = sc.scaling_parameters("red green blue alpha")
-        self.assertIsNone(scales)
-        self.assertEqual(data_type, "UInt16")
+        assert scales is None
+        assert data_type == "UInt16"
 
     def test_scaling_parameters_none(self):
         sc = SceneCollection(
@@ -378,8 +379,8 @@ class TestSceneCollection(unittest.TestCase):
             ]
         )
         scales, data_type = sc.scaling_parameters("red green blue alpha")
-        self.assertIsNone(scales)
-        self.assertEqual(data_type, "UInt16")
+        assert scales is None
+        assert data_type == "UInt16"
 
     def test_scaling_parameters_display(self):
         sc = SceneCollection(
@@ -389,10 +390,8 @@ class TestSceneCollection(unittest.TestCase):
             ]
         )
         scales, data_type = sc.scaling_parameters("red green blue alpha", "display")
-        self.assertEqual(
-            scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
-        )
-        self.assertEqual(data_type, "Byte")
+        assert scales == [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
+        assert data_type == "Byte"
 
     def test_scaling_parameters_missing_band(self):
         sc = SceneCollection(
@@ -401,7 +400,7 @@ class TestSceneCollection(unittest.TestCase):
                 MockScene({}, self.MOCK_RGBA_PROPERTIES3),
             ]
         )
-        with self.assertRaisesRegexp(ValueError, "not available"):
+        with pytest.raises(ValueError, match="not available"):
             scales, data_type = sc.scaling_parameters("red green blue alpha")
 
     def test_scaling_parameters_none_data_type(self):
@@ -412,8 +411,8 @@ class TestSceneCollection(unittest.TestCase):
             ]
         )
         scales, data_type = sc.scaling_parameters("red alpha")
-        self.assertIsNone(scales)
-        self.assertEqual(data_type, "Int32")
+        assert scales is None
+        assert data_type == "Int32"
 
     def test_scaling_parameters_display_range(self):
         sc = SceneCollection(
@@ -423,8 +422,8 @@ class TestSceneCollection(unittest.TestCase):
             ]
         )
         scales, data_type = sc.scaling_parameters("red alpha", "display")
-        self.assertEquals(scales, [(0, 4000, 0, 255), None])
-        self.assertEqual(data_type, "Byte")
+        assert scales == [(0, 4000, 0, 255), None]
+        assert data_type == "Byte"
 
     def test_scaling_parameters_raw_range(self):
         sc = SceneCollection(
@@ -434,8 +433,8 @@ class TestSceneCollection(unittest.TestCase):
             ]
         )
         scales, data_type = sc.scaling_parameters("red alpha", "raw")
-        self.assertEquals(scales, [None, None])
-        self.assertEqual(data_type, "Int32")
+        assert scales == [None, None]
+        assert data_type == "Int32"
 
     def test_scaling_parameters_physical_incompatible(self):
         sc = SceneCollection(
@@ -444,7 +443,7 @@ class TestSceneCollection(unittest.TestCase):
                 MockScene({}, self.MOCK_RGBA_PROPERTIES3),
             ]
         )
-        with self.assertRaisesRegexp(ValueError, "incompatible"):
+        with pytest.raises(ValueError, match="incompatible"):
             scales, data_type = sc.scaling_parameters("green alpha", "physical")
 
 
@@ -469,16 +468,13 @@ class TestSceneCollectionDownload(unittest.TestCase):
         dest = "rasters"
         paths = self.scenes.download("nir yellow", self.ctx, dest, format="png")
 
-        self.assertEqual(
-            paths,
-            [
-                os.path.join(dest, "foo:bar0-nir-yellow.png"),
-                os.path.join(dest, "foo:bar1-nir-yellow.png"),
-                os.path.join(dest, "foo:bar2-nir-yellow.png"),
-            ],
-        )
+        assert paths == [
+            os.path.join(dest, "foo:bar0-nir-yellow.png"),
+            os.path.join(dest, "foo:bar1-nir-yellow.png"),
+            os.path.join(dest, "foo:bar2-nir-yellow.png"),
+        ]
 
-        self.assertEqual(mock_download.call_count, len(self.scenes))
+        assert mock_download.call_count == len(self.scenes)
         for scene, path in zip(self.scenes, paths):
             mock_download.assert_any_call(
                 ["nir", "yellow"],
@@ -498,9 +494,9 @@ class TestSceneCollectionDownload(unittest.TestCase):
             os.path.join("foo", "img3.tif"),
         ]
         result = self.scenes.download("nir yellow", self.ctx, filenames)
-        self.assertEqual(result, filenames)
+        assert result == filenames
 
-        self.assertEqual(mock_download.call_count, len(self.scenes))
+        assert mock_download.call_count == len(self.scenes)
         for scene, path in zip(self.scenes, filenames):
             mock_download.assert_any_call(
                 ["nir", "yellow"],
@@ -515,15 +511,15 @@ class TestSceneCollectionDownload(unittest.TestCase):
 
     def test_non_unique_paths(self, mock_download):
         nonunique_paths = ["img.tif", "img2.tif", "img.tif"]
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             self.scenes.download("nir yellow", self.ctx, nonunique_paths)
 
     def test_wrong_number_of_dest(self, mock_download):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.scenes.download("nir", self.ctx, ["a", "b"])
 
     def test_wrong_type_of_dest(self, mock_download):
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             self.scenes.download("nir", self.ctx, 4)
 
     @mock.patch("descarteslabs.scenes.scenecollection._download._download")
@@ -532,4 +528,4 @@ class TestSceneCollectionDownload(unittest.TestCase):
 
         mock_base_download.assert_called_once()
         called_ids = mock_base_download.call_args[1]["inputs"]
-        self.assertEqual(called_ids, self.scenes.each.properties["id"].combine())
+        assert called_ids == self.scenes.each.properties["id"].combine()

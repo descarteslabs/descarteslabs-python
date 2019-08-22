@@ -1,3 +1,4 @@
+import pytest
 import unittest
 import mock
 import datetime
@@ -77,23 +78,23 @@ class TestScene(unittest.TestCase):
 
         scene = Scene(metadata, bands)
 
-        self.assertEqual(scene.properties.id, scene_id)
-        self.assertEqual(scene.properties.product, "landsat:LC08:PRE:TOAR")
-        self.assertAlmostEqual(len(scene.properties.bands), 24, delta=4)
-        self.assertIsInstance(scene.properties.bands, dict)
-        self.assertEqual(scene.properties.crs, "EPSG:32615")
-        self.assertIsInstance(scene.geometry, shapely.geometry.Polygon)
-        self.assertIsInstance(scene.__geo_interface__, dict)
+        assert scene.properties.id == scene_id
+        assert scene.properties.product == "landsat:LC08:PRE:TOAR"
+        assert abs(len(scene.properties.bands) - 24) < 4
+        assert isinstance(scene.properties.bands, dict)
+        assert scene.properties.crs == "EPSG:32615"
+        assert isinstance(scene.geometry, shapely.geometry.Polygon)
+        assert isinstance(scene.__geo_interface__, dict)
 
     def test_default_ctx(self):
         # test doesn't fail with nothing
         ctx = MockScene({}, {}).default_ctx()
-        self.assertEqual(ctx, geocontext.AOI(bounds_crs=None, align_pixels=False))
+        assert ctx == geocontext.AOI(bounds_crs=None, align_pixels=False)
 
         # no geotrans
         ctx = MockScene({}, {"crs": "EPSG:4326"}).default_ctx()
-        self.assertEqual(
-            ctx, geocontext.AOI(crs="EPSG:4326", bounds_crs=None, align_pixels=False)
+        assert ctx == geocontext.AOI(
+            crs="EPSG:4326", bounds_crs=None, align_pixels=False
         )
 
         # north-up geotrans - resolution
@@ -109,8 +110,8 @@ class TestScene(unittest.TestCase):
                     "geotrans": [0, 2, 0, 0, 0, -2],
                 },
             ).default_ctx()
-            self.assertEqual(len(w), 0)
-        self.assertEqual(ctx.resolution, 2)
+            assert len(w) == 0
+        assert ctx.resolution == 2
 
         # non-north-up geotrans - resolution
         with warnings.catch_warnings(record=True) as w:
@@ -131,11 +132,9 @@ class TestScene(unittest.TestCase):
                 },
             ).default_ctx()
             warning = w[0]
-            self.assertIn(
-                "The GeoContext will *not* return this Scene's original data",
-                str(warning.message),
-            )
-        self.assertEqual(ctx.resolution, 2)
+            assert "The GeoContext will *not* return this Scene's original data" in \
+                str(warning.message)
+        assert ctx.resolution == 2
 
         # north-up geotrans - bounds
         ctx = MockScene(
@@ -147,7 +146,7 @@ class TestScene(unittest.TestCase):
                 "raster_size": [1, 2],
             },
         ).default_ctx()
-        self.assertEqual(ctx.bounds, (10, 16, 12, 20))
+        assert ctx.bounds == (10, 16, 12, 20)
 
         # non-north-up geotrans - bounds
         with warnings.catch_warnings(record=True) as w:
@@ -169,12 +168,10 @@ class TestScene(unittest.TestCase):
                 },
             ).default_ctx()
             warning = w[0]
-            self.assertIn(
-                "The GeoContext will *not* return this Scene's original data",
-                str(warning.message),
-            )
+            assert "The GeoContext will *not* return this Scene's original data" in \
+                str(warning.message)
         diagonal = np.sqrt(2 ** 2 + 2 ** 2)
-        self.assertEqual(ctx.bounds, (0, -diagonal / 2, diagonal, diagonal / 2))
+        assert ctx.bounds == (0, -diagonal / 2, diagonal, diagonal / 2)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
@@ -185,9 +182,9 @@ class TestScene(unittest.TestCase):
         scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
         scene, ctx = Scene.from_id(scene_id)
 
-        self.assertEqual(scene.properties.id, scene_id)
-        self.assertIsInstance(scene.geometry, shapely.geometry.Polygon)
-        self.assertIsInstance(ctx, geocontext.AOI)
+        assert scene.properties.id == scene_id
+        assert isinstance(scene.geometry, shapely.geometry.Polygon)
+        assert isinstance(ctx, geocontext.AOI)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
@@ -199,12 +196,12 @@ class TestScene(unittest.TestCase):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr, info = scene.ndarray("red", ctx.assign(resolution=1000), raster_info=True)
 
-        self.assertEqual(arr.shape, (1, 239, 235))
-        self.assertTrue(arr.mask[0, 2, 2])
-        self.assertFalse(arr.mask[0, 115, 116])
-        self.assertEqual(len(info["geoTransform"]), 6)
+        assert arr.shape == (1, 239, 235)
+        assert arr.mask[0, 2, 2]
+        assert not arr.mask[0, 115, 116]
+        assert len(info["geoTransform"]) == 6
 
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             scene.ndarray("blue", ctx, invalid_argument=True)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
@@ -214,7 +211,7 @@ class TestScene(unittest.TestCase):
     )
     def test_nonexistent_band_fails(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             scene.ndarray("blue yellow", ctx)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
@@ -229,7 +226,7 @@ class TestScene(unittest.TestCase):
         arr, info = scene.ndarray(
             "red green", ctx.assign(resolution=600), mask_alpha=False
         )
-        self.assertEqual(arr.dtype.type, np.int32)
+        assert arr.dtype.type == np.int32
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
@@ -241,9 +238,9 @@ class TestScene(unittest.TestCase):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr = scene.ndarray("red green blue", ctx.assign(resolution=1000))
 
-        self.assertEqual(arr.shape, (3, 239, 235))
-        self.assertTrue((arr.mask[:, 2, 2]).all())
-        self.assertFalse((arr.mask[:, 115, 116]).all())
+        assert arr.shape == (3, 239, 235)
+        assert (arr.mask[:, 2, 2]).all()
+        assert not (arr.mask[:, 115, 116]).all()
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
@@ -257,15 +254,15 @@ class TestScene(unittest.TestCase):
             "red green blue", ctx.assign(resolution=1000), bands_axis=-1
         )
 
-        self.assertEqual(arr.shape, (239, 235, 3))
-        self.assertTrue((arr.mask[2, 2, :]).all())
-        self.assertFalse((arr.mask[115, 116, :]).all())
+        assert arr.shape == (239, 235, 3)
+        assert (arr.mask[2, 2, :]).all()
+        assert not (arr.mask[115, 116, :]).all()
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             arr = scene.ndarray(
                 "red green blue", ctx.assign(resolution=1000), bands_axis=3
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             arr = scene.ndarray(
                 "red green blue", ctx.assign(resolution=1000), bands_axis=-3
             )
@@ -285,8 +282,8 @@ class TestScene(unittest.TestCase):
             mask_alpha=False,
         )
 
-        self.assertFalse(hasattr(arr, "mask"))
-        self.assertEqual(arr.shape, (2, 239, 235))
+        assert not hasattr(arr, "mask")
+        assert arr.shape == (2, 239, 235)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
@@ -304,8 +301,8 @@ class TestScene(unittest.TestCase):
             mask_nodata=False,
         )
 
-        self.assertFalse(hasattr(arr, "mask"))
-        self.assertEqual(arr.shape, (2, 688, 473))
+        assert not hasattr(arr, "mask")
+        assert arr.shape == (2, 688, 473)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
@@ -324,8 +321,8 @@ class TestScene(unittest.TestCase):
             mask_nodata=False,
         )
 
-        self.assertTrue(hasattr(arr, "mask"))
-        self.assertEqual(arr.shape, (2, 688, 473))
+        assert hasattr(arr, "mask")
+        assert arr.shape == (2, 688, 473)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
@@ -337,7 +334,7 @@ class TestScene(unittest.TestCase):
         scene, ctx = Scene.from_id(
             "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1"
         )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             scene.ndarray(
                 ["Clear_sky_days", "Clear_sky_nights"],
                 ctx.assign(resolution=1000),
@@ -355,7 +352,7 @@ class TestScene(unittest.TestCase):
         scene, ctx = Scene.from_id(
             "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1"
         )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             scene.ndarray(
                 ["Clear_sky_days", "Clear_sky_nights"],
                 ctx.assign(resolution=1000),
@@ -375,8 +372,8 @@ class TestScene(unittest.TestCase):
             ["red", "green", "blue"], ctx.assign(resolution=1000), mask_nodata=False
         )
 
-        self.assertTrue(hasattr(arr, "mask"))
-        self.assertEqual(arr.shape, (3, 239, 235))
+        assert hasattr(arr, "mask")
+        assert arr.shape == (3, 239, 235)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
@@ -388,26 +385,24 @@ class TestScene(unittest.TestCase):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
 
         arr = scene.ndarray(["red", "alpha"], ctx.assign(resolution=1000))
-        self.assertEqual(arr.shape, (2, 239, 235))
-        self.assertTrue((arr.mask == (arr.data[1] == 0)).all())
+        assert arr.shape == (2, 239, 235)
+        assert (arr.mask == (arr.data[1] == 0)).all()
 
         arr = scene.ndarray(["alpha"], ctx.assign(resolution=1000), mask_nodata=False)
-        self.assertEqual(arr.shape, (1, 239, 235))
-        self.assertTrue((arr.mask == (arr.data == 0)).all())
+        assert arr.shape == (1, 239, 235)
+        assert (arr.mask == (arr.data == 0)).all()
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             arr = scene.ndarray("alpha red", ctx.assign(resolution=1000))
 
     def test_bands_to_list(self):
-        self.assertEqual(Scene._bands_to_list("one"), ["one"])
-        self.assertEqual(Scene._bands_to_list(["one"]), ["one"])
-        self.assertEqual(Scene._bands_to_list("one two three"), ["one", "two", "three"])
-        self.assertEqual(
-            Scene._bands_to_list(["one", "two", "three"]), ["one", "two", "three"]
-        )
-        with self.assertRaises(TypeError):
+        assert Scene._bands_to_list("one") == ["one"]
+        assert Scene._bands_to_list(["one"]) == ["one"]
+        assert Scene._bands_to_list("one two three") == ["one", "two", "three"]
+        assert Scene._bands_to_list(["one", "two", "three"]) == ["one", "two", "three"]
+        with pytest.raises(TypeError):
             Scene._bands_to_list(1)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             Scene._bands_to_list([])
 
     def test_scenes_bands_dict(self):
@@ -418,11 +413,9 @@ class TestScene(unittest.TestCase):
             "derived:ndvi": {"name": "ndvi", "id": "derived:ndvi"},
         }
         scenes_bands = Scene._scenes_bands_dict(meta_bands)
-        self.assertEqual(
-            set(scenes_bands.keys()), {"red", "green", "ndvi", "derived:ndvi"}
-        )
-        self.assertEqual(scenes_bands.ndvi, meta_bands["someproduct:ndvi"])
-        self.assertEqual(scenes_bands["derived:ndvi"], meta_bands["derived:ndvi"])
+        assert set(scenes_bands.keys()) == {"red", "green", "ndvi", "derived:ndvi"}
+        assert scenes_bands.ndvi == meta_bands["someproduct:ndvi"]
+        assert scenes_bands["derived:ndvi"] == meta_bands["derived:ndvi"]
 
     def test_raw_data_type(self):
         mock_properties = {
@@ -439,48 +432,34 @@ class TestScene(unittest.TestCase):
             },
         }
         s = MockScene({}, mock_properties)
-        self.assertEqual(s.scaling_parameters(["its_a_byte"], scaling=None)[1], "Byte")
-        self.assertEqual(
-            s.scaling_parameters(["one", "two"], scaling=None)[1], "UInt16"
-        )
-        self.assertEqual(
-            s.scaling_parameters(["its_a_byte", "alpha"], scaling=None)[1], "Byte"
-        )
+        assert s.scaling_parameters(["its_a_byte"], scaling=None)[1] == "Byte"
+        assert s.scaling_parameters(["one", "two"], scaling=None)[1] == "UInt16"
+        assert s.scaling_parameters(["its_a_byte", "alpha"], scaling=None)[1] == "Byte"
         # alpha ignored from common datatype
-        self.assertEqual(
-            s.scaling_parameters(["one", "alpha"], scaling=None)[1], "UInt16"
-        )
-        self.assertEqual(s.scaling_parameters(["alpha"], scaling=None)[1], "Byte")
-        self.assertEqual(
-            s.scaling_parameters(
+        assert s.scaling_parameters(["one", "alpha"], scaling=None)[1] == "UInt16"
+        assert s.scaling_parameters(["alpha"], scaling=None)[1] == "Byte"
+        assert s.scaling_parameters(
                 ["one", "two", "derived:three", "derived:one"], scaling=None
-            )[1],
-            "UInt16",
-        )
-        self.assertEqual(
-            s.scaling_parameters(["one", "its_a_byte"], scaling=None)[1], "UInt16"
-        )
-        self.assertEqual(
-            s.scaling_parameters(["signed", "its_a_byte"], scaling=None)[1], "Int16"
-        )
-        self.assertEqual(
-            s.scaling_parameters(["one", "signed"], scaling=None)[1], "Int32"
-        )
+            )[1] == \
+            "UInt16"
+        assert s.scaling_parameters(["one", "its_a_byte"], scaling=None)[1] == "UInt16"
+        assert s.scaling_parameters(["signed", "its_a_byte"], scaling=None)[1] == "Int16"
+        assert s.scaling_parameters(["one", "signed"], scaling=None)[1] == "Int32"
 
-        with self.assertRaisesRegexp(ValueError, "is not available"):
+        with pytest.raises(ValueError, match="is not available"):
             s.scaling_parameters(["one", "woohoo"], scaling=None)
-        with self.assertRaisesRegexp(ValueError, "did you mean"):
+        with pytest.raises(ValueError, match="did you mean"):
             s.scaling_parameters(
                 ["one", "three"], scaling=None
             )  # should hint that derived:three exists
-        with self.assertRaisesRegexp(ValueError, "Invalid data type"):
+        with pytest.raises(ValueError, match="Invalid data type"):
             s.scaling_parameters(["its_a_byte", "future_unknown_type"], scaling=None)
 
     def test__naive_dateparse(self):
-        self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00+00:00"))
-        self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00.00+00:00"))
-        self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00Z"))
-        self.assertIsNotNone(_strptime_helper("2017-08-31T00:00:00"))
+        assert _strptime_helper("2017-08-31T00:00:00+00:00") is not None
+        assert _strptime_helper("2017-08-31T00:00:00.00+00:00") is not None
+        assert _strptime_helper("2017-08-31T00:00:00Z") is not None
+        assert _strptime_helper("2017-08-31T00:00:00") is not None
 
     def test_coverage(self):
         scene_geometry = shapely.geometry.Point(0.0, 0.0).buffer(1)
@@ -488,17 +467,15 @@ class TestScene(unittest.TestCase):
         scene = Scene(dict(id="foo", geometry=scene_geometry, properties={}), {})
 
         # same geometry (as a GeoJSON)
-        self.assertAlmostEqual(
-            scene.coverage(scene_geometry.__geo_interface__), 1.0, places=6
-        )
+        assert scene.coverage(scene_geometry.__geo_interface__) == pytest.approx(1.0, abs=1e-6)
 
         # geom is larger
         geom_larger = shapely.geometry.Point(0.0, 0.0).buffer(2)
-        self.assertEqual(scene.coverage(geom_larger), 0.25)
+        assert scene.coverage(geom_larger) == 0.25
 
         # geom is smaller
         geom_smaller = shapely.geometry.Point(0.0, 0.0).buffer(0.5)
-        self.assertEqual(scene.coverage(geom_smaller), 1.0)
+        assert scene.coverage(geom_smaller) == 1.0
 
     @mock.patch("descarteslabs.scenes.scene._download._download")
     def test_download(self, mock_geotiff):
@@ -516,70 +493,70 @@ class TestScene(unittest.TestCase):
     def test_scaling_parameters_none(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters("red green blue alpha")
-        self.assertIsNone(scales)
-        self.assertEqual(data_type, "UInt16")
+        assert scales is None
+        assert data_type == "UInt16"
 
     def test_scaling_parameters_dtype(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
             "red green blue alpha", None, "UInt32"
         )
-        self.assertIsNone(scales)
-        self.assertEqual(data_type, "UInt32")
+        assert scales is None
+        assert data_type == "UInt32"
 
     def test_scaling_parameters_raw(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters("red green blue alpha", "raw")
-        self.assertEqual(scales, [None, None, None, None])
-        self.assertEqual(data_type, "UInt16")
+        assert scales == [None, None, None, None]
+        assert data_type == "UInt16"
 
     def test_scaling_parameters_display(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters("red green blue alpha", "display")
-        self.assertEqual(
-            scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
-        )
-        self.assertEqual(data_type, "Byte")
+        assert scales == [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
+        assert data_type == "Byte"
 
     def test_scaling_parameters_display_uint16(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
             "red green blue alpha", "display", "UInt16"
         )
-        self.assertEqual(
-            scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
-        )
-        self.assertEqual(data_type, "UInt16")
+        assert scales == [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
+        assert data_type == "UInt16"
 
     def test_scaling_parameters_auto(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters("red green blue alpha", "auto")
-        self.assertEqual(scales, [(), (), (), None])
-        self.assertEqual(data_type, "Byte")
+        assert scales == [(), (), (), None]
+        assert data_type == "Byte"
 
     def test_scaling_parameters_physical(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters("red green blue alpha", "physical")
-        self.assertEqual(
-            scales,
-            [(0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), None],
-        )
-        self.assertEqual(data_type, "Float64")
+        assert scales == [
+            (0, 10000, 0.0, 1.0),
+            (0, 10000, 0.0, 1.0),
+            (0, 10000, 0.0, 1.0),
+            None,
+        ]
+        assert data_type == "Float64"
 
     def test_scaling_parameters_physical_int32(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
             "red green blue alpha", "physical", "Int32"
         )
-        self.assertEqual(
-            scales,
-            [(0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), (0, 10000, 0.0, 1.0), None],
-        )
-        self.assertEqual(data_type, "Int32")
+        assert scales == [
+            (0, 10000, 0.0, 1.0),
+            (0, 10000, 0.0, 1.0),
+            (0, 10000, 0.0, 1.0),
+            None,
+        ]
+        assert data_type == "Int32"
 
     def test_scaling_parameters_bad_mode(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             scales, data_type = scene.scaling_parameters("red green blue alpha", "mode")
 
     def test_scaling_parameters_list(self):
@@ -587,29 +564,27 @@ class TestScene(unittest.TestCase):
         scales, data_type = scene.scaling_parameters(
             "red green blue alpha", [(0, 10000), "display", (), None]
         )
-        self.assertEqual(scales, [(0, 10000, 0, 255), (0, 4000, 0, 255), (), None])
-        self.assertEqual(data_type, "Byte")
+        assert scales == [(0, 10000, 0, 255), (0, 4000, 0, 255), (), None]
+        assert data_type == "Byte"
 
     def test_scaling_parameters_list_alpha(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
             "red green blue alpha", [(0, 4000), (0, 4000), (0, 4000), "raw"]
         )
-        self.assertEqual(
-            scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
-        )
-        self.assertEqual(data_type, "Byte")
+        assert scales == [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
+        assert data_type == "Byte"
 
     def test_scaling_parameters_list_bad_length(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             scales, data_type = scene.scaling_parameters(
                 "red green blue alpha", [(0, 10000), "display", ()]
             )
 
     def test_scaling_parameters_list_bad_mode(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             scales, data_type = scene.scaling_parameters(
                 "red green blue alpha", [(0, 10000), "mode", (), None]
             )
@@ -620,50 +595,48 @@ class TestScene(unittest.TestCase):
             "red green blue alpha",
             {"red": "display", "green": (0, 10000), "default_": "auto"},
         )
-        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 10000, 0, 255), (), None])
-        self.assertEqual(data_type, "Byte")
+        assert scales == [(0, 4000, 0, 255), (0, 10000, 0, 255), (), None]
+        assert data_type == "Byte"
 
     def test_scaling_parameters_dict_default(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
             "red green blue alpha", {"red": (0, 4000, 0, 255), "default_": "raw"}
         )
-        self.assertEqual(scales, [(0, 4000, 0, 255), None, None, None])
-        self.assertEqual(data_type, "UInt16")
+        assert scales == [(0, 4000, 0, 255), None, None, None]
+        assert data_type == "UInt16"
 
     def test_scaling_parameters_dict_default_none(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
             "red green blue alpha", {"red": "display", "green": "display"}
         )
-        self.assertEqual(scales, [(0, 4000, 0, 255), (0, 4000, 0, 255), None, None])
-        self.assertEqual(data_type, "Byte")
+        assert scales == [(0, 4000, 0, 255), (0, 4000, 0, 255), None, None]
+        assert data_type == "Byte"
 
     def test_scaling_parameters_tuple_range(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
             "red green blue alpha", [(0, 10000, 0, 255), (0, 4000), (), None]
         )
-        self.assertEqual(scales, [(0, 10000, 0, 255), (0, 4000, 0, 255), (), None])
-        self.assertEqual(data_type, "Byte")
+        assert scales == [(0, 10000, 0, 255), (0, 4000, 0, 255), (), None]
+        assert data_type == "Byte"
 
     def test_scaling_parameters_tuple_range_uint16(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
             "red green blue alpha", [(0, 10000, 0, 10000), (0, 4000), (), None]
         )
-        self.assertEqual(scales, [(0, 10000, 0, 10000), (0, 4000, 0, 65535), (), None])
-        self.assertEqual(data_type, "UInt16")
+        assert scales == [(0, 10000, 0, 10000), (0, 4000, 0, 65535), (), None]
+        assert data_type == "UInt16"
 
     def test_scaling_parameters_tuple_range_float(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
             "red green blue alpha", [(0, 10000, 0, 1.0), (0, 4000), (0, 4000), None]
         )
-        self.assertEqual(
-            scales, [(0, 10000, 0, 1), (0, 4000, 0, 1), (0, 4000, 0, 1), None]
-        )
-        self.assertEqual(data_type, "Float64")
+        assert scales == [(0, 10000, 0, 1), (0, 4000, 0, 1), (0, 4000, 0, 1), None]
+        assert data_type == "Float64"
 
     def test_scaling_parameters_tuple_pct(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
@@ -671,10 +644,13 @@ class TestScene(unittest.TestCase):
             "red green blue alpha",
             [("0%", "100%", "0%", "100%"), ("2%", "98%", "2%", "98%"), "display", None],
         )
-        self.assertEqual(
-            scales, [(0, 4000, 0, 255), (80, 3920, 5, 250), (0, 4000, 0, 255), None]
-        )
-        self.assertEqual(data_type, "Byte")
+        assert scales == [
+            (0, 4000, 0, 255),
+            (80, 3920, 5, 250),
+            (0, 4000, 0, 255),
+            None,
+        ]
+        assert data_type == "Byte"
 
     def test_scaling_parameters_tuple_pct_float(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
@@ -687,14 +663,17 @@ class TestScene(unittest.TestCase):
                 None,
             ],
         )
-        self.assertEqual(
-            scales, [(0, 10000, 0, 1), (200, 9800, 0.02, 0.98), (0, 10000, 0, 1), None]
-        )
-        self.assertEqual(data_type, "Float64")
+        assert scales == [
+            (0, 10000, 0, 1),
+            (200, 9800, 0.02, 0.98),
+            (0, 10000, 0, 1),
+            None,
+        ]
+        assert data_type == "Float64"
 
     def test_scaling_parameters_bad_data_type(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             scales, data_type = scene.scaling_parameters(
                 "red green blue alpha", None, "data_type"
             )
@@ -753,7 +732,7 @@ class TestSceneRepr(unittest.TestCase):
             self.date_str
         )
 
-        self.assertEqual(repr_str, textwrap.dedent(match_str))
+        assert repr_str == textwrap.dedent(match_str)
 
     def test_missing_band_part(self):
         del self.scene.properties.bands["blue"]["physical_range"]
@@ -770,7 +749,7 @@ class TestSceneRepr(unittest.TestCase):
             self.date_str
         )
 
-        self.assertEqual(repr_str, textwrap.dedent(match_str))
+        assert repr_str == textwrap.dedent(match_str)
 
     def test_missing_all_band_parts(self):
         self.scene.properties.bands["alpha"] = {}
@@ -786,7 +765,7 @@ class TestSceneRepr(unittest.TestCase):
             self.date_str
         )
 
-        self.assertEqual(repr_str, textwrap.dedent(match_str))
+        assert repr_str == textwrap.dedent(match_str)
 
     def test_no_bands(self):
         self.scene.properties.bands = {}
@@ -799,7 +778,7 @@ class TestSceneRepr(unittest.TestCase):
             self.date_str
         )
 
-        self.assertEqual(repr_str, textwrap.dedent(match_str))
+        assert repr_str == textwrap.dedent(match_str)
 
     def test_truncate_hella_bands(self):
         self.scene.properties.bands.update({str(i): {} for i in range(100)})
@@ -813,4 +792,4 @@ class TestSceneRepr(unittest.TestCase):
             self.date_str
         )
 
-        self.assertEqual(repr_str, textwrap.dedent(match_str))
+        assert repr_str == textwrap.dedent(match_str)

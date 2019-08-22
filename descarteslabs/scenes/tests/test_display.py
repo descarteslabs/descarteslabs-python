@@ -1,5 +1,6 @@
 from __future__ import division
 
+import pytest
 import unittest
 import mock
 
@@ -35,7 +36,7 @@ class TestDisplay(unittest.TestCase):
 
         ax = mock_axs[0][0]
         imshow_args, imshow_kwargs = ax.imshow.call_args
-        self.assertTrue((imshow_args[0] == img_normed).all())
+        assert (imshow_args[0] == img_normed).all()
         ax.set_title.assert_called_with("foo")
 
     @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
@@ -60,8 +61,8 @@ class TestDisplay(unittest.TestCase):
         ax = mock_axs[0][0]
         imshow_args, imshow_kwargs = ax.imshow.call_args
         called_arr = imshow_args[0]
-        self.assertEqual(called_arr.shape, (3, 2, 4))
-        self.assertTrue((called_arr[:, :, -1] == alpha).all())
+        assert called_arr.shape == (3, 2, 4)
+        assert (called_arr[:, :, -1] == alpha).all()
 
         ax.set_title.assert_not_called()
 
@@ -72,7 +73,7 @@ class TestDisplay(unittest.TestCase):
         )
 
         img = np.arange(len(mock_axs) * 3 * 3 * 2).reshape((len(mock_axs), 3, 3, 2))
-        with self.assertRaisesRegexp(TypeError, "To display a 4D ndarray"):
+        with pytest.raises(TypeError, match="To display a 4D ndarray"):
             display(img)
 
         display(*img, title=list(range(len(img))))
@@ -81,7 +82,7 @@ class TestDisplay(unittest.TestCase):
             ax = ax[0]
             imshow_args, imshow_kwargs = ax.imshow.call_args
             called_arr = imshow_args[0]
-            self.assertEqual(called_arr.shape, (3, 2, 3))
+            assert called_arr.shape == (3, 2, 3)
             ax.set_title.assert_called_with(str(i))
 
     @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
@@ -92,7 +93,7 @@ class TestDisplay(unittest.TestCase):
 
         img = np.arange(2 * 4 * 2).reshape((2, 4, 2))
 
-        with self.assertRaises(NotImplementedError):
+        with pytest.raises(NotImplementedError):
             display(img)
 
     @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
@@ -102,10 +103,10 @@ class TestDisplay(unittest.TestCase):
         )
 
         img = np.arange(len(mock_axs) * 3 * 3 * 2).reshape((len(mock_axs), 3, 3, 2))
-        with self.assertRaisesRegexp(ValueError, "titles"):
+        with pytest.raises(ValueError, match="titles"):
             display(*img, title=[1, 2])
 
     @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
     def test_fails_wrong_kwargs(self, mock_matplotlib_importer):
-        with self.assertRaisesRegexp(TypeError, "what"):
+        with pytest.raises(TypeError, match="what"):
             display(None, title="foo", what="bar")

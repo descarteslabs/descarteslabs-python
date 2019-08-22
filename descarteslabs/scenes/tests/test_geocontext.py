@@ -1,3 +1,4 @@
+import pytest
 import unittest
 import mock
 import multiprocessing
@@ -25,23 +26,23 @@ class TestGeoContext(unittest.TestCase):
         r = repr(simple)
         expected = """SimpleContext(foo=1,
               bar=False)"""
-        self.assertEqual(r, expected)
+        assert r == expected
 
     def test_eq(self):
         simple = SimpleContext(1, False)
         simple2 = SimpleContext(1, False)
         simple_diff = SimpleContext(1, True)
         not_simple = geocontext.GeoContext()
-        self.assertEqual(simple, simple)
-        self.assertEqual(simple, simple2)
-        self.assertNotEqual(simple, simple_diff)
-        self.assertNotEqual(simple, not_simple)
+        assert simple == simple
+        assert simple == simple2
+        assert simple != simple_diff
+        assert simple != not_simple
 
     def test_deepcopy(self):
         simple = SimpleContext(1, False)
         simple_copy = copy.deepcopy(simple)
-        self.assertIsNot(simple._geometry_lock_, simple_copy._geometry_lock_)
-        self.assertEqual(simple, simple_copy)
+        assert simple._geometry_lock_ is not simple_copy._geometry_lock_
+        assert simple == simple_copy
 
 
 class TestAOI(unittest.TestCase):
@@ -68,14 +69,13 @@ class TestAOI(unittest.TestCase):
         bounds_wgs84 = (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716)
         resolution = 40
         ctx = geocontext.AOI(collection, resolution=resolution)
-        self.assertEqual(ctx.resolution, resolution)
-        self.assertEqual(
-            tuple(round(e, 5) for e in ctx.bounds),
-            tuple(round(e, 5) for e in bounds_wgs84),
+        assert ctx.resolution == resolution
+        assert tuple(round(e, 5) for e in ctx.bounds) == tuple(
+            round(e, 5) for e in bounds_wgs84
         )
-        self.assertEqual(ctx.bounds_crs, "EPSG:4326")
-        self.assertIsInstance(ctx.geometry, shapely.geometry.GeometryCollection)
-        self.assertEqual(ctx.__geo_interface__["type"], "GeometryCollection")
+        assert ctx.bounds_crs == "EPSG:4326"
+        assert isinstance(ctx.geometry, shapely.geometry.GeometryCollection)
+        assert ctx.__geo_interface__["type"] == "GeometryCollection"
         assertCountEqual(
             self, ctx.__geo_interface__["geometries"][0], feature["geometry"]
         )
@@ -131,62 +131,53 @@ class TestAOI(unittest.TestCase):
             ctx2.geometry.__geo_interface__,
             shapely.geometry.shape(geom).__geo_interface__,
         )
-        self.assertEqual(ctx2.resolution, 40)
-        self.assertEqual(ctx2.align_pixels, True)
-        self.assertEqual(ctx2.shape, None)
+        assert ctx2.resolution == 40
+        assert ctx2.align_pixels
+        assert ctx2.shape is None
 
         ctx3 = ctx2.assign(geometry=None)
-        self.assertEqual(ctx3.geometry, None)
+        assert ctx3.geometry is None
 
     def test_assign_update_bounds(self):
         geom = shapely.geometry.Point(-90, 30).buffer(1).envelope
         ctx = geocontext.AOI(geometry=geom, resolution=40)
 
         geom_overlaps = shapely.affinity.translate(geom, xoff=1)
-        self.assertTrue(geom.intersects(geom_overlaps))
+        assert geom.intersects(geom_overlaps)
         ctx_overlap = ctx.assign(geometry=geom_overlaps)
-        self.assertEqual(ctx_overlap.bounds, ctx.bounds)
+        assert ctx_overlap.bounds == ctx.bounds
 
         ctx_updated = ctx.assign(geometry=geom_overlaps, bounds="update")
-        self.assertEqual(ctx_updated.bounds, geom_overlaps.bounds)
+        assert ctx_updated.bounds == geom_overlaps.bounds
 
         geom_doesnt_overlap = shapely.affinity.translate(geom, xoff=3)
-        with self.assertRaisesRegexp(
-            ValueError, "Geometry and bounds do not intersect"
-        ):
+        with pytest.raises(ValueError, match="Geometry and bounds do not intersect"):
             ctx.assign(geometry=geom_doesnt_overlap)
         ctx_doesnt_overlap_updated = ctx.assign(
             geometry=geom_doesnt_overlap, bounds="update"
         )
-        self.assertEqual(ctx_doesnt_overlap_updated.bounds, geom_doesnt_overlap.bounds)
+        assert ctx_doesnt_overlap_updated.bounds == geom_doesnt_overlap.bounds
 
-        with self.assertRaisesRegexp(
-            ValueError, "A geometry must be given with which to update the bounds"
-        ):
+        with pytest.raises(ValueError, match="A geometry must be given with which to update the bounds"):
             ctx.assign(bounds="update")
 
     def test_assign_update_bounds_crs(self):
         ctx = geocontext.AOI(bounds_crs="EPSG:32615")
-        self.assertEqual(ctx.bounds_crs, "EPSG:32615")
+        assert ctx.bounds_crs == "EPSG:32615"
         geom = shapely.geometry.Point(-20, 30).buffer(1).envelope
 
         ctx_no_update_bounds = ctx.assign(geometry=geom)
-        self.assertEqual(ctx_no_update_bounds.bounds_crs, "EPSG:32615")
+        assert ctx_no_update_bounds.bounds_crs == "EPSG:32615"
 
         ctx_update_bounds = ctx.assign(geometry=geom, bounds="update")
-        self.assertEqual(ctx_update_bounds.bounds_crs, "EPSG:4326")
+        assert ctx_update_bounds.bounds_crs == "EPSG:4326"
 
-        with self.assertRaisesRegexp(
-            ValueError,
-            "Can't compute bounds from a geometry while also explicitly setting",
-        ):
+        with pytest.raises(ValueError, match="Can't compute bounds from a geometry while also explicitly setting"):
             ctx = geocontext.AOI(geometry=geom, resolution=40, bounds_crs="EPSG:32615")
 
     def test_validate_bounds_values_for_bounds_crs__latlon(self):
         # invalid latlon bounds
-        with self.assertRaisesRegexp(
-            ValueError, "Bounds must be in lat-lon coordinates"
-        ):
+        with pytest.raises(ValueError, match="Bounds must be in lat-lon coordinates"):
             geocontext.AOI(
                 bounds_crs="EPSG:4326", bounds=[500000, 2000000, 501000, 2001000]
             )
@@ -198,38 +189,34 @@ class TestAOI(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             ctx = geocontext.AOI(bounds_crs="EPSG:32615", bounds=(12, -41, 14, -40))
-            self.assertEqual(ctx.bounds_crs, "EPSG:32615")
-            self.assertEqual(ctx.bounds, (12, -41, 14, -40))
+            assert ctx.bounds_crs == "EPSG:32615"
+            assert ctx.bounds == (12, -41, 14, -40)
             warning = w[0]
-            self.assertIn(
-                "You might have the wrong `bounds_crs` set.", str(warning.message)
-            )
+            assert "You might have the wrong `bounds_crs` set." in str(warning.message)
         # not latlon bounds, no error should raise
         geocontext.AOI(
             bounds_crs="EPSG:32615", bounds=[500000, 2000000, 501000, 2001000]
         )
 
     def test_validate_shape(self):
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             geocontext.AOI(shape=120)
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             geocontext.AOI(shape=(120, 0, 0))
 
     def test_validate_resolution(self):
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             geocontext.AOI(resolution="foo")
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             geocontext.AOI(resolution=-1)
 
     def test_validate_resolution_shape(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             geocontext.AOI(resolution=40, shape=(120, 280))
 
     def test_validate_bound_geom_intersection(self):
         # bounds don't intersect
-        with self.assertRaisesRegexp(
-            ValueError, "Geometry and bounds do not intersect"
-        ):
+        with pytest.raises(ValueError, match="Geometry and bounds do not intersect"):
             geocontext.AOI(
                 geometry=shapely.geometry.box(0, 0, 1, 1),
                 bounds=[5, 5, 6, 6],
@@ -258,10 +245,10 @@ class TestAOI(unittest.TestCase):
             bounds=[0, 0, 1.5, 1.5],
             resolution=15,
         )
-        self.assertEqual(ctx.crs, "EPSG:32615")
-        self.assertEqual(ctx.bounds_crs, "EPSG:4326")
-        self.assertEqual(ctx.bounds, (0, 0, 1.5, 1.5))
-        self.assertEqual(ctx.resolution, 15)
+        assert ctx.crs == "EPSG:32615"
+        assert ctx.bounds_crs == "EPSG:4326"
+        assert ctx.bounds == (0, 0, 1.5, 1.5)
+        assert ctx.resolution == 15
 
         # same CRSs, bounds < resolution --- no error
         geocontext.AOI(
@@ -272,7 +259,7 @@ class TestAOI(unittest.TestCase):
         )
 
         # same CRSs, width < resolution --- error
-        with self.assertRaisesRegexp(ValueError, "less than one pixel wide"):
+        with pytest.raises(ValueError, match="less than one pixel wide"):
             geocontext.AOI(
                 crs="EPSG:32615",
                 bounds_crs="EPSG:32615",
@@ -281,7 +268,7 @@ class TestAOI(unittest.TestCase):
             )
 
         # same CRSs, height < resolution --- error
-        with self.assertRaisesRegexp(ValueError, "less than one pixel tall"):
+        with pytest.raises(ValueError, match="less than one pixel tall"):
             geocontext.AOI(
                 crs="EPSG:32615",
                 bounds_crs="EPSG:32615",
@@ -290,9 +277,7 @@ class TestAOI(unittest.TestCase):
             )
 
         # same CRSs, width < resolution, CRS is lat-lon --- error including "decimal degrees"
-        with self.assertRaisesRegexp(
-            ValueError, "resolution must be given in decimal degrees"
-        ):
+        with pytest.raises(ValueError, match="resolution must be given in decimal degrees"):
             geocontext.AOI(
                 crs="EPSG:4326",
                 bounds_crs="EPSG:4326",
@@ -373,24 +358,18 @@ class TestDLTIle(unittest.TestCase):
         tile = geocontext.DLTile.from_key(self.key)
         mock_raster_instance.dltile.assert_called_with(self.key)
 
-        self.assertEqual(tile.key, self.key)
-        self.assertEqual(tile.resolution, 960)
-        self.assertEqual(tile.pad, 16)
-        self.assertEqual(tile.tilesize, 128)
-        self.assertEqual(tile.crs, "EPSG:32615")
-        self.assertEqual(tile.bounds, (361760.0, 4531200.0, 515360.0, 4684800.0))
-        self.assertEqual(tile.bounds_crs, "EPSG:32615")
-        self.assertEqual(
-            tile.raster_params, {"dltile": self.key, "align_pixels": False}
-        )
-        self.assertEqual(tile.geotrans, (361760.0, 960, 0, 4684800.0, 0, -960))
-        self.assertEqual(
-            tile.proj4, "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs "
-        )
-        self.assertEqual(
-            tile.wkt,
-            'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]',  # noqa: E501
-        )
+        assert tile.key == self.key
+        assert tile.resolution == 960
+        assert tile.pad == 16
+        assert tile.tilesize == 128
+        assert tile.crs == "EPSG:32615"
+        assert tile.bounds == (361760.0, 4531200.0, 515360.0, 4684800.0)
+        assert tile.bounds_crs == "EPSG:32615"
+        assert tile.raster_params == {"dltile": self.key, "align_pixels": False}
+        assert tile.geotrans == (361760.0, 960, 0, 4684800.0, 0, -960)
+        assert tile.proj4 == "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs "
+        assert tile.wkt == \
+            'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]'  # noqa
 
     @mock.patch("descarteslabs.scenes.geocontext.Raster")
     def test_assign(self, mock_raster):
@@ -405,59 +384,54 @@ class TestDLTIle(unittest.TestCase):
         tile = tile.assign(8)
         mock_raster_instance.dltile.assert_called_with(self.key2)
 
-        self.assertEqual(tile.key, self.key2)
-        self.assertEqual(tile.resolution, 960)
-        self.assertEqual(tile.pad, 8)
-        self.assertEqual(tile.tilesize, 128)
-        self.assertEqual(tile.crs, "EPSG:32615")
-        self.assertEqual(tile.bounds, (369440.0, 4538880.0, 507680.0, 4677120.0))
-        self.assertEqual(tile.bounds_crs, "EPSG:32615")
-        self.assertEqual(
-            tile.raster_params, {"dltile": self.key2, "align_pixels": False}
-        )
-        self.assertEqual(tile.geotrans, (369440.0, 960.0, 0, 4677120.0, 0, -960.0))
-        self.assertEqual(
-            tile.proj4, "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs "
-        )
-        self.assertEqual(
-            tile.wkt,
-            'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]',  # noqa: E501
+        assert tile.key == self.key2
+        assert tile.resolution == 960
+        assert tile.pad == 8
+        assert tile.tilesize == 128
+        assert tile.crs == "EPSG:32615"
+        assert tile.bounds == (369440.0, 4538880.0, 507680.0, 4677120.0)
+        assert tile.bounds_crs == "EPSG:32615"
+        assert tile.raster_params == {"dltile": self.key2, "align_pixels": False}
+        assert tile.geotrans == (369440.0, 960.0, 0, 4677120.0, 0, -960.0)
+        assert tile.proj4 == "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs "
+        assert (
+            tile.wkt
+            == 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]'  # noqa
         )
 
 
 class TestXYZTile(unittest.TestCase):
     def test_bounds(self):
         tile = geocontext.XYZTile(1, 1, 2)
-        self.assertEqual(
-            tile.bounds,
-            (-10018754.171394622, -7.081154551613622e-10, 0.0, 10018754.171394626),
+        assert tile.bounds == (
+            -10018754.171394622,
+            -7.081154551613622e-10,
+            0.0,
+            10018754.171394626,
         )
 
     def test_geometry(self):
         tile = geocontext.XYZTile(1, 1, 2)
-        self.assertEqual(tile.geometry.bounds, (-90.0, 0.0, 0.0, 66.51326044311186))
+        assert tile.geometry.bounds == (-90.0, 0.0, 0.0, 66.51326044311186)
 
     def test_raster_params(self):
         tile = geocontext.XYZTile(1, 1, 2)
-        self.assertEqual(
-            tile.raster_params,
-            {
-                "bounds": (
-                    -10018754.171394622,
-                    -7.081154551613622e-10,
-                    0.0,
-                    10018754.171394626,
-                ),
-                "srs": "EPSG:3857",
-                "bounds_srs": "EPSG:3857",
-                "align_pixels": False,
-                "dimensions": (256, 256),
-            },
-        )
+        assert tile.raster_params == {
+            "bounds": (
+                -10018754.171394622,
+                -7.081154551613622e-10,
+                0.0,
+                10018754.171394626,
+            ),
+            "srs": "EPSG:3857",
+            "bounds_srs": "EPSG:3857",
+            "align_pixels": False,
+            "dimensions": (256, 256),
+        }
 
     def test_children_parent(self):
         tile = geocontext.XYZTile(1, 1, 2)
-        self.assertEqual(tile, tile.children()[0].parent())
+        assert tile == tile.children()[0].parent()
 
 
 # can't use the word `test` in the function name otherwise nose tries to run it...
@@ -554,12 +528,12 @@ class TestShapelyThreadSafe(unittest.TestCase):
 
     def test_aoi_raster_params_threadsafe(self):
         errors = run_threadsafe_experiment(self.aoi_factory, "raster_params")
-        self.assertEqual(errors, [])
+        assert errors == []
 
     def test_aoi_geo_interface_threadsafe(self):
         errors = run_threadsafe_experiment(self.aoi_factory, "__geo_interface__")
-        self.assertEqual(errors, [])
+        assert errors == []
 
     def test_dltile_geo_interface_threadsafe(self):
         errors = run_threadsafe_experiment(self.dltile_factory, "__geo_interface__")
-        self.assertEqual(errors, [])
+        assert errors == []

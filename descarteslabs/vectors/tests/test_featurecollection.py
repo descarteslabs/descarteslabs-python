@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pytest
 import unittest
 
 from descarteslabs.vectors import (
@@ -34,8 +35,8 @@ class TestFeatureCollection(unittest.TestCase):
         id_ = "foo"
         fc = FeatureCollection(id=id_)
 
-        self.assertEqual(id_, fc.id)
-        self.assertIsNotNone(fc.vector_client)
+        assert id_ == fc.id
+        assert fc.vector_client is not None
 
     def test_create(self, vector_client):
         attributes = dict(
@@ -94,11 +95,11 @@ class TestFeatureCollection(unittest.TestCase):
         )
 
         fc = FeatureCollection._from_jsonapi(r, vector_client=vector_client)
-        self.assertIsNotNone(fc.id)
+        assert fc.id is not None
         vector_client.get_product.assert_not_called()
 
         for key in r.attributes.keys():
-            self.assertIsNotNone(getattr(fc, key))
+            assert getattr(fc, key) is not None
 
     def test_filter_geometry(self, vector_client):
         vector_client.search_features = mock.Mock(return_value=iter([]))
@@ -108,11 +109,11 @@ class TestFeatureCollection(unittest.TestCase):
 
         filtered = fc.filter(geometry=geometry)
 
-        self.assertEqual(fc._query_geometry, None)
-        self.assertEqual(fc._query_property_expression, None)
-        self.assertEqual(filtered._query_geometry, geometry)
+        assert fc._query_geometry is None
+        assert fc._query_property_expression is None
+        assert filtered._query_geometry == geometry
 
-        self.assertEqual(list(filtered.features()), [])
+        assert list(filtered.features()) == []
         vector_client.search_features.assert_called_once_with(
             geometry=geometry, query_limit=None, product_id="foo", query_expr=None
         )
@@ -124,7 +125,7 @@ class TestFeatureCollection(unittest.TestCase):
         geometry = mock.MagicMock()
 
         filtered = fc.filter(geometry=geometry)
-        with self.assertRaises(InvalidQueryException):
+        with pytest.raises(InvalidQueryException):
             filtered = filtered.filter(geometry=geometry)
 
     def test_filter_properties(self, vector_client):
@@ -136,11 +137,11 @@ class TestFeatureCollection(unittest.TestCase):
         exp2 = p.bar >= 0
 
         filtered = fc.filter(properties=exp)
-        self.assertEqual(filtered._query_property_expression, exp)
-        self.assertEqual(fc._query_property_expression, None)
+        assert filtered._query_property_expression == exp
+        assert fc._query_property_expression is None
 
         filtered = filtered.filter(properties=exp2)
-        self.assertEqual(list(filtered.features()), [])
+        assert list(filtered.features()) == []
 
         vector_client.search_features.assert_called_once_with(
             geometry=None, query_limit=None, product_id="foo", query_expr=mock.ANY
@@ -152,7 +153,7 @@ class TestFeatureCollection(unittest.TestCase):
         limit = 10
         fc = FeatureCollection("foo", vector_client=vector_client).limit(limit)
 
-        self.assertEqual(list(fc.features()), [])
+        assert list(fc.features()) == []
         vector_client.search_features.assert_called_once_with(
             geometry=None, query_limit=10, product_id="foo", query_expr=None
         )
@@ -181,7 +182,7 @@ class TestFeatureCollection(unittest.TestCase):
         fc.refresh()
 
         for key in attributes.keys():
-            self.assertEqual(getattr(fc, key), attributes[key])
+            assert getattr(fc, key) == attributes[key]
 
     def test_add_single(self, vector_client):
         vector_client = mock.MagicMock()
@@ -244,7 +245,7 @@ class TestFeatureCollection(unittest.TestCase):
 
         for f in modified_features:
             # the side_effect above uses properties.id instead of uuid
-            self.assertEqual(f.id, f.properties.id)
+            assert f.id == f.properties.id
 
     def test_delete(self, vector_client):
         fc = FeatureCollection("foo", vector_client=vector_client)
@@ -273,7 +274,7 @@ class TestFeatureCollection(unittest.TestCase):
         vector_client.replace_product.assert_called_once_with("foo", **attributes)
 
         for key in attributes.keys():
-            self.assertEqual(getattr(fc, key), attributes[key])
+            assert getattr(fc, key) == attributes[key]
 
     def test_update(self, vector_client):
         vector_client.update_product.side_effect = lambda id, **attributes: {
@@ -288,11 +289,11 @@ class TestFeatureCollection(unittest.TestCase):
         vector_client.update_product.assert_called_once_with("foo", **attributes)
 
         for key in attributes.keys():
-            self.assertEqual(getattr(fc, key), attributes[key])
+            assert getattr(fc, key) == attributes[key]
 
     def test__repr__(self, vector_client):
         fc = FeatureCollection("foo")
-        self.assertEqual(repr(fc), "FeatureCollection({\n  'id': 'foo'\n})")
+        assert repr(fc) == "FeatureCollection({\n  'id': 'foo'\n})"
 
     def test_copy(self, vector_client):
         attributes = dict(
@@ -399,7 +400,7 @@ class TestFeatureCollection(unittest.TestCase):
 
         FeatureCollection.COMPLETION_POLL_INTERVAL_SECONDS = 1
         FeatureCollection("foo").wait_for_copy()
-        self.assertEqual(2, mock_get.call_count)
+        assert 2 == mock_get.call_count
 
     @mock.patch(
         "descarteslabs.vectors.featurecollection.FeatureCollection.vector_client",
@@ -426,7 +427,7 @@ class TestFeatureCollection(unittest.TestCase):
         mock_get = mock.MagicMock(side_effect=calls)
         vector_client.return_value.get_product_from_query_status = mock_get
 
-        with self.assertRaises(FailedJobError):
+        with pytest.raises(FailedJobError):
             FeatureCollection("foo").wait_for_copy()
 
     @mock.patch(
@@ -454,7 +455,7 @@ class TestFeatureCollection(unittest.TestCase):
         mock_get = mock.MagicMock(side_effect=calls)
         vector_client.return_value.get_product_from_query_status = mock_get
         FeatureCollection.COMPLETION_POLL_INTERVAL_SECONDS = 1
-        with self.assertRaises(WaitTimeoutError):
+        with pytest.raises(WaitTimeoutError):
             FeatureCollection("foo").wait_for_copy(timeout=0)
 
     @mock.patch("descarteslabs.vectors.featurecollection.DeleteJob")
@@ -477,5 +478,5 @@ class TestFeatureCollection(unittest.TestCase):
         fc = FeatureCollection("foo", vector_client=vector_client)
         fc = fc.limit(100)
 
-        with self.assertRaises(InvalidQueryException):
+        with pytest.raises(InvalidQueryException):
             fc.delete_features()

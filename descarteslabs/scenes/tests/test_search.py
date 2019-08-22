@@ -29,18 +29,18 @@ class TestScenesSearch(unittest.TestCase):
     )
     def test_search_geom(self):
         sc, ctx = search(self.geom, products="landsat:LC08:PRE:TOAR", limit=4)
-        self.assertGreater(len(sc), 0)
-        self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
+        assert len(sc) > 0
+        assert len(sc) <= 4  # test client only has 2 scenes available
 
-        self.assertIsInstance(ctx, geocontext.AOI)
-        self.assertEqual(ctx.__geo_interface__, self.geom)
-        self.assertEqual(ctx.resolution, 15)
-        self.assertEqual(ctx.crs, "EPSG:32615")
+        assert isinstance(ctx, geocontext.AOI)
+        assert ctx.__geo_interface__ == self.geom
+        assert ctx.resolution == 15
+        assert ctx.crs == "EPSG:32615"
 
         for scene in sc:
             # allow for changes in publicly available data
-            self.assertAlmostEqual(len(scene.properties.bands), 24, delta=4)
-            self.assertIn("derived:ndvi", scene.properties.bands)
+            assert abs(len(scene.properties.bands) - 24) < 4
+            assert "derived:ndvi" in scene.properties.bands
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
@@ -49,17 +49,17 @@ class TestScenesSearch(unittest.TestCase):
     )
     def test_search_shapely(self):
         sc, ctx = search(shape(self.geom), products="landsat:LC08:PRE:TOAR", limit=4)
-        self.assertEqual(len(sc), 2)
+        assert len(sc) == 2
 
-        self.assertIsInstance(ctx, geocontext.AOI)
-        self.assertEqual(ctx.__geo_interface__, self.geom)
-        self.assertEqual(ctx.resolution, 15)
-        self.assertEqual(ctx.crs, "EPSG:32615")
+        assert isinstance(ctx, geocontext.AOI)
+        assert ctx.__geo_interface__ == self.geom
+        assert ctx.resolution == 15
+        assert ctx.crs == "EPSG:32615"
 
         for scene in sc:
             # allow for changes in publicly available data
-            self.assertAlmostEqual(len(scene.properties.bands), 24, delta=4)
-            self.assertIn("derived:ndvi", scene.properties.bands)
+            assert abs(len(scene.properties.bands) - 24) < 4
+            assert "derived:ndvi" in scene.properties.bands
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
@@ -69,11 +69,11 @@ class TestScenesSearch(unittest.TestCase):
     def test_search_AOI(self):
         aoi = geocontext.AOI(self.geom, resolution=5)
         sc, ctx = search(aoi, products="landsat:LC08:PRE:TOAR", limit=4)
-        self.assertGreater(len(sc), 0)
-        self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
+        assert len(sc) > 0
+        assert len(sc) <= 4  # test client only has 2 scenes available
 
-        self.assertEqual(ctx.resolution, 5)
-        self.assertEqual(ctx.crs, "EPSG:32615")
+        assert ctx.resolution == 5
+        assert ctx.crs == "EPSG:32615"
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
@@ -83,12 +83,12 @@ class TestScenesSearch(unittest.TestCase):
     def test_search_AOI_with_shape(self):
         aoi = geocontext.AOI(self.geom, shape=(100, 100))
         sc, ctx = search(aoi, products="landsat:LC08:PRE:TOAR", limit=4)
-        self.assertGreater(len(sc), 0)
-        self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
+        assert len(sc) > 0
+        assert len(sc) <= 4  # test client only has 2 scenes available
 
-        self.assertEqual(ctx.resolution, None)
-        self.assertEqual(ctx.shape, aoi.shape)
-        self.assertEqual(ctx.crs, "EPSG:32615")
+        assert ctx.resolution is None
+        assert ctx.shape == aoi.shape
+        assert ctx.crs == "EPSG:32615"
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
@@ -124,9 +124,9 @@ class TestScenesSearch(unittest.TestCase):
             }
         )
         sc, ctx = search(tile, products="landsat:LC08:PRE:TOAR", limit=4)
-        self.assertGreater(len(sc), 0)
-        self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
-        self.assertEqual(ctx, tile)
+        assert len(sc) > 0
+        assert len(sc) <= 4  # test client only has 2 scenes available
+        assert ctx == tile
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
@@ -135,8 +135,8 @@ class TestScenesSearch(unittest.TestCase):
     )
     def test_search_no_products(self):
         sc, ctx = search(self.geom, limit=4)
-        self.assertGreater(len(sc), 0)
-        self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
+        assert len(sc) > 0
+        assert len(sc) <= 4  # test client only has 2 scenes available
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
@@ -154,9 +154,9 @@ class TestScenesSearch(unittest.TestCase):
             limit=4,
         )
 
-        self.assertGreater(len(sc), 0)
-        self.assertLessEqual(len(sc), 4)  # test client only has 2 scenes available
+        assert len(sc) > 0
+        assert len(sc) <= 4  # test client only has 2 scenes available
 
         for scene in sc:
-            self.assertGreaterEqual(scene.properties["date"], start_datetime)
-            self.assertLessEqual(scene.properties["date"], end_datetime)
+            assert scene.properties["date"] >= start_datetime
+            assert scene.properties["date"] <= end_datetime
