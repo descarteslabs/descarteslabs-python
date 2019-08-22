@@ -21,8 +21,13 @@ Changelog
 
 ### Workflows (channel `v0-7`) - Added
 - Interactive maps: `clear_layers` and `remove_layer` methods
+- ImageCollections: `reversed` operator
 - ImageCollections: `concat` and `sorted` methods
 - ImageCollections: `head`, `tail`, and `partition` methods for slicing
+- ImageCollections: `where` method for filtering by condition
+- ImageCollections `map_window` method for applying sliding windows
+- ImageCollections: Indexing into ImageCollections is supported (`imgs[1]`)
+- **[breaking]** Statistics functions are now applied to named axes
 - DateTime, Timedelta, Geocontext, Bool, and Geometry are now computable
 - ImageCollectionGroupby ProxyObject for grouping ImageCollection by properties, and applying functions over groups
 - ImageCollections: `groupby` method
@@ -31,6 +36,18 @@ Changelog
 ### Workflows - Changed
 - Interactive maps: autoscaling is now done in the background
 - Tiles requests can now include parameters
+- `median` is noticeably faster
+- `count` is no longer breaks colormaps
+- `map`, `filter`, and `reduce` are 2x faster in the "PREPARING" stage
+- Significantly better performance for functions that reference variables outside their scope, like
+```
+overall_comp = ndvi.mean(axis="images")
+deltas = ndvi.map(lambda img: img - overall_comp)
+```
+- Full support for floor-division (`//`) between Datetimes and Timedeltas (`imgs.filter(lambda img: img.properties['date'] // wf.Timedelta(days=14)`)
+
+### Workflows - Removed
+- **[breaking]** `ImageCollection.one` (in favor of indexing)
 
 ## [0.24.0] - 2019-08-01
 ### Added
