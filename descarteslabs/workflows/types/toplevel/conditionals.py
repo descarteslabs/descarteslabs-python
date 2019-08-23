@@ -49,4 +49,4 @@ def where(condition, x, y):
         return_type = Float
     else:
         return_type = Int
-    return return_type._from_apply("where", x, y)
+    return return_type._from_apply("where", condition, x, y)
