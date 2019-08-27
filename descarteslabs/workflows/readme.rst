@@ -107,9 +107,9 @@ The tables below list the types and functions available through the Workflows AP
 :workflow_api_nontoc_heading:`Parameter`
 
 .. autosummary::
-    :nosignatures:
+  :nosignatures:
     
-    ~descarteslabs.workflows.types.identifier.identifier.parameter
+  ~descarteslabs.workflows.types.identifier.parameter
 
 :workflow_api_nontoc_heading:`Execution`
 

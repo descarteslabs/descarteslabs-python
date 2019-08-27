@@ -1,6 +1,6 @@
 import pytest
 
-from ... import Int, Str, List
+from ... import Int, Str, List, Datetime
 from ..identifier import identifier, parameter
 
 
@@ -25,3 +25,7 @@ def test_parameter_type_fail():
 def test_parameter_name_fail():
     with pytest.raises(ValueError):
         parameter("1", Int)
+
+
+def test_datetime_param():
+    assert isinstance(parameter("start", Datetime), Datetime)
