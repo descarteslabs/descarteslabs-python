@@ -79,7 +79,7 @@ class RangeExpression(Expression):
         return {"range": {self.name: self.parts}}
 
     def jsonapi_serialize(self, model=None):
-        return [
+        serialized = [
             {
                 "name": self.name,
                 "op": op,
@@ -87,6 +87,7 @@ class RangeExpression(Expression):
             }
             for (op, val) in self.parts.items()
         ]
+        return serialized[0] if len(serialized) == 1 else {"and": serialized}
 
 
 class LikeExpression(Expression):
@@ -127,7 +128,7 @@ class AndExpression(object):
         return {"and": [x.serialize() for x in self.parts]}
 
     def jsonapi_serialize(self, model=None):
-        return {"and": flatten_filters(self.parts, model=model)}
+        return {"and": [part.jsonapi_serialize(model=model) for part in self.parts]}
 
 
 class OrExpression(object):
@@ -153,19 +154,7 @@ class OrExpression(object):
         return {"or": [x.serialize() for x in self.parts]}
 
     def jsonapi_serialize(self, model=None):
-        return {"or": flatten_filters(self.parts, model=model)}
-
-
-def flatten_filters(parts, model=None):
-    filters = []
-    for x in parts:
-        serialized = x.jsonapi_serialize(model)
-        if isinstance(serialized, list):
-            for s in serialized:
-                filters.append(s)
-        else:
-            filters.append(serialized)
-    return filters
+        return {"or": [part.jsonapi_serialize(model=model) for part in self.parts]}
 
 
 def range_expr(op):
