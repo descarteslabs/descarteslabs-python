@@ -231,4 +231,7 @@ class GenericProperties(object):
     """
 
     def __getattr__(self, attr):
+        # keep sphinx happy
+        if attr == "__qualname__":
+            return self.__class__.__qualname__
         return Property(attr)
