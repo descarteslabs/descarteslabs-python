@@ -955,7 +955,7 @@ class Image(ImageBase, BandsMixin):
             )
             map.add_layer(layer)
 
-    def tile_url(self, name=None, scales=None, colormap=None):
+    def tile_url(self, name=None, scales=None, colormap=None, client=None):
         """
         Generate a new tile server URL for this `Image`.
 
@@ -969,13 +969,16 @@ class Image(ImageBase, BandsMixin):
             The scaling to apply to each band in the image.
         colormap: str, default None
             The colormap to apply to the image.
+        client : Compute, optional
+            Allows you to use a specific client instance with non-default-
+            auth and parameters
 
         Returns
         -------
         str
             The tile server URL.
         """
-        xyz = XYZ.build(self, name=name)
+        xyz = XYZ.build(self, name=name, client=client)
         xyz.save()
 
         tile_server_base_url = "https://workflows.descarteslabs.com/{}".format(
