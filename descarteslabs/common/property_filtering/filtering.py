@@ -205,6 +205,16 @@ class Property(object):
         """
         return LikeExpression(self.name, other)
 
+    def in_(self, iterable):
+        """
+        Asserts that this property must have a value equal to one of the
+        values in the given iterable. This can be thought of as behaving
+        like an ``in`` expression in Python or an ``IN`` expression in SQL.
+        """
+        return OrExpression([(self == item) for item in iterable])
+
+    any_of = in_
+
 
 class Properties(object):
     """A wrapper object to allow constructing filter expressions using properties"""
@@ -225,6 +235,7 @@ class GenericProperties(object):
     You can construct filter expression using the ``==``, ``!=``, ``<``, ``>``,
     ``<=`` and ``>=`` operators as well as the
     :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
+    and :meth:`~descarteslabs.common.property_filtering.filtering.Property.in_`
     method. You cannot use the boolean keywords ``and`` and ``or`` because of
     Python language limitations; instead you can combine filter expressions
     with ``&`` (boolean "and") and ``|`` (boolean "or").

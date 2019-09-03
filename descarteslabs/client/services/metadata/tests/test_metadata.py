@@ -59,6 +59,15 @@ class MetadataTest(unittest.TestCase):
 
         assert q.serialize() == expected_q
 
+    def test_expr_contains(self):
+        p = self.instance.properties
+        q = p.sat_id.in_(("usa-245", "terra"))
+        expected_q = {
+            "or": [{"eq": {"sat_id": "usa-245"}}, {"eq": {"sat_id": "terra"}}]
+        }
+
+        assert q.serialize() == expected_q
+
     @responses.activate
     def test_paged_search(self):
         features = [{"id": "foo"}]

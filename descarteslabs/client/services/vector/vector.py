@@ -919,7 +919,8 @@ class Vector(JsonApiService):
             You can construct filter expression using the ``==``, ``!=``,
             ``<``, ``>``, ``<=`` and ``>=`` operators as well as the
             :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
-            method. You cannot use the boolean keywords ``and`` and ``or``
+            and :meth:`~descarteslabs.common.property_filtering.filtering.Property.in_`
+            methods. You cannot use the boolean keywords ``and`` and ``or``
             because of Python language limitations; instead you can combine
             filter expressions with ``&`` (boolean "and") and ``|`` (boolean
             "or").
@@ -1016,7 +1017,8 @@ class Vector(JsonApiService):
             You can construct filter expression using the ``==``, ``!=``,
             ``<``, ``>``, ``<=`` and ``>=`` operators as well as the
             :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
-            method. You cannot use the boolean keywords ``and`` and ``or``
+            and :meth:`~descarteslabs.common.property_filtering.filtering.Property.in_`
+            methods. You cannot use the boolean keywords ``and`` and ``or``
             because of Python language limitations; instead you can combine
             filter expressions with ``&`` (boolean "and") and ``|`` (boolean
             "or").
@@ -1154,7 +1156,8 @@ class Vector(JsonApiService):
             You can construct filter expression using the ``==``, ``!=``,
             ``<``, ``>``, ``<=`` and ``>=`` operators as well as the
             :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
-            method. You cannot use the boolean keywords ``and`` and ``or``
+            and and :meth:`~descarteslabs.common.property_filtering.filtering.Property.in_`
+            methods. You cannot use the boolean keywords ``and`` and ``or``
             because of Python language limitations; instead you can combine
             filter expressions with ``&`` (boolean "and") and ``|`` (boolean
             "or").
@@ -1331,7 +1334,8 @@ class Vector(JsonApiService):
             You can construct filter expression using the ``==``, ``!=``,
             ``<``, ``>``, ``<=`` and ``>=`` operators as well as the
             :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
-            method. You cannot use the boolean keywords ``and`` and ``or``
+            and :meth:`~descarteslabs.common.property_filtering.filtering.Property.in_`
+            methods. You cannot use the boolean keywords ``and`` and ``or``
             because of Python language limitations; instead you can combine
             filter expressions with ``&`` (boolean "and") and ``|`` (boolean
             "or").

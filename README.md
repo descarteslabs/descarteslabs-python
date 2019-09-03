@@ -11,6 +11,8 @@ Changelog
 ## [Unreleased]
 ### Added
 
+- Property filtering expressions such as used in `scenes.search()` and `FeatureCollection.filter()` now support an `in_()` method.
+
 ### Changed
 
 ## [0.25.0] - 2019-08-22
