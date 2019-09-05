@@ -710,7 +710,7 @@ class SceneCollection(Collection):
             resampler=resampler,
             processing_level=processing_level,
             scales=scales,
-            dtype=data_type,
+            data_type=data_type,
             raster_client=self._raster_client,
         )
         try:

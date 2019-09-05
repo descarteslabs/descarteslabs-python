@@ -483,7 +483,7 @@ class TestSceneCollectionDownload(unittest.TestCase):
                 resampler="near",
                 processing_level=None,
                 scales=None,
-                dtype="UInt16",
+                data_type="UInt16",
                 raster_client=self.scenes._raster_client,
             )
 
@@ -505,7 +505,7 @@ class TestSceneCollectionDownload(unittest.TestCase):
                 resampler="near",
                 processing_level=None,
                 scales=None,
-                dtype="UInt16",
+                data_type="UInt16",
                 raster_client=self.scenes._raster_client,
             )
 
