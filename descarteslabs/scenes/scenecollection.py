@@ -723,13 +723,20 @@ class SceneCollection(Collection):
                 scene.download(bands, ctx, dest=path, **download_args)
         else:
             with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = [
+                futures = {
                     executor.submit(
                         scene.download, bands, ctx, dest=path, **download_args
-                    )
+                    ) : path
                     for scene, path in zip(self, dest)
-                ]
-                concurrent.futures.wait(futures)
+                }
+                exceptions = []
+                for future in concurrent.futures.as_completed(futures):
+                    try:
+                        future.result()
+                    except Exception as ex:
+                        exceptions.append((futures[future], ex))
+                if exceptions:
+                    raise RuntimeError("One or more downloads failed: {}".format(exceptions))
         return dest
 
     def download_mosaic(

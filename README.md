@@ -15,6 +15,8 @@ Changelog
 
 ### Changed
 
+- `SceneCollection.download` previously always returned successfully even if one or more of the downloads failed. Now if any of the downloads fail, a RuntimeError is raised, which will detail which destination files failed and why.
+
 ## [0.25.0] - 2019-08-22
 ### Added
 

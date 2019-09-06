@@ -522,6 +522,12 @@ class TestSceneCollectionDownload(unittest.TestCase):
         with pytest.raises(TypeError):
             self.scenes.download("nir", self.ctx, 4)
 
+    def test_download_failure(self, mock_download):
+        mock_download.side_effect = RuntimeError("blarf")
+        dest = "rasters"
+        with pytest.raises(RuntimeError):
+            self.scenes.download("nir", self.ctx, dest)
+
     @mock.patch("descarteslabs.scenes.scenecollection._download._download")
     def test_download_mosaic(self, mock_base_download, mock_download):
         self.scenes.download_mosaic("nir yellow", self.ctx)
