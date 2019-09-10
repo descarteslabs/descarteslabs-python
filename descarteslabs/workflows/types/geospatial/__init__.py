@@ -6,7 +6,7 @@ from .geocontext import GeoContext
 from .groupby import ImageCollectionGroupby
 from .image import Image
 from .imagecollection import ImageCollection
-
+from .kernel import Kernel
 
 __all__ = [
     "Feature",
@@ -18,5 +18,6 @@ __all__ = [
     "GeoContext",
     "Image",
     "ImageCollection",
+    "Kernel",
     "ImageCollectionGroupby",
 ]

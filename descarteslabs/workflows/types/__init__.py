@@ -21,6 +21,7 @@ from .geospatial import (
     GeoContext,
     Image,
     ImageCollection,
+    Kernel,
     ImageCollectionGroupby,
 )
 from .toplevel import (
@@ -33,6 +34,7 @@ from .toplevel import (
     tan,
     normalized_difference,
     where,
+    conv2d,
 )
 from .constants import e, inf, nan, pi
 from .identifier import parameter, identifier
@@ -77,6 +79,7 @@ __all__ = [
     "GeoContext",
     "Image",
     "ImageCollection",
+    "Kernel",
     "ImageCollectionGroupby",
     # .toplevel
     "log",
@@ -88,6 +91,7 @@ __all__ = [
     "tan",
     "normalized_difference",
     "where",
+    "conv2d",
     # .identifier
     "parameter",
     "identifier",
