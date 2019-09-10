@@ -27,7 +27,7 @@ def _get_format(ext):
         six.raise_from(
             ValueError(
                 "Unknown format '{}'. Possible values are {}.".format(
-                    format, ", ".join(ext_to_format)
+                    ext, ", ".join(ext_to_format)
                 )
             ),
             None,
