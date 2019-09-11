@@ -790,35 +790,37 @@ class Image(ImageBase, BandsMixin):
     def __abs__(self):
         return self._from_apply("abs", self)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
+    @typecheck_promote(
+        (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
+    )
     def __add__(self, other):
         return _result_type(other)._from_apply("add", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
+    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
     def __sub__(self, other):
         return _result_type(other)._from_apply("sub", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
+    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
     def __mul__(self, other):
         return _result_type(other)._from_apply("mul", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
+    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
     def __div__(self, other):
         return _result_type(other)._from_apply("div", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
+    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
     def __truediv__(self, other):
         return _result_type(other)._from_apply("div", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
+    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
     def __floordiv__(self, other):
         return _result_type(other)._from_apply("floordiv", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
+    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
     def __mod__(self, other):
         return _result_type(other)._from_apply("mod", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
+    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
     def __pow__(self, other):
         return _result_type(other)._from_apply("pow", self, other)
 

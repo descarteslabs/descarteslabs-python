@@ -102,7 +102,11 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
     """
     Decorator to promote a function's arguments to specified Proxytypes.
 
-    If promotion fails for an argument, a TypeError is raised.
+    If promotion fails for an argument, a TypeError is raised, unless
+    the ``_reflect`` kwarg is set in which case NotImplemented is returned.
+    This indicates to the Python interpreter that, when dealing with
+    binary ops, the reversed version of the function should be attempted
+    before raising a TypeError.
 
     Expected types can be given as:
 
@@ -186,6 +190,8 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
 
     have_resolved_lambdas = []  # empty means False
 
+    reflect = expected_kwarg_types.pop("_reflect", False)
+
     def decorator(func):
         func_name = "{}()".format(func.__name__)
         func_signature = signature(func)
@@ -247,7 +253,14 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
                     # it's a placeholder for `self`
                     continue
                 value = bound_args_dict[name]
-                bound_args_dict[name] = _promote(value, argtype, name, func_name)
+                try:
+                    bound_args_dict[name] = _promote(value, argtype, name, func_name)
+                except TypeError as e:
+                    if reflect:
+                        return NotImplemented
+                    else:
+                        # Re-raise TypeError
+                        six.raise_from(e, None)
 
             promoted_args = bound_args.args
             promoted_kwargs = bound_args.kwargs

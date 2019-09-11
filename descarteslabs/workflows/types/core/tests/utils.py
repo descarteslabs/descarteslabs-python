@@ -69,14 +69,16 @@ def operator_test(obj, all_values_to_try, operator, accepted_types, return_type)
                 )
                 assert isinstance(result, expected_type), err
             else:
-                with pytest.raises(TypeError):
-                    method(value)
-
-                    # pytest.raises(..., message=) parameter is deprecated,
-                    # so we use [this pattern](https://github.com/pytest-dev/pytest/issues/3974#issuecomment-453994294)
-                    # if an exception wasn't raised to get a more helpful error for debugging
-                    pytest.fail(
-                        "Expected {}.{}() called with {} raise TypeError".format(
-                            type(obj).__name__, operator, value
+                try:
+                    result = method(value)
+                    # if method doesn't raise a TypeError, need to check for methods
+                    # that return NotImplemented
+                    if result is not NotImplemented:
+                        pytest.fail(
+                            "Expected {}.{}() called with {} to raise TypeError".format(
+                                type(obj).__name__, operator, value
+                            )
                         )
-                    )
+                except TypeError:
+                    # TypeError is expected
+                    pass
