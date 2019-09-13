@@ -14,6 +14,57 @@
 
 
 class Expression(object):
+    """An expression for filtering a property against a value or set of values.
+
+    An expression contains a :py:class:`Property`, a comparison operator, and a value (or set of values):
+
+        | ``property operator value``
+        | or
+        | ``value operator property``
+
+    where the operator can be
+
+    * ==
+    * !=
+    * <
+    * <=
+    * >
+    * >=
+
+    If the operator is ``<``, ``<=``, ``>`` or ``>=``, you can construct a range using
+
+        ``value operator property operator value``
+
+    Expressions can be combined using the Boolean operators ``and`` or ``or``,
+    but due to language limitations
+    the operator for ``and`` is expressed as ``&`` and the operator for ``or`` is
+    expressed as ``|``.
+
+    In addition there are a couple of method-like operators that can be used on a
+    property:
+
+    * like()
+    * any_of() or in_()
+
+    Example
+    -------
+    >>> from descarteslabs.common.property_filtering import GenericProperties
+    >>> p = GenericProperties()
+    >>> e = p.foo == 5
+    >>> type(e)
+    <class 'descarteslabs.common.property_filtering.filtering.EqExpression'>
+    >>> e = p.foo.any_of([1, 2, 3, 4, 5])
+    >>> type(e)
+    <class 'descarteslabs.common.property_filtering.filtering.OrExpression'>
+    >>> e = 5 < p.foo < 10
+    >>> type(e)
+    <class 'descarteslabs.common.property_filtering.filtering.RangeExpression'>
+    >>> e = (5 < p.foo < 10) & p.foo.any_of([1, 2, 3, 4, 5])
+    >>> type(e)
+    <class 'descarteslabs.common.property_filtering.filtering.AndExpression'>
+
+    """
+
     def __and__(self, other):
         return AndExpression([self]) & other
 

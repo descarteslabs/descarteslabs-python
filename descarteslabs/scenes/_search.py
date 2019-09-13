@@ -67,7 +67,7 @@ def search(
     limit : int or None, optional, default 100
         Maximum number of Scenes to return, or None for all results.
     sort_field : str, optional
-        Field name in `Scene.properties` by which to order the results
+        Field name in :py:attr:`Scene.properties` by which to order the results
     sort_order : str, optional, default 'asc'
         ``"asc"`` or ``"desc"``
     date_field : str, optional, default 'acquired'
