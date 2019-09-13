@@ -336,6 +336,7 @@ class Job(object):
         self.refresh()
 
         if progress_bar:
+            sys.stdout.write("Job ID: {}\n".format(self.id))
             self._draw_progress_bar()
 
         while not self.done and not exceeded_timeout():
