@@ -15,8 +15,8 @@ class LonLatInput(widgets.Text):
     model = traitlets.List(
         traitlets.CFloat(), default_value=(0.0, 0.0), minlen=2, maxlen=2
     )
-    model_is_latlon = traitlets.Bool(True)
-    description = traitlets.Unicode("Lon, lat (WGS84):").tag(sync=True)
+    model_is_latlon = traitlets.Bool(False)
+    description = traitlets.Unicode("Lat, lon (WGS84):").tag(sync=True)
     continuous_update = traitlets.Bool(False).tag(sync=True)
 
     @traitlets.observe("value")
