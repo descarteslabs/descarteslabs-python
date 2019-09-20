@@ -324,7 +324,7 @@ class TestJob(object):
 
     def test_unmarshal_image(self, stub):
         marshalled = {
-            "bands": collections.OrderedDict([("red", [])]),
+            "ndarray": collections.OrderedDict([("red", [])]),
             "properties": {
                 "foo": "bar",
                 "geometry": {"type": "Point", "coordinates": [0, 0]},
@@ -341,6 +341,6 @@ class TestJob(object):
         # and part of what we're testing for is that the unmarshallers are getting registered correctly.
         assert result.__class__.__name__ == "Image"
 
-        assert result.bands == marshalled["bands"]
+        assert result.ndarray == marshalled["ndarray"]
         assert result.properties == marshalled["properties"]
         assert result.bandinfo == marshalled["bandinfo"]

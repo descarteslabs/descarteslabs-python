@@ -37,8 +37,8 @@ class EqualityMixin(object):
 
 
 class Image(EqualityMixin):
-    def __init__(self, bands, properties, bandinfo):
-        self.bands = bands
+    def __init__(self, ndarray, properties, bandinfo):
+        self.ndarray = ndarray
         self.properties = properties
         self.bandinfo = bandinfo
 
@@ -49,11 +49,11 @@ class Image(EqualityMixin):
                 )
             )
 
-        if len(self.bands) != len(self.bandinfo):
+        if len(self.ndarray) != len(self.bandinfo):
             raise ValueError(
                 "bands mismatch between bands and bandinfo. "
                 "Bandinfo indicates {} keys, while bands indicates {} keys".format(
-                    len(self.bandinfo), len(self.bands)
+                    len(self.bandinfo), len(self.ndarray)
                 )
             )
 
@@ -65,8 +65,8 @@ unmarshal.register("Image", unmarshal.unpack_into(Image))
 
 
 class ImageCollection(EqualityMixin):
-    def __init__(self, images, properties, bandinfo):
-        self.images = images
+    def __init__(self, ndarray, properties, bandinfo):
+        self.ndarray = ndarray
         self.properties = properties
         self.bandinfo = bandinfo
 
