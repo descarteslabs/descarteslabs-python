@@ -290,7 +290,7 @@ class LayerControllerRow(widgets.Box):
             except JobComputeError:
                 pass
             else:
-                arr = result.bands
+                arr = result.ndarray
 
                 scales_attrs = (
                     [("r_min", "r_max"), ("g_min", "g_max"), ("b_min", "b_max")]
