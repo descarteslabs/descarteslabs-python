@@ -295,6 +295,13 @@ class Map(ipyleaflet.Map):
         geoctx: ~.geospatial.GeoContext
         """
         bounds = [self.west, self.south, self.east, self.north]
+        if bounds == [0, 0, 0, 0]:
+            raise RuntimeError(
+                "Undefined bounds, please ensure that the interactive map has "
+                "finished rendering and run this cell again. If you have not "
+                "displayed the map yet, run `wf.map` in its own cell first."
+            )
+
         resolution = 156543.00 / 2 ** self.zoom
         # TODO this resolution calculation is not quite right; assumes at equator.
         # TODO more importantly: can we make the request using the component XYZ tiles,
