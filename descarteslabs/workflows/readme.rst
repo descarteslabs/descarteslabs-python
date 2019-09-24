@@ -82,6 +82,13 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.types.toplevel.arithmetic.sin
   ~descarteslabs.workflows.types.toplevel.arithmetic.tan
 
+:workflow_api_nontoc_heading:`Conditionals`
+
+.. autosummary::
+  :nosignatures:
+
+  ~descarteslabs.workflows.types.toplevel.conditionals.where
+
 :workflow_api_nontoc_heading:`Constants`
 
 .. autosummary::
