@@ -278,37 +278,36 @@ class LayerControllerRow(widgets.Box):
         self.children = self._make_children()
 
     def _autoscale(self, widget):
-        with self.map.output_log:
-            old_icon = widget.icon
-            widget.icon = "spinner"
-            widget.disabled = True
+        old_icon = widget.icon
+        widget.icon = "spinner"
+        widget.disabled = True
 
-            ctx = self.map.geocontext()
+        ctx = self.map.geocontext()
 
-            try:
-                result = self.layer.image.compute(ctx)
-            except JobComputeError:
-                pass
-            else:
-                arr = result.ndarray
+        try:
+            result = self.layer.image.compute(ctx, progress_bar=self.map.output_log)
+        except JobComputeError:
+            pass
+        else:
+            arr = result.ndarray
 
-                scales_attrs = (
-                    [("r_min", "r_max"), ("g_min", "g_max"), ("b_min", "b_max")]
-                    if self.layer.colormap is None
-                    else [("cmap_min", "cmap_max")]
-                )
+            scales_attrs = (
+                [("r_min", "r_max"), ("g_min", "g_max"), ("b_min", "b_max")]
+                if self.layer.colormap is None
+                else [("cmap_min", "cmap_max")]
+            )
 
-                with self.layer.hold_trait_notifications():
-                    for band, (scale_min, scale_max) in zip(arr, scales_attrs):
-                        if isinstance(band, np.ma.MaskedArray):
-                            data = band.compressed()  # drop masked data
-                        min, max = np.percentile(data, [2, 98])
+            with self.layer.hold_trait_notifications():
+                for band, (scale_min, scale_max) in zip(arr, scales_attrs):
+                    if isinstance(band, np.ma.MaskedArray):
+                        data = band.compressed()  # drop masked data
+                    min, max = np.percentile(data, [2, 98])
 
-                        setattr(self.layer, scale_min, min)
-                        setattr(self.layer, scale_max, max)
-            finally:
-                widget.icon = old_icon
-                widget.disabled = False
+                    setattr(self.layer, scale_min, min)
+                    setattr(self.layer, scale_max, max)
+        finally:
+            widget.icon = old_icon
+            widget.disabled = False
 
     def autoscale(self, widget):
         "``on_click`` handler to perform autoscaling."

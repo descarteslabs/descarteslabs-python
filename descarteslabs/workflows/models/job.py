@@ -43,6 +43,16 @@ def _typespec_to_unmarshal_str(typespec):
     return marshal_type
 
 
+def _write_to_io_or_widget(io, string):
+    if io is not None:
+        # try/except avoids having to import ipywidgets just for an isinstance check
+        try:
+            io.append_stdout(string)
+        except AttributeError:
+            io.write(string)
+            io.flush()
+
+
 class Job(object):
     """
     A `Job` represents the computation of a proxy object's graft
@@ -335,9 +345,10 @@ class Job(object):
         # we refresh after starting the watch to avoid race condition
         self.refresh()
 
-        if progress_bar:
-            sys.stdout.write("Job ID: {}\n".format(self.id))
-            self._draw_progress_bar()
+        show_progress = progress_bar is not False
+        if show_progress:
+            progress_bar_io = sys.stdout if progress_bar is True else progress_bar
+            _write_to_io_or_widget(progress_bar_io, "\nJob ID: {}\n".format(self.id))
 
         while not self.done and not exceeded_timeout():
             try:
@@ -347,8 +358,8 @@ class Job(object):
                 # TODO(justin) stopiteration will likely be caused by connectivity issues
                 stream = self.watch()
 
-            if progress_bar:
-                self._draw_progress_bar()
+            if show_progress:
+                self._draw_progress_bar(output=progress_bar_io)
         else:
             if self.done:
                 return self._load_result()
@@ -357,7 +368,15 @@ class Job(object):
                     "timeout while waiting on result for Job('{}')".format(self.id)
                 )
 
-    def _draw_progress_bar(self):
+    def _draw_progress_bar(self, output=None):
+        """
+        Draw the progress bar of a running job.
+
+        Parameters
+        ----------
+        output: ipywidgets Output, file-like object
+            The output widget/stream to write a job's progress bar to.
+        """
         _draw_progress_bar(
             finished=self._message.progress.finished,
             total=sum(
@@ -370,10 +389,11 @@ class Job(object):
             ),
             stage=self.stage,
             status=self.status,
+            output=output,
         )
 
 
-def _draw_progress_bar(finished, total, stage, status, width=6):
+def _draw_progress_bar(finished, total, stage, status, output, width=6):
     if total == 0:
         percent = 0
     else:
@@ -384,7 +404,7 @@ def _draw_progress_bar(finished, total, stage, status, width=6):
     else:
         bar = "#" * int(width * percent)
 
-    output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage} | Status: {status}".format(
+    progress_output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage} | Status: {status}".format(
         bar=bar,
         width=width,
         finished=finished,
@@ -393,5 +413,4 @@ def _draw_progress_bar(finished, total, stage, status, width=6):
         status=status.replace("STATUS_", ""),
     )
 
-    sys.stdout.write("{:<79}".format(output))
-    sys.stdout.flush()
+    _write_to_io_or_widget(output, "{:<79}".format(progress_output))
