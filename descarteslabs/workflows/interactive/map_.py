@@ -112,7 +112,7 @@ class MapApp(widgets.VBox):
         "Remove a named layer from the map"
         for lyr in self.map.layers:
             if lyr.name == layer_name:
-                self.map.remove_layer(layer_name)
+                self.map.remove_layer(lyr)
                 break
         else:
             raise ValueError("Layer {} does not exist on the map".format(layer_name))
