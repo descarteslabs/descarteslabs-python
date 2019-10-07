@@ -108,7 +108,7 @@ def do_setup():
             "numpy>=1.10.0",
             "matplotlib>=2.1.0",
             "mercantile>=1.0.4",
-            "ipyleaflet>=0.11.1",
+            "ipyleaflet>=0.11.3",
             "ipywidgets>=7.5.1",
             "traitlets==4.3.2",
         ],
