@@ -1,9 +1,8 @@
-import collections
-
 import numpy as np
 import datetime
 
 from descarteslabs.common.workflows import unmarshal
+
 
 unmarshal.register("Number", unmarshal.identity)
 unmarshal.register("Int", unmarshal.identity)
@@ -41,21 +40,6 @@ class Image(EqualityMixin):
         self.ndarray = ndarray
         self.properties = properties
         self.bandinfo = bandinfo
-
-        if not isinstance(bandinfo, collections.OrderedDict):
-            raise TypeError(
-                "bandinfo must be {}, not {}".format(
-                    collections.OrderedDict, type(bandinfo)
-                )
-            )
-
-        if len(self.ndarray) != len(self.bandinfo):
-            raise ValueError(
-                "bands mismatch between bands and bandinfo. "
-                "Bandinfo indicates {} keys, while bands indicates {} keys".format(
-                    len(self.bandinfo), len(self.ndarray)
-                )
-            )
 
     def __len__(self):
         return len(self.bandinfo)
@@ -132,7 +116,14 @@ class GeometryCollection(Geometry):
         if type not in self.TYPES:
             raise ValueError("Invalid type {!r} for GeometryCollection")
         self.type = type
-        self.geometries = geometries
+        self.geometries = tuple(
+            geometry
+            if isinstance(geometry, Geometry)
+            else Geometry(geometry["type"], geometry["coordinates"])
+            if isinstance(geometry, dict)
+            else Geometry(geometry.type, geometry.coordinates)
+            for geometry in geometries
+        )
         self.crs = crs
         self._shape = None
 
@@ -160,13 +151,23 @@ class Feature(EqualityMixin):
     GEOMETRY_COLLECTION = GeometryCollection
 
     def __init__(self, geometry, properties):
-        self.geometry = (
-            geometry
-            if isinstance(geometry, (self.GEOMETRY, self.GEOMETRY_COLLECTION))
-            else self.GEOMETRY_COLLECTION(**geometry)
-            if geometry["type"] == "GeometryCollection"
-            else self.GEOMETRY(**geometry)
-        )
+        try:
+            self.geometry = (
+                geometry
+                if isinstance(geometry, (self.GEOMETRY, self.GEOMETRY_COLLECTION))
+                else self.GEOMETRY_COLLECTION(**geometry)
+                if geometry["type"] == "GeometryCollection"
+                else self.GEOMETRY(**geometry)
+            )
+        except TypeError:
+            if geometry.type == "GeometryCollection":
+                self.geometry = self.GEOMETRY_COLLECTION(
+                    geometry.type, geometry.geometries, geometry.crs
+                )
+            else:
+                self.geometry = self.GEOMETRY(
+                    geometry.type, geometry.coordinates, geometry.crs
+                )
         self.properties = properties
         self._shape = None
 
@@ -200,9 +201,11 @@ class FeatureCollection(EqualityMixin):
 
     def __init__(self, features):
         self.features = tuple(
-            self.FEATURE(feature["geometry"], feature["properties"])
-            if not isinstance(feature, Feature)
-            else feature
+            feature
+            if isinstance(feature, Feature)
+            else self.FEATURE(feature["geometry"], feature["properties"])
+            if isinstance(feature, dict)
+            else self.FEATURE(feature.geometry, feature.properties)
             for feature in features
         )
 
@@ -210,7 +213,10 @@ class FeatureCollection(EqualityMixin):
     def __geo_interface__(self):
         # NOTE: library support may be limited with this
         # interface for FeatureCollections
-        return {"type": "FeatureCollection", "features": self.features}
+        return {
+            "type": "FeatureCollection",
+            "features": [feat.__geo_interface__ for feat in self.features],
+        }
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and self.features == other.features

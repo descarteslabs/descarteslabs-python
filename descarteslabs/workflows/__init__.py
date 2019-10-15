@@ -214,7 +214,7 @@ def _compute_mixin(
     result
         Appropriate Python object representing the result,
         either as a plain Python type, or object from
-        ``descarteslabs.common.workflows.containers``.
+        ``descarteslabs.workflows.containers``.
     """
     if geoctx is not None:
         params["geoctx"] = GeoContext._promote(geoctx)

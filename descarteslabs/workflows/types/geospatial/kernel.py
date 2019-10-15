@@ -13,7 +13,7 @@ class Kernel(KernelBase):
     """
 
     _doc = {
-        'dims': "Tuple containing the dimensions of the kernel",
-        'data': "List containing the kernel data in row-major format",
+        "dims": "Tuple containing the dimensions of the kernel",
+        "data": "List containing the kernel data in row-major format",
     }
-    _constructor = "kernel.load"
+    _constructor = "Kernel.load"

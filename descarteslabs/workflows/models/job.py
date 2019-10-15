@@ -20,10 +20,11 @@ from ..client import Client
 from .exceptions import ERRORS, TimeoutError
 from .utils import in_notebook, pb_milliseconds_to_datetime
 
-from descarteslabs.common.workflows import (  # noqa: F401 isort:skip
-    unmarshal,
-    containers,  # we must import to register its unmarshallers
-)
+from descarteslabs.common.workflows import unmarshal
+
+from descarteslabs.workflows import (  # noqa: F401 isort:skip
+    containers,
+)  # we must import to register its unmarshallers
 
 
 logger = logging.getLogger(__name__)
