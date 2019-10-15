@@ -28,15 +28,11 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     ----------
     image: ~.geospatial.Image
         The `~.geospatial.Image` to use
-    displayed_image: ~.geospatial.Image
-        Read-only: the `~.geospatial.Image` object that's actually displayed.
-        This differs from `~.geospatial.Image` if `colormap` is set, for example.
     xyz_obj: ~.models.XYZ
         Read-only: The `XYZ` object this layer is displaying.
     colormap: str, optional, default None
         Name of the colormap to use.
         If set, `image` must have 1 band.
-        Updates `displayed_image` by calling `~Image.colormap` on `image`.
     cmap_min: float, optional, default None
         Min value for scaling the single band when a `colormap` is given.
     cmap_max: float, optional, default None
@@ -63,7 +59,6 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     url = traitlets.Unicode(read_only=True).tag(sync=True)
 
     image = traitlets.Instance(Image)
-    displayed_image = traitlets.Instance(Image, read_only=True)
     xyz_obj = traitlets.Instance(XYZ, read_only=True)
     session_id = traitlets.Unicode(read_only=True)
 
@@ -103,18 +98,21 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             # which is expensive computation users don't want
             return ""
 
-        if self.colormap is None:
+        query_args = {"session_id": self.session_id}
+
+        if self.colormap is not None:
+            query_args["colormap"] = self.colormap
+
+            scales = [[self.cmap_min, self.cmap_max]]
+        else:
             scales = [
                 [self.r_min, self.r_max],
                 [self.g_min, self.g_max],
                 [self.b_min, self.b_max],
             ]
-        else:
-            scales = [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]
 
         scales = [scale for scale in scales if scale != [None, None]]
 
-        query_args = {"session_id": self.session_id}
         if len(scales) > 0:
             query_args["scales"] = json.dumps(scales)
 
@@ -123,16 +121,8 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
 
         return self.xyz_obj.url(**query_args)
 
-    @traitlets.observe("image", "colormap", "cmap_min", "cmap_max")
-    def _update_colormap(self, change):
-        if self.colormap is not None:
-            cmapped = self.image.colormap(self.colormap, self.cmap_min, self.cmap_max)
-            self.set_trait("displayed_image", cmapped)
-        else:
-            self.set_trait("displayed_image", self.image)
-
-    @traitlets.observe("displayed_image")
-    def _update_displayed_image(self, change):
+    @traitlets.observe("image")
+    def _update_xyz(self, change):
         xyz = XYZ.build(change["new"], name=self.name)
         xyz.save()
         self.set_trait("xyz_obj", xyz)
@@ -140,12 +130,15 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     @traitlets.observe(
         "visible",
         "checkerboard",
+        "colormap",
         "r_min",
         "r_max",
         "g_min",
         "g_max",
         "b_min",
         "b_max",
+        "cmap_min",
+        "cmap_max",
         "xyz_obj",
         "session_id",
     )
