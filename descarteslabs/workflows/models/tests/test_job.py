@@ -1,4 +1,3 @@
-import collections
 import json
 
 import pytest
@@ -324,12 +323,12 @@ class TestJob(object):
 
     def test_unmarshal_image(self, stub):
         marshalled = {
-            "ndarray": collections.OrderedDict([("red", [])]),
+            "ndarray": {"red": []},
             "properties": {
                 "foo": "bar",
                 "geometry": {"type": "Point", "coordinates": [0, 0]},
             },
-            "bandinfo": collections.OrderedDict([("red", {})]),
+            "bandinfo": {"red": {}},
         }
         job = Job(
             job_pb2.Job(id="foo", status=job_pb2.STATUS_SUCCESS, type=types_pb2.Image)

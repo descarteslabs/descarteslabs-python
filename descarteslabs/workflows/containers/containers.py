@@ -1,6 +1,8 @@
 import numpy as np
 import datetime
 
+import collections
+
 from descarteslabs.common.workflows import unmarshal
 
 
@@ -54,7 +56,7 @@ class Image(EqualityMixin):
     def __init__(self, ndarray, properties, bandinfo):
         self.ndarray = ndarray
         self.properties = properties
-        self.bandinfo = bandinfo
+        self.bandinfo = collections.OrderedDict(**bandinfo)
 
     def __len__(self):
         return len(self.bandinfo)
@@ -67,7 +69,7 @@ class ImageCollection(EqualityMixin):
     def __init__(self, ndarray, properties, bandinfo):
         self.ndarray = ndarray
         self.properties = properties
-        self.bandinfo = bandinfo
+        self.bandinfo = collections.OrderedDict(**bandinfo)
 
     def __len__(self):
         return len(self.properties)
