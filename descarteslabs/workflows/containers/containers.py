@@ -16,11 +16,26 @@ unmarshal.register("Str", unmarshal.astype(str))
 unmarshal.register("List", unmarshal.astype(list))
 unmarshal.register("Tuple", unmarshal.astype(tuple))
 unmarshal.register("Dict", unmarshal.astype(dict))
-unmarshal.register("Datetime", datetime.datetime)
-unmarshal.register("Timedelta", datetime.timedelta)
 unmarshal.register("AOI", unmarshal.astype(dict))
 unmarshal.register("DLTile", unmarshal.astype(dict))
 unmarshal.register("XYZTile", unmarshal.astype(dict))
+
+
+def datetime_from_string(s):
+    try:
+        return datetime.datetime.fromisoformat(s)
+    except AttributeError:
+        raise TypeError(
+            "Datetime unmarshalling failed. If you are using PY2, update to PY3 to fix this error."
+        )
+
+
+def timedelta_from_seconds(s):
+    return datetime.timedelta(seconds=s)
+
+
+unmarshal.register("Datetime", datetime_from_string)
+unmarshal.register("Timedelta", timedelta_from_seconds)
 
 
 class EqualityMixin(object):
