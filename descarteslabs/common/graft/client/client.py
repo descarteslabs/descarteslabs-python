@@ -163,7 +163,7 @@ def is_keyref_graft(value):
 
 def apply_graft(function, *args, **kwargs):
     """
-     The graft for calling a function with the given positional and keyword arguments.
+    The graft for calling a function with the given positional and keyword arguments.
 
     Arguments can be given as Python values, in which case `value_graft`
     will be called on them first, or as delayed-like objects or graft-like mappings.
@@ -388,3 +388,93 @@ def merge_value_grafts(**grafts):
                 # actual name is the invocation of that subgraft, with no arguments
                 merged[name] = [subkey, {}]
     return merged
+
+
+def isolate_keys(graft, wrap_function=False):
+    """
+    Isolate a value graft to its own subscope, to prevent key collisions.
+
+    If ``graft`` already uses valid GUID keys, this ensures that subsequent `apply_graft`
+    operations on ``graft`` won't collide with its existing keys.
+    Essentially, "key-namespace isolation".
+
+    Usually a value graft, i.e. a graft with no ``"parameters"`` key
+    that refers to the original value of ``graft``. See the ``wrap_function``
+    argument for details.
+
+    Parameters
+    ----------
+    graft: graft-like mapping or delayed-like object
+        The graft or delayed object to scope-isolate.
+    wrap_function: bool, optional, default False
+        If a function graft is given (contains a ``"parameters"`` key),
+        whether to wrap it in an outer graft.
+
+        Usually, this is not necessary, since `apply_graft` would never
+        add additional keys to a function graft, making collisions with new
+        keys impossible. In some cases though, it may be preferable to always
+        get a value graft back, regardless of whether ``graft`` was a function
+        graft or a value graft.
+
+        If False (default), function grafts are returned unmodified.
+
+        If True and ``graft`` is a function graft, a value graft is returned
+        that refers to that function.
+
+    Returns
+    -------
+    isolated_graft: dict
+        Value graft representing the same value as ``graft``,
+        but isolated to a subscope. Or, if ``graft`` was a function graft,
+        and ``wrap_function`` is False, it's returned unmodified.
+    """
+    graft = graft if syntax.is_graft(graft) else value_graft(graft)
+
+    if is_function_graft(graft):
+        if not wrap_function:
+            return graft
+        else:
+            subgraft_key = guid()
+            return {subgraft_key: graft, "returns": subgraft_key}
+    else:
+        subgraft_key = guid()
+        result_key = guid()
+        return {subgraft_key: graft, result_key: [subgraft_key], "returns": result_key}
+
+
+def parametrize(graft, **params):
+    """
+    Isolate ``graft`` to its own subscope, in which ``params`` are defined.
+
+    Parameters
+    ----------
+    graft: graft-like mapping or delayed-like object
+        The graft or delayed object to scope-isolate and parametrize
+    **params: delayed-like object, graft-like mapping, or JSON-serializable value
+        Grafts that take no arguments: delayed-like objects with no dependencies on parameters,
+        JSON-serializable values, or grafts without parameters.
+
+        The value _returned_ by each graft will be bound to the name given
+        by its keyword argument within the scope in which ``graft`` executes.
+        These names will _not_ be defined within the top-level scope of the returned graft,
+        unless none of the names are valid GUIDs, in which case they are put in
+        the outer scope since is no collison risk.
+
+        Except for JSON-serializable values, each parameter will be kept as a sub-graft within its own scope,
+        so overlapping keys between the parameters will not collide.
+        Caution: this function accepts both grafts and JSON values, so be careful
+        that you do not pass in a JSON value that looks like a graft, since it will not get quoted.
+
+    Returns
+    -------
+    parametrized_graft: dict
+        Value graft also representing ``graft``,
+        but with ``graft`` isolated to a subscope in which ``params`` are defined.
+    """
+    subgraft = isolate_keys(graft, wrap_function=True)
+    subgraft.update(merge_value_grafts(**params))
+
+    if any(syntax.is_guid_key(param) for param in params):
+        return isolate_keys(subgraft)
+    else:
+        return subgraft

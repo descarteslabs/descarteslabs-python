@@ -1,6 +1,7 @@
 from .syntax import (
     PRIMITIVE_TYPES,
     is_key,
+    is_guid_key,
     is_literal,
     is_quoted_json,
     is_application,
@@ -13,6 +14,7 @@ from .syntax import (
 __all__ = [
     "PRIMITIVE_TYPES",
     "is_key",
+    "is_guid_key",
     "is_literal",
     "is_quoted_json",
     "is_application",

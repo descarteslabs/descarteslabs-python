@@ -6,6 +6,8 @@ from .client import (
     function_graft,
     merge_value_grafts,
     guid,
+    isolate_keys,
+    parametrize,
 )
 
 __all__ = [
@@ -16,4 +18,6 @@ __all__ = [
     "function_graft",
     "merge_value_grafts",
     "guid",
+    "isolate_keys",
+    "parametrize",
 ]

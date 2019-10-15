@@ -1,5 +1,6 @@
 import json
 
+from descarteslabs.common.graft import client as graft_client
 from descarteslabs.common.proto import workflow_pb2
 
 from .. import _channel
@@ -154,7 +155,8 @@ class Workflow(object):
 
         if message.serialized_graft:
             graft = json.loads(message.serialized_graft)
-            obj = proxytype._from_graft(graft)
+            isolated = graft_client.isolate_keys(graft)
+            obj = proxytype._from_graft(isolated)
         else:
             obj = proxytype._from_apply("Workflow.use", workflow_id=message.id)
 

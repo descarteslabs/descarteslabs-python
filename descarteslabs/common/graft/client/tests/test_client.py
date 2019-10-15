@@ -87,3 +87,65 @@ class TestFunctionGraft(object):
             "101": drop_keys(result, "1", "2"),
             "returns": "101",
         }
+
+
+class TestIsolateKeys(object):
+    def test_value_graft(self):
+        initial = {"1": 1, "2": 2, "3": ["add", "1", "2"], "returns": "3"}
+
+        reset_guid_counter(0)
+        isolated = client.isolate_keys(initial)
+        assert isolated == {"1": initial, "2": ["1"], "returns": "2"}
+
+        extra = client.apply_graft("sub", isolated, 5)
+        assert extra == dict(
+            isolated, **{"3": 5, "4": ["sub", "2", "3"], "returns": "4"}
+        )
+
+    def test_function_graft_unwrapped(self):
+        initial = {"parameters": ["x"], "2": 2, "3": ["add", "x", "2"], "returns": "3"}
+
+        reset_guid_counter(0)
+        isolated = client.isolate_keys(initial)
+        assert isolated is initial
+
+    def test_function_graft_wrapped(self):
+        initial = {"parameters": ["x"], "2": 2, "3": ["add", "x", "2"], "returns": "3"}
+
+        reset_guid_counter(0)
+        isolated = client.isolate_keys(initial, wrap_function=True)
+        assert isolated == {"1": initial, "returns": "1"}
+
+
+class TestParametrize(object):
+    def test_non_guid_params(self):
+        initial = {"2": 2, "3": ["add", "x", "y", "2"], "returns": "3"}
+
+        reset_guid_counter(0)
+        parametrized = client.parametrize(initial, x=0, y=100, z="foo")
+        assert parametrized == {
+            "1": initial,
+            "2": ["1"],
+            "x": 0,
+            "y": 100,
+            "z": "foo",
+            "returns": "2",
+        }
+
+    def test_guid_params(self):
+        initial = {"2": 2, "3": ["add", "100", "101", "2"], "returns": "3"}
+
+        reset_guid_counter(0)
+        parametrized = client.parametrize(initial, **{"100": 0, "101": 100, "z": "foo"})
+        assert parametrized == {
+            "3": {
+                "1": initial,
+                "2": ["1"],
+                "100": 0,
+                "101": 100,
+                "z": "foo",
+                "returns": "2",
+            },
+            "4": ["3"],
+            "returns": "4",
+        }

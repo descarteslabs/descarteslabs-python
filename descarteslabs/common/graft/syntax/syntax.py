@@ -23,6 +23,13 @@ def is_key(expr):
     return isinstance(expr, six.string_types)
 
 
+def is_guid_key(expr):
+    try:
+        return is_key(expr) and int(expr) > 0
+    except ValueError:
+        return False
+
+
 def is_literal(expr):
     return isinstance(expr, PRIMITIVE_TYPES)
 

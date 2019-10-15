@@ -248,7 +248,8 @@ class Job(object):
             typespec = json.loads(self._message.serialized_typespec)
             proxytype = deserialize_typespec(typespec)
             graft = json.loads(self._message.serialized_graft)
-            self._object = proxytype._from_graft(graft)
+            isolated = graft_client.isolate_keys(graft)
+            self._object = proxytype._from_graft(isolated)
         return self._object
 
     @property
