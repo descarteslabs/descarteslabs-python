@@ -38,7 +38,7 @@ class TestWorkflow(object):
 
         new_obj = wf_from_proto.object
         assert type(new_obj) == type(obj)
-        assert new_obj.graft == utils.json_normalize(obj.graft)
+        utils.assert_graft_is_scope_isolated_equvalent(new_obj.graft, obj.graft)
 
     def test_roundtrip_from_proto_no_graft(self, stub):
         obj = utils.Bar(utils.Foo(1))

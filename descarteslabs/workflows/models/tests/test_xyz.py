@@ -40,7 +40,7 @@ class TestXYZ(object):
 
         new_obj = xyz_from_proto.object
         assert type(new_obj) == type(obj)
-        assert new_obj.graft == utils.json_normalize(obj.graft)
+        utils.assert_graft_is_scope_isolated_equvalent(new_obj.graft, obj.graft)
 
     def test_get(self, stub):
         message = "foo"

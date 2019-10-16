@@ -16,7 +16,7 @@ from ..exceptions import JobInvalid
 from ..job import Job, _typespec_to_unmarshal_str
 from ..utils import pb_milliseconds_to_datetime
 
-from .utils import json_normalize
+from . import utils
 
 
 class TestTypespecToUnmarshalStr(object):
@@ -75,10 +75,10 @@ class TestJob(object):
         assert message.workflow_id == ""
         assert message.channel == "foo"
 
-        assert json.loads(message.parameters) == json_normalize(
+        assert json.loads(message.parameters) == utils.json_normalize(
             {"foo": graft_client.value_graft(parameters["foo"])}
         )
-        assert json.loads(message.serialized_graft) == json_normalize(obj.graft)
+        assert json.loads(message.serialized_graft) == utils.json_normalize(obj.graft)
         assert message.serialized_typespec == json.dumps("Int")
         assert message.type == types_pb2.Int
 
@@ -174,7 +174,9 @@ class TestJob(object):
         job_from_msg = Job(job._message, client=job._client)
 
         assert job.object is obj
-        assert json_normalize(job_from_msg.object.graft) == json_normalize(obj.graft)
+        utils.assert_graft_is_scope_isolated_equvalent(
+            job_from_msg.object.graft, obj.graft
+        )
         assert job_from_msg.type is type(job_from_msg.object) is type(obj)  # noqa: E721
         assert job.result_type == "Int"
         assert job.parameters == {"foo": graft_client.value_graft(parameters["foo"])}
