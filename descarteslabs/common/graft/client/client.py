@@ -76,12 +76,6 @@ import itertools
 
 from .. import syntax
 
-try:
-    # only after py3.4
-    from collections import abc
-except ImportError:
-    import collections as abc
-
 
 NO_INITIAL = "_no_initial_"
 PARAM = "__param__"
@@ -126,12 +120,12 @@ def value_graft(value, key=None):
         key = guid()
     if isinstance(value, syntax.PRIMITIVE_TYPES):
         return {key: value, "returns": key}
-    elif isinstance(value, (abc.Sequence, abc.Mapping)):
+    elif isinstance(value, (tuple, list, dict)):
         # Quoted JSON
         return {key: [value], "returns": key}
     else:
         raise TypeError(
-            "Value must be a delayed-like object, primitve (one of {}), or JSON-serializable"
+            "Value must be a delayed-like object, primitve (one of {}), or JSON-serializable "
             "sequence or mapping, not {}".format(syntax.PRIMITIVE_TYPES, type(value))
         )
 
