@@ -150,6 +150,7 @@ class CollectionMixin:
         """
         return Int._from_apply("length", self)
 
+    @typecheck_promote(lambda self: self._element_type)
     def contains(self, other):
         """Contains is equivalient to the Python ``in`` operator.
 
