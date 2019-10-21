@@ -15,6 +15,9 @@ from ..utils import pb_datetime_to_milliseconds, pb_milliseconds_to_datetime
 from . import utils
 
 
+@mock.patch.object(
+    Client, "_open_channel", new=lambda *args, **kwargs: mock.MagicMock()
+)
 @mock.patch("descarteslabs.common.proto.xyz_pb2_grpc.XYZAPIStub")
 class TestXYZ(object):
     def test_build(self, stub):

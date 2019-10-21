@@ -34,6 +34,9 @@ class TestTypespecToUnmarshalStr(object):
             _typespec_to_unmarshal_str(typespec)
 
 
+@mock.patch.object(
+    Client, "_open_channel", new=lambda *args, **kwargs: mock.MagicMock()
+)
 @mock.patch("descarteslabs.common.proto.job_pb2_grpc.JobAPIStub")
 class TestJob(object):
     @pytest.mark.parametrize("client", [mock.Mock(), None])
