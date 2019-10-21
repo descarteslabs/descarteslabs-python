@@ -9,20 +9,20 @@ def parameter(name, type_):
     Useful for describing computations that will be further
     parameterized at runtime.
 
-    To actually provide values for the parameter at `Job` compute time,
-    pass them in as keyword arguments to `.compute`.
+    To actually provide values for the parameter at `.Job` compute time,
+    pass them in as keyword arguments to `~.models.compute` or `~.geospatial.Image.visualize`.
 
     Parameters
     ----------
     name: str
         Name of the parameter
-    type_: ProxyType
+    type_: Proxytype
         Type of the parameter
 
     Returns
     -------
     proxyTime:
-        a ProxyType object of type `type_`.
+        a Proxytype object of type ``type_``.
 
     Example
     -------

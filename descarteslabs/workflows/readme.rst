@@ -158,6 +158,7 @@ The tables below list the types and functions available through the Workflows AP
   docs/types/function
   docs/types/toplevel
   docs/types/constants
+  docs/types/identifier
   docs/interactive
   docs/execution
   docs/exceptions
