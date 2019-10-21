@@ -126,7 +126,9 @@ def value_graft(value, key=None):
     else:
         raise TypeError(
             "Value must be a delayed-like object, primitve (one of {}), or JSON-serializable "
-            "sequence or mapping, not {}".format(syntax.PRIMITIVE_TYPES, type(value))
+            "sequence or mapping, not {}: {}".format(
+                syntax.PRIMITIVE_TYPES, type(value), value
+            )
         )
 
 
