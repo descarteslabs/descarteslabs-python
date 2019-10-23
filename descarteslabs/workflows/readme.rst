@@ -115,7 +115,7 @@ The tables below list the types and functions available through the Workflows AP
 
 .. autosummary::
   :nosignatures:
-    
+
   ~descarteslabs.workflows.types.identifier.parameter
 
 :workflow_api_nontoc_heading:`Execution`
@@ -130,6 +130,18 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.models.compute
   ~descarteslabs.workflows.models.publish
   ~descarteslabs.workflows.models.use
+
+:workflow_api_nontoc_heading:`Result Types`
+
+.. autosummary::
+  :nosignatures:
+
+  ~descarteslabs.workflows.results.ImageResult
+  ~descarteslabs.workflows.results.ImageCollectionResult
+  ~descarteslabs.workflows.results.GeometryResult
+  ~descarteslabs.workflows.results.GeometryCollectionResult
+  ~descarteslabs.workflows.results.FeatureResult
+  ~descarteslabs.workflows.results.FeatureCollectionResult
 
 :workflow_api_nontoc_heading:`Exceptions`
 
@@ -161,6 +173,7 @@ The tables below list the types and functions available through the Workflows AP
   docs/types/identifier
   docs/interactive
   docs/execution
+  docs/results
   docs/exceptions
   docs/client
   /descarteslabs/common/retry/readme

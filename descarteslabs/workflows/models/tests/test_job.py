@@ -340,10 +340,10 @@ class TestJob(object):
         )
 
         result = job._unmarshal(marshalled)
-        # NOTE(gabe): we check the class name, versus `isinstance(result, containers.Image)`,
-        # because importing containers in this test would register its unmarshallers,
+        # NOTE(gabe): we check the class name, versus `isinstance(result, results.ImageResult)`,
+        # because importing results in this test would register its unmarshallers,
         # and part of what we're testing for is that the unmarshallers are getting registered correctly.
-        assert result.__class__.__name__ == "Image"
+        assert result.__class__.__name__ == "ImageResult"
 
         assert result.ndarray == marshalled["ndarray"]
         assert result.properties == marshalled["properties"]

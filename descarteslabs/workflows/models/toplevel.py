@@ -50,7 +50,7 @@ def compute(
     result
         Appropriate Python object representing the result,
         either as a plain Python type, or object from
-        ``descarteslabs.workflows.containers``.
+        `descarteslabs.workflows.results`.
     """
     job = Job.build(obj, params, channel=channel, client=client)
     job.execute()

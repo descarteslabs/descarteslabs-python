@@ -22,10 +22,8 @@ from .utils import in_notebook, pb_milliseconds_to_datetime
 
 from descarteslabs.common.workflows import unmarshal
 
-from descarteslabs.workflows import (  # noqa: F401 isort:skip
-    containers,
-)  # we must import to register its unmarshallers
-
+from descarteslabs.workflows import results  # noqa: F401 isort:skip
+# ^ we must import to register its unmarshallers
 
 logger = logging.getLogger(__name__)
 
@@ -226,7 +224,7 @@ class Job(object):
         result
             Appropriate Python object representing the result,
             either as a plain Python type, or object from
-            ``descarteslabs.common.workflows.containers``.
+            ``descarteslabs.common.workflows.results``.
 
         Example
         -------
