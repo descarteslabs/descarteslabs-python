@@ -4,6 +4,7 @@ import json
 import logging
 import sys
 import time
+import warnings
 
 import six
 
@@ -233,6 +234,14 @@ class Job(object):
         >>> job.result(timeout=10)  # doctest: +SKIP
         1
         """
+
+        if sys.version < "3.6":
+            warnings.warn(
+                "Using Python version < 3.6 will result in a nondeterministic ordering"
+                " of bandinfos for `Image` and `ImageCollection`."
+                " Update to Python 3.6 or greater to fix this.",
+                RuntimeWarning,
+            )
 
         if progress_bar is None:
             progress_bar = in_notebook()
