@@ -110,6 +110,7 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.interactive.WorkflowsLayer
   ~descarteslabs.workflows.interactive.LayerController
   ~descarteslabs.workflows.interactive.LayerControllerList
+  ~descarteslabs.workflows.interactive.ParameterSet
 
 :workflow_api_nontoc_heading:`Parameter`
 

@@ -153,13 +153,68 @@ class TestXYZ(object):
         url_base = "{}/v0-0/xyz/baz/{{z}}/{{x}}/{{y}}.png".format(xyz.BASE_URL)
 
         assert xyz.url() == url_base
-        assert xyz.url("foo") == url_base + "?session_id=foo"
-        assert xyz.url(arg="bar") == url_base + "?arg=bar"
+        assert xyz.url(session_id="foo") == url_base + "?session_id=foo"
+        assert xyz.url(colormap="foo") == url_base + "?colormap=foo"
+        assert xyz.url(checkerboard=True) == url_base + "?checkerboard=true"
+        assert xyz.url(checkerboard=False) == url_base
+        # 1-band scales are normalized
+        assert xyz.url(scales=[0, 1]) == url_base + "?scales=[[0.0, 1.0]]"
+        # If all none scales, not included
+        assert xyz.url(scales=[None, None]) == url_base
 
-        # ugh nondeterministic py2 dict order
-        base, params = xyz.url("foo", arg="bar").split("?")
+        # Primitives are inserted directly and JSON-encoded
+        assert xyz.url(foo=1) == url_base + "?foo=1"
+        assert xyz.url(bar=True) == url_base + "?bar=true"
+        assert xyz.url(baz="quz") == url_base + '?baz="quz"'
+        # Grafts are JSON-encoded (along with embedded JSON in grafts)
+        assert xyz.url(foo=obj) == url_base + "?foo={}".format(json.dumps(obj.graft))
+
+        # test everything gets added together correctly
+        base, params = xyz.url(session_id="foo", arg="bar", foo=2.2, obj=obj).split("?")
         assert base == url_base
-        assert set(params.split("&")) == {"session_id=foo", "arg=bar"}
+        assert set(params.split("&")) == {
+            "session_id=foo",
+            'arg="bar"',
+            "foo=2.2",
+            "obj={}".format(json.dumps(obj.graft)),
+        }
+
+    def test_validate_scales(self, stub):
+        assert XYZ._validate_scales([[0.0, 1.0], [0.0, 2.0], [-1.0, 1.0]]) == [
+            [0.0, 1.0],
+            [0.0, 2.0],
+            [-1.0, 1.0],
+        ]
+        assert XYZ._validate_scales([[0.0, 1.0]]) == [[0.0, 1.0]]
+        # ints -> floats
+        assert XYZ._validate_scales([[0, 1]]) == [[0.0, 1.0]]
+        # 1-band convenience
+        assert XYZ._validate_scales([0, 1]) == [[0.0, 1.0]]
+        assert XYZ._validate_scales([None, 1]) == [[None, 1.0]]
+        # no scalings
+        assert XYZ._validate_scales(None) == []
+        assert XYZ._validate_scales([]) == []
+
+        with pytest.raises(TypeError, match="Expected a list or tuple of scales"):
+            XYZ._validate_scales(0)
+        with pytest.raises(TypeError, match="Expected a list or tuple of scales"):
+            XYZ._validate_scales("foo")
+        with pytest.raises(
+            TypeError, match="Scaling 0: expected a 2-item list or tuple"
+        ):
+            XYZ._validate_scales([1, 2, 3])
+        with pytest.raises(
+            TypeError, match="Scaling 0: items in scaling must be numbers"
+        ):
+            XYZ._validate_scales([1, "foo"])
+        with pytest.raises(ValueError, match="Expected 0, 1, or 3 scales, but got 2"):
+            XYZ._validate_scales([[0.0, 1.0], [0.0, 1.0]])
+        with pytest.raises(ValueError, match="Expected 0, 1, or 3 scales, but got 4"):
+            XYZ._validate_scales([[0.0, 1.0], [0.0, 1.0], [0.0, 1.0], [0.0, 1.0]])
+        with pytest.raises(ValueError, match="but length was 3"):
+            XYZ._validate_scales([[0.0, 1.0, 2.0]])
+        with pytest.raises(ValueError, match="but length was 1"):
+            XYZ._validate_scales([[0.0]])
 
 
 @mock.patch("descarteslabs.workflows.models.xyz._tile_error_stream")

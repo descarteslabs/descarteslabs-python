@@ -1,12 +1,9 @@
-import json
 import six
-import uuid
 
 from descarteslabs import scenes
 
-from ... import _channel, env
+from ... import env
 from ...cereal import serializable
-from ...models import XYZ
 from ..containers import Dict, KnownDict, Struct, Tuple, List
 from ..core import typecheck_promote, _resolve_lambdas
 from ..datetimes import Datetime
@@ -857,7 +854,7 @@ class Image(ImageBase, BandsMixin):
     def __rpow__(self, other):
         return _result_type(other)._from_apply("rpow", self, other)
 
-    def tile_layer(self, name=None, scales=None, colormap=None, checkerboard=True):
+    def tile_layer(self, name=None, scales=None, colormap=None, checkerboard=True, **parameters):
         """
         A `.WorkflowsLayer` for this `Image`.
 
@@ -876,10 +873,18 @@ class Image(ImageBase, BandsMixin):
 
             If `Image` contains 1 band, ``scales`` must be a list like ``[(0, 1)]``,
             or just ``(0, 1)`` for convenience
+
+            If None, each 256x256 tile will be scaled independently.
+            based on the min and max values of its data.
         colormap: str, default None
             The name of the colormap to apply to the `Image`. Only valid if the `Image` has a single band.
         checkerboard: bool, default True
             Whether to display a checkerboarded background for missing or masked data.
+        **parameters: JSON-serializable value, Proxytype, or ipywidgets.Widget
+            Runtime parameters to use when computing tiles.
+            Values can be any JSON-serializable value, a `Proxytype` instance, or an ipywidgets ``Widget``.
+
+            See the docstring for `visualize` for more detail.
 
         Returns
         -------
@@ -887,13 +892,13 @@ class Image(ImageBase, BandsMixin):
         """
         from ... import interactive
 
-        layer = interactive.WorkflowsLayer(self, name=name)
+        layer = interactive.WorkflowsLayer(self, name=name, parameters=parameters)
         layer.set_scales(scales, new_colormap=colormap)
         layer.checkerboard = checkerboard
 
         return layer
 
-    def visualize(self, name, scales=None, colormap=None, checkerboard=True, map=None):
+    def visualize(self, name, scales=None, colormap=None, checkerboard=True, map=None, **parameters):
         """
         Add this `Image` to `wf.map <.interactive.map>`, or replace a layer with the same name.
 
@@ -914,7 +919,7 @@ class Image(ImageBase, BandsMixin):
             If `Image` contains 1 band, ``scales`` must be a list like ``[(0, 1)]``,
             or just ``(0, 1)`` for convenience
 
-            If None, each 256x256 tile will be scaled independently
+            If None, each 256x256 tile will be scaled independently.
             based on the min and max values of its data.
         colormap: str, default None
             The name of the colormap to apply to the `Image`. Only valid if the `Image` has a single band.
@@ -923,6 +928,28 @@ class Image(ImageBase, BandsMixin):
         map: `.Map` or `.MapApp`, optional, default None
             The `.Map` (or plain ipyleaflet Map) instance on which to show the `Image`.
             If None (default), uses `wf.map <.interactive.map>`, the singleton Workflows `.MapApp` object.
+        **parameters: JSON-serializable value, Proxytype, or ipywidgets.Widget
+            Runtime parameters to use when computing tiles.
+            Values can be any JSON-serializable value, a `Proxytype` instance, or an ipywidgets ``Widget``.
+
+            Once these initial parameter values are set, they can be modified by assigning to
+            `~.WorkflowsLayer.parameters` on the returned `WorkflowsLayer`.
+
+            If a Widget is given, it's automatically linked, so updating the widget causes the parameter
+            value to change, and the map to update. Running `visualize` again and passing in a different
+            widget instance will un-link the old one automatically.
+
+            If a Python value or `Proxytype` is given, values you later assign to that parameter
+            must be of a compatible type (for example, you can't give ``threshold=0.6``, then assign
+            ``lyr.parameters.threshold = "foo"``, because ``"foo"`` can't be cast to a float).
+
+            For more information, see the docstring to `ParameterSet`.
+
+        Returns
+        -------
+        layer: WorkflowsLayer
+            The layer displaying this `Image`. Either a new `WorkflowsLayer` if one was created,
+            or the layer with the same ``name`` that was already on the map.
 
         Example
         -------
@@ -931,13 +958,17 @@ class Image(ImageBase, BandsMixin):
         >>> nir, red = col.unpack_bands(["nir", "red"])
         >>> ndvi = wf.normalized_difference(nir, red)
         >>> max_ndvi = ndvi.max()
-        >>> max_ndvi.visualize(
+        >>> highest_ndvi = max_ndvi > wf.parameter("threshold", wf.Float)
+        >>> lyr = highest_ndvi.visualize(
         ...     name="My Cool Max NDVI",
-        ...     scales=[(-1, 1)],
+        ...     scales=[0, 1],
         ...     colormap="viridis",
+        ...     threshold=0.4,
         ... )  # doctest: +SKIP
         >>> wf.map  # doctest: +SKIP
         >>> # `wf.map` actually displays the map; right click and open in new view in JupyterLab
+        >>> lyr.parameters.threshold = 0.3  # doctest: +SKIP
+        >>> # update map with a new value for the "threshold" parameter
         """
         from ... import interactive
 
@@ -950,52 +981,14 @@ class Image(ImageBase, BandsMixin):
                     layer.image = self
                     layer.set_scales(scales, new_colormap=colormap)
                     layer.checkerboard = checkerboard
-                break
+                    layer.set_parameters(**parameters)
+                return layer
         else:
             layer = self.tile_layer(
-                name=name, scales=scales, colormap=colormap, checkerboard=checkerboard
+                name=name, scales=scales, colormap=colormap, checkerboard=checkerboard, **parameters
             )
             map.add_layer(layer)
-
-    def tile_url(self, name=None, scales=None, colormap=None, client=None):
-        """
-        Generate a new tile server URL for this `Image`.
-
-        Publishes ``self`` as a `Workflow`.
-
-        Parameters
-        ----------
-        name: str, default None
-            The name of the published workflow that will encapsulate this image.
-        scales: list of lists, default None
-            The scaling to apply to each band in the image.
-        colormap: str, default None
-            The colormap to apply to the image.
-        client : Compute, optional
-            Allows you to use a specific client instance with non-default-
-            auth and parameters
-
-        Returns
-        -------
-        str
-            The tile server URL.
-        """
-        xyz = XYZ.build(self, name=name, client=client)
-        xyz.save()
-
-        tile_server_base_url = "https://workflows.descarteslabs.com/{}".format(
-            _channel.__channel__
-        )
-        url = "{}/xyz/{}/{{z}}/{{x}}/{{y}}.png?session_id={}".format(
-            tile_server_base_url, xyz.id, uuid.uuid4().hex[:6]
-        )
-
-        if scales:
-            url += "&scales={}".format(json.dumps(scales))
-        if colormap:
-            url += "&colormap={}".format(colormap)
-
-        return url
+            return layer
 
 
 def _result_type(other):

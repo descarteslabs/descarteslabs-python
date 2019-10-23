@@ -4,12 +4,13 @@ import threading
 import six
 
 import grpc
-from descarteslabs.common.graft import client as graft_client
+from descarteslabs.common.graft import client as graft_client, syntax as graft_syntax
 from descarteslabs.common.proto import xyz_pb2
 
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec
 from ..client import Client
+from ..types import proxify
 from .utils import pb_datetime_to_milliseconds, pb_milliseconds_to_datetime
 
 
@@ -25,6 +26,7 @@ class XYZ(object):
     or `.error_listener` to retrieve error messages that happen while
     computing them.
     """
+
     BASE_URL = "https://workflows.descarteslabs.com"
 
     def __init__(self, proxy_object, proto_message, client=None):
@@ -146,7 +148,14 @@ class XYZ(object):
         )
         self._message = message
 
-    def url(self, session_id=None, **query_args):
+    def url(
+        self,
+        session_id=None,
+        colormap=None,
+        scales=None,
+        checkerboard=False,
+        **parameters
+    ):
         """
         XYZ tile URL format-string, like ``https://workflows.descarteslabs.com/v0-5/xyz/1234567/{z}/{x}/{y}.png``
 
@@ -156,8 +165,26 @@ class XYZ(object):
             Unique, client-generated ID that error logs will be stored under.
             Since multiple users may access tiles from the same `XYZ` object,
             each user should set their own ``session_id`` to get individual error logs.
-        query_args: dict[str, str], optional, default None
-            Additional query arguments to add to the URL. Keys and values must be strings.
+        colormap: str, optional, default None
+            Name of the colormap to use. If set, the displayed `~.geospatial.Image` must have 1 band.
+        scales: list of lists, optional, default None
+            The scaling to apply to each band in the `~.geospatial.Image` this `XYZ` object will display.
+
+            If the `~.geospatial.Image` contains 3 bands, ``scales`` must be a list like ``[(0, 1), (0, 1), (-1, 1)]``.
+
+            If the `~.geospatial.Image` contains 1 band, ``scales`` must be a list like ``[(0, 1)]``,
+            or just ``(0, 1)`` for convenience
+
+            If None, each 256x256 tile will be scaled independently.
+        checkerboard: bool, default False
+            Whether to display a checkerboarded background for missing or masked data.
+        parameters: dict[str, Union[Proxytype, json_serializable_value]]
+            Parameters to use while computing.
+
+            Each argument must be the name of a parameter created with `~.identifier.parameter`.
+            Each value must be a JSON-serializable type (``bool``, ``int``, ``float``,
+            ``str``, ``list``, ``dict``, etc.), a `Proxytype` (like `~.geospatial.Image` or `.Timedelta`),
+            or a value that `proxify` can handle (like a ``datetime.datetime``).
 
         Returns
         -------
@@ -167,6 +194,9 @@ class XYZ(object):
         ------
         ValueError
             If the `XYZ` object has no `id` and `.save` has not been called yet.
+
+        TypeError
+            If the ``scales`` or ``parameters`` are of invalid type.
         """
         if self.id is None:
             raise ValueError(
@@ -175,8 +205,23 @@ class XYZ(object):
         url = "{base}/{channel}/xyz/{id}/{{z}}/{{x}}/{{y}}.png".format(
             base=self.BASE_URL, channel=self.channel, id=self.id
         )
-        if session_id:
+
+        query_args = {}
+        if session_id is not None:
             query_args["session_id"] = session_id
+        if colormap is not None:
+            query_args["colormap"] = colormap
+        if checkerboard:
+            query_args["checkerboard"] = "true"
+
+        if scales is not None:
+            scales = self._validate_scales(scales)
+
+            if any(scale != [None, None] for scale in scales):
+                query_args["scales"] = json.dumps(scales)
+
+        if parameters is not None:
+            query_args.update(self._parameters_to_query_args(**parameters))
 
         if query_args:
             url = (
@@ -187,6 +232,146 @@ class XYZ(object):
                 )
             )
         return url
+
+    @staticmethod
+    def _validate_scales(scales):
+        """
+        Validate and normalize a list of scales for an XYZ layer.
+
+        A _scaling_ is a 2-tuple (or 2-list) like ``[min, max]``,
+        meaning the range of values in your data you want to stretch
+        to the 0..255 output range.
+
+        If ``min`` and ``max`` are ``None``, the min/max values in the
+        data will be used automatically. Since each tile is computed
+        separately and may have different min/max values, this can
+        create a "patchwork" effect when viewed on a map.
+
+        Scales can be given as:
+
+        * Three scalings, for 3-band images, like ``[[0, 1], [0, 0.5], [None, None]]``
+        * 1-list/tuple of 1 scaling, for 1-band images, like ``[[0, 1]]``
+        * 1 scaling (for convenience), which is equivalent to the above: ``[0, 1]``
+        * None, or an empty list or tuple for no scalings
+
+        Parameters
+        ----------
+        scales: list, tuple, or None
+            The scales to validate, in the format shown above
+
+        Returns
+        -------
+        scales: list
+            0, 1- or 3-length list of scalings, where each item is a float.
+            (``[0, 1]`` would become ``[[0.0, 1.0]]``, for example.)
+            If no scalings are given, an empty list is returned.
+
+        Raises
+        ------
+        TypeError, ValueError
+            If the scales do not match the correct format
+        """
+        if scales is not None:
+            if not isinstance(scales, (list, tuple)):
+                raise TypeError(
+                    "Expected a list or tuple of scales, but got {}".format(scales)
+                )
+
+            if (
+                len(scales) == 2
+                and not isinstance(scales[0], (list, tuple))
+                and not isinstance(scales[1], (list, tuple))
+            ):
+                # allow a single 2-tuple for convenience with colormaps/1-band images
+                scales = (scales,)
+
+            if len(scales) not in (0, 1, 3):
+                raise ValueError(
+                    "Expected 0, 1, or 3 scales, but got {}".format(len(scales))
+                )
+
+            for i, scaling in enumerate(scales):
+                if not isinstance(scaling, (list, tuple)):
+                    raise TypeError(
+                        "Scaling {}: expected a 2-item list or tuple for the scaling, "
+                        "but got {}".format(i, scaling)
+                    )
+                if len(scaling) != 2:
+                    raise ValueError(
+                        "Scaling {}: expected a 2-item list or tuple for the scaling, "
+                        "but length was {}".format(i, len(scaling))
+                    )
+                if not all(isinstance(x, (int, float, type(None))) for x in scaling):
+                    raise TypeError(
+                        "Scaling {}: items in scaling must be numbers or None; "
+                        "got {}".format(i, scaling)
+                    )
+
+            return [
+                [float(x) if isinstance(x, int) else x for x in scaling]
+                for scaling in scales
+            ]
+            # be less strict about floats than traitlets is
+        else:
+            return []
+
+    @staticmethod
+    def _parameters_to_query_args(**parameters):
+        """
+        Convert a dict of parameters into JSON-encoded query arguments.
+
+        If a parameter is a graft literal (i.e., a Python primitive),
+        it's JSON-encoded directly rather than wrapping it in a graft, to prevent
+        query argument bloat.
+
+        Otherwise, ``value_graft`` is called on it, so it should be a `Proxytype`
+        or a JSON literal.
+
+        If ``value_graft`` fails, `proxify` is called as a last resort to try to
+        convert the value into something that graft can represent.
+
+        Parameters
+        ----------
+        parameters: JSON-serializable value, Proxytype, `proxify` compatible value
+            Parameters to use while computing.
+
+            Each argument must be the name of a parameter created with `~.identifier.parameter`.
+            Each value must be a JSON-serializable type (``bool``, ``int``, ``float``,
+            ``str``, ``list``, ``dict``, etc.), a `Proxytype` (like `~.geospatial.Image` or `.Timedelta`),
+            or a value that `proxify` can handle (like a ``datetime.datetime``).
+
+        Returns
+        -------
+        query_args: dict[str, str]
+            Dict of query arguments, where keys are argument names, and values
+            are their JSON-encoded representations.
+
+        Raises
+        ------
+        TypeError:
+            If a parameter value can't be represented as a graft by ``value_graft`` or `proxify`.
+        """
+        query_args = {}
+        for name, param in six.iteritems(parameters):
+            if graft_syntax.is_literal(param):
+                graftable = param
+            else:
+                try:
+                    graftable = graft_client.value_graft(param)
+                except TypeError:
+                    try:
+                        graftable = proxify(param).graft
+                    except NotImplementedError:
+                        raise TypeError(
+                            "Invalid type for parameter {!r}: {}. "
+                            "Must be a JSON-serializable value, Proxytype, "
+                            "or object that `proxify` can handle. "
+                            "Got: {}".format(name, type(param), param)
+                        )
+
+            query_args[name] = json.dumps(graftable)
+
+        return query_args
 
     def iter_tile_errors(self, session_id, start_datetime=None):
         """
@@ -305,6 +490,7 @@ class XYZErrorListener(object):
     >>> # later
     >>> listener.stop()  # doctest: +SKIP
     """
+
     def __init__(self, xyz_id, client=None):
         self.xyz_id = xyz_id
         self.callbacks = []

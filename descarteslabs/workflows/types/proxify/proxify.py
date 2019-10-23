@@ -1,8 +1,12 @@
+import datetime
+
+
 def proxify(obj):
     from ..core import Proxytype
     from ..function import Function
     from ..containers import Tuple, List
     from ..primitives import Int, Float, Bool, Str, NoneType
+    from ..datetimes import Datetime, Timedelta
 
     if isinstance(obj, Proxytype):
         return obj
@@ -29,9 +33,13 @@ def proxify(obj):
         return Str(obj)
     elif obj is None:
         return NoneType(obj)
+    elif isinstance(obj, (datetime.datetime, datetime.date)):
+        return Datetime._promote(obj)
+    elif isinstance(obj, datetime.timedelta):
+        return Timedelta._promote(obj)
     else:
         raise NotImplementedError(
             "Cannot automatically convert to a Proxytype. "
             "Please manually construct the appropriate container type "
-            "and initialize it with your object. Value: {}".format(obj)
+            "and initialize it with your object. Value: {!r}".format(obj)
         )

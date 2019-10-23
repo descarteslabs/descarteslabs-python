@@ -5,6 +5,7 @@ try:
     from .layer import WorkflowsLayer
     from .layer_controller import LayerController, LayerControllerList
     from .map_ import MapApp, Map
+    from .parameters import ParameterSet, ProxytypeInstance
 
     map = MapApp()
     """
@@ -44,6 +45,8 @@ except Exception as e:
     LayerControllerList = map
     MapApp = map
     Map = map
+    ParameterSet = map
+    ProxytypeInstance = map
 
 
 __all__ = [
@@ -53,4 +56,6 @@ __all__ = [
     "Map",
     "MapApp",
     "map",
+    "ParameterSet",
+    "ProxytypeInstance",
 ]

@@ -283,9 +283,14 @@ class LayerControllerRow(widgets.Box):
         widget.disabled = True
 
         ctx = self.map.geocontext()
+        try:
+            params = self.layer.parameters.to_dict()
+        except AttributeError:
+            # technically, parameters is allowed to be None
+            params = {}
 
         try:
-            result = self.layer.image.compute(ctx, progress_bar=self.map.output_log)
+            result = self.layer.image.compute(ctx, progress_bar=self.map.output_log, **params)
         except JobComputeError:
             pass
         else:

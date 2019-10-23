@@ -1,5 +1,4 @@
 import datetime
-import json
 import uuid
 import threading
 
@@ -7,8 +6,11 @@ import ipyleaflet
 import ipywidgets as widgets
 import traitlets
 
+
 from ..models import XYZ
 from ..types import Image
+
+from . import parameters
 
 
 class ScaleFloat(traitlets.CFloat):
@@ -28,8 +30,16 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     ----------
     image: ~.geospatial.Image
         The `~.geospatial.Image` to use
+    parameters: ParameterSet
+        Parameters to use while computing; modify attributes under ``.parameters``
+        (like ``layer.parameters.foo = "bar"``) to cause the layer to recompute
+        and update under those new parameters.
     xyz_obj: ~.models.XYZ
         Read-only: The `XYZ` object this layer is displaying.
+    session_id: str
+        Read-only: Unique ID that error logs will be stored under, generated automatically.
+    checkerboard: bool, default True
+        Whether to display a checkerboarded background for missing or masked data.
     colormap: str, optional, default None
         Name of the colormap to use.
         If set, `image` must have 1 band.
@@ -59,8 +69,14 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     url = traitlets.Unicode(read_only=True).tag(sync=True)
 
     image = traitlets.Instance(Image)
+    parameters = traitlets.Instance(parameters.ParameterSet, allow_none=True)
     xyz_obj = traitlets.Instance(XYZ, read_only=True)
     session_id = traitlets.Unicode(read_only=True)
+
+    checkerboard = traitlets.Bool(True)
+    colormap = traitlets.Unicode(None, allow_none=True)
+    cmap_min = ScaleFloat(None, allow_none=True)
+    cmap_max = ScaleFloat(None, allow_none=True)
 
     r_min = ScaleFloat(None, allow_none=True)
     r_max = ScaleFloat(None, allow_none=True)
@@ -69,19 +85,16 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     b_min = ScaleFloat(None, allow_none=True)
     b_max = ScaleFloat(None, allow_none=True)
 
-    colormap = traitlets.Unicode(None, allow_none=True)
-    cmap_min = ScaleFloat(None, allow_none=True)
-    cmap_max = ScaleFloat(None, allow_none=True)
-
-    checkerboard = traitlets.Bool(True)
-
     error_output = traitlets.Instance(widgets.Output, allow_none=True)
 
     def __init__(self, image, *args, **kwargs):
+        params = kwargs.pop("parameters", {})
         super(WorkflowsLayer, self).__init__(*args, **kwargs)
+
         with self.hold_trait_notifications():
             self.image = image
             self.set_trait("session_id", uuid.uuid4().hex)
+            self.set_parameters(**params)
 
         self._error_listener = None
         self._known_errors = set()
@@ -98,11 +111,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             # which is expensive computation users don't want
             return ""
 
-        query_args = {"session_id": self.session_id}
-
         if self.colormap is not None:
-            query_args["colormap"] = self.colormap
-
             scales = [[self.cmap_min, self.cmap_max]]
         else:
             scales = [
@@ -113,17 +122,25 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
 
         scales = [scale for scale in scales if scale != [None, None]]
 
-        if len(scales) > 0:
-            query_args["scales"] = json.dumps(scales)
+        parameters = self.parameters.to_dict()
 
-        if self.checkerboard:
-            query_args["checkerboard"] = "true"
-
-        return self.xyz_obj.url(**query_args)
+        return self.xyz_obj.url(
+            session_id=self.session_id,
+            colormap=self.colormap,
+            scales=scales,
+            checkerboard=self.checkerboard,
+            **parameters
+        )
 
     @traitlets.observe("image")
     def _update_xyz(self, change):
-        xyz = XYZ.build(change["new"], name=self.name)
+        old, new = change["old"], change["new"]
+        if old is new:
+            # traitlets does an == check between the old and new value to decide if it's changed,
+            # which for an Image, returns another Image, which it considers changed.
+            return
+
+        xyz = XYZ.build(new, name=self.name)
         xyz.save()
         self.set_trait("xyz_obj", xyz)
 
@@ -141,8 +158,16 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         "cmap_max",
         "xyz_obj",
         "session_id",
+        "parameters",
     )
+    @traitlets.observe("parameters", type="delete")
     def _update_url(self, change):
+        print(change)
+        self.set_trait("url", self.make_url())
+
+    @traitlets.observe("parameters", type="delete")
+    def _update_url_on_param_delete(self, change):
+        # traitlets is dumb and decorator stacking doesn't work so we have to repeat this
         self.set_trait("url", self.make_url())
 
     @traitlets.observe("xyz_obj", "session_id")
@@ -211,23 +236,11 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             based on the min and max values of its data.
         new_colormap: str, None, or False, optional, default False
             A new colormap to set at the same time, or False to use the current colormap.
-
-            If changing both scales and colormap, this is more efficient
-            than doing one at a time, since it will only re-publish one `Workflow`
-            instead of two.
         """
         colormap = self.colormap if new_colormap is False else new_colormap
 
         if scales is not None:
-            if not isinstance(scales, (list, tuple)):
-                raise TypeError(
-                    "Expected a list or tuple of scales, but got {}".format(scales)
-                )
-
-            if colormap is not None:
-                if len(scales) == 2:
-                    # allow a single 2-tuple for convenience with colormaps
-                    scales = (scales,)
+            scales = XYZ._validate_scales(scales)
 
             scales_len = 1 if colormap is not None else 3
             if len(scales) != scales_len:
@@ -238,29 +251,6 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
                     msg += " Colormaps cannot be used with multi-band images."
 
                 raise ValueError(msg)
-
-            for i, scaling in enumerate(scales):
-                if not isinstance(scaling, (list, tuple)):
-                    raise TypeError(
-                        "Scaling {}: expected a 2-item list or tuple for the scaling, "
-                        "but got {}".format(i, scaling)
-                    )
-                if len(scaling) != 2:
-                    raise TypeError(
-                        "Scaling {}: expected a 2-item list or tuple for the scaling, "
-                        "but length was {}".format(i, len(scaling))
-                    )
-                if not all(isinstance(x, (int, float, type(None))) for x in scaling):
-                    raise TypeError(
-                        "Scaling {}: items in scaling must be numbers or None; "
-                        "got {}".format(i, scaling)
-                    )
-
-            scales = [
-                [float(x) if isinstance(x, int) else x for x in scaling]
-                for scaling in scales
-            ]
-            # be less strict about floats than traitlets is
 
             with self.hold_trait_notifications():
                 if colormap is None:
@@ -290,3 +280,41 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
                     self.cmap_max = None
                 if new_colormap is not False:
                     self.colormap = new_colormap
+
+    def set_parameters(self, **params):
+        """
+        Set new parameters for this `WorkflowsLayer`.
+
+        In typical cases, you update parameters by assigning to `parameters`
+        (like ``layer.parameters.threshold = 6.6``).
+
+        Instead, use this function when you need to change the *names or types*
+        of parameters available on the `WorkflowsLayer`. (Users shouldn't need to
+        do this, as `~.Image.visualize` handles it for you, but custom widget developers
+        may need to use this method when they change the `image` field on a `WorkflowsLayer`.)
+
+        If a value is an ipywidgets Widget, it will be linked to that parameter
+        (via its ``"value"`` attribute). If a parameter was previously set with
+        a widget, and a different widget instance (or non-widget) is passed
+        for its new value, the old widget is automatically unlinked.
+        If the same widget instance is passed as is already linked, no change occurs.
+
+        Parameters
+        ----------
+        params: JSON-serializable value, Proxytype, or ipywidgets.Widget
+            Paramter names to new values. Values can be Python types,
+            `Proxytype` instances, or ``ipywidgets.Widget`` instances.
+        """
+        param_set = self.parameters
+        if param_set is None:
+            param_set = self.parameters = parameters.ParameterSet(self, "parameters")
+
+        with self.hold_trait_notifications():
+            param_set.update(**params)
+
+    def _ipython_display_(self):
+        param_set = self.parameters
+        if param_set:
+            widget = param_set.widget
+            if widget and len(widget.children) > 0:
+                widget._ipython_display_()
