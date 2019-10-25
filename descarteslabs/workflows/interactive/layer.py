@@ -162,7 +162,6 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     )
     @traitlets.observe("parameters", type="delete")
     def _update_url(self, change):
-        print(change)
         self.set_trait("url", self.make_url())
 
     @traitlets.observe("parameters", type="delete")
