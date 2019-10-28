@@ -28,6 +28,9 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.types.geospatial.ImageCollectionGroupby
   ~descarteslabs.workflows.types.geospatial.load_geojson
   ~descarteslabs.workflows.types.geospatial.load_geojson_file
+  ~descarteslabs.workflows.types.geospatial.Kernel
+  ~descarteslabs.workflows.types.geospatial.conv2d
+  ~descarteslabs.workflows.types.geospatial.where
 
 :workflow_api_nontoc_heading:`Primitives`
 
@@ -69,25 +72,18 @@ The tables below list the types and functions available through the Workflows AP
 
   ~descarteslabs.workflows.types.function.Function
 
-:workflow_api_nontoc_heading:`Arithmetic`
+:workflow_api_nontoc_heading:`Math`
 
 .. autosummary::
   :nosignatures:
 
-  ~descarteslabs.workflows.types.toplevel.arithmetic.log
-  ~descarteslabs.workflows.types.toplevel.arithmetic.log2
-  ~descarteslabs.workflows.types.toplevel.arithmetic.log10
-  ~descarteslabs.workflows.types.toplevel.arithmetic.sqrt
-  ~descarteslabs.workflows.types.toplevel.arithmetic.cos
-  ~descarteslabs.workflows.types.toplevel.arithmetic.sin
-  ~descarteslabs.workflows.types.toplevel.arithmetic.tan
-
-:workflow_api_nontoc_heading:`Conditionals`
-
-.. autosummary::
-  :nosignatures:
-
-  ~descarteslabs.workflows.types.toplevel.conditionals.where
+  ~descarteslabs.workflows.types.math.log
+  ~descarteslabs.workflows.types.math.log2
+  ~descarteslabs.workflows.types.math.log10
+  ~descarteslabs.workflows.types.math.sqrt
+  ~descarteslabs.workflows.types.math.cos
+  ~descarteslabs.workflows.types.math.sin
+  ~descarteslabs.workflows.types.math.tan
 
 :workflow_api_nontoc_heading:`Constants`
 
@@ -169,7 +165,7 @@ The tables below list the types and functions available through the Workflows AP
   docs/types/containers
   docs/types/datetimes
   docs/types/function
-  docs/types/toplevel
+  docs/types/math
   docs/types/constants
   docs/types/identifier
   docs/interactive

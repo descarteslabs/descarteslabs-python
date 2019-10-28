@@ -12,30 +12,21 @@ from .proxify import proxify
 from .containers import CollectionMixin, Tuple, List, Dict, Struct, zip
 from .datetimes import Datetime, Timedelta
 from .geospatial import (
+    Kernel,
+    conv2d,
     Feature,
     FeatureCollection,
-    load_geojson,
-    load_geojson_file,
+    GeoContext,
     Geometry,
     GeometryCollection,
-    GeoContext,
+    ImageCollectionGroupby,
     Image,
     ImageCollection,
-    Kernel,
-    ImageCollectionGroupby,
-)
-from .toplevel import (
-    log,
-    log2,
-    log10,
-    sqrt,
-    cos,
-    sin,
-    tan,
-    normalized_difference,
+    load_geojson,
+    load_geojson_file,
     where,
-    conv2d,
 )
+from .math import log, log2, log10, sqrt, cos, sin, tan, normalized_difference
 from .constants import e, inf, nan, pi
 from .identifier import parameter, identifier
 
@@ -70,18 +61,20 @@ __all__ = [
     "Datetime",
     "Timedelta",
     # .geospatial
+    "Kernel",
+    "conv2d",
     "Feature",
     "FeatureCollection",
-    "load_geojson",
-    "load_geojson_file",
+    "GeoContext",
     "Geometry",
     "GeometryCollection",
-    "GeoContext",
+    "ImageCollectionGroupby",
     "Image",
     "ImageCollection",
-    "Kernel",
-    "ImageCollectionGroupby",
-    # .toplevel
+    "load_geojson",
+    "load_geojson_file",
+    "where",
+    # .math
     "log",
     "log2",
     "log10",
@@ -90,8 +83,6 @@ __all__ = [
     "sin",
     "tan",
     "normalized_difference",
-    "where",
-    "conv2d",
     # .identifier
     "parameter",
     "identifier",

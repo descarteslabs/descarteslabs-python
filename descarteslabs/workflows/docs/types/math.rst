@@ -1,8 +1,8 @@
 .. default-role:: py:obj
 
-Arithmetic
-----------
-.. automodule:: descarteslabs.workflows.types.toplevel.arithmetic
+Math
+----
+.. automodule:: descarteslabs.workflows.types.math
   :members:
   :autosummary:
   :inherited-members:

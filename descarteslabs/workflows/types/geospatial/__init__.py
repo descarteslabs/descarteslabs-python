@@ -1,23 +1,26 @@
+from .convolution import Kernel, conv2d
 from .feature import Feature
 from .featurecollection import FeatureCollection
-from .load_geojson import load_geojson, load_geojson_file
-from .geometry import Geometry, GeometryCollection
 from .geocontext import GeoContext
+from .geometry import Geometry, GeometryCollection
 from .groupby import ImageCollectionGroupby
 from .image import Image
 from .imagecollection import ImageCollection
-from .kernel import Kernel
+from .load_geojson import load_geojson, load_geojson_file
+from .where import where
 
 __all__ = [
+    "Kernel",
+    "conv2d",
     "Feature",
     "FeatureCollection",
-    "load_geojson",
-    "load_geojson_file",
+    "GeoContext",
     "Geometry",
     "GeometryCollection",
-    "GeoContext",
+    "ImageCollectionGroupby",
     "Image",
     "ImageCollection",
-    "Kernel",
-    "ImageCollectionGroupby",
+    "load_geojson",
+    "load_geojson_file",
+    "where",
 ]

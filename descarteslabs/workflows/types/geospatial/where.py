@@ -1,6 +1,7 @@
 from ..core import typecheck_promote
-from ..geospatial import Image, ImageCollection
 from ..primitives import Bool, Int, Float
+from .image import Image
+from .imagecollection import ImageCollection
 
 
 @typecheck_promote(

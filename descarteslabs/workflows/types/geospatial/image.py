@@ -694,43 +694,43 @@ class Image(ImageBase, BandsMixin):
     # Arithmetic operators
     def log(img):
         "Element-wise natural log of an `Image`"
-        from ..toplevel import arithmetic
+        from ..math import arithmetic
 
         return arithmetic.log(img)
 
     def log2(img):
         "Element-wise base 2 log of an `Image`"
-        from ..toplevel import arithmetic
+        from ..math import arithmetic
 
         return arithmetic.log2(img)
 
     def log10(img):
         "Element-wise base 10 log of an `Image`"
-        from ..toplevel import arithmetic
+        from ..math import arithmetic
 
         return arithmetic.log10(img)
 
     def sqrt(self):
         "Element-wise square root of an `Image`"
-        from ..toplevel import arithmetic
+        from ..math import arithmetic
 
         return arithmetic.sqrt(self)
 
     def cos(self):
         "Element-wise cosine of an `Image`"
-        from ..toplevel import arithmetic
+        from ..math import arithmetic
 
         return arithmetic.cos(self)
 
     def sin(self):
         "Element-wise sine of an `Image`"
-        from ..toplevel import arithmetic
+        from ..math import arithmetic
 
         return arithmetic.sin(self)
 
     def tan(self):
         "Element-wise tangent of an `Image`"
-        from ..toplevel import arithmetic
+        from ..math import arithmetic
 
         return arithmetic.tan(self)
 
