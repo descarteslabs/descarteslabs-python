@@ -1,6 +1,9 @@
 import datetime
 import collections
 import itertools
+import warnings
+import sys
+import functools
 
 import six
 import numpy as np
@@ -38,6 +41,21 @@ def timedelta_from_seconds(s):
 
 unmarshal.register("Datetime", datetime_from_string)
 unmarshal.register("Timedelta", timedelta_from_seconds)
+
+
+def warn_on_old_python_wrapper(unmarshal_func):
+    @functools.wraps(unmarshal_func)
+    def unmarshaler(*args, **kwargs):
+        if sys.version_info[:2] < (3, 6):
+            warnings.warn(
+                "Using Python version < 3.6 will result in a nondeterministic ordering "
+                "of bandinfos for `Image` and `ImageCollection`. "
+                "Update to Python 3.6 or greater to fix this.",
+                RuntimeWarning,
+            )
+        return unmarshal_func(*args, **kwargs)
+
+    return unmarshaler
 
 
 class EqualityMixin(object):
@@ -96,7 +114,9 @@ class ImageResult(EqualityMixin):
         return "\n".join((name_header, ndarray_line, properties_line, bandinfo_line))
 
 
-unmarshal.register("Image", unmarshal.unpack_into(ImageResult))
+unmarshal.register(
+    "Image", warn_on_old_python_wrapper(unmarshal.unpack_into(ImageResult))
+)
 
 
 class ImageCollectionResult(EqualityMixin):
@@ -139,7 +159,10 @@ class ImageCollectionResult(EqualityMixin):
         return "\n".join((name_header, ndarray_line, properties_line, bandinfo_line))
 
 
-unmarshal.register("ImageCollection", unmarshal.unpack_into(ImageCollectionResult))
+unmarshal.register(
+    "ImageCollection",
+    warn_on_old_python_wrapper(unmarshal.unpack_into(ImageCollectionResult)),
+)
 
 
 class GeometryResult(EqualityMixin):
