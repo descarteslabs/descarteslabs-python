@@ -290,7 +290,12 @@ class LayerControllerRow(widgets.Box):
             params = {}
 
         try:
-            result = self.layer.image.compute(ctx, progress_bar=self.map.output_log, **params)
+            # clear the output widget before computing
+            self.layer.autoscale_progress.outputs = ()
+
+            result = self.layer.image.compute(
+                ctx, progress_bar=self.layer.autoscale_progress, **params
+            )
         except JobComputeError:
             pass
         else:

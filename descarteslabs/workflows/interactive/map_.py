@@ -7,6 +7,7 @@ import traitlets
 
 from ..types import GeoContext
 from .clearable import ClearableOutput
+from .layer import WorkflowsLayer
 from .lonlat import PositionController
 from .utils import tuple_move
 
@@ -97,16 +98,27 @@ class MapApp(widgets.VBox):
 
         self.errors = ClearableOutput(map.error_log, on_clear=on_clear)
 
+        self.autoscale_outputs = widgets.VBox(
+            [
+                x.autoscale_progress
+                for x in reversed(self.map.layers)
+                if isinstance(x, WorkflowsLayer)
+            ]
+        )
+
         super(MapApp, self).__init__(
             [
                 map,
                 self.errors,
                 map.output_log,
+                self.autoscale_outputs,
                 position_controller,
                 layer_controller_list,
             ],
             layout=app_layout,
         )
+
+        map.observe(self._update_autoscale_progress, names=["layers"])
 
     def remove_layer(self, layer_name):
         "Remove a named layer from the map"
@@ -120,6 +132,13 @@ class MapApp(widgets.VBox):
     def clear_layers(self):
         "Remove all layers from the map (besides the base layer)"
         self.map.layers = tuple(lyr for lyr in self.map.layers if lyr.base)
+
+    def _update_autoscale_progress(self, change):
+        self.autoscale_outputs.children = [
+            x.autoscale_progress
+            for x in reversed(self.map.layers)
+            if isinstance(x, WorkflowsLayer)
+        ]
 
     def __getattr__(self, attr):
         if attr in self._forward_attrs_to_map:
@@ -209,9 +228,14 @@ class Map(ipyleaflet.Map):
         args=(),
         help="""
         Widget where functions doing operations on this map
-        (especially compute operations, like autoscaling or timeseries)
-        can log their output.
+        (especially compute operations) can log their output.
         """,
+    )
+
+    autoscale_outputs = traitlets.Instance(
+        widgets.VBox,
+        args=(),
+        help="Widget containing all layers' autoscale output widgets",
     )
 
     def move_layer(self, layer, new_index):

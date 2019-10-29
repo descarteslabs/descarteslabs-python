@@ -28,7 +28,7 @@ Changelog
 - **[breaking] `.bands` and `.images` attributes of ImageResult and ImageCollectionResult renamed `.ndarray`**
 - **[breaking]** When `compute`-ing an `Image` or `ImageCollection`, **the order of `bandinfo` is only correct for Python >= 3.6**
 - Interactive maps: coordinates are displayed in lat, lon order instead of lon, lat for easier copy-pasting
-- Interactive maps: progress bar is back when running autoscale
+- Interactive maps: each layer now has an associated output that is populated when running autoscale and deleted when the layer is removed
 - Interactive maps: `Image.visualize` returns a `Layer` object, making it easier to adjust `Layer.parameters` or integrate with other widgets
 
 ### Workflows - Fixed
