@@ -6,7 +6,7 @@ import json
 import textwrap
 from datetime import datetime
 from six.moves.urllib.parse import urlparse
-from six import assertCountEqual
+from six import assertCountEqual, ensure_str
 
 from descarteslabs.client.auth import Auth
 
@@ -52,7 +52,7 @@ class TestImageSummary(unittest.TestCase):
         summary = s.summary()
         parsed_url = urlparse(responses.calls[0].request.url)
         assert parsed_url.path == "/catalog/v2/images/summary/all"
-        params = json.loads(responses.calls[0].request.body)
+        params = json.loads(ensure_str(responses.calls[0].request.body))
 
         assertCountEqual(
             self,
@@ -101,7 +101,7 @@ class TestImageSummary(unittest.TestCase):
         parsed_url = urlparse(responses.calls[0].request.url)
         assert parsed_url.path == "/catalog/v2/images/summary/created/month"
 
-        request_params = json.loads(responses.calls[0].request.body)
+        request_params = json.loads(ensure_str(responses.calls[0].request.body))
         assertCountEqual(self, request_params, {"_start": "2018", "_end": "2019-01-01"})
 
         assert len(results) == 1

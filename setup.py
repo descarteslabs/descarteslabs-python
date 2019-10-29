@@ -84,10 +84,10 @@ def do_setup():
     }
     kwargs["install_requires"] = [
         "cloudpickle==0.4.0",
-        "six",
+        "six>=1.12.0",
         "cachetools>=2.0.1",
         'futures;python_version=="2.7"',
-        "geojson>=2.4.1",
+        "geojson==2.4.1",
         "shapely>=1.6.3,<2",
         "affine>=2.2.1",
         "pyarrow==0.13.0",
@@ -111,7 +111,7 @@ def do_setup():
             "ipyleaflet>=0.11.4",
             "ipywidgets>=7.5.1",
             "traitlets==4.3.2",
-        ],
+        ]
     }
     kwargs["license"] = "Apache 2.0"
     kwargs["zip_safe"] = False

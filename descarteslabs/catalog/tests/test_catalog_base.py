@@ -1,7 +1,7 @@
 import json
 import pytest
 import responses
-from six import assertCountEqual
+from six import assertCountEqual, ensure_str
 
 from descarteslabs.client.exceptions import NotFoundError
 
@@ -217,7 +217,7 @@ class TestCatalogObject(ClientTestCase):
         foo.save(extra_attributes={"foo": "bar"})
         assert foo.state == DocumentState.SAVED
 
-        body = json.loads(responses.calls[0].request.body)
+        body = json.loads(ensure_str(responses.calls[0].request.body))
         assert {"bar": "baz", "foo": "bar"} == body["data"]["attributes"]
 
     @responses.activate
@@ -238,7 +238,7 @@ class TestCatalogObject(ClientTestCase):
         foo.save(extra_attributes={"foo": "bar"})
         assert foo.state == DocumentState.SAVED
 
-        body = json.loads(responses.calls[0].request.body)
+        body = json.loads(ensure_str(responses.calls[0].request.body))
         assert {"foo": "bar"} == body["data"]["attributes"]
 
     def test_equality(self):

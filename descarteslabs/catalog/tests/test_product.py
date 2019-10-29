@@ -5,6 +5,7 @@ from datetime import datetime
 import textwrap
 import json
 from mock import patch
+from six import ensure_str
 
 from descarteslabs.client.exceptions import BadRequestError, NotFoundError
 from .base import ClientTestCase
@@ -272,7 +273,10 @@ class TestProduct(ClientTestCase):
     @responses.activate
     def test_delete(self):
         p = Product(
-            id="descarteslabs:my-product", name="My Product", client=self.client, _saved=True
+            id="descarteslabs:my-product",
+            name="My Product",
+            client=self.client,
+            _saved=True,
         )
         self.mock_response(
             responses.DELETE,
@@ -287,7 +291,9 @@ class TestProduct(ClientTestCase):
 
     @responses.activate
     def test_delete_non_existent(self):
-        p = Product(id="ne-my-product", name="Non-existent", client=self.client, _saved=True)
+        p = Product(
+            id="ne-my-product", name="Non-existent", client=self.client, _saved=True
+        )
         self.mock_response(
             responses.DELETE,
             {
@@ -456,7 +462,7 @@ class TestProduct(ClientTestCase):
             == "https://example.com/catalog/v2/products/p1/update_related_objects_acls"
         )
 
-        body = json.loads(req.body)["data"]["attributes"]
+        body = json.loads(ensure_str(req.body))["data"]["attributes"]
         assert body["readers"] == ["group:public"]
         assert body["owners"] == ["org:descarteslabs"]
         assert body["writers"] is None
