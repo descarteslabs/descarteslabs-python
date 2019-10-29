@@ -7,7 +7,6 @@ import time
 
 import six
 
-import grpc
 import pyarrow as pa
 import requests
 from descarteslabs.common.graft import client as graft_client
@@ -67,7 +66,6 @@ class Job(object):
     """
 
     BUCKET_PREFIX = "https://storage.googleapis.com/dl-compute-dev-results/{}"
-    WATCH_TIMEOUT = 30
     WAIT_INTERVAL = 0.1
 
     def __init__(self, message, client=None):
@@ -190,22 +188,17 @@ class Job(object):
         self._message = message
 
     def watch(self):
-        while True:
-            try:
-                for message in self._client.api["WatchJob"](
-                    job_pb2.WatchJobRequest(id=self.id), timeout=self.WATCH_TIMEOUT
-                ):
-                    self._message = message
-                    yield self
-            except grpc.RpcError as e:
-                if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
-                    # use the same channel to open another rpc stream
-                    continue
-                else:
-                    six.reraise(*sys.exc_info())
-            finally:
-                if self.done:
-                    return
+        # Note(Winston): If we need to support long-running connections,
+        # this is where we would infinitely loop on `grpc.StatusCode.DEADLINE_EXCEEDED` exceptions.
+        # Currently, this will timeout as specified with `client.STREAM_TIMEOUT`, (as of writing, 24 hours).
+
+        stream = self._client.api["WatchJob"](
+            job_pb2.WatchJobRequest(id=self.id), timeout=self._client.STREAM_TIMEOUT
+        )
+
+        for message in stream:
+            self._message = message
+            yield self
 
     def result(self, timeout=None, progress_bar=None):
         """

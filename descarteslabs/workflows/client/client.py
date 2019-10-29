@@ -17,6 +17,7 @@ _RETRYABLE_STATUS_CODES = (
     grpc.StatusCode.UNAVAILABLE,
     grpc.StatusCode.RESOURCE_EXHAUSTED,
     grpc.StatusCode.UNKNOWN,
+    grpc.StatusCode.DEADLINE_EXCEEDED,
 )
 
 
@@ -44,6 +45,7 @@ def default_grpc_retry_predicate(e):
 
 class Client:
     DEFAULT_TIMEOUT = 5
+    STREAM_TIMEOUT = 60 * 60 * 24
 
     def __init__(self, host=None, auth=None, certificate=None, port=443):
         if auth is None:

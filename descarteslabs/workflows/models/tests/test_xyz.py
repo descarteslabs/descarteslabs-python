@@ -126,7 +126,8 @@ class TestXYZ(object):
                 session_id=session_id,
                 start_timestamp=pb_datetime_to_milliseconds(start_datetime),
                 xyz_id=xyz.id,
-            )
+            ),
+            timeout=Client.STREAM_TIMEOUT,
         )
 
     def test_from_proto(self, stub):

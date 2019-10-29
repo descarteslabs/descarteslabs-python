@@ -573,4 +573,5 @@ def _tile_error_stream(xyz_id, session_id, start_datetime=None, client=None):
     msg = xyz_pb2.GetXYZSessionErrorsRequest(
         session_id=session_id, xyz_id=xyz_id, start_timestamp=start_timestamp
     )
-    return client.api["GetXYZSessionErrors"](msg)
+
+    return client.api["GetXYZSessionErrors"](msg, timeout=client.STREAM_TIMEOUT)
