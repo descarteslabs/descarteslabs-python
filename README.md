@@ -17,8 +17,28 @@ Changelog
 
 - `SceneCollection.download` previously always returned successfully even if one or more of the downloads failed. Now if any of the downloads fail, a RuntimeError is raised, which will detail which destination files failed and why.
 
+### Workflows (channel `v0-8`) - Added
+- **Interactive parameters**: add parameters to map layers and interactively control them using widgets
+- **Spatial convolution** with `wf.conv2d`
+- Result containers have helpful `repr`s when displayed
+- `Datetime` and `Timedelta` are unpacked into `datetime.datetime` and `datetime.timedelta` objects when computed.
+
 ### Workflows - Changed
-- **[breaking]** `.bands` and `.images` attributes of Image and ImageCollection result containers renamed `.ndarray`
+- **[breaking]** Result containers moved to `descarteslabs/workflows/results` and renamed, appending "Result" to disambiguate (e.g. ImageResult and ImageCollectionResult)
+- **[breaking] `.bands` and `.images` attributes of ImageResult and ImageCollectionResult renamed `.ndarray`**
+- **[breaking]** When `compute`-ing an `Image` or `ImageCollection`, **the order of `bandinfo` is only correct for Python >= 3.6**
+- Interactive maps: coordinates are displayed in lat, lon order instead of lon, lat for easier copy-pasting
+- Interactive maps: progress bar is back when running autoscale
+- Interactive maps: `Image.visualize` returns a `Layer` object, making it easier to adjust `Layer.parameters` or integrate with other widgets
+
+### Workflows - Fixed
+- Composing operations onto imported Workflows no longer causes nondeterministic errors when computed
+- Interactive maps: `remove_layer` doesn't cause an error
+- No more errors when creating a `wf.parameter` for `Datetime` and other complex types
+- `.where` no longer causes a backend error
+- Calling `wf.map.geocontext()` when the map is not fully initialized raises an informative error
+- Operations on numbers computed from raster data (like `img_collection.mean(axis=None)`) no longer fail when computed
+- Colormap succeeds when the Image contains only 1 value
 
 ## [0.25.0] - 2019-08-22
 ### Added
