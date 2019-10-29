@@ -1,5 +1,5 @@
-Metadata
---------
+Metadata (deprecated)
+---------------------
 
 .. automodule:: descarteslabs.client.services.metadata
     :members:
