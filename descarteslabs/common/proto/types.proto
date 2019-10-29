@@ -22,4 +22,5 @@ enum ResultType {
     Timedelta = 15;
     Bool = 16;
     Geometry = 17;
+    KnownDict = 18;
 }
