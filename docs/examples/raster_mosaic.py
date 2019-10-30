@@ -12,6 +12,7 @@ by acquisition date (and/or any other metadata property).
 
 """
 import descarteslabs as dl
+from descarteslabs.catalog import Image, properties as p
 import matplotlib.pyplot as plt
 
 print(__doc__)
@@ -25,12 +26,13 @@ tile = raster_client.dltile_from_latlon(
 
 # Search for Sentinel-2 imagery collected between
 # August 13 - August 21, 2017 over the AOI
-metadata = dl.metadata.search(
-    product="sentinel-2:L1C",
-    start_time="2017-08-13",
-    end_time="2017-08-21",
-    dltile=tile,
+image_metadata = list(
+    Image.search()
+    .filter(p.product_id == "sentinel-2:L1C")
+    .filter("2017-08-13" < p.acquired < "2017-08-22")
+    .intersects(tile)
 )
+
 
 ################################################
 # Let's first visualize each of these image acquisitions separately.
@@ -39,10 +41,9 @@ metadata = dl.metadata.search(
 # and store the ndarrays in a list
 
 images = list()
-for feature in metadata["features"]:
-    image_id = feature["id"]
+for image in image_metadata:
     arr, meta = raster_client.ndarray(
-        image_id,
+        image.id,
         dltile=tile,
         bands=["nir", "red", "green", "alpha"],
         scales=[[0, 6000, 0, 255], [0, 4000, 0, 255], [0, 4000, 0, 255]],
@@ -54,10 +55,10 @@ for feature in metadata["features"]:
 fig = plt.figure(figsize=[6, 6])
 for i, image in enumerate(images):
     # get acquisition date of the image
-    date = metadata["features"][i]["properties"]["acquired"][:10]
+    date = image_metadata[i].acquired.date()
 
     # plot the image
-    ax = fig.add_subplot(2, 2, i + 1)
+    ax = fig.add_subplot(4, 4, i + 1)
     ax.imshow(image)
     ax.set_title(date, fontsize=8)
     plt.axis("off")
@@ -78,19 +79,13 @@ plt.tight_layout()
 ################################################
 
 # get list of all unique imagery dates
-dates = list(
-    set([feature["properties"]["acquired"][:10] for feature in metadata["features"]])
-)
+dates = list(set([image.acquired.date() for image in image_metadata]))
 
 # mosaic the images acquired on each date
 images = list()
 for date in dates:
     # get ids
-    ids = [
-        feature["id"]
-        for feature in metadata["features"]
-        if feature["properties"]["acquired"][:10] == date
-    ]
+    ids = [image.id for image in image_metadata if image.acquired.date() == date]
     # retrieve mosaicked data
     arr, meta = raster_client.ndarray(
         ids,
@@ -104,7 +99,7 @@ for date in dates:
 # plot the mosaics
 fig = plt.figure(figsize=[10, 5])
 for i, image in enumerate(images):
-    date = metadata["features"][i]["properties"]["acquired"][:10]
+    date = image_metadata[i].acquired.date()
     ax = fig.add_subplot(1, 2, i + 1)
     ax.imshow(image)
     ax.set_title(dates[i], fontsize=8)
@@ -121,7 +116,7 @@ plt.tight_layout()
 # they were returned by Metadata, it will return
 # the latest image.
 
-all_ids = [feature["id"] for feature in metadata["features"]]
+all_ids = [image.id for image in image_metadata]
 arr, meta = raster_client.ndarray(
     all_ids,
     dltile=tile,
