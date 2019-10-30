@@ -9,8 +9,11 @@ Changelog
 =========
 
 ## [Unreleased]
+
+## [0.26.0] - 2019-10-30
 ### Added
 
+- A new catalog client in `descarteslabs.catalog` makes searching and managing products, bands and images easier. This client encompasses functionality previously split between the `descarteslabs.Metadata` and `descarteslabs.Catalog` client, which are now deprecated. Learn how to use the new API in the [Catalog guide](https://docs.descarteslabs.com/guides/catalog_v2.html).
 - Property filtering expressions such as used in `scenes.search()` and `FeatureCollection.filter()` now support an `in_()` method.
 
 ### Changed
