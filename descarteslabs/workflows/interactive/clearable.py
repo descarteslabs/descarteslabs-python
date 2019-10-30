@@ -26,12 +26,15 @@ class ClearableOutput(widgets.HBox):
             self.layout.display = "none"
 
     def _observe_output(self, change):
-        self.layout.display = "none" if len(change["new"]) == 0 else ""
+        if len(change["new"]) == 0:
+            self.layout.display = "none"
+            if self._on_clear is not None:
+                self._on_clear()
+        else:
+            self.layout.display = ""
 
     def clear(self, *args):
         self.output.clear_output()
-        if self._on_clear is not None:
-            self._on_clear()
 
     def on_clear(self, func):
         self._on_clear = func
