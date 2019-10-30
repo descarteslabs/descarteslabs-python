@@ -35,3 +35,16 @@ class ClearableOutput(widgets.HBox):
 
     def on_clear(self, func):
         self._on_clear = func
+
+    def append_stdout(self, output):
+        self.output.append_stdout(output)
+
+    def append_stderr(self, output):
+        self.output.append_stderr(output)
+
+    def set_output(self, output):
+        self.output.outputs = output
+
+    @property
+    def outputs(self):
+        return self.output.outputs

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import ipywidgets as widgets
 import traitlets
 import numpy as np
@@ -290,15 +289,20 @@ class LayerControllerRow(widgets.Box):
             params = {}
 
         try:
-            # clear the output widget before computing
-            self.layer.autoscale_progress.outputs = ()
+            # clear any existing outputs (e.g. from a failed autoscale)
+            if self.layer.autoscale_progress.outputs:
+                self.layer.autoscale_progress.set_output(())
 
             result = self.layer.image.compute(
                 ctx, progress_bar=self.layer.autoscale_progress, **params
             )
-        except JobComputeError:
-            pass
+
+        except JobComputeError as e:
+            self.layer.autoscale_progress.append_stdout("\n" + e.message)
         else:
+            # clear the output widget if the job succeeded
+            self.layer.autoscale_progress.set_output(())
+
             arr = result.ndarray
 
             scales_attrs = (

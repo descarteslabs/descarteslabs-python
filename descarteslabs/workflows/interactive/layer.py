@@ -11,6 +11,7 @@ from ..models import XYZ
 from ..types import Image
 
 from . import parameters
+from .clearable import ClearableOutput
 
 
 class ScaleFloat(traitlets.CFloat):
@@ -86,7 +87,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     b_max = ScaleFloat(None, allow_none=True)
 
     error_output = traitlets.Instance(widgets.Output, allow_none=True)
-    autoscale_progress = traitlets.Instance(widgets.Output, allow_none=True)
+    autoscale_progress = traitlets.Instance(ClearableOutput)
 
     def __init__(self, image, *args, **kwargs):
         params = kwargs.pop("parameters", {})
@@ -95,7 +96,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         with self.hold_trait_notifications():
             self.image = image
             self.set_trait("session_id", uuid.uuid4().hex)
-            self.set_trait("autoscale_progress", widgets.Output())
+            self.set_trait("autoscale_progress", ClearableOutput(widgets.Output()))
             self.set_parameters(**params)
 
         self._error_listener = None
