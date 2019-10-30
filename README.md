@@ -16,6 +16,7 @@ Changelog
 ### Changed
 
 - `SceneCollection.download` previously always returned successfully even if one or more of the downloads failed. Now if any of the downloads fail, a RuntimeError is raised, which will detail which destination files failed and why.
+- Fixed a bug where geometries used with the Scenes client had coordinates with reduced precision.
 
 ### Workflows (channel `v0-8`) - Added
 - **Interactive parameters**: add parameters to map layers and interactively control them using widgets

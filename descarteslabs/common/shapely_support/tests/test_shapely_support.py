@@ -1,7 +1,6 @@
 import unittest
 import mock
 import pytest
-from six import assertCountEqual
 
 import shapely.geometry
 import geojson
@@ -58,12 +57,12 @@ class ShapelySupportTest(unittest.TestCase):
     def test_as_geojson_geometry(self):
         geoj = as_geojson_geometry(self.feature["geometry"])
         assert isinstance(geoj, geojson.Polygon)
-        assertCountEqual(self, geoj, self.feature["geometry"])
+        assert geoj == self.feature["geometry"]
 
     def test_as_geojson_geometry_feature(self):
         geoj = as_geojson_geometry(self.feature)
         assert isinstance(geoj, geojson.Polygon)
-        assertCountEqual(self, geoj, self.feature["geometry"])
+        assert geoj == self.feature["geometry"]
 
     def test_as_geojson_geometry_featurecollection(self):
         fc = {
@@ -80,7 +79,7 @@ class ShapelySupportTest(unittest.TestCase):
         }
         geoj = as_geojson_geometry(fc)
         assert isinstance(geoj, geojson.GeometryCollection)
-        assertCountEqual(self, geoj, gc)
+        assert geoj == gc
 
     def test_as_geojson_geometry_invalid(self):
         with pytest.raises(ValueError):
@@ -115,7 +114,7 @@ class ShapelySupportTest(unittest.TestCase):
         obj.__geo_interface__ = shape.__geo_interface__
         as_shapely = geometry_like_to_shapely(obj)
         assert isinstance(as_shapely, shapely.geometry.Polygon)
-        assertCountEqual(self, shape.__geo_interface__, as_shapely.__geo_interface__)
+        assert shape.__geo_interface__ == as_shapely.__geo_interface__
 
     def test_geometry_like_to_shapely_not_mapping_or_geo_interface(self):
         unhelpful = (1, 2, 3, 4)
@@ -143,4 +142,4 @@ class ShapelySupportTest(unittest.TestCase):
         for converted, shape in zip(
             list(as_shapely), list(shapely.geometry.GeometryCollection(shapes))
         ):
-            assertCountEqual(self, converted.__geo_interface__, shape.__geo_interface__)
+            assert converted.__geo_interface__ == shape.__geo_interface__

@@ -4,7 +4,7 @@ cachetools>=2.0.1
 chainmap==1.0.2;python_version=="2.7"
 cloudpickle==0.4.0
 futures;python_version=="2.7"
-geojson==2.4.1
+geojson>=2.4.1
 grpcio>=1.16.1,<2
 hypothesis[numpy]==4.24.5
 ipyleaflet==0.11.4

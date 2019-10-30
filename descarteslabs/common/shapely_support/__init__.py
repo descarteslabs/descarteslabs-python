@@ -55,24 +55,16 @@ def as_geojson_geometry(geojson_dict):
     """
     Return a mapping as a GeoJSON instance, converting Feature types to Geometry types.
     """
-    try:
-        geoj = geojson.GeoJSON.to_instance(geojson_dict, strict=True)
-    except (TypeError, KeyError, UnicodeEncodeError) as ex:
-        raise ValueError(
-            "geometry not recognized as valid GeoJSON ({}): {}".format(
-                str(ex), geojson_dict
-            )
-        )
+    geoj = _parse_geojson_safe(geojson_dict)
+
     # Shapely cannot handle GeoJSON Features or FeatureCollections
     if isinstance(geoj, geojson.Feature):
-        geoj = geoj.geometry
+        geoj = _parse_geojson_safe(geojson_dict["geometry"])
     elif isinstance(geoj, geojson.FeatureCollection):
         features = []
-        for feature in geoj.features:
+        for feature in geojson_dict.get("features", []):
             try:
-                features.append(
-                    geojson.GeoJSON.to_instance(feature, strict=True).geometry
-                )
+                features.append(_parse_geojson_safe(feature["geometry"]))
             except (TypeError, KeyError, UnicodeEncodeError) as ex:
                 raise ValueError(
                     "feature in FeatureCollection not recognized as valid ({}): {}".format(
@@ -80,6 +72,33 @@ def as_geojson_geometry(geojson_dict):
                     )
                 )
         geoj = geojson.GeometryCollection(features)
+    return geoj
+
+
+def _parse_geojson_safe(geojson_dict):
+    """
+    Turns a dictionary into a GeoJSON instance in a safe way across different versions
+    of the geojson library, without losing precision. Version 2.5.0 introduced a
+    default FP precision of 6 for geometry coordinates, but we never want to lose
+    precision. The maintainers have said they will remove the default precision again
+    (https://github.com/jazzband/geojson/issues/135) but in the meantime we need to
+    handle 2.5.0 in the wild.
+    """
+    try:
+        geojson_dict = dict(geojson_dict)
+        geojson_dict["precision"] = 40
+        geoj = geojson.GeoJSON.to_instance(geojson_dict, strict=True)
+    except (TypeError, KeyError, UnicodeEncodeError) as ex:
+        raise ValueError(
+            "geometry not recognized as valid GeoJSON ({}): {}".format(
+                str(ex), geojson_dict
+            )
+        )
+
+    # Prior to 2.5.0 this will exist as an attribute now, after 2.5.0 it won't
+    if hasattr(geoj, "precision"):
+        del geoj.precision
+
     return geoj
 
 
