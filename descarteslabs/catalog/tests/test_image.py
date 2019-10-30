@@ -237,138 +237,19 @@ class TestImage(ClientTestCase):
     @patch("descarteslabs.catalog.image_upload.ImageUpload._POLLING_INTERVAL", 1)
     @responses.activate
     def test_upload(self, upload_mock):
-        with NamedTemporaryFile(suffix=".tif") as f:
-            # this is copied from the upload impl, should go away with new ingest
-            product_id = "p1"
-            image_name = "image"
-            image_key = os.path.basename(f.name)
-            upload_id = "{}:{}".format(
-                b64encode(product_id.encode("utf-8")).decode("utf-8"), image_key
-            )
-            user_sub = "user:123"
-            upload_url = "https:www.example.com/bucket/{}/{}/{}".format(
-                product_id, user_sub, image_key
-            )
-
-            self.mock_response(
-                responses.GET,
-                {
-                    "data": {
-                        "attributes": {
-                            "readers": [],
-                            "writers": [],
-                            "owners": ["org:descarteslabs"],
-                            "modified": "2019-06-11T23:31:33.714883Z",
-                            "created": "2019-06-11T23:31:33.714883Z",
-                        },
-                        "type": "product",
-                        "id": product_id,
-                    },
-                    "jsonapi": {"version": "1.0"},
-                },
-            )
-            self.mock_response(
-                responses.POST,
-                {
-                    "data": {
-                        "attributes": {
-                            "product_id": product_id,
-                            "image_id": "{}:{}".format(product_id, image_name),
-                            "modified": "2019-01-02T03:04:05Z",
-                            "created": "2019-01-02T03:04:05Z",
-                            "resumable_urls": [upload_url],
-                            "status": "uploading",
-                        },
-                        "type": "image_upload",
-                        "id": upload_id,
-                    },
-                    "jsonapi": {"version": "1.0"},
-                },
-            )
-            self.mock_response(
-                responses.PATCH,
-                {
-                    "data": {
-                        "attributes": {
-                            "product_id": product_id,
-                            "image_id": "{}:{}".format(product_id, image_name),
-                            "modified": "2019-01-02T03:04:06Z",
-                            "created": "2019-01-02T03:04:05Z",
-                            "status": "pending",
-                            "job_id": "job_id",
-                            "events": [],
-                            "errors": [],
-                        },
-                        "type": "image_upload",
-                        "id": upload_id,
-                    },
-                    "jsonapi": {"version": "1.0"},
-                },
-            )
-            self.mock_response(responses.GET, None, 404)
-            self.mock_response(
-                responses.GET,
-                {
-                    "data": {
-                        "attributes": {
-                            "product_id": product_id,
-                            "image_id": "{}:{}".format(product_id, image_name),
-                            "status": "success",
-                            "job_id": "job_id",
-                            "events": [],
-                            "errors": [],
-                        },
-                        "type": "image_upload",
-                        "id": upload_id,
-                    },
-                    "jsonapi": {"version": "1.0"},
-                },
-            )
-
-            image = Image(
-                name=image_name,
-                product_id=product_id,
-                acquired="2001-01-01",
-                client=self.client,
-            )
-
-            upload = image.upload(f.name)
-
-        assert image.state == DocumentState.UNSAVED
-        assert upload.id == upload_id
-        assert upload.product_id == product_id
-        assert upload.image_id == image.id
-        assert upload.status == ImageUploadStatus.PENDING
-        upload_mock.session.put.assert_called_once()
-        assert upload_mock.session.put.call_args[0][0] == upload_url
-
-        upload.wait_for_completion(15)
-
-        assert upload.status == ImageUploadStatus.SUCCESS
-
-        # when the new ingest is completed, we may implement the reload
-        # of the updated Image...
-
-    @patch("descarteslabs.catalog.image.Image._gcs_upload_service")
-    @patch("descarteslabs.catalog.image_upload.ImageUpload._POLLING_INTERVAL", 1)
-    @responses.activate
-    def test_upload_multi_file(self, upload_mock):
-        with NamedTemporaryFile(suffix=".tif") as f1:
-            with NamedTemporaryFile(suffix=".tif") as f2:
+        with NamedTemporaryFile(suffix=".tif", delete=False) as f:
+            try:
+                f.close()
                 # this is copied from the upload impl, should go away with new ingest
                 product_id = "p1"
                 image_name = "image"
+                image_key = os.path.basename(f.name)
+                upload_id = "{}:{}".format(
+                    b64encode(product_id.encode("utf-8")).decode("utf-8"), image_key
+                )
                 user_sub = "user:123"
-                image_key1 = os.path.basename(f1.name)
-                upload_url1 = "https:www.example.com/bucket/{}/{}/{}".format(
-                    product_id, user_sub, image_key1
-                )
-                image_key2 = os.path.basename(f2.name)
-                upload_id2 = "{}:{}".format(
-                    b64encode(product_id.encode("utf-8")).decode("utf-8"), image_key2
-                )
-                upload_url2 = "https:www.example.com/bucket/{}/{}/{}".format(
-                    product_id, user_sub, image_key2
+                upload_url = "https:www.example.com/bucket/{}/{}/{}".format(
+                    product_id, user_sub, image_key
                 )
 
                 self.mock_response(
@@ -397,11 +278,11 @@ class TestImage(ClientTestCase):
                                 "image_id": "{}:{}".format(product_id, image_name),
                                 "modified": "2019-01-02T03:04:05Z",
                                 "created": "2019-01-02T03:04:05Z",
-                                "resumable_urls": [upload_url1, upload_url2],
+                                "resumable_urls": [upload_url],
                                 "status": "uploading",
                             },
                             "type": "image_upload",
-                            "id": upload_id2,
+                            "id": upload_id,
                         },
                         "jsonapi": {"version": "1.0"},
                     },
@@ -421,7 +302,7 @@ class TestImage(ClientTestCase):
                                 "errors": [],
                             },
                             "type": "image_upload",
-                            "id": upload_id2,
+                            "id": upload_id,
                         },
                         "jsonapi": {"version": "1.0"},
                     },
@@ -440,7 +321,7 @@ class TestImage(ClientTestCase):
                                 "errors": [],
                             },
                             "type": "image_upload",
-                            "id": upload_id2,
+                            "id": upload_id,
                         },
                         "jsonapi": {"version": "1.0"},
                     },
@@ -453,7 +334,139 @@ class TestImage(ClientTestCase):
                     client=self.client,
                 )
 
-                upload = image.upload([f1.name, f2.name])
+                upload = image.upload(f.name)
+            finally:
+                # Manual cleanup required for Windows compatibility
+                os.unlink(f.name)
+
+        assert image.state == DocumentState.UNSAVED
+        assert upload.id == upload_id
+        assert upload.product_id == product_id
+        assert upload.image_id == image.id
+        assert upload.status == ImageUploadStatus.PENDING
+        upload_mock.session.put.assert_called_once()
+        assert upload_mock.session.put.call_args[0][0] == upload_url
+
+        upload.wait_for_completion(15)
+
+        assert upload.status == ImageUploadStatus.SUCCESS
+
+        # when the new ingest is completed, we may implement the reload
+        # of the updated Image...
+
+    @patch("descarteslabs.catalog.image.Image._gcs_upload_service")
+    @patch("descarteslabs.catalog.image_upload.ImageUpload._POLLING_INTERVAL", 1)
+    @responses.activate
+    def test_upload_multi_file(self, upload_mock):
+        with NamedTemporaryFile(suffix=".tif", delete=False) as f1:
+            with NamedTemporaryFile(suffix=".tif", delete=False) as f2:
+                try:
+                    f1.close()
+                    f2.close()
+                    # this is copied from the upload impl, should go away with new ingest
+                    product_id = "p1"
+                    image_name = "image"
+                    user_sub = "user:123"
+                    image_key1 = os.path.basename(f1.name)
+                    upload_url1 = "https:www.example.com/bucket/{}/{}/{}".format(
+                        product_id, user_sub, image_key1
+                    )
+                    image_key2 = os.path.basename(f2.name)
+                    upload_id2 = "{}:{}".format(
+                        b64encode(product_id.encode("utf-8")).decode("utf-8"),
+                        image_key2,
+                    )
+                    upload_url2 = "https:www.example.com/bucket/{}/{}/{}".format(
+                        product_id, user_sub, image_key2
+                    )
+
+                    self.mock_response(
+                        responses.GET,
+                        {
+                            "data": {
+                                "attributes": {
+                                    "readers": [],
+                                    "writers": [],
+                                    "owners": ["org:descarteslabs"],
+                                    "modified": "2019-06-11T23:31:33.714883Z",
+                                    "created": "2019-06-11T23:31:33.714883Z",
+                                },
+                                "type": "product",
+                                "id": product_id,
+                            },
+                            "jsonapi": {"version": "1.0"},
+                        },
+                    )
+                    self.mock_response(
+                        responses.POST,
+                        {
+                            "data": {
+                                "attributes": {
+                                    "product_id": product_id,
+                                    "image_id": "{}:{}".format(product_id, image_name),
+                                    "modified": "2019-01-02T03:04:05Z",
+                                    "created": "2019-01-02T03:04:05Z",
+                                    "resumable_urls": [upload_url1, upload_url2],
+                                    "status": "uploading",
+                                },
+                                "type": "image_upload",
+                                "id": upload_id2,
+                            },
+                            "jsonapi": {"version": "1.0"},
+                        },
+                    )
+                    self.mock_response(
+                        responses.PATCH,
+                        {
+                            "data": {
+                                "attributes": {
+                                    "product_id": product_id,
+                                    "image_id": "{}:{}".format(product_id, image_name),
+                                    "modified": "2019-01-02T03:04:06Z",
+                                    "created": "2019-01-02T03:04:05Z",
+                                    "status": "pending",
+                                    "job_id": "job_id",
+                                    "events": [],
+                                    "errors": [],
+                                },
+                                "type": "image_upload",
+                                "id": upload_id2,
+                            },
+                            "jsonapi": {"version": "1.0"},
+                        },
+                    )
+                    self.mock_response(responses.GET, None, 404)
+                    self.mock_response(
+                        responses.GET,
+                        {
+                            "data": {
+                                "attributes": {
+                                    "product_id": product_id,
+                                    "image_id": "{}:{}".format(product_id, image_name),
+                                    "status": "success",
+                                    "job_id": "job_id",
+                                    "events": [],
+                                    "errors": [],
+                                },
+                                "type": "image_upload",
+                                "id": upload_id2,
+                            },
+                            "jsonapi": {"version": "1.0"},
+                        },
+                    )
+
+                    image = Image(
+                        name=image_name,
+                        product_id=product_id,
+                        acquired="2001-01-01",
+                        client=self.client,
+                    )
+
+                    upload = image.upload([f1.name, f2.name])
+                finally:
+                    # Manual cleanup required for Windows compatibility
+                    os.unlink(f1.name)
+                    os.unlink(f2.name)
 
         assert image.state == DocumentState.UNSAVED
         assert upload.id == upload_id2

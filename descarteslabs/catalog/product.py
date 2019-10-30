@@ -1,5 +1,6 @@
 import time
 from enum import Enum
+from concurrent.futures import TimeoutError
 
 from descarteslabs.common.property_filtering import GenericProperties
 from .catalog_base import CatalogObject, CatalogClient, check_deleted
