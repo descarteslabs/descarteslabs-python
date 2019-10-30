@@ -4,14 +4,14 @@ import threading
 import six
 
 import grpc
-from descarteslabs.common.graft import client as graft_client, syntax as graft_syntax
+from descarteslabs.common.graft import client as graft_client
 from descarteslabs.common.proto import xyz_pb2
 
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec
 from ..client import Client
-from ..types import proxify
 from .utils import pb_datetime_to_milliseconds, pb_milliseconds_to_datetime
+from .parameters import parameters_to_grafts
 
 
 class XYZ(object):
@@ -221,7 +221,14 @@ class XYZ(object):
                 query_args["scales"] = json.dumps(scales)
 
         if parameters is not None:
-            query_args.update(self._parameters_to_query_args(**parameters))
+            query_args.update(
+                {
+                    param: json.dumps(graft)
+                    for param, graft in six.iteritems(
+                        parameters_to_grafts(**parameters)
+                    )
+                }
+            )
 
         if query_args:
             url = (
@@ -314,64 +321,6 @@ class XYZ(object):
             # be less strict about floats than traitlets is
         else:
             return []
-
-    @staticmethod
-    def _parameters_to_query_args(**parameters):
-        """
-        Convert a dict of parameters into JSON-encoded query arguments.
-
-        If a parameter is a graft literal (i.e., a Python primitive),
-        it's JSON-encoded directly rather than wrapping it in a graft, to prevent
-        query argument bloat.
-
-        Otherwise, ``value_graft`` is called on it, so it should be a `Proxytype`
-        or a JSON literal.
-
-        If ``value_graft`` fails, `proxify` is called as a last resort to try to
-        convert the value into something that graft can represent.
-
-        Parameters
-        ----------
-        parameters: JSON-serializable value, Proxytype, `proxify` compatible value
-            Parameters to use while computing.
-
-            Each argument must be the name of a parameter created with `~.identifier.parameter`.
-            Each value must be a JSON-serializable type (``bool``, ``int``, ``float``,
-            ``str``, ``list``, ``dict``, etc.), a `Proxytype` (like `~.geospatial.Image` or `.Timedelta`),
-            or a value that `proxify` can handle (like a ``datetime.datetime``).
-
-        Returns
-        -------
-        query_args: dict[str, str]
-            Dict of query arguments, where keys are argument names, and values
-            are their JSON-encoded representations.
-
-        Raises
-        ------
-        TypeError:
-            If a parameter value can't be represented as a graft by ``value_graft`` or `proxify`.
-        """
-        query_args = {}
-        for name, param in six.iteritems(parameters):
-            if graft_syntax.is_literal(param):
-                graftable = param
-            else:
-                try:
-                    graftable = graft_client.value_graft(param)
-                except TypeError:
-                    try:
-                        graftable = proxify(param).graft
-                    except NotImplementedError:
-                        raise TypeError(
-                            "Invalid type for parameter {!r}: {}. "
-                            "Must be a JSON-serializable value, Proxytype, "
-                            "or object that `proxify` can handle. "
-                            "Got: {}".format(name, type(param), param)
-                        )
-
-            query_args[name] = json.dumps(graftable)
-
-        return query_args
 
     def iter_tile_errors(self, session_id, start_datetime=None):
         """

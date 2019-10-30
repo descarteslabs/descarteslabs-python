@@ -18,6 +18,7 @@ from ..cereal import deserialize_typespec, serialize_typespec
 from ..client import Client
 from .exceptions import ERRORS, TimeoutError
 from .utils import in_notebook, pb_milliseconds_to_datetime
+from .parameters import parameters_to_grafts
 
 from descarteslabs.common.workflows import unmarshal
 
@@ -117,10 +118,7 @@ class Job(object):
         typespec = serialize_typespec(type(proxy_object))
         result_type = _typespec_to_unmarshal_str(typespec)
         # ^ this also preemptively checks whether the result type is something we'll know how to unmarshal
-        parameters = {
-            key: graft_client.value_graft(value)
-            for key, value in six.iteritems(parameters)
-        }
+        parameters = parameters_to_grafts(**parameters)
 
         message = job_pb2.Job(
             parameters=json.dumps(parameters),
