@@ -6,7 +6,7 @@ import json
 import textwrap
 from datetime import datetime
 from six.moves.urllib.parse import urlparse
-from six import assertCountEqual, ensure_str
+from six import ensure_str
 
 from descarteslabs.client.auth import Auth
 
@@ -54,11 +54,9 @@ class TestImageSummary(unittest.TestCase):
         assert parsed_url.path == "/catalog/v2/images/summary/all"
         params = json.loads(ensure_str(responses.calls[0].request.body))
 
-        assertCountEqual(
-            self,
-            json.loads(params["filter"]),
-            [{"name": "product_id", "val": "descarteslabs:fake-product", "op": "eq"}],
-        )
+        assert json.loads(params["filter"]) == [
+            {"name": "product_id", "val": "descarteslabs:fake-product", "op": "eq"}
+        ]
 
         assert summary.products == ["descarteslabs:fake-product"]
         summary_repr = repr(summary)
@@ -102,7 +100,7 @@ class TestImageSummary(unittest.TestCase):
         assert parsed_url.path == "/catalog/v2/images/summary/created/month"
 
         request_params = json.loads(ensure_str(responses.calls[0].request.body))
-        assertCountEqual(self, request_params, {"_start": "2018", "_end": "2019-01-01"})
+        assert request_params == {"_start": "2018-01-01T00:00:00", "_end": "2019-01-01"}
 
         assert len(results) == 1
         assert isinstance(results[0].interval_start, datetime)

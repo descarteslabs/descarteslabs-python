@@ -92,7 +92,7 @@ class TestCatalogObject(ClientTestCase):
         assert not c.is_modified
         c.owners = ["org"]
         assert c.is_modified
-        assertCountEqual(self, c.serialize(modified_only=True), {"owners": ["org"]})
+        assert c.serialize(modified_only=True) == {"owners": ["org"]}
 
         c._clear_modified_attributes()
         assert not c.is_modified
