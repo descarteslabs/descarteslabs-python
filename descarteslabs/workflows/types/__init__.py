@@ -26,7 +26,7 @@ from .geospatial import (
     load_geojson_file,
     where,
 )
-from .math import log, log2, log10, sqrt, cos, sin, tan, normalized_difference
+from .math import arctan2, log, log2, log10, sqrt, cos, sin, tan, normalized_difference
 from .constants import e, inf, nan, pi
 from .identifier import parameter, identifier
 
@@ -75,6 +75,7 @@ __all__ = [
     "load_geojson_file",
     "where",
     # .math
+    "arctan2",
     "log",
     "log2",
     "log10",
@@ -82,6 +83,7 @@ __all__ = [
     "cos",
     "sin",
     "tan",
+    "arctan2",
     "normalized_difference",
     # .identifier
     "parameter",

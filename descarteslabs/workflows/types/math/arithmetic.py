@@ -4,6 +4,13 @@ from ..geospatial import Image
 from ..geospatial import ImageCollection
 
 
+def _higher_precedence_type(t1, t2, to_float=True):
+    order = (Int, Float, Image, ImageCollection)
+    t1_i = order.index(t1)
+    t2_i = order.index(t2)
+    return order[max(t1_i, t2_i, 1 if to_float else 0)]
+
+
 @typecheck_promote((Int, Float, Image, ImageCollection))
 def log(obj):
     """
@@ -95,3 +102,61 @@ def normalized_difference(x, y):
     """
 
     return (x - y) / (x + y)
+
+
+@typecheck_promote(
+    (Int, Float, Image, ImageCollection), (Int, Float, Image, ImageCollection)
+)
+def arctan2(y, x):
+    """
+    Element-wise arc tangent of ``y/x`` choosing the quadrant correctly.
+
+    The quadrant (i.e., branch) is chosen so that ``arctan2(y, x)`` is
+    the signed angle in radians between the ray ending at the origin and
+    passing through the point (1,0), and the ray ending at the origin and
+    passing through the point (x, y).  (Note the role reversal: the
+    "y-coordinate" is the first function parameter, the "x-coordinate"
+    is the second.)  By IEEE convention, this function is defined for
+    x = +/-0 and for either or both of y and x = +/-inf (see
+    Notes for specific values).
+
+    Parameters
+    ----------
+    y: Int, Float, ~.geospatial.Image, ~.geospatial.ImageCollection
+        y-coordinates
+    x: Int, Float, ~.geospatial.Image, ~.geospatial.ImageCollection
+        x-coordinates
+
+    Returns
+    -------
+    x: Float, ~.geospatial.Image, ~.geospatial.ImageCollection
+        Angle(s) in radians, in the range ``[-pi, pi]``,
+        of the type that results from broadcasting ``y`` to ``x``,
+        (except `.Int` is promoted to `.Float`)
+
+    Notes
+    -----
+    *arctan2* is identical to the ``atan2`` function of the underlying
+    C library.  The following special values are defined in the C
+    standard: [1]_
+
+    ====== ====== ================
+    ``y``   ``x``   ``arctan2(y,x)``
+    ====== ====== ================
+    +/- 0  +0     +/- 0
+    +/- 0  -0     +/- pi
+     > 0   +/-inf +0 / +pi
+     < 0   +/-inf -0 / -pi
+    +/-inf +inf   +/- (pi/4)
+    +/-inf -inf   +/- (3*pi/4)
+    ====== ====== ================
+
+    Note that +0 and -0 are distinct floating point numbers, as are +inf
+    and -inf.
+
+    References
+    ----------
+    .. [1] ISO/IEC standard 9899:1999, "Programming language C."
+    """
+    return_type = _higher_precedence_type(type(y), type(x))
+    return return_type._from_apply("arctan2", y, x)

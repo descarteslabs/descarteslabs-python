@@ -84,6 +84,7 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.types.math.cos
   ~descarteslabs.workflows.types.math.sin
   ~descarteslabs.workflows.types.math.tan
+  ~descarteslabs.workflows.types.math.arctan2
 
 :workflow_api_nontoc_heading:`Constants`
 
