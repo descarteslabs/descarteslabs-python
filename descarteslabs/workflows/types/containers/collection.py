@@ -132,7 +132,7 @@ class CollectionMixin:
         initial_type = _initial_reduce_type(initial, self._element_type)
 
         delayed_func = Function._delay(
-            func, initial_type, self._element_type, initial_type
+            func, initial_type, initial_type, self._element_type
         )
 
         if initial is REDUCE_INITIAL_DEFAULT:

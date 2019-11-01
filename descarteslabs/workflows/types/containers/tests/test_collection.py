@@ -12,6 +12,7 @@ from ... import (
     List,
     ProxyTypeError,
     Str,
+    Tuple,
 )
 from ..collection import _initial_reduce_type, REDUCE_INITIAL_DEFAULT
 
@@ -40,8 +41,8 @@ def test_filter(col):
 
 def test_reduce():
     initial = Float(0.0)
-    list_ = List[Int]([0, 1, 2])
-    reduced = list_.reduce(lambda x, y: x + y, initial)
+    list_ = List[Tuple[Str, Int]]([("foo", 0), ("bar", 1), ("baz", 2)])
+    reduced = list_.reduce(lambda x, y: x + y[1], initial)
 
     assert isinstance(reduced, type(initial))
 
