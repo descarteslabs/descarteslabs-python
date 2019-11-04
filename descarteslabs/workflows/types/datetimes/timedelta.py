@@ -10,39 +10,43 @@ TimedeltaStruct = Struct[{"days": Int, "seconds": Int, "microseconds": Int}]
 @serializable(is_named_concrete_type=True)
 class Timedelta(TimedeltaStruct):
     @typecheck_promote(
-        weeks=(Int, Number),
         days=(Int, Number),
-        hours=(Int, Number),
-        minutes=(Int, Number),
         seconds=(Int, Number),
         microseconds=(Int, Number),
         milliseconds=(Int, Number),
+        minutes=(Int, Number),
+        hours=(Int, Number),
+        weeks=(Int, Number),
     )
     def __init__(
         self,
-        weeks=0,
         days=0,
-        hours=0,
-        minutes=0,
         seconds=0,
         microseconds=0,
         milliseconds=0,
+        minutes=0,
+        hours=0,
+        weeks=0,
     ):
         self.graft = client.apply_graft(
             "timedelta.from_components",
-            weeks=weeks,
             days=days,
-            hours=hours,
-            minutes=minutes,
             seconds=seconds,
             microseconds=microseconds,
             milliseconds=milliseconds,
+            minutes=minutes,
+            hours=hours,
+            weeks=weeks,
         )
 
     @classmethod
     def _promote(cls, obj):
+        if isinstance(obj, cls):
+            return obj
         try:
-            return cls(seconds=obj.seconds, microseconds=obj.microseconds)
+            return cls(
+                days=obj.days, seconds=obj.seconds, microseconds=obj.microseconds
+            )
         except AttributeError:
             return super(cls, cls)._promote(obj)
 
