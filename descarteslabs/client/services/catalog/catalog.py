@@ -1263,7 +1263,7 @@ class Catalog(Service):
             fields bucket, directory, files, file_md5s, file_sizes. Default is `"available"`.
         :param list(str) writers: A list of groups, or user hashes to give read access to.
         :param dict extra_properties: User defined custom properties for this image.
-            Only 10 keys are allowed. The dict can only map strings to primitive types (str -> str|float|int).
+            Up to 50 keys are allowed. The dict can only map strings to primitive types (str -> str|float|int).
 
         :rtype: dict
         :return: JSON API representation of the band. See :meth:`get_image`

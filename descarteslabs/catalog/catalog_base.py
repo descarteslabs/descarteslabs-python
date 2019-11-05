@@ -163,7 +163,7 @@ class CatalogObject(AttributeEqualityMixin):
         read permission).  Will be empty by default.
         This attribute is only available to the `owners` of a catalog object.
     extra_properties : dict
-        Optional: A dictionary of up to 10 key/value pairs where the strings as keys
+        Optional: A dictionary of up to 50 key/value pairs where the strings as keys
         and numbers or strings as values. This allows for more structured custom
         metadata to be associated with objects.
     tags : list(str)
