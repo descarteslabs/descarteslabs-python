@@ -80,10 +80,10 @@ class Image(NamedCatalogObject):
         The spatial reference system used by the image either as a proj.4 string or
         a WKT string. One of `cs_dode` and `projection` is required.
         If both are set and disagree, `cs_code` takes precedence.
-    geotrans : str
-        GDAL-style geotransform matrix that transforms pixel coordinates into the
-        spatial reference system defined by the `cs_code` or `projection`
-        attributes
+    geotrans : `list` of six `float` elements
+        GDAL-style `geotransform matrix <https://gdal.org/user/raster_data_model.html#affine-geotransform>`_
+        that transforms pixel coordinates into the spatial reference system defined by the `cs_code`
+        or `projection` attributes
     x_pixels : int
         X dimension of the image in pixels
     y_pixels : int
@@ -160,6 +160,7 @@ class Image(NamedCatalogObject):
         image in a preview context, generally low resolution. It should be a 3-band
         (RBG) or a 4-band (RGBA) image suitable for visual preview. (It's not
         expected to conform to the bands of the products.)
+
     """
 
     _doc_type = "image"
