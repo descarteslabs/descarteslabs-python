@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0c\x65rrors.proto\x12\x17\x64\x65scarteslabs.workflows*\x9f\x01\n\tErrorCode\x12\x0e\n\nERROR_NONE\x10\x00\x12\x11\n\rERROR_UNKNOWN\x10\x01\x12\x11\n\rERROR_INVALID\x10\x02\x12\x12\n\x0e\x45RROR_DEADLINE\x10\x03\x12\r\n\tERROR_OOM\x10\t\x12\x13\n\x0f\x45RROR_INTERRUPT\x10\x0f\x12\x14\n\x10\x45RROR_TERMINATED\x10\x10\x12\x0e\n\nERROR_AUTH\x10\x11\x62\x06proto3')
+  serialized_pb=_b('\n\x0c\x65rrors.proto\x12\x17\x64\x65scarteslabs.workflows*\xb1\x01\n\tErrorCode\x12\x0e\n\nERROR_NONE\x10\x00\x12\x11\n\rERROR_UNKNOWN\x10\x01\x12\x11\n\rERROR_INVALID\x10\x02\x12\x12\n\x0e\x45RROR_DEADLINE\x10\x03\x12\r\n\tERROR_OOM\x10\t\x12\x13\n\x0f\x45RROR_INTERRUPT\x10\x0f\x12\x14\n\x10\x45RROR_TERMINATED\x10\x10\x12\x0e\n\nERROR_AUTH\x10\x11\x12\x10\n\x0c\x45RROR_TYPING\x10\x12\x62\x06proto3')
 )
 
 _ERRORCODE = _descriptor.EnumDescriptor(
@@ -62,11 +62,15 @@ _ERRORCODE = _descriptor.EnumDescriptor(
       name='ERROR_AUTH', index=7, number=17,
       serialized_options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='ERROR_TYPING', index=8, number=18,
+      serialized_options=None,
+      type=None),
   ],
   containing_type=None,
   serialized_options=None,
   serialized_start=42,
-  serialized_end=201,
+  serialized_end=219,
 )
 _sym_db.RegisterEnumDescriptor(_ERRORCODE)
 
@@ -79,6 +83,7 @@ ERROR_OOM = 9
 ERROR_INTERRUPT = 15
 ERROR_TERMINATED = 16
 ERROR_AUTH = 17
+ERROR_TYPING = 18
 
 
 DESCRIPTOR.enum_types_by_name['ErrorCode'] = _ERRORCODE
