@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0btypes.proto\x12\x17\x64\x65scarteslabs.workflows*\x85\x02\n\nResultType\x12\x0b\n\x07Unknown\x10\x00\x12\t\n\x05Image\x10\x01\x12\x13\n\x0fImageCollection\x10\x02\x12\x0b\n\x07\x46\x65\x61ture\x10\x03\x12\x15\n\x11\x46\x65\x61tureCollection\x10\x04\x12\n\n\x06String\x10\x05\x12\n\n\x06Number\x10\x06\x12\x08\n\x04List\x10\x07\x12\x0e\n\nDictionary\x10\x08\x12\x07\n\x03Int\x10\t\x12\t\n\x05\x46loat\x10\n\x12\x07\n\x03Str\x10\x0b\x12\t\n\x05Tuple\x10\x0c\x12\x08\n\x04\x44ict\x10\r\x12\x0c\n\x08\x44\x61tetime\x10\x0e\x12\r\n\tTimedelta\x10\x0f\x12\x08\n\x04\x42ool\x10\x10\x12\x0c\n\x08Geometry\x10\x11\x12\r\n\tKnownDict\x10\x12\x62\x06proto3')
+  serialized_pb=_b('\n\x0btypes.proto\x12\x17\x64\x65scarteslabs.workflows*\x95\x02\n\nResultType\x12\x0b\n\x07Unknown\x10\x00\x12\t\n\x05Image\x10\x01\x12\x13\n\x0fImageCollection\x10\x02\x12\x0b\n\x07\x46\x65\x61ture\x10\x03\x12\x15\n\x11\x46\x65\x61tureCollection\x10\x04\x12\n\n\x06String\x10\x05\x12\n\n\x06Number\x10\x06\x12\x08\n\x04List\x10\x07\x12\x0e\n\nDictionary\x10\x08\x12\x07\n\x03Int\x10\t\x12\t\n\x05\x46loat\x10\n\x12\x07\n\x03Str\x10\x0b\x12\t\n\x05Tuple\x10\x0c\x12\x08\n\x04\x44ict\x10\r\x12\x0c\n\x08\x44\x61tetime\x10\x0e\x12\r\n\tTimedelta\x10\x0f\x12\x08\n\x04\x42ool\x10\x10\x12\x0c\n\x08Geometry\x10\x11\x12\r\n\tKnownDict\x10\x12\x12\x0e\n\nGeoContext\x10\x13\x62\x06proto3')
 )
 
 _RESULTTYPE = _descriptor.EnumDescriptor(
@@ -106,11 +106,15 @@ _RESULTTYPE = _descriptor.EnumDescriptor(
       name='KnownDict', index=18, number=18,
       serialized_options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='GeoContext', index=19, number=19,
+      serialized_options=None,
+      type=None),
   ],
   containing_type=None,
   serialized_options=None,
   serialized_start=41,
-  serialized_end=302,
+  serialized_end=318,
 )
 _sym_db.RegisterEnumDescriptor(_RESULTTYPE)
 
@@ -134,6 +138,7 @@ Timedelta = 15
 Bool = 16
 Geometry = 17
 KnownDict = 18
+GeoContext = 19
 
 
 DESCRIPTOR.enum_types_by_name['ResultType'] = _RESULTTYPE

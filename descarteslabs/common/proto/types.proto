@@ -23,4 +23,5 @@ enum ResultType {
     Bool = 16;
     Geometry = 17;
     KnownDict = 18;
+    GeoContext = 19;
 }
