@@ -370,7 +370,13 @@ class ClassBand(Band):
     colormap_name : str
         Name of a predefined colormap for display purposes.
     colormap : list(tuple)
-        A custom colormap.
+        A custom colormap for this band. A list of lists, where each nested list
+        is a 4-tuple of RGBA values to map pixels whose value is the index of the
+        tuple. E.g. the colormap ``[["100", "20", "200", "255"]]`` would map pixels
+        whose value is 0 in the original band to the RGBA color defined by
+        ``["100", "20", "200", "255"]``. The number of 4-tuples provided can be up
+        to the maximum of this band's data range. Omitted values will map to black
+        by default.
     class_labels : list(str or None)
         A list of labels where each element is a name for the class with the value at
         that index. Elements can be null if there is no label at that value.
@@ -416,7 +422,13 @@ class GenericBand(Band):
     colormap_name : str
         Name of a predefined colormap for display purposes
     colormap : list(tuple)
-        A custom colormap
+        A custom colormap for this band. A list of lists, where each nested list
+        is a 4-tuple of RGBA values to map pixels whose value is the index of the
+        tuple. E.g. the colormap ``[["100", "20", "200", "255"]]`` would map pixels
+        whose value is 0 in the original band to the RGBA color defined by
+        ``["100", "20", "200", "255"]``. The number of 4-tuples provided can be up
+        to the maximum of this band's data range. Omitted values will map to black
+        by default.
     """
 
     _derived_type = BandType.GENERIC.value
