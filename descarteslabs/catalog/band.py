@@ -372,9 +372,9 @@ class ClassBand(Band):
     colormap : list(tuple)
         A custom colormap for this band. A list of lists, where each nested list
         is a 4-tuple of RGBA values to map pixels whose value is the index of the
-        tuple. E.g. the colormap ``[["100", "20", "200", "255"]]`` would map pixels
+        tuple. E.g. the colormap ``[[100, 20, 200, 255]]`` would map pixels
         whose value is 0 in the original band to the RGBA color defined by
-        ``["100", "20", "200", "255"]``. The number of 4-tuples provided can be up
+        ``[100, 20, 200, 255]``. The number of 4-tuples provided can be up
         to the maximum of this band's data range. Omitted values will map to black
         by default.
     class_labels : list(str or None)
@@ -424,9 +424,9 @@ class GenericBand(Band):
     colormap : list(tuple)
         A custom colormap for this band. A list of lists, where each nested list
         is a 4-tuple of RGBA values to map pixels whose value is the index of the
-        tuple. E.g. the colormap ``[["100", "20", "200", "255"]]`` would map pixels
+        tuple. E.g. the colormap ``[[100, 20, 200, 255]]`` would map pixels
         whose value is 0 in the original band to the RGBA color defined by
-        ``["100", "20", "200", "255"]``. The number of 4-tuples provided can be up
+        ``[100, 20, 200, 255]``. The number of 4-tuples provided can be up
         to the maximum of this band's data range. Omitted values will map to black
         by default.
     """

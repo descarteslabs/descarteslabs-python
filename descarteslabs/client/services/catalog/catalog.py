@@ -181,7 +181,7 @@ class Catalog(Service):
                                        list is a 4-tuple of rgba values
                                        to map pixels whose value is the
                                        index of the tuple. e.g. the
-                                       colormap [["100", "20", "200", "255"]]
+                                       colormap [[100, 20, 200, 255]]
                                        would map pixels whose value is 0 in
                                        the original band, to the rgba color
                                        vector at colormap[0].  Less than
@@ -754,7 +754,7 @@ class Catalog(Service):
                                                list is a 4-tuple of rgba values
                                                to map pixels whose value is the
                                                index of the tuple. e.g. the colormap
-                                               [["100", "20", "200", "255"]] would
+                                               [[100, 20, 200, 255]] would
                                                map pixels whose value is 0 in the
                                                original band, to the rgba color
                                                vector at colormap[0].  Less than
@@ -917,7 +917,7 @@ class Catalog(Service):
                                   ['plasma', 'magma', 'viridis', 'msw', 'inferno']
         :param list(list(str)) colormap: A custom colormap to use for this band. Takes a list of lists, where each
                                          nested list is a 4-tuple of rgba values to map pixels whose value is the index
-                                         of the tuple. e.g. the colormap [["100", "20", "200", "255"]] would map pixels
+                                         of the tuple. e.g. the colormap [[100, 20, 200, 255]] would map pixels
                                          whose value is 0 in the original band, to the rgba color vector at colormap[0].
                                          Less than 2^nbits 4-tuples may be provided, and omitted values
                                          will default map to black.
