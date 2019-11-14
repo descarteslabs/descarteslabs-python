@@ -92,12 +92,15 @@ class ImageResult(EqualityMixin):
     bandinfo: OrderedDict[str, dict[str, any]]
         OrderedDict of metadata about each band.
         The order corresponds to the bands in the `ndarray`.
+    geocontext: dict
+        GeoContext over which computation was done.
     """
 
-    def __init__(self, ndarray, properties, bandinfo):
+    def __init__(self, ndarray, properties, bandinfo, geocontext):
         self.ndarray = ndarray
         self.properties = properties
         self.bandinfo = collections.OrderedDict(**bandinfo)
+        self.geocontext = geocontext
 
     def __len__(self):
         return len(self.bandinfo)
@@ -135,12 +138,15 @@ class ImageCollectionResult(EqualityMixin):
     bandinfo: OrderedDict[str, dict[str, any]]
         OrderedDict of metadata about each band.
         The order corresponds to the bands (axis 1) in the `ndarray`.
+    geocontext: dict
+        GeoContext over which computation was done.
     """
 
-    def __init__(self, ndarray, properties, bandinfo):
+    def __init__(self, ndarray, properties, bandinfo, geocontext):
         self.ndarray = ndarray
         self.properties = properties
         self.bandinfo = collections.OrderedDict(**bandinfo)
+        self.geocontext = geocontext
 
     def __len__(self):
         return len(self.properties)

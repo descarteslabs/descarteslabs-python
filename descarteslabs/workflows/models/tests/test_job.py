@@ -334,6 +334,11 @@ class TestJob(object):
                 "geometry": {"type": "Point", "coordinates": [0, 0]},
             },
             "bandinfo": {"red": {}},
+            "geocontext": {
+                "geometry": None,
+                "crs": "EPSG:4326",
+                "bounds": (-98, 40, -90, 44),
+            },
         }
         job = Job(
             job_pb2.Job(id="foo", status=job_pb2.STATUS_SUCCESS, type=types_pb2.Image)
@@ -348,3 +353,4 @@ class TestJob(object):
         assert result.ndarray == marshalled["ndarray"]
         assert result.properties == marshalled["properties"]
         assert result.bandinfo == marshalled["bandinfo"]
+        assert result.geocontext == marshalled["geocontext"]
