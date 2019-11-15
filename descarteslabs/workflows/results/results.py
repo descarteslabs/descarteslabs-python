@@ -116,7 +116,11 @@ class ImageResult(EqualityMixin):
         properties_line = "  * properties: {}".format(_join_dict_keys(self.properties))
         bandinfo_line = "  * bandinfo: {}".format(_join_dict_keys(self.bandinfo))
 
-        return "\n".join((name_header, ndarray_line, properties_line, bandinfo_line))
+        geocontext_line = "  * geocontext: {}".format(_join_dict_keys(self.geocontext))
+
+        return "\n".join(
+            (name_header, ndarray_line, properties_line, bandinfo_line, geocontext_line)
+        )
 
 
 unmarshal.register(
@@ -164,7 +168,11 @@ class ImageCollectionResult(EqualityMixin):
         properties_line = "  * properties: {} items".format(len(self.properties))
         bandinfo_line = "  * bandinfo: {}".format(_join_dict_keys(self.bandinfo))
 
-        return "\n".join((name_header, ndarray_line, properties_line, bandinfo_line))
+        geocontext_line = "  * geocontext: {}".format(_join_dict_keys(self.geocontext))
+
+        return "\n".join(
+            (name_header, ndarray_line, properties_line, bandinfo_line, geocontext_line)
+        )
 
 
 unmarshal.register(
