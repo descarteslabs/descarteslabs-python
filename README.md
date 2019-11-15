@@ -14,6 +14,7 @@ Changelog
 ### Changed
 
 - The maximum number of `extra_properties` allowed for Catalog objects has been increased from 10 to 50.
+- Fixed bug causing `SceneCollection.download` to fail.
 
 ## [0.26.0] - 2019-10-30
 ### Added

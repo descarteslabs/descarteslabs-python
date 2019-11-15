@@ -709,7 +709,7 @@ class SceneCollection(Collection):
         download_args = dict(
             resampler=resampler,
             processing_level=processing_level,
-            scales=scales,
+            scaling=scales,
             data_type=data_type,
             raster_client=self._raster_client,
         )
