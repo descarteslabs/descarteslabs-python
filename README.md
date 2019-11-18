@@ -11,6 +11,11 @@ Changelog
 ## [Unreleased]
 ### Added
 
+### Changed
+
+## [0.27.0] - 2019-11-18
+### Added
+
 - Catalog client: Added a `MaskBand.is_alpha` attribute to declare alpha channel behavior for a band.
 
 ### Changed
