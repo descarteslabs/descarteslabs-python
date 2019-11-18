@@ -16,6 +16,13 @@ Changelog
 - The maximum number of `extra_properties` allowed for Catalog objects has been increased from 10 to 50.
 - Fixed bug causing `SceneCollection.download` to fail.
 
+### Workflows (channel `v0-9`) - Added
+- When you call `.compute()` on an `Image` or `ImageCollection`, the `GeoContext` is included on the result object (`ImageResult.geocontext`, `ImageCollectionResult.geocontext`)
+
+### Workflows - Fixed
+- Passing a Workflows `Timedelta` object (instead of a `datetime.timedelta`) into functions expecting it now behaves correctly
+- Arguments to the reducer function for `reduce` are now in the correct order
+
 ## [0.26.0] - 2019-10-30
 ### Added
 
