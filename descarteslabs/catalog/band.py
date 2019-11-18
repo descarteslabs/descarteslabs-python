@@ -86,7 +86,7 @@ class Band(NamedCatalogObject):
       :attr:`~MicrowaveBand.bandwidth`
     * `MaskBand`: A binary band where by convention a 0 means masked and 1 means
       non-masked. The :attr:`~Band.data_range` and :attr:`~Band.display_range` for
-      masks is implicitly ``[0, 1]``.
+      masks is implicitly ``[0, 1]``. Specific attributes::attr:`~MaskBand.is_alpha`
     * `ClassBand`: A band that maps a finite set of values that may not be continuous to
       classification categories (e.g. a land use classification). A visualization with
       straight pixel values is typically not useful, so commonly a
@@ -331,6 +331,13 @@ class MaskBand(Band):
 
     Attributes
     ----------
+    is_alpha : bool
+        Whether this band should be useable as an alpha band during rastering.
+        This enables special behavior for this band during rastering. If this
+        is ``True`` and the band appears as the last band in a raster operation
+        (such as :meth:`descarteslabs.scenes.scenecollection.SceneCollection.mosaic`
+        or :meth:`descarteslabs.scenes.scenecollection.SceneCollection.stack`)
+        pixels with a value of 0 in this band will be treated as transparent.
     data_range : tuple(float, float)
         Readonly: [0, 1].
     display_range : tuple(float, float)
@@ -338,6 +345,8 @@ class MaskBand(Band):
     """
 
     _derived_type = BandType.MASK.value
+
+    is_alpha = Attribute()
 
 
 class ClassBand(Band):

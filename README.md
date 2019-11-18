@@ -11,6 +11,8 @@ Changelog
 ## [Unreleased]
 ### Added
 
+- Catalog client: Added a `MaskBand.is_alpha` attribute to declare alpha channel behavior for a band.
+
 ### Changed
 
 - The maximum number of `extra_properties` allowed for Catalog objects has been increased from 10 to 50.

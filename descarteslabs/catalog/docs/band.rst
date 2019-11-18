@@ -51,6 +51,7 @@ Bands
   :undoc-members:
 
 .. autoclass:: descarteslabs.catalog.MaskBand
+  :exclude-members: is_alpha
   :members:
   :undoc-members:
 
