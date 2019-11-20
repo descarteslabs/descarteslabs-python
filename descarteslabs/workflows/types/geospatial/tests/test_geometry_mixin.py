@@ -1,13 +1,8 @@
-import pytest
-
-from ... import Proxytype
-from ..mixins import GeometryMixin
+from ..geometry import Geometry, GeometryCollection
 
 
-class Foo(Proxytype, GeometryMixin):
-    pass
-
-
-@pytest.mark.parametrize("distance", [0, 0.0])
-def test_buffer(distance):
-    assert isinstance(Foo().buffer(distance), Foo)
+def test_buffer():
+    geom = Geometry(type="Point", coordinates=[0, 0])
+    col = GeometryCollection(type="GeometryCollection", geometries=[geom, geom])
+    assert isinstance(geom.buffer(0.0), Geometry)
+    assert isinstance(col.buffer(0.0), Geometry)

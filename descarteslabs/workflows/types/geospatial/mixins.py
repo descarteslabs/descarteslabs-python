@@ -144,4 +144,4 @@ class BandsMixin:
 class GeometryMixin:
     @typecheck_promote((Int, Float))
     def buffer(self, distance):
-        return self._from_apply("buffer", distance)
+        return self._from_apply("buffer", self, distance)

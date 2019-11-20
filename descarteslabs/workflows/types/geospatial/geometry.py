@@ -93,3 +93,7 @@ class GeometryCollection(GeometryCollectionStruct, Geometry):
                 "Expected a GeoJSON mapping containing the fields 'type' and 'geometries', "
                 "but got {}".format(geojson)
             )
+
+    @typecheck_promote((Int, Float))
+    def buffer(self, distance):
+        return Geometry._from_apply("buffer", self, distance)
