@@ -397,6 +397,7 @@ class Image(ImageBase, BandsMixin):
         >>> min_pixel = img.min(axis=None)
         """
         return_type = self._stats_return_type(axis)
+        axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("min", self, axis)
 
     def max(self, axis=None):
@@ -433,6 +434,7 @@ class Image(ImageBase, BandsMixin):
         >>> max_pixel = img.max(axis=None)
         """
         return_type = self._stats_return_type(axis)
+        axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("max", self, axis)
 
     def mean(self, axis=None):
@@ -469,6 +471,7 @@ class Image(ImageBase, BandsMixin):
         >>> mean_pixel = img.mean(axis=None)
         """
         return_type = self._stats_return_type(axis)
+        axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("mean", self, axis)
 
     def median(self, axis=None):
@@ -505,6 +508,7 @@ class Image(ImageBase, BandsMixin):
         >>> median_pixel = img.median(axis=None)
         """
         return_type = self._stats_return_type(axis)
+        axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("median", self, axis)
 
     def sum(self, axis=None):
@@ -541,6 +545,7 @@ class Image(ImageBase, BandsMixin):
         >>> sum_pixels = img.sum(axis=None)
         """
         return_type = self._stats_return_type(axis)
+        axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("sum", self, axis)
 
     def std(self, axis=None):
@@ -578,6 +583,7 @@ class Image(ImageBase, BandsMixin):
         >>> std = img.std(axis=None)
         """
         return_type = self._stats_return_type(axis)
+        axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("std", self, axis)
 
     def count(self, axis=None):
@@ -615,6 +621,7 @@ class Image(ImageBase, BandsMixin):
         >>> count = img.count(axis=None)
         """
         return_type = self._stats_return_type(axis)
+        axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("count", self, axis)
 
     # Binary comparators
