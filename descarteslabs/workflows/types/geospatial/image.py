@@ -778,6 +778,43 @@ class Image(ImageBase, BandsMixin):
             "scale_values", self, range_min, range_max, domain_min, domain_max
         )
 
+    def replace_empty_with(self, fill, mask=True, bandinfo=None):
+        """
+        Replace `Image`, if empty, with fill value.
+
+        Parameters
+        ----------
+        fill: int, float, `Image`
+            The value to fill the `Image` with. If int or float, the fill value will be broadcasted to
+            band dimensions as determined by the geocontext and provided bandinfo.
+        mask: bool, default True
+            Whether to mask the band data. If ``mask`` is True and ``fill`` is an `Image`,
+            the original `Image` mask will be overridden and all underlying data will be masked.
+            If ``mask`` is False and ``fill`` is an `Image`, the original mask is left as is.
+            If ``fill`` is scalar, the `Image` constructed will be fully masked or fully un-masked
+            data if ``mask`` is True and False respectively.
+        bandinfo: dict, default None
+            Bandinfo used in constructing new `Image`. If ``fill`` is an `Image`, bandinfo is optional, and
+            will be ignored if provided. If ``fill`` is a scalar, the bandinfo will be used to determine
+            the number of bands on the new `Image`, as well as become the bandinfo for it.
+        """
+        if (
+            not isinstance(fill, int)
+            and not isinstance(fill, float)
+            and not isinstance(fill, Image)
+        ):
+            raise ValueError(
+                "Cannot replace empty Image with {}. Fill must either be an int, float, or Image.".format(
+                    type(fill)
+                )
+            )
+        if (isinstance(fill, int) or isinstance(fill, float)) and bandinfo is None:
+            # filling with scalar requires bandinfo to be provided
+            raise ValueError(
+                "To replace empty Image with an int or float, bandinfo must be provided."
+            )
+        return self._from_apply("Image.replace_empty_with", self, fill, mask, bandinfo)
+
     def __neg__(self):
         return self._from_apply("neg", self)
 
@@ -793,31 +830,45 @@ class Image(ImageBase, BandsMixin):
     def __add__(self, other):
         return _result_type(other)._from_apply("add", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
+    @typecheck_promote(
+        (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
+    )
     def __sub__(self, other):
         return _result_type(other)._from_apply("sub", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
+    @typecheck_promote(
+        (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
+    )
     def __mul__(self, other):
         return _result_type(other)._from_apply("mul", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
+    @typecheck_promote(
+        (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
+    )
     def __div__(self, other):
         return _result_type(other)._from_apply("div", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
+    @typecheck_promote(
+        (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
+    )
     def __truediv__(self, other):
         return _result_type(other)._from_apply("div", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
+    @typecheck_promote(
+        (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
+    )
     def __floordiv__(self, other):
         return _result_type(other)._from_apply("floordiv", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
+    @typecheck_promote(
+        (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
+    )
     def __mod__(self, other):
         return _result_type(other)._from_apply("mod", self, other)
 
-    @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True)
+    @typecheck_promote(
+        (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
+    )
     def __pow__(self, other):
         return _result_type(other)._from_apply("pow", self, other)
 
@@ -854,7 +905,9 @@ class Image(ImageBase, BandsMixin):
     def __rpow__(self, other):
         return _result_type(other)._from_apply("rpow", self, other)
 
-    def tile_layer(self, name=None, scales=None, colormap=None, checkerboard=True, **parameters):
+    def tile_layer(
+        self, name=None, scales=None, colormap=None, checkerboard=True, **parameters
+    ):
         """
         A `.WorkflowsLayer` for this `Image`.
 
@@ -898,7 +951,15 @@ class Image(ImageBase, BandsMixin):
 
         return layer
 
-    def visualize(self, name, scales=None, colormap=None, checkerboard=True, map=None, **parameters):
+    def visualize(
+        self,
+        name,
+        scales=None,
+        colormap=None,
+        checkerboard=True,
+        map=None,
+        **parameters
+    ):
         """
         Add this `Image` to `wf.map <.interactive.map>`, or replace a layer with the same name.
 
@@ -985,7 +1046,11 @@ class Image(ImageBase, BandsMixin):
                 return layer
         else:
             layer = self.tile_layer(
-                name=name, scales=scales, colormap=colormap, checkerboard=checkerboard, **parameters
+                name=name,
+                scales=scales,
+                colormap=colormap,
+                checkerboard=checkerboard,
+                **parameters
             )
             map.add_layer(layer)
             return layer

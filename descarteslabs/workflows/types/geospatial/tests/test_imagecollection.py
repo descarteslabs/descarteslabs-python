@@ -107,6 +107,9 @@ def test_all_methods_nonstats():
     assert isinstance(col.clip_values(0.1, 0.5), ImageCollection)
     assert isinstance(col.clip_values([0.1, 0.4], [0.5, 0.8]), ImageCollection)
     assert isinstance(col.scale_values(0.1, 0.5), ImageCollection)
+    assert isinstance(
+        col.replace_empty_with(0.1, bandinfo={"red": {}}), ImageCollection
+    )
     assert isinstance(col.mask(img), ImageCollection)
     assert isinstance(col.mask(img, replace=True), ImageCollection)
     assert isinstance(col.mask(col2), ImageCollection)

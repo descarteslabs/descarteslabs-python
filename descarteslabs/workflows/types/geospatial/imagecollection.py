@@ -1122,6 +1122,47 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             "scale_values", self, range_min, range_max, domain_min, domain_max
         )
 
+    def replace_empty_with(self, fill, mask=True, bandinfo=None):
+        """
+        Replace `ImageCollection`, if empty, with fill value.
+
+        Parameters
+        ----------
+        fill: int, float, `ImageCollection`
+            The value to fill the `ImageCollection` with. If int or float, the fill value will be broadcasted to
+            a 1 image collection, with band dimensions as determined by the geocontext and provided bandinfo.
+        mask: bool, default True
+            Whether to mask the band data. If ``mask`` is True and ``fill`` is an `ImageCollection`,
+            the original `ImageCollection` mask will be overridden and all underlying data will be masked.
+            If ``mask`` is False and ``fill`` is an `ImageCollection`, the original mask is left as is.
+            If ``fill`` is scalar, the `ImageCollection` constructed will be fully masked or fully un-masked
+            data if ``mask`` is True and False respectively.
+        bandinfo: dict, default None
+            Bandinfo used in constructing new `ImageCollection`. If ``fill`` is an `ImageCollection`,
+            bandinfo is optional, and will be ignored if provided. If ``fill`` is a scalar,
+            the bandinfo will be used to determine the number of bands on the new `ImageCollection`,
+            as well as become the bandinfo for it.
+        """
+        if (
+            not isinstance(fill, int)
+            and not isinstance(fill, float)
+            and not isinstance(fill, ImageCollection)
+        ):
+            raise ValueError(
+                "Cannot replace empty ImageCollection with {}."
+                " Fill must either be an int, float, or ImageCollection.".format(
+                    type(fill)
+                )
+            )
+        if (isinstance(fill, int) or isinstance(fill, float)) and bandinfo is None:
+            # filling with scalar requires bandinfo to be provided
+            raise ValueError(
+                "To replace an empty ImageCollection with an int or float, bandinfo must be provided."
+            )
+        return self._from_apply(
+            "ImageCollection.replace_empty_with", self, fill, mask, bandinfo
+        )
+
     def __neg__(self):
         return self._from_apply("neg", self)
 
