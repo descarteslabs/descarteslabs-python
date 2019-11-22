@@ -4,7 +4,7 @@ from six import add_metaclass, iteritems, ensure_str, wraps
 import json
 
 from descarteslabs.client.auth import Auth
-from descarteslabs.client.exceptions import NotFoundError
+from descarteslabs.client.exceptions import ClientError, NotFoundError
 from descarteslabs.client.services.service.service import Service
 from .attributes import (
     Attribute,
@@ -801,11 +801,59 @@ class CatalogObject(AttributeEqualityMixin):
         if cls._default_includes:
             url += "?include=" + ",".join(cls._default_includes)
 
-        r = session_method(url, json=json).json()
+        try:
+            r = session_method(url, json=json).json()
+        except ClientError as client_error:
+            cls._rewrite_error(client_error)
+            raise
+
         data = r["data"]
         related_objects = cls._load_related_objects(r, client)
 
         return data, related_objects
+
+    @classmethod
+    def _rewrite_error(cls, client_error):
+        KEY_ERRORS = "errors"
+        KEY_TITLE = "title"
+        KEY_STATUS = "status"
+        KEY_DETAIL = "detail"
+        KEY_SOURCE = "source"
+        KEY_POINTER = "pointer"
+        message = ""
+
+        for arg in client_error.args:
+            try:
+                errors = json.loads(arg)[KEY_ERRORS]
+
+                for error in errors:
+                    line = ""
+                    seperator = ""
+
+                    if KEY_TITLE in error:
+                        line += error[KEY_TITLE]
+                        seperator = ": "
+                    elif KEY_STATUS in error:
+                        line += error[KEY_STATUS]
+                        seperator = ": "
+
+                    if KEY_DETAIL in error:
+                        line += seperator + error[KEY_DETAIL].strip(".")
+                        seperator = ": "
+
+                    if KEY_SOURCE in error:
+                        source = error[KEY_SOURCE]
+                        if KEY_POINTER in source:
+                            source = source[KEY_POINTER].split("/")[-1]
+                        line += seperator + source
+
+                    if line:
+                        message += "\n    " + line
+            except Exception:
+                return
+
+        if message:
+            client_error.args = (message,)
 
     @classmethod
     def _load_related_objects(cls, response, client):
