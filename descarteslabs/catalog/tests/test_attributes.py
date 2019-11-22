@@ -1,6 +1,7 @@
 import pytest
 import unittest
 import textwrap
+from copy import deepcopy
 from datetime import datetime
 from enum import Enum
 
@@ -16,6 +17,8 @@ from ..attributes import (
     MappingAttribute,
     ListAttribute,
     DocumentState,
+    Resolution,
+    File,
 )
 from ..band import BandType
 
@@ -642,3 +645,33 @@ class TestAttributes(unittest.TestCase):
         model_object._clear_modified_attributes()
         la[-1].bar = 4
         assert model_object.is_modified
+
+    def test_deepcopy(self):
+        r = Resolution(value=2, unit="meters")
+        r_copy = deepcopy(r)
+        assert r is not r_copy
+        assert r == r_copy
+
+        r.value = 0
+        r_copy.value = 20
+        assert r.value == 0
+        assert r_copy.value == 20
+
+        f = File(href="foo")
+        f_copy = deepcopy(f)
+        assert f is not f_copy
+        assert f == f_copy
+
+        f_copy.href = "bar"
+        assert f.href == "foo"
+        assert f_copy.href == "bar"
+
+        la = ListAttribute(File)
+        la.append(f)
+        la_copy = deepcopy(la)
+        assert la is not la_copy
+        assert la == la_copy
+
+        la_copy.append(f_copy)
+        assert la == [f]
+        assert la_copy == [f, f_copy]
