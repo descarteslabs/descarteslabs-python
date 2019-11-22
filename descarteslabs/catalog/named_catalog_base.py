@@ -136,7 +136,7 @@ class NamedCatalogObject(CatalogObject):
     id = NamedIdAttribute()
     name = NameAttribute()
     product_id = ProductIdAttribute()
-    product = CatalogObjectReference(Product, _mutable=False)
+    product = CatalogObjectReference(Product, _mutable=False, _sticky=True)
 
     def __init__(self, **kwargs):
         product_id = kwargs.get("product_id")
