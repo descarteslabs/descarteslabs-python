@@ -84,7 +84,7 @@ class Str(Primitive):
 
     @typecheck_promote(lambda: Str)
     def endswith(self, suffix):
-        return Bool._from_apply("Str.endswidth", self, suffix)
+        return Bool._from_apply("Str.endswith", self, suffix)
 
     @typecheck_promote(tabsize=Int)
     def expandtabs(self, tabsize=8):
@@ -205,13 +205,12 @@ class Str(Primitive):
     def title(self):
         return self._from_apply("Str.title", self)
 
-    @typecheck_promote(lambda: Str, deletechars=lambda: Str)
-    def translate(self, table, deletechars=""):
-        return self._from_apply("Str.translate", self, table, deletechars=deletechars)
+    def translate(self, table):
+        return self._from_apply("Str.translate", self, table)
 
     def upper(self):
         return self._from_apply("Str.upper", self)
 
     @typecheck_promote(Int)
     def zfill(self, width):
-        return self._from_apply("Str.upper", self, width)
+        return self._from_apply("Str.zfill", self, width)
