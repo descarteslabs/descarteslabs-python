@@ -14,6 +14,7 @@ from .image_upload import (
 from .band import (
     Band,
     BandType,
+    Colormap,
     DataType,
     SpectralBand,
     MicrowaveBand,
@@ -43,6 +44,7 @@ __all__ = [
     "CatalogClient",
     "CatalogObject",
     "ClassBand",
+    "Colormap",
     "DataType",
     "DeletedObjectError",
     "DerivedBand",

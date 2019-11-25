@@ -25,6 +25,7 @@ Bands
 
   * - :py:class:`~descarteslabs.catalog.band.DataType`
   * - :py:class:`~descarteslabs.catalog.band.BandType`
+  * - :py:class:`~descarteslabs.catalog.band.Colormap`
   * - :py:class:`~descarteslabs.catalog.Resolution`
   * - :py:class:`~descarteslabs.catalog.ResolutionUnit`
 
@@ -77,6 +78,8 @@ Bands
 .. autoclass:: descarteslabs.catalog.band.DataType
 
 .. autoclass:: descarteslabs.catalog.band.BandType
+
+.. autoclass:: descarteslabs.catalog.band.Colormap
 
 .. autoclass:: descarteslabs.catalog.Resolution
 

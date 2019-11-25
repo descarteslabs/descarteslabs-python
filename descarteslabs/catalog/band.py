@@ -68,6 +68,61 @@ class BandType(str, Enum):
     GENERIC = "generic"
 
 
+class Colormap(str, Enum):
+    """Predefined colormaps available to assign to bands.
+
+    Most of these colormaps correspond directly to the built-in colormaps of the
+    same name in matplotlib. See
+    https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html for an
+    overview and visual examples.
+
+    Attributes
+    ----------
+    MAGMA : enum
+        A perceptually uniform sequential colormap, equivalent to matplotlib's
+        built-in "magma"
+    INFERNO : enum
+        A perceptually uniform sequential colormap, equivalent to matplotlib's
+        built-in "inferno"
+    PLASMA : enum
+        A perceptually uniform sequential colormap, equivalent to matplotlib's
+        built-in "plasma"
+    VIRIDIS : enum
+        A perceptually uniform sequential colormap, equivalent to matplotlib's
+        built-in "viridis"
+    COOL : enum
+        A sequential colormap, equivalent to matplotlib's built-in "cool"
+    HOT : enum
+        A sequential colormap, equivalent to matplotlib's built-in "hot"
+    COOLWARM : enum
+        A diverging colormap, equivalent to matplotlib's built-in "coolwarm"
+    BWR : enum
+        A diverging colormap (blue-white-red), equivalent to matplotlib's
+        built-in "bwr"
+    GIST_EARTH : enum
+        A colormap designed to represent topography and water depths together,
+        equivalent to matplotlib's built-in "gist_earth"
+    TERRAIN : enum
+        A colormap designed to represent topography and water depths together,
+        equivalent to matplotlib's built-in "terrain"
+    CDL : enum
+        A standard colormap used in Cropland Data Layer (CDL) products, with a
+        distinct color for each class in such products
+    """
+
+    MAGMA = "magma"
+    INFERNO = "inferno"
+    PLASMA = "plasma"
+    VIRIDIS = "viridis"
+    COOL = "cool"
+    HOT = "hot"
+    COOLWARM = "coolwarm"
+    BWR = "bwr"
+    GIST_EARTH = "gist_earth"
+    TERRAIN = "terrain"
+    CDL = "cdl"
+
+
 class Band(NamedCatalogObject):
     """A data band in images of a specific product.
 
@@ -376,8 +431,10 @@ class ClassBand(Band):
 
     Attributes
     ----------
-    colormap_name : str
-        Name of a predefined colormap for display purposes.
+    colormap_name : str, Colormap
+        Name of a predefined colormap for display purposes. The colormap is applied
+        when this band is rastered by itself in PNG or TIFF format, including in
+        UIs where imagery is visualized.
     colormap : list(tuple)
         A custom colormap for this band. A list of lists, where each nested list
         is a 4-tuple of RGBA values to map pixels whose value is the index of the
@@ -393,7 +450,7 @@ class ClassBand(Band):
 
     _derived_type = BandType.CLASS.value
 
-    colormap_name = Attribute()
+    colormap_name = EnumAttribute(Colormap)
     colormap = Attribute()
     class_labels = Attribute()
 
@@ -428,8 +485,10 @@ class GenericBand(Band):
         A physical range that pixel values map to
     physical_range_unit : str
         Unit of the physical range
-    colormap_name : str
-        Name of a predefined colormap for display purposes
+    colormap_name : str, Colormap
+        Name of a predefined colormap for display purposes. The colormap is applied
+        when this band is rastered by itself in PNG or TIFF format, including in
+        UIs where imagery is visualized.
     colormap : list(tuple)
         A custom colormap for this band. A list of lists, where each nested list
         is a 4-tuple of RGBA values to map pixels whose value is the index of the
@@ -444,7 +503,7 @@ class GenericBand(Band):
 
     physical_range = Attribute()
     physical_range_unit = Attribute()
-    colormap_name = Attribute()
+    colormap_name = EnumAttribute(Colormap)
     colormap = Attribute()
 
 
