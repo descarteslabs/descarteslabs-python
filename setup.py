@@ -105,7 +105,8 @@ def do_setup():
     kwargs["extras_require"] = {
         "complete": [
             'blosc;platform_system!="Windows"',
-            "numpy>=1.10.0",
+            'numpy>=1.17.4; python_version >= "3.5"',
+            'numpy>=1.10; python_version < "3.5"',
             "matplotlib>=2.1.0",
             "mercantile>=1.0.4",
             "ipyleaflet>=0.11.4",
