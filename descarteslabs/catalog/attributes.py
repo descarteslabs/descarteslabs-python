@@ -94,7 +94,7 @@ class Attribute(object):
         Set to True by default.
         If set to False, the attribute will be skipped during serialized and will
         throw an AttributeValidationError if serialized explicitly using
-        `serialize_attribute`.
+        `serialize_attribute_for_filter`.
     _sticky : bool
         Whether this attribute will be cleared when new attribute values are loaded
         from the Descartes Labs catalog.  Set fo False by default.  This is used
@@ -816,6 +816,9 @@ class ListAttribute(Attribute):
         Serialize the provided values to a JSON-serializable list based on the class definition for this
         ListAttribute.
         """
+        if values is None:
+            return None
+
         return [
             self._item_type.serialize(v, jsonapi_format=jsonapi_format) for v in values
         ]

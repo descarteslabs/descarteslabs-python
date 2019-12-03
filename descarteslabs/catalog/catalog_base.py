@@ -13,6 +13,7 @@ from .attributes import (
     AttributeEqualityMixin,
     DocumentState,
     ImmutableTimestamp,
+    ListAttribute,
 )
 
 
@@ -239,11 +240,11 @@ class CatalogObject(AttributeEqualityMixin):
     id = Attribute(_mutable=False, _serializable=False)
     created = ImmutableTimestamp()
     modified = ImmutableTimestamp()
-    owners = Attribute()
-    readers = Attribute()
-    writers = Attribute()
+    owners = ListAttribute(Attribute)
+    readers = ListAttribute(Attribute)
+    writers = ListAttribute(Attribute)
     extra_properties = Attribute()
-    tags = Attribute()
+    tags = ListAttribute(Attribute)
 
     def __init__(self, **kwargs):
         self.delete = self._instance_delete
@@ -377,11 +378,12 @@ class CatalogObject(AttributeEqualityMixin):
         return klass
 
     @classmethod
-    def serialize_attribute(cls, name, value):
-        """Serialize a single attribute value.
+    def _serialize_attribute(cls, name, value):
+        """Serialize a single value for a filter.
 
         Allow the given value to be serialzed using the serialization logic
-        of the given attribute.
+        of the given attribute.  This method should only be used to serialize
+        a filter value.
 
         Parameters
         ----------
@@ -400,6 +402,8 @@ class CatalogObject(AttributeEqualityMixin):
             raise AttributeValidationError(
                 "Attribute '{}' cannot be serialized".format(name)
             )
+        if isinstance(attribute_type, ListAttribute):
+            attribute_type = attribute_type._item_type
         return attribute_type.serialize(value)
 
     def _set_modified(self, attr_name):

@@ -97,6 +97,19 @@ class TestCatalogObject(ClientTestCase):
         c._clear_modified_attributes()
         assert not c.is_modified
 
+    def test_list_properties(self):
+        c = CatalogObject(id="foo1", owners=["foo"], tags=["something"], _saved=True)
+        assert not c.is_modified
+
+        c.owners.append("bar")
+        c.tags.append("nothing")
+
+        assert c.is_modified
+        assert c.serialize(modified_only=True) == {
+            "owners": ["foo", "bar"],
+            "tags": ["something", "nothing"],
+        }
+
     @responses.activate
     def test_get(self):
         self.mock_response(

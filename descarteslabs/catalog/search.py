@@ -327,7 +327,7 @@ class ImageSearch(Search):
         """
         s = copy.deepcopy(self)
         s._request_params["intersects"] = json.dumps(
-            self._model_cls.serialize_attribute("geometry", geometry),
+            self._model_cls._serialize_attribute("geometry", geometry),
             separators=(",", ":"),
         )
         return s

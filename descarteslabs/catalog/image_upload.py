@@ -117,8 +117,8 @@ class ImageUploadOptions(MappingAttribute):
     """
 
     upload_type = EnumAttribute(ImageUploadType)
-    image_files = Attribute()
-    overviews = Attribute()
+    image_files = ListAttribute(Attribute)
+    overviews = ListAttribute(Attribute)
     overview_resampler = EnumAttribute(OverviewResampler)
 
 
