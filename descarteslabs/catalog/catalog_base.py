@@ -425,6 +425,46 @@ class CatalogObject(AttributeEqualityMixin):
 
         return serialized
 
+    @check_deleted
+    def update(self, ignore_errors=False, **kwargs):
+        """
+        Update multiple attributes at once using the given keyword arguments.
+
+        Parameters
+        ----------
+        ignore_errors : bool, optional
+            When set to ``True``, it will suppress `AttributeValidationError` and
+            `AttributeError`.  Any given attribute that causes one of these two
+            exceptions will be ignored, all other attributes will be set to the given
+            values.
+
+        Raises
+        ------
+        AttributeValidationError
+            If one or more of the attributes being updated are immutable.
+        AttributeError
+            If one or more of the attributes are not part of this catalog object.
+        DeletedObjectError
+            If this catalog object was deleted.
+        """
+        original_values = dict(self._attributes)
+        original_modified = set(self._modified)
+
+        for (name, val) in iteritems(kwargs):
+            try:
+                # A non-existent attribute will raise an AttributeError
+                attribute_definition = self._get_attribute_type(name)
+
+                # A bad value will raise an AttributeValidationError
+                attribute_definition.__set__(self, val)
+            except (AttributeError, AttributeValidationError):
+                if ignore_errors:
+                    pass
+                else:
+                    self._attributes = original_values
+                    self._modified = original_modified
+                    raise
+
     def serialize(self, modified_only=False, jsonapi_format=False):
         """Serialize the catalog object into json.
 

@@ -2,6 +2,8 @@ import json
 import pytest
 import responses
 from six import assertCountEqual, ensure_str
+from datetime import datetime
+from pytz import utc
 
 from descarteslabs.client.exceptions import NotFoundError
 
@@ -381,3 +383,81 @@ class TestCatalogObject(ClientTestCase):
 
         with pytest.raises(DeletedObjectError):
             instance.reload()
+
+    def test_update(self):
+        c = CatalogObject()
+        assert not c.is_modified
+        assert c.state == DocumentState.UNSAVED
+
+        c.update(owners=["owner"], writers=["writer"], tags=["tag"])
+        assert c.owners == ["owner"]
+        assert c.writers == ["writer"]
+        assert c.readers is None
+        assert c.tags == ["tag"]
+        assert c.is_modified
+
+    def test_update_immutable_attr(self):
+        timestamp = datetime.now(utc)
+        c = CatalogObject(id="id", created=timestamp, _saved=True)
+        assert not c.is_modified
+        assert c.state == DocumentState.SAVED
+
+        with pytest.raises(AttributeValidationError):
+            c.update(owners=["owner"], writers=["writer"], created=["created"])
+
+        assert c.owners is None
+        assert c.writers is None
+        assert c.created == timestamp
+        assert not c.is_modified
+        assert c.state == DocumentState.SAVED
+
+    def test_update_non_attr(self):
+        c = CatalogObject()
+        assert not c.is_modified
+
+        with pytest.raises(AttributeError):
+            c.update(owners=["owner"], writers=["writer"], foo=["bar"])
+
+        assert c.owners is None
+        assert c.writers is None
+        with pytest.raises(AttributeError):
+            c.foo
+        assert not c.is_modified
+
+    def test_update_bad_value(self):
+        c = CatalogObject(id="id")
+        assert c._modified == set(("id",))
+
+        with pytest.raises(AttributeValidationError):
+            c.update(owners=["owner"], writers="writer")
+
+        assert c.id == "id"
+        assert c.owners is None
+        assert c.writers is None
+        assert c._modified == set(("id",))
+
+    def test_update_ignore_errors(self):
+        c = CatalogObject(id="id")
+        assert c._modified == set(("id",))
+
+        c.update(owners=["owner"], writers="writer", ignore_errors=True)
+        assert c.id == "id"
+        assert c.owners == ["owner"]
+        assert c.writers is None
+        assert c._modified == set(("id", "owners"))
+
+    @responses.activate
+    def test_update_deleted_object(self):
+        self.mock_response(
+            responses.DELETE,
+            {
+                "meta": {"message": "Object successfully deleted"},
+                "jsonapi": {"version": "1.0"},
+            },
+        )
+
+        c = Foo(id="id", _saved=True, client=self.client)
+        c.delete()
+
+        with pytest.raises(DeletedObjectError):
+            c.update(owners=["owner"], writers="writer")
