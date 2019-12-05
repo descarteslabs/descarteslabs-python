@@ -9,6 +9,10 @@ Changelog
 =========
 
 ## [Unreleased]
+
+| After January 1st, 2020, all future client library releases will be Python 3 only. For more information, please contact support@descarteslabs.com. For porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html. |
+| --------- |
+
 ### Added
 - Catalog client: Added an `update()` method that allows you to update multiple attributes at once.
 

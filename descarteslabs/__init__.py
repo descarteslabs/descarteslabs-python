@@ -33,6 +33,30 @@ The Descartes Labs Platform simplifies analysis of **global-scale raster data** 
     and `view imagery <https://viewer.descarteslabs.com/>`_, including your data you create
 """
 
+import sys
+import warnings
+
+if sys.version_info.major == 2:
+    with warnings.catch_warnings():
+        warnings.simplefilter("once")
+        warnings.warn(
+            DeprecationWarning(
+                """
+You are using the Descartes Labs Python client library with Python 2.
+After January 1st, 2020, all future client library releases will be Python 3 only.
+For more information, please contact support@descarteslabs.com.
+For porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html."""
+            ),
+            DeprecationWarning,
+            2,
+        )
+else:
+    # By importing cloudpickle here, we avoid a DeprecationWarning
+    import cloudpickle
+
+# Turn on deprecation warnings for all API clients
+warnings.simplefilter("always", DeprecationWarning)
+
 # flake8: noqa
 from .client import exceptions
 from .client import services
@@ -76,6 +100,6 @@ __all__ = [
     "vector",
     "properties",
     "Auth",
-    "exceptions"
+    "exceptions",
 ] + services.__all__
 __author__ = "Descartes Labs"
