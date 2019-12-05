@@ -10,6 +10,7 @@ Changelog
 
 ## [Unreleased]
 ### Added
+- Catalog client: Added an `update()` method that allows you to update multiple attributes at once.
 
 ### Changed
 - Catalog client: Images and Bands no longer reload the Product after calling `save`
