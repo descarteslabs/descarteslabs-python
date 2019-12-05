@@ -260,7 +260,9 @@ class Image(NamedCatalogObject):
         Raises
         ------
         ValueError
-            If any improper arguments are supplied
+            If any improper arguments are supplied.
+        DeletedObjectError
+            If this image was deleted.
 
         Returns
         -------
@@ -363,7 +365,9 @@ class Image(NamedCatalogObject):
         Raises
         ------
         ValueError
-            If any improper arguments are supplied
+            If any improper arguments are supplied.
+        DeletedObjectError
+            If this image was deleted.
 
         Returns
         -------

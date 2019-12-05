@@ -210,6 +210,10 @@ class CatalogObject(AttributeEqualityMixin):
         NotFoundError
             If the object does not exist in the Descartes Labs catalog and
             `ignore_missing` is ``False``.
+        DeletedObjectError
+            If this catalog object was deleted.
+        UnsavedObjectError
+            If this catalog object is being deleted without having been saved.
     """
 
     # The following can be overridden by subclasses to customize behavior:
@@ -394,7 +398,7 @@ class CatalogObject(AttributeEqualityMixin):
 
         Raises
         ------
-        `descarteslabs.catalog.AttributeValidationError`
+        AttributeValidationError
             If the attribute is not serializable.
         """
         attribute_type = cls._get_attribute_type(name)
@@ -648,6 +652,8 @@ class CatalogObject(AttributeEqualityMixin):
         BadRequestError
             If the given ``id`` already exists in the Descartes Labs catalog or
             if attribute values are invalid.
+        DeletedObjectError
+            If this catalog object was deleted.
 
         Example
         -------
@@ -702,6 +708,8 @@ class CatalogObject(AttributeEqualityMixin):
             If the object no longer exists.
         ValueError
             If the catalog object was not in the ``SAVED`` state.
+        DeletedObjectError
+            If this catalog object was deleted.
         """
 
         if self.state != DocumentState.SAVED:

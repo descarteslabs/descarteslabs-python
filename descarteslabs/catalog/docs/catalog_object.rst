@@ -13,7 +13,9 @@ Catalog Objects
   * - :py:class:`descarteslabs.catalog.CatalogClient`
   * - :py:class:`~descarteslabs.catalog.CatalogObject`
   * - :py:class:`~descarteslabs.catalog.NamedCatalogObject`
-  * - :py:class:`~descarteslabs.catalog.AttributeValidationError`
+  * - :py:exc:`~descarteslabs.catalog.AttributeValidationError`
+  * - :py:exc:`~descarteslabs.catalog.DeletedObjectError`
+  * - :py:exc:`~descarteslabs.catalog.UnsavedObjectError`
 
 :nontoc_heading:`Data Types`
 
@@ -43,3 +45,7 @@ Catalog Objects
 .. autoclass:: descarteslabs.catalog.attributes.DocumentState
 
 .. autoclass:: descarteslabs.catalog.AttributeValidationError
+
+.. autoclass:: descarteslabs.catalog.DeletedObjectError
+
+.. autoclass:: descarteslabs.catalog.UnsavedObjectError

@@ -23,7 +23,12 @@ from .band import (
     GenericBand,
     DerivedBand,
 )
-from .catalog_base import CatalogClient, CatalogObject, DeletedObjectError
+from .catalog_base import (
+    CatalogClient,
+    CatalogObject,
+    DeletedObjectError,
+    UnsavedObjectError,
+)
 from .named_catalog_base import NamedCatalogObject
 from .attributes import (
     AttributeValidationError,
@@ -65,4 +70,5 @@ __all__ = [
     "ResolutionUnit",
     "SpectralBand",
     "StorageState",
+    "UnsavedObjectError",
 ]

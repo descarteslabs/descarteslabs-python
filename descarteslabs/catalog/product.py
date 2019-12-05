@@ -96,6 +96,8 @@ class Product(CatalogObject):
         ------
         ConflictError
             If a deletion process is already in progress.
+        DeletedObjectError
+            If this product was deleted.
 
         """
         r = self._client.session.post(
@@ -119,6 +121,10 @@ class Product(CatalogObject):
         -------
         DeletionTaskStatus
 
+        Raises
+        ------
+        DeletedObjectError
+            If this product was deleted.
         """
         r = self._client.session.get(
             "/products/{}/delete_related_objects".format(self.id)
@@ -159,6 +165,8 @@ class Product(CatalogObject):
         ------
         ConflictError
             If an update task is already in progress.
+        DeletedObjectError
+            If this product was deleted.
 
         """
 
@@ -193,6 +201,11 @@ class Product(CatalogObject):
         -------
         UpdatePermissionsTaskStatus
 
+        Raises
+        ------
+        DeletedObjectError
+            If this product was deleted.
+
         Example
         -------
         >>> product = Product.get('product-id')
@@ -218,6 +231,12 @@ class Product(CatalogObject):
         :py:class:`~descarteslabs.catalog.search.Search`
             A :py:class:`~descarteslabs.catalog.search.Search` instance configured to
             find all bands for this product.
+
+        Raises
+        ------
+        DeletedObjectError
+            If this product was deleted.
+
         """
         from .band import Band
 
@@ -236,6 +255,12 @@ class Product(CatalogObject):
         :py:class:`~descarteslabs.catalog.search.Search`
             A :py:class:`~descarteslabs.catalog.search.Search` instance configured to
             find all derived bands for this product.
+
+        Raises
+        ------
+        DeletedObjectError
+            If this product was deleted.
+
         """
         from .search import Search
         from .band import DerivedBand
@@ -256,6 +281,12 @@ class Product(CatalogObject):
         :py:class:`~descarteslabs.catalog.search.Search`
             A :py:class:`~descarteslabs.catalog.search.Search` instance configured to
             find all images in this product.
+
+        Raises
+        ------
+        DeletedObjectError
+            If this product was deleted.
+
         """
         from .image import Image
 
@@ -272,6 +303,12 @@ class Product(CatalogObject):
         :py:class:`~descarteslabs.catalog.search.Search`
             A :py:class:`~descarteslabs.catalog.search.Search` instance configured to
             find all uploads in this product.
+
+        Raises
+        ------
+        DeletedObjectError
+            If this product was deleted.
+
         """
         from .image_upload import ImageUpload
 
