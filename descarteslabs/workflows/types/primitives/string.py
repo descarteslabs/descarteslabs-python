@@ -76,12 +76,6 @@ class Str(Primitive):
     def count(self, sub):
         return Int._from_apply("Str.count", self, sub)
 
-    def decode(self):
-        raise NotImplementedError()
-
-    def encode(self):
-        raise NotImplementedError()
-
     @typecheck_promote(lambda: Str)
     def endswith(self, suffix):
         return Bool._from_apply("Str.endswith", self, suffix)
@@ -96,10 +90,6 @@ class Str(Primitive):
 
     def format(self, *args, **kwargs):
         return self._from_apply("Str.format", self, *args, **kwargs)
-
-    @typecheck_promote(lambda: Str)
-    def index(self, sub):
-        return Int._from_apply("Str.index", self, sub)
 
     def isalnum(self):
         return Bool._from_apply("Str.isalnum", self)
@@ -156,10 +146,6 @@ class Str(Primitive):
     def rfind(self, sub):
         return Int._from_apply("Str.rfind", self, sub)
 
-    @typecheck_promote(lambda: Str)
-    def rindex(self, sub):
-        return Int._from_apply("Str.rindex", self, sub)
-
     @typecheck_promote(Int, fillchar=lambda: Str)
     def rjust(self, width, fillchar=" "):
         return self._from_apply("Str.rjust", self, width, fillchar=fillchar)
@@ -204,9 +190,6 @@ class Str(Primitive):
 
     def title(self):
         return self._from_apply("Str.title", self)
-
-    def translate(self, table):
-        return self._from_apply("Str.translate", self, table)
 
     def upper(self):
         return self._from_apply("Str.upper", self)

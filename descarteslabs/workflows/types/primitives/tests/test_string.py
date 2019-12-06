@@ -62,7 +62,6 @@ def test_length():
         ("expandtabs", Str, []),
         ("find", Int, [""]),
         ("format", Str, [""]),
-        ("index", Int, [""]),
         ("isalnum", Bool, []),
         ("isalpha", Bool, []),
         ("isdigit", Bool, []),
@@ -77,7 +76,6 @@ def test_length():
         ("partition", Tuple[Str, Str, Str], [""]),
         ("replace", Str, ["", ""]),
         ("rfind", Int, [""]),
-        ("rindex", Int, [""]),
         ("rjust", Str, [1]),
         ("rpartition", Tuple[Str, Str, Str], [""]),
         ("rsplit", List[Str], [""]),
@@ -88,7 +86,6 @@ def test_length():
         ("strip", Str, []),
         ("swapcase", Str, []),
         ("title", Str, []),
-        ("translate", Str, [Str("")]),
         ("upper", Str, []),
         ("zfill", Str, [0]),
     ],
@@ -97,13 +94,3 @@ def test_has_methods(method, return_type, args):
     s = Str("")
     out = getattr(s, method)(*args)
     assert isinstance(out, return_type)
-
-
-def test_not_implemented_methods():
-    s = Str("")
-
-    with pytest.raises(NotImplementedError):
-        s.encode()
-
-    with pytest.raises(NotImplementedError):
-        s.decode()
