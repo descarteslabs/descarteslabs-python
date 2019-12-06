@@ -785,7 +785,12 @@ class Image(ImageBase, BandsMixin):
             "scale_values", self, range_min, range_max, domain_min, domain_max
         )
 
-    def replace_empty_with(self, fill, mask=True, bandinfo=None):
+    @typecheck_promote(
+        (lambda: Image, Int, Float),
+        mask=Bool,
+        bandinfo=(NoneType, Dict[Str, Dict[Str, Any]]),
+    )
+    def _replace_empty_with(self, fill, mask=True, bandinfo=None):
         """
         Replace `Image`, if empty, with fill value.
 
@@ -805,17 +810,7 @@ class Image(ImageBase, BandsMixin):
             will be ignored if provided. If ``fill`` is a scalar, the bandinfo will be used to determine
             the number of bands on the new `Image`, as well as become the bandinfo for it.
         """
-        if (
-            not isinstance(fill, int)
-            and not isinstance(fill, float)
-            and not isinstance(fill, Image)
-        ):
-            raise ValueError(
-                "Cannot replace empty Image with {}. Fill must either be an int, float, or Image.".format(
-                    type(fill)
-                )
-            )
-        if (isinstance(fill, int) or isinstance(fill, float)) and bandinfo is None:
+        if isinstance(fill, (Int, Float)) and isinstance(bandinfo, NoneType):
             # filling with scalar requires bandinfo to be provided
             raise ValueError(
                 "To replace empty Image with an int or float, bandinfo must be provided."
