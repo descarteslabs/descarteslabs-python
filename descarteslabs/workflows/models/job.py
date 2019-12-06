@@ -15,7 +15,7 @@ from descarteslabs.common.workflows.arrow_serialization import serialization_con
 
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec
-from ..client import Client
+from ..client import Client, default_grpc_retry_predicate
 from .exceptions import ERRORS, TimeoutError
 from .utils import in_notebook, pb_milliseconds_to_datetime
 from .parameters import parameters_to_grafts
@@ -346,9 +346,11 @@ class Job(object):
             try:
                 next(stream)
 
-            except StopIteration:
-                # TODO(justin) stopiteration will likely be caused by connectivity issues
-                stream = self.watch()
+            except Exception as e:
+                if isinstance(e, StopIteration) or default_grpc_retry_predicate(e):
+                    stream = self.watch()
+                else:
+                    six.reraise(*sys.exc_info())
 
             if show_progress:
                 self._draw_progress_bar(output=progress_bar_io)

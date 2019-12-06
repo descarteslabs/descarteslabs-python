@@ -15,6 +15,7 @@ from descarteslabs.common.retry.retry import _wraps
 
 _RETRYABLE_STATUS_CODES = (
     grpc.StatusCode.UNAVAILABLE,
+    grpc.StatusCode.INTERNAL,
     grpc.StatusCode.RESOURCE_EXHAUSTED,
     grpc.StatusCode.UNKNOWN,
     grpc.StatusCode.DEADLINE_EXCEEDED,
