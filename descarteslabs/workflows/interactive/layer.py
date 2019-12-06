@@ -44,14 +44,12 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     colormap: str, optional, default None
         Name of the colormap to use.
         If set, `image` must have 1 band.
-    cmap_min: float, optional, default None
-        Min value for scaling the single band when a `colormap` is given.
-    cmap_max: float, optional, default None
-        Max value for scaling the single band when a `colormap` is given.
     r_min: float, optional, default None
-        Min value for scaling the red band.
+        Min value for scaling the red band. Along with r_max,
+        controls scaling when a colormap is enabled.
     r_max: float, optional, default None
-        Max value for scaling the red band.
+        Max value for scaling the red band. Along with r_min, controls scaling
+        when a colormap is enabled.
     g_min: float, optional, default None
         Min value for scaling the green band.
     g_max: float, optional, default None
@@ -76,8 +74,6 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
 
     checkerboard = traitlets.Bool(True)
     colormap = traitlets.Unicode(None, allow_none=True)
-    cmap_min = ScaleFloat(None, allow_none=True)
-    cmap_max = ScaleFloat(None, allow_none=True)
 
     r_min = ScaleFloat(None, allow_none=True)
     r_max = ScaleFloat(None, allow_none=True)
@@ -115,7 +111,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             return ""
 
         if self.colormap is not None:
-            scales = [[self.cmap_min, self.cmap_max]]
+            scales = [[self.r_min, self.r_max]]
         else:
             scales = [
                 [self.r_min, self.r_max],
@@ -157,8 +153,6 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         "g_max",
         "b_min",
         "b_max",
-        "cmap_min",
-        "cmap_max",
         "xyz_obj",
         "session_id",
         "parameters",
@@ -263,8 +257,8 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
                     self.b_min = scales[2][0]
                     self.b_max = scales[2][1]
                 else:
-                    self.cmap_min = scales[0][0]
-                    self.cmap_max = scales[0][1]
+                    self.r_min = scales[0][0]
+                    self.r_max = scales[0][1]
                 if new_colormap is not False:
                     self.colormap = new_colormap
         else:
@@ -278,8 +272,8 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
                     self.b_min = None
                     self.b_max = None
                 else:
-                    self.cmap_min = None
-                    self.cmap_max = None
+                    self.r_min = None
+                    self.r_max = None
                 if new_colormap is not False:
                     self.colormap = new_colormap
 

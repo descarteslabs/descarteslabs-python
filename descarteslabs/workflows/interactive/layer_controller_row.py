@@ -195,10 +195,12 @@ class LayerControllerRow(widgets.Box):
         colormap.observe(self._observe_supported_controls, names="value")
         self._widgets["colormap"] = colormap
 
-        cmap_min = CText(placeholder="min", value=layer.cmap_min, layout=scale_width)
-        widgets.link((cmap_min, "value"), (layer, "cmap_min"))
-        cmap_max = CText(placeholder="max", value=layer.cmap_max, layout=scale_width)
-        widgets.link((cmap_max, "value"), (layer, "cmap_max"))
+        # when using a colormap display 'min' and 'max' placeholders but link
+        # to r_min and r_max
+        cmap_min = CText(placeholder="min", value=layer.r_min, layout=scale_width)
+        widgets.link((cmap_min, "value"), (layer, "r_min"))
+        cmap_max = CText(placeholder="max", value=layer.r_max, layout=scale_width)
+        widgets.link((cmap_max, "value"), (layer, "r_max"))
 
         self._widgets["cmap_scales"] = [cmap_min, cmap_max]
 
@@ -289,7 +291,7 @@ class LayerControllerRow(widgets.Box):
             params = {}
 
         try:
-            # clear any existing outputs (e.g. from a failed autoscale)
+            # clear any existing outputs (e.g. from a previous failed autoscale)
             if self.layer.autoscale_progress.outputs:
                 self.layer.autoscale_progress.set_output(())
 
@@ -305,13 +307,10 @@ class LayerControllerRow(widgets.Box):
 
             arr = result.ndarray
 
-            scales_attrs = (
-                [("r_min", "r_max"), ("g_min", "g_max"), ("b_min", "b_max")]
-                if self.layer.colormap is None
-                else [("cmap_min", "cmap_max")]
-            )
+            scales_attrs = [("r_min", "r_max"), ("g_min", "g_max"), ("b_min", "b_max")]
 
             with self.layer.hold_trait_notifications():
+                # for a single-band array, only set r_min and r_max
                 for band, (scale_min, scale_max) in zip(arr, scales_attrs):
                     if isinstance(band, np.ma.MaskedArray):
                         data = band.compressed()  # drop masked data
