@@ -14,6 +14,11 @@ Changelog
 | --------- |
 
 ### Added
+
+### Changed
+
+## [0.28.0] - 2019-12-09
+### Added
 - Catalog client: Added an `update()` method that allows you to update multiple attributes at once.
 
 ### Changed
@@ -33,7 +38,6 @@ Changelog
 - `Image/ImageCollection.count()` is much faster
 - `.buffer()` on vector types now works correctly
 - Calling `.compute()` on a `GeometryCollection` works
-
 
 ## [0.27.0] - 2019-11-18
 ### Added
