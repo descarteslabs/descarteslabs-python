@@ -13,7 +13,6 @@ Changelog
 | After January 1st, 2020, all future client library releases will be Python 3 only. For more information, please contact support@descarteslabs.com. For porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html. |
 | --------- |
 
-## [0.28.0] - 2019-12-09
 ### Added
 
 ### Changed
