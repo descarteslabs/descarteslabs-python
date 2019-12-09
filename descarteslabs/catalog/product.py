@@ -377,9 +377,12 @@ class TaskStatus(object):
     A base class for the status of asynchronous jobs.
     """
 
-    task_name = "task"
     _TERMINAL_STATES = [TaskState.SUCCEEDED, TaskState.FAILED]
     _POLLING_INTERVAL = 60
+
+    # The following 2 attributes must be set correctly in any derived class
+    _task_name = "task"  # The name of the task as shown in __repr__()
+    _url = "{}"  # The url for getting the status of the task with the `id` passed in
 
     def __init__(
         self,
@@ -404,7 +407,7 @@ class TaskStatus(object):
 
     def __repr__(self):
         status = self.status.value if self.status else "UNKNOWN"
-        text = ["{} {} status: {}".format(self.product_id, self.task_name, status)]
+        text = ["{} {} status: {}".format(self.product_id, self._task_name, status)]
         if self.start_datetime:
             text.append("  - started: {}".format(self.start_datetime))
 
@@ -418,9 +421,7 @@ class TaskStatus(object):
         return "\n".join(text)
 
     def reload(self):
-        r = self._client.session.get(
-            "/products/{}/update_related_objects_acls".format(self.product_id)
-        )
+        r = self._client.session.get(self._url.format(self.product_id))
         response = r.json()
         new_values = response["data"]["attributes"]
 
@@ -490,7 +491,8 @@ class DeletionTaskStatus(TaskStatus):
         that were encountered.  In all other states this will not be set.
     """
 
-    task_name = "deletion task"
+    _task_name = "delete task"
+    _url = "/products/{}/delete_related_objects"
 
     def __init__(self, objects_deleted=None, **kwargs):
         super(DeletionTaskStatus, self).__init__(**kwargs)
@@ -534,7 +536,8 @@ class UpdatePermissionsTaskStatus(TaskStatus):
         that were encountered.  In all other states this will not be set.
     """
 
-    task_name = "update permissions task"
+    _task_name = "update permissions task"
+    _url = "/products/{}/update_related_objects_acls"
 
     def __init__(self, objects_updated=None, **kwargs):
         super(UpdatePermissionsTaskStatus, self).__init__(**kwargs)

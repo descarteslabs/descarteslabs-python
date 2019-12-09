@@ -360,7 +360,7 @@ class TestProduct(ClientTestCase):
         assert not hasattr(p, "foobar")
 
     @responses.activate
-    def test_create_product_deletion_task(self):
+    def test_create_product_delete_task(self):
         p = Product(id="p1", name="Test Product", client=self.client)
         self.mock_response(
             responses.POST,
@@ -429,7 +429,7 @@ class TestProduct(ClientTestCase):
 
         status_repr = repr(r)
         match_str = """\
-            p1 deletion task status: SUCCESS
+            p1 delete task status: SUCCESS
               - started: 2019-08-10T00:10:17.528903Z
               - took 0.3676 seconds
               - 2 objects deleted"""
