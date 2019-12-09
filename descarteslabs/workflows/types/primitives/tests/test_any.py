@@ -92,8 +92,8 @@ def test_length():
 
 def test_call():
     any_ = Str("")._cast(Any)
-
-    assert isinstance(any_(), Any)
+    with pytest.raises(TypeError):
+        any_()
 
 
 def test_getters():

@@ -23,7 +23,9 @@ class Any(Proxytype):
             )
 
     def __call__(self, *args, **kwargs):
-        return self._from_apply(self, *args, **kwargs)
+        raise TypeError(
+            "'Any' is not a callable type. Try casting it to the type it should be via `.cast`."
+        )
 
     # Binary comparators
     def __lt__(self, other):
