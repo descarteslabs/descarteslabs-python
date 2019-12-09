@@ -142,7 +142,8 @@ class CatalogObject(AttributeEqualityMixin):
     id : str
         Required, immutable: A unique identifier for this object. Note that if you
         pass a string that does not begin with your Descartes Labs user organization ID,
-        it will be prepended to your id` with a ``:`` as separator.
+        it will be prepended to your `id` with a ``:`` as separator.  If you are not
+        part of an organization, your user ID is used.
         Once set, it cannot be changed.
     created : datetime
         Readonly: The point in time this object was created.

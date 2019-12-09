@@ -9,6 +9,24 @@
 .. !!! If you change the class hierarchy, *make sure* to update the `Inheritance`
   action for all derived classes !!!
 
+.. admonition:: Compatibility Warnings
+
+  Product ID:
+    Instead of your Descartes Labs user ID, the product id is now prepended
+    with your Descartes Labs organization ID if available, otherwise it defaults to your
+    Descartes Labs user ID.  If the prefix is your Descartes Labs organization ID, it means that your product id must be unique within your organization.
+
+  Image and Band Name:
+    The allowed characters are now ``a`` through ``z``, ``A`` through ``Z``, ``0``
+    through ``9``, ``.``, ``_`` and ``-``.  Note that ``:`` is not an allowed
+    character any more.
+
+  Image and Band Owners:
+    The image and band owners will include the owners of the related product.  This
+    means that if you're not the owner of the product (but you are the writer), you
+    can add an image or band and the owners will not only include your Descartes Labs
+    user ID but also the owners of the related product.
+
 .. _catalog_v2_api_reference:
 
 Catalog
