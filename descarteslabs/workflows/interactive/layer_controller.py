@@ -24,6 +24,9 @@ class LayerControllerList(widgets.VBox):
         self._layers_changed({"old": [], "new": map.layers})
         # initialize with the current layers on the map, if any
 
+        self.layout.overflow = "auto"
+        self.layout.max_height = "30rem"
+
     def _layers_changed(self, change):
         new_layers = change["new"]
         controllers = []

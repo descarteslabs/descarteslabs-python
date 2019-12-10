@@ -63,3 +63,5 @@ class PositionController(widgets.HBox):
         widgets.link((map, "max_zoom"), (zoom, "max"))
 
         super(PositionController, self).__init__(children=(lonlat, zoom_label, zoom))
+
+        self.layout.overflow = "initial"

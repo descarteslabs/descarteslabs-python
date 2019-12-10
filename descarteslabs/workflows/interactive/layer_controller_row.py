@@ -240,6 +240,8 @@ class LayerControllerRow(widgets.Box):
 
         super(LayerControllerRow, self).__init__(self._make_children())
 
+        self.layout.overflow = "initial"
+
     def _scale_observer(self, scale):
         def _observer(change):
             try:
