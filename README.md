@@ -17,6 +17,11 @@ Changelog
 
 ### Changed
 
+## [0.28.1] - 2019-12-10
+### Changed
+- Update workflows client channel
+- Workflows map UI is more stable: errors and layers won't fill the screen
+
 ## [0.28.0] - 2019-12-09
 ### Added
 - Catalog client: Added an `update()` method that allows you to update multiple attributes at once.
