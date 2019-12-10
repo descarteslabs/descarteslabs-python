@@ -11,13 +11,16 @@ class ClearableOutput(widgets.HBox):
         self._on_clear = on_clear
         self.output = output
         output.layout.flex = "1 0 auto"
+        output.layout.max_width = "calc(100% - 42px)"
+        output.layout.max_height = "100%"
+        output.layout.overflow = "auto"
 
         output.observe(self._observe_output, names=["outputs"])
 
         clear = widgets.Button(
             description=u"✖︎",
             tooltip="Clear error logs",
-            layout=widgets.Layout(width="initial"),
+            layout=widgets.Layout(width="initial", margin="5px"),
         )
         clear.on_click(self.clear)
 

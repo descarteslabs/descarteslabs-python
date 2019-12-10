@@ -92,7 +92,12 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         with self.hold_trait_notifications():
             self.image = image
             self.set_trait("session_id", uuid.uuid4().hex)
-            self.set_trait("autoscale_progress", ClearableOutput(widgets.Output()))
+            self.set_trait(
+                "autoscale_progress",
+                ClearableOutput(
+                    widgets.Output(), layout=widgets.Layout(max_height="20rem")
+                ),
+            )
             self.set_parameters(**params)
 
         self._error_listener = None

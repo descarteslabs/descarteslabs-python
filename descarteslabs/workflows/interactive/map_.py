@@ -96,7 +96,9 @@ class MapApp(widgets.VBox):
                 except AttributeError:
                     pass
 
-        self.errors = ClearableOutput(map.error_log, on_clear=on_clear)
+        self.errors = ClearableOutput(
+            map.error_log, on_clear=on_clear, layout=widgets.Layout(max_height="20rem")
+        )
 
         self.autoscale_outputs = widgets.VBox(
             [
