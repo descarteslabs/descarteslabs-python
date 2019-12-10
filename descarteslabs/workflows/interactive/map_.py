@@ -97,7 +97,9 @@ class MapApp(widgets.VBox):
                     pass
 
         self.errors = ClearableOutput(
-            map.error_log, on_clear=on_clear, layout=widgets.Layout(max_height="20rem")
+            map.error_log,
+            on_clear=on_clear,
+            layout=widgets.Layout(max_height="20rem", flex="1 0 auto"),
         )
 
         self.autoscale_outputs = widgets.VBox(
@@ -105,7 +107,8 @@ class MapApp(widgets.VBox):
                 x.autoscale_progress
                 for x in reversed(self.map.layers)
                 if isinstance(x, WorkflowsLayer)
-            ]
+            ],
+            layout=widgets.Layout(flex="1 0 auto", max_height="16rem"),
         )
 
         super(MapApp, self).__init__(

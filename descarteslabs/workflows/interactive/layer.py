@@ -95,7 +95,8 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             self.set_trait(
                 "autoscale_progress",
                 ClearableOutput(
-                    widgets.Output(), layout=widgets.Layout(max_height="20rem")
+                    widgets.Output(),
+                    layout=widgets.Layout(max_height="10rem", flex="1 0 auto"),
                 ),
             )
             self.set_parameters(**params)

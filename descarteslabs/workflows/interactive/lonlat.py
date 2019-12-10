@@ -64,4 +64,6 @@ class PositionController(widgets.HBox):
 
         super(PositionController, self).__init__(children=(lonlat, zoom_label, zoom))
 
-        self.layout.overflow = "initial"
+        self.layout.overflow = "hidden"
+        self.layout.flex = "1 0 auto"
+        self.layout.padding = "2px 0"
