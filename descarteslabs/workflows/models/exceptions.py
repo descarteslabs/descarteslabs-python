@@ -30,7 +30,15 @@ class JobOOM(JobComputeError):
     pass
 
 
+class JobAuth(JobComputeError):
+    pass
+
+
 class JobInvalid(JobComputeError):
+    pass
+
+
+class JobInvalidTyping(JobInvalid):
     pass
 
 
@@ -42,14 +50,26 @@ class JobTerminated(JobComputeError):
     pass
 
 
+class JobInterrupt(JobComputeError):
+    pass
+
+
 class TimeoutError(Exception):
     pass
 
 
 ERRORS = {
-    errors_pb2.ERROR_DEADLINE: JobDeadlineExceeded,
-    errors_pb2.ERROR_INVALID: JobInvalid,
-    errors_pb2.ERROR_OOM: JobOOM,
-    errors_pb2.ERROR_TERMINATED: JobTerminated,
+    errors_pb2.ERROR_NONE: None,
     errors_pb2.ERROR_UNKNOWN: JobComputeError,
+    errors_pb2.ERROR_INVALID: JobInvalid,
+    errors_pb2.ERROR_DEADLINE: JobDeadlineExceeded,
+    errors_pb2.ERROR_OOM: JobOOM,
+    errors_pb2.ERROR_INTERRUPT: JobInterrupt,
+    errors_pb2.ERROR_TERMINATED: JobTerminated,
+    errors_pb2.ERROR_AUTH: JobAuth,
+    errors_pb2.ERROR_TYPING: JobInvalidTyping,
 }
+
+
+def error_code_to_exception(error_code):
+    return ERRORS.get(error_code, JobComputeError)

@@ -16,7 +16,7 @@ from descarteslabs.common.workflows.arrow_serialization import serialization_con
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec
 from ..client import Client, default_grpc_retry_predicate
-from .exceptions import ERRORS, TimeoutError
+from .exceptions import error_code_to_exception, TimeoutError
 from .utils import in_notebook, pb_milliseconds_to_datetime
 from .parameters import parameters_to_grafts
 
@@ -300,8 +300,8 @@ class Job(object):
     @property
     def error(self):
         error_code = self._message.error.code
-        # If no errors on the message, then the error code will be 0.
-        return ERRORS[error_code](self) if error_code != 0 else None
+        exc = error_code_to_exception(error_code)
+        return exc(self) if exc is not None else None
 
     def _load_result(self):
         if self._message.status == job_pb2.STATUS_SUCCESS:
