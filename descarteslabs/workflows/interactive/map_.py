@@ -78,6 +78,8 @@ class MapApp(widgets.VBox):
     def __init__(self, map=None, layer_controller_list=None, position_controller=None):
         if map is None:
             map = Map()
+            map.add_control(ipyleaflet.FullScreenControl())
+
         if layer_controller_list is None:
             from .layer_controller import LayerControllerList
 
