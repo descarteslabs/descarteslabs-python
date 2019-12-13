@@ -71,19 +71,19 @@ class Any(Proxytype):
 
     # Reflected bitwise operators
     def __rand__(self, other):
-        return self._from_apply("rand", self, other)
+        return self._from_apply("and", other, self)
 
     def __ror__(self, other):
-        return self._from_apply("ror", self, other)
+        return self._from_apply("or", other, self)
 
     def __rxor__(self, other):
-        return self._from_apply("rxor", self, other)
+        return self._from_apply("xor", other, self)
 
     def __rlshift__(self, other):
-        return self._from_apply("rlshift", self, other)
+        return self._from_apply("lshift", other, self)
 
     def __rrshift__(self, other):
-        return self._from_apply("rrshift", self, other)
+        return self._from_apply("rshift", other, self)
 
     # Arithmetic operators
     def __neg__(self):
@@ -126,33 +126,33 @@ class Any(Proxytype):
 
     # Reflected arithmetic operators
     def __radd__(self, other):
-        return self._from_apply("radd", self, other)
+        return self._from_apply("add", other, self)
 
     def __rsub__(self, other):
-        return self._from_apply("rsub", self, other)
+        return self._from_apply("sub", other, self)
 
     def __rmul__(self, other):
-        return self._from_apply("rmul", self, other)
+        return self._from_apply("mul", other, self)
 
     def __rdiv__(self, other):
-        return self._from_apply("rdiv", self, other)
+        return self._from_apply("div", other, self)
 
     def __rtruediv__(self, other):
-        return self._from_apply("rtruediv", self, other)
+        return self._from_apply("truediv", other, self)
 
     def __rfloordiv__(self, other):
-        return self._from_apply("rfloordiv", self, other)
+        return self._from_apply("floordiv", other, self)
 
     def __rmod__(self, other):
-        return self._from_apply("rmod", self, other)
+        return self._from_apply("mod", other, self)
 
     def __rpow__(self, other):
-        return self._from_apply("rpow", self, other)
+        return self._from_apply("pow", other, self)
 
     def __rdivmod__(self, other):
         from ..containers import Tuple
 
-        return Tuple[Any, Any]._from_apply("rdivmod", self, other)
+        return Tuple[Any, Any]._from_apply("divmod", other, self)
 
     # Mapping operators
     def __getitem__(self, item):

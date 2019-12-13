@@ -680,23 +680,23 @@ class Image(ImageBase, BandsMixin):
     # Reflected bitwise operators
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Bool))
     def __rand__(self, other):
-        return _result_type(other)._from_apply("rand", self, other)
+        return _result_type(other)._from_apply("and", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Bool))
     def __ror__(self, other):
-        return _result_type(other)._from_apply("ror", self, other)
+        return _result_type(other)._from_apply("or", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Bool))
     def __rxor__(self, other):
-        return _result_type(other)._from_apply("rxor", self, other)
+        return _result_type(other)._from_apply("xor", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int))
     def __rlshift__(self, other):
-        return _result_type(other)._from_apply("rlshift", self, other)
+        return _result_type(other)._from_apply("lshift", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int))
     def __rrshift__(self, other):
-        return _result_type(other)._from_apply("rrshift", self, other)
+        return _result_type(other)._from_apply("rshift", other, self)
 
     # Arithmetic operators
     def log(img):
@@ -877,35 +877,35 @@ class Image(ImageBase, BandsMixin):
     # Reflected arithmetic operators
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __radd__(self, other):
-        return _result_type(other)._from_apply("radd", self, other)
+        return _result_type(other)._from_apply("add", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rsub__(self, other):
-        return _result_type(other)._from_apply("rsub", self, other)
+        return _result_type(other)._from_apply("sub", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rmul__(self, other):
-        return _result_type(other)._from_apply("rmul", self, other)
+        return _result_type(other)._from_apply("mul", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rdiv__(self, other):
-        return _result_type(other)._from_apply("rdiv", self, other)
+        return _result_type(other)._from_apply("div", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rtruediv__(self, other):
-        return _result_type(other)._from_apply("rtruediv", self, other)
+        return _result_type(other)._from_apply("truediv", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rfloordiv__(self, other):
-        return _result_type(other)._from_apply("rfloordiv", self, other)
+        return _result_type(other)._from_apply("floordiv", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rmod__(self, other):
-        return _result_type(other)._from_apply("rmod", self, other)
+        return _result_type(other)._from_apply("mod", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rpow__(self, other):
-        return _result_type(other)._from_apply("rpow", self, other)
+        return _result_type(other)._from_apply("pow", other, self)
 
     def tile_layer(
         self, name=None, scales=None, colormap=None, checkerboard=True, **parameters

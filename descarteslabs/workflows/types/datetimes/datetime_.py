@@ -89,6 +89,10 @@ class Datetime(DatetimeStruct):
     def __add__(self, other):
         return self._from_apply("add", self, other)
 
+    @typecheck_promote(Timedelta)
+    def __radd__(self, other):
+        return self._from_apply("add", other, self)
+
     @typecheck_promote(lambda: (Timedelta, Datetime))
     def __sub__(self, other):
         return _binary_op_casts_to(self, other)._from_apply("sub", self, other)

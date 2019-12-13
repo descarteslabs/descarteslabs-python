@@ -97,13 +97,13 @@ class Timedelta(TimedeltaStruct):
 
         @typecheck_promote((Timedelta, Datetime))
         def radd(other):
-            return _binary_op_casts_to(self, other)._from_apply("radd", self, other)
+            return _binary_op_casts_to(self, other)._from_apply("add", other, self)
 
         return radd(other)
 
     @typecheck_promote(lambda: Timedelta)
     def __rsub__(self, other):
-        return self._from_apply("rsub", self, other)
+        return self._from_apply("sub", other, self)
 
     @typecheck_promote(lambda: Timedelta)
     def __sub__(self, other):

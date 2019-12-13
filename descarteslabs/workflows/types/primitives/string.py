@@ -48,9 +48,17 @@ class Str(Primitive):
     def __add__(self, other):
         return self._from_apply("add", self, other)
 
+    @typecheck_promote(lambda: Str)
+    def __radd__(self, other):
+        return self._from_apply("add", other, self)
+
     @typecheck_promote(Int)
     def __mul__(self, other):
         return self._from_apply("mul", self, other)
+
+    @typecheck_promote(Int)
+    def __rmul__(self, other):
+        return self._from_apply("mul", other, self)
 
     def __reversed__(self):
         return self._from_apply("reversed", self)

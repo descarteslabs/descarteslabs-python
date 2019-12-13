@@ -45,12 +45,12 @@ class Bool(Primitive):
 
     @typecheck_promote(lambda: Bool)
     def __rand__(self, other):
-        return self._from_apply("rand", self, other)
+        return self._from_apply("and", other, self)
 
     @typecheck_promote(lambda: Bool)
     def __ror__(self, other):
-        return self._from_apply("ror", self, other)
+        return self._from_apply("or", other, self)
 
     @typecheck_promote(lambda: Bool)
     def __rxor__(self, other):
-        return self._from_apply("rxor", self, other)
+        return self._from_apply("xor", other, self)
