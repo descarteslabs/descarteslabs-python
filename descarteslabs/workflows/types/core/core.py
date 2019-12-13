@@ -411,6 +411,21 @@ class GenericProxytype(Proxytype):
             return obj
         return cls(obj)
 
+    @classmethod
+    def _from_graft(cls, graft):
+        """
+        Create an instance of this class with the given graft dict, circumventing ``__init__``
+
+        To use safely, this class must function correctly if its ``__init__`` method is not called.
+
+        This is used to let your class present a friendly user-facing constructor,
+        but still support copy-constuction or casting when necessary.
+        """
+        assert not is_generic(cls), "Cannot instantiate a generic {}".format(
+            cls.__name__
+        )
+        return super(GenericProxytype, cls)._from_graft(graft)
+
 
 def is_generic(type_):
     """

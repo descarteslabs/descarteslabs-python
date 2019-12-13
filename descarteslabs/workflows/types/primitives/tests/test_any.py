@@ -96,6 +96,17 @@ def test_call():
         any_()
 
 
+def test_cast():
+    any_ = Any(0).cast(Int)
+    assert isinstance(any_, Int)
+
+    any_ = Any((1, 2)).cast(Tuple[Int, Int])
+    assert isinstance(any_, Tuple)
+
+    with pytest.raises(AssertionError, match="Cannot instantiate a generic"):
+        Any((1, 2)).cast(Tuple)
+
+
 def test_getters():
     any_ = Str("")._cast(Any)
 

@@ -27,6 +27,10 @@ class Any(Proxytype):
             "'Any' is not a callable type. Try casting it to the type it should be via `.cast`."
         )
 
+    def cast(self, cls):
+        "Convert this `Any` to another type."
+        return self._cast(cls)
+
     # Binary comparators
     def __lt__(self, other):
         return Bool._from_apply("lt", self, other)
