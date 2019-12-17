@@ -368,7 +368,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         return self._from_apply("ImageCollection.concat_bands", self, other)
 
-    @typecheck_promote(lambda: Tuple[ImageCollection])
+    # @typecheck_promote(lambda: Tuple[ImageCollection])
+    # Once we support checking variadic positional args in typecheck_promote, we can use typecheck_promote instead
     def concat(self, *imgs):
         """
         New `ImageCollection` with ``imgs`` concatenated to this one, where
@@ -386,6 +387,13 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         -------
         concatenated: ImageCollection
         """
+        for img in imgs:
+            if not isinstance(img, ImageCollection):
+                raise TypeError(
+                    "Argument 'imgs' to function concat(): expected ImageCollection objects but got ({})".format(
+                        ", ".join(str(i) for i in imgs)
+                    )
+                )
         return self._from_apply("ImageCollection.concat", self, *imgs)
 
     @typecheck_promote(Int)
