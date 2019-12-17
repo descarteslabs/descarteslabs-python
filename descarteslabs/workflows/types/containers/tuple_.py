@@ -13,16 +13,21 @@ except ImportError:
 @serializable()
 class Tuple(GenericProxytype):
     """
-    Proxy sequence of a fixed number of elements of specific types.
+    ``Tuple[item1_type, item2_type, ...]``: Proxy sequence of a fixed number of elements of specific types.
+    A type must be specified for each item in the tuple.
 
     Can be instantiated from any Python iterable.
 
     Examples
     --------
     >>> from descarteslabs.workflows import Tuple, Int, Float, Str, Bool
-    >>> Tuple[Int, Float]([1, 2.2])
+    >>> Tuple[Int, Float]([1, 2.2]) # 2-tuple of Int and Float
     <descarteslabs.workflows.types.containers.tuple_.Tuple[Int, Float] object at 0x...>
-    >>> Tuple[Str, Tuple[Int, Bool]](["foo", (1, True)])
+    >>> Tuple[Int]([1]) # 1-tuple of Int (NOT a variable length tuple of Ints)
+    <descarteslabs.workflows.types.containers.tuple_.Tuple[Int] object at 0x...>
+    >>> Tuple[Float, Float, Float]([1.1, 2.2, 3.3]) # 3-tuple of Floats
+    <descarteslabs.workflows.types.containers.tuple_.Tuple[Float, Float, Float] object at 0x...>
+    >>> Tuple[Str, Tuple[Int, Bool]](["foo", (1, True)]) # 2-tuple of Str and 2-tuple of Int and Bool
     <descarteslabs.workflows.types.containers.tuple_.Tuple[Str, Tuple[Int, Bool]] object at 0x...>
     """
 

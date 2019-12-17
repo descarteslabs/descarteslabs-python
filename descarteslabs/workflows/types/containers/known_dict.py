@@ -5,8 +5,8 @@ from ..core import GenericProxytype, ProxyTypeError
 @serializable()
 class KnownDict(GenericProxytype):
     """
-    Mapping from specific keys to specific value types,
-    with default type for unknown values.
+    ``KnownDict[<{key: KnownType, ...}>, KeyType, ValueType]``: Proxy mapping from specific keys to specific value
+    types, with default type for unknown values.
 
     Cannot be instantiated directly; meant to be used as an element type
     in a container, or ``._cast`` to.
@@ -14,9 +14,12 @@ class KnownDict(GenericProxytype):
     Examples
     --------
     >>> from descarteslabs.workflows import Float, Bool, Str, Int, Any
-    >>> from descarteslabs.workflows.types.containers import KnownDict
-    >>> kd_type = KnownDict[{'x': Float, 'y': Bool}, Str, Int]
-    >>> kd = Any({'x': 1, 'y': 2.2})._cast(kd_type)
+    >>> from descarteslabs.workflows.types.containers import KnownDict, Tuple
+    >>> kd_type = KnownDict[Str, Int] # same as Dict[Str, Int]: no known keys given
+    >>> kd_type = KnownDict[Str, Tuple[Int, Float]] # known dict of Str to 2-tuple of Int and Float
+    >>> kd_type = KnownDict[{'x': Float, 'y': Bool}, Str, Int] # known dict where 'x' is Float, 'y' is Bool
+    >>> # all other keys are Str, and all other values are Int
+    >>> kd = Any({'x': 1, 'y': 2.2}).cast(kd_type)
     >>> kd['x']  # Float
     <descarteslabs.workflows.types.primitives.number.Float object at 0x...>
     >>> kd['foo']  # Int

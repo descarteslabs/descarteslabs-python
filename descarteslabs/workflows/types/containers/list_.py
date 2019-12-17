@@ -14,16 +14,16 @@ except ImportError:
 @serializable()
 class List(GenericProxytype, CollectionMixin):
     """
-    Proxy sequence of any number of elements, all of the same type.
+    ``List[ValueType]``: Proxy sequence of any number of elements, all of the same type.
 
     Can be instantiated from any Python iterable, or another List of the same type.
 
     Examples
     --------
     >>> from descarteslabs.workflows import List, Str, Int
-    >>> List[Str](["foo", "bar", "baz"])
+    >>> List[Str](["foo", "bar", "baz"]) # list of Strs
     <descarteslabs.workflows.types.containers.list_.List[Str] object at 0x...>
-    >>> List[List[Int]]([[1, 2], [-1], [10, 11, 12]])
+    >>> List[List[Int]]([[1, 2], [-1], [10, 11, 12]]) # list of lists of Ints
     <descarteslabs.workflows.types.containers.list_.List[List[Int]] object at 0x...>
     """
 

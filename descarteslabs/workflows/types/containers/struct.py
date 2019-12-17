@@ -46,7 +46,8 @@ def _property_factory(field, field_cls, doc=None):
 @serializable()
 class Struct(GenericProxytype):
     """
-    Proxy container with named fields of specific types, meant as a helper base class.
+    ``Struct[{field_name: type, ...}]``: Proxy container with named fields of specific types,
+    meant as a helper base class.
 
     Can be instantiated from kwargs.
 
@@ -68,8 +69,8 @@ class Struct(GenericProxytype):
     Examples
     --------
     >>> from descarteslabs.workflows import Struct, Str, Int
-    >>> MyStructType = Struct[{'str_field': Str, 'int_field': Int}]
-    >>> instance = MyStructType(str_field="foo", int_field=1)
+    >>> MyStructType = Struct[{'x': Str, 'y': Int}] # struct where type of 'x' is Str and type of 'y' is Int
+    >>> instance = MyStructType(x="foo", y=1)
 
     As a base class::
 

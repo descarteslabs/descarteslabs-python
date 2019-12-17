@@ -33,7 +33,22 @@ def _promote_arg(value, arg_type, arg_name, func_name):
 
 @serializable()
 class Function(GenericProxytype):
-    # Function[argtype, ..., {kwarg: type, ...}, return_type]
+    """
+    ``Function[arg_type, ..., {kwarg: type, ...}, return_type]``: Proxy function with args, kwargs,
+    and return values of specific types.
+
+    Can be instantiated from any Python callable or string function name.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Bool, Int, Float, Function
+    >>> func_type = Function[Int, {}, Int] # function with Int arg, no kwargs, returning an Int
+    >>> func_type = Function[Int, {'x': Float}, Bool] # function with Int arg, kwarg 'x' of type Float, returning a Bool
+    >>> func_type = Function[{}, Int] # zero-argument function, returning a Int
+    >>> my_func = Function[Int, {}, Int](lambda num: num + 5) # function to add 5 to a number
+    >>> my_func(10) # will result in 15 when computed
+    <descarteslabs.workflows.types.primitives.number.Int object at 0x...>
+    """
 
     def __init__(self, function):
         if self._type_params is None:

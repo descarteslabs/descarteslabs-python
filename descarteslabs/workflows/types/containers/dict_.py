@@ -17,18 +17,18 @@ except ImportError:
 @serializable()
 class Dict(GenericProxytype):
     """
-    Proxy mapping, from keys of a specific type to values of a specific type.
+    ``Dict[KeyType, ValueType]``: Proxy mapping, from keys of a specific type to values of a specific type.
 
     Can be instantiated from a Python mapping and/or keyword arguments.
 
     Examples
     --------
     >>> from descarteslabs.workflows import Dict, List, Str, Int, Float
-    >>> Dict[Str, Int](a=1, b=2)
+    >>> Dict[Str, Int](a=1, b=2) # dict of Str to Int
     <descarteslabs.workflows.types.containers.dict_.Dict[Str, Int] object at 0x...>
-    >>> Dict[Str, Int]({'a': 1, 'b': 2}, b=100, c=3)
+    >>> Dict[Str, Int]({'a': 1, 'b': 2}, b=100, c=3) # dict of Str to Int
     <descarteslabs.workflows.types.containers.dict_.Dict[Str, Int] object at 0x...>
-    >>> Dict[Str, List[Float]](a=[1.1, 2.2], b=[3.3])
+    >>> Dict[Str, List[Float]](a=[1.1, 2.2], b=[3.3]) # dict of Str to List of Floats
     <descarteslabs.workflows.types.containers.dict_.Dict[Str, List[Float]] object at 0x...>
     """
 
