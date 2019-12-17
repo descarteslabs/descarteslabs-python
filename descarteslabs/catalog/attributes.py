@@ -377,6 +377,7 @@ class AttributeMeta(type):
             if hasattr(b, "_reference_attribute_types"):
                 attrs["_reference_attribute_types"].update(b._reference_attribute_types)
 
+        attrs["ATTRIBUTES"] = tuple(attrs["_attribute_types"].keys())
         return super(AttributeMeta, cls).__new__(cls, name, bases, attrs)
 
 
