@@ -130,15 +130,19 @@ class BandsMixin:
         `Image` if ``func`` returns `Image`, otherwise ``Dict[Str, T]``,
         where ``T`` is the return type of ``func``.
         """
+        from .image import Image
+        from .imagecollection import ImageCollection
+
         self_type = type(self)
 
         delayed_func = Function._delay(func, None, Str, self_type)
         result_type = type(delayed_func)
+        func = "map_bands_imagery"
 
-        if result_type is not self_type:
+        if result_type not in (Image, ImageCollection):
             result_type = Dict[Str, result_type]
-
-        return result_type._from_apply("map_bands", self, delayed_func)
+            func = "map_bands"
+        return result_type._from_apply(func, self, delayed_func)
 
 
 class GeometryMixin:

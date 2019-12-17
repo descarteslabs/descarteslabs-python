@@ -109,7 +109,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     def __init__(self, images):
         "Construct an ImageCollection from a sequence of Images"
 
-        self.graft = client.apply_graft("ImageCollection.from_images", images)
+        self.graft = client.apply_graft(
+            "ImageCollection.from_images", images, env.geoctx
+        )
 
     @classmethod
     @typecheck_promote(
@@ -228,6 +230,48 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             *new_positional_names, **new_names
         )
 
+    def map(self, func):
+        """Map a function over the Images in an `ImageCollection`.
+
+        Parameters
+        ----------
+        func : Python callable
+            A function that takes a single `Image` and returns another
+            proxytype.
+
+        Returns
+        -------
+        Proxtype
+            The return type is dependent on the ``func`` and the type of
+            the element returned. For example, calling `map` over an
+            `.ImageCollection` with a function that returns the mean along the pixels axis of a
+            `~.geospatial.Image` will now be a ``List[Dict[Str, Float]]``.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("sentinel-2:L1C")
+        >>> dates = col.map(lambda img: img.properties["date"])
+        >>> type(dates).__name__
+        'List[Datetime]'
+        >>> means = col.map(lambda img: img.mean(axis="pixels"))
+        >>> type(means).__name__
+        'List[Dict[Str, Float]]'
+        >>> mean_col = col.map(lambda img: img.mean(axis="bands"))
+        >>> type(mean_col).__name__
+        'ImageCollection'
+        """
+        delayed_func = Function._delay(func, None, self._element_type)
+
+        result_type = type(delayed_func)
+
+        container_type, func = (
+            (type(self), "map_imagery")
+            if result_type is self._element_type
+            else (List[result_type], "map")
+        )
+        return container_type._from_apply(func, self, delayed_func)
+
     @typecheck_promote(None, back=Int, fwd=Int)
     def map_window(self, func, back=0, fwd=0):
         """
@@ -265,14 +309,12 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         )
         return_type = delayed_func._type_params[-1]
 
-        out_type = (
-            ImageCollection
+        out_type, func = (
+            (ImageCollection, "ImageCollection.map_window_ic")
             if return_type in (Image, ImageCollection)
-            else List[return_type]
+            else (List[return_type], "ImageCollection.map_window")
         )
-        return out_type._from_apply(
-            "ImageCollection.map_window", self, delayed_func, back, fwd
-        )
+        return out_type._from_apply(func, self, delayed_func, back, fwd)
 
     def map_bands(self, func):
         """

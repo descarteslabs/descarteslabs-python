@@ -95,9 +95,11 @@ class ImageCollectionGroupby(GenericProxytype):
 
         if result_type in (ImageCollection, Image):
             out_type = ImageCollection
+            func = "ImageCollectionGroupby.map_ic"
         else:
             out_type = Dict[self.key_type, result_type]
-        return out_type._from_apply("ImageCollectionGroupby.map", self, proxy_func)
+            func = "ImageCollectionGroupby.map"
+        return out_type._from_apply(func, self, proxy_func)
 
     def count(self, axis=None):
         "Apply `.ImageCollection.count` to each group"
