@@ -135,8 +135,8 @@ class Function(GenericProxytype):
     @classmethod
     def from_callable(cls, func, *arg_types):
         # TODO(gabe): use type annotations for great good!
-        func_signature = signature(func)
         if len(arg_types) == 0:
+            func_signature = signature(func)
             arg_types = (Any,) * len(func_signature.parameters)
         result = cls._delay(func, None, *arg_types)
         result_type = type(result)

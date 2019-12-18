@@ -60,3 +60,26 @@ def test_rasterize():
     assert isinstance(
         fc.rasterize("foo", default_value=5, merge_algorithm="replace"), Image
     )
+
+
+def test_sorted():
+    fc = FeatureCollection.from_vector_id("foo")
+
+    def key(feature):
+        assert isinstance(feature, Feature)
+        return feature.properties["foo"]
+
+    sorted_ = fc.sorted(key)
+    assert isinstance(sorted_, FeatureCollection)
+
+
+def test_sorted_bad_args():
+    fc = FeatureCollection.from_vector_id("foo")
+
+    with pytest.raises(TypeError):
+        fc.sorted()
+
+    with pytest.raises(
+        TypeError, match="Sort key function produced non-orderable type Feature"
+    ):
+        fc.sorted(lambda feature: feature)

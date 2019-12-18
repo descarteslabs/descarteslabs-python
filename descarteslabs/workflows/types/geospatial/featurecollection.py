@@ -1,7 +1,7 @@
 from ... import env
 from ...cereal import serializable
 from ..core import typecheck_promote
-from ..primitives import Str, Int, Float
+from ..primitives import Str, Int, Float, Bool
 from ..containers import List, Struct, CollectionMixin
 from .feature import Feature
 
@@ -96,3 +96,24 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
             default_value=default_value,
             merge_algorithm=merge_algorithm,
         )
+
+    @typecheck_promote(None, reverse=Bool)
+    def sorted(self, key, reverse=False):
+        """
+        Copy of this `~.geospatial.FeatureCollection`, sorted by a key function.
+
+        Parameters
+        ----------
+        key: Function
+            Function which takes an `Feature` and returns a value to sort by.
+        reverse: Bool, default False
+            Sorts in ascending order if False (default), descending if True.
+
+        Returns
+        -------
+        sorted: ~.geospatial.FeatureCollection
+        """
+        key = self._make_sort_key(key)
+        return self._from_apply("sorted", self, key, reverse=reverse)
+        # NOTE(gabe): `key` is a required arg for the "sorted" function when given an FeatureCollection,
+        # hence why we don't give it as a kwarg like we do for Collection.sorted

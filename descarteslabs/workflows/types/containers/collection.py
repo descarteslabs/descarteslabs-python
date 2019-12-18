@@ -1,5 +1,5 @@
 from ..function import Function
-from ..primitives import Any, Bool, Int
+from ..primitives import Any, Bool, Int, NoneType
 from ..core import Proxytype, ProxyTypeError, typecheck_promote
 
 
@@ -173,19 +173,44 @@ class CollectionMixin:
 
         Parameters
         ----------
-        key: Function
-            Function which takes an element and returns a value to sort by
+        key: Function, optional, default None
+            Function which takes an element and returns a value to sort by.
+            If not given, sorts by the elements themselves.
         reverse: Bool, default False
             Sorts in ascending order if False (default), descending if True.
         """
-        if key is not None:
-            key = Function._delay(key, None, self._element_type)
-            try:
-                if type(key < key) not in (Any, Bool):
-                    raise TypeError("Comparison did not result in Bool")
-            except TypeError:
-                raise TypeError(
-                    "Key function produced non-orderable type {}".format(type(key))
-                )
+        key = self._make_sort_key(key)
+        return self._from_apply("sorted", self, key=key, reverse=reverse)
 
-        return self._from_apply("sorted", self, key, reverse)
+    def _make_sort_key(self, key):
+        "Delay a Python sort key function, or None, and ensure it produces an orderable type"
+        if key is None or isinstance(key, NoneType):
+            key_result = self._element_type._from_apply("")
+            nonbool_msg = nonorderable_msg = (
+                "{} does not contain orderable items and cannot be sorted directly. "
+                "Please provide a key function.".format(type(self).__name__)
+            )
+        else:
+            key = Function._delay(key, None, self._element_type)
+            # ^ NOTE(gabe): we use `._delay` instead of `from_callable`
+            # to get the object returned by the function, so we can use
+            # comparison operators on it directly. Same graft as a Function,
+            # just a different Python type.
+            key_result = key
+            nonbool_msg = "In sort key: comparing {} did not result in Bool".format(
+                type(key).__name__
+            )
+            nonorderable_msg = "Sort key function produced non-orderable type {}".format(
+                type(key).__name__
+            )
+
+        try:
+            if type(key_result < key_result) not in (Any, Bool):
+                raise TypeError(nonbool_msg)
+        except TypeError:
+            raise TypeError(nonorderable_msg)
+
+        return key
+
+    def __reversed__(self):
+        return self._from_apply("reversed", self)

@@ -91,8 +91,9 @@ def test__initial_reduce_type_value_no_promotion():
         _initial_reduce_type(0, Int)
 
 
-@pytest.mark.parametrize("col", [FeatureCollection([]), List[Int]([0, 1, 2])])
-def test_sorted(col):
+def test_sorted():
+    col = List[Int]([0, 1, 2])
+
     sorted_ = col.sorted()
     assert isinstance(sorted_, type(col))
 
@@ -115,10 +116,14 @@ def test_sorted_any():
 def test_sorted_bad_key():
     col = List[Int]([0, 1, 2])
 
-    with pytest.raises(TypeError, match="Key function produced non-orderable type"):
+    with pytest.raises(
+        TypeError, match=r"Sort key function produced non-orderable type List\[Int\]"
+    ):
         # < operator fails
         col.sorted(key=lambda x: List[Int]([x]))
 
-    with pytest.raises(TypeError, match="Key function produced non-orderable type"):
+    with pytest.raises(
+        TypeError, match="Sort key function produced non-orderable type Image"
+    ):
         # < operator doesn't produce Bool
         col.sorted(key=lambda x: Image.from_id("foo") + x)

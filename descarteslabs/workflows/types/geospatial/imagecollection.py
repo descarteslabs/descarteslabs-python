@@ -231,7 +231,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         )
 
     def map(self, func):
-        """Map a function over the Images in an `ImageCollection`.
+        """
+        Map a function over the Images in an `ImageCollection`.
 
         Parameters
         ----------
@@ -241,11 +242,14 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         Returns
         -------
-        Proxtype
-            The return type is dependent on the ``func`` and the type of
-            the element returned. For example, calling `map` over an
-            `.ImageCollection` with a function that returns the mean along the pixels axis of a
-            `~.geospatial.Image` will now be a ``List[Dict[Str, Float]]``.
+        mapped: ImageCollection or List
+            `ImageCollection` if ``func`` returns `Image`,
+            otherwise ``List[T]``, where ``T`` is the return type of ``func``.
+
+            For example:
+
+            * ``ic.map(lambda img: img + 1)`` returns an `ImageCollection`
+            * ``ic.map(lambda img: img.properties["date"])`` returns a ``List[Datetime]``.
 
         Example
         -------
@@ -271,6 +275,27 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             else (List[result_type], "map")
         )
         return container_type._from_apply(func, self, delayed_func)
+
+    @typecheck_promote(None, reverse=Bool)
+    def sorted(self, key, reverse=False):
+        """
+        Copy of this `ImageCollection`, sorted by a key function.
+
+        Parameters
+        ----------
+        key: Function
+            Function which takes an `Image` and returns a value to sort by.
+        reverse: Bool, default False
+            Sorts in ascending order if False (default), descending if True.
+
+        Returns
+        -------
+        sorted: ImageCollection
+        """
+        key = self._make_sort_key(key)
+        return self._from_apply("sorted", self, key, reverse=reverse)
+        # NOTE(gabe): `key` is a required arg for the "sorted" function when given an ImageCollection,
+        # hence why we don't give it as a kwarg like we do for Collection.sorted
 
     @typecheck_promote(None, back=Int, fwd=Int)
     def map_window(self, func, back=0, fwd=0):
@@ -1013,9 +1038,6 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         return_type = self._stats_return_type(axis)
         axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("count", self, axis)
-
-    def __reversed__(self):
-        return self._from_apply("reversed", self)
 
     @typecheck_promote(Int)
     def __getitem__(self, item):
