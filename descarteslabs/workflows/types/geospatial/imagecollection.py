@@ -1206,7 +1206,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         mask=Bool,
         bandinfo=(NoneType, Dict[Str, Dict[Str, Any]]),
     )
-    def _replace_empty_with(self, fill, mask=True, bandinfo=None):
+    def replace_empty_with(self, fill, mask=True, bandinfo=None):
         """
         Replace `ImageCollection`, if empty, with fill value.
 

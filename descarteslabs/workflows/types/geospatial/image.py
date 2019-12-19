@@ -790,7 +790,7 @@ class Image(ImageBase, BandsMixin):
         mask=Bool,
         bandinfo=(NoneType, Dict[Str, Dict[Str, Any]]),
     )
-    def _replace_empty_with(self, fill, mask=True, bandinfo=None):
+    def replace_empty_with(self, fill, mask=True, bandinfo=None):
         """
         Replace `Image`, if empty, with fill value.
 
