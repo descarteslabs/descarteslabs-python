@@ -15,6 +15,7 @@ from ..product import (
     Product,
     Resolution,
     TaskState,
+    TaskStatus,
     DeletionTaskStatus,
     UpdatePermissionsTaskStatus,
 )
@@ -402,6 +403,10 @@ class TestProduct(ClientTestCase):
         )
         r = p.delete_related_objects()
         assert not r
+
+    def test_abstract_status_class(self):
+        with pytest.raises(TypeError):
+            TaskStatus()
 
     @responses.activate
     def test_get_delete_status(self):

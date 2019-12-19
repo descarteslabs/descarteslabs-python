@@ -48,6 +48,29 @@ def check_deleted(f):
     return wrapper
 
 
+def check_derived(f):
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        if self._url is None:
+            raise TypeError(
+                "This method is only available for a derived class of 'CatalogObject'"
+            )
+        return f(self, *args, **kwargs)
+
+    return wrapper
+
+
+def _new_abstract_class(cls, abstract_cls):
+    if cls is abstract_cls:
+        raise TypeError(
+            "You can only instantiate a derived class of '{}'".format(
+                abstract_cls.__name__
+            )
+        )
+
+    return super(abstract_cls, cls).__new__(cls)
+
+
 class CatalogClient(Service):
     """
     The CatalogClient handles the HTTP communication with the Descartes Labs catalog.
@@ -250,6 +273,9 @@ class CatalogObject(AttributeEqualityMixin):
     writers = ListAttribute(Attribute)
     extra_properties = Attribute()
     tags = ListAttribute(Attribute)
+
+    def __new__(cls, *args, **kwargs):
+        return _new_abstract_class(cls, CatalogObject)
 
     def __init__(self, **kwargs):
         self.delete = self._instance_delete
@@ -614,6 +640,7 @@ class CatalogObject(AttributeEqualityMixin):
         return objects
 
     @classmethod
+    @check_derived
     def exists(cls, id, client=None):
         """Checks if an object exists in the Descartes Labs catalog.
 
@@ -643,6 +670,7 @@ class CatalogObject(AttributeEqualityMixin):
         return r and r.ok
 
     @classmethod
+    @check_derived
     def search(cls, client=None):
         """A search query for all object of the type this class represents.
 
@@ -831,6 +859,7 @@ class CatalogObject(AttributeEqualityMixin):
         return deleted
 
     @classmethod
+    @check_derived
     def _delete_impl(cls, id, ignore_missing, client=None):
         if client is None:
             client = CatalogClient.get_default_client()
@@ -843,6 +872,7 @@ class CatalogObject(AttributeEqualityMixin):
             return False
 
     @classmethod
+    @check_derived
     def _send_data(cls, method, id=None, json=None, client=None):
         client = client or CatalogClient.get_default_client()
         session_method = getattr(client.session, method)

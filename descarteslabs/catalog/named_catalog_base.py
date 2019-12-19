@@ -1,5 +1,5 @@
 from .attributes import Attribute, AttributeValidationError, CatalogObjectReference
-from .catalog_base import CatalogObject
+from .catalog_base import CatalogObject, _new_abstract_class
 from .product import Product
 
 from .attributes import DocumentState  # noqa : F104 -- This is for the documentation
@@ -137,6 +137,9 @@ class NamedCatalogObject(CatalogObject):
     name = NameAttribute()
     product_id = ProductIdAttribute()
     product = CatalogObjectReference(Product, _mutable=False, _sticky=True)
+
+    def __new__(cls, *args, **kwargs):
+        return _new_abstract_class(cls, NamedCatalogObject)
 
     def __init__(self, **kwargs):
         product_id = kwargs.get("product_id")

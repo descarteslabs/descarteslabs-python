@@ -16,10 +16,15 @@ from ..attributes import (
 )
 from ..catalog_base import (
     CatalogClient,
-    CatalogObject,
+    CatalogObject as OriginalCatalogObject,
     DeletedObjectError,
     UnsavedObjectError,
 )
+from ..named_catalog_base import NamedCatalogObject
+
+
+class CatalogObject(OriginalCatalogObject):
+    pass
 
 
 class Foo(CatalogObject):
@@ -29,6 +34,29 @@ class Foo(CatalogObject):
 
 
 class TestCatalogObject(ClientTestCase):
+    def test_abstract_class(self):
+        with pytest.raises(TypeError):
+            OriginalCatalogObject()
+
+        with pytest.raises(TypeError):
+            NamedCatalogObject()
+
+    def test_abstract_class_methods(self):
+        with pytest.raises(TypeError):
+            OriginalCatalogObject.exists("foo")
+
+        with pytest.raises(TypeError):
+            OriginalCatalogObject.search()
+
+        with pytest.raises(TypeError):
+            OriginalCatalogObject.delete("foo")
+
+        with pytest.raises(TypeError):
+            OriginalCatalogObject.get("foo")
+
+        with pytest.raises(TypeError):
+            OriginalCatalogObject.get_many(["foo"])
+
     def test_constructor(self):
         c = CatalogObject(id="id")
         assertCountEqual(

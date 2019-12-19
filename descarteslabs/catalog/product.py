@@ -3,7 +3,12 @@ from enum import Enum
 from concurrent.futures import TimeoutError
 
 from descarteslabs.common.property_filtering import GenericProperties
-from .catalog_base import CatalogObject, CatalogClient, check_deleted
+from .catalog_base import (
+    CatalogObject,
+    CatalogClient,
+    check_deleted,
+    _new_abstract_class,
+)
 from .attributes import Attribute, Resolution, Timestamp, BooleanAttribute
 
 properties = GenericProperties()
@@ -382,6 +387,9 @@ class TaskStatus(object):
     # The following 2 attributes must be set correctly in any derived class
     _task_name = "task"  # The name of the task as shown in __repr__()
     _url = "{}"  # The url for getting the status of the task with the `id` passed in
+
+    def __new__(cls, *args, **kwargs):
+        return _new_abstract_class(cls, TaskStatus)
 
     def __init__(
         self,

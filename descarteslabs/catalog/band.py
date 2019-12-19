@@ -1,7 +1,7 @@
 from enum import Enum
 
 from descarteslabs.common.property_filtering import GenericProperties
-from .catalog_base import CatalogObject
+from .catalog_base import CatalogObject, _new_abstract_class
 from .named_catalog_base import NamedCatalogObject
 from .attributes import Attribute, EnumAttribute, Resolution
 
@@ -231,12 +231,7 @@ class Band(NamedCatalogObject):
     jpx_layer_index = Attribute()
 
     def __new__(cls, *args, **kwargs):
-        if cls is Band:
-            raise TypeError(
-                "Please instantiate one of the derived classes of 'Band' instead"
-            )
-
-        return super(Band, cls).__new__(cls)
+        return _new_abstract_class(cls, Band)
 
     def __init__(self, **kwargs):
         if self._derived_type_switch not in kwargs:
