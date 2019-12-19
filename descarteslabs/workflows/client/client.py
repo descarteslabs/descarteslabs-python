@@ -100,9 +100,7 @@ class Client:
 
         # TODO wrap these functions in retry
         self._api = {
-            "Check": wrap_stub(
-                self._stubs["Health"].Check, default_retry=self._default_retry
-            ),
+            "Check": self._stubs["Health"].Check,
             "CreateWorkflow": wrap_stub(
                 self._stubs["Workflow"].CreateWorkflow,
                 default_retry=self._default_retry,

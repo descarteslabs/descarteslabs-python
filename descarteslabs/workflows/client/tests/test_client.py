@@ -5,7 +5,7 @@ import pytest
 from descarteslabs.common.retry import Retry
 
 from .. import Client
-from ..client import _RETRYABLE_STATUS_CODES, wrap_stub
+from ..client import wrap_stub
 
 
 class FakeRpcError(grpc.RpcError):
@@ -22,17 +22,6 @@ def test_client_health(stub):
     client = Client(auth=mock.Mock())
     assert client.health(timeout=5) == stub.return_value.Check.return_value
     assert stub.return_value.Check.call_args_list[0][1]["timeout"] == 5
-
-
-@mock.patch("descarteslabs.common.proto.health_pb2_grpc.HealthStub")
-def test_client_health_default_retry(stub):
-    stub.return_value.Check.side_effect = [
-        FakeRpcError("", code=_RETRYABLE_STATUS_CODES[0]),
-        True,
-    ]
-    client = Client(auth=mock.Mock())
-    assert client.health() is True
-    assert len(stub.return_value.Check.call_args_list) == 2
 
 
 @mock.patch("descarteslabs.common.proto.health_pb2_grpc.HealthStub")
