@@ -242,6 +242,15 @@ class TestAttributes(unittest.TestCase):
         with pytest.raises(ValueError):
             FakeCatalogObject(id="id", mapping={"nested": {"en": "Four"}})
 
+        # Creation with undefined attribute from server should be fine
+        model_object = FakeCatalogObject(id="id", mapping={"baz": "qux"}, _saved=True)
+        mapping = model_object.mapping
+        assert "baz" not in mapping._attributes
+
+        # Creation with undefined attribute causes exception
+        with pytest.raises(AttributeError):
+            FakeCatalogObject(id="id", mapping={"baz": "qux"})
+
     def test_mapping_equality(self):
         assert Mapping() != Nested()
         assert Mapping() == Mapping()

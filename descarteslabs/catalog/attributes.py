@@ -443,16 +443,15 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
         validate = kwargs.pop("validate", True)
         self._attributes = {}
         for attr_name, value in iteritems(kwargs):
-            try:
-                attr = self.get_attribute_type(attr_name)
-            except KeyError:
+            attr = self._attribute_types.get(attr_name)
+            if attr is not None:
+                attr.__set__(self, value, validate=validate)
+            elif validate:
                 raise AttributeError(
                     "type '{}' has no attribute {}".format(
                         self.__class__.__name__, attr_name
                     )
                 )
-
-            attr.__set__(self, value, validate=validate)
 
     def __repr__(self):
         sections = ["{}:".format(self.__class__.__name__)]
