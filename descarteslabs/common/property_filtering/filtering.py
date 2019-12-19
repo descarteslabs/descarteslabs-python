@@ -18,9 +18,9 @@ class Expression(object):
 
     An expression contains a :py:class:`Property`, a comparison operator, and a value (or set of values):
 
-        | ``property operator value``
+        | ``property`` ``operator`` ``value``
         | or
-        | ``value operator property``
+        | ``value`` ``operator`` ``property``
 
     where the operator can be
 
@@ -33,7 +33,7 @@ class Expression(object):
 
     If the operator is ``<``, ``<=``, ``>`` or ``>=``, you can construct a range using
 
-        ``value operator property operator value``
+        ``value`` ``operator`` ``property`` ``operator`` ``value``
 
     Expressions can be combined using the Boolean operators ``and`` or ``or``,
     but due to language limitations
@@ -43,8 +43,9 @@ class Expression(object):
     In addition there are a couple of method-like operators that can be used on a
     property:
 
-    * like()
-    * any_of() or in_()
+    * :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
+    * :meth:`~descarteslabs.common.property_filtering.filtering.Property.any_of` or
+      :meth:`~descarteslabs.common.property_filtering.filtering.Property.in_`
 
     Example
     -------
@@ -287,6 +288,7 @@ class GenericProperties(object):
     ``<=`` and ``>=`` operators as well as the
     :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
     and :meth:`~descarteslabs.common.property_filtering.filtering.Property.in_`
+    or :meth:`~descarteslabs.common.property_filtering.filtering.Property.any_of`
     method. You cannot use the boolean keywords ``and`` and ``or`` because of
     Python language limitations; instead you can combine filter expressions
     with ``&`` (boolean "and") and ``|`` (boolean "or").

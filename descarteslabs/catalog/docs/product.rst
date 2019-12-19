@@ -1,25 +1,15 @@
 
 .. default-role:: py:obj
 
-.. role:: nontoc_heading
-
 Product
 =======
 
-:nontoc_heading:`Classes`
+.. autosummary::
+  :nosignatures:
 
-.. list-table::
-
-  * - :py:class:`descarteslabs.catalog.Product`
-
-:nontoc_heading:`Data Types`
-
-.. list-table::
-
-  * - :py:class:`~descarteslabs.catalog.product.TaskStatus`
-  * - :py:class:`~descarteslabs.catalog.product.DeletionTaskStatus`
-  * - :py:class:`~descarteslabs.catalog.product.UpdatePermissionsTaskStatus`
-  * - :py:class:`~descarteslabs.catalog.product.TaskState`
+  ~descarteslabs.catalog.Product
+  ~descarteslabs.catalog.DeletionTaskStatus
+  ~descarteslabs.catalog.UpdatePermissionsTaskStatus
 
 -----
 
@@ -31,13 +21,14 @@ Product
   :members:
   :undoc-members:
 
-.. autoclass:: descarteslabs.catalog.product.TaskStatus
+.. autoclass:: descarteslabs.catalog.DeletionTaskStatus
+  :autosummary:
   :members:
+  :inherited-members:
+  :undoc-members:
 
-.. autoclass:: descarteslabs.catalog.product.DeletionTaskStatus
+.. autoclass:: descarteslabs.catalog.UpdatePermissionsTaskStatus
+  :autosummary:
   :members:
-
-.. autoclass:: descarteslabs.catalog.product.UpdatePermissionsTaskStatus
-  :members:
-
-.. autoclass:: descarteslabs.catalog.product.TaskState
+  :inherited-members:
+  :undoc-members:

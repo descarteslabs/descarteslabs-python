@@ -1,26 +1,35 @@
 
 .. default-role:: py:obj
 
-.. role:: nontoc_heading
-
 Search
 ======
 
-:nontoc_heading:`Classes`
+.. autosummary::
+  :nosignatures:
 
-.. list-table::
-
-  * - :py:class:`~descarteslabs.catalog.search.Search`
-  * - :py:class:`~descarteslabs.catalog.search.ImageSearch`
+  ~descarteslabs.catalog.Search
+  ~descarteslabs.catalog.ImageSearch
+  ~descarteslabs.catalog.SummaryResult
+  ~descarteslabs.catalog.properties
 
 -----
 
-.. autoclass:: descarteslabs.catalog.search.Search
+.. autoclass:: descarteslabs.catalog.Search
   :autosummary:
   :members:
   :undoc-members:
 
-.. autoclass:: descarteslabs.catalog.search.ImageSearch
+.. autoclass:: descarteslabs.catalog.ImageSearch
+  :autosummary:
+  :members:
+  :undoc-members:
+
+.. autoclass:: descarteslabs.catalog.SummaryResult
+  :autosummary:
+  :members:
+  :undoc-members:
+
+.. autoclass:: descarteslabs.catalog.properties
   :autosummary:
   :members:
   :undoc-members:

@@ -1,33 +1,19 @@
 
 .. default-role:: py:obj
 
-.. role:: nontoc_heading
-
 Bands
 =====
 
+.. autosummary::
+  :nosignatures:
 
-:nontoc_heading:`Classes`
-
-.. list-table::
-
-  * - :py:class:`descarteslabs.catalog.Band`
-  * - :py:class:`descarteslabs.catalog.SpectralBand`
-  * - :py:class:`descarteslabs.catalog.MicrowaveBand`
-  * - :py:class:`descarteslabs.catalog.MaskBand`
-  * - :py:class:`descarteslabs.catalog.ClassBand`
-  * - :py:class:`descarteslabs.catalog.GenericBand`
-  * - :py:class:`descarteslabs.catalog.DerivedBand`
-
-:nontoc_heading:`Data Types`
-
-.. list-table::
-
-  * - :py:class:`~descarteslabs.catalog.band.DataType`
-  * - :py:class:`~descarteslabs.catalog.band.BandType`
-  * - :py:class:`~descarteslabs.catalog.band.Colormap`
-  * - :py:class:`~descarteslabs.catalog.Resolution`
-  * - :py:class:`~descarteslabs.catalog.ResolutionUnit`
+  ~descarteslabs.catalog.Band
+  ~descarteslabs.catalog.SpectralBand
+  ~descarteslabs.catalog.MicrowaveBand
+  ~descarteslabs.catalog.MaskBand
+  ~descarteslabs.catalog.ClassBand
+  ~descarteslabs.catalog.GenericBand
+  ~descarteslabs.catalog.DerivedBand
 
 -----
 
@@ -52,7 +38,8 @@ Bands
   :undoc-members:
 
 .. autoclass:: descarteslabs.catalog.MaskBand
-  :exclude-members: is_alpha
+  :autosummary:
+  :exclude-members: is_alpha, data_range, display_range
   :members:
   :undoc-members:
 
@@ -74,13 +61,3 @@ Bands
     function_name
   :members:
   :undoc-members:
-
-.. autoclass:: descarteslabs.catalog.band.DataType
-
-.. autoclass:: descarteslabs.catalog.band.BandType
-
-.. autoclass:: descarteslabs.catalog.band.Colormap
-
-.. autoclass:: descarteslabs.catalog.Resolution
-
-.. autoclass:: descarteslabs.catalog.ResolutionUnit

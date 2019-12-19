@@ -249,7 +249,7 @@ class Band(NamedCatalogObject):
         """A search query for all bands.
 
         Returns an instance of the
-        :py:class:`~descarteslabs.catalog.search.Search` class configured for
+        :py:class:`~descarteslabs.catalog.Search` class configured for
         searching bands.  Call this on the :py:class:`Band` base class to search all
         types of bands or classes :py:class:`SpectralBand`, :py:class:`MicrowaveBand`,
         :py:class:`MaskBand`, :py:class:`ClassBand` and :py:class:`GenericBand` to search
@@ -264,8 +264,8 @@ class Band(NamedCatalogObject):
 
         Returns
         -------
-        :py:class:`~descarteslabs.catalog.search.Search`
-            An instance of the :py:class:`~descarteslabs.catalog.search.Search` class
+        :py:class:`~descarteslabs.catalog.Search`
+            An instance of the :py:class:`~descarteslabs.catalog.Search` class
         """
         search = super(Band, cls).search(client)
         if cls._derived_type:

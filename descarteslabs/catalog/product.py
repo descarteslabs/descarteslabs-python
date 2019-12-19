@@ -228,8 +228,8 @@ class Product(CatalogObject):
 
         Returns
         -------
-        :py:class:`~descarteslabs.catalog.search.Search`
-            A :py:class:`~descarteslabs.catalog.search.Search` instance configured to
+        :py:class:`~descarteslabs.catalog.Search`
+            A :py:class:`~descarteslabs.catalog.Search` instance configured to
             find all bands for this product.
 
         Raises
@@ -252,8 +252,8 @@ class Product(CatalogObject):
 
         Returns
         -------
-        :py:class:`~descarteslabs.catalog.search.Search`
-            A :py:class:`~descarteslabs.catalog.search.Search` instance configured to
+        :py:class:`~descarteslabs.catalog.Search`
+            A :py:class:`~descarteslabs.catalog.Search` instance configured to
             find all derived bands for this product.
 
         Raises
@@ -278,8 +278,8 @@ class Product(CatalogObject):
 
         Returns
         -------
-        :py:class:`~descarteslabs.catalog.search.Search`
-            A :py:class:`~descarteslabs.catalog.search.Search` instance configured to
+        :py:class:`~descarteslabs.catalog.Search`
+            A :py:class:`~descarteslabs.catalog.Search` instance configured to
             find all images in this product.
 
         Raises
@@ -300,8 +300,8 @@ class Product(CatalogObject):
 
         Returns
         -------
-        :py:class:`~descarteslabs.catalog.search.Search`
-            A :py:class:`~descarteslabs.catalog.search.Search` instance configured to
+        :py:class:`~descarteslabs.catalog.Search`
+            A :py:class:`~descarteslabs.catalog.Search` instance configured to
             find all uploads in this product.
 
         Raises
@@ -352,8 +352,9 @@ class Product(CatalogObject):
         return "{}{}".format(prefix, id_)
 
 
-class TaskState(Enum):
-    """
+class TaskState(str, Enum):
+    """The state of a task.
+
     Attributes
     ----------
     NEVERRAN : enum
@@ -373,9 +374,7 @@ class TaskState(Enum):
 
 
 class TaskStatus(object):
-    """
-    A base class for the status of asynchronous jobs.
-    """
+    """A base class for the status of asynchronous jobs."""
 
     _TERMINAL_STATES = [TaskState.SUCCEEDED, TaskState.FAILED]
     _POLLING_INTERVAL = 60
@@ -421,6 +420,7 @@ class TaskStatus(object):
         return "\n".join(text)
 
     def reload(self):
+        "Update the task information."
         r = self._client.session.get(self._url.format(self.product_id))
         response = r.json()
         new_values = response["data"]["attributes"]
@@ -465,15 +465,6 @@ class TaskStatus(object):
 class DeletionTaskStatus(TaskStatus):
     """The asynchronous deletion task's status
 
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base class:
-
-    * :py:class:`TaskStatus`
-
-    |
-
     Attributes
     ----------
     product_id : str
@@ -509,15 +500,6 @@ class DeletionTaskStatus(TaskStatus):
 
 class UpdatePermissionsTaskStatus(TaskStatus):
     """The asynchronous task status for updating related objects' access control permissions
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base class:
-
-    * :py:class:`TaskStatus`
-
-    |
 
     Attributes
     ----------

@@ -657,7 +657,7 @@ class CatalogObject(AttributeEqualityMixin):
         Returns
         -------
         Search
-            An instance of the :py:class:`~descarteslabs.catalog.search.Search`
+            An instance of the :py:class:`~descarteslabs.catalog.Search`
             class.
 
         Example
@@ -741,7 +741,7 @@ class CatalogObject(AttributeEqualityMixin):
         Refresh the state of this catalog object from the object in the Descartes Labs
         catalog.  This may be necessary if there are concurrent updates and the object
         in the Descartes Labs catalog was updated from another client.  The instance
-        state must be `~descarteslabs.catalog.attributes.DocumentState.SAVED`.
+        state must be `~descarteslabs.catalog.DocumentState.SAVED`.
 
         Raises
         ------

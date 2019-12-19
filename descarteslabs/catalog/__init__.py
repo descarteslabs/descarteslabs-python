@@ -3,26 +3,29 @@ The Catalog Service provides access to products, bands, and images
 available from Descartes Labs.
 """
 
-from .image import Image, StorageState
-from .product import Product
-from .image_upload import (
-    ImageUpload,
-    ImageUploadType,
-    OverviewResampler,
-    ImageUploadStatus,
-)
+from .product import DeletionTaskStatus, Product, TaskState, UpdatePermissionsTaskStatus
 from .band import (
     Band,
     BandType,
+    ClassBand,
     Colormap,
     DataType,
-    SpectralBand,
-    MicrowaveBand,
-    ClassBand,
-    MaskBand,
-    GenericBand,
     DerivedBand,
+    GenericBand,
+    MaskBand,
+    MicrowaveBand,
+    SpectralBand,
 )
+from .image import Image, StorageState
+from .image_upload import (
+    ImageUpload,
+    ImageUploadOptions,
+    ImageUploadStatus,
+    ImageUploadType,
+    OverviewResampler,
+    UploadError,
+)
+from .search import ImageSearch, Search, SummaryResult
 from .catalog_base import (
     CatalogClient,
     CatalogObject,
@@ -52,12 +55,15 @@ __all__ = [
     "Colormap",
     "DataType",
     "DeletedObjectError",
+    "DeletionTaskStatus",
     "DerivedBand",
     "DocumentState",
     "File",
     "GenericBand",
     "Image",
+    "ImageSearch",
     "ImageUpload",
+    "ImageUploadOptions",
     "ImageUploadStatus",
     "ImageUploadType",
     "MaskBand",
@@ -68,7 +74,12 @@ __all__ = [
     "properties",
     "Resolution",
     "ResolutionUnit",
+    "Search",
     "SpectralBand",
     "StorageState",
+    "SummaryResult",
+    "TaskState",
     "UnsavedObjectError",
+    "UpdatePermissionsTaskStatus",
+    "UploadError",
 ]

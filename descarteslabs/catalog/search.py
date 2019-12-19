@@ -123,7 +123,7 @@ class Search(object):
         Returns
         -------
         Search
-            A new :py:class:`~descarteslabs.catalog.search.Search` instance with the
+            A new :py:class:`~descarteslabs.catalog.Search` instance with the
             new filter(s) applied (using ``and`` if there were existing filters)
 
         Example
@@ -158,9 +158,12 @@ class Search(object):
     def find_text(self, text):
         """Full-text search for a string in the name or description of the item.
 
-        Not all attributes support full-text search; typically `name` and `description`
-        support full-text search, except for bands and images where the name does not
-        support full-text search and only bands have a description.  Successive calls
+        Not all attributes support full-text search; the product name
+        (`Product.name <descarteslabs.catalog.Product.name>`)
+        and product and band description
+        (`Product.description <descarteslabs.catalog.Product.description>`,
+        `Band.description <descarteslabs.catalog.Band.description>`)
+        support full-text search.  Successive calls
         to `find_text` override the previous find_text parameter.
 
         Parameters
@@ -171,7 +174,7 @@ class Search(object):
         Returns
         -------
         Search
-            A new instance of the :py:class:`~descarteslabs.catalog.search.Search`
+            A new instance of the :py:class:`~descarteslabs.catalog.Search`
             class that includes the text query.
         """
         s = copy.deepcopy(self)
@@ -303,7 +306,7 @@ class ImageSearch(Search):
     For inherited parameters, methods, attributes, and properties, please refer to the
     base classes:
 
-    * :py:class:`descarteslabs.catalog.search.Search`
+    * :py:class:`descarteslabs.catalog.Search`
     """
 
     _unsupported_summary_params = ["sort"]
@@ -322,7 +325,7 @@ class ImageSearch(Search):
         Returns
         -------
         Search
-            A new instance of the :py:class:`~descarteslabs.catalog.search.ImageSearch`
+            A new instance of the :py:class:`~descarteslabs.catalog.ImageSearch`
             class that includes geometry filter.
         """
         s = copy.deepcopy(self)

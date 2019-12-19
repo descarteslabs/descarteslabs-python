@@ -71,14 +71,15 @@ class Image(NamedCatalogObject):
     geometry : shapely.geometry.base.BaseGeometry, geojson-like
         Required: Geometry representing the image coverage.
         *Filterable*
-        (use :py:meth:`ImageSearch.intersects`)
+        (use :py:meth:`ImageSearch.intersects
+        <descarteslabs.catalog.ImageSearch.intersects>`)
     cs_code : str
         The coordinate reference system used by the image as an EPSG or ESRI code,
         e.g. ``"EPSG:4326"``. One of `cs_code` and `projection` is required. If
         both are set and disagree, `cs_code` takes precedence.
     projection : str
         The spatial reference system used by the image either as a proj.4 string or
-        a WKT string. One of `cs_dode` and `projection` is required.
+        a WKT string. One of `cs_code` and `projection` is required.
         If both are set and disagree, `cs_code` takes precedence.
     geotrans : `list` of six `float` elements
         GDAL-style `geotransform matrix <https://gdal.org/user/raster_data_model.html#affine-geotransform>`_
@@ -212,11 +213,11 @@ class Image(NamedCatalogObject):
     def search(cls, client=None):
         """A search query for all images.
 
-        Return an `ImageSearch` instance for searching images in the Descartes Labs
-        catalog.  This instance extends the
-        :py:class:`~descarteslabs.catalog.search.Search` class with the
-        :py:meth:`~descarteslabs.catalog.search.ImageSearch.summary` and
-        :py:meth:`~descarteslabs.catalog.search.ImageSearch.summary_interval` methods
+        Return an `~descarteslabs.catalog.ImageSearch` instance for searching
+        images in the Descartes Labs catalog.  This instance extends the
+        :py:class:`~descarteslabs.catalog.Search` class with the
+        :py:meth:`~descarteslabs.catalog.ImageSearch.summary` and
+        :py:meth:`~descarteslabs.catalog.ImageSearch.summary_interval` methods
         which return summary statistics about the images that match the search query.
 
         Parameters
@@ -227,8 +228,8 @@ class Image(NamedCatalogObject):
 
         Returns
         -------
-        :class:`~descarteslabs.catalog.search.ImageSearch`
-            An instance of the `ImageSearch` class
+        :class:`~descarteslabs.catalog.ImageSearch`
+            An instance of the `~descarteslabs.catalog.ImageSearch` class
 
         Example
         -------
@@ -251,10 +252,10 @@ class Image(NamedCatalogObject):
         Parameters
         ----------
         files : str or io.IOBase or list of same
-            File or files to be uploaded. Can be string with path to the file
-            in the local filesystem, or an opened file (``io.IOBase``), or an iterable
-            of either of these when multiple files make up the image.
-        upload_options : :py:class:`ImageUploadOptions`, optional
+            File or files to be uploaded.  Can be string with path to the file in the
+            local filesystem, or an opened file (``io.IOBase``), or an iterable of
+            either of these when multiple files make up the image.
+        upload_options : `~descarteslabs.catalog.ImageUploadOptions`, optional
             Optional control of the upload process.
 
         Raises
@@ -266,9 +267,10 @@ class Image(NamedCatalogObject):
 
         Returns
         -------
-        :py:class:`ImageUpload`
-            An :py:class:`ImageUpload` instance which can be used to check the status or
-            wait on the asynchronous upload process to complete.
+        :py:class:`~descarteslabs.catalog.ImageUpload`
+            An `~descarteslabs.catalog.ImageUpload` instance which can
+            be used to check the status or wait on the asynchronous upload process to
+            complete.
         """
         from .image_upload import ImageUploadType, ImageUploadOptions
 
@@ -324,7 +326,7 @@ class Image(NamedCatalogObject):
     ):
         """Uploads imagery from an ndarray to be ingested as an Image.
 
-        Note that one of the spatial reference attributes (`cs_dode` and
+        Note that one of the spatial reference attributes (`cs_code` and
         `projection`), and/or `geotrans` parameters can be
         specified explicitly in the image, or the `raster_meta` parameter can be
         specified.  Likewise, `overviews` and `overview_resampler` can be
@@ -341,16 +343,15 @@ class Image(NamedCatalogObject):
             also be one of the following:
             [``uint8``, ``int8``, ``uint16``, ``int16``, ``uint32``, ``int32``,
             ``float32``, ``float64``]
-        upload_options : :py:class:`ImageUploadOptions`, optional
+        upload_options : :py:class:`~descarteslabs.catalog.ImageUploadOptions`, optional
             Optional control of the upload process.
         raster_meta : dict, optional
             Metadata returned from the :meth:`Raster.ndarray()
             <descarteslabs.client.services.raster.Raster.ndarray>` request which
             generated the initial data for the `ndarray` being uploaded.  Specifying
-            `image.geotrans` and one of the spatial reference attributes
-            (`image.cs_code` and `image.projection`) is unnecessary
-            in this case, but if either of those fields is set in the `image`
-            parameter then it will take precedence over the value in `raster_meta`.
+            `geotrans` and one of the spatial reference attributes (`cs_code` or
+            `projection`) is unnecessary in this case but will take precedence over
+            the value in `raster_meta`.
         overviews : list(int), optional
             Overview resolution magnification factors e.g.  [2, 4] would make two
             overviews at 2x and 4x the native resolution.  Maximum number of overviews
@@ -371,9 +372,10 @@ class Image(NamedCatalogObject):
 
         Returns
         -------
-        :py:class:`ImageUpload`
-            An :py:class:`ImageUpload` instance which can be used to check the status or
-            wait on the asynchronous upload process to complete.
+        :py:class:`~descarteslabs.catalog.ImageUpload`
+            An `~descarteslabs.catalog.ImageUpload` instance which can
+            be used to check the status or wait on the asynchronous upload process to
+            complete.
         """
         from .image_upload import ImageUploadType, ImageUploadOptions
 
@@ -455,8 +457,8 @@ class Image(NamedCatalogObject):
 
         Returns
         -------
-        :py:class:`~descarteslabs.catalog.search.Search`
-            A :py:class:`~descarteslabs.catalog.search.Search` instance configured to
+        :py:class:`~descarteslabs.catalog.Search`
+            A :py:class:`~descarteslabs.catalog.Search` instance configured to
             find all uploads for this image.
         """
         from .image_upload import ImageUpload

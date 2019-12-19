@@ -1,27 +1,15 @@
 
 .. default-role:: py:obj
 
-.. role:: nontoc_heading
+Base Catalog Objects
+====================
 
-Catalog Objects
-===============
+.. autosummary::
+  :nosignatures:
 
-:nontoc_heading:`Classes`
-
-.. list-table::
-
-  * - :py:class:`descarteslabs.catalog.CatalogClient`
-  * - :py:class:`~descarteslabs.catalog.CatalogObject`
-  * - :py:class:`~descarteslabs.catalog.NamedCatalogObject`
-  * - :py:exc:`~descarteslabs.catalog.AttributeValidationError`
-  * - :py:exc:`~descarteslabs.catalog.DeletedObjectError`
-  * - :py:exc:`~descarteslabs.catalog.UnsavedObjectError`
-
-:nontoc_heading:`Data Types`
-
-.. list-table::
-
-  * - :py:class:`~descarteslabs.catalog.attributes.DocumentState`
+  ~descarteslabs.catalog.CatalogClient
+  ~descarteslabs.catalog.CatalogObject
+  ~descarteslabs.catalog.NamedCatalogObject
 
 -----
 
@@ -41,11 +29,3 @@ Catalog Objects
   :exclude-members: id, name, product, product_id
   :members:
   :undoc-members:
-
-.. autoclass:: descarteslabs.catalog.attributes.DocumentState
-
-.. autoclass:: descarteslabs.catalog.AttributeValidationError
-
-.. autoclass:: descarteslabs.catalog.DeletedObjectError
-
-.. autoclass:: descarteslabs.catalog.UnsavedObjectError

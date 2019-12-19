@@ -1,29 +1,14 @@
 
 .. default-role:: py:obj
 
-.. role:: nontoc_heading
-
 Image
 =====
 
-:nontoc_heading:`Classes`
+.. autosummary::
+  :nosignatures:
 
-.. list-table::
-
-  * - :py:class:`descarteslabs.catalog.Image`
-  * - :py:class:`~descarteslabs.catalog.image_upload.ImageUpload`
-
-:nontoc_heading:`Data Types`
-
-.. list-table::
-
-  * - :py:class:`descarteslabs.catalog.File`
-  * - :py:class:`~descarteslabs.catalog.search.SummaryResult`
-  * - :py:class:`~descarteslabs.catalog.StorageState`
-  * - :py:class:`~descarteslabs.catalog.image_upload.ImageUploadOptions`
-  * - :py:class:`~descarteslabs.catalog.image_upload.ImageUploadType`
-  * - :py:class:`~descarteslabs.catalog.image_upload.OverviewResampler`
-  * - :py:class:`~descarteslabs.catalog.image_upload.ImageUploadStatus`
+  ~descarteslabs.catalog.Image
+  ~descarteslabs.catalog.ImageUpload
 
 -----
 
@@ -38,26 +23,9 @@ Image
   :members:
   :undoc-members:
 
-.. autoclass:: descarteslabs.catalog.search.SummaryResult
-  :autosummary:
-  :members:
-  :undoc-members:
-
-.. autoclass:: descarteslabs.catalog.image_upload.ImageUpload
+.. autoclass:: descarteslabs.catalog.ImageUpload
   :autosummary:
   :exclude-members: end_datetime, errors, events, image, image_upload_options, job_id,
-    product_id, resumable_urls, start_datetime, status
+    product_id, image_id, resumable_urls, start_datetime, status
   :members:
   :undoc-members:
-
-.. autoclass:: descarteslabs.catalog.File
-
-.. autoclass:: descarteslabs.catalog.StorageState
-
-.. autoclass:: descarteslabs.catalog.image_upload.ImageUploadOptions
-
-.. autoclass:: descarteslabs.catalog.image_upload.ImageUploadType
-
-.. autoclass:: descarteslabs.catalog.image_upload.OverviewResampler
-
-.. autoclass:: descarteslabs.catalog.image_upload.ImageUploadStatus
