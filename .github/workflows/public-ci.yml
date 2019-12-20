@@ -1,0 +1,29 @@
+name: CI
+on: [push]
+
+jobs:
+  test:
+    name: ${{ matrix.os }} ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.6', '3.7']
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install CI deps
+        run: |
+          pip install --upgrade pip setuptools wheel
+          pip install shapely -f ${{ secrets.CI_PIP_INDEX_URL }}/simple/shapely/index.html
+      - name: Build wheel
+        run: |
+          pip wheel --no-deps --wheel-dir wheels -e .
+          pip install -e .[complete,tests]
+      - name: Test
+        run: |
+          pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
+      - name: Install check
+        run: pip install .

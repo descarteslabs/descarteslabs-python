@@ -19,6 +19,7 @@ from six import StringIO
 from descarteslabs.client.scripts.cli import parser, handle
 import base64
 import json
+import pytest
 
 
 class TestScripts(unittest.TestCase):
@@ -55,6 +56,7 @@ class TestScripts(unittest.TestCase):
             with open(cls.token_path, "w+") as f:
                 json.dump(cls.old_token, f)
 
+    @pytest.mark.skip("requires creds")
     def test_auth_login(self):
         with mock.patch("descarteslabs.client.auth.cli.input", return_value=self.token):
             handle(parser.parse_args(["auth", "login"]))
@@ -63,6 +65,7 @@ class TestScripts(unittest.TestCase):
             handle(parser.parse_args(["auth", "groups"]))
             assert out.getvalue().strip() == '["public"]'
 
+    @pytest.mark.skip("requires creds")
     def test_places_find(self):
         with mock.patch("sys.stdout", new_callable=StringIO) as out:
             handle(parser.parse_args(["places", "find", "iowa"]))
