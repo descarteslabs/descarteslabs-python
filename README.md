@@ -17,6 +17,11 @@ Changelog
 
 ### Changed
 
+### Workflows - Added
+- `wf.concat` for concatentating `Image` and `ImageCollection` objects
+- `ImageCollection.concat` now accepts `Image` objects
+- Images: `concat` method 
+
 ## [0.28.1] - 2019-12-10
 ### Changed
 - Update workflows client channel

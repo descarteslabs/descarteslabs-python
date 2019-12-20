@@ -12,6 +12,7 @@ from .proxify import proxify
 from .containers import CollectionMixin, Tuple, List, Dict, Struct, zip
 from .datetimes import Datetime, Timedelta
 from .geospatial import (
+    concat,
     Kernel,
     conv2d,
     Feature,
@@ -61,6 +62,7 @@ __all__ = [
     "Datetime",
     "Timedelta",
     # .geospatial
+    "concat",
     "Kernel",
     "conv2d",
     "Feature",

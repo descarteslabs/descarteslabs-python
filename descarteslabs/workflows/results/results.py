@@ -108,9 +108,13 @@ class ImageResult(EqualityMixin):
     def __repr__(self):
         name_header = type(self).__name__ + ":"
 
-        ndarray = "{}<shape={}, dtype={}>".format(
-            type(self.ndarray).__name__, self.ndarray.shape, self.ndarray.dtype
-        )
+        try:
+            ndarray = "{}<shape={}, dtype={}>".format(
+                type(self.ndarray).__name__, self.ndarray.shape, self.ndarray.dtype
+            )
+        except AttributeError:
+            ndarray = "None (Empty Image)"
+
         ndarray_line = "  * ndarray: {}".format(ndarray)
 
         properties_line = "  * properties: {}".format(_join_dict_keys(self.properties))
@@ -160,9 +164,13 @@ class ImageCollectionResult(EqualityMixin):
             type(self).__name__, len(self.properties)
         )
 
-        ndarray = "{}<shape={}, dtype={}>".format(
-            type(self.ndarray).__name__, self.ndarray.shape, self.ndarray.dtype
-        )
+        try:
+            ndarray = "{}<shape={}, dtype={}>".format(
+                type(self.ndarray).__name__, self.ndarray.shape, self.ndarray.dtype
+            )
+        except AttributeError:
+            ndarray = "None (Empty ImageCollection)"
+
         ndarray_line = "  * ndarray: {}".format(ndarray)
 
         properties_line = "  * properties: {} items".format(len(self.properties))

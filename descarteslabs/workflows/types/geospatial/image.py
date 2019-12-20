@@ -200,6 +200,31 @@ class Image(ImageBase, BandsMixin):
         """
         return self._from_apply("Image.concat_bands", self, other_image)
 
+    # @typecheck_promote(lambda: Tuple[ImageCollection])
+    # Once we support checking variadic positional args in typecheck_promote, we can use typecheck_promote instead
+    def concat(self, *imgs):
+        """
+        `ImageCollection` with ``imgs`` concatenated onto this `Image`, where
+        ``imgs`` is a variable number of `Image` or `ImageCollection` objects.
+
+        Images, properties, and bandinfo are concatenated. All imagery
+        must have the same number of bands with identical names. Any empty
+        `Images` or `ImageCollections` will not be concatenated.
+
+        Parameters
+        ----------
+        *imgs: variable number of `Image` or `ImageCollection` objects
+
+        Returns
+        -------
+        concatenated: ImageCollection
+        """
+        from .concat import concat as wf_concat
+
+        if len(imgs) < 1:
+            raise ValueError("Must pass at least one imagery object to Image.concat().")
+        return wf_concat(self, *imgs)
+
     @typecheck_promote(
         (lambda: Image, Geometry, Feature, FeatureCollection), replace=Bool
     )

@@ -397,29 +397,26 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     # Once we support checking variadic positional args in typecheck_promote, we can use typecheck_promote instead
     def concat(self, *imgs):
         """
-        New `ImageCollection` with ``imgs`` concatenated to this one, where
-        ``imgs`` is a variable number of `ImageCollection` objects.
+        `ImageCollection` with ``imgs`` concatenated onto this one, where
+        ``imgs`` is a variable number of `Image` or `ImageCollection` objects.
 
-        Images, properties, and bandinfo are concatenated. All collections
+        Images, properties, and bandinfo are concatenated. All imagery
         must have the same number of bands with identical names. Any empty
-        `ImageCollections` will not be concatenated.
+        `Images` or `ImageCollections` will not be concatenated.
 
         Parameters
         ----------
-        *imgs: variable number of `ImageCollection` objects
+        *imgs: variable number of `Image` or `ImageCollection` objects
 
         Returns
         -------
         concatenated: ImageCollection
         """
-        for img in imgs:
-            if not isinstance(img, ImageCollection):
-                raise TypeError(
-                    "Argument 'imgs' to function concat(): expected ImageCollection objects but got ({})".format(
-                        ", ".join(str(i) for i in imgs)
-                    )
-                )
-        return self._from_apply("ImageCollection.concat", self, *imgs)
+        from .concat import concat as wf_concat
+
+        if len(imgs) < 1:
+            raise ValueError("Must pass at least one imagery object to ImageCollection.concat().")
+        return wf_concat(self, *imgs)
 
     @typecheck_promote(Int)
     def head(self, n):

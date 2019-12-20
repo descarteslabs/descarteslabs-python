@@ -1,3 +1,4 @@
+from .concat import concat
 from .convolution import Kernel, conv2d
 from .feature import Feature
 from .featurecollection import FeatureCollection
@@ -10,6 +11,7 @@ from .load_geojson import load_geojson, load_geojson_file
 from .where import where
 
 __all__ = [
+    "concat",
     "Kernel",
     "conv2d",
     "Feature",

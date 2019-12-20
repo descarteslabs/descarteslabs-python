@@ -30,6 +30,7 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.types.geospatial.load_geojson_file
   ~descarteslabs.workflows.types.geospatial.Kernel
   ~descarteslabs.workflows.types.geospatial.conv2d
+  ~descarteslabs.workflows.types.geospatial.concat
   ~descarteslabs.workflows.types.geospatial.where
 
 :workflow_api_nontoc_heading:`Primitives`

@@ -73,6 +73,7 @@ def test_all_methods():
     assert isinstance(img.pick_bands(["red", "green", "blue"]), Image)
     assert isinstance(img.unpack_bands("red green blue"), tuple)
     assert isinstance(img.unpack_bands(["red", "green", "blue"]), tuple)
+    assert isinstance(img.concat(img), ImageCollection)
     assert isinstance(img.concat_bands(img2), Image)
     assert isinstance(img.clip_values(0.1, 0.5), Image)
     assert isinstance(img.clip_values([0.1, 0.4], [0.5, 0.8]), Image)
