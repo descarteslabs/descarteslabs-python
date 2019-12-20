@@ -684,3 +684,13 @@ class TestAttributes(unittest.TestCase):
         la_copy.append(f_copy)
         assert la == [f]
         assert la_copy == [f, f_copy]
+
+    def test_create_non_attr(self):
+        with pytest.raises(AttributeError):
+            Resolution(value=2, bar="foo")
+
+    def test_set_non_attr(self):
+        r = Resolution()
+
+        with pytest.raises(AttributeError):
+            r.foo = "bad"

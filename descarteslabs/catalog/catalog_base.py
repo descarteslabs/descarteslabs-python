@@ -1,6 +1,7 @@
 import os
 from enum import Enum
 from six import add_metaclass, iteritems, ensure_str, wraps
+from types import MethodType
 import json
 
 from descarteslabs.client.auth import Auth
@@ -378,6 +379,12 @@ class CatalogObject(AttributeEqualityMixin):
             return False
 
         return super(CatalogObject, self).__eq__(other)
+
+    def __setattr__(self, name, value):
+        if not (name.startswith("_") or isinstance(value, MethodType)):
+            # Make sure it's a proper attribute
+            self._get_attribute_type(name)
+        super(CatalogObject, self).__setattr__(name, value)
 
     @property
     def is_modified(self):

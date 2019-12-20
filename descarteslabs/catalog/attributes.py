@@ -443,15 +443,13 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
         validate = kwargs.pop("validate", True)
         self._attributes = {}
         for attr_name, value in iteritems(kwargs):
-            attr = self._attribute_types.get(attr_name)
+            attr = (
+                self.get_attribute_type(attr_name)
+                if validate
+                else self._attribute_types.get(attr_name)
+            )
             if attr is not None:
                 attr.__set__(self, value, validate=validate)
-            elif validate:
-                raise AttributeError(
-                    "type '{}' has no attribute {}".format(
-                        self.__class__.__name__, attr_name
-                    )
-                )
 
     def __repr__(self):
         sections = ["{}:".format(self.__class__.__name__)]
@@ -461,11 +459,22 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
             sections.append("  {}: {}".format(key, val))
         return "\n".join(sections)
 
+    def __setattr__(self, name, value):
+        if not name.startswith("_"):
+            # Make sure it's a proper attribute
+            self.get_attribute_type(name)
+        super(MappingAttribute, self).__setattr__(name, value)
+
     def get_attribute_type(self, name):
         """
         Get the type definition for an attribute by name.
         """
-        return self._attribute_types[name]
+        try:
+            return self._attribute_types[name]
+        except KeyError:
+            raise AttributeError(
+                "{} has no attribute {}".format(self.__class__.__name__, name)
+            )
 
     def _add_model_object(self, model_object, attr_name):
         """
@@ -529,8 +538,8 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
 
     def serialize(self, attrs, jsonapi_format=False):
         """
-        Serialize the provided values to a JSON-serializable dict based on the class definition for this
-        MappingAttribute.
+        Serialize the provided values to a JSON-serializable dict based on the class
+        definition for this MappingAttribute.
         """
         if attrs is None:
             return None

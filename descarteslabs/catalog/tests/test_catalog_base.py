@@ -94,6 +94,16 @@ class TestCatalogObject(ClientTestCase):
         assert c.owners == ["user", "org"]
         assert c.is_modified
 
+    def test_create_non_attr(self):
+        with pytest.raises(AttributeError):
+            CatalogObject(foo="bad")
+
+    def test_set_non_attr(self):
+        c = CatalogObject(id={})
+
+        with pytest.raises(AttributeError):
+            c.foo = "bad"
+
     def test_serialize(self):
         c = CatalogObject(id="id", owners=["user", "org"], readers=["public"])
         assert c.readers == ["public"]
