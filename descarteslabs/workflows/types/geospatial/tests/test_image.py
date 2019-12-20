@@ -65,6 +65,10 @@ def test_all_methods():
     feature = Feature(geometry=geom, properties={})
     fc = FeatureCollection([feature, feature])
 
+    assert isinstance(img.with_properties(foo="bar", baz="qux"), Image)
+    assert isinstance(img.without_properties("foo", "baz"), Image)
+    assert isinstance(img.with_bandinfo("red", foo="bar", baz="qux"), Image)
+    assert isinstance(img.without_bandinfo("red", "foo", "baz"), Image)
     assert isinstance(img.rename_bands("foo", "bar"), Image)
     assert isinstance(img.rename_bands(baz="quiz"), Image)
     assert isinstance(img.rename_bands("foo", "bar"), Image)

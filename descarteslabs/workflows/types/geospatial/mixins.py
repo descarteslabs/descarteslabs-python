@@ -3,6 +3,7 @@ import six
 from ..containers import Dict, List
 from ..core import typecheck_promote
 from ..primitives import Float, Int, Str
+from ..proxify import proxify
 from ..function import Function
 
 try:
@@ -15,6 +16,43 @@ except ImportError:
 class BandsMixin:
     def __init__(self):
         raise TypeError("Please use Image or ImageCollection.")
+
+    def with_bandinfo(self, band, **bandinfo):
+        if not isinstance(band, (Str, six.string_types)):
+            raise TypeError(
+                "Invalid type {!r} for band argument, must be a string.".format(
+                    type(band).__name__
+                )
+            )
+
+        bandinfo_promoted = {}
+        for name, value in six.iteritems(bandinfo):
+            try:
+                bandinfo_promoted[name] = proxify(value)
+            except NotImplementedError as e:
+                raise ValueError(
+                    "Invalid value {!r} for bandinfo field {!r}.\n{}".format(
+                        value, name, str(e)
+                    )
+                )
+        return self._from_apply("with_bandinfo", self, band, **bandinfo_promoted)
+
+    def without_bandinfo(self, band, *bandinfo_keys):
+        if not isinstance(band, (Str, six.string_types)):
+            raise TypeError(
+                "Invalid type {!r} for band argument, must be a string.".format(
+                    type(band).__name__
+                )
+            )
+
+        for bandinfo_key in bandinfo_keys:
+            if not isinstance(bandinfo_key, (Str, six.string_types)):
+                raise TypeError(
+                    "Invalid type {!r} for bandinfo key, must be a string.".format(
+                        type(bandinfo_key).__name__
+                    )
+                )
+        return self._from_apply("without_bandinfo", self, band, *bandinfo_keys)
 
     def pick_bands(self, bands):
         """

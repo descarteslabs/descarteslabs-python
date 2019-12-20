@@ -100,6 +100,8 @@ def test_all_methods_nonstats():
     feature = Feature(geometry=geom, properties={})
     fc = FeatureCollection([feature, feature])
 
+    assert isinstance(col.with_bandinfo("red", foo="bar", baz="qux"), ImageCollection)
+    assert isinstance(col.without_bandinfo("red", "foo", "baz"), ImageCollection)
     assert isinstance(col.rename_bands("foo", "bar"), ImageCollection)
     assert isinstance(col.rename_bands(baz="quiz"), ImageCollection)
     assert isinstance(col.rename_bands("foo", "bar"), ImageCollection)

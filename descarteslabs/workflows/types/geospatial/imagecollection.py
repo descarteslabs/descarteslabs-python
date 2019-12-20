@@ -203,6 +203,39 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             processing_level=processing_level,
         )
 
+    def with_bandinfo(self, band, **bandinfo):
+        """
+        New `ImageCollection`, with the given ``**bandinfo`` fields added to the specified band's `bandinfo`.
+
+        If a given field already exists on the band's `bandinfo`, it will be overwritten.
+
+        Parameters
+        ----------
+        band: Str
+            The name of the band whose bandinfo will be added to.
+        **bandinfo: dict
+            Fields that will be added to the band's bandinfo
+        """
+        return super(ImageCollection, self).with_bandinfo(band, **bandinfo)
+
+    # @typecheck_promote(Str, VarArgs[Str])
+    # Once we support checking variadic positional args in typecheck_promote, we can use
+    # typecheck_promote instead.
+    def without_bandinfo(self, band, *bandinfo_keys):
+        """
+        New `ImageCollection`, with each given ``*bandinfo_keys`` field dropped from the specified band's `bandinfo`.
+
+        If a given field doesn't exists on the band's `bandinfo`, it will be a no-op.
+
+        Parameters
+        ----------
+        band: Str
+            The name of the band whose bandinfo will be pruned.
+        *bandinfo_keys: Str
+            Fields that will be dropped from the band's bandinfo
+        """
+        return super(ImageCollection, self).without_bandinfo(band, *bandinfo_keys)
+
     def pick_bands(self, bands):
         """
         New `ImageCollection`, containing Images with only the given bands.
@@ -415,7 +448,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         from .concat import concat as wf_concat
 
         if len(imgs) < 1:
-            raise ValueError("Must pass at least one imagery object to ImageCollection.concat().")
+            raise ValueError(
+                "Must pass at least one imagery object to ImageCollection.concat()."
+            )
         return wf_concat(self, *imgs)
 
     @typecheck_promote(Int)

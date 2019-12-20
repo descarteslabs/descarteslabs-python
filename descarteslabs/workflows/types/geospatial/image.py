@@ -8,6 +8,7 @@ from ..containers import Dict, KnownDict, Struct, Tuple, List
 from ..core import typecheck_promote, _resolve_lambdas
 from ..datetimes import Datetime
 from ..primitives import Any, Bool, Float, Int, Str, NoneType
+from ..proxify import proxify
 from .feature import Feature
 from .featurecollection import FeatureCollection
 from .geometry import Geometry
@@ -190,6 +191,86 @@ class Image(ImageBase, BandsMixin):
     def from_scene(cls, scene):
         "Create a proxy image from a `~descarteslabs.scenes.scene.Scene` object"
         return cls.from_id(scene.properties["id"])
+
+    def with_properties(self, **properties):
+        """
+        New `Image`, with the given ``**properties`` fields added to the Image's `properties`.
+
+        If a given field already exists on the Image's properties, it will be overwritten.
+
+        Parameters
+        ----------
+        **properties: Proxytype, or any JSON-serializable value
+            Fields that will be added to the image's properties
+        """
+        properties_promoted = {}
+        for name, value in six.iteritems(properties):
+            try:
+                properties_promoted[name] = proxify(value)
+            except NotImplementedError as e:
+                raise ValueError(
+                    "Invalid value {!r} for property {!r}.\n{}".format(
+                        value, name, str(e)
+                    )
+                )
+
+        return self._from_apply("with_properties", self, **properties_promoted)
+
+    # @typecheck_promote(VarArgs[Str])
+    # Once we support checking variadic positional args in typecheck_promote, we can use
+    # typecheck_promote instead.
+    def without_properties(self, *property_keys):
+        """
+        New `Image`, with each given property field name dropped from the Image's `properties` field.
+
+        If a given field doesn't exist on the Image's properties, it will be a no-op.
+
+        Parameters
+        ----------
+        *properties_keys: Str
+            Fields that will be dropped from the image's properties
+        """
+        for property_key in property_keys:
+            if not isinstance(property_key, (Str, six.string_types)):
+                raise TypeError(
+                    "Invalid type {!r} for property key, must be a string.".format(
+                        type(property_key).__name__
+                    )
+                )
+        return self._from_apply("without_properties", self, *property_keys)
+
+    def with_bandinfo(self, band, **bandinfo):
+        """
+        New `Image`, with the given ``**bandinfo`` fields added to the specified band's `bandinfo`.
+
+        If a given field already exists on the band's bandinfo, it will be overwritten.
+
+        Parameters
+        ----------
+        band: Str
+            The name of the band whose bandinfo will be added to.
+        **bandinfo: dict
+            Fields that will be added to the band's bandinfo
+        """
+        return super(Image, self).with_bandinfo(band, **bandinfo)
+
+    # @typecheck_promote(Str, VarArgs[Str])
+    # Once we support checking variadic positional args in typecheck_promote, we can use
+    # typecheck_promote instead.
+    def without_bandinfo(self, band, *bandinfo_keys):
+        """
+        New `Image`, with each given ``*bandinfo_keys`` field dropped from the specified band's `bandinfo`.
+
+        If a given field doesn't exists on the band's `bandinfo`, it will be a no-op.
+
+        Parameters
+        ----------
+        band: Str
+            The name of the band whose bandinfo will be pruned.
+        *bandinfo_keys: Str
+            Fields that will be dropped from the band's bandinfo
+        """
+        return super(Image, self).without_bandinfo(band, *bandinfo_keys)
 
     @typecheck_promote(lambda: Image)
     def concat_bands(self, other_image):
