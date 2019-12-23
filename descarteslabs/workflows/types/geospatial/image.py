@@ -185,6 +185,7 @@ class Image(ImageBase, BandsMixin):
             token=env._token,
             resampler=resampler,
             processing_level=processing_level,
+            ruster=env._ruster,
         )
 
     @classmethod

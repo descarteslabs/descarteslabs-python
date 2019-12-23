@@ -201,6 +201,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             limit=limit,
             resampler=resampler,
             processing_level=processing_level,
+            ruster=env._ruster,
         )
 
     def with_bandinfo(self, band, **bandinfo):
