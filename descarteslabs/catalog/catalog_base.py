@@ -288,6 +288,7 @@ class CatalogObject(AttributeEqualityMixin):
         self._initialize(
             id=kwargs.pop("id", None),
             saved=kwargs.pop("_saved", False),
+            relationships=kwargs.pop("_relationships", None),
             related_objects=kwargs.pop("_related_objects", None),
             **kwargs
         )
@@ -305,7 +306,13 @@ class CatalogObject(AttributeEqualityMixin):
         self._attributes = sticky_attributes
 
     def _initialize(
-        self, id=None, saved=False, related_objects=None, deleted=False, **kwargs
+        self,
+        id=None,
+        saved=False,
+        relationships=None,
+        related_objects=None,
+        deleted=False,
+        **kwargs
     ):
         self._clear_attributes()
         self._saved = saved
@@ -416,10 +423,10 @@ class CatalogObject(AttributeEqualityMixin):
         return klass
 
     @classmethod
-    def _serialize_attribute(cls, name, value):
+    def _serialize_filter_attribute(cls, name, value):
         """Serialize a single value for a filter.
 
-        Allow the given value to be serialzed using the serialization logic
+        Allow the given value to be serialized using the serialization logic
         of the given attribute.  This method should only be used to serialize
         a filter value.
 
@@ -436,10 +443,6 @@ class CatalogObject(AttributeEqualityMixin):
             If the attribute is not serializable.
         """
         attribute_type = cls._get_attribute_type(name)
-        if not attribute_type._serializable:
-            raise AttributeValidationError(
-                "Attribute '{}' cannot be serialized".format(name)
-            )
         if isinstance(attribute_type, ListAttribute):
             attribute_type = attribute_type._item_type
         return attribute_type.serialize(value)
@@ -578,6 +581,7 @@ class CatalogObject(AttributeEqualityMixin):
             id=data["id"],
             client=client,
             _saved=True,
+            _relationships=data.get("relationships"),
             _related_objects=related_objects,
             **data["attributes"]
         )
@@ -638,6 +642,7 @@ class CatalogObject(AttributeEqualityMixin):
                 id=obj["id"],
                 client=client,
                 _saved=True,
+                _relationships=obj.get("relationships"),
                 _related_objects=related_objects,
                 **obj["attributes"]
             )
@@ -765,6 +770,7 @@ class CatalogObject(AttributeEqualityMixin):
         self._initialize(
             id=data["id"],
             saved=True,
+            relationships=data.get("relationships"),
             related_objects=related_objects,
             **data["attributes"]
         )
@@ -811,6 +817,7 @@ class CatalogObject(AttributeEqualityMixin):
         self._initialize(
             id=data["id"],
             saved=True,
+            relationships=data.get("relationships"),
             related_objects=related_objects,
             **data["attributes"]
         )

@@ -262,6 +262,7 @@ class Search(object):
                     id=doc["id"],
                     client=self._client,
                     _saved=True,
+                    _relationships=doc.get("relationships"),
                     _related_objects=related_objects,
                     **doc["attributes"]
                 )
@@ -330,7 +331,7 @@ class ImageSearch(Search):
         """
         s = copy.deepcopy(self)
         s._request_params["intersects"] = json.dumps(
-            self._model_cls._serialize_attribute("geometry", geometry),
+            self._model_cls._serialize_filter_attribute("geometry", geometry),
             separators=(",", ":"),
         )
         return s

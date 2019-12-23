@@ -163,17 +163,6 @@ class TestCatalogObject(ClientTestCase):
                 },
             },
         )
-        self.mock_response(
-            responses.GET,
-            {
-                "jsonapi": {"version": "1.0"},
-                "data": {
-                    "type": Foo._doc_type,
-                    "id": "foo1",
-                    "attributes": {"bar": "baz"},
-                },
-            },
-        )
 
         foo = Foo.get("foo1", client=self.client)
         assert foo is not None

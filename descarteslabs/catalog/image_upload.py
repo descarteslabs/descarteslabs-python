@@ -257,7 +257,13 @@ class ImageUpload(CatalogObject):
                 return
             raise
 
-        self._initialize(id=data["id"], saved=True, **data["attributes"])
+        self._initialize(
+            id=data["id"],
+            saved=True,
+            relationships=data.get("relationships"),
+            related_objects=related_objects,
+            **data["attributes"]
+        )
 
     def wait_for_completion(self, timeout=None):
         """Wait for the upload to complete.

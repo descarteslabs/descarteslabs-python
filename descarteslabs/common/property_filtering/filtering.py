@@ -86,7 +86,7 @@ class Expression(object):
 
 
 # A convention was added to allow for serialization of catalog V2 attributes
-# If a model is given, the model class method `_serialize_attribute` will be
+# If a model is given, the model class method `_serialize_filter_attribute` will be
 # called to retrieve the serialized value of an attribute.
 
 # A second convention was added to allow for Catalog V2 object to be used
@@ -103,7 +103,9 @@ class EqExpression(Expression):
 
     def jsonapi_serialize(self, model=None):
         value = (
-            model._serialize_attribute(self.name, self.value) if model else self.value
+            model._serialize_filter_attribute(self.name, self.value)
+            if model
+            else self.value
         )
         return {"op": "eq", "name": self.name, "val": value}
 
@@ -117,7 +119,9 @@ class NeExpression(Expression):
 
     def jsonapi_serialize(self, model=None):
         value = (
-            model._serialize_attribute(self.name, self.value) if model else self.value
+            model._serialize_filter_attribute(self.name, self.value)
+            if model
+            else self.value
         )
         return {"op": "ne", "name": self.name, "val": value}
 
@@ -135,7 +139,9 @@ class RangeExpression(Expression):
             {
                 "name": self.name,
                 "op": op,
-                "val": model._serialize_attribute(self.name, val) if model else val,
+                "val": model._serialize_filter_attribute(self.name, val)
+                if model
+                else val,
             }
             for (op, val) in self.parts.items()
         ]
