@@ -359,7 +359,7 @@ class CatalogObject(AttributeEqualityMixin):
 
         sections = [
             # Document type and ID
-            "\n{}: {}\n  id: {}".format(self.__class__.__name__, name, self.id)
+            "{}: {}\n  id: {}".format(self.__class__.__name__, name, self.id)
         ]
         # related objects and their ids
         for name in sorted(self._reference_attribute_types):
