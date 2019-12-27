@@ -1,3 +1,4 @@
+import six
 import time
 from enum import Enum
 from concurrent.futures import TimeoutError
@@ -10,6 +11,12 @@ from .catalog_base import (
     _new_abstract_class,
 )
 from .attributes import Attribute, Resolution, Timestamp, BooleanAttribute
+
+try:
+    import collections.abc as abc
+except ImportError:
+    import collections as abc
+
 
 properties = GenericProperties()
 
@@ -94,8 +101,9 @@ class Product(CatalogObject):
         Returns
         -------
         DeletionTaskStatus
-            Returns :py:class`DeletionTaskStatus` if deletion task was successfully started and ``None``
-            if there were no related objects to delete.
+            Returns :py:class`DeletionTaskStatus` if deletion task was successfully
+            started and ``None`` if there were no related objects to delete.
+
 
         Raises
         ------
@@ -150,19 +158,26 @@ class Product(CatalogObject):
 
         Parameters
         ----------
-        owners : list(str)
-        readers : list(str)
-        writers : list(str)
-        inherit: Whether to inherit the values from the product for owners, readers,
-            and/or writers that have not been set in this request.  By default, this
-            value is ``False`` and if an ACL is not set, it is not changed.
-            When set to ``True``, and the ACL is not set, it is inherited from the
-            product.
+        owners : str or iterable(str), optional
+            A single owner or a list of owners; see `~CatalogObject.owners`.
+        readers : str or iterable(str), optional
+            A single reader or a list of readers; see `~CatalogObject.readers`.
+        writers : str or iterable(str), optional
+            A single writer or a list of writers; see `~CatalogObject.writers`.
+        inherit : bool, optional
+            Whether to inherit the values from the product for owners, readers, and/or
+            writers that have not been set in this request.  By default, this value
+            is ``False`` and if a parameter is not set, it will not change the
+            corresponding attribute in the related objects.  When set to ``True``, and
+            a parameter is not set, it is inherited from the product and applied to
+            all related objects.  If `inherit` is ``False``, at least one of the other
+            parameters must be given.  If `inherit` is ``True``, all other parameters
+            are optional.
 
         Returns
         -------
         UpdatePermissionsTaskStatus
-            Returns :py:class`UpdatePermissionsTaskStatus` if update task was
+            Returns :py:class:`UpdatePermissionsTaskStatus` if update task was
             successfully started and ``None`` if there were no related objects
             to update.
 
@@ -174,20 +189,24 @@ class Product(CatalogObject):
             If this product was deleted.
 
         """
+        attributes = {"owners": owners, "readers": readers, "writers": writers}
+        for name, parameter in attributes.items():
+            if parameter is not None:
+                if isinstance(parameter, six.string_types):
+                    attributes[name] = [parameter]
+                elif isinstance(parameter, abc.Iterable) and all(
+                    isinstance(value, six.string_types) for value in parameter
+                ):
+                    attributes[name] = list(parameter)
+                else:
+                    raise TypeError(
+                        "{} must be a string or iterable of strings".format(name)
+                    )
+        attributes["inherit"] = inherit
 
         r = self._client.session.post(
             "/products/{}/update_related_objects_acls".format(self.id),
-            json={
-                "data": {
-                    "type": "product_update_acls",
-                    "attributes": {
-                        "owners": owners,
-                        "readers": readers,
-                        "writers": writers,
-                        "inherit": inherit,
-                    },
-                }
-            },
+            json={"data": {"type": "product_update_acls", "attributes": attributes}},
         )
         if r.status_code == 201:
             response = r.json()

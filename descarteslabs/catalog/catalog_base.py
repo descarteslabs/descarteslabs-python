@@ -234,15 +234,18 @@ class CatalogObject(AttributeEqualityMixin):
         Optional: User, group, or organization IDs that own this object.  Defaults to
         [``user:current_user``, ``org:current_org``]. The owner can edit, delete,
         and change access to this object.
+        See note below.
         *Filterable*.
     readers : list(str)
         Optional: User, group, or organization IDs that can read this object.
         Will be empty by default.
         This attribute is only available to the `owners` of a catalog object.
+        See note below.
     writers : list(str)
         Optional: User, group, or organization IDs that can edit this object (includes
-        read permission).  Will be empty by default.
+        read permission).  Will be empty by default.  See note below.
         This attribute is only available to the `owners` of a catalog object.
+        See note below.
     extra_properties : dict
         Optional: A dictionary of up to 50 key/value pairs where the strings as keys
         and numbers or strings as values. This allows for more structured custom
@@ -254,12 +257,12 @@ class CatalogObject(AttributeEqualityMixin):
 
     Note
     ----
-    All ``owner``, ``reader``, and ``writer`` IDs must be prefixed with ``email:``,
-    ``user:``, ``group:`` or ``org:``.  Using ``org:`` as an ``owner`` will assign
-    those privileges only to administrators for that organization; using ``org:`` as a
-    ``reader`` or ``writer`` assigns those privileges to everyone in that organization.
-    The `readers` and `writers` attributes are only visible to the `owners`, you will
-    not see them otherwise.
+    The ``reader`` and ``writer`` IDs must be prefixed with ``email:``, ``user:``,
+    ``group:`` or ``org:``.  The ``owner`` ID only accepts ``org:`` and ``user:``.
+    Using ``org:`` as an ``owner`` will assign those privileges only to administrators
+    for that organization; using ``org:`` as a ``reader`` or ``writer`` assigns those
+    privileges to everyone in that organization.  The `readers` and `writers` attributes
+    are only visible to the `owners`, you will not see them otherwise.
 
     Methods
     -------

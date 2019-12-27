@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+import re
 import responses
 from datetime import datetime
 import textwrap
@@ -471,6 +472,71 @@ class TestProduct(ClientTestCase):
         assert body["readers"] == ["group:public"]
         assert body["owners"] == ["org:descarteslabs"]
         assert body["writers"] is None
+
+    @responses.activate
+    def test_update_related_acls_using_listattribute(self):
+        p = Product(
+            id="p1",
+            name="Test Product",
+            owners=["user:owner"],
+            readers=["user:reader"],
+            writers=["user:writer"],
+            client=self.client,
+            _saved=True,
+        )
+        self.mock_response(
+            responses.POST,
+            {
+                "data": {
+                    "type": "product_update_acls",
+                    "attributes": {"status": "RUNNING"},
+                    "id": "p1",
+                },
+                "jsonapi": {"version": "1.0"},
+            },
+            status=201,
+        )
+
+        assert type(p.owners) == ListAttribute
+        assert type(p.readers) == ListAttribute
+        p.update_related_objects_permissions(owners=p.owners, readers=p.readers)
+
+    @responses.activate
+    def test_update_related_acls_with_single_value(self):
+        owner = "org:descarteslabs"
+        reader = "group:public"
+
+        def request_callback(request):
+            payload = json.loads(request.body)
+            print(payload)
+            assert payload["data"]["attributes"]["owners"] == [owner]
+            assert payload["data"]["attributes"]["readers"] == [reader]
+
+            headers = {"request-id": "728d329e-0e86-11e4-a748-0c84dc037c13"}
+            return (
+                201,
+                headers,
+                json.dumps(
+                    {
+                        "data": {
+                            "type": "product_update_acls",
+                            "attributes": {"status": "RUNNING"},
+                            "id": "p1",
+                        },
+                        "jsonapi": {"version": "1.0"},
+                    }
+                ),
+            )
+
+        responses.add_callback(
+            responses.POST,
+            re.compile(self.url),
+            callback=request_callback,
+            content_type="application/json",
+        )
+
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
+        p.update_related_objects_permissions(owners=owner, readers=reader)
 
     @responses.activate
     def test_update_acls_task_status(self):

@@ -251,7 +251,7 @@ class Image(NamedCatalogObject):
 
         Parameters
         ----------
-        files : str or io.IOBase or list of same
+        files : str or io.IOBase or iterable of same
             File or files to be uploaded.  Can be string with path to the file in the
             local filesystem, or an opened file (``io.IOBase``), or an iterable of
             either of these when multiple files make up the image.
