@@ -102,7 +102,7 @@ class Service(object):
     # of the single underlying connection pool.
     ADAPTER = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=Service.RETRY_CONFIG))
 
-    def __init__(self, url, token=None, auth=None, retries=None):
+    def __init__(self, url, token=None, auth=None, retries=None, session_class=None):
         if auth is None:
             auth = Auth()
 
@@ -114,13 +114,17 @@ class Service(object):
             auth._token = token
 
         self.auth = auth
-
         self.base_url = url
 
-        if retries is not None:
-            self._adapter = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=retries))
-        else:
+        if retries is None:
             self._adapter = Service.ADAPTER
+        else:
+            self._adapter = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=retries))
+
+        if session_class is None:
+            self._session_class = WrappedSession
+        else:
+            self._session_class = session_class
 
         # Sessions can't be shared across threads or processes because the underlying
         # SSL connection pool can't be shared. We create them thread-local to avoid
@@ -146,7 +150,7 @@ class Service(object):
         return session
 
     def build_session(self):
-        s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
+        s = self._session_class(self.base_url, timeout=self.TIMEOUT)
         adapter = self._adapter.get()
         s.mount("https://", adapter)
         s.mount("http://", adapter)

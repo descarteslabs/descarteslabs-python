@@ -488,3 +488,21 @@ class TestCatalogObject(ClientTestCase):
 
         with pytest.raises(DeletedObjectError):
             c.update(owners=["owner"], writers="writer")
+
+    @responses.activate
+    def test_rewritten_errors(self):
+        title = "Object not found"
+        detail = "Object not found: nerp"
+        self.mock_response(
+            responses.DELETE,
+            {
+                "errors": [{"detail": detail, "status": "404", "title": title}],
+                "jsonapi": {"version": "1.0"},
+            },
+            status=404,
+        )
+
+        c = Foo(id="id", _saved=True, client=self.client)
+        with pytest.raises(NotFoundError) as error:
+            c.delete()
+            assert error.message == "{}: {}".format(title, detail)

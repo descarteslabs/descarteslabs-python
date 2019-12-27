@@ -13,9 +13,9 @@ Base Catalog Objects
 
 -----
 
+.. Don't include undoc members!
 .. autoclass:: descarteslabs.catalog.CatalogClient
   :members:
-  :undoc-members:
 
 .. autoclass:: descarteslabs.catalog.CatalogObject
   :autosummary:
