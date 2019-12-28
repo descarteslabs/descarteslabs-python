@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
-import re
 import responses
 from datetime import datetime
 import textwrap
-import json
 from mock import patch
-from six import ensure_str
 
 from descarteslabs.client.exceptions import BadRequestError, NotFoundError
 from .base import ClientTestCase
@@ -264,7 +261,7 @@ class TestProduct(ClientTestCase):
         assert p1_repr.strip("\n") == textwrap.dedent(match_str)
 
         p1.save()
-        assert json.loads(responses.calls[1].request.body.decode("utf-8")) == {
+        assert self.get_request_body(1) == {
             "data": {
                 "type": "product",
                 "id": "descarteslabs:my-product",
@@ -462,16 +459,16 @@ class TestProduct(ClientTestCase):
             owners=["org:descarteslabs"], readers=["group:public"]
         )
         assert r.status == TaskState.RUNNING
-        req = responses.calls[0].request
+        req = self.get_request(0)
         assert (
             req.url
             == "https://example.com/catalog/v2/products/p1/update_related_objects_acls"
         )
 
-        body = json.loads(ensure_str(req.body))["data"]["attributes"]
-        assert body["readers"] == ["group:public"]
-        assert body["owners"] == ["org:descarteslabs"]
-        assert body["writers"] is None
+        body_attributes = self.get_request_body(0)["data"]["attributes"]
+        assert body_attributes["readers"] == ["group:public"]
+        assert body_attributes["owners"] == ["org:descarteslabs"]
+        assert body_attributes["writers"] is None
 
     @responses.activate
     def test_update_related_acls_using_listattribute(self):
@@ -505,38 +502,24 @@ class TestProduct(ClientTestCase):
     def test_update_related_acls_with_single_value(self):
         owner = "org:descarteslabs"
         reader = "group:public"
-
-        def request_callback(request):
-            payload = json.loads(request.body)
-            print(payload)
-            assert payload["data"]["attributes"]["owners"] == [owner]
-            assert payload["data"]["attributes"]["readers"] == [reader]
-
-            headers = {"request-id": "728d329e-0e86-11e4-a748-0c84dc037c13"}
-            return (
-                201,
-                headers,
-                json.dumps(
-                    {
-                        "data": {
-                            "type": "product_update_acls",
-                            "attributes": {"status": "RUNNING"},
-                            "id": "p1",
-                        },
-                        "jsonapi": {"version": "1.0"},
-                    }
-                ),
-            )
-
-        responses.add_callback(
+        self.mock_response(
             responses.POST,
-            re.compile(self.url),
-            callback=request_callback,
-            content_type="application/json",
+            {
+                "data": {
+                    "type": "product_update_acls",
+                    "attributes": {"status": "RUNNING"},
+                    "id": "p1",
+                },
+                "jsonapi": {"version": "1.0"},
+            },
+            status=201,
         )
 
         p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         p.update_related_objects_permissions(owners=owner, readers=reader)
+        body_attributes = self.get_request_body(0)["data"]["attributes"]
+        assert body_attributes["owners"] == [owner]
+        assert body_attributes["readers"] == [reader]
 
     @responses.activate
     def test_update_acls_task_status(self):

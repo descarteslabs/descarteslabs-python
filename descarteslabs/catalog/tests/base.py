@@ -2,6 +2,8 @@ import re
 import unittest
 
 import responses
+import json
+from six import ensure_str
 
 from descarteslabs.client.auth import Auth
 from ..catalog_base import CatalogClient
@@ -20,3 +22,11 @@ class ClientTestCase(unittest.TestCase):
 
     def mock_response(self, method, json, status=200, **kwargs):
         responses.add(method, self.match_url, json=json, status=status, **kwargs)
+
+    def get_request(self, index):
+        r = responses.calls[index].request
+        r.body = ensure_str(r.body)
+        return r
+
+    def get_request_body(self, index):
+        return json.loads(ensure_str(responses.calls[index].request.body))

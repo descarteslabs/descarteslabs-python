@@ -1,7 +1,6 @@
 import responses
 import json
 import shapely.geometry
-from six import ensure_str
 
 from .base import ClientTestCase
 from .. import properties as p
@@ -102,7 +101,7 @@ class TestSearch(ClientTestCase):
         )
 
         count = self.search.count()
-        assert json.loads(ensure_str(responses.calls[0].request.body)) == {"limit": 0}
+        assert self.get_request_body(0) == {"limit": 0}
         assert count == 1
 
     @responses.activate
@@ -119,7 +118,7 @@ class TestSearch(ClientTestCase):
         )
         count = s.count()
         # limit has no impact for count request
-        assert json.loads(ensure_str(responses.calls[0].request.body)) == {"limit": 0}
+        assert self.get_request_body(0) == {"limit": 0}
         assert count == 1
 
     @responses.activate

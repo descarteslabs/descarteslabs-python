@@ -1,7 +1,6 @@
-import json
 import pytest
 import responses
-from six import assertCountEqual, ensure_str
+from six import assertCountEqual
 from datetime import datetime
 from pytz import utc
 
@@ -259,7 +258,7 @@ class TestCatalogObject(ClientTestCase):
         foo.save(extra_attributes={"foo": "bar"})
         assert foo.state == DocumentState.SAVED
 
-        body = json.loads(ensure_str(responses.calls[0].request.body))
+        body = self.get_request_body(0)
         assert {"bar": "baz", "foo": "bar"} == body["data"]["attributes"]
 
     @responses.activate
@@ -280,7 +279,7 @@ class TestCatalogObject(ClientTestCase):
         foo.save(extra_attributes={"foo": "bar"})
         assert foo.state == DocumentState.SAVED
 
-        body = json.loads(ensure_str(responses.calls[0].request.body))
+        body = self.get_request_body(0)
         assert {"foo": "bar"} == body["data"]["attributes"]
 
     def test_equality(self):

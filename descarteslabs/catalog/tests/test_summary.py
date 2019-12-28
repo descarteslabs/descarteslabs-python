@@ -1,31 +1,24 @@
 import pytest
-import unittest
 import responses
-import re
 import json
 import textwrap
 from datetime import datetime
 from six.moves.urllib.parse import urlparse
-from six import ensure_str
-
-from descarteslabs.client.auth import Auth
 
 from .. import properties as p
-from ..catalog_base import CatalogClient
 from ..image import Image
 from ..product import Product
+
+from .base import ClientTestCase
+
 
 public_token = "header.e30.signature"
 
 
-class TestImageSummary(unittest.TestCase):
+class TestImageSummary(ClientTestCase):
     def setUp(self):
-        self.url = "https://example.com/catalog/v2"
-        self.client = CatalogClient(
-            url=self.url, auth=Auth(jwt_token=public_token, token_info_path=None)
-        )
+        super(TestImageSummary, self).setUp()
         self.search = Image.search(client=self.client)
-        self.match_url = re.compile(self.url)
 
     def mock_response(self, method, json, status=200, **kwargs):
         responses.add(method, self.match_url, json=json, status=status, **kwargs)
@@ -52,7 +45,7 @@ class TestImageSummary(unittest.TestCase):
         summary = s.summary()
         parsed_url = urlparse(responses.calls[0].request.url)
         assert parsed_url.path == "/catalog/v2/images/summary/all"
-        params = json.loads(ensure_str(responses.calls[0].request.body))
+        params = self.get_request_body(0)
 
         assert json.loads(params["filter"]) == [
             {"name": "product_id", "val": "descarteslabs:fake-product", "op": "eq"}
@@ -99,7 +92,7 @@ class TestImageSummary(unittest.TestCase):
         parsed_url = urlparse(responses.calls[0].request.url)
         assert parsed_url.path == "/catalog/v2/images/summary/created/month"
 
-        request_params = json.loads(ensure_str(responses.calls[0].request.body))
+        request_params = self.get_request_body(0)
         assert request_params == {"_start": "2018-01-01T00:00:00", "_end": "2019-01-01"}
 
         assert len(results) == 1
