@@ -11,6 +11,9 @@
 
 .. _catalog_v2_api_reference:
 
+.. The automodule makes it possible to link here using :mod:
+.. automodule:: descarteslabs.catalog
+
 Catalog
 -------
 
