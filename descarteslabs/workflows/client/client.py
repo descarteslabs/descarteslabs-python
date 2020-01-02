@@ -80,8 +80,10 @@ class Client:
     @property
     def certificate(self):
         if self._certificate is None:
-            with open(certifi.where(), "rb") as f:
+            cert_file = os.getenv("SSL_CERT_FILE", certifi.where())
+            with open(cert_file, "rb") as f:
                 self._certificate = f.read()
+
         return self._certificate
 
     @property
