@@ -12,7 +12,10 @@ from .imagecollection import ImageCollection
 def where(condition, x, y):
     """
     Returns an `Image` or `ImageCollection` with values chosen from ``x`` or ``y``
-    depending on ``condition``.
+    depending on ``condition``. The bandnames of the returned imagery will be
+    of the format ``<band name>_where_<condition band name>`` for each band in
+    ``condition``. Depending on the number of bands in ``x`` and ``y``, <band name>
+    can be taken from ``x``, ``y``, ``x_or_y``, or ``condition``.
 
     Parameters
     ----------
