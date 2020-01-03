@@ -3,7 +3,8 @@ from .convolution import Kernel, conv2d
 from .feature import Feature
 from .featurecollection import FeatureCollection
 from .geocontext import GeoContext
-from .geometry import Geometry, GeometryCollection
+from .geometry import Geometry
+from .geometrycollection import GeometryCollection
 from .groupby import ImageCollectionGroupby
 from .image import Image
 from .imagecollection import ImageCollection

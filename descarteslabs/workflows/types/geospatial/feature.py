@@ -12,10 +12,25 @@ FeatureStruct = Struct[{"properties": Dict[Str, Any], "geometry": Geometry}]
 
 @serializable(is_named_concrete_type=True)
 class Feature(FeatureStruct, GeometryMixin):
+    "Proxy Feature representing a `Geometry` and a `Dict` of properties."
+
     _constructor = "Feature.create"
 
     @classmethod
     def from_geojson(cls, geojson):
+        """
+        Construct a Workflows Feature from a GeoJSON mapping.
+
+        Note that the GeoJSON must be relatively small (under 10MiB of serialized JSON).
+
+        Parameters
+        ----------
+        geojson: Dict
+
+        Returns
+        -------
+        ~descarteslabs.workflows.Feature
+        """
         try:
             if geojson["type"].lower() != "feature":
                 raise ValueError(

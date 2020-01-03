@@ -11,10 +11,25 @@ GeometryStruct = Struct[{"type": Str, "coordinates": List[Any]}]
 
 @serializable(is_named_concrete_type=True)
 class Geometry(GeometryStruct, GeometryMixin):
+    "Proxy Geometry representing a geometry's type and coordinates."
+
     _constructor = "Geometry.create"
 
     @classmethod
     def from_geo_interface(cls, obj):
+        """
+        Construct a Workflows Geometry from a __geo_interface__.
+
+        Parameters
+        ----------
+        obj: object with a __geo_interface__ attribute
+            See https://gist.github.com/sgillies/2217756 for information about
+            the ``__geo_interface__`` attribute
+
+        Returns
+        -------
+        ~descarteslabs.workflows.Geometry
+        """
         try:
             geo_interface = obj.__geo_interface__
         except AttributeError:
@@ -28,6 +43,19 @@ class Geometry(GeometryStruct, GeometryMixin):
 
     @classmethod
     def from_geojson(cls, geojson):
+        """
+        Construct a Workflows Geometry from a GeoJSON mapping.
+
+        Note that the GeoJSON must be relatively small (under 10MiB of serialized JSON).
+
+        Parameters
+        ----------
+        geojson: Dict
+
+        Returns
+        -------
+        ~descarteslabs.workflows.Geometry
+        """
         try:
             return cls._from_apply(
                 cls._constructor,
@@ -73,27 +101,3 @@ class Geometry(GeometryStruct, GeometryMixin):
         from .image import Image
 
         return Image._from_apply("rasterize", self, value, env.geoctx)
-
-
-GeometryCollectionStruct = Struct[{"type": Str, "geometries": List[Geometry]}]
-
-
-@serializable(is_named_concrete_type=True)
-class GeometryCollection(GeometryCollectionStruct, Geometry):
-    _constructor = "GeometryCollection.create"
-
-    @classmethod
-    def from_geojson(cls, geojson):
-        try:
-            return cls._from_apply(
-                cls._constructor, type=geojson["type"], geometries=geojson["geometries"]
-            )
-        except KeyError:
-            raise ValueError(
-                "Expected a GeoJSON mapping containing the fields 'type' and 'geometries', "
-                "but got {}".format(geojson)
-            )
-
-    @typecheck_promote((Int, Float))
-    def buffer(self, distance):
-        return Geometry._from_apply("buffer", self, distance)

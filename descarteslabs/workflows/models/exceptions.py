@@ -2,6 +2,8 @@ from descarteslabs.common.proto import errors_pb2
 
 
 class JobComputeError(Exception):
+    "Generic error raised when a job computation fails."
+
     def __init__(self, job):
         self._id = job.id
         self._code = errors_pb2.ErrorCode.Name(job._message.error.code)
@@ -27,34 +29,42 @@ class JobComputeError(Exception):
 
 
 class JobOOM(JobComputeError):
+    "Raised when a job computation runs out of memory."
     pass
 
 
 class JobAuth(JobComputeError):
+    "Raised when a job computation fails due to invalid authentication."
     pass
 
 
 class JobInvalid(JobComputeError):
+    "Raised when a job computation is invalid."
     pass
 
 
 class JobInvalidTyping(JobInvalid):
+    "Raised when a job computation fails due to an operation being applied to an inappropriate type."
     pass
 
 
 class JobDeadlineExceeded(JobComputeError):
+    "Raised when a job takes too long to compute (currently 30 mins)."
     pass
 
 
 class JobTerminated(JobComputeError):
+    "Raised when a job computation is terminated before finishing."
     pass
 
 
 class JobInterrupt(JobComputeError):
+    "Raised when a job computation is interrupted before finishing."
     pass
 
 
 class TimeoutError(Exception):
+    "Raised when a computation took longer to complete than a specified timeout."
     pass
 
 

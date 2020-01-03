@@ -26,6 +26,16 @@ GeoContextBase = Struct[
 
 @serializable(is_named_concrete_type=True)
 class GeoContext(GeoContextBase):
+    """
+    Proxy `.scenes.geocontext.GeoContext` containing the spatial parameters (AOI, resolution, etc.)
+    to use when loading geospatial data. Equivalent to a `.scenes.geocontext.AOI`,
+    with the additional read-only properties ``arr_shape``, ``gdal_geotrans``, and ``projected_bounds``.
+
+    Note: You don't often need to construct a Workflows GeoContext yourself. When you call compute(),
+    you can pass in any `.scenes.geocontext.GeoContext`, or use
+    `wf.map.geocontext() <.interactive.Map.geocontext>` for the current map viewport.
+    """
+
     _constructor = "GeoContext.create"
     _optional = {
         "geometry",
@@ -105,11 +115,35 @@ class GeoContext(GeoContextBase):
     @classmethod
     @typecheck_promote(Str)
     def from_dltile_key(cls, key):
+        """
+        Construct a Workflows GeoContext from a DLTile key.
+
+        Parameters
+        ----------
+        key: Str
+
+        Returns
+        -------
+        ~descarteslabs.workflows.GeoContext
+        """
         return cls._from_apply("GeoContext.from_dltile_key", key)
 
     @classmethod
     @typecheck_promote(Int, Int, Int)
     def from_xyz_tile(cls, x, y, z):
+        """
+        Construct a Workflows GeoContext for an XYZ tile in the OpenStreetMap tiling scheme.
+
+        Parameters
+        ----------
+        x: Int
+        y: Int
+        z: Int
+
+        Returns
+        -------
+        ~descarteslabs.workflows.GeoContext
+        """
         return cls._from_apply("GeoContext.from_xyz_tile", x, y, z)
 
     @classmethod

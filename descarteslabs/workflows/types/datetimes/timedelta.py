@@ -9,6 +9,8 @@ TimedeltaStruct = Struct[{"days": Int, "seconds": Int, "microseconds": Int}]
 
 @serializable(is_named_concrete_type=True)
 class Timedelta(TimedeltaStruct):
+    "Proxy Timedelta object, similar to Python's timedelta."
+
     @typecheck_promote(
         days=(Int, Number),
         seconds=(Int, Number),
@@ -110,4 +112,5 @@ class Timedelta(TimedeltaStruct):
         return self._from_apply("sub", self, other)
 
     def total_seconds(self):
+        "The total number of seconds contained in the duration."
         return Float._from_apply("timedelta.total_seconds", self)

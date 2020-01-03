@@ -23,14 +23,15 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.types.geospatial.FeatureCollection
   ~descarteslabs.workflows.types.geospatial.GeoContext
   ~descarteslabs.workflows.types.geospatial.Geometry
+  ~descarteslabs.workflows.types.geospatial.GeometryCollection
   ~descarteslabs.workflows.types.geospatial.Image
   ~descarteslabs.workflows.types.geospatial.ImageCollection
   ~descarteslabs.workflows.types.geospatial.ImageCollectionGroupby
+  ~descarteslabs.workflows.types.geospatial.Kernel
+  ~descarteslabs.workflows.types.geospatial.concat
+  ~descarteslabs.workflows.types.geospatial.conv2d
   ~descarteslabs.workflows.types.geospatial.load_geojson
   ~descarteslabs.workflows.types.geospatial.load_geojson_file
-  ~descarteslabs.workflows.types.geospatial.Kernel
-  ~descarteslabs.workflows.types.geospatial.conv2d
-  ~descarteslabs.workflows.types.geospatial.concat
   ~descarteslabs.workflows.types.geospatial.where
 
 :workflow_api_nontoc_heading:`Primitives`
@@ -149,6 +150,13 @@ The tables below list the types and functions available through the Workflows AP
 
   ~descarteslabs.workflows.types.core.ProxyTypeError
   ~descarteslabs.workflows.models.exceptions.JobComputeError
+  ~descarteslabs.workflows.models.exceptions.JobOOM
+  ~descarteslabs.workflows.models.exceptions.JobAuth
+  ~descarteslabs.workflows.models.exceptions.JobInvalid
+  ~descarteslabs.workflows.models.exceptions.JobInvalidTyping
+  ~descarteslabs.workflows.models.exceptions.JobDeadlineExceeded
+  ~descarteslabs.workflows.models.exceptions.JobTerminated
+  ~descarteslabs.workflows.models.exceptions.JobInterrupt
   ~descarteslabs.workflows.models.exceptions.TimeoutError
 
 :workflow_api_nontoc_heading:`gRPC Client`

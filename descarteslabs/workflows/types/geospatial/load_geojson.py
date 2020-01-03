@@ -1,7 +1,8 @@
 import json
 import os
 
-from .geometry import Geometry, GeometryCollection
+from .geometry import Geometry
+from .geometrycollection import GeometryCollection
 from .feature import Feature
 from .featurecollection import FeatureCollection
 

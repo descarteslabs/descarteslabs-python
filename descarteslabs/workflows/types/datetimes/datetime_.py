@@ -78,11 +78,34 @@ class Datetime(DatetimeStruct):
     @classmethod
     @typecheck_promote((Int, Float))
     def from_timestamp(cls, seconds):
+        """
+        Construct a Workflows Datetime from a number of seconds since the Unix epoch (January 1, 1970, 00:00:00 (UTC)).
+
+        Parameters
+        ----------
+        seconds: Int or Float
+
+        Returns
+        -------
+        ~descarteslabs.datetimes.Datetime
+        """
         return cls._from_apply("datetime.from_timestamp", seconds)
 
     @classmethod
     @typecheck_promote(Str)
     def from_string(cls, string):
+        """
+        Construct a Workflows Datetime from an ISO 8601-formatted string.
+
+        Parameters
+        ----------
+        string: Str
+            An ISO 8601-formatted datetime string, such as 2018-03-22 or 2020-03-22T16:37:00Z.
+
+        Returns
+        -------
+        ~descarteslabs.datetimes.Datetime
+        """
         return cls._from_apply("datetime.from_string", string)
 
     @typecheck_promote(Timedelta)

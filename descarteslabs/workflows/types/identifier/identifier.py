@@ -44,6 +44,8 @@ def parameter(name, type_):
 
 def identifier(name, type_):
     """
-    Create a Proxytype instance that references a graft key; i.e. for references to builtin constants or parameters.
+    Create a Proxytype instance that references a graft key.
+    Internal method meant for references to builtin constants or parameters.
+    You shouldn't use this directly; consider `parameter` instead.
     """
     return type_._from_graft(graft_client.keyref_graft(name))

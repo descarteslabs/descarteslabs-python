@@ -134,6 +134,22 @@ class Function(GenericProxytype):
 
     @classmethod
     def from_callable(cls, func, *arg_types):
+        """
+        Construct a Workflows Function from a Python callable.
+
+        Parameters
+        ----------
+        func: Python callable
+        *arg_types: ProxyType
+            For each parameter of ``func``, the type that it should accept.
+            The number of argument types given much match the number of arguments ``func`` actually accepts.
+            If not given, the number of parameters is inferred from the function's signature,
+            and `Any` is the type used for each.
+
+        Returns
+        -------
+        ~descarteslabs.function.Function
+        """
         # TODO(gabe): use type annotations for great good!
         if len(arg_types) == 0:
             func_signature = signature(func)

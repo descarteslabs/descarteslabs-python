@@ -1,4 +1,5 @@
-from ..geometry import Geometry, GeometryCollection
+from ..geometry import Geometry
+from ..geometrycollection import GeometryCollection
 
 
 def test_buffer():

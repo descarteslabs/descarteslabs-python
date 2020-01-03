@@ -10,17 +10,33 @@ FeatureCollectionStruct = Struct[{"features": List[Feature]}]
 
 @serializable(is_named_concrete_type=True)
 class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
+    "Proxy FeatureCollection constructed from a sequence of Features."
+
     _constructor = "FeatureCollection.create"
     _element_type = Feature
 
     @typecheck_promote(List[Feature])
     def __init__(self, features):
-        "Construct a FeatureCollection from a sequence of Features"
+        "Construct a FeatureCollection from a sequence of Features."
         super(FeatureCollection, self).__init__(features=features)
 
     @classmethod
     @typecheck_promote(Str)
     def from_vector_id(cls, id):
+        """
+        Construct a Workflows FeatureCollection from a vector ID.
+
+        The FeatureCollection will contain all `Feature`s within the `GeoContext` used in the computation.
+
+        Parameters
+        ----------
+        id: Str
+            An ID of a product in the Descartes Labs Vector service.
+
+        Returns
+        -------
+        ~descarteslabs.workflows.FeatureCollection
+        """
         return cls._from_apply(
             "FeatureCollection.from_vector",
             id,
@@ -30,6 +46,19 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
 
     @classmethod
     def from_geojson(cls, geojson):
+        """
+        Construct a Workflows FeatureCollection from a GeoJSON mapping.
+
+        Note that the GeoJSON must be relatively small (under 10MiB of serialized JSON).
+
+        Parameters
+        ----------
+        geojson: Dict
+
+        Returns
+        -------
+        ~descarteslabs.workflows.FeatureCollection
+        """
         try:
             if geojson["type"].lower() != "featurecollection":
                 raise ValueError(

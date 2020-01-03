@@ -186,4 +186,16 @@ class BandsMixin:
 class GeometryMixin:
     @typecheck_promote((Int, Float))
     def buffer(self, distance):
+        """
+        Buffer the area around ``self`` by a given distance.
+
+        Parameters
+        ----------
+        distance: Int or Float
+            The distance (in decimal degrees) to buffer the area around the Geometry.
+
+        Returns
+        -------
+        Same type as self
+        """
         return self._from_apply("buffer", self, distance)
