@@ -199,6 +199,8 @@ class Image(ImageBase, BandsMixin):
 
         If a given field already exists on the Image's properties, it will be overwritten.
 
+        If the `Image` is empty, returns the empty `Image`.
+
         Parameters
         ----------
         **properties: Proxytype, or any JSON-serializable value
@@ -246,6 +248,8 @@ class Image(ImageBase, BandsMixin):
 
         If a given field already exists on the band's bandinfo, it will be overwritten.
 
+        If the `Image` is empty, returns the empty `Image`.
+
         Parameters
         ----------
         band: Str
@@ -279,6 +283,8 @@ class Image(ImageBase, BandsMixin):
         New `Image`, with the bands in ``other_image`` appended to this one.
 
         If band names overlap, the band from the *other* `Image` will be suffixed with "_1".
+
+        If either `Image` is empty, returns another empty `Image`.
         """
         return self._from_apply("Image.concat_bands", self, other_image)
 
@@ -314,6 +320,9 @@ class Image(ImageBase, BandsMixin):
         """
         New `Image`, masked with a boolean `Image` or vector object.
 
+        If the mask is empty, the original `Image` is returned unchanged.
+        (If the `Image` was already empty, it is still empty even if the mask is non-empty.)
+
         Parameters
         ----------
         mask: `Image`, `Geometry`, `~.workflows.types.geospatial.Feature`, `~.workflows.types.geospatial.FeatureCollection`
@@ -334,12 +343,18 @@ class Image(ImageBase, BandsMixin):
         return self._from_apply("mask", self, mask, replace=replace)
 
     def getmask(self):
-        "Mask of this `Image`, as a new `Image` with one boolean band named ``'mask'``"
+        """
+        Mask of this `Image`, as a new `Image` with one boolean band named ``'mask'``.
+
+        If the `Image` is empty, returns the empty `Image`.
+        """
         return self._from_apply("getmask", self)
 
     def colormap(self, named_colormap="viridis", vmin=None, vmax=None):
         """
         Apply a colormap to an `Image`. Image must have a single band.
+
+        If the `Image` is empty, returns the empty `Image`.
 
         Parameters
         ----------
@@ -475,6 +490,8 @@ class Image(ImageBase, BandsMixin):
         Minimum pixel value across the provided ``axis``, or across all pixels in the image
         if no ``axis`` argument is provided.
 
+        If the `Image` is empty, an empty (of the type determined by ``axis``) will be returned.
+
         Parameters
         ----------
         axis: {None, "pixels", "bands"}
@@ -511,6 +528,8 @@ class Image(ImageBase, BandsMixin):
         """
         Maximum pixel value across the provided ``axis``, or across all pixels in the image
         if no ``axis`` argument is provided.
+
+        If the `Image` is empty, an empty (of the type determined by ``axis``) will be returned.
 
         Parameters
         ----------
@@ -549,6 +568,8 @@ class Image(ImageBase, BandsMixin):
         Mean pixel value across the provided ``axis``, or across all pixels in the image
         if no ``axis`` argument is provided.
 
+        If the `Image` is empty, an empty (of the type determined by ``axis``) will be returned.
+
         Parameters
         ----------
         axis: {None, "pixels", "bands"}
@@ -585,6 +606,8 @@ class Image(ImageBase, BandsMixin):
         """
         Median pixel value across the provided ``axis``, or across all pixels in the image
         if no ``axis`` argument is provided.
+
+        If the `Image` is empty, an empty (of the type determined by ``axis``) will be returned.
 
         Parameters
         ----------
@@ -623,6 +646,8 @@ class Image(ImageBase, BandsMixin):
         Sum of pixel values across the provided ``axis``, or across all pixels in the image
         if no ``axis`` argument is provided.
 
+        If the `Image` is empty, an empty (of the type determined by ``axis``) will be returned.
+
         Parameters
         ----------
         axis: {None, "pixels", "bands"}
@@ -659,6 +684,8 @@ class Image(ImageBase, BandsMixin):
         """
         Standard deviation along the provided ``axis``, or across all pixels in the image
         if no ``axis`` argument is provided.
+
+        If the `Image` is empty, an empty (of the type determined by ``axis``) will be returned.
 
         Parameters
         ----------
@@ -697,6 +724,8 @@ class Image(ImageBase, BandsMixin):
         """
         Count of valid (unmasked) pixels across the provided ``axis``, or across all pixels
         in the image if no ``axis`` argument is provided.
+
+        If the `Image` is empty, an empty (of the type determined by ``axis``) will be returned.
 
         Parameters
         ----------
@@ -807,43 +836,71 @@ class Image(ImageBase, BandsMixin):
 
     # Arithmetic operators
     def log(img):
-        "Element-wise natural log of an `Image`"
+        """
+        Element-wise natural log of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+        """
         from ..math import arithmetic
 
         return arithmetic.log(img)
 
     def log2(img):
-        "Element-wise base 2 log of an `Image`"
+        """
+        Element-wise base 2 log of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+        """
         from ..math import arithmetic
 
         return arithmetic.log2(img)
 
     def log10(img):
-        "Element-wise base 10 log of an `Image`"
+        """
+        Element-wise base 10 log of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+        """
         from ..math import arithmetic
 
         return arithmetic.log10(img)
 
     def sqrt(self):
-        "Element-wise square root of an `Image`"
+        """
+        Element-wise square root of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+        """
         from ..math import arithmetic
 
         return arithmetic.sqrt(self)
 
     def cos(self):
-        "Element-wise cosine of an `Image`"
+        """
+        Element-wise cosine of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+        """
         from ..math import arithmetic
 
         return arithmetic.cos(self)
 
     def sin(self):
-        "Element-wise sine of an `Image`"
+        """
+        Element-wise sine of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+        """
         from ..math import arithmetic
 
         return arithmetic.sin(self)
 
     def tan(self):
-        "Element-wise tangent of an `Image`"
+        """
+        Element-wise tangent of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+        """
         from ..math import arithmetic
 
         return arithmetic.tan(self)
@@ -855,6 +912,8 @@ class Image(ImageBase, BandsMixin):
     def clip_values(self, min=None, max=None):
         """
         Given an interval, band values outside the interval are clipped to the interval edge.
+
+        If the `Image` is empty, returns the empty `Image`.
 
         Parameters
         ----------
@@ -876,6 +935,8 @@ class Image(ImageBase, BandsMixin):
     def scale_values(self, range_min, range_max, domain_min=None, domain_max=None):
         """
         Given an interval, band values will be scaled to the interval.
+
+        If the `Image` is empty, returns the empty `Image`.
 
         Parameters
         ----------
@@ -1024,6 +1085,8 @@ class Image(ImageBase, BandsMixin):
         Only use this method if you're managing your own ipyleaflet Map instances,
         and creating more custom visualizations.
 
+        An empty  `Image` will be rendered as a checkerboard (default) or blank tile.
+
         Parameters
         ----------
         name: str
@@ -1071,6 +1134,8 @@ class Image(ImageBase, BandsMixin):
     ):
         """
         Add this `Image` to `wf.map <.interactive.map>`, or replace a layer with the same name.
+
+        An empty  `Image` will be rendered as a checkerboard (default) or blank tile.
 
         Parameters
         ----------

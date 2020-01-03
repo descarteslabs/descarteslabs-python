@@ -107,7 +107,13 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
     @typecheck_promote(List[Image])
     def __init__(self, images):
-        "Construct an ImageCollection from a sequence of Images"
+        """
+        Construct an ImageCollection from a sequence of Images.
+
+        Will return an empty `ImageCollection` if given an empty list or a list
+        of empty images.
+        If given a list of some non-empty and some empty images, the empties will be dropped.
+        """
 
         self.graft = client.apply_graft(
             "ImageCollection.from_images", images, env.geoctx
@@ -143,6 +149,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         We recommend using ``start_datetime`` and ``end_datetime`` for giving a coarse date window
         (at the year level, for example), then using `filter` to do more sophisticated filtering
         within that subset if necessary.
+
+        If no imagery is found to satisfy the constraints, an empty `ImageCollection` is returned.
 
         Parameters
         ----------
@@ -210,6 +218,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         If a given field already exists on the band's `bandinfo`, it will be overwritten.
 
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
         Parameters
         ----------
         band: Str
@@ -245,6 +255,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         or a single space-separated string (like ``"red green blue"``).
 
         Bands on the Images will be in the order given.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
         """
         return super(ImageCollection, self).pick_bands(bands)
 
@@ -259,6 +271,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         mapping from old band names to new ones.
 
         To eliminate ambiguity, names cannot be given both ways.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
         """
         return super(ImageCollection, self).rename_bands(
             *new_positional_names, **new_names
@@ -267,6 +281,12 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     def map(self, func):
         """
         Map a function over the Images in an `ImageCollection`.
+
+        If the `ImageCollection` is empty, it will return an empty `ImageCollection` or `List`,
+        according to the return type of ``func``.
+        If ``func`` returns some empty and some non-empty `Image` objects, the empties are dropped
+        so only the non-empties are included in the resulting `ImageCollection`.
+        If ``func`` returns all empty `Image` objects, an empty `ImageCollection` is returned.
 
         Parameters
         ----------
@@ -315,6 +335,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         Copy of this `ImageCollection`, sorted by a key function.
 
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
         Parameters
         ----------
         key: Function
@@ -347,6 +369,12 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         Note that the total length of the window is ``back + 1 + fwd``.
         Specifying a window longer than the `ImageCollection` will cause an error.
+
+        If the `ImageCollection` is empty, it will return an empty `ImageCollection` or `List`,
+        according to the return type of ``func``.
+        If ``func`` returns some empty and some non-empty imagery, the empties are dropped
+        so only the non-empties are included in the resulting `ImageCollection`.
+        If ``func`` returns all empty imagery, an empty `ImageCollection` is returned.
 
         Parameters
         ----------
@@ -394,6 +422,13 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Note that ``func`` can return ImageCollections with more than 1 band,
         but the band names must be unique across all of its results.
 
+        If the `ImageCollection` is empty, it will return an empty `ImageCollection` or `Dict`,
+        according to the return type of ``func``.
+        If ``func`` produces an empty `Image` or `ImageCollection` for any band,
+        that empty is returned.
+        (Any band being empty propagates to all of them, because it is impossible to have some
+        bands empty and some not.)
+
         Parameters
         ----------
         func: Python function
@@ -412,6 +447,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         New `ImageCollection`, with the bands in ``other`` appended to this one.
 
         If band names overlap, the band name from ``other`` will be suffixed with "_1".
+
+        If the `ImageCollection` is empty, or ``other`` is empty, an empty is returned (following broadcasting rules).
 
         Parameters
         ----------
@@ -457,7 +494,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     @typecheck_promote(Int)
     def head(self, n):
         """
-        `ImageCollection` of the first ``n`` Images
+        `ImageCollection` of the first ``n`` Images.
+
+        If the `ImageCollection` is empty, an empty `ImageCollection` is returned (all values of n are valid).
 
         Parameters
         ----------
@@ -474,7 +513,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     @typecheck_promote(Int)
     def tail(self, n):
         """
-        `ImageCollection` of the last ``n`` Images
+        `ImageCollection` of the last ``n`` Images.
+
+        If the `ImageCollection` is empty, an empty `ImageCollection` is returned (all values of n are valid).
 
         Parameters
         ----------
@@ -492,6 +533,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     def partition(self, i):
         """
         Split this `ImageCollection` into two collections at index ``i``.
+
+        If the `ImageCollection` is empty, a 2-tuple of empty `ImageCollection` objects
+        is returned (all indices are valid).
 
         Parameters
         ----------
@@ -514,6 +558,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     def mask(self, mask, replace=False):
         """
         New `ImageCollection`, masked with a boolean `ImageCollection`, `Image`, or vector object.
+
+        If the mask is empty, the original `ImageCollection` is returned unchanged.
+        (If the `ImageCollection` was already empty, it is still empty even if the mask is non-empty.)
 
         Parameters
         ----------
@@ -539,12 +586,18 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         return self._from_apply("mask", self, mask, replace=replace)
 
     def getmask(self):
-        "Mask of this `ImageCollection`, as a new `ImageCollection` with one boolean band named 'mask'"
+        """
+        Mask of this `ImageCollection`, as a new `ImageCollection` with one boolean band named 'mask'.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+        """
         return self._from_apply("getmask", self)
 
     def colormap(self, named_colormap="viridis", vmin=None, vmax=None):
         """
         Apply a colormap to an `ImageCollection`. Each image must have a single band.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
 
         Parameters
         ----------
@@ -668,6 +721,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         it belongs to.
 
         Type-theoretically: ``groupby(func: Function[Image, {}, T]) -> ImageCollectionGroupby[T]``
+
+        If the `ImageCollection` is empty, or ``func`` results in empty groups,
+        `ImageCollectionGroupby.groups` will return an empty `Dict`.
         """
         from .groupby import ImageCollectionGroupby
 
@@ -731,6 +787,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Minimum pixel value across the provided ``axis``, or across all pixels in the image
         collection if no ``axis`` argument is provided.
 
+        If the `ImageCollection` is empty, an empty (of the type determined by ``axis``) will be returned.
+
         Parameters
         ----------
         axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
@@ -781,6 +839,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Maximum pixel value across the provided ``axis``, or across all pixels in the image
         collection if no ``axis`` argument is provided.
 
+        If the `ImageCollection` is empty, an empty (of the type determined by ``axis``) will be returned.
+
         Parameters
         ----------
         axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
@@ -829,6 +889,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         Mean pixel value across the provided ``axis``, or across all pixels in the image
         collection if no ``axis`` argument is provided.
+
+        If the `ImageCollection` is empty, an empty (of the type determined by ``axis``) will be returned.
 
         Parameters
         ----------
@@ -879,6 +941,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Median pixel value across the provided ``axis``, or across all pixels in the image
         collection if no ``axis`` argument is provided.
 
+        If the `ImageCollection` is empty, an empty (of the type determined by ``axis``) will be returned.
+
         Parameters
         ----------
         axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
@@ -927,6 +991,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         Sum of pixel values across the provided ``axis``, or across all pixels in the image
         collection if no ``axis`` argument is provided.
+
+        If the `ImageCollection` is empty, an empty (of the type determined by ``axis``) will be returned.
 
         Parameters
         ----------
@@ -977,6 +1043,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Standard deviation along the provided ``axis``, or across all pixels in the image
         collection if no ``axis`` argument is provided.
 
+        If the `ImageCollection` is empty, an empty (of the type determined by ``axis``) will be returned.
+
         Parameters
         ----------
         axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
@@ -1026,6 +1094,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         Count of valid (unmasked) pixels across the provided ``axis``, or across all pixels
         in the `ImageCollection` if no ``axis`` argument is provided.
+
+        If the `ImageCollection` is empty, an empty (of the type determined by ``axis``) will be returned.
 
         Parameters
         ----------
@@ -1149,43 +1219,71 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
     # Arithmetic operators
     def log(ic):
-        "Element-wise natural log of an `ImageCollection`"
+        """
+        Element-wise natural log of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+        """
         from ..math import arithmetic
 
         return arithmetic.log(ic)
 
     def log2(ic):
-        "Element-wise base 2 log of an `ImageCollection`"
+        """
+        Element-wise base 2 log of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+        """
         from ..math import arithmetic
 
         return arithmetic.log2(ic)
 
     def log10(ic):
-        "Element-wise base 10 log of an `ImageCollection`"
+        """
+        Element-wise base 10 log of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+        """
         from ..math import arithmetic
 
         return arithmetic.log10(ic)
 
     def sqrt(self):
-        "Element-wise square root of an `ImageCollection`"
+        """
+        Element-wise square root of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+        """
         from ..math import arithmetic
 
         return arithmetic.sqrt(self)
 
     def cos(self):
-        "Element-wise cosine of an `ImageCollection`"
+        """
+        Element-wise cosine of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+        """
         from ..math import arithmetic
 
         return arithmetic.cos(self)
 
     def sin(self):
-        "Element-wise sine of an `ImageCollection`"
+        """
+        Element-wise sine of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+        """
         from ..math import arithmetic
 
         return arithmetic.sin(self)
 
     def tan(self):
-        "Element-wise tangent of an `ImageCollection`"
+        """
+        Element-wise tangent of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+        """
         from ..math import arithmetic
 
         return arithmetic.tan(self)
@@ -1197,6 +1295,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     def clip_values(self, min=None, max=None):
         """
         Given an interval, band values outside the interval are clipped to the interval edge.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
 
         Parameters
         ----------
@@ -1219,6 +1319,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         Given an interval, band values will be scaled to the interval.
 
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
         Parameters
         ----------
         range_min: float
@@ -1235,7 +1337,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         )
 
     @typecheck_promote(
-        (lambda: Image, Int, Float),
+        (lambda: ImageCollection, Int, Float),
         mask=Bool,
         bandinfo=(NoneType, Dict[Str, Dict[Str, Any]]),
     )
