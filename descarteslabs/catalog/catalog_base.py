@@ -842,9 +842,11 @@ class CatalogObject(AttributeEqualityMixin):
 
         Raises
         ------
+        ConflictError
+            If you're trying to create a new object and the object with given ``id``
+            already exists in the Descartes Labs catalog.
         BadRequestError
-            If the given ``id`` already exists in the Descartes Labs catalog or
-            if attribute values are invalid.
+            If any of the attribute values are invalid.
         DeletedObjectError
             If this catalog object was deleted.
 
@@ -938,11 +940,11 @@ class CatalogObject(AttributeEqualityMixin):
         >>> p.reload()
         Traceback (most recent call last):
         File "<stdin>", line 1, in <module>
-        File "/Users/jaap-mbp/Work/monorepo/descarteslabs/catalog/catalog_base.py", line 47, in wrapper
+        File "/usr/lib/python3/site-packages/descarteslabs/catalog/catalog_base.py", line 47, in wrapper
             return f(self, *args, **kwargs)
-        File "/Users/jaap-mbp/Work/monorepo/descarteslabs/catalog/catalog_base.py", line 879, in reload
+        File "/usr/lib/python3/site-packages/descarteslabs/catalog/catalog_base.py", line 879, in reload
             \"""Reload all attributes from the Descartes Labs catalog.
-        ValueError: Product instance with id descarteslabs:jaaptest has not been saved
+        ValueError: Product instance with id my_org_id:my_product_id has not been saved
         >>> # But you can revert
         >>> p = Product.get(p.id)
         >>> p.state
