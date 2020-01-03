@@ -6,6 +6,7 @@ Types
 .. autosummary::
   :nosignatures:
 
+  ~descarteslabs.catalog.CatalogObject
   ~descarteslabs.catalog.DocumentState
   ~descarteslabs.catalog.TaskState
   ~descarteslabs.catalog.DataType
@@ -19,8 +20,11 @@ Types
   ~descarteslabs.catalog.ImageUploadType
   ~descarteslabs.catalog.OverviewResampler
   ~descarteslabs.catalog.ImageUploadStatus
+  ~descarteslabs.catalog.UploadError
 
 -----
+
+.. autoclass:: descarteslabs.catalog.CatalogObject
 
 .. autoclass:: descarteslabs.catalog.DocumentState
 
@@ -47,3 +51,5 @@ Types
 .. autoclass:: descarteslabs.catalog.OverviewResampler
 
 .. autoclass:: descarteslabs.catalog.ImageUploadStatus
+
+.. autoclass:: descarteslabs.catalog.UploadError

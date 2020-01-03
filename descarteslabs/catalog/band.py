@@ -3,7 +3,7 @@ from enum import Enum
 from descarteslabs.common.property_filtering import GenericProperties
 from .catalog_base import CatalogObject, _new_abstract_class
 from .named_catalog_base import NamedCatalogObject
-from .attributes import Attribute, EnumAttribute, Resolution
+from .attributes import Attribute, EnumAttribute, Resolution, BooleanAttribute
 
 
 properties = GenericProperties()
@@ -128,107 +128,142 @@ class Band(NamedCatalogObject):
 
     This is an abstract class that cannot be instantiated, but can be used for searching
     across all types of bands.  The concrete bands are represented by the derived
-    classes.  To create a new band instantiate one of those specialized classes:
+    classes.
+
+    Common attributes:
+    :attr:`~descarteslabs.catalog.SpectralBand.id`,
+    :attr:`~descarteslabs.catalog.SpectralBand.name`,
+    :attr:`~descarteslabs.catalog.SpectralBand.product_id`,
+    :attr:`~descarteslabs.catalog.SpectralBand.description`,
+    :attr:`~descarteslabs.catalog.SpectralBand.type`,
+    :attr:`~descarteslabs.catalog.SpectralBand.sort_order`,
+    :attr:`~descarteslabs.catalog.SpectralBand.data_type`,
+    :attr:`~descarteslabs.catalog.SpectralBand.no_data`,
+    :attr:`~descarteslabs.catalog.SpectralBand.data_range`,
+    :attr:`~descarteslabs.catalog.SpectralBand.display_range`,
+    :attr:`~descarteslabs.catalog.SpectralBand.resolution`,
+    :attr:`~descarteslabs.catalog.SpectralBand.band_index`,
+    :attr:`~descarteslabs.catalog.SpectralBand.file_index`,
+    :attr:`~descarteslabs.catalog.SpectralBand.jpx_layer_index`.
+
+    To create a new band instantiate one of those specialized classes:
 
     * `SpectralBand`: A band that lies somewhere on the visible/NIR/SWIR electro-optical
       wavelength spectrum. Specific attributes:
       :attr:`~SpectralBand.wavelength_nm_center`,
       :attr:`~SpectralBand.wavelength_nm_min`,
       :attr:`~SpectralBand.wavelength_nm_max`,
-      :attr:`~SpectralBand.wavelength_nm_fwhm`
+      :attr:`~SpectralBand.wavelength_nm_fwhm`.
     * `MicrowaveBand`: A band that lies in the microwave spectrum, often from SAR or
       passive radar sensors. Specific attributes: :attr:`~MicrowaveBand.frequency`,
-      :attr:`~MicrowaveBand.bandwidth`
+      :attr:`~MicrowaveBand.bandwidth`.
     * `MaskBand`: A binary band where by convention a 0 means masked and 1 means
       non-masked. The :attr:`~Band.data_range` and :attr:`~Band.display_range` for
-      masks is implicitly ``[0, 1]``. Specific attributes::attr:`~MaskBand.is_alpha`
+      masks is implicitly ``[0, 1]``. Specific attributes::attr:`~MaskBand.is_alpha`.
     * `ClassBand`: A band that maps a finite set of values that may not be continuous to
       classification categories (e.g. a land use classification). A visualization with
       straight pixel values is typically not useful, so commonly a
       :attr:`~ClassBand.colormap` is used. Specific attributes:
       :attr:`~ClassBand.colormap`, :attr:`~ClassBand.colormap_name`,
-      :attr:`~ClassBand.class_labels`
+      :attr:`~ClassBand.class_labels`.
     * `GenericBand`: A generic type for bands that are not represented by the other band
       types, e.g., mapping physical values like temperature or angles. Specific
       attributes: :attr:`~GenericBand.colormap`, :attr:`~GenericBand.colormap_name`,
-      :attr:`~GenericBand.physical_range`, :attr:`~GenericBand.physical_range_unit`
-
-    Parameters
-    ----------
-    kwargs : dict
-        With the exception of readonly attributes
-        (:py:attr:`~descarteslabs.catalog.CatalogObject.created`,
-        :py:attr:`~descarteslabs.catalog.CatalogObject.modified`), any
-        (inherited) attribute listed below can also be used as a keyword argument.
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base classes:
-
-    * :py:class:`descarteslabs.catalog.NamedCatalogObject`
-    * :py:class:`descarteslabs.catalog.CatalogObject`
-
-    |
-
-    **The attributes documented below are shared by all band objects,
-    namely SpectralBand, MicrowaveBand, MaskBand, ClassBand, and GenericBand.**
-
-    Attributes
-    ----------
-    description : str
-        A description with further details on the band
-    type : str, BandType
-        The type of this band, directly corresponding to a `Band` subclass
-        (:py:class:`SpectralBand`, :py:class:`MicrowaveBand`, :py:class:`MaskBand`,
-        :py:class:`ClassBand`, :py:class:`GenericBand`). Never needs to be set
-        explicitly, this attribute is implied by the subclass used. The type of a
-        band does not necessarily affect how it is rastered, it mainly conveys
-        useful information about the data it contains.
-        *Filterable*.
-    sort_order : int
-        A number defining the default sort order for bands within a product. If not
-        set for newly created bands, this will default to the current maximum sort
-        order + 1 in the product.
-        *Sortable*.
-    data_type : DataType
-        Required: The data type for pixel values in this band
-    nodata : float
-        A value representing missing data in a pixel in this band
-    data_range : tuple(float, float)
-        Required: The minimum and maximum pixel values stored in this band
-    display_range : tuple(float, float)
-        Required: A reasonable default range of pixel values when rastering
-        this band for display purposes
-    resolution : Resolution
-        The spatial resolution of this band.
-        *Filterable, sortable*.
-    band_index : int
-        Required: The 0-based index into the source data to access this band
-    file_index : int
-        The 0-based index into the list of source files, if there are multiple ones.
-        Defaults to 0 (first file).
-    jpx_layer_index : int
-        The 0-based layer index if the source data is JPEG2000 with layers.
-        Defaults to 0.
+      :attr:`~GenericBand.physical_range`, :attr:`~GenericBand.physical_range_unit`.
     """
+
+    _DOC_DESCRIPTION = """A description with further details on the band.
+
+        The description can be up to 80,000 characters and is used by
+        :py:meth:`Search.find_text`.
+
+        *Searchable*
+        """
+    _DOC_DATATYPE = "The data type for pixel values in this band."
+    _DOC_DATARANGE = """The range of pixel values stored in the band.
+
+        The two floats are the minimum and maximum pixel values stored in this band.
+        """
+    _DOC_COLORMAPNAME = """str or Colormap, optional: Name of a predefined colormap for display purposes.
+
+        The colormap is applied when this band is rastered by itself in PNG or TIFF
+        format, including in UIs where imagery is visualized.
+        """
+    _DOC_COLORMAP = """list(tuple), optional: A custom colormap for this band.
+
+        A list of tuples, where each nested tuple is a 4-tuple of RGBA values to map
+        pixels whose value is the index of the list.  E.g.  the colormap ``[(100, 20,
+        200, 255)]`` would map pixels whose value is 0 in the original band to the
+        RGBA color defined by ``(100, 20, 200, 255)``.  The number of 4-tuples provided
+        can be up to the maximum of this band's data range.  Omitted values will map
+        to black by default.
+        """
+    _DOC_PHYSICALRANGE = (
+        "tuple(float, float), optional: A physical range that pixel values map to."
+    )
 
     _doc_type = "band"
     _url = "/bands"
     _derived_type_switch = "type"
     _default_includes = ["product"]
 
-    description = Attribute()
-    type = EnumAttribute(BandType)
-    sort_order = Attribute()
-    data_type = EnumAttribute(DataType)
-    nodata = Attribute()
-    data_range = Attribute()
-    display_range = Attribute()
-    resolution = Resolution()
-    band_index = Attribute()
-    file_index = Attribute()
-    jpx_layer_index = Attribute()
+    description = Attribute(doc="str, optional: " + _DOC_DESCRIPTION)
+    type = EnumAttribute(
+        BandType,
+        doc="""str or BandType: The type of this band, directly corresponding to a `Band` derived class.
+
+        The derived classes are `SpectralBand`, `MicrowaveBand`, `MaskBand`,
+        `ClassBand`, and `GenericBand`.  The type never needs to be set explicitly,
+        this attribute is implied by the derived class used.  The type of a band does
+        not necessarily affect how it is rastered, it mainly conveys useful information
+        about the data it contains.
+
+        *Filterable*.
+        """,
+    )
+    sort_order = Attribute(
+        doc="""int, optional: A number defining the default sort order for bands within a product.
+
+        If not set for newly created bands, this will default to the current maximum
+        sort order + 1 in the product.
+
+        *Sortable*.
+        """
+    )
+    data_type = EnumAttribute(DataType, doc="str or DataType: " + _DOC_DATATYPE)
+    nodata = Attribute(
+        doc="""float, optional: A value representing missing data in a pixel in this band."""
+    )
+    data_range = Attribute(doc="tuple(float, float): " + _DOC_DATARANGE)
+    display_range = Attribute(
+        doc="""tuple(float, float): The range of pixel values for display purposes.
+
+        The two floats are the minimum and maximum values indicating a default reasonable
+        range of pixel values usd when rastering this band for display purposes.
+        """
+    )
+    resolution = Resolution(
+        doc="""Resolution, optional: The spatial resolution of this band.
+
+        *Filterable, sortable*.
+        """
+    )
+    band_index = Attribute(
+        doc="int: The 0-based index into the source data to access this band."
+    )
+    file_index = Attribute(
+        doc="""int, optional: The 0-based index into the list of source files.
+
+        If there are multiple files, it maps the band index to the file index.  It defaults
+        to 0 (first file).
+        """
+    )
+    jpx_layer_index = Attribute(
+        doc="""int, optional: The 0-based layer index if the source data is JPEG2000 with layers.
+
+        Defaults to 0.
+        """
+    )
 
     def __new__(cls, *args, **kwargs):
         return _new_abstract_class(cls, Band)
@@ -274,45 +309,43 @@ class SpectralBand(Band):
 
     Parameters
     ----------
-    kwargs : dict
-        With the exception of readonly attributes
-        (:py:attr:`~descarteslabs.catalog.CatalogObject.created`,
-        :py:attr:`~descarteslabs.catalog.CatalogObject.modified`), any
-        (inherited) attribute listed below can also be used as a keyword argument.
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base classes:
-
-    * :py:class:`descarteslabs.catalog.Band`
-    * :py:class:`descarteslabs.catalog.NamedCatalogObject`
-    * :py:class:`descarteslabs.catalog.CatalogObject`
-
-    |
-
-    Attributes
-    ----------
-    wavelength_nm_center : float
-        Weighted center of min/max responsiveness of the band, in nm.
-        *Filterable, sortable*.
-    wavelength_nm_min : float
-        Minimum wavelength this band is sensitive to, in nm.
-        *Filterable, sortable*.
-    wavelength_nm_max : float
-        Maximum wavelength this band is sensitive to, in nm.
-        *Filterable, sortable*.
-    wavelength_nm_fwhm : float
-        Full width at half maximum value of the wavelength spread, in nm.
-        *Filterable, sortable*.
+    client : CatalogClient, optional
+        A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
+        The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+        be used if not set.
+    kwargs : dict, optional
+        With the exception of readonly attributes (`created`, `modified`) and with the
+        exception of properties (`ATTRIBUTES`, `is_modified`, and `state`), any
+        attribute listed below can also be used as a keyword argument.  Also see
+        `~SpectralBand.ATTRIBUTES`.
     """
 
     _derived_type = BandType.SPECTRAL.value
 
-    wavelength_nm_center = Attribute()
-    wavelength_nm_min = Attribute()
-    wavelength_nm_max = Attribute()
-    wavelength_nm_fwhm = Attribute()
+    wavelength_nm_center = Attribute(
+        doc="""float, optional: Weighted center of min/max responsiveness of the band, in nm.
+
+        *Filterable, sortable*.
+        """
+    )
+    wavelength_nm_min = Attribute(
+        doc="""float, optional: Minimum wavelength this band is sensitive to, in nm.
+
+        *Filterable, sortable*.
+        """
+    )
+    wavelength_nm_max = Attribute(
+        doc="""float, optional: Maximum wavelength this band is sensitive to, in nm.
+
+            *Filterable, sortable*.
+        """
+    )
+    wavelength_nm_fwhm = Attribute(
+        doc="""float, optional: Full width at half maximum value of the wavelength spread, in nm.
+
+        *Filterable, sortable*.
+        """
+    )
 
 
 class MicrowaveBand(Band):
@@ -320,83 +353,67 @@ class MicrowaveBand(Band):
 
     Parameters
     ----------
-    kwargs : dict
-        With the exception of readonly attributes
-        (:py:attr:`~descarteslabs.catalog.CatalogObject.created`,
-        :py:attr:`~descarteslabs.catalog.CatalogObject.modified`), any
-        (inherited) attribute listed below can also be used as a keyword argument.
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base classes:
-
-    * :py:class:`descarteslabs.catalog.Band`
-    * :py:class:`descarteslabs.catalog.NamedCatalogObject`
-    * :py:class:`descarteslabs.catalog.CatalogObject`
-
-    |
-
-    Attributes
-    ----------
-    frequency : float
-        Center frequency of the observed microwave in GHz.
-        *Filterable, sortable*.
-    bandwidth : float
-        Chirp bandwidth of the sensor in MHz.
-        *Filterable, sortable*.
+    client : CatalogClient, optional
+        A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
+        The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+        be used if not set.
+    kwargs : dict, optional
+        With the exception of readonly attributes (`created`, `modified`) and with the
+        exception of properties (`ATTRIBUTES`, `is_modified`, and `state`), any
+        attribute listed below can also be used as a keyword argument.  Also see
+        `~MicrowaveBand.ATTRIBUTES`.
     """
 
     _derived_type = BandType.MICROWAVE.value
 
-    frequency = Attribute()
-    bandwidth = Attribute()
+    frequency = Attribute(
+        doc="""float, optional: Center frequency of the observed microwave in GHz.
+
+        *Filterable, sortable*.
+        """
+    )
+    bandwidth = Attribute(
+        doc="""float, optional: Chirp bandwidth of the sensor in MHz.
+
+        *Filterable, sortable*.
+        """
+    )
 
 
 class MaskBand(Band):
     """A binary band where by convention a 0 means masked and 1 means non-masked.
 
-    The :py:attr:`data_range` and :py:attr:`display_range` for masks is implicitly
-    ``(0, 1)``.
+    The `data_range` and `display_range` for masks is implicitly ``(0, 1)``.
 
     Parameters
     ----------
-    kwargs : dict
-        With the exception of readonly attributes
-        (:py:attr:`~descarteslabs.catalog.CatalogObject.created`,
-        :py:attr:`~descarteslabs.catalog.CatalogObject.modified`), and
-        the computed attributes (`data_range`, `display_range`) any (inherited)
-        attribute listed below can also be used as a keyword argument.
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base classes:
-
-    * :py:class:`descarteslabs.catalog.Band`
-    * :py:class:`descarteslabs.catalog.NamedCatalogObject`
-    * :py:class:`descarteslabs.catalog.CatalogObject`
-
-    |
-
-    Attributes
-    ----------
-    is_alpha : bool
-        Whether this band should be useable as an alpha band during rastering.
-        This enables special behavior for this band during rastering. If this
-        is ``True`` and the band appears as the last band in a raster operation
-        (such as :meth:`descarteslabs.scenes.scenecollection.SceneCollection.mosaic`
-        or :meth:`descarteslabs.scenes.scenecollection.SceneCollection.stack`)
-        pixels with a value of 0 in this band will be treated as transparent.
-    data_range : tuple(float, float)
-        Readonly: [0, 1].
-    display_range : tuple(float, float)
-        Readonly: [0, 1].
+    client : CatalogClient, optional
+        A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
+        The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+        be used if not set.
+    kwargs : dict, optional
+        With the exception of readonly attributes (`created`, `modified`) and with the
+        exception of properties (`ATTRIBUTES`, `is_modified`, and `state`), any
+        attribute listed below can also be used as a keyword argument.  Also see
+        `~MaskBand.ATTRIBUTES`.
     """
 
     _derived_type = BandType.MASK.value
 
-    is_alpha = Attribute()
+    is_alpha = BooleanAttribute(
+        doc="""bool, optional: Whether this band should be useable as an alpha band during rastering.
+
+        This enables special behavior for this band during rastering.  If this is
+        ``True`` and the band appears as the last band in a raster operation (such as
+        :meth:`descarteslabs.scenes.scenecollection.SceneCollection.mosaic` or
+        :meth:`descarteslabs.scenes.scenecollection.SceneCollection.stack`) pixels
+        with a value of 0 in this band will be treated as transparent.
+        """
+    )
+    data_range = Attribute(mutable=False, doc="tuple(float, float), readonly: [0, 1].")
+    display_range = Attribute(
+        mutable=False, doc="tuple(float, float), readonly: [0, 1]."
+    )
 
 
 class ClassBand(Band):
@@ -407,47 +424,28 @@ class ClassBand(Band):
 
     Parameters
     ----------
-    kwargs : dict
-        With the exception of readonly attributes
-        (:py:attr:`~descarteslabs.catalog.CatalogObject.created`,
-        :py:attr:`~descarteslabs.catalog.CatalogObject.modified`), any
-        (inherited) attribute listed below can also be used as a keyword argument.
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base classes:
-
-    * :py:class:`descarteslabs.catalog.Band`
-    * :py:class:`descarteslabs.catalog.NamedCatalogObject`
-    * :py:class:`descarteslabs.catalog.CatalogObject`
-
-    |
-
-    Attributes
-    ----------
-    colormap_name : str, Colormap
-        Name of a predefined colormap for display purposes. The colormap is applied
-        when this band is rastered by itself in PNG or TIFF format, including in
-        UIs where imagery is visualized.
-    colormap : list(tuple)
-        A custom colormap for this band. A list of lists, where each nested list
-        is a 4-tuple of RGBA values to map pixels whose value is the index of the
-        tuple. E.g. the colormap ``[[100, 20, 200, 255]]`` would map pixels
-        whose value is 0 in the original band to the RGBA color defined by
-        ``[100, 20, 200, 255]``. The number of 4-tuples provided can be up
-        to the maximum of this band's data range. Omitted values will map to black
-        by default.
-    class_labels : list(str or None)
-        A list of labels where each element is a name for the class with the value at
-        that index. Elements can be null if there is no label at that value.
+    client : CatalogClient, optional
+        A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
+        The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+        be used if not set.
+    kwargs : dict, optional
+        With the exception of readonly attributes (`created`, `modified`) and with the
+        exception of properties (`ATTRIBUTES`, `is_modified`, and `state`), any
+        attribute listed below can also be used as a keyword argument.  Also see
+        `~ClassBand.ATTRIBUTES`.
     """
 
     _derived_type = BandType.CLASS.value
 
-    colormap_name = EnumAttribute(Colormap)
-    colormap = Attribute()
-    class_labels = Attribute()
+    colormap_name = EnumAttribute(Colormap, doc=Band._DOC_COLORMAPNAME)
+    colormap = Attribute(Band._DOC_COLORMAP)
+    class_labels = Attribute(
+        doc="""list(str or None), optional: A list of labels.
+
+        A list of labels where each element is a name for the class with the value at
+        that index.  Elements can be null if there is no label at that value.
+        """
+    )
 
 
 class GenericBand(Band):
@@ -457,90 +455,40 @@ class GenericBand(Band):
 
     Parameters
     ----------
-    kwargs : dict
-        With the exception of readonly attributes
-        (:py:attr:`~descarteslabs.catalog.CatalogObject.created`,
-        :py:attr:`~descarteslabs.catalog.CatalogObject.modified`), any
-        (inherited) attribute listed below can also be used as a keyword argument.
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base classes:
-
-    * :py:class:`descarteslabs.catalog.Band`
-    * :py:class:`descarteslabs.catalog.NamedCatalogObject`
-    * :py:class:`descarteslabs.catalog.CatalogObject`
-
-    |
-
-    Attributes
-    ----------
-    physical_range : tuple(float, float)
-        A physical range that pixel values map to
-    physical_range_unit : str
-        Unit of the physical range
-    colormap_name : str, Colormap
-        Name of a predefined colormap for display purposes. The colormap is applied
-        when this band is rastered by itself in PNG or TIFF format, including in
-        UIs where imagery is visualized.
-    colormap : list(tuple)
-        A custom colormap for this band. A list of lists, where each nested list
-        is a 4-tuple of RGBA values to map pixels whose value is the index of the
-        tuple. E.g. the colormap ``[[100, 20, 200, 255]]`` would map pixels
-        whose value is 0 in the original band to the RGBA color defined by
-        ``[100, 20, 200, 255]``. The number of 4-tuples provided can be up
-        to the maximum of this band's data range. Omitted values will map to black
-        by default.
+    client : CatalogClient, optional
+        A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
+        The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+        be used if not set.
+    kwargs : dict, optional
+        With the exception of readonly attributes (`created`, `modified`) and with the
+        exception of properties (`ATTRIBUTES`, `is_modified`, and `state`), any
+        attribute listed below can also be used as a keyword argument.  Also see
+        `~GenericBand.ATTRIBUTES`.
     """
 
     _derived_type = BandType.GENERIC.value
 
-    physical_range = Attribute()
-    physical_range_unit = Attribute()
-    colormap_name = EnumAttribute(Colormap)
-    colormap = Attribute()
+    physical_range = Attribute(doc=Band._DOC_PHYSICALRANGE)
+    physical_range_unit = Attribute(doc="str, optional: Unit of the physical range")
+    colormap_name = EnumAttribute(Colormap, doc=Band._DOC_COLORMAPNAME)
+    colormap = Attribute(doc=Band._DOC_COLORMAP)
 
 
 class DerivedBand(CatalogObject):
-    """
+    """A band with pixel values computed from the data in other bands.
+
     A type of band that is the result of a pixel function applied to one or more
     existing bands. This object type only supports read operations;
     they cannot be created, updated, or deleted using this client.
 
     Parameters
     ----------
-    kwargs : dict
-        This is a readonly object.
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base class:
-
-    * :py:class:`descarteslabs.catalog.CatalogObject`
-
-    |
-
-    Attributes
-    ----------
-    name : str
-        Required, immutable: The name of the derived band, globally unique.
-        *Filterable, sortable*.
-    description : str
-        Immutable: A description with further details on the derived band
-    data_type : str
-        Required, immutable: The data type for pixel values in this derived band
-    data_range : tuple(float, float)
-        Required, immutable: The minimum and maximum pixel values stored in
-        this derived band
-    physical_range : tuple(float, float)
-        Immutable: A physical range that pixel values map to
-    bands : list(str)
-        Required, immutable: List of bands used in the derived band pixel function
-        *Filterable*
-    function_name : str
-        Required, immutable: Name of the function applied to create this derived band
+    client : CatalogClient, optional
+        A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
+        The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+        be used if not set.
+    kwargs : dict, optional
+        You cannot set any additional keyword arguments as a derived band is readonly.
 
     Methods
     -------
@@ -551,19 +499,49 @@ class DerivedBand(CatalogObject):
         ------
         NotImplementedError
             This method is not supported for DerivedBands.
-
     """
 
     _doc_type = "derived_band"
     _url = "/derived_bands"
 
-    name = Attribute(readonly=True)
-    description = Attribute(readonly=True)
-    data_type = EnumAttribute(DataType, readonly=True)
-    data_range = Attribute(readonly=True)
-    physical_range = Attribute(readonly=True)
-    bands = Attribute(readonly=True)
-    function_name = Attribute(readonly=True)
+    name = Attribute(
+        readonly=True,
+        doc="""str, readonly: The name of the derived band, globally unique.
+
+        *Filterable, sortable*.
+        """,
+    )
+    description = Attribute(
+        readonly=True, doc="str, readonly: " + Band._DOC_DESCRIPTION
+    )
+    data_type = EnumAttribute(
+        DataType, readonly=True, doc="str or DataType, readonly: " + Band._DOC_DATATYPE
+    )
+    data_range = Attribute(
+        readonly=True, doc="tuple(float, float), readonly: " + Band._DOC_DATARANGE
+    )
+    physical_range = Attribute(readonly=True, doc=Band._DOC_PHYSICALRANGE)
+    bands = Attribute(
+        readonly=True,
+        doc="""list(str), readonly: List of bands used in the derived band pixel function.
+
+        *Filterable*
+        """,
+    )
+    function_name = Attribute(
+        readonly=True,
+        doc="str, readonly: Name of the function applied to create this derived band.",
+    )
+
+    def update(self, **kwargs):
+        """You cannot update a derived band.
+
+        Raises
+        ------
+        NotImplementedError
+            This method is not supported for DerivedBands.
+        """
+        raise NotImplementedError("Updating DerivedBands is not permitted")
 
     def save(self):
         """You cannot save a derived band.
@@ -573,7 +551,7 @@ class DerivedBand(CatalogObject):
         NotImplementedError
             This method is not supported for DerivedBands.
         """
-        raise NotImplementedError("Saving and updating DerivedBands is not permitted")
+        raise NotImplementedError("Saving DerivedBands is not permitted")
 
     @classmethod
     def delete(cls, id, client=None, ignore_missing=False):

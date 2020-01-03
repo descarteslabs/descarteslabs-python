@@ -484,8 +484,8 @@ class TestProduct(ClientTestCase):
             status=201,
         )
 
-        assert type(p.owners) == ListAttribute
-        assert type(p.readers) == ListAttribute
+        assert isinstance(p.owners, ListAttribute)
+        assert isinstance(p.readers, ListAttribute)
         p.update_related_objects_permissions(owners=p.owners, readers=p.readers)
 
     @responses.activate

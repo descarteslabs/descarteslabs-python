@@ -50,15 +50,15 @@ class DocumentState(str, Enum):
         the corresponding object in the Descartes Labs catalog.
     MODIFIED : enum
         The catalog object was synchronized with the Descartes Labs catalog (using
-        :py:meth:`~descarteslabs.catalog.CatalogObject.get` or
-        :py:meth:`~descarteslabs.catalog.CatalogObject.save`), but at least one
+        :py:meth:`~descarteslabs.catalog.Product.get` or
+        :py:meth:`~descarteslabs.catalog.Product.save`), but at least one
         attribute value has since been changed.  You can
-        :py:meth:`~descarteslabs.catalog.CatalogObject.save` a modified catalog object
+        :py:meth:`~descarteslabs.catalog.Product.save` a modified catalog object
         to update the object in the Descartes Labs catalog.
     SAVED : enum
         The catalog object has been fully synchronized with the Descartes Labs catalog
-        (using :py:meth:`~descarteslabs.catalog.CatalogObject.get` or
-        :py:meth:`~descarteslabs.catalog.CatalogObject.save`).
+        (using :py:meth:`~descarteslabs.catalog.Product.get` or
+        :py:meth:`~descarteslabs.catalog.Product.save`).
     DELETED : enum
         The catalog object has been deleted from the Descartes Labs catalog.  Many
         operations cannot be performed on ``DELETED`` objects.
@@ -68,7 +68,7 @@ class DocumentState(str, Enum):
     A ``SAVED`` catalog object can still be out-of-date with respect to the Descartes
     Labs catalog if there was an update from another client since the last
     sycnronization.  To re-synchronize a ``SAVED`` catalog object you can use
-    :py:meth:`~descarteslabs.catalog.CatalogObject.reload`.
+    :py:meth:`~descarteslabs.catalog.Product.reload`.
     """
 
     SAVED = "saved"
@@ -85,19 +85,19 @@ class Attribute(object):
     ----------
     mutable : bool
         Whether this attribute can be changed.
-        Set to True by default.
-        If set to False, the attribute can be set once and after that can only be
+        Set to ``True`` by default.
+        If set to ``False``, the attribute can be set once and after that can only be
         set with the same value. If set with a different value, an
-        `AttributeValidationError` will be thrown.
+        `AttributeValidationError` will be raised.
     serializable : bool
         Whether this attribute will be included during serialization.
-        Set to True by default.
-        If set to False, the attribute will be skipped during serialized and will
+        Set to ``True`` by default.
+        If set to ``False``, the attribute will be skipped during serialized and will
         throw an AttributeValidationError if serialized explicitly using
         `serialize_attribute_for_filter`.
     sticky : bool
         Whether this attribute will be cleared when new attribute values are loaded
-        from the Descartes Labs catalog.  Set fo False by default.  This is used
+        from the Descartes Labs catalog.  Set to ``False`` by default.  This is used
         specifically for attributes that are only deserialised on the Descartes Labs
         catalog (`load_only`).  These attributes will never appear in the data from
         the Descartes Labs catalog, and to allow them to persist you can set the _sticky
@@ -113,14 +113,21 @@ class Attribute(object):
     _PARAM_SERIALIZABLE = "serializable"
     _PARAM_STICKY = "sticky"
     _PARAM_READONLY = "readonly"
+    _PARAM_DOC = "doc"
 
-    def __init__(self, mutable=True, serializable=True, sticky=False, readonly=False):
+    def __init__(
+        self, mutable=True, serializable=True, sticky=False, readonly=False, doc=None
+    ):
         self._mutable = mutable
         self._serializable = serializable
         self._sticky = sticky
         self._readonly = readonly
 
+        if doc is not None:
+            self.__doc__ = doc
+
     def _get_attr_params(self, **extra_params):
+        # We don't need _PARAM_DOC
         params = {
             self._PARAM_MUTABLE: self._mutable,
             self._PARAM_SERIALIZABLE: self._serializable,
@@ -204,6 +211,7 @@ class CatalogObjectReference(Attribute):
     """
 
     def __init__(self, reference_class, allow_unsaved=False, **kwargs):
+        # Serializable defaults to `False` for reference objects
         kwargs[self._PARAM_SERIALIZABLE] = kwargs.pop(self._PARAM_SERIALIZABLE, False)
         super(CatalogObjectReference, self).__init__(**kwargs)
 
@@ -388,31 +396,40 @@ class AttributeMeta(type):
     _KEY_REF_ATTR_TYPES = "_reference_attribute_types"
 
     def __new__(cls, name, bases, attrs):
-        attrs[AttributeMeta._KEY_ATTR_TYPES] = {}
-        attrs[AttributeMeta._KEY_REF_ATTR_TYPES] = {}
+        types = {}
+        references = {}
 
-        # register all declared attributes
-        for attr_name, value in attrs.items():
-            if isinstance(value, Attribute):
-                attrs[AttributeMeta._KEY_ATTR_TYPES][attr_name] = value
-                if isinstance(value, CatalogObjectReference):
-                    attrs[AttributeMeta._KEY_REF_ATTR_TYPES][attr_name] = value
+        # Register all declared attributes
+        for attr_name, attr_type in attrs.items():
+            if isinstance(attr_type, Attribute):
+                types[attr_name] = attr_type
+                if isinstance(attr_type, CatalogObjectReference):
+                    references[attr_name] = attr_type
 
-                # register this attribute's name with the instance
-                value._attribute_name = attr_name
+                # Register this attribute's name with the instance
+                attr_type._attribute_name = attr_name
 
         # inherit attributes from base classes
         for b in bases:
             if hasattr(b, AttributeMeta._KEY_ATTR_TYPES):
-                for attr_name, value in b._attribute_types.items():
-                    if attr_name not in attrs[AttributeMeta._KEY_ATTR_TYPES]:
-                        attrs[AttributeMeta._KEY_ATTR_TYPES][attr_name] = value
+                for attr_name, attr_type in b._attribute_types.items():
+                    # Don't overwrite existing attrs
+                    if attr_name not in types:
+                        types[attr_name] = attr_type
+                        if "_no_inherit" not in attrs or not attrs["_no_inherit"]:
+                            # Add base attributes for documentation
+                            # (sphinx doesn't inherit attrs)
+                            attrs[attr_name] = attr_type
             if hasattr(b, AttributeMeta._KEY_REF_ATTR_TYPES):
-                for attr_name, value in b._reference_attribute_types.items():
-                    if attr_name not in attrs[AttributeMeta._KEY_REF_ATTR_TYPES]:
-                        attrs[AttributeMeta._KEY_REF_ATTR_TYPES][attr_name] = value
+                for attr_name, attr_type in b._reference_attribute_types.items():
+                    # Don't overwrite existing reference attrs
+                    if attr_name not in references:
+                        references[attr_name] = attr_type
 
-        attrs["ATTRIBUTES"] = tuple(attrs[AttributeMeta._KEY_ATTR_TYPES].keys())
+        attrs["ATTRIBUTES"] = tuple(types.keys())
+        attrs["_attribute_types"] = types
+        attrs["_reference_attribute_types"] = references
+
         return super(AttributeMeta, cls).__new__(cls, name, bases, attrs)
 
 
@@ -477,6 +494,7 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
             self._PARAM_SERIALIZABLE: kwargs.pop(self._PARAM_SERIALIZABLE, True),
             self._PARAM_STICKY: kwargs.pop(self._PARAM_STICKY, False),
             self._PARAM_READONLY: kwargs.pop(self._PARAM_READONLY, False),
+            self._PARAM_DOC: kwargs.pop(self._PARAM_DOC, None),
         }
         super(MappingAttribute, self).__init__(**attr_params)
 
@@ -646,10 +664,10 @@ class ResolutionUnit(str, Enum):
 
 
 class Resolution(MappingAttribute):
-    """
-    A spatial pixel resolution with a unit. For example,
-    ``Resolution(value=60, unit=ResolutionUnit.METERS)`` represents a resolution
-    of 60 meters per pixel.
+    """A spatial pixel resolution with a unit.
+
+    For example, ``Resolution(value=60, unit=ResolutionUnit.METERS)`` represents a
+    resolution of 60 meters per pixel.
 
     Objects with resolution values can be filtered by a unitless number in which
     case the value is always in meters. For example, retrieving all bands with
@@ -660,9 +678,9 @@ class Resolution(MappingAttribute):
     Attributes
     ----------
     value : float
-        Required: The value of the resolution.
-    unit : str
-        Required: The unit the resolution is measured in.
+        The value of the resolution.
+    unit : str or ResolutionUnit
+        The unit the resolution is measured in.
     """
 
     value = Attribute()

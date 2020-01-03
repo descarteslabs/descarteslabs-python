@@ -26,69 +26,117 @@ class Product(CatalogObject):
 
     Parameters
     ----------
+    client : CatalogClient, optional
+        A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
+        The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+        be used if not set.
     kwargs : dict
-        With the exception of readonly attributes
-        (:py:attr:`~descarteslabs.catalog.CatalogObject.created`,
-        :py:attr:`~descarteslabs.catalog.CatalogObject.modified`), any
-        (inherited) attribute listed below can also be used as a keyword argument.
+        With the exception of readonly attributes (`created`, `modified`,
+        `resolution_min`, and `resolution_max`) and with the exception of properties
+        (`ATTRIBUTES`, `is_modified`, and `state`), any attribute listed below can
+        also be used as a keyword argument.  Also see
+        `~Product.ATTRIBUTES`.
 
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base class:
 
-    * :py:class:`descarteslabs.catalog.CatalogObject`
+    .. _product_note:
 
-    |
+    Note
+    ----
+    The ``reader`` and ``writer`` IDs must be prefixed with ``email:``, ``user:``,
+    ``group:`` or ``org:``.  The ``owner`` ID only accepts ``org:`` and ``user:``.
+    Using ``org:`` as an ``owner`` will assign those privileges only to administrators
+    for that organization; using ``org:`` as a ``reader`` or ``writer`` assigns those
+    privileges to everyone in that organization.  The `readers` and `writers` attributes
+    are only visible to the `owners`, you will not see them otherwise.
 
-    Attributes
-    ----------
-    name : str
-        Required: The name of this product.
-        *Sortable*.
-    description : str
-        A description with further details on this product.
-    start_datetime : str, datetime-like
-        The beginning of the mission for this product.
-        *Filterable, sortable*.
-    end_datetime : str, datetime-like
-        The end of the mission for this product.
-        *Filterable, sortable*.
-    is_core : bool
-        Whether this is a Descartes Labs catalog core product, which means that
-        the product is fully supported by Descartes Labs.
-        *Filterable, sortable*.
-    revisit_period_minutes_min : float
-        Minimum length of the time interval between observations of any given area in
-        minutes.
-        *Filterable, sortable*.
-    revisit_period_minutes_max : float
-        Maxiumum length of the time interval between observations of any given area in
-        minutes.
-        *Filterable, sortable*.
-    resolution_min : Resolution
-        Minimum resolution of the bands for this product. If applying a filter with a
-        plain unitless number the value is assumed to be in meters.
-        *Filterable, sortable*.
-    resolution_max : Resolution
-        Maximum resolution of the bands for this product. If applying a filter with a
-        plain unitless number the value is assumed to be in meters.
-        *Filterable, sortable*.
+    Also see `Sharing Resources </guides/sharing.html>`_.
+
     """
 
     _doc_type = "product"
     _url = "/products"
 
     # Product Attributes
-    name = Attribute()
-    description = Attribute()
-    is_core = BooleanAttribute()
-    revisit_period_minutes_min = Attribute()
-    revisit_period_minutes_max = Attribute()
-    start_datetime = Timestamp()
-    end_datetime = Timestamp()
-    resolution_min = Resolution(readonly=True)
-    resolution_max = Resolution(readonly=True)
+    name = Attribute(
+        doc="""str: The name of this product.
+
+        This should not be confused with a band name or image name.  Unlike the band
+        name and image name, this name is not unique and purely for display purposes
+        and is used by :py:meth:`Search.find_text`.  It can contain a string with up
+        to 2000 arbitrary characters.
+
+        *Searchable, sortable*.
+        """
+    )
+    description = Attribute(
+        doc="""str, optional: A description with further details on this product.
+
+        The description can be up to 80,000 characters and is used by
+        :py:meth:`Search.find_text`.
+
+        *Searchable*
+        """
+    )
+    is_core = BooleanAttribute(
+        doc="""bool, optional: Whether this is a Descartes Labs catalog core product.
+
+        A core product is a product that is fully supported by Descartes Labs.  By
+        default this value is ``False`` and you must have a special permission
+        (``descarteslabs:core:create``) to set it to ``True``.
+
+        *Filterable, sortable*.
+        """
+    )
+    revisit_period_minutes_min = Attribute(
+        doc="""float, optional: Minimum length of the time interval between observations.
+
+        The minimum length of the time interval between observations of any given area
+        in minutes.
+
+        *Filterable, sortable*.
+        """
+    )
+    revisit_period_minutes_max = Attribute(
+        doc="""float, optional: Maximum length of the time interval between observations.
+
+        The maximum length of the time interval between observations of any given area
+        in minutes.
+
+        *Filterable, sortable*.
+        """
+    )
+    start_datetime = Timestamp(
+        doc="""str or datetime, optional: The beginning of the mission for this product.
+
+        *Filterable, sortable*.
+        """
+    )
+    end_datetime = Timestamp(
+        doc="""str or datetime, optional: The end of the mission for this product.
+
+        *Filterable, sortable*.
+        """
+    )
+    resolution_min = Resolution(
+        readonly=True,
+        doc="""Resolution, readonly: Minimum resolution of the bands for this product.
+
+        If applying a filter with a plain unitless number the value is assumed to be
+        in meters.
+
+        *Filterable, sortable*.
+        """,
+    )
+    resolution_max = Resolution(
+        readonly=True,
+        doc="""Resolution, readonly: Maximum resolution of the bands for this product.
+
+        If applying a filter with a plain unitless number the value is assumed to be
+        in meters.
+
+        *Filterable, sortable*.
+        """,
+    )
 
     @check_deleted
     def delete_related_objects(self):
@@ -101,7 +149,7 @@ class Product(CatalogObject):
         Returns
         -------
         DeletionTaskStatus
-            Returns :py:class`DeletionTaskStatus` if deletion task was successfully
+            Returns :py:class:`DeletionTaskStatus` if deletion task was successfully
             started and ``None`` if there were no related objects to delete.
 
 

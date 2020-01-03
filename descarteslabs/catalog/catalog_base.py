@@ -22,7 +22,8 @@ class DeletedObjectError(Exception):
     """Indicates that an action cannot be performed.
 
     Raised when some action cannot be performed because the catalog object
-    has been deleted from the Descartes Labs catalog using the `delete` method.
+    has been deleted from the Descartes Labs catalog using the delete method
+    (e.g. :py:meth:`Product.delete`).
     """
 
     pass
@@ -199,105 +200,7 @@ class CatalogObjectMeta(AttributeMeta):
 
 @add_metaclass(CatalogObjectMeta)
 class CatalogObject(AttributeEqualityMixin):
-    """A base class for all representations of objects in the Descartes Labs catalog.
-
-    Parameters
-    ----------
-    client : CatalogClient, optional
-        A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
-        The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
-        be used if not set.
-    kwargs : dict, optional
-        With the exception of readonly attributes
-        (:py:attr:`~descarteslabs.catalog.CatalogObject.created`,
-        :py:attr:`~descarteslabs.catalog.CatalogObject.modified`), any
-        (inherited) attribute listed below can also be used as a keyword argument.
-
-
-    **The attributes documented below are shared by all catalog objects.**
-
-    Attributes
-    ----------
-    id : str
-        Required, immutable: A unique identifier for this object. Note that if you
-        pass a string that does not begin with your Descartes Labs user organization ID,
-        it will be prepended to your `id` with a ``:`` as separator.  If you are not
-        part of an organization, your user ID is used.
-        Once set, it cannot be changed.
-    created : datetime
-        Readonly: The point in time this object was created.
-        *Filterable, sortable*.
-    modified : datetime
-        Readonly: The point in time this object was last modified.
-        *Filterable, sortable*.
-    owners : list(str)
-        Optional: User, group, or organization IDs that own this object.  Defaults to
-        [``user:current_user``, ``org:current_org``]. The owner can edit, delete,
-        and change access to this object.
-        See note below.
-        *Filterable*.
-    readers : list(str)
-        Optional: User, group, or organization IDs that can read this object.
-        Will be empty by default.
-        This attribute is only available to the `owners` of a catalog object.
-        See note below.
-    writers : list(str)
-        Optional: User, group, or organization IDs that can edit this object (includes
-        read permission).  Will be empty by default.  See note below.
-        This attribute is only available to the `owners` of a catalog object.
-        See note below.
-    extra_properties : dict
-        Optional: A dictionary of up to 50 key/value pairs where the strings as keys
-        and numbers or strings as values. This allows for more structured custom
-        metadata to be associated with objects.
-    tags : list(str)
-        Optional: A list of up to 20 tags that may support the classification and
-        custom filtering of objects.
-        *Filterable*.
-
-    Note
-    ----
-    The ``reader`` and ``writer`` IDs must be prefixed with ``email:``, ``user:``,
-    ``group:`` or ``org:``.  The ``owner`` ID only accepts ``org:`` and ``user:``.
-    Using ``org:`` as an ``owner`` will assign those privileges only to administrators
-    for that organization; using ``org:`` as a ``reader`` or ``writer`` assigns those
-    privileges to everyone in that organization.  The `readers` and `writers` attributes
-    are only visible to the `owners`, you will not see them otherwise.
-
-    Methods
-    -------
-    delete(ignore_missing=False)
-        Delete this catalog object from the Descartes Labs catalog.
-
-        Once deleted, you cannot use the catalog object and should release any
-        references.
-
-        Parameters
-        ----------
-        ignore_missing : bool, optional
-            Whether to ignore (not raise) the
-            `~descarteslabs.client.exceptions.NotFoundError` exception if the object
-            to be deleted is not found in the Descartes Labs catalog.  The default is
-            ``False``.
-
-        Returns
-        -------
-        bool
-            ``True`` if this object was successfully deleted. Returns ``False`` if the
-            object was not found, and `ignore_missing` = ``True``.
-
-        Raises
-        ------
-        ConflictError
-            If the object has related objects (bands, images) that exist.
-        NotFoundError
-            If the object does not exist in the Descartes Labs catalog and
-            `ignore_missing` is ``False``.
-        DeletedObjectError
-            If this catalog object was deleted.
-        UnsavedObjectError
-            If this catalog object is being deleted without having been saved.
-    """
+    """A base class for all representations of objects in the Descartes Labs catalog."""
 
     # The following can be overridden by subclasses to customize behavior:
 
@@ -324,14 +227,75 @@ class CatalogObject(AttributeEqualityMixin):
         PUT = "put"
         GET = "get"
 
-    id = Attribute(mutable=False, serializable=False)
-    created = Timestamp(readonly=True)
-    modified = Timestamp(readonly=True)
-    owners = ListAttribute(Attribute)
-    readers = ListAttribute(Attribute)
-    writers = ListAttribute(Attribute)
-    extra_properties = Attribute()
-    tags = ListAttribute(Attribute)
+    id = Attribute(
+        mutable=False,
+        serializable=False,
+        doc="""str, immutable: A unique identifier for this object.
+
+        Note that if you pass a string that does not begin with your Descartes Labs
+        user organization ID, it will be prepended to your `id` with a ``:`` as
+        separator.  If you are not part of an organization, your user ID is used.  Once
+        set, it cannot be changed.
+        """,
+    )
+    created = Timestamp(
+        readonly=True,
+        doc="""datetime, readonly: The point in time this object was created.
+
+        *Filterable, sortable*.
+        """,
+    )
+    modified = Timestamp(
+        readonly=True,
+        doc="""datetime, readonly: The point in time this object was last modified.
+
+        *Filterable, sortable*.
+        """,
+    )
+    owners = ListAttribute(
+        Attribute,
+        doc="""list(str), optional: User, group, or organization IDs that own this object.
+
+        Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
+        delete, and change access to this object.  :ref:`See this note <product_note>`.
+
+        *Filterable*.
+        """,
+    )
+    readers = ListAttribute(
+        Attribute,
+        doc="""list(str), optional: User, group, or organization IDs that can read this object.
+
+        Will be empty by default.  This attribute is only available to the `owners`
+        of a catalog object.  :ref:`See this note <product_note>`.
+        """,
+    )
+    writers = ListAttribute(
+        Attribute,
+        doc="""list(str), optional: User, group, or organization IDs that can edit this object.
+
+        Writers will also have read permission.  Writers will be empty by default.
+        See note below.  This attribute is only available to the `owners` of a catalog
+        object.  :ref:`See this note <product_note>`.
+        """,
+    )
+    extra_properties = Attribute(
+        doc="""dict, optional: A dictionary of up to 50 key/value pairs.
+
+        The keys of this dictonary must be strings, and the values of this dictionary
+        can be strings or numbers.  This allows for more structured custom metadata
+        to be associated with objects.
+        """
+    )
+    tags = ListAttribute(
+        Attribute,
+        doc="""list, optional: A list of up to 20 tags.
+
+        The tags may support the classification and custom filtering of objects.
+
+        *Filterable*.
+        """,
+    )
 
     def __new__(cls, *args, **kwargs):
         return _new_abstract_class(cls, CatalogObject)
@@ -457,7 +421,7 @@ class CatalogObject(AttributeEqualityMixin):
 
     @property
     def is_modified(self):
-        """Whether any attributes were changed.
+        """bool: Whether any attributes were changed.
 
         ``True`` if any of the attributes have changed since the last time this
         catalog object was retrieved or saved.  ``False`` otherwise.
@@ -589,12 +553,12 @@ class CatalogObject(AttributeEqualityMixin):
             default. If set to ``True``, only those attributes that were modified since
             the last time the catalog object was retrieved or saved will be included.
         jsonapi_format : bool, optional
-            Whether to use the `data` element for catalog objects.  ``False`` by
-            default. When set to ``False``, the serialized data will directly contain
+            Whether to use the ``data`` element for catalog objects.  ``False`` by
+            default.  When set to ``False``, the serialized data will directly contain
             the attributes of the catalog object.  If set to ``True``, the serialized
-            data will follow the exact JSONAPI with a top-level `data` element which
-            contains `id`, `type`, and `attributes`.  The latter will contain the
-            attributes of the catalog object.
+            data will follow the exact JSONAPI with a top-level ``data`` element which
+            contains ``id``, ``type``, and ``attributes``.  The latter will contain
+            the attributes of the catalog object.
         """
         keys = self._modified if modified_only else self._attributes.keys()
         attributes = self._serialize(keys, jsonapi_format=jsonapi_format)
@@ -611,10 +575,7 @@ class CatalogObject(AttributeEqualityMixin):
 
     @property
     def state(self):
-        """The state of this catalog object.
-
-        See :py:attr:`~descarteslabs.catalog.attributes.DocumentState`.
-        """
+        """DocumentState: The state of this catalog object."""
         if self._deleted:
             return DocumentState.DELETED
 

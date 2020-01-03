@@ -50,118 +50,15 @@ class Image(NamedCatalogObject):
 
     Parameters
     ----------
+    client : CatalogClient, optional
+        A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
+        The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+        be used if not set.
     kwargs : dict
-        With the exception of readonly attributes
-        (:py:attr:`~descarteslabs.catalog.CatalogObject.created`,
-        :py:attr:`~descarteslabs.catalog.CatalogObject.modified`), any
-        (inherited) attribute listed below can also be used as a keyword argument.
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base classes:
-
-    * :py:class:`descarteslabs.catalog.NamedCatalogObject`
-    * :py:class:`descarteslabs.catalog.CatalogObject`
-
-    |
-
-    Attributes
-    ----------
-    geometry : shapely.geometry.base.BaseGeometry, geojson-like
-        Required: Geometry representing the image coverage.
-        *Filterable*
-        (use :py:meth:`ImageSearch.intersects
-        <descarteslabs.catalog.ImageSearch.intersects>`)
-    cs_code : str
-        The coordinate reference system used by the image as an EPSG or ESRI code,
-        e.g. ``"EPSG:4326"``. One of `cs_code` and `projection` is required. If
-        both are set and disagree, `cs_code` takes precedence.
-    projection : str
-        The spatial reference system used by the image either as a proj.4 string or
-        a WKT string. One of `cs_code` and `projection` is required.
-        If both are set and disagree, `cs_code` takes precedence.
-    geotrans : `list` of six `float` elements
-        GDAL-style `geotransform matrix <https://gdal.org/user/raster_data_model.html#affine-geotransform>`_
-        that transforms pixel coordinates into the spatial reference system defined by the `cs_code`
-        or `projection` attributes
-    x_pixels : int
-        X dimension of the image in pixels
-    y_pixels : int
-        Y dimension of the image in pixels
-    acquired : str, datetime-like
-        Required: Timestamp when the image was captured by its sensor or created.
-        *Filterable, sortable*.
-    acquired_end : str, datetime-like
-        Timestamp when the image capture by its sensor was completed.
-        *Filterable, sortable*.
-    published : str, datetime-like
-        Timestamp when the data provider published this image. *Filterable, sortable*.
-    storage_state : StorageState
-        Required: Storage state of the image; "available" if the data is available
-        and can be rastered, "remote" if the data is not currently available.
-        *Filterable, sortable*.
-    files : list(File)
-        The list of files holding data for this image.
-    area : float
-        Surface are the image covers.
-        *Filterable, sortable*.
-    azimuth_angle : float
-        Sensor azimuth angle in degrees.
-        *Filterable, sortable*.
-    bits_per_pixel : list(float)
-        Average bits of data per pixel per band
-    bright_fraction : float
-        Fraction of the image that has reflectance greater than .4 in the blue band.
-        *Filterable, sortable*.
-    cloud_fraction : float
-        Fraction of pixels which are obscured by clouds.
-        *Filterable, sortable*.
-    alt_cloud_fraction : float
-        Fraction of pixels which are obscured by clouds, as per an alternative
-        algorithm.
-        *Filterable, sortable*.
-    processing_pipeline_id : str
-        Identifier for the pipeline that processed this image from raw data.
-        *Filterable, sortable*.
-    fill_fraction : float
-        Fraction of this image which has data.
-        *Filterable, sortable*.
-    incidence_angle : float
-        Sensor incidence angle in degrees.
-        *Filterable, sortable*.
-    reflectance_scale : list(float)
-        Scale factors converting TOA radiances to TOA reflectances
-    roll_angle : float
-        Applicable only to Landsat 8, roll angle in degrees.
-        *Filterable, sortable*.
-    solar_azimuth_angle : float
-        Solar azimuth angle at capture time.
-        *Filterable, sortable*.
-    solar_elevation_angle : float
-        Solar elevation angle at capture time.
-        *Filterable, sortable*.
-    view_angle : float
-        Sensor view angle in degrees.
-        *Filterable, sortable*.
-    satellite_id : str
-        Id of the capturing satellite/sensor among a constellation of many satellites.
-        *Filterable, sortable*.
-    provider_id : str
-        Id that uniquely ties this image to an entity as understood by the data
-        provider.
-        *Filterable, sortable*.
-    provider_url : str
-        An external (http) URL that has more details about the image
-    preview_url : str
-        An external (http) URL to an image that could be inlined in a UI to show a
-        preview for the image
-    preview_file : str
-        A GCS URL (gs://) with a georeferenced image that can be used to raster the
-        image in a preview context, generally low resolution. It should be a 3-band
-        (RBG) or a 4-band (RGBA) image suitable for visual preview. (It's not
-        expected to conform to the bands of the products.)
-
+        With the exception of readonly attributes (`created`, `modified`) and with the
+        exception of properties (`ATTRIBUTES`, `is_modified`, and `state`), any
+        attribute listed below can also be used as a keyword argument.  Also see
+        `~Image.ATTRIBUTES`.
     """
 
     _doc_type = "image"
@@ -170,44 +67,197 @@ class Image(NamedCatalogObject):
     _gcs_upload_service = ThirdPartyService()
 
     # Geo referencing
-    geometry = GeometryAttribute()
-    cs_code = Attribute()
-    projection = Attribute()
-    geotrans = Attribute()
-    x_pixels = Attribute()
-    y_pixels = Attribute()
+    geometry = GeometryAttribute(
+        doc="""str or shapely.geometry.base.BaseGeometry: Geometry representing the image coverage.
+
+        *Filterable*
+
+        (use :py:meth:`ImageSearch.intersects
+        <descarteslabs.catalog.ImageSearch.intersects>` to search based on geometry)
+        """
+    )
+    cs_code = Attribute(
+        doc="""str: The coordinate reference system used by the image as an EPSG or ESRI code.
+
+        An example of a EPSG code is ``"EPSG:4326"``.  One of `cs_code` and `projection`
+        is required.  If both are set and disagree, `cs_code` takes precedence.
+        """
+    )
+    projection = Attribute(
+        doc="""str: The spatial reference system used by the image.
+
+        The projection can be specified as either a proj.4 string or a a WKT string.
+        One of `cs_code` and `projection` is required.  If both are set and disagree,
+        `cs_code` takes precedence.
+        """
+    )
+    geotrans = Attribute(
+        doc="""list of six float elements, optional if `~StorageState.REMOTE`: GDAL-style geotransform matrix.
+
+        A GDAL-style `geotransform matrix
+        <https://gdal.org/user/raster_data_model.html#affine-geotransform>`_ that
+        transforms pixel coordinates into the spatial reference system defined by the
+        `cs_code` or `projection` attributes.
+        """
+    )
+    x_pixels = Attribute(
+        doc="int, optional if `~StorageState.REMOTE`: X dimension of the image in pixels."
+    )
+    y_pixels = Attribute(
+        doc="int, optional if `~StorageState.REMOTE`: Y dimension of the image in pixels."
+    )
 
     # Time dimensions
-    acquired = Timestamp()
-    acquired_end = Timestamp()
-    published = Timestamp()
+    acquired = Timestamp(
+        doc="""str or datetime: Timestamp when the image was captured by its sensor or created.
+
+        *Filterable, sortable*.
+        """
+    )
+    acquired_end = Timestamp(
+        doc="""str or datetime, optional: Timestamp when the image capture by its sensor was completed.
+
+        *Filterable, sortable*.
+        """
+    )
+    published = Timestamp(
+        doc="""str or datetime, optional: Timestamp when the data provider published this image.
+
+        *Filterable, sortable*.
+        """
+    )
 
     # Stored files
-    storage_state = EnumAttribute(StorageState)
-    files = ListAttribute(File)
+    storage_state = EnumAttribute(
+        StorageState,
+        doc="""str or StorageState: Storage state of the image.
+
+        The state is `~StorageState.AVAILABLE` if the data is available and can be
+        rastered, `~StorageState.REMOTE` if the data is not currently available.
+
+        *Filterable, sortable*.
+        """,
+    )
+    files = ListAttribute(
+        File, doc="list(File): The list of files holding data for this image."
+    )
 
     # Image properties
-    area = Attribute()
-    azimuth_angle = Attribute()
-    bits_per_pixel = ListAttribute(Attribute)
-    bright_fraction = Attribute()
-    cloud_fraction = Attribute()
-    alt_cloud_fraction = Attribute()
-    processing_pipeline_id = Attribute()
-    fill_fraction = Attribute()
-    incidence_angle = Attribute()
-    reflectance_scale = ListAttribute(Attribute)
-    roll_angle = Attribute()
-    solar_azimuth_angle = Attribute()
-    solar_elevation_angle = Attribute()
-    view_angle = Attribute()
-    satellite_id = Attribute()
+    area = Attribute(
+        doc="""float, optional: Surface area the image covers.
+
+        *Filterable, sortable*.
+        """
+    )
+    azimuth_angle = Attribute(
+        doc="""float, optional: Sensor azimuth angle in degrees.
+
+        *Filterable, sortable*.
+        """
+    )
+    bits_per_pixel = ListAttribute(
+        Attribute, doc="list(float), optional: Average bits of data per pixel per band."
+    )
+    bright_fraction = Attribute(
+        doc="""float, optional: Fraction of the image that has reflectance greater than .4 in the blue band.
+
+        *Filterable, sortable*.
+        """
+    )
+    cloud_fraction = Attribute(
+        doc="""float, optional: Fraction of pixels which are obscured by clouds.
+
+        *Filterable, sortable*.
+        """
+    )
+    alt_cloud_fraction = Attribute(
+        doc="""float, optional: Fraction of pixels which are obscured by clouds.
+
+        This is as per an alternative algorithm.  See the product documentation in the
+        `Descartes Labs catalog <catalog.descarteslabs.com>`_ for more information.
+
+        *Filterable, sortable*.
+        """
+    )
+    processing_pipeline_id = Attribute(
+        doc="""str, optional: Identifier for the pipeline that processed this image from raw data.
+
+        *Filterable, sortable*.
+        """
+    )
+    fill_fraction = Attribute(
+        doc="""float, optional: Fraction of this image which has data.
+
+        *Filterable, sortable*.
+        """
+    )
+    incidence_angle = Attribute(
+        doc="""float, optional: Sensor incidence angle in degrees.
+
+        *Filterable, sortable*.
+        """
+    )
+    reflectance_scale = ListAttribute(
+        Attribute,
+        doc="list(float), optional: Scale factors converting TOA radiances to TOA reflectances.",
+    )
+    roll_angle = Attribute(
+        doc="""float, optional: Applicable only to Landsat 8, roll angle in degrees.
+
+        *Filterable, sortable*.
+        """
+    )
+    solar_azimuth_angle = Attribute(
+        doc="""float, optional: Solar azimuth angle at capture time.
+
+        *Filterable, sortable*.
+        """
+    )
+    solar_elevation_angle = Attribute(
+        doc="""float, optional: Solar elevation angle at capture time.
+
+        *Filterable, sortable*.
+        """
+    )
+    view_angle = Attribute(
+        doc="""float, optional: Sensor view angle in degrees.
+
+        *Filterable, sortable*.
+        """
+    )
+    satellite_id = Attribute(
+        doc="""str, optional: Id of the capturing satellite/sensor among a constellation of many satellites.
+
+        *Filterable, sortable*.
+        """
+    )
 
     # Provider info
-    provider_id = Attribute()
-    provider_url = Attribute()
-    preview_url = Attribute()
-    preview_file = Attribute()
+    provider_id = Attribute(
+        doc="""str, optional: Id that uniquely ties this image to an entity as understood by the data provider.
+
+        *Filterable, sortable*.
+        """
+    )
+    provider_url = Attribute(
+        doc="str, optional: An external (http) URL that has more details about the image"
+    )
+    preview_url = Attribute(
+        doc="""str, optional: An external (http) URL to a preview image.
+
+        This image could be inlined in a UI to show a preview for the image.
+        """
+    )
+    preview_file = Attribute(
+        doc="""str, optional: A GCS URL with a georeferenced image.
+
+        Use a GCS URL (``gs://...```) with appropriate access permissions.  This
+        referenced image can be used to raster the image in a preview context, generally
+        low resolution.  It should be a 3-band (RBG) or a 4-band (RGBA) image suitable
+        for visual preview.  (It's not expected to conform to the bands of the
+        products.)
+        """
+    )
 
     @classmethod
     def search(cls, client=None):
@@ -256,7 +306,7 @@ class Image(NamedCatalogObject):
             local filesystem, or an opened file (``io.IOBase``), or an iterable of
             either of these when multiple files make up the image.
         upload_options : `~descarteslabs.catalog.ImageUploadOptions`, optional
-            Optional control of the upload process.
+            Control of the upload process.
 
         Raises
         ------
@@ -344,7 +394,7 @@ class Image(NamedCatalogObject):
             [``uint8``, ``int8``, ``uint16``, ``int16``, ``uint32``, ``int32``,
             ``float32``, ``float64``]
         upload_options : :py:class:`~descarteslabs.catalog.ImageUploadOptions`, optional
-            Optional control of the upload process.
+            Control of the upload process.
         raster_meta : dict, optional
             Metadata returned from the :meth:`Raster.ndarray()
             <descarteslabs.client.services.raster.Raster.ndarray>` request which

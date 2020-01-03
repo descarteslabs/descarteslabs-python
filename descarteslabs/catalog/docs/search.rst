@@ -22,6 +22,7 @@ Search
 .. autoclass:: descarteslabs.catalog.ImageSearch
   :autosummary:
   :members:
+  :inherited-members:
   :undoc-members:
 
 .. autoclass:: descarteslabs.catalog.SummaryResult

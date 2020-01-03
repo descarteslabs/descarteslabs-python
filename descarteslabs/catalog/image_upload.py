@@ -73,21 +73,21 @@ class OverviewResampler(str, Enum):
 
 
 class ImageUploadStatus(str, Enum):
-    """The status of the image upload.
+    """The state of the image upload.
 
     Attributes
     ----------
-    UPLOADING
+    UPLOADING : enum
         File(s) are being uploaded from client.
-    PENDING
+    PENDING : enum
         The files were uploaded, awaiting processing.
-    RUNNING
+    RUNNING : enum
         The data is being processed.
-    SUCCESS
+    SUCCESS : enum
         The upload completed successfully.
-    FAILURE
+    FAILURE : enum
         The upload failed; error information is available.
-    CANCELED
+    CANCELED : enum
         The upload was canceled by the user.
     """
 
@@ -100,20 +100,20 @@ class ImageUploadStatus(str, Enum):
 
 
 class ImageUploadOptions(MappingAttribute):
-    """Image upload processing options.
+    """Control of the upload process.
 
     Attributes
     ----------
-    upload_type : str
-        Required: Type of upload job, see :class:`ImageUploadType`.
+    upload_type : str or ImageUploadType
+        Type of upload job, see `ImageUploadType`.
     image_files : list(str)
-        Required: file basenames of the uploaded files.
+        File basenames of the uploaded files.
     overviews : list(int)
-        Overview generation control, only used when ``upload_type ==
-        ImageUploadType::NDARRAY``.
-    overview_resampler : :class:`OverviewResampler`
-        Overview resampler method, only used when ``upload_type ==
-        ImageUploadType::NDARRAY``.
+        Overview generation control, only used when `upload_type` is
+        `ImageUploadType.NDARRAY`.
+    overview_resampler : str or OverviewResampler
+        Overview resampler method, only used when `upload_type` is
+        `ImageUploadType.NDARRAY`.
     """
 
     upload_type = EnumAttribute(ImageUploadType)
@@ -135,7 +135,8 @@ class UploadError(MappingAttribute):
         Component of the upload process that triggered the error.
     component_id : str
         Identifier for the `component` that errored.
-        If `component` for the error is `worker` this attribute represents the `result_key` of the `Task`.
+
+        If `component` for the error is ``worker`` this attribute represents the ``result_key`` of the `Task`.
     """
 
     stacktrace = Attribute(mutable=False)
@@ -147,51 +148,9 @@ class UploadError(MappingAttribute):
 class ImageUpload(CatalogObject):
     # Be aware that the `|` characters below add whitespace.  The first one is needed
     # avoid the `Inheritance` section from appearing before the auto summary.
-    """The informational object returned when you upload an image using
-    `~descarteslabs.catalog.Image.upload` or
-    `~descarteslabs.catalog.Image.upload_ndarray`.
-
-    |
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base class:
-
-    * :py:class:`descarteslabs.catalog.CatalogObject`
-
-    |
-
-    Attributes
-    ----------
-    id : str
-        Globally unique identifier for the upload.
-    product_id : str
-        Product id for the `~descarteslabs.catalog.Product` to which this imagery will
-        be uploaded.
-    image_id : str
-        Image id for the `~descarteslabs.catalog.Image` to which this imagery will be
-        uploaded.
-    image : :class:`~descarteslabs.catalog.Image`
-        `~descarteslabs.catalog.Image` instance with all desired metadata fields (any
-        values will override those determined from the image files themselves).
-    image_upload_options : :class:`ImageUploadOptions`
-        Optional control of the upload process, see :class:`ImageUploadOptions`.
-    resumable_urls : list(str)
-        Upload URLs (one per `ImageUploadOptions.image_files` element) to which the
-        client will upload the file contents.
-    status : str
-        Current job status, see :class:`ImageUploadStatus`.
-    start_datetime : str, datetime-like
-        Starting time for upload process.
-    end_datetime : str, datetime-like
-        Ending time for upload process.
-    job_id : str
-        Unique identifier for the internal asynchronous upload process.
-    events : list
-        List of events pertaining to the upload process.
-    errors : list
-        List of any errors encountered during the upload process if the upload failed.
+    """The status object returned when you upload an image using
+    :py:meth:`~descarteslabs.catalog.Image.upload` or
+    :py:meth:`~descarteslabs.catalog.Image.upload_ndarray`.
     """
 
     _POLLING_INTERVAL = 60
@@ -203,20 +162,79 @@ class ImageUpload(CatalogObject):
 
     _doc_type = "image_upload"
     _url = "/uploads"
+    _no_inherit = True
 
-    product_id = Attribute(mutable=False)
-    image_id = Attribute(mutable=False)
-    image = CatalogObjectReference(
-        Image, allow_unsaved=True, mutable=False, serializable=True, sticky=True
+    id = Attribute(
+        mutable=False,
+        serializable=False,
+        doc="str: Globally unique identifier for the upload.",
     )
-    image_upload_options = ImageUploadOptions(sticky=True)
-    resumable_urls = Attribute(serializable=False, mutable=False)
-    status = EnumAttribute(ImageUploadStatus)
-    start_datetime = Timestamp(readonly=True)
-    end_datetime = Timestamp(readonly=True)
-    job_id = Attribute(readonly=True)
-    events = Attribute(readonly=True)
-    errors = ListAttribute(UploadError, readonly=True)
+    product_id = Attribute(
+        mutable=False,
+        doc="""str: Product id of the product for this imagery.
+
+        The product id for the `~descarteslabs.catalog.Product` to which this imagery
+        will be uploaded.
+        """,
+    )
+    image_id = Attribute(
+        mutable=False,
+        doc="""str: Image id of the image for this imagery.
+
+        The image id for the `~descarteslabs.catalog.Image` to which this imagery will
+        be uploaded.  This is identical to `image`.id.
+        """,
+    )
+    image = CatalogObjectReference(
+        Image,
+        allow_unsaved=True,
+        mutable=False,
+        serializable=True,
+        sticky=True,
+        doc="""~descarteslabs.catalog.Image: Image instance with all desired metadata fields.
+
+        Note that any values will override those determined from the image files
+        themselves.
+        """,
+    )
+    image_upload_options = ImageUploadOptions(
+        sticky=True, doc="ImageUploadOptions: Control of the upload process."
+    )
+    resumable_urls = Attribute(
+        serializable=False,
+        mutable=False,
+        doc="""list(str): Upload URLs to which the client will upload the file contents.
+
+        There is one upload URL per `ImageUploadOptions.image_files` element in the
+        same order.  You use each upload URL to upload the image data (typically one
+        URL per band).
+        """,
+    )
+    status = EnumAttribute(
+        ImageUploadStatus,
+        doc="""str or ImageUploadStatus: Current job status.
+
+        To retrieve the latest status, use :py:meth:`reload`.
+        """,
+    )
+    start_datetime = Timestamp(
+        readonly=True, doc="str or datetime: Starting time for upload process."
+    )
+    end_datetime = Timestamp(
+        readonly=True, doc="str or datetime: Ending time for upload process."
+    )
+    job_id = Attribute(
+        readonly=True,
+        doc="str: Unique identifier for the internal asynchronous upload process.",
+    )
+    events = Attribute(
+        readonly=True, doc="list(str): List of events pertaining to the upload process."
+    )
+    errors = ListAttribute(
+        UploadError,
+        readonly=True,
+        doc="list(UploadError): List of any errors encountered during the upload process if the upload failed.",
+    )
 
     def __init__(self, **kwargs):
         if kwargs.get("id") is None:

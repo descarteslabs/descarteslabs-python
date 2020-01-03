@@ -2,15 +2,20 @@ from .attributes import Attribute, AttributeValidationError, CatalogObjectRefere
 from .catalog_base import CatalogObject, _new_abstract_class
 from .product import Product
 
-from .attributes import DocumentState  # noqa : F104 -- This is for the documentation
-
 
 class NamedIdAttribute(Attribute):
-    """Verifies that the id is a concatenation of product id and name
+    """str, immutable: An optional unique identifier for this object.
 
-    It will compare the `id` against the `name` and `product_id` attributes if
-    they are set.  It will set the `name` and `product_id` atttributes otherwise.
+    The identifier for a named catalog object is the concatenation of the `product_id`
+    and `name`, separated by a colon.  It will be generated from the `product_id` and
+    the `name` if not provided.  Otherwise, the `name` and `product_id` are extracted
+    from the `id`.  A :py:exc:`AttributeValidationError` will be raised if it conflicts
+    with an existing `product_id` and/or `name`.
     """
+
+    # Verifies that the id is a concatenation of product id and name
+    # It will compare the `id` against the `name` and `product_id` attributes if
+    # they are set.  It will set the `name` and `product_id` atttributes otherwise.
 
     def __init__(self):
         super(NamedIdAttribute, self).__init__(mutable=False, serializable=False)
@@ -44,7 +49,17 @@ class NamedIdAttribute(Attribute):
 
 
 class NameAttribute(Attribute):
-    """Sets the id if the `product_id` is already set."""
+    """str, immutable: The name of the catalog object.
+
+    The name of a named catalog object is unique within a product and object type
+    (images and bands).  The name can contain alphanumeric characters, ``-``, ``_``,
+    and ``.`` up to 2000 characters.  If the `id` contains a name, it will be used
+    instead.  Once set, it cannot be changed.
+
+    *Sortable*.
+    """
+
+    # Sets the id if the `product_id` is already set."""
 
     def __init__(self):
         super(NameAttribute, self).__init__(mutable=False)
@@ -53,6 +68,7 @@ class NameAttribute(Attribute):
         # Only update if it differs
         if value != obj.name:
             super(NameAttribute, self).__set__(obj, value, validate=validate)
+
         if value is not None and obj.id is None and obj.product_id:
             id_ = "{}:{}".format(obj.product_id, value)
             # Only update if it differs
@@ -61,7 +77,15 @@ class NameAttribute(Attribute):
 
 
 class ProductIdAttribute(Attribute):
-    """Sets the id if the `name` is already set."""
+    """str, immutable: The id of the product this catalog object belongs to.
+
+    If the `id` contains a product id, it will be used instead.  Once set, it cannot
+    be changed.
+
+    *Filterable, sortable*.
+    """
+
+    # Sets the id if the `name` is already set."""
 
     def __init__(self):
         super(ProductIdAttribute, self).__init__(mutable=False)
@@ -70,6 +94,7 @@ class ProductIdAttribute(Attribute):
         # Only update if it differs
         if value != obj.product_id:
             super(ProductIdAttribute, self).__set__(obj, value, validate=validate)
+
         if value is not None and obj.id is None and obj.name:
             id_ = "{}:{}".format(value, obj.name)
             # Only update if it differs
@@ -87,46 +112,14 @@ class NamedCatalogObject(CatalogObject):
 
     Parameters
     ----------
-    kwargs : dict
-        With the exception of readonly attributes
-        (:py:attr:`~descarteslabs.catalog.CatalogObject.created`,
-        :py:attr:`~descarteslabs.catalog.CatalogObject.modified`), any
-        (inherited) attribute listed below can also be used as a keyword argument.
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base class:
-
-    * :py:class:`descarteslabs.catalog.CatalogObject`
-
-    |
-
-    **The attributes documented below are shared by all named catalog objects,
-    namely Band and Image.**
-
-    Attributes
-    ----------
-    id : str
-        Immutable: An optional unique identifier for this object, a concatenation of
-        the `product_id` and `name`, separated by a colon.  It will be generated from
-        the `product_id` and the `name` if not provided.  Otherwise, the `name` and
-        `product_id` are extracted from the `id`.  A :py:exc:`AttributeValidationError`
-        will be raised if it conflicts with an existing `product_id` and/or `name`.
-    name : str
-        Required, immutable: The name of the catalog object, unique within a product.
-        The name can contain alphanumeric characters, ``-``, ``_``, and ``.``.  If the
-        `id` contains a name, it will be used instead.  Once set, it cannot be changed.
-        *Sortable*.
-    product_id : str
-        Required, immutable: The id of the product this catalog object belongs to.  If
-        the `id` contains a product id, it will be used instead.  Once set, it cannot
-        be changed.
-        *Filterable, sortable*.
-    product : Product
-        The representation of the product this catalog object belongs to.
-        If given, it is used to retrieve the `product_id`.
-        *Filterable*.
+    client : CatalogClient, optional
+        A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
+        The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+        be used if not set.
+    kwargs : dict, optional
+        With the exception of readonly attributes (`created`, `modified`) and with the
+        exception of properties (`ATTRIBUTES`, `is_modified`, and `state`), any
+        attribute listed below can also be used as a keyword argument.
 
     Example
     -------
@@ -141,13 +134,23 @@ class NamedCatalogObject(CatalogObject):
     >>> # Also possible...
     >>> image_id = "{}:{}".format(product.id, image_name)
     >>> image = Image(id=image_id)
-
     """
 
     id = NamedIdAttribute()
     name = NameAttribute()
     product_id = ProductIdAttribute()
-    product = CatalogObjectReference(Product, mutable=False, sticky=True)
+    product = CatalogObjectReference(
+        Product,
+        mutable=False,
+        sticky=True,
+        doc="""
+        Product, immutable: The product instance this catalog object belongs to.
+
+        If given, it is used to retrieve the `product_id`.
+
+        *Filterable*.
+        """,
+    )
 
     def __new__(cls, *args, **kwargs):
         return _new_abstract_class(cls, NamedCatalogObject)

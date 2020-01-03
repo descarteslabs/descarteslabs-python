@@ -18,16 +18,15 @@ class Search(object):
     * :py:meth:`filter`
     * :py:meth:`find_text`
 
-    Each method returns a narrowed-down search object.  You obtain a search object
-    using the :py:meth:`~descarteslabs.catalog.CatalogObject.search` method
-    on a :py:class:`~descarteslabs.catalog.CatalogObject` such as
-    :py:class:`~descarteslabs.catalog.Product`, :py:class:`~descarteslabs.catalog.Band`
-    or :py:class:`~descarteslabs.catalog.Image`.
+    Each method on a search instance returns a narrowed-down search object.  You obtain
+    a search instance using the search() method on a catalog object class, for example
+    `Product.search() <descarteslabs.catalog.Product.search>`, `Band.search()
+    <descarteslabs.catalog.Band>` or `Image.search() <descarteslabs.catalog.Image>`.
 
-    You must use the `Search` object as an ``iterator`` to get the results.
-    This will execute the search query and return a generator for iterating through
-    the returned results.  This might raise a `BadRequestError` if any of the query
-    parameters or filters are invalid.
+    You must use the `Search` object as an ``iterator`` to get the results.  This will
+    execute the search query and return a generator for iterating through the returned
+    results.  This might raise a `~descarteslabs.client.exceptions.BadRequestError`
+    if any of the query parameters or filters are invalid.
 
     Example
     -------
@@ -156,7 +155,7 @@ class Search(object):
         return filters
 
     def find_text(self, text):
-        """Full-text search for a string in the name or description of the item.
+        """Full-text search for a string in the name or description of an item.
 
         Not all attributes support full-text search; the product name
         (`Product.name <descarteslabs.catalog.Product.name>`)
@@ -296,18 +295,11 @@ class Search(object):
 class ImageSearch(Search):
     # Be aware that the `|` characters below add whitespace.  The first one is needed
     # avoid the `Inheritance` section from appearing before the auto summary.
-    """A search request that iterates over its search results.
+    """A search request that iterates over its search results for images.
 
-    The `ImageSearch` is identical to `Search` but with a couple of summary methods.
-
-    |
-
-    Inheritance
-    -----------
-    For inherited parameters, methods, attributes, and properties, please refer to the
-    base classes:
-
-    * :py:class:`descarteslabs.catalog.Search`
+    The `ImageSearch` is identical to `Search` but with a couple of summary methods:
+    :py:meth:`summary` and :py:meth:`summary_interval`; and an additional method
+    :py:meth:`intersects` for geometry.
     """
 
     _unsupported_summary_params = ["sort"]
