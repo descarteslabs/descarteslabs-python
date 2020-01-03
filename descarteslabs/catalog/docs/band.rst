@@ -25,7 +25,8 @@ Bands
   :exclude-members: ATTRIBUTES, band_index, created, data_range, data_type, description,
     display_range, extra_properties, file_index, id, is_modified, jpx_layer_index,
     modified, name, nodata, owners, product, product_id, readers, resolution,
-    sort_order, state, tags, type, writers, reload, save, serialize, update
+    sort_order, state, tags, type, writers, reload, save, serialize, update,
+    get_or_create
 
 .. autoclass:: descarteslabs.catalog.SpectralBand
   :autosummary:

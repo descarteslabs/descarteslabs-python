@@ -32,6 +32,9 @@ class Foo(CatalogObject):
     bar = Attribute()
 
 
+Foo._model_classes_by_type_and_derived_type = {("foo", None): Foo}
+
+
 class TestCatalogObject(ClientTestCase):
     def test_abstract_class(self):
         with pytest.raises(TypeError):
@@ -364,6 +367,7 @@ class TestCatalogObject(ClientTestCase):
         r = instance.delete()
         assert r is True
         assert instance.state == DocumentState.DELETED
+        assert "* Deleted" in repr(instance)
 
     def test_delete_not_saved(self):
         foo = Foo(id="nerp", client=self.client)
@@ -505,3 +509,37 @@ class TestCatalogObject(ClientTestCase):
         with pytest.raises(NotFoundError) as error:
             c.delete()
             assert error.message == "{}: {}".format(title, detail)
+
+    def test_update_no_changes(self):
+        c = CatalogObject(
+            id="id", owners=["owner"], writers=["writer"], tags=["tag"], _saved=True
+        )
+        assert not c.is_modified
+
+        c.update(owners=["owner"], writers=["writer"], tags=["tag"])
+        assert not c.is_modified
+
+    @responses.activate
+    def test_get_or_create(self):
+        not_found_json = {
+            "errors": [
+                {
+                    "detail": "Object not found: foo1",
+                    "status": "404",
+                    "title": "Object not found",
+                }
+            ],
+            "jsonapi": {"version": "1.0"},
+        }
+
+        self.mock_response(responses.GET, not_found_json, status=404)
+        self.mock_response(responses.GET, not_found_json, status=404)
+
+        foo = Foo.get("foo1", client=self.client)
+        assert foo is None
+
+        foo = Foo.get_or_create("foo1", bar="baz", client=self.client)
+        assert foo is not None
+        assert foo.id == "foo1"
+        assert foo.bar == "baz"
+        assert foo.state == DocumentState.UNSAVED

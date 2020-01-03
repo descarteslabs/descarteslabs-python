@@ -835,3 +835,7 @@ class TestProduct(ClientTestCase):
         del Client.auth.payload["org"]
 
         assert Product.namespace_id("foo", client=Client) == "mynamespace:foo"
+
+    def test_named_id(self):
+        p = Product(id="id1")
+        assert p.named_id("band1") == "id1:band1"

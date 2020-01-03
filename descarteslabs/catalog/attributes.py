@@ -55,6 +55,8 @@ class DocumentState(str, Enum):
         attribute value has since been changed.  You can
         :py:meth:`~descarteslabs.catalog.Product.save` a modified catalog object
         to update the object in the Descartes Labs catalog.
+
+        Note that assigning an identical value does not change the state.
     SAVED : enum
         The catalog object has been fully synchronized with the Descartes Labs catalog
         (using :py:meth:`~descarteslabs.catalog.Product.get` or
@@ -192,9 +194,15 @@ class Attribute(object):
         if validate:
             self._raise_if_immutable_or_readonly("set", obj)
 
+        value = self.deserialize(value, validate)
+        changed = not (
+            self._attribute_name in obj._attributes
+            and obj._attributes[self._attribute_name] == value
+        )
+
         # `_set_modified()` will raise exception if change is not allowed
-        obj._set_modified(self._attribute_name, validate)
-        obj._attributes[self._attribute_name] = self.deserialize(value, validate)
+        obj._set_modified(self._attribute_name, changed, validate)
+        obj._attributes[self._attribute_name] = value
 
     def __delete__(self, obj, validate=True):
         if validate:
@@ -277,11 +285,16 @@ class CatalogObjectReference(Attribute):
                     )
                 )
 
+        changed = not (
+            self._attribute_name in model_object._attributes
+            and model_object._attributes[self._attribute_name] == value
+        )
+
         # `_set_modified()` will raise exception if change is not allowed
-        model_object._set_modified(self._attribute_name, validate)
+        model_object._set_modified(self._attribute_name, changed, validate)
         model_object._attributes[self._attribute_name] = value
         # Jam in the `id`
-        model_object._set_modified(self.id_field, validate=False)
+        model_object._set_modified(self.id_field, changed, validate=False)
         model_object._attributes[self.id_field] = None if value is None else value.id
 
 
@@ -552,7 +565,7 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
         id_ = id(model_object)
         self._model_objects.pop(id_, None)
 
-    def _set_modified(self, attr_name=None, validate=True):
+    def _set_modified(self, attr_name=None, changed=True, validate=True):
         """
         Trigger modifications on all the referenced model objects.
 
@@ -561,7 +574,7 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
         references to the names of attributes on objects they're attached to.
         """
         for model_object, attr_name in itervalues(self._model_objects):
-            model_object._set_modified(attr_name, validate)
+            model_object._set_modified(attr_name, changed, validate)
 
     def __get__(self, model_object, objtype):
         """
@@ -580,10 +593,14 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
             self._raise_if_immutable_or_readonly("set", model_object)
 
         value = self.deserialize(value, validate=validate)
-        previous_value = model_object._attributes.pop(self._attribute_name, None)
+        previous_value = model_object._attributes.get(self._attribute_name, None)
+
+        changed = not (
+            self._attribute_name in model_object._attributes and previous_value == value
+        )
 
         # `_set_modified()` will raise exception if change is not allowed
-        model_object._set_modified(self._attribute_name, validate)
+        model_object._set_modified(self._attribute_name, changed, validate)
 
         # deregister the previous value and register the new one
         if previous_value is not None:
@@ -820,7 +837,7 @@ class ListAttribute(Attribute):
         except KeyError:
             pass
 
-    def _set_modified(self, attr_name=None, validate=True):
+    def _set_modified(self, attr_name=None, changed=True, validate=True):
         """
         Trigger modifications on all the referenced model objects.
 
@@ -829,17 +846,21 @@ class ListAttribute(Attribute):
         references to the names of attributes on objects they're attached to.
         """
         for model_object, attr_name in itervalues(self._model_objects):
-            model_object._set_modified(attr_name, validate)
+            model_object._set_modified(attr_name, changed, validate)
 
     def __set__(self, model_object, value, validate=True):
         if validate:
             self._raise_if_immutable_or_readonly("set", model_object)
 
         value = self.deserialize(value, validate=validate)
-        previous_value = model_object._attributes.pop(self._attribute_name, None)
+        previous_value = model_object._attributes.get(self._attribute_name, None)
+
+        changed = not (
+            self._attribute_name in model_object._attributes and previous_value == value
+        )
 
         # `_set_modified()` will raise exception if change is not allowed
-        model_object._set_modified(self._attribute_name, validate)
+        model_object._set_modified(self._attribute_name, changed, validate)
 
         # deregister and register
         if previous_value is not None:
@@ -916,7 +937,7 @@ class ListAttribute(Attribute):
             self._raise_if_immutable_or_readonly(operation="clear")
 
             # `_set_modified()` will raise exception if change is not allowed
-            self._set_modified()
+            self._set_modified(changed=bool(self._items))
             del self[:]
 
         def copy(self):
@@ -991,9 +1012,12 @@ class ListAttribute(Attribute):
         """Reverse *IN PLACE*."""
         self._raise_if_immutable_or_readonly(operation="reverse")
 
+        new_items = list(self._items)
+        new_items.reverse()
+
         # `_set_modified()` will raise exception if change is not allowed
-        self._set_modified()
-        self._items.reverse()
+        self._set_modified(changed=(self._items != new_items))
+        self._items = new_items
 
     # sort changed signatures between py2 and py3
     if PY2:
@@ -1002,9 +1026,12 @@ class ListAttribute(Attribute):
             """Stable sort *IN PLACE*."""
             self._raise_if_immutable_or_readonly(operation="sort")
 
+            new_items = list(self._items)
+            new_items.sort(cmp=cmp, key=key, reverse=reverse)
+
             # `_set_modified()` will raise exception if change is not allowed
-            self._set_modified()
-            self._items.sort(cmp=cmp, key=key, reverse=reverse)
+            self._set_modified(changed=(self._items != new_items))
+            self._items = new_items
 
     else:
 
@@ -1012,9 +1039,12 @@ class ListAttribute(Attribute):
             """Stable sort *IN PLACE*."""
             self._raise_if_immutable_or_readonly(operation="sort")
 
+            new_items = list(self._items)
+            new_items.sort(key=key, reverse=reverse)
+
             # `_set_modified()` will raise exception if change is not allowed
-            self._set_modified()
-            self._items.sort(key=key, reverse=reverse)
+            self._set_modified(changed=(self._items != new_items))
+            self._items = new_items
 
     def __getitem__(self, n):
         return self._items[n]
@@ -1034,12 +1064,12 @@ class ListAttribute(Attribute):
                 # mimic the error you get from the builtin
                 raise TypeError("can only assign an iterable")
 
-            new_item = (self._instantiate_item(o) for o in item)
+            new_item = list(self._instantiate_item(o) for o in item)
         else:
             new_item = self._instantiate_item(item)
 
         # `_set_modified()` will raise exception if change is not allowed
-        self._set_modified()
+        self._set_modified(changed=(previous_value != new_item))
         self._items[n] = new_item
 
         # slicing returns a list of items
@@ -1064,9 +1094,12 @@ class ListAttribute(Attribute):
             if isinstance(val, MappingAttribute):
                 val._remove_model_object(self)
 
+        new_items = list(self._items)
+        del new_items[n]
+
         # `_set_modified()` will raise exception if change is not allowed
-        self._set_modified()
-        del self._items[n]
+        self._set_modified(changed=(self._items != new_items))
+        self._items = new_items
 
     def __len__(self):
         return len(self._items)
@@ -1097,7 +1130,7 @@ class ListAttribute(Attribute):
         new_other = (self._instantiate_item(o) for o in other)
 
         # `_set_modified()` will raise exception if change is not allowed
-        self._set_modified()
+        self._set_modified(changed=bool(other))
         self._items += new_other
         return self
 
@@ -1105,7 +1138,7 @@ class ListAttribute(Attribute):
         self._raise_if_immutable_or_readonly(operation="__imul__")
 
         # `_set_modified()` will raise exception if change is not allowed
-        self._set_modified()
+        self._set_modified(changed=(self._items and other != 1))
         self._items *= other
         return self
 
@@ -1143,6 +1176,9 @@ class ListAttribute(Attribute):
                 return False
 
         return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __ge__(self, other):
         if isinstance(other, self.__class__):

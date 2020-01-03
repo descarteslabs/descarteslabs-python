@@ -131,20 +131,20 @@ class Band(NamedCatalogObject):
     classes.
 
     Common attributes:
-    :attr:`~descarteslabs.catalog.SpectralBand.id`,
-    :attr:`~descarteslabs.catalog.SpectralBand.name`,
-    :attr:`~descarteslabs.catalog.SpectralBand.product_id`,
-    :attr:`~descarteslabs.catalog.SpectralBand.description`,
-    :attr:`~descarteslabs.catalog.SpectralBand.type`,
-    :attr:`~descarteslabs.catalog.SpectralBand.sort_order`,
-    :attr:`~descarteslabs.catalog.SpectralBand.data_type`,
-    :attr:`~descarteslabs.catalog.SpectralBand.no_data`,
-    :attr:`~descarteslabs.catalog.SpectralBand.data_range`,
-    :attr:`~descarteslabs.catalog.SpectralBand.display_range`,
-    :attr:`~descarteslabs.catalog.SpectralBand.resolution`,
-    :attr:`~descarteslabs.catalog.SpectralBand.band_index`,
-    :attr:`~descarteslabs.catalog.SpectralBand.file_index`,
-    :attr:`~descarteslabs.catalog.SpectralBand.jpx_layer_index`.
+    :attr:`~descarteslabs.catalog.GenericBand.id`,
+    :attr:`~descarteslabs.catalog.GenericBand.name`,
+    :attr:`~descarteslabs.catalog.GenericBand.product_id`,
+    :attr:`~descarteslabs.catalog.GenericBand.description`,
+    :attr:`~descarteslabs.catalog.GenericBand.type`,
+    :attr:`~descarteslabs.catalog.GenericBand.sort_order`,
+    :attr:`~descarteslabs.catalog.GenericBand.data_type`,
+    :attr:`~descarteslabs.catalog.GenericBand.no_data`,
+    :attr:`~descarteslabs.catalog.GenericBand.data_range`,
+    :attr:`~descarteslabs.catalog.GenericBand.display_range`,
+    :attr:`~descarteslabs.catalog.GenericBand.resolution`,
+    :attr:`~descarteslabs.catalog.GenericBand.band_index`,
+    :attr:`~descarteslabs.catalog.GenericBand.file_index`,
+    :attr:`~descarteslabs.catalog.GenericBand.jpx_layer_index`.
 
     To create a new band instantiate one of those specialized classes:
 
@@ -304,8 +304,15 @@ class Band(NamedCatalogObject):
 
 
 class SpectralBand(Band):
-    """A band that lies somewhere on the visible/NIR/SWIR electro-optical wavelength
-    spectrum.
+    """A band that lies somewhere on the visible/NIR/SWIR electro-optical wavelength spectrum.
+
+    Instantiating a spectral band indicates that you want to create a *new* Descartes
+    Labs catalog spectral band.  If you instead want to retrieve an existing catalog
+    spectral band use `Band.get() <descarteslabs.catalog.Band.get>`, or if
+    you're not sure use `SpectralBand.get_or_create()
+    <descarteslabs.catalog.SpectralBand.get_or_create>`.  You can also use
+    `Band.search() <descarteslabs.catalog.Band.search>`.  Also see the example
+    for :py:meth:`~descarteslabs.catalog.Band.save`.
 
     Parameters
     ----------
@@ -351,6 +358,14 @@ class SpectralBand(Band):
 class MicrowaveBand(Band):
     """A band that lies in the microwave spectrum, often from SAR or passive radar sensors.
 
+    Instantiating a microwave band indicates that you want to create a *new* Descartes
+    Labs catalog microwave band.  If you instead want to retrieve an existing catalog
+    microwave band use `Band.get() <descarteslabs.catalog.Band.get>`, or if
+    you're not sure use `MicrowaveBand.get_or_create()
+    <descarteslabs.catalog.MicrowaveBand.get_or_create>`.  You can also use
+    `Band.search() <descarteslabs.catalog.Band.search>`.  Also see the example
+    for :py:meth:`~descarteslabs.catalog.Band.save`.
+
     Parameters
     ----------
     client : CatalogClient, optional
@@ -384,6 +399,14 @@ class MaskBand(Band):
     """A binary band where by convention a 0 means masked and 1 means non-masked.
 
     The `data_range` and `display_range` for masks is implicitly ``(0, 1)``.
+
+    Instantiating a mask band indicates that you want to create a *new* Descartes
+    Labs catalog mask band.  If you instead want to retrieve an existing catalog
+    mask band use `Band.get() <descarteslabs.catalog.Band.get>`, or if
+    you're not sure use `MaskBand.get_or_create()
+    <descarteslabs.catalog.MaskBand.get_or_create>`.  You can also use
+    `Band.search() <descarteslabs.catalog.Band.search>`.  Also see the example
+    for :py:meth:`~descarteslabs.catalog.Band.save`.
 
     Parameters
     ----------
@@ -422,6 +445,14 @@ class ClassBand(Band):
     For example land use classification.  A visualization with straight pixel values
     is typically not useful, so commonly a colormap is used.
 
+    Instantiating a class band indicates that you want to create a *new* Descartes
+    Labs catalog class band.  If you instead want to retrieve an existing catalog
+    class band use `Band.get() <descarteslabs.catalog.Band.get>`, or if
+    you're not sure use `ClassBand.get_or_create()
+    <descarteslabs.catalog.ClassBand.get_or_create>`.  You can also use
+    `Band.search() <descarteslabs.catalog.Band.search>`.  Also see the example
+    for :py:meth:`~descarteslabs.catalog.Band.save`.
+
     Parameters
     ----------
     client : CatalogClient, optional
@@ -453,6 +484,14 @@ class GenericBand(Band):
 
     For example mapping physical values like temperature or angles.
 
+    Instantiating a generic band indicates that you want to create a *new* Descartes
+    Labs catalog generic band.  If you instead want to retrieve an existing catalog
+    generic band use `Band.get() <descarteslabs.catalog.Band.get>`, or if
+    you're not sure use `GenericBand.get_or_create()
+    <descarteslabs.catalog.GenericBand.get_or_create>`.  You can also use
+    `Band.search() <descarteslabs.catalog.Band.search>`.  Also see the example
+    for :py:meth:`~descarteslabs.catalog.Band.save`.
+
     Parameters
     ----------
     client : CatalogClient, optional
@@ -480,6 +519,10 @@ class DerivedBand(CatalogObject):
     A type of band that is the result of a pixel function applied to one or more
     existing bands. This object type only supports read operations;
     they cannot be created, updated, or deleted using this client.
+
+    Instantiating a derived band can only be done through `Band.get()
+    <descarteslabs.catalog.Band.get>`, or `Band.search()
+    <descarteslabs.catalog.Band.search>`.
 
     Parameters
     ----------

@@ -24,6 +24,14 @@ properties = GenericProperties()
 class Product(CatalogObject):
     """A raster product that connects band information to imagery.
 
+    Instantiating a product indicates that you want to create a *new* Descartes Labs
+    catalog product.  If you instead want to retrieve an existing catalog product use
+    `Product.get() <descarteslabs.catalog.Product.get>`, or if you're not sure
+    use `Product.get_or_create() <descarteslabs.catalog.Product.get_or_create>`.
+    You can also use `Product.search() <descarteslabs.catalog.Product.search>`.
+    Also see the example for :py:meth:`~descarteslabs.catalog.Product.save`.
+
+
     Parameters
     ----------
     client : CatalogClient, optional
@@ -137,6 +145,69 @@ class Product(CatalogObject):
         *Filterable, sortable*.
         """,
     )
+
+    def named_id(self, name):
+        """Return the ~descarteslabs.catalog.NamedCatalogObject.id` for the given named catalog object.
+
+        Parameters
+        ----------
+        name : str
+            The name of the catalog object within this product, see
+            :py:attr:`~descarteslabs.catalog.NamedCatalogObject.name`.
+
+        Returns
+        -------
+        str
+            The named catalog object id within this product.
+        """
+        return "{}:{}".format(self.id, name)
+
+    def get_band(self, name, client=None):
+        """Retrieve the request band associated with this product by name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the band to retrieve.
+        client : CatalogClient, optional
+            A `CatalogClient` instance to use for requests to the Descartes Labs
+            catalog.  The
+            :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+            be used if not set.
+
+        Returns
+        -------
+        Band or None
+            A derived class of `Band` that represents the requested band object if
+            found, ``None`` if not found.
+
+        """
+        from .band import Band
+
+        return Band.get(self.named_id(name))
+
+    def get_image(self, name, client=None):
+        """Retrieve the request image associated with this product by name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the image to retrieve.
+        client : CatalogClient, optional
+            A `CatalogClient` instance to use for requests to the Descartes Labs
+            catalog.  The
+            :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+            be used if not set.
+
+        Returns
+        -------
+        ~descarteslabs.catalog.Image or None
+            The requested image if found, or ``None`` if not found.
+
+        """
+        from .image import Image
+
+        return Image.get(self.named_id(name))
 
     @check_deleted
     def delete_related_objects(self):

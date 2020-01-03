@@ -48,6 +48,13 @@ class StorageState(str, Enum):
 class Image(NamedCatalogObject):
     """An image with raster data.
 
+    Instantiating an image indicates that you want to create a *new* Descartes Labs
+    catalog image.  If you instead want to retrieve an existing catalog image use
+    `Image.get() <descarteslabs.catalog.Image.get>`, or if you're not sure use
+    `Image.get_or_create() <~descarteslabs.catalog.Image.get_or_create>`.  You
+    can also use `Image.search() <descarteslabs.catalog.Image.search>`.  Also
+    see the example for :py:meth:`~descarteslabs.catalog.Image.save`.
+
     Parameters
     ----------
     client : CatalogClient, optional

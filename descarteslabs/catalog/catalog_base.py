@@ -152,9 +152,7 @@ class CatalogClient(Service):
 
     _instance = None
 
-    def __init__(
-        self, url=None, auth=None, session_class=_RewriteErrorSession, **kwargs
-    ):
+    def __init__(self, url=None, auth=None, retries=None):
         if auth is None:
             auth = Auth()
 
@@ -164,7 +162,9 @@ class CatalogClient(Service):
                 "https://platform.descarteslabs.com/metadata/v1/catalog/v2",
             )
 
-        super(CatalogClient, self).__init__(url, auth=auth, **kwargs)
+        super(CatalogClient, self).__init__(
+            url, auth=auth, retries=retries, session_class=_RewriteErrorSession
+        )
 
     @staticmethod
     def get_default_client():
@@ -396,7 +396,9 @@ class CatalogObject(AttributeEqualityMixin):
         if self.created:
             sections.append("  created: {:%c}".format(self.created))
 
-        if self.state != DocumentState.SAVED:
+        if self.state == DocumentState.DELETED:
+            sections.append("* Deleted from the Descartes Labs catalog.")
+        elif self.state != DocumentState.SAVED:
             sections.append(
                 "* Not up-to-date in the Descartes Labs catalog. Call `.save()` to save or update this record."
             )
@@ -421,10 +423,12 @@ class CatalogObject(AttributeEqualityMixin):
 
     @property
     def is_modified(self):
-        """bool: Whether any attributes were changed.
+        """bool: Whether any attributes were changed (see `state`).
 
-        ``True`` if any of the attributes have changed since the last time this
+        ``True`` if any of the attribute values changed since the last time this
         catalog object was retrieved or saved.  ``False`` otherwise.
+
+        Note that assigning an identical value does not affect the state.
         """
         return bool(self._modified)
 
@@ -473,8 +477,8 @@ class CatalogObject(AttributeEqualityMixin):
             attribute_type = attribute_type._item_type
         return attribute_type.serialize(value)
 
-    def _set_modified(self, attr_name, validate=True):
-        # Verify it is allowed to change
+    def _set_modified(self, attr_name, changed=True, validate=True):
+        # Verify it is allowed to to be set
         attr = self._get_attribute_type(attr_name)
         if validate:
             if attr._readonly:
@@ -489,7 +493,9 @@ class CatalogObject(AttributeEqualityMixin):
                         attr_name
                     )
                 )
-        self._modified.add(attr_name)
+
+        if changed:
+            self._modified.add(attr_name)
 
     def _serialize(self, attrs, jsonapi_format=False):
         serialized = {}
@@ -505,16 +511,15 @@ class CatalogObject(AttributeEqualityMixin):
 
     @check_deleted
     def update(self, ignore_errors=False, **kwargs):
-        """
-        Update multiple attributes at once using the given keyword arguments.
+        """Update multiple attributes at once using the given keyword arguments.
 
         Parameters
         ----------
         ignore_errors : bool, optional
-            When set to ``True``, it will suppress `AttributeValidationError` and
-            `AttributeError`.  Any given attribute that causes one of these two
-            exceptions will be ignored, all other attributes will be set to the given
-            values.
+            ``False`` by default.  When set to ``True``, it will suppress
+            `AttributeValidationError` and `AttributeError`.  Any given attribute that
+            causes one of these two exceptions will be ignored, all other attributes
+            will be set to the given values.
 
         Raises
         ------
@@ -590,6 +595,12 @@ class CatalogObject(AttributeEqualityMixin):
     def get(cls, id, client=None):
         """Get an existing object from the Descartes Labs catalog.
 
+        If the Descartes Labs catalog object is found, it will be returned in the
+        `~descarteslabs.catalog.DocumentState.SAVED` state.  Subsequent changes will
+        put the instance in the `~descarteslabs.catalog.DocumentState.MODIFIED` state,
+        and you can use :py:meth:`save` to commit those changes and update the Descartes
+        Labs catalog object.  Also see the example for :py:meth:`save`.
+
         Parameters
         ----------
         id : str
@@ -625,8 +636,56 @@ class CatalogObject(AttributeEqualityMixin):
         )
 
     @classmethod
+    def get_or_create(cls, id, client=None, **kwargs):
+        """Get an existing object from the Descartes Labs catalog or create a new object.
+
+        If the Descartes Labs catalog object is found, and the remainder of the
+        arguments do not differ from the values in the retrieved instance, it will be
+        returned in the `~descarteslabs.catalog.DocumentState.SAVED` state.
+
+        If the Descartes Labs catalog object is found, and the remainder of the
+        arguments update one or more values in the instance, it will be returned in
+        the `~descarteslabs.catalog.DocumentState.MODIFIED` state.
+
+        If the Descartes Labs catalog object is not found, it will be created and the
+        state will be `~descarteslabs.catalog.DocumentState.UNSAVED`.  Also see the
+        example for :py:meth:`save`.
+
+        Parameters
+        ----------
+        id : str
+            The id of the object you are requesting.
+        client : CatalogClient, optional
+            A `CatalogClient` instance to use for requests to the Descartes Labs
+            catalog.  The
+            :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+            be used if not set.
+        kwargs : dict, optional
+            With the exception of readonly attributes (`created`, `modified`), any
+            attribute of a catalog object can be set as a keyword argument (Also see
+            `ATTRIBUTES`).
+
+        Returns
+        -------
+        :py:class:`~descarteslabs.catalog.CatalogObject`
+            The requested catalog object that was retrieved or created.
+
+        """
+        obj = cls.get(id, client=client)
+
+        if obj is None:
+            obj = cls(id=id, client=client, **kwargs)
+        else:
+            obj.update(**kwargs)
+
+        return obj
+
+    @classmethod
     def get_many(cls, ids, ignore_missing=False, client=None):
         """Get existing objects from the Descartes Labs catalog.
+
+        All returned Descartes Labs catalog objects will be in the
+        `~descarteslabs.catalog.DocumentState.SAVED` state.  Also see :py:meth:`get`.
 
         Parameters
         ----------
@@ -704,6 +763,7 @@ class CatalogObject(AttributeEqualityMixin):
             :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
             be used if not set.
 
+
         Returns
         -------
         bool
@@ -753,17 +813,31 @@ class CatalogObject(AttributeEqualityMixin):
     def save(self, extra_attributes=None):
         """Saves this object to the Descartes Labs catalog.
 
-        If this instance has not yet been added to the catalog (i.e.  it was created
-        using the constructor), a new object is created.  If this instance was
-        previously saved or fetched from the Descartes Labs catalog, and has attributes
-        that have been modified, the object is updated in the Descartes Labs catalog.
+        If this instance was created using the constructor, it will be in the
+        `~descarteslabs.catalog.DocumentState.UNSAVED` state and is considered a new
+        Descartes Labs catalog object that must be created.  If the catalog object
+        already exists in this case, this method will raise a
+        `~descarteslabs.client.exceptions.BadRequestError`.
+
+        If this instance was retrieved using :py:meth:`get`, :py:meth:`get_or_create`
+        or any other way (for example as part of a :py:meth:`search`), and any of its
+        values were changed, it will be in the
+        `~descarteslabs.catalog.DocumentState.MODIFIED` state and the existing catalog
+        object will be updated.
+
+        If this instance was retrieved using :py:meth:`get`, :py:meth:`get_or_create`
+        or any other way (for example as part of a :py:meth:`search`), and none of its
+        values were changed, it will be in the
+        `~descarteslabs.catalog.DocumentState.SAVED` state, and if no `extra_attributes`
+        parameter is given, nothing will happen.
 
         Parameters
         ----------
         extra_attributes : dict, optional
             A dictionary of attributes that should be sent to the catalog along with
             attributes already set on this object.  Empty by default.  If not empty,
-            the object is updated in the Descartes Labs catalog even if no attributes
+            and the object is in the `~descarteslabs.catalog.DocumentState.SAVED`
+            state, it is updated in the Descartes Labs catalog even though no attributes
             were modified.
 
         Raises
@@ -781,10 +855,28 @@ class CatalogObject(AttributeEqualityMixin):
         ...     name="My Product",
         ...     description="This is a test product"
         ... )
+        >>> new_product.state
+        <DocumentState.UNSAVED: 'unsaved'>
         >>> new_product.save()
         >>> # ids will be automatically prefixed by the Descartes Labs catalog
         >>> # with your organization id
         >>> new_product.id
+        my_org_id:my-product
+        >>> # Now you can retrieve the product and update it
+        >>> existing_product = Product.get(new_product.id)
+        >>> existing_product.state
+        <DocumentState.SAVED: 'saved'>
+        >>> existing_product.name = "My Updated Product"
+        >>> existing_product.state
+        <DocumentState.MODIFIED: 'modified'>
+        >>> existing_product.save()
+        >>> existing_product.state
+        <DocumentState.SAVED: 'saved'>
+        >>> # After you delete it...
+        >>> existing_product.delete()
+        True
+        >>> product.state
+        <DocumentState.DELETED: 'deleted'>
 
         """
         if self.state == DocumentState.SAVED and not extra_attributes:
@@ -820,16 +912,42 @@ class CatalogObject(AttributeEqualityMixin):
         Refresh the state of this catalog object from the object in the Descartes Labs
         catalog.  This may be necessary if there are concurrent updates and the object
         in the Descartes Labs catalog was updated from another client.  The instance
-        state must be `~descarteslabs.catalog.DocumentState.SAVED`.
+        state must be in the `~descarteslabs.catalog.DocumentState.SAVED` state.
+
+        If you want to revert a modified object to its original one, you should use
+        :py:meth:`get` on the object class with the object's `id`.
 
         Raises
         ------
         NotFoundError
             If the object no longer exists.
         ValueError
-            If the catalog object was not in the ``SAVED`` state.
+            If the catalog object is not in the ``SAVED`` state.
         DeletedObjectError
             If this catalog object was deleted.
+
+        Example
+        -------
+        >>> p = Product("my_org_id:my_product_id")
+        >>> # Some time elapses and a concurrent change was made
+        >>> p.state
+        <DocumentState.SAVED: 'saved'>
+        >>> p.reload()
+        >>> # But once you make changes, you cannot use this method any more
+        >>> p.name = "My name has changed"
+        >>> p.reload()
+        Traceback (most recent call last):
+        File "<stdin>", line 1, in <module>
+        File "/Users/jaap-mbp/Work/monorepo/descarteslabs/catalog/catalog_base.py", line 47, in wrapper
+            return f(self, *args, **kwargs)
+        File "/Users/jaap-mbp/Work/monorepo/descarteslabs/catalog/catalog_base.py", line 879, in reload
+            \"""Reload all attributes from the Descartes Labs catalog.
+        ValueError: Product instance with id descarteslabs:jaaptest has not been saved
+        >>> # But you can revert
+        >>> p = Product.get(p.id)
+        >>> p.state
+        <DocumentState.SAVED: 'saved'>
+
         """
 
         if self.state != DocumentState.SAVED:

@@ -567,6 +567,48 @@ class TestAttributes(unittest.TestCase):
         assert model_object.is_modified
         model_object._clear_modified_attributes()
 
+    def test_list_attribute_modification(self):
+        model_object = FakeCatalogObject(
+            id="id1", listmapping=[], listattribute=[5, 5, 5, 5], _saved=True
+        )
+        la = model_object.listmapping
+        la.sort()
+        assert not model_object.is_modified
+        la.reverse()
+        assert not model_object.is_modified
+        del la[:]
+        assert not model_object.is_modified
+        la += []
+        assert not model_object.is_modified
+        la *= 5
+        assert not model_object.is_modified
+
+        la += [{"bar": 5}]
+        assert model_object.is_modified
+
+        model_object._clear_modified_attributes()
+        la.sort()
+        assert not model_object.is_modified
+        la.reverse()
+        assert not model_object.is_modified
+        la *= 1
+        assert not model_object.is_modified
+        del la[:]
+
+        laa = model_object.listattribute
+        model_object._clear_modified_attributes()
+        laa.sort()
+        assert not model_object.is_modified
+        laa.reverse()
+        assert not model_object.is_modified
+
+        la = [Mapping(bar="foo"), Mapping(bar=1), Mapping(bar=2), Mapping(bar=3)]
+        model_object._clear_modified_attributes()
+        la[1:3] = [dict(bar=1), dict(bar=2)]
+        assert not model_object.is_modified
+        la[-1].bar = 3
+        assert not model_object.is_modified
+
     def test_list_attribute_delegate_mutable_methods_mapping_items(self):
         nested1 = Nested(foo="zap", dt="2019-02-01T00:00:00.0000Z", validate=False)
         nested2 = Nested(foo="zip", dt="2019-02-02T00:00:00.0000Z", validate=False)
@@ -596,7 +638,7 @@ class TestAttributes(unittest.TestCase):
         ]
         assert model_object.is_modified
         model_object._clear_modified_attributes()
-        la[-1].bar = "baz"  # new items are attached
+        la[-1].bar = "zab"  # new different item is attached
         assert model_object.is_modified
         model_object._clear_modified_attributes()
 
