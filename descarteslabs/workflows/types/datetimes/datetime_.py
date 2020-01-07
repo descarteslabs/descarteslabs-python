@@ -38,9 +38,21 @@ class Datetime(DatetimeStruct):
     Proxy Datetime object, similar to Python's datetime.
 
     Note: Datetimes are always in UTC.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Datetime
+    >>> my_datetime = Datetime(year=2019, month=1, day=1)
+    >>> my_datetime
+    <descarteslabs.workflows.types.datetimes.datetime_.Datetime object at 0x...>
+    >>> my_datetime.compute() # doctest: +SKIP
+    datetime.datetime(2019, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
+    >>> my_datetime.year.compute() # doctest: +SKIP
+    2019
     """
 
     _doc = {
+        "year": "1 <= year <= 9999",
         "month": "1 <= month <= 12",
         "day": "1 <= day <= number of days in the given month and year",
         "hour": "0 <= hour < 24",

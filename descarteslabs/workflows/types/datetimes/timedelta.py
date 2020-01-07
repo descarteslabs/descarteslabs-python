@@ -9,7 +9,25 @@ TimedeltaStruct = Struct[{"days": Int, "seconds": Int, "microseconds": Int}]
 
 @serializable(is_named_concrete_type=True)
 class Timedelta(TimedeltaStruct):
-    "Proxy Timedelta object, similar to Python's timedelta."
+    """Proxy Timedelta object, similar to Python's timedelta.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Timedelta
+    >>> my_timedelta = Timedelta(days=10, minutes=100)
+    >>> my_timedelta
+    <descarteslabs.workflows.types.datetimes.timedelta.Timedelta object at 0x...>
+    >>> my_timedelta.compute() # doctest: +SKIP
+    datetime.timedelta(days=10, seconds=6000)
+    >>> my_timedelta.total_seconds().compute() # doctest: +SKIP
+    870000.0
+    """
+
+    _doc = {
+        "days": "-999999999 <= days <= 999999999",
+        "seconds": "0 <= seconds < 3600*24 (the number of seconds in one day)",
+        "microseconds": "0 <= microseconds < 1000000",
+    }
 
     @typecheck_promote(
         days=(Int, Number),
