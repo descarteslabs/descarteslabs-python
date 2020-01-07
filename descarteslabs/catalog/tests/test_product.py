@@ -5,9 +5,9 @@ from datetime import datetime
 import textwrap
 from mock import patch
 
-from descarteslabs.client.exceptions import BadRequestError, NotFoundError
+from descarteslabs.client.exceptions import BadRequestError
 from .base import ClientTestCase
-from ..catalog_base import DocumentState
+from ..catalog_base import DocumentState, DeletedObjectError
 from ..attributes import AttributeValidationError, ListAttribute
 from ..product import (
     Product,
@@ -298,7 +298,7 @@ class TestProduct(ClientTestCase):
             status=404,
         )
 
-        with pytest.raises(NotFoundError):
+        with pytest.raises(DeletedObjectError):
             p.delete()
 
     @responses.activate

@@ -4,7 +4,7 @@ from six import assertCountEqual
 from datetime import datetime
 from pytz import utc
 
-from descarteslabs.client.exceptions import NotFoundError
+from descarteslabs.client.exceptions import NotFoundError, BadRequestError
 
 from .base import ClientTestCase
 from ..attributes import (
@@ -391,7 +391,7 @@ class TestCatalogObject(ClientTestCase):
             status=404,
         )
         foo = Foo(id="nerp", client=self.client, _saved=True)
-        with pytest.raises(NotFoundError):
+        with pytest.raises(DeletedObjectError):
             foo.delete()
 
         instance = Foo(id="nerp", client=self.client, _saved=True)
@@ -494,21 +494,32 @@ class TestCatalogObject(ClientTestCase):
 
     @responses.activate
     def test_rewritten_errors(self):
-        title = "Object not found"
-        detail = "Object not found: nerp"
+        title = "Validation error"
+
         self.mock_response(
-            responses.DELETE,
+            responses.POST,
             {
-                "errors": [{"detail": detail, "status": "404", "title": title}],
+                "errors": [
+                    {
+                        "detail": "Missing data for required field.",
+                        "status": "422",
+                        "title": title,
+                        "source": {"pointer": "/data/attributes/name"},
+                    }
+                ],
                 "jsonapi": {"version": "1.0"},
             },
-            status=404,
+            status=400,
         )
 
-        c = Foo(id="id", _saved=True, client=self.client)
-        with pytest.raises(NotFoundError) as error:
-            c.delete()
-            assert error.message == "{}: {}".format(title, detail)
+        try:
+            foo = Foo(id="nerp", client=self.client)
+            foo.save()
+            assert False
+        except BadRequestError as error:
+            assert str(error) == "\n    {}: {}".format(
+                title, "Missing data for required field: name"
+            )
 
     def test_update_no_changes(self):
         c = CatalogObject(

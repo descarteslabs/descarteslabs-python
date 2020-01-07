@@ -42,10 +42,16 @@ def check_deleted(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if self.state == DocumentState.DELETED:
+            raise DeletedObjectError("This catalog object has been deleted.")
+        try:
+            return f(self, *args, **kwargs)
+        except NotFoundError as e:
+            self._deleted = True
             raise DeletedObjectError(
-                "catalog object is deleted, cannot perform operation"
-            )
-        return f(self, *args, **kwargs)
+                "{} instance with id {} has been deleted".format(
+                    self.__class__.__name__, self.id
+                )
+            ).with_traceback(e.__traceback__) from None
 
     return wrapper
 
@@ -921,8 +927,6 @@ class CatalogObject(AttributeEqualityMixin):
 
         Raises
         ------
-        NotFoundError
-            If the object no longer exists.
         ValueError
             If the catalog object is not in the ``SAVED`` state.
         DeletedObjectError
@@ -959,17 +963,9 @@ class CatalogObject(AttributeEqualityMixin):
                 )
             )
 
-        try:
-            data, related_objects = self._send_data(
-                method=self._RequestMethod.GET, id=self.id, client=self._client
-            )
-        except NotFoundError:
-            # once delete protocol is defined, do the same here instead of error
-            raise ValueError(
-                "{} instance with id {} has been deleted".format(
-                    self.__class__.__name__, self.id
-                )
-            )
+        data, related_objects = self._send_data(
+            method=self._RequestMethod.GET, id=self.id, client=self._client
+        )
 
         # this will effectively wipe all current state & caching
         self._initialize(
@@ -981,7 +977,8 @@ class CatalogObject(AttributeEqualityMixin):
         )
 
     @classmethod
-    def delete(cls, id, client=None, ignore_missing=False):
+    @check_derived
+    def _class_delete(cls, id, ignore_missing=False, client=None):
         """Delete the catalog object with the given `id`.
 
         Parameters
@@ -1017,22 +1014,6 @@ class CatalogObject(AttributeEqualityMixin):
         -------
         >>> Image.delete('my-image-id')
         """
-        # only invoked if called on the class. on instance initialization, delete is
-        # bound to the _delete instance method
-        return cls._delete_impl(id, ignore_missing, client=client)
-
-    @check_deleted
-    def _instance_delete(self, ignore_missing=False):
-        if self.state == DocumentState.UNSAVED:
-            raise UnsavedObjectError("You cannot delete an unsaved object.")
-
-        deleted = self._delete_impl(self.id, ignore_missing, client=self._client)
-        self._deleted = deleted
-        return deleted
-
-    @classmethod
-    @check_derived
-    def _delete_impl(cls, id, ignore_missing, client=None):
         if client is None:
             client = CatalogClient.get_default_client()
         try:
@@ -1042,6 +1023,19 @@ class CatalogObject(AttributeEqualityMixin):
             if not ignore_missing:
                 raise
             return False
+
+    delete = _class_delete
+
+    @check_deleted
+    def _instance_delete(self, ignore_missing=False):
+        if self.state == DocumentState.UNSAVED:
+            raise UnsavedObjectError("You cannot delete an unsaved object.")
+
+        deleted = self._class_delete(
+            self.id, ignore_missing=ignore_missing, client=self._client
+        )
+        self._deleted = deleted
+        return deleted
 
     @classmethod
     @check_derived

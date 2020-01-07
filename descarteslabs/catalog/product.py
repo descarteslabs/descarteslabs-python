@@ -162,6 +162,7 @@ class Product(CatalogObject):
         """
         return "{}:{}".format(self.id, name)
 
+    @check_deleted
     def get_band(self, name, client=None):
         """Retrieve the request band associated with this product by name.
 
@@ -186,6 +187,7 @@ class Product(CatalogObject):
 
         return Band.get(self.named_id(name))
 
+    @check_deleted
     def get_image(self, name, client=None):
         """Retrieve the request image associated with this product by name.
 
