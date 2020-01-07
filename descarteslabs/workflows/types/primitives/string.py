@@ -17,7 +17,28 @@ def ListType(param):
 
 @serializable()
 class Str(Primitive):
-    "Proxy str"
+    """
+    Proxy string.
+
+    Supports most of the same API as Python's string type.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Str
+    >>> my_str = Str("hello")
+    >>> my_str
+    <descarteslabs.workflows.types.primitives.string.Str object at 0x...>
+    >>> other_str = Str("world")
+    >>> val = my_str + " " + other_str
+    >>> val.compute() # doctest: +SKIP
+    'hello world'
+    >>> val.upper().compute() # doctest: +SKIP
+    'HELLO WORLD'
+    >>> val = val * 3
+    >>> val.compute() # doctest: +SKIP
+    'hello worldhello worldhello world'
+    """
+
     _pytype = six.string_types
 
     @typecheck_promote(lambda: Str)

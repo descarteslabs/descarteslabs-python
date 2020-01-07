@@ -29,6 +29,15 @@ class Tuple(GenericProxytype):
     <descarteslabs.workflows.types.containers.tuple_.Tuple[Float, Float, Float] object at 0x...>
     >>> Tuple[Str, Tuple[Int, Bool]](["foo", (1, True)]) # 2-tuple of Str and 2-tuple of Int and Bool
     <descarteslabs.workflows.types.containers.tuple_.Tuple[Str, Tuple[Int, Bool]] object at 0x...>
+
+    >>> from descarteslabs.workflows import Tuple, Str
+    >>> my_tuple = Tuple[Str, Str](["hello", "world"])
+    >>> my_tuple
+    <descarteslabs.workflows.types.containers.tuple_.Tuple[Str, Str] object at 0x...>
+    >>> my_tuple.compute() # doctest: +SKIP
+    ('hello', 'world')
+    >>> my_tuple[0].compute() # doctest: +SKIP
+    'hello'
     """
 
     def __init__(self, iterable):
@@ -92,6 +101,13 @@ class Tuple(GenericProxytype):
             )
 
     def length(self):
+        """Length is equivalent to the Python ``len`` operator.
+
+        Returns
+        -------
+        Int
+            An Int Proxytype
+        """
         return Int._from_apply("length", self)
 
     def __iter__(self):

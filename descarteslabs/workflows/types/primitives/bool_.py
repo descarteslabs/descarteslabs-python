@@ -5,7 +5,25 @@ from .primitive import Primitive
 
 @serializable()
 class Bool(Primitive):
-    "Proxy bool"
+    """
+    Proxy boolean.
+
+    Note that this cannot be compared with Python's ``and`` and ``or`` operators;
+    you must use the bitwise operators ``&`` and ``|``. Also note that more parenthesis are needed
+    with bitwise operators than with ``and`` and ``or``.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Bool
+    >>> my_bool = Bool(True)
+    >>> my_bool
+    <descarteslabs.workflows.types.primitives.bool_.Bool object at 0x...>
+    >>> other_bool = Bool(False)
+    >>> val = my_bool | other_bool
+    >>> val.compute() # doctest: +SKIP
+    True
+    """
+
     _pytype = bool
 
     def __bool__(self):

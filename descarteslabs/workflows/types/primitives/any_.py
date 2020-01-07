@@ -7,7 +7,55 @@ from .number import Int
 
 @serializable()
 class Any(Proxytype):
-    "Generic Proxytype that supports almost all operations."
+    """
+    Represents a proxy object of an unknown type.
+
+    `Any` is most commonly encountered when accessing unknown fields from metadata
+    (for example, ``image.properties["foobar"]``). `Any` should generally be converted
+    to the correct type with the `cast` method. However for convenience,
+    `Any` also supports binary operators.
+
+    .. code-block:: python
+
+        x = image.properties["x"]  # Any
+        y = image.properties["y"]  # Any
+        # either of these work; the first is better practice
+        result = x.cast(Int) + y.cast(Float)
+        result = x + y
+
+    Note that cast is simply changing the type representation in your client;
+    the actual object on the backend isn't changed. It's up to you to cast to the correct Proxytype.
+    At compute time, there is no check that you cast to the actual type that exists on the backend--
+    though if you cast to the wrong type, subsequent operations will probably fail.
+
+    `Any` can also be constructed with any JSON-serializable value, or other ProxyType, though there is
+    little reason to do this.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Any, Int
+    >>> my_any = Any(2)
+    >>> my_int = my_any.cast(Int) # cast to an Int
+    >>> my_int
+    <descarteslabs.workflows.types.primitives.number.Int object at 0x...>
+    >>> my_int.compute() # doctest: +SKIP
+    2
+
+    >>> from descarteslabs.workflows import Any, List, Int
+    >>> my_any = Any([1, 2, 3])
+    >>> my_list = my_any.cast(List[Int]) # cast to a list of ints
+    >>> my_list
+    <descarteslabs.workflows.types.containers.list_.List[Int] object at 0x...>
+    >>> my_list[0].compute() # doctest: +SKIP
+    1
+
+    >>> from descarteslabs.workflows import Any, Int
+    >>> my_any = Any(2)
+    >>> other_any = Any(3)
+    >>> val = my_any * other_any
+    >>> val.cast(Int).compute() # doctest: +SKIP
+    6
+    """
 
     def __init__(self, value):
         self.graft = client.value_graft(value)

@@ -180,7 +180,24 @@ class Number(Primitive):
 
 @serializable()
 class Int(Number):
-    "Proxy int"
+    """
+    Proxy integer.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Int
+    >>> my_int = Int(2)
+    >>> my_int
+    <descarteslabs.workflows.types.primitives.number.Int object at 0x...>
+    >>> other_int = Int(5)
+    >>> val = my_int + other_int
+    >>> val.compute() # doctest: +SKIP
+    7
+    >>> val = my_int < other_int
+    >>> val.compute() # doctest: +SKIP
+    True
+    """
+
     _pytype = int
 
     @typecheck_promote(lambda: Int)
@@ -226,5 +243,22 @@ class Int(Number):
 
 @serializable()
 class Float(Number):
-    "Proxy float"
+    """
+    Proxy float.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Float
+    >>> my_float = Float(2.3)
+    >>> my_float
+    <descarteslabs.workflows.types.primitives.number.Float object at 0x...>
+    >>> other_float = Float(5.6)
+    >>> val = my_float + other_float
+    >>> val.compute() # doctest: +SKIP
+    7.9
+    >>> val = my_float > other_float
+    >>> val.compute() # doctest: +SKIP
+    False
+    """
+
     _pytype = float

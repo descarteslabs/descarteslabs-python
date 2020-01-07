@@ -25,6 +25,15 @@ class List(GenericProxytype, CollectionMixin):
     <descarteslabs.workflows.types.containers.list_.List[Str] object at 0x...>
     >>> List[List[Int]]([[1, 2], [-1], [10, 11, 12]]) # list of lists of Ints
     <descarteslabs.workflows.types.containers.list_.List[List[Int]] object at 0x...>
+
+    >>> from descarteslabs.workflows import List, Float
+    >>> my_list = List[Float]([1.1, 2.2, 3.3, 4.4])
+    >>> my_list
+    <descarteslabs.workflows.types.containers.list_.List[Float] object at 0x...>
+    >>> my_list.compute() # doctest: +SKIP
+    [1.1, 2.2, 3.3, 4.4]
+    >>> my_list[2].compute() # doctest: +SKIP
+    3.3
     """
 
     def __init__(self, iterable):

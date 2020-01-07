@@ -30,6 +30,17 @@ class Dict(GenericProxytype):
     <descarteslabs.workflows.types.containers.dict_.Dict[Str, Int] object at 0x...>
     >>> Dict[Str, List[Float]](a=[1.1, 2.2], b=[3.3]) # dict of Str to List of Floats
     <descarteslabs.workflows.types.containers.dict_.Dict[Str, List[Float]] object at 0x...>
+
+    >>> from descarteslabs.workflows import Dict, Str, Float
+    >>> my_dict = Dict[Str, Float]({"red": 100.5, "blue": 67.6})
+    >>> my_dict
+    <descarteslabs.workflows.types.containers.dict_.Dict[Str, Float] object at 0x...>
+    >>> my_dict.compute() # doctest: +SKIP
+    {"red": 100.5, "blue": 67.6}
+    >>> my_dict.keys().compute() # doctest: +SKIP
+    ['red', 'blue']
+    >>> my_dict["red"].compute() # doctest: +SKIP
+    100.5
     """
 
     def __init__(self, *dct, **kwargs):
@@ -113,15 +124,30 @@ class Dict(GenericProxytype):
         return vt._from_apply("getitem", self, item)
 
     def keys(self):
-        # TODO(gabe): need a Set type, since these should be unordered
+        """Get a list of all the dictionary keys.
+
+        Returns
+        -------
+        List
+        """
         return List[self._type_params[0]]._from_apply("dict.keys", self)
 
     def values(self):
-        # TODO(gabe): need a Set type, since these should be unordered
+        """Get a list of all the dictionary values.
+
+        Returns
+        -------
+        List
+        """
         return List[self._type_params[1]]._from_apply("dict.values", self)
 
     def items(self):
-        # TODO(gabe): need a Set type, since these should be unordered
+        """Get a list of tuples of key-value pairs in the dictionary.
+
+        Returns
+        -------
+        List[Tuple[KeyType, ValueType]]
+        """
         return List[Tuple[self._type_params[0], self._type_params[1]]]._from_apply(
             "dict.items", self
         )

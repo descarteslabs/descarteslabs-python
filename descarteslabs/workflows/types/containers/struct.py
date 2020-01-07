@@ -51,6 +51,9 @@ class Struct(GenericProxytype):
 
     Can be instantiated from kwargs.
 
+    In general, Struct is used as an internal base class to help create proxy objects,
+    and is not meant to be worked with directly.
+
     Notes
     -----
     Adding certain fields to subclasses of concrete Structs changes their behavior:
@@ -71,18 +74,21 @@ class Struct(GenericProxytype):
     >>> from descarteslabs.workflows import Struct, Str, Int
     >>> MyStructType = Struct[{'x': Str, 'y': Int}] # struct where type of 'x' is Str and type of 'y' is Int
     >>> instance = MyStructType(x="foo", y=1)
+    >>> instance
+    <descarteslabs.workflows.types.containers.struct.Struct[{'x': Str, 'y': Int}] object at 0x...>
 
-    As a base class::
-
-        class Foo(Struct[{'x': Int, 'y': Str}]):
+    >>> from descarteslabs.workflows import Struct, Str, Int
+    >>> class Foo(Struct[{'x': Int, 'y': Str}]): # doctest: +SKIP
             _doc = {
                 'x': "the x field",
-                'y': "a y field. derived from x.",
+                'y': "the y field, derived from x",
             }
             _constructor = "make_foo"
             _optional = {'x'}
             _read_only = {'y'}
-
+    >>> my_struct = Foo(10) # doctest: +SKIP
+    >>> my_struct.x.compute() # doctest: +SKIP
+    10
     """
 
     # docstrings for struct fields; must be dict[str, str] or None
