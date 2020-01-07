@@ -1,6 +1,5 @@
 language: python
 python:
-- '2.7'
 - '3.5'
 - '3.6'
 matrix:
@@ -21,13 +20,12 @@ matrix:
 git:
   lfs_skip_smudge: true
 before_install:
-- pip install --upgrade pip setuptools
+- pip install --upgrade pip setuptools wheel
 install:
-- pip install -r requirements.txt --upgrade
-- pip install flake8 mock responses shapely numpy pytest==4.3.1
+- pip wheel --no-deps --wheel-dir wheels -e .
+- pip install wheels/*.whl\[complete,tests\]
 script:
-- pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs && flake8
-- pip install .
+- pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
 notifications:
   slack:
     on_success: change

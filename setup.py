@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2018-2019 Descartes Labs.
+# Copyright 2018-2020 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import ast
-import os
 import re
-import sys
 
 from setuptools import find_packages, setup
 
@@ -48,80 +46,62 @@ def check_setuptools():
 
 
 def do_setup():
-    src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    old_path = os.getcwd()
-    os.chdir(src_path)
-    sys.path.insert(0, src_path)
-
-    kwargs = {}
-    kwargs["name"] = "descarteslabs"
-    kwargs["description"] = DOCLINES[0]
-    kwargs["long_description"] = "\n".join(DOCLINES[2:])
-    kwargs["author"] = "Descartes Labs"
-    kwargs["author_email"] = "hello@descarteslabs.com"
-    kwargs["url"] = "https://github.com/descarteslabs/descarteslabs-python"
-    kwargs["download_url"] = (
-        "https://github.com/descarteslabs/descarteslabs-python/archive/v%s.tar.gz"
-        % version
+    setup(
+        name="descarteslabs",
+        description=DOCLINES[0],
+        long_description="\n".join(DOCLINES[2:]),
+        author="Descartes Labs",
+        author_email="hello@descarteslabs.com",
+        url="https://github.com/descarteslabs/descarteslabs-python",
+        classifiers=[
+            "Programming Language :: Python",
+            "Programming Language :: Python :: 3",
+            "Programming Language :: Python :: 3.5",
+            "Programming Language :: Python :: 3.6",
+            "Programming Language :: Python :: 3.7",
+        ],
+        license="Apache 2.0",
+        download_url=f"https://github.com/descarteslabs/descarteslabs-python/archive/v{version}.tar.gz",
+        version=version,
+        packages=find_packages(),
+        entry_points={
+            "console_scripts": ["descarteslabs = descarteslabs.client.scripts.__main__:main"]
+        },
+        python_requires="~=3.5",
+        install_requires=[
+            "affine>=2.2.1",
+            "cachetools>=2.0.1",
+            "cloudpickle==0.4.0",
+            "geojson>=2.4.1",
+            "grpcio>=1.16.1,<2",
+            "protobuf==3.8.0,<4",
+            "pyarrow==0.13.0",
+            "pytz>=2019.1",
+            "requests[security]>=2.20.1,<3",
+            "six>=1.12.0",
+            "shapely>=1.6.3,<2",
+        ],
+        extras_require={
+            "complete": [
+                'blosc;platform_system!="Windows"',
+                "numpy>=1.17.4",
+                "matplotlib>=2.1.0",
+                "mercantile>=1.0.4",
+                "ipyleaflet>=0.11.4",
+                "ipywidgets>=7.5.1",
+                "traitlets==4.3.2",
+            ],
+            "tests": [
+                "hypothesis[numpy]==4.24.5",
+                "mock",
+                "pytest==4.3.1",
+                "responses",
+            ]
+        },
+        data_files=[
+            ("docs/descarteslabs", ["README.md"]),
+        ]
     )
-
-    clssfrs = [
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-    ]
-    kwargs["classifiers"] = clssfrs
-    kwargs["version"] = version
-    kwargs["packages"] = find_packages(".")
-    kwargs["entry_points"] = {
-        "console_scripts": [
-            "descarteslabs = descarteslabs.client.scripts.__main__:main"
-        ]
-    }
-    kwargs["install_requires"] = [
-        "cloudpickle==0.4.0",
-        "six>=1.12.0",
-        "cachetools>=2.0.1",
-        'futures;python_version=="2.7"',
-        "geojson>=2.4.1",
-        "shapely>=1.6.3,<2",
-        "affine>=2.2.1",
-        "pyarrow==0.13.0",
-        "grpcio>=1.16.1,<2",
-        "protobuf==3.8.0,<4",
-    ]
-
-    # Python < 2.7.9 needs requests[security] to avoid SSL issues
-    # macOS ships with ancient OpenSSL which causes different SSL issues
-    if sys.version_info[0:3] >= (2, 7, 9) and sys.platform != "darwin":
-        kwargs["install_requires"].append("requests>=2.20.1,<3")
-    else:
-        kwargs["install_requires"].append("requests[security]>=2.20.1,<3")
-
-    kwargs["extras_require"] = {
-        "complete": [
-            'blosc;platform_system!="Windows"',
-            'numpy>=1.17.4; python_version >= "3.5"',
-            'numpy>=1.10; python_version < "3.5"',
-            "matplotlib>=2.1.0",
-            "mercantile>=1.0.4",
-            "ipyleaflet>=0.11.4",
-            "ipywidgets>=7.5.1",
-            "traitlets==4.3.2",
-        ]
-    }
-    kwargs["license"] = "Apache 2.0"
-    kwargs["zip_safe"] = False
-
-    try:
-        setup(**kwargs)
-    finally:
-        del sys.path[0]
-        os.chdir(old_path)
 
 
 if __name__ == "__main__":
