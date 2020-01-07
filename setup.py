@@ -61,7 +61,7 @@ def do_setup():
             "Programming Language :: Python :: 3.7",
         ],
         license="Apache 2.0",
-        download_url=f"https://github.com/descarteslabs/descarteslabs-python/archive/v{version}.tar.gz",
+        download_url="https://github.com/descarteslabs/descarteslabs-python/archive/v{}.tar.gz".format(version),
         version=version,
         packages=find_packages(),
         entry_points={

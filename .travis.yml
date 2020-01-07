@@ -23,7 +23,7 @@ before_install:
 - pip install --upgrade pip setuptools wheel
 install:
 - pip wheel --no-deps --wheel-dir wheels -e .
-- pip install wheels/*.whl\[complete,tests\]
+- pip install `ls wheels/*.whl`\[complete,tests\]
 script:
 - pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
 notifications:
