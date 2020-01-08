@@ -83,6 +83,17 @@ class ImageResult(EqualityMixin):
     """
     Result of calling `~.models.compute` on an `~.geospatial.Image`.
 
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Image
+    >>> my_img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+    >>> my_img.compute(my_geoctx) # my_geoctx is an arbitrary geocontext for 'my_img' # doctest: +SKIP
+    ImageResult:
+      * ndarray: MaskedArray<shape=(27, 512, 512), dtype=float64>
+      * properties: 'absolute_orbit', 'acquired', 'archived', 'area', ...
+      * bandinfo: 'coastal-aerosol', 'blue', 'green', 'red', ...
+      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
+
     Attributes
     ----------
     ndarray: numpy.ndarray
@@ -135,6 +146,19 @@ unmarshal.register(
 class ImageCollectionResult(EqualityMixin):
     """
     Result of calling `~.models.compute` on an `~.geospatial.ImageCollection`.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import ImageCollection
+    >>> my_col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+    ...        start_datetime="2017-01-01",
+    ...        end_datetime="2017-05-30")
+    >>> my_col.compute(my_geoctx) # my_geoctx is an arbitrary geocontext for 'my_col' # doctest: +SKIP
+    ImageCollectionResult of length 2:
+      * ndarray: MaskedArray<shape=(2, 27, 512, 512), dtype=float64>
+      * properties: 2 items
+      * bandinfo: 'coastal-aerosol', 'blue', 'green', 'red', ...
+      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
 
     Attributes
     ----------
@@ -192,6 +216,13 @@ unmarshal.register(
 class GeometryResult(EqualityMixin):
     """
     Result of calling `~.models.compute` on a `~.geospatial.Geometry`.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Geometry
+    >>> my_geom = Geometry(type="Point", coordinates=[1, 2, 3, 4])
+    >>> my_geom.compute() # doctest: +SKIP
+    GeometryResult(type=Point, coordinates=[1, 2, 3, 4])
 
     Attributes
     ----------
@@ -266,6 +297,18 @@ class GeometryCollectionResult(GeometryResult):
     """
     Result of calling `~.models.compute` on a `~.geospatial.GeometryCollection`.
 
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Geometry, GeometryCollection
+    >>> my_geom = Geometry(type="Point", coordinates=[1, 2, 3, 4])
+    >>> my_gc = GeometryCollection(type="GeometryCollection", geometries=[my_geom, my_geom, my_geom])
+    >>> my_gc.compute() # doctest: +SKIP
+    GeometryCollectionResult(type=GeometryCollection,
+            geometries=(
+                GeometryResult(type=Point, coordinates=[1, 2, 3, 4]),
+                GeometryResult(type=Point, coordinates=[1, 2, 3, 4]),
+                GeometryResult(type=Point, coordinates=[1, 2, 3, 4])))
+
     Attributes
     ----------
     type: str
@@ -324,6 +367,14 @@ class GeometryCollectionResult(GeometryResult):
 class FeatureResult(EqualityMixin):
     """
     Result of calling `~.models.compute` on a `~.geospatial.Feature`.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Geometry, Feature
+    >>> my_geom = Geometry(type="Point", coordinates=[1, 2, 3, 4])
+    >>> my_feat = Feature(geometry=my_geom, properties={"foo": "bar"})
+    >>> my_feat.compute() # doctest: +SKIP
+    FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2, 3, 4]), properties={'foo': 'bar'})
 
     Attributes
     ----------
@@ -393,6 +444,18 @@ class FeatureResult(EqualityMixin):
 class FeatureCollectionResult(EqualityMixin):
     """
     Result of calling `~.models.compute` on a `~.geospatial.FeatureCollection`.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Geometry, Feature, FeatureCollection
+    >>> my_geom = Geometry(type="Point", coordinates=[1, 2, 3, 4])
+    >>> my_feat = Feature(geometry=my_geom, properties={"foo": "bar"})
+    >>> my_fc = FeatureCollection(features=[my_feat, my_feat, my_feat])
+    >>> my_fc.compute() # doctest: +SKIP
+    FeatureCollectionResult(features=(
+        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2, 3, 4]), properties={'foo': 'bar'}),
+        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2, 3, 4]), properties={'foo': 'bar'}),
+        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2, 3, 4]), properties={'foo': 'bar'})))
 
     Attributes
     ----------
