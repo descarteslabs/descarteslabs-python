@@ -45,9 +45,24 @@ class Function(GenericProxytype):
     >>> func_type = Function[Int, {}, Int] # function with Int arg, no kwargs, returning an Int
     >>> func_type = Function[Int, {'x': Float}, Bool] # function with Int arg, kwarg 'x' of type Float, returning a Bool
     >>> func_type = Function[{}, Int] # zero-argument function, returning a Int
-    >>> my_func = Function[Int, {}, Int](lambda num: num + 5) # function to add 5 to a number
-    >>> my_func(10) # will result in 15 when computed
-    <descarteslabs.workflows.types.primitives.number.Int object at 0x...>
+
+    >>> from descarteslabs.workflows import Function, Int
+    >>> my_func = Function[Int, Int, {}, Int](lambda x, y: x + y) # function taking two Ints and adding them together
+    >>> my_func
+    <descarteslabs.workflows.types.function.function.Function[Int, Int, {}, Int] object at 0x...>
+    >>> my_func(3, 4).compute() # doctest: +SKIP
+    7
+
+    >>> from descarteslabs.workflows import Function, Int, Image
+    >>> my_img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+    >>> def my_add(x, y):
+    ...     return x + y # function taking two values and adding them together
+    >>> my_func = Function.from_callable(my_add, Image, Int) # Image and Int are the argument types
+    >>> my_func
+    <descarteslabs.workflows.types.function.function.Function[Image, Int, {}, Image] object at 0x...>
+    >>> my_func(my_img, 10).compute(my_geoctx) # my_geoctx is an arbitrary geocontext for 'img' # doctest: +SKIP
+    ImageResult:
+    ...
     """
 
     def __init__(self, function):
