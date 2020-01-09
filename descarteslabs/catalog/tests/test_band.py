@@ -315,3 +315,101 @@ class TestDerivedBand(ClientTestCase):
         derived_bands = list(DerivedBand.search(client=self.client))
         assert len(derived_bands) == 2
         assert isinstance(derived_bands[0], DerivedBand)
+
+    @responses.activate
+    def test_related_product(self):
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "type": "product",
+                    "attributes": {
+                        "resolution_max": None,
+                        "resolution_min": None,
+                        "readers": [],
+                        "start_datetime": None,
+                        "modified": "2020-01-09T16:45:25.913037Z",
+                        "created": "2020-01-09T16:45:25.913037Z",
+                        "owners": ["org:descarteslabs", "user:someone"],
+                        "revisit_period_minutes_min": None,
+                        "writers": [],
+                        "tags": [],
+                        "extra_properties": {},
+                        "description": None,
+                        "revisit_period_minutes_max": None,
+                        "end_datetime": None,
+                        "name": "Product 1",
+                        "is_core": False,
+                    },
+                    "id": "p1",
+                },
+                "jsonapi": {"version": "1.0"},
+            },
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "type": "band",
+                    "attributes": {
+                        "nodata": None,
+                        "created": "2020-01-09T16:46:20.094904Z",
+                        "data_type": "Float32",
+                        "wavelength_nm_fwhm": None,
+                        "type": "spectral",
+                        "readers": [],
+                        "wavelength_nm_center": None,
+                        "display_range": [0.0, 255.0],
+                        "file_index": 0,
+                        "jpx_layer_index": 0,
+                        "tags": [],
+                        "wavelength_nm_max": None,
+                        "band_index": 0,
+                        "wavelength_nm_min": None,
+                        "sort_order": 1,
+                        "extra_properties": {},
+                        "modified": "2020-01-09T16:46:20.094904Z",
+                        "name": "b1",
+                        "product_id": "p1",
+                        "description": None,
+                        "owners": ["org:descarteslabs", "user:someone"],
+                        "data_range": [0.0, 1962239500502.9294],
+                        "resolution": None,
+                        "writers": [],
+                    },
+                    "relationships": {
+                        "product": {"data": {"type": "product", "id": "p1"}}
+                    },
+                    "id": "p1:b1",
+                },
+                "included": [
+                    {
+                        "type": "product",
+                        "attributes": {
+                            "revisit_period_minutes_min": None,
+                            "created": "2020-01-09T16:45:25.913037Z",
+                            "resolution_min": None,
+                            "resolution_max": None,
+                            "readers": [],
+                            "revisit_period_minutes_max": None,
+                            "tags": [],
+                            "is_core": False,
+                            "end_datetime": None,
+                            "start_datetime": None,
+                            "extra_properties": {},
+                            "modified": "2020-01-09T16:45:25.913037Z",
+                            "name": "Product 1",
+                            "description": None,
+                            "owners": ["org:descarteslabs", "user:someone"],
+                            "writers": [],
+                        },
+                        "id": "p1",
+                    }
+                ],
+                "jsonapi": {"version": "1.0"},
+            },
+        )
+        b = SpectralBand(name="b1", product_id="p1", client=self.client, _saved=True)
+        p = b.product
+        assert p.id == "p1"
+        b.reload()

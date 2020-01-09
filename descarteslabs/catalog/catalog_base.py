@@ -380,7 +380,7 @@ class CatalogObject(AttributeEqualityMixin):
                         (t.reference_class._doc_type, id_value)
                     )
                     if related_object is not None:
-                        setattr(self, name, related_object)
+                        t.__set__(self, related_object, validate=not saved)
 
         if saved:
             self._clear_modified_attributes()
