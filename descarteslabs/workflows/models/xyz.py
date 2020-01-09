@@ -25,6 +25,23 @@ class XYZ(object):
     Use `.url` to generate an XYZ URL template, and `.iter_tile_errors`
     or `.error_listener` to retrieve error messages that happen while
     computing them.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Image, XYZ
+    >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+    >>> rgb = img.pick_bands("red green blue")
+    >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
+    >>> xyz.save() # doctest: +SKIP
+    >>> xyz # doctest: +SKIP
+    <descarteslabs.workflows.models.xyz.XYZ object at 0x...>
+    >>> xyz.id # doctest: +SKIP
+    '24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6'
+    >>> same_xyz = XYZ.get('24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6') # doctest: +SKIP
+    >>> same_xyz.url() # doctest: +SKIP
+    'https://workflows.descarteslabs.com/master/xyz/24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6/{z}/{x}/{y}.png'
+    >>> same_xyz.object # doctest: +SKIP
+    <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
     """
 
     BASE_URL = "https://workflows.descarteslabs.com"
@@ -132,9 +149,6 @@ class XYZ(object):
             xyz_pb2.GetXYZRequest(xyz_id=xyz_id), timeout=client.DEFAULT_TIMEOUT
         )
         return cls._from_proto(message, client)
-
-    def update(self, *args, **kwargs):
-        raise NotImplementedError("XYZ.update not implemented")
 
     def save(self):
         """
@@ -407,18 +421,6 @@ class XYZ(object):
         "str: The channel name this XYZ is compatible with."
         return self._message.channel
 
-    @property
-    def owners(self):
-        raise NotImplementedError("ACLs are not yet supported for XYZs")
-
-    @property
-    def readers(self):
-        raise NotImplementedError("ACLs are not yet supported for XYZs")
-
-    @property
-    def writers(self):
-        raise NotImplementedError("ACLs are not yet supported for XYZs")
-
 
 class XYZErrorListener(object):
     """
@@ -428,14 +430,15 @@ class XYZErrorListener(object):
 
     Example
     -------
-    >>> import descarteslabs.workflows as wf
-    >>> xyz = wf.XYZ.build(wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"))
+    >>> from descarteslabs.workflows import Image, XYZ
+    >>> img = Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
+    >>> xyz = XYZ.build(img)
     >>> xyz.save()  # doctest: +SKIP
     >>> listener = xyz.error_listener()
     >>> def callback(msg):
     ...     print(msg.code, msg.message)
     >>> listener.add_callback(callback)
-    >>> listener.listen("my_session_id", start_datetime=datetime.datetime.now())  # doctest: +SKIP
+    >>> listener.listen("session_id", start_datetime=datetime.datetime.now())  # doctest: +SKIP
     >>> # later
     >>> listener.stop()  # doctest: +SKIP
     """

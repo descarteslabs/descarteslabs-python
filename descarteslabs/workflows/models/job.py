@@ -60,10 +60,20 @@ class Job(object):
 
     Example
     -------
-    >>> import descarteslabs.workflows as wf
-    >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-    >>> job = img.compute(geoctx, block=False)  # doctest: +SKIP
-    >>> result = job.result()  # doctest: +SKIP
+    >>> from descarteslabs.workflows import Int, Job
+    >>> num = Int(1) + 1
+    >>> job = num.compute(block=False)  # doctest: +SKIP
+    >>> job # doctest: +SKIP
+    <descarteslabs.workflows.models.job.Job object at 0x...>
+    >>> job.id # doctest: +SKIP
+    '3754676080bbb2b857fbc04a3e48f6312732e1bc42e0bd7b'
+    >>> job.result() # doctest: +SKIP
+    2
+    >>> same_job = Job.get('3754676080bbb2b857fbc04a3e48f6312732e1bc42e0bd7b') # doctest: +SKIP
+    >>> same_job.stage # doctest: +SKIP
+    'STAGE_DONE'
+    >>> same_job.result # doctest: +SKIP
+    2
     """
 
     BUCKET_PREFIX = "https://storage.googleapis.com/dl-compute-dev-results/{}"
@@ -186,6 +196,7 @@ class Job(object):
         self._message = message
 
     def watch(self):
+        "Generator that yields ``self`` each time an update to the Job occurs."
         # Note(Winston): If we need to support long-running connections,
         # this is where we would infinitely loop on `grpc.StatusCode.DEADLINE_EXCEEDED` exceptions.
         # Currently, this will timeout as specified with `client.STREAM_TIMEOUT`, (as of writing, 24 hours).
@@ -267,26 +278,32 @@ class Job(object):
 
     @property
     def status(self):
+        "The current status of the Job (success, failure, unknown)."
         return job_pb2.JobStatus.Name(self._message.status)
 
     @property
     def stage(self):
+        "The current stage of the Job (preparing, running, saving, done)."
         return job_pb2.JobStage.Name(self._message.stage)
 
     @property
     def done(self):
+        "bool: Whether the Job has completed or not."
         return self._message.status in [job_pb2.STATUS_FAILURE, job_pb2.STATUS_SUCCESS]
 
     @property
     def created_datetime(self):
+        "datetime: The time the Job was created."
         return pb_milliseconds_to_datetime(self._message.created_timestamp)
 
     @property
     def updated_datetime(self):
+        "datetime: The time of the most recent Job update."
         return pb_milliseconds_to_datetime(self._message.updated_timestamp)
 
     @property
     def runtime(self):
+        "datetime: The total time it took the Job to run."
         if self.updated_datetime is None or self.created_datetime is None:
             return None
         else:
@@ -294,11 +311,13 @@ class Job(object):
 
     @property
     def parameters(self):
+        "The parameters of the Job, as a graft."
         # TODO(gabe): this isn't very useful without reconstructing them into Proxytypes
         return json.loads(self._message.parameters)
 
     @property
     def error(self):
+        "The error of the Job, or None if it finished successfully."
         error_code = self._message.error.code
         exc = error_code_to_exception(error_code)
         return exc(self) if exc is not None else None

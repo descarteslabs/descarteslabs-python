@@ -17,6 +17,22 @@ class Workflow(object):
 
     * `Workflow.build`: build a new Workflow from a proxy object.
     * `Workflow.get`: load a stored Workflow by ID.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Int, Workflow, retrieve
+    >>> num = Int(1) + 1
+    >>> workflow = Workflow.build(num, name="one-plus-one", description="The result of 1 plus 1")
+    >>> workflow
+    <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
+    >>> workflow.save() # doctest: +SKIP
+    >>> workflow.id # doctest: +SKIP
+    '0eb6676dbe2de3ceb1990d9669f4ceb35c9309795d842c86'
+    >>> same_workflow = retrieve('0eb6676dbe2de3ceb1990d9669f4ceb35c9309795d842c86') # doctest: +SKIP
+    >>> same_workflow.object # doctest: +SKIP
+    <descarteslabs.workflows.types.primitives.number.Int object at 0x...>
+    >>> same_workflow.object.compute() # doctest: +SKIP
+    2
     """
 
     def __init__(self, proxy_object, proto_message, client=None):
@@ -221,15 +237,3 @@ class Workflow(object):
     def channel(self):
         "str: The channel name this Workflow is compatible with."
         return self._message.channel
-
-    @property
-    def owners(self):
-        raise NotImplementedError("ACLs are not yet supported for Workflows")
-
-    @property
-    def readers(self):
-        raise NotImplementedError("ACLs are not yet supported for Workflows")
-
-    @property
-    def writers(self):
-        raise NotImplementedError("ACLs are not yet supported for Workflows")
