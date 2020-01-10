@@ -215,7 +215,7 @@ class LayerControllerRow(widgets.Box):
         self._widgets["checkerboard"] = checkerboard
 
         autoscale = widgets.Button(
-            description="", tooltip="Enhance!", icon="magic", layout=button_layout
+            description="", tooltip="Autoscale", icon="magic", layout=button_layout
         )
         autoscale.on_click(self.autoscale)
         self._widgets["autoscale"] = autoscale
