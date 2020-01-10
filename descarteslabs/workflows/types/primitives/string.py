@@ -85,12 +85,26 @@ class Str(Primitive):
         return self._from_apply("reversed", self)
 
     def length(self):
-        "The length of the string (returns `Int`)"
+        """The length of the string (returns `Int`)
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").length().compute() # doctest: +SKIP
+        5
+        """
         return Int._from_apply("length", self)
 
     @typecheck_promote(lambda: Str)
     def contains(self, other):
-        "Whether this string contains the given substring (returns `Bool`)"
+        """Whether this string contains the given substring (returns `Bool`)
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").contains("o").compute() # doctest: +SKIP
+        True
+        """
         return Bool._from_apply("contains", self, other)
 
     def capitalize(self):
@@ -99,6 +113,12 @@ class Str(Primitive):
 
         More specifically, make the first character have upper case and the rest lower
         case.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").capitalize().compute() # doctest: +SKIP
+        'Hello'
         """
         return self._from_apply("Str.capitalize", self)
 
@@ -108,6 +128,12 @@ class Str(Primitive):
         Return a centered string of length width.
 
         Padding is done using the specified fill character (default is a space).
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").center(9).compute() # doctest: +SKIP
+        '  hello  '
         """
         return self._from_apply("Str.center", self, width, fillchar=fillchar)
 
@@ -115,6 +141,12 @@ class Str(Primitive):
     def count(self, sub):
         """
         Return an `Int` of the number of non-overlapping occurrences of the substring sub in this string.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").count("l").compute() # doctest: +SKIP
+        2
         """
         return Int._from_apply("Str.count", self, sub)
 
@@ -122,6 +154,12 @@ class Str(Primitive):
     def endswith(self, suffix):
         """
         Return True if S ends with the specified suffix, False otherwise.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").endswith("o").compute() # doctest: +SKIP
+        True
         """
         return Bool._from_apply("Str.endswith", self, suffix)
 
@@ -131,6 +169,12 @@ class Str(Primitive):
         Return a copy where all tab characters are expanded using spaces.
 
         If tabsize is not given, a tab size of 8 characters is assumed.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello\t").expandtabs().compute() # doctest: +SKIP
+        'hello   '
         """
         return self._from_apply("Str.expandtabs", self, tabsize=tabsize)
 
@@ -140,6 +184,12 @@ class Str(Primitive):
         Return the lowest index in S where substring sub is found in this string.
 
         Return -1 on failure.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").find("l").compute() # doctest: +SKIP
+        2
         """
         return Int._from_apply("Str.find", self, sub)
 
@@ -147,6 +197,12 @@ class Str(Primitive):
         """
         Return a formatted version of S, using substitutions from args and kwargs.
         The substitutions are identified by braces ('{' and '}').
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello {}").format("world").compute() # doctest: +SKIP
+        'hello world'
         """
         return self._from_apply("Str.format", self, *args, **kwargs)
 
@@ -156,6 +212,12 @@ class Str(Primitive):
 
         A string is alpha-numeric if all characters in the string are alpha-numeric and
         there is at least one character in the string.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").isalnum().compute() # doctest: +SKIP
+        True
         """
         return Bool._from_apply("Str.isalnum", self)
 
@@ -165,6 +227,12 @@ class Str(Primitive):
 
         A string is alphabetic if all characters in the string are alphabetic and there
         is at least one character in the string.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").isalpha().compute() # doctest: +SKIP
+        True
         """
         return Bool._from_apply("Str.isalpha", self)
 
@@ -174,6 +242,12 @@ class Str(Primitive):
 
         A string is a digit string if all characters in the string are digits and there
         is at least one character in the string.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("3").isdigit().compute() # doctest: +SKIP
+        True
         """
         return Bool._from_apply("Str.isdigit", self)
 
@@ -183,6 +257,12 @@ class Str(Primitive):
 
         A string is lowercase if all cased characters in the string are lowercase and
         there is at least one cased character in the string.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").islower().compute() # doctest: +SKIP
+        True
         """
         return Bool._from_apply("Str.islower", self)
 
@@ -192,6 +272,12 @@ class Str(Primitive):
 
         A string is whitespace if all characters in the string are whitespace and there
         is at least one character in the string.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str(" ").isspace().compute() # doctest: +SKIP
+        True
         """
         return Bool._from_apply("Str.isspace", self)
 
@@ -201,6 +287,12 @@ class Str(Primitive):
 
         In a title-cased string, upper- and title-case characters may only
         follow uncased characters and lowercase characters only cased ones.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("Hello World").istitle().compute() # doctest: +SKIP
+        True
         """
         return Bool._from_apply("Str.istitle", self)
 
@@ -210,6 +302,12 @@ class Str(Primitive):
 
         A string is uppercase if all cased characters in the string are uppercase and
         there is at least one cased character in the string.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("HELLO").isupper().compute() # doctest: +SKIP
+        True
         """
         return Bool._from_apply("Str.isupper", self)
 
@@ -221,7 +319,11 @@ class Str(Primitive):
         The string whose method is called is inserted in between each given string.
         The result is returned as a new string.
 
-        Example: ``wf.Str('.').join(['ab', 'pq', 'rs']) -> 'ab.pq.rs'``
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str(".").join(['ab', 'pq']).compute() # doctest: +SKIP
+        'ab.pq'
         """
         return self._from_apply("Str.join", self, strings)
 
@@ -231,12 +333,24 @@ class Str(Primitive):
         Return a left-justified string of length width.
 
         Padding is done using the specified fill character (default is a space).
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").ljust(6).compute() # doctest: +SKIP
+        'hello '
         """
         return self._from_apply("Str.ljust", self, width, fillchar=fillchar)
 
     def lower(self):
         """
         Return a copy of the string converted to lowercase.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("HELLO").lower().compute() # doctest: +SKIP
+        'hello'
         """
         return self._from_apply("Str.lower", self)
 
@@ -246,6 +360,12 @@ class Str(Primitive):
         Return a copy of the string with leading whitespace removed.
 
         If chars is given and not None, remove characters in chars instead.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("  hello ").lstrip().compute() # doctest: +SKIP
+        'hello '
         """
         return self._from_apply("Str.lstrip", self, chars)
 
@@ -260,6 +380,12 @@ class Str(Primitive):
 
         If the separator is not found, returns a ``Tuple[Str, Str, Str]``
         containing the original string and two empty strings.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").partition("e").compute() # doctest: +SKIP
+        ('h', 'e', 'llo')
         """
         from ..containers import Tuple
 
@@ -276,6 +402,12 @@ class Str(Primitive):
 
         If the optional argument count is given, only the first count occurrences are
         replaced.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").replace("e", "a").compute() # doctest: +SKIP
+        'hallo'
         """
         return self._from_apply("Str.replace", self, old, new, count=count)
 
@@ -285,6 +417,12 @@ class Str(Primitive):
         Return the highest index in S where substring sub is found.
 
         Return -1 on failure.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").rfind("l").compute() # doctest: +SKIP
+        3
         """
         return Int._from_apply("Str.rfind", self, sub)
 
@@ -294,6 +432,12 @@ class Str(Primitive):
         Return a right-justified string of length width.
 
         Padding is done using the specified fill character (default is a space).
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").rjust(9).compute() # doctest: +SKIP
+        '    hello'
         """
         return self._from_apply("Str.rjust", self, width, fillchar=fillchar)
 
@@ -308,6 +452,12 @@ class Str(Primitive):
 
         If the separator is not found, returns a 3-tuple containing two empty strings
         and the original string.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").rpartition("l").compute() # doctest: +SKIP
+        ('hel', 'l', 'o')
         """
         from ..containers import Tuple
 
@@ -327,6 +477,12 @@ class Str(Primitive):
             -1 (the default value) means no limit.
 
         Splits are done starting at the end of the string and working to the front.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").rsplit("l").compute() # doctest: +SKIP
+        ['he', '', 'o']
         """
         from ..containers import List
 
@@ -338,6 +494,12 @@ class Str(Primitive):
         Return a copy of the string with trailing whitespace removed.
 
         If chars is given and not None, remove characters in chars instead.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str(" hello  ").rstrip().compute() # doctest: +SKIP
+        ' hello'
         """
         return self._from_apply("Str.rstrip", self, chars=chars)
 
@@ -353,6 +515,12 @@ class Str(Primitive):
           maxsplit
             Maximum number of splits to do.
             -1 (the default value) means no limit.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").split("e").compute() # doctest: +SKIP
+        ['h', 'llo']
         """
         from ..containers import List
 
@@ -363,6 +531,12 @@ class Str(Primitive):
         Return a ``List[Str]`` of the lines in the string, breaking at line boundaries.
 
         Line breaks are not included in the resulting strings.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello\\nworld").splitlines().compute() # doctest: +SKIP
+        ['hello', 'world']
         """
         from ..containers import List
 
@@ -372,21 +546,39 @@ class Str(Primitive):
     def startswith(self, prefix):
         """
         Return True if S starts with the specified prefix, False otherwise.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").startswith("h").compute() # doctest: +SKIP
+        True
         """
         return Bool._from_apply("Str.startswith", self, prefix)
 
     @typecheck_promote(chars=lambda: (Str, NoneType))
     def strip(self, chars=None):
         """
-        Return a copy of the string with leading and trailing whitespace remove.
+        Return a copy of the string with leading and trailing whitespaces removed.
 
         If chars is given and not None, remove characters in chars instead.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("  hello  ").strip().compute() # doctest: +SKIP
+        'hello'
         """
         return self._from_apply("Str.strip", self, chars=chars)
 
     def swapcase(self):
         """
         Convert uppercase characters to lowercase and lowercase characters to uppercase.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").swapcase().compute() # doctest: +SKIP
+        'HELLO'
         """
         return self._from_apply("Str.swapcase", self)
 
@@ -396,12 +588,24 @@ class Str(Primitive):
 
         More specifically, words start with uppercased characters and all remaining
         cased characters have lower case.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello world").title().compute() # doctest: +SKIP
+        'Hello World'
         """
         return self._from_apply("Str.title", self)
 
     def upper(self):
         """
         Return a copy of the string converted to uppercase.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").upper().compute() # doctest: +SKIP
+        'HELLO'
         """
         return self._from_apply("Str.upper", self)
 
@@ -411,5 +615,11 @@ class Str(Primitive):
         Pad a numeric string with zeros on the left, to fill a field of the given width.
 
         The string is never truncated.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Str
+        >>> Str("hello").zfill(9).compute() # doctest: +SKIP
+        '0000hello'
         """
         return self._from_apply("Str.zfill", self, width)

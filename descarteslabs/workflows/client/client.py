@@ -45,6 +45,18 @@ def default_grpc_retry_predicate(e):
 
 
 class Client:
+    """Low-level gRPC client for interacting with the Workflows backend. Not intended for users to use directly.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Client, Int
+    >>> my_client = Client(auth=non_default_auth) # doctest: +SKIP
+    >>> Int(1).compute(client=my_client) # doctest: +SKIP
+    1
+    >>> Int(1).publish("One", client=my_client) # doctest: +SKIP
+    <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
+    """
+
     DEFAULT_TIMEOUT = 5
     STREAM_TIMEOUT = 60 * 60 * 24
 
@@ -69,16 +81,19 @@ class Client:
 
     @property
     def token(self):
+        "The Client token."
         return self.auth.token
 
     @property
     def channel(self):
+        "The GRPC channel of the Client."
         if self._channel is None:
             self._channel = self._open_channel()
         return self._channel
 
     @property
     def certificate(self):
+        "The Client SSL certificate."
         if self._certificate is None:
             cert_file = os.getenv("SSL_CERT_FILE", certifi.where())
             with open(cert_file, "rb") as f:
@@ -88,6 +103,7 @@ class Client:
 
     @property
     def api(self):
+        "The available Client operations, as a dict."
         if self._api is None:
             self._initialize()
         return self._api
@@ -160,6 +176,14 @@ class Client:
         )
 
     def health(self, timeout=None):
+        """Check the health of the GRPC server (SERVING, NOT_SERVING, UNKNOWN).
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Client
+        >>> Client().health() # doctest: +SKIP
+        SERVING
+        """
         if timeout is None:
             timeout = self.DEFAULT_TIMEOUT
 
@@ -168,6 +192,7 @@ class Client:
         )
 
     def close(self):
+        "Close the GRPC channel associated with the Client."
         # NOTE: this may be a blocking operation
         if self._channel:
             self._channel.close()
