@@ -894,3 +894,17 @@ class TestAttributes(unittest.TestCase):
 
         assert r == Resolution(value=6)
         assert la == ["one", "two", "three"]
+
+    def test_resolution_string(self):
+        Resolution("60m")
+        Resolution("-6.5 deg.")
+        with self.assertRaises(AttributeValidationError):
+            Resolution("60")
+
+        class Foo(MappingAttribute):
+            r = Resolution()
+
+        Foo.r = "60  m."
+        Foo.r = "1.234 °"
+        with self.assertRaises(AttributeValidationError):
+            Resolution("m")

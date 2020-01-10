@@ -2,6 +2,7 @@ from enum import Enum
 from datetime import datetime
 from pytz import utc
 import numbers
+import re
 
 from six import add_metaclass, PY2, PY3, iteritems, itervalues
 from descarteslabs.common.shapely_support import (
@@ -684,7 +685,13 @@ class Resolution(MappingAttribute):
     """A spatial pixel resolution with a unit.
 
     For example, ``Resolution(value=60, unit=ResolutionUnit.METERS)`` represents a
-    resolution of 60 meters per pixel.
+    resolution of 60 meters per pixel.  You can also use a string with a value and
+    unit, for example ``60m`` or ``1.2 deg.``.  The available unit designations are:
+
+    * m, meter, meters, metre, metres
+    * °, deg, degree, degrees
+
+    Spaces between the value and unit are optional, as is a trailing period.
 
     Objects with resolution values can be filtered by a unitless number in which
     case the value is always in meters. For example, retrieving all bands with
@@ -700,8 +707,29 @@ class Resolution(MappingAttribute):
         The unit the resolution is measured in.
     """
 
+    _pattern = re.compile(r"([-0-9.]+)\s*([a-zA-Z.°]+)")
+    _unit_mapping = {
+        "m": ResolutionUnit.METERS,
+        "meter": ResolutionUnit.METERS,
+        "metre": ResolutionUnit.METERS,
+        "meters": ResolutionUnit.METERS,
+        "metres": ResolutionUnit.METERS,
+        "°": ResolutionUnit.DEGREES,
+        "deg": ResolutionUnit.DEGREES,
+        "degree": ResolutionUnit.DEGREES,
+        "degrees": ResolutionUnit.DEGREES,
+    }
+
     value = Attribute()
     unit = EnumAttribute(ResolutionUnit)
+
+    def __init__(self, string=None, **kwargs):
+        super(Resolution, self).__init__(**kwargs)
+
+        if string is not None:
+            r = self.deserialize(string)
+            self.value = r.value
+            self.unit = r.unit
 
     def serialize(self, value, jsonapi_format=False):
         # Serialize a single number as is - this supports filtering resolution
@@ -712,6 +740,20 @@ class Resolution(MappingAttribute):
             return super(Resolution, self).serialize(
                 value, jsonapi_format=jsonapi_format
             )
+
+    def deserialize(self, value, validate=True):
+        if isinstance(value, str):
+            match = self._pattern.match(value)
+            unit = match and match.group(2).lower().rstrip(".")
+
+            if not unit or unit not in self._unit_mapping:
+                raise AttributeValidationError(
+                    "The given resolution string cannot be parsed: {}".format(value)
+                )
+
+            value = {"value": float(match.group(1)), "unit": self._unit_mapping[unit]}
+
+        return super(Resolution, self).deserialize(value, validate)
 
 
 class File(MappingAttribute):
