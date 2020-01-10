@@ -134,7 +134,7 @@ class Image(ImageBase, BandsMixin):
         return super(Image, cls)._promote(obj)
 
     @classmethod
-    @typecheck_promote(Str)
+    @typecheck_promote(Str, (Str, NoneType), (Str, NoneType))
     def from_id(cls, image_id, resampler=None, processing_level=None):
         """
         Create a proxy `Image` from an ID in the Descartes Labs catalog.
@@ -143,12 +143,12 @@ class Image(ImageBase, BandsMixin):
         ----------
         image_id: Str
             ID of the image
-        resampler: str, optional, default None
+        resampler: Str, optional, default None
             Algorithm used to interpolate pixel values when scaling and transforming
             the image to the resolution and CRS eventually defined by a `~.geospatial.GeoContext`.
             Possible values are ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
-        processing_level : str, optional
+        processing_level : Str, optional
             Reflectance processing level. Possible values are ``'toa'`` (top of atmosphere)
             and ``'surface'``. For products that support it, ``'surface'`` applies
             Descartes Labs' general surface reflectance algorithm to the output.
@@ -157,7 +157,7 @@ class Image(ImageBase, BandsMixin):
         -------
         img: ~.geospatial.Image
         """
-        if resampler is not None and resampler not in [
+        if resampler.literal_value is not None and resampler.literal_value not in [
             "near",
             "bilinear",
             "cubic",
@@ -171,11 +171,16 @@ class Image(ImageBase, BandsMixin):
             "q1",
             "q3",
         ]:
-            raise ValueError("Unknown resampler type: {}".format(resampler))
-        if processing_level is not None and processing_level not in ("toa", "surface"):
+            raise ValueError(
+                "Unknown resampler type: {}".format(resampler.literal_value)
+            )
+        if (
+            processing_level.literal_value is not None
+            and processing_level.literal_value not in ("toa", "surface")
+        ):
             raise ValueError(
                 "Unknown processing level: {!r}. Must be None, 'toa', or 'surface'.".format(
-                    processing_level
+                    processing_level.literal_value
                 )
             )
         return cls._from_apply(
@@ -350,6 +355,7 @@ class Image(ImageBase, BandsMixin):
         """
         return self._from_apply("getmask", self)
 
+    @typecheck_promote((Str, NoneType))
     def colormap(self, named_colormap="viridis", vmin=None, vmax=None):
         """
         Apply a colormap to an `Image`. Image must have a single band.
@@ -358,7 +364,7 @@ class Image(ImageBase, BandsMixin):
 
         Parameters
         ----------
-        named_colormap: str, default "viridis"
+        named_colormap: Str, default "viridis"
             The name of the Colormap registered with matplotlib.
             See https://matplotlib.org/users/colormaps.html for colormap options.
         vmin: float, default None
@@ -372,91 +378,97 @@ class Image(ImageBase, BandsMixin):
         """
         if (vmin is not None and vmax is None) or (vmin is None and vmax is not None):
             raise ValueError("Must specify both vmin and vmax, or neither.")
-        if named_colormap not in [
-            "viridis",
-            "plasma",
-            "inferno",
-            "magma",
-            "cividis",
-            "Greys",
-            "Purples",
-            "Blues",
-            "Greens",
-            "Oranges",
-            "Reds",
-            "YlOrBr",
-            "YlOrRd",
-            "OrRd",
-            "PuRd",
-            "RdPu",
-            "BuPu",
-            "GnBu",
-            "PuBu",
-            "YlGnBu",
-            "PuBuGn",
-            "BuGn",
-            "YlGn",
-            "binary",
-            "gist_yarg",
-            "gist_gray",
-            "gray",
-            "bone",
-            "pink",
-            "spring",
-            "summer",
-            "autumn",
-            "winter",
-            "cool",
-            "Wistia",
-            "hot",
-            "afmhot",
-            "gist_heat",
-            "copper",
-            "PiYG",
-            "PRGn",
-            "BrBG",
-            "PuOr",
-            "RdGy",
-            "RdBu",
-            "RdYlBu",
-            "RdYlGn",
-            "Spectral",
-            "coolwarm",
-            "bwr",
-            "seismic",
-            "twilight",
-            "twilight_shifted",
-            "hsv",
-            "Pastel1",
-            "Pastel2",
-            "Paired",
-            "Accent",
-            "Dark2",
-            "Set1",
-            "Set2",
-            "Set3",
-            "tab10",
-            "tab20",
-            "tab20b",
-            "tab20c",
-            "flag",
-            "prism",
-            "ocean",
-            "gist_earth",
-            "terrain",
-            "gist_stern",
-            "gnuplot",
-            "gnuplot2",
-            "CMRmap",
-            "cubehelix",
-            "brg",
-            "gist_rainbow",
-            "rainbow",
-            "jet",
-            "nipy_spectral",
-            "gist_ncar",
-        ]:
-            raise ValueError("Unknown colormap type: {}".format(named_colormap))
+        if (
+            named_colormap.literal_value is not None
+            and named_colormap.literal_value
+            not in [
+                "viridis",
+                "plasma",
+                "inferno",
+                "magma",
+                "cividis",
+                "Greys",
+                "Purples",
+                "Blues",
+                "Greens",
+                "Oranges",
+                "Reds",
+                "YlOrBr",
+                "YlOrRd",
+                "OrRd",
+                "PuRd",
+                "RdPu",
+                "BuPu",
+                "GnBu",
+                "PuBu",
+                "YlGnBu",
+                "PuBuGn",
+                "BuGn",
+                "YlGn",
+                "binary",
+                "gist_yarg",
+                "gist_gray",
+                "gray",
+                "bone",
+                "pink",
+                "spring",
+                "summer",
+                "autumn",
+                "winter",
+                "cool",
+                "Wistia",
+                "hot",
+                "afmhot",
+                "gist_heat",
+                "copper",
+                "PiYG",
+                "PRGn",
+                "BrBG",
+                "PuOr",
+                "RdGy",
+                "RdBu",
+                "RdYlBu",
+                "RdYlGn",
+                "Spectral",
+                "coolwarm",
+                "bwr",
+                "seismic",
+                "twilight",
+                "twilight_shifted",
+                "hsv",
+                "Pastel1",
+                "Pastel2",
+                "Paired",
+                "Accent",
+                "Dark2",
+                "Set1",
+                "Set2",
+                "Set3",
+                "tab10",
+                "tab20",
+                "tab20b",
+                "tab20c",
+                "flag",
+                "prism",
+                "ocean",
+                "gist_earth",
+                "terrain",
+                "gist_stern",
+                "gnuplot",
+                "gnuplot2",
+                "CMRmap",
+                "cubehelix",
+                "brg",
+                "gist_rainbow",
+                "rainbow",
+                "jet",
+                "nipy_spectral",
+                "gist_ncar",
+            ]
+        ):
+            raise ValueError(
+                "Unknown colormap type: {}".format(named_colormap.literal_value)
+            )
         return self._from_apply("colormap", self, named_colormap, vmin, vmax)
 
     _STATS_RETURN_TYPES = {

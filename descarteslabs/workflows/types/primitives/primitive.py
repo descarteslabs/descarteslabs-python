@@ -29,10 +29,16 @@ class Primitive(Proxytype):
                     "Cannot promote {} to {}".format(type(obj), type(self))
                 )
             self.graft = client.value_graft(obj)
+            self._literal_value = obj
 
     @classmethod
     def _promote(cls, obj):
         return cls(obj)
+
+    @property
+    def literal_value(self):
+        "Python literal value this proxy object was constructed with, or None if not constructed from a literal value."
+        return getattr(self, "_literal_value", None)
 
     def _is_generic(self):
         return self._pytype is None
