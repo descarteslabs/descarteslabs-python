@@ -69,8 +69,10 @@ class MapApp(widgets.VBox):
         "move_layer_down",
         "add_layer",
         "add_control",
+        "remove_layer",
         "remove_control",
         "clear_controls",
+        "clear_layers",
         "on_interaction",
         "geocontext",
     }
@@ -126,19 +128,6 @@ class MapApp(widgets.VBox):
         )
 
         map.observe(self._update_autoscale_progress, names=["layers"])
-
-    def remove_layer(self, layer_name):
-        "Remove a named layer from the map"
-        for lyr in self.map.layers:
-            if lyr.name == layer_name:
-                self.map.remove_layer(lyr)
-                break
-        else:
-            raise ValueError("Layer {} does not exist on the map".format(layer_name))
-
-    def clear_layers(self):
-        "Remove all layers from the map (besides the base layer)"
-        self.map.layers = tuple(lyr for lyr in self.map.layers if lyr.base)
 
     def _update_autoscale_progress(self, change):
         self.autoscale_outputs.children = [
@@ -316,6 +305,19 @@ class Map(ipyleaflet.Map):
 
         if old_i > 0 and not self.layers[old_i - 1].base:
             self.layers = tuple_move(self.layers, old_i, old_i - 1)
+
+    def remove_layer(self, layer_name):
+        "Remove a named layer from the map"
+        for lyr in self.layers:
+            if lyr.name == layer_name:
+                super().remove_layer(lyr)
+                break
+        else:
+            raise ValueError("Layer {} does not exist on the map".format(layer_name))
+
+    def clear_layers(self):
+        "Remove all layers from the map (besides the base layer)"
+        self.layers = tuple(lyr for lyr in self.layers if lyr.base)
 
     def geocontext(self):
         """
