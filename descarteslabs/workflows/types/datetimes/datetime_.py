@@ -63,7 +63,7 @@ class Datetime(DatetimeStruct):
     _constructor = "datetime.from_components"
 
     def __init__(self, year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
-        "Construct a `Datetime` from a components. All parts are optional besides ``year``."
+        "Construct a `Datetime` from components. All parts are optional besides ``year``."
         super(Datetime, self).__init__(
             year=year,
             month=month,
