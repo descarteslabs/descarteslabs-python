@@ -78,3 +78,8 @@ class List(GenericProxytype, CollectionMixin):
                 "List indicies must be integers, not {}".format(type(item))
             )
         return self._type_params[0]._from_apply("getitem", self, item)
+
+    def __iter__(self):
+        raise TypeError(
+            "Proxy List object is not iterable, since it contains an unknown number of elements"
+        )
