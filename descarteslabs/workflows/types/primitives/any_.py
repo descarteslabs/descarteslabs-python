@@ -204,10 +204,10 @@ class Any(Proxytype):
 
     # Mapping operators
     def __getitem__(self, item):
-        return self._from_apply("getitem", self, item=item)
+        return self._from_apply("getitem", self, item)
 
     def __getattr__(self, attr):
-        return self._from_apply("getattr", self, attr=attr)
+        return self._from_apply("getattr", self, attr)
 
     # Sequence operators
     def __reversed__(self):
