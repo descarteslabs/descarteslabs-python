@@ -100,6 +100,13 @@ class Datetime(DatetimeStruct):
         Returns
         -------
         ~descarteslabs.datetimes.Datetime
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Datetime
+        >>> my_datetime = Datetime.from_timestamp(1000)
+        >>> my_datetime.compute() # doctest: +SKIP
+        datetime.datetime(1970, 1, 1, 0, 16, 40)
         """
         return cls._from_apply("datetime.from_timestamp", seconds)
 
@@ -117,6 +124,13 @@ class Datetime(DatetimeStruct):
         Returns
         -------
         ~descarteslabs.datetimes.Datetime
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Datetime
+        >>> my_datetime = Datetime.from_string("2017-12-31")
+        >>> my_datetime.compute() # doctest: +SKIP
+        datetime.datetime(2017, 12, 31, 0, 0, tzinfo=datetime.timezone.utc)
         """
         return cls._from_apply("datetime.from_string", string)
 

@@ -53,8 +53,8 @@ class CollectionMixin:
 
         Example
         -------
-        >>> import descarteslabs.workflows as wf
-        >>> col = wf.ImageCollection.from_id("sentinel-2:L1C")
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("sentinel-2:L1C")
         >>> dates = col.map(lambda img: img.properties["date"])
         >>> type(dates).__name__
         'List[Datetime]'
@@ -88,8 +88,8 @@ class CollectionMixin:
 
         Example
         -------
-        >>> import descarteslabs.workflows as wf
-        >>> col = wf.ImageCollection.from_id("sentinel-2:L1C")
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("sentinel-2:L1C")
         >>> filtered = col.filter(lambda img: img.properties["date"].year == 2018)
         """
         delayed_func = Function._delay(func, Bool, self._element_type)
@@ -121,12 +121,11 @@ class CollectionMixin:
 
         Example
         -------
-        >>> import descarteslabs.workflows as wf
+        >>> from descarteslabs.workflows import List, Int
         >>> def add(accumulated, current):
         ...     return accumulated + current
-        >>> l = wf.List[wf.Int]([1, 2])
-        >>> reduced = l.reduce(add, initial=wf.Int(10))
-        >>> reduced.compute()  # doctest: +SKIP
+        >>> my_list = List[Int]([1, 2])
+        >>> my_list.reduce(add, initial=Int(10)).compute()  # doctest: +SKIP
         13
         """
         initial_type = _initial_reduce_type(initial, self._element_type)
@@ -147,6 +146,13 @@ class CollectionMixin:
         -------
         Int
             An Int Proxytype
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import List, Int
+        >>> my_list = List[Int]([1, 2, 3])
+        >>> my_list.length().compute() # doctest: +SKIP
+        3
         """
         return Int._from_apply("length", self)
 
@@ -163,6 +169,13 @@ class CollectionMixin:
         -------
         Bool
             A Bool Proxytype
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import List, Int
+        >>> my_list = List[Int]([1, 2, 3])
+        >>> my_list.contains(2).compute() # doctest: +SKIP
+        True
         """
         return Bool._from_apply("contains", self, other)
 
@@ -178,6 +191,13 @@ class CollectionMixin:
             If not given, sorts by the elements themselves.
         reverse: Bool, default False
             Sorts in ascending order if False (default), descending if True.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import List, Int
+        >>> my_list = List[Int]([1, 4, 2, 3])
+        >>> my_list.sorted().compute() # doctest: +SKIP
+        [1, 2, 3, 4]
         """
         key = self._make_sort_key(key)
         return self._from_apply("sorted", self, key=key, reverse=reverse)

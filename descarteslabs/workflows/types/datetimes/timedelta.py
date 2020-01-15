@@ -130,5 +130,13 @@ class Timedelta(TimedeltaStruct):
         return self._from_apply("sub", self, other)
 
     def total_seconds(self):
-        "The total number of seconds contained in the duration."
+        """The total number of seconds contained in the duration.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Timedelta
+        >>> my_timedelta = Timedelta(minutes=30)
+        >>> my_timedelta.total_seconds().compute() # doctest: +SKIP
+        1800.0
+        """
         return Float._from_apply("timedelta.total_seconds", self)

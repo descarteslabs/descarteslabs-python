@@ -52,17 +52,6 @@ class Function(GenericProxytype):
     <descarteslabs.workflows.types.function.function.Function[Int, Int, {}, Int] object at 0x...>
     >>> my_func(3, 4).compute() # doctest: +SKIP
     7
-
-    >>> from descarteslabs.workflows import Function, Int, Image
-    >>> my_img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
-    >>> def my_add(x, y):
-    ...     return x + y # function taking two values and adding them together
-    >>> my_func = Function.from_callable(my_add, Image, Int) # Image and Int are the argument types
-    >>> my_func
-    <descarteslabs.workflows.types.function.function.Function[Image, Int, {}, Image] object at 0x...>
-    >>> my_func(my_img, 10).compute(my_geoctx) # my_geoctx is an arbitrary geocontext for 'img' # doctest: +SKIP
-    ImageResult:
-    ...
     """
 
     def __init__(self, function):
@@ -164,6 +153,19 @@ class Function(GenericProxytype):
         Returns
         -------
         ~descarteslabs.function.Function
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Function, Int, Image
+        >>> my_img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> def my_add(x, y):
+        ...     return x + y # function taking two values and adding them together
+        >>> my_func = Function.from_callable(my_add, Image, Int) # Image and Int are the argument types
+        >>> my_func
+        <descarteslabs.workflows.types.function.function.Function[Image, Int, {}, Image] object at 0x...>
+        >>> my_func(my_img, 10).compute(my_geoctx) # my_geoctx is an arbitrary geocontext for 'img' # doctest: +SKIP
+        ImageResult:
+        ...
         """
         # TODO(gabe): use type annotations for great good!
         if len(arg_types) == 0:

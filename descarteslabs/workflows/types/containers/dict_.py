@@ -129,6 +129,13 @@ class Dict(GenericProxytype):
         Returns
         -------
         List
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Dict, Str, Int
+        >>> my_dict = Dict[Str, Int]({"foo": 1, "bar": 2, "baz": 3})
+        >>> my_dict.keys().compute() # doctest: +SKIP
+        ['foo', 'bar', 'baz']
         """
         return List[self._type_params[0]]._from_apply("dict.keys", self)
 
@@ -138,6 +145,13 @@ class Dict(GenericProxytype):
         Returns
         -------
         List
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Dict, Str, Int
+        >>> my_dict = Dict[Str, Int]({"foo": 1, "bar": 2, "baz": 3})
+        >>> my_dict.values().compute() # doctest: +SKIP
+        [1, 2, 3]
         """
         return List[self._type_params[1]]._from_apply("dict.values", self)
 
@@ -147,6 +161,13 @@ class Dict(GenericProxytype):
         Returns
         -------
         List[Tuple[KeyType, ValueType]]
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Dict, Str, Int
+        >>> my_dict = Dict[Str, Int]({"foo": 1, "bar": 2, "baz": 3})
+        >>> my_dict.items().compute() # doctest: +SKIP
+        [('foo', 1), ('bar', 2), ('baz', 3)]
         """
         return List[Tuple[self._type_params[0], self._type_params[1]]]._from_apply(
             "dict.items", self

@@ -62,6 +62,12 @@ class BandsMixin:
         or a single space-separated string (like ``"red green blue"``).
 
         Bands on the new `Image` will be in the order given.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> rgb = img.pick_bands("red green blue")
         """
         namespace = type(self).__name__
         if isinstance(bands, abc.Sequence):
@@ -94,8 +100,8 @@ class BandsMixin:
 
         Example
         -------
-        >>> import descarteslabs.workflows as wf
-        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> from descarteslabs.workflows import Image
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
         >>> red, green, blue = img.unpack_bands("red green blue")
         """
         if isinstance(bands, six.string_types):
@@ -116,6 +122,12 @@ class BandsMixin:
         mapping from old band names to new ones.
 
         To eliminate ambiguity, names cannot be given both ways.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> renamed = img.rename_bands(red="new_red", blue="new_blue", green="new_green")
         """
         if len(new_positional_names) > 0 and len(new_names) > 0:
             raise TypeError(
@@ -167,6 +179,12 @@ class BandsMixin:
         -------
         `Image` if ``func`` returns `Image`, otherwise ``Dict[Str, T]``,
         where ``T`` is the return type of ``func``.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> mapped = img.map_bands(lambda name, band: band / 2) # divide each band by 2
         """
         from .image import Image
         from .imagecollection import ImageCollection

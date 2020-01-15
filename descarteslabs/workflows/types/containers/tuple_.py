@@ -107,6 +107,13 @@ class Tuple(GenericProxytype):
         -------
         Int
             An Int Proxytype
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Tuple, Str
+        >>> my_tuple = Tuple[Str, Str, Str](("foo", "bar", "baz"))
+        >>> my_tuple.length().compute() # doctest: +SKIP
+        3
         """
         return Int._from_apply("length", self)
 

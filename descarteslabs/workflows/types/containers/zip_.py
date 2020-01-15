@@ -10,6 +10,14 @@ def zip(*lists):
     from each of the argument `List`. All arguments must be Proxytype `List`.
     The returned `List` is truncated in length to the length of the shortest
     argument sequence.
+
+    Example
+    -------
+    >>> from descarteslabs.workflows import List, Int, Str, zip
+    >>> my_list = List[Int]([1, 2, 3, 4])
+    >>> other_list = List[Str](["foo", "bar", "baz"])
+    >>> zip(my_list, other_list).compute() # doctest: +SKIP
+    [(1, 'foo'), (2, 'bar'), (3, 'baz')]
     """
     for i, seq in enumerate(lists):
         if not isinstance(seq, List):
