@@ -5,6 +5,7 @@ import numpy as np
 import threading
 
 from ..models import JobComputeError
+from ..types import Image
 
 from .map_ import Map
 from .layer import WorkflowsLayer
@@ -13,91 +14,6 @@ from .layer import WorkflowsLayer
 initial_width = widgets.Layout(width="initial")
 scale_width = widgets.Layout(min_width="1.3em", max_width="4em", width="initial")
 button_layout = widgets.Layout(width="initial", overflow="visible")
-
-colormaps = [
-    "viridis",
-    "plasma",
-    "inferno",
-    "magma",
-    "cividis",
-    "Greys",
-    "Purples",
-    "Blues",
-    "Greens",
-    "Oranges",
-    "Reds",
-    "YlOrBr",
-    "YlOrRd",
-    "OrRd",
-    "PuRd",
-    "RdPu",
-    "BuPu",
-    "GnBu",
-    "PuBu",
-    "YlGnBu",
-    "PuBuGn",
-    "BuGn",
-    "YlGn",
-    "binary",
-    "gist_yarg",
-    "gist_gray",
-    "gray",
-    "bone",
-    "pink",
-    "spring",
-    "summer",
-    "autumn",
-    "winter",
-    "cool",
-    "Wistia",
-    "hot",
-    "afmhot",
-    "gist_heat",
-    "copper",
-    "PiYG",
-    "PRGn",
-    "BrBG",
-    "PuOr",
-    "RdGy",
-    "RdBu",
-    "RdYlBu",
-    "RdYlGn",
-    "Spectral",
-    "coolwarm",
-    "bwr",
-    "seismic",
-    "twilight",
-    "twilight_shifted",
-    "hsv",
-    "Pastel1",
-    "Pastel2",
-    "Paired",
-    "Accent",
-    "Dark2",
-    "Set1",
-    "Set2",
-    "Set3",
-    "tab10",
-    "tab20",
-    "tab20b",
-    "tab20c",
-    "flag",
-    "prism",
-    "ocean",
-    "gist_earth",
-    "terrain",
-    "gist_stern",
-    "gnuplot",
-    "gnuplot2",
-    "CMRmap",
-    "cubehelix",
-    "brg",
-    "gist_rainbow",
-    "rainbow",
-    "jet",
-    "nipy_spectral",
-    "gist_ncar",
-]
 
 
 class CText(widgets.Text):
@@ -187,7 +103,7 @@ class LayerControllerRow(widgets.Box):
         self._widgets["scales"] = [r_min, r_max, g_min, g_max, b_min, b_max]
 
         colormap = widgets.Dropdown(
-            options=[None] + colormaps,
+            options=[None] + Image._colormaps,
             value=layer.colormap,
             layout=widgets.Layout(width="initial", max_width="7vh"),
         )
