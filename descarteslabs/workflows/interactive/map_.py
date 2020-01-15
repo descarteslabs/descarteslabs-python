@@ -19,6 +19,12 @@ class MapApp(widgets.VBox):
     Widget displaying a map, layers, and output logs in a nicer layout.
 
     Forwards attributes and methods to ``self.map``.
+
+    Note: to change the size of the map when displayed inline in a notebook,
+    set ``wf.map.map.layout.height == "1000px"``. (``wf.map.map`` is the actual
+    map widget, ``wf.map`` is the container with the layer controls, which will
+    resize accordingly.) Setting the height on just ``wf.map`` will also work,
+    but if you use an output view, then the map won't resize itself to fit in within it.
     """
 
     _forward_attrs_to_map = {
@@ -103,7 +109,7 @@ class MapApp(widgets.VBox):
         self.errors = ClearableOutput(
             map.error_log,
             on_clear=on_clear,
-            layout=widgets.Layout(max_height="20rem", flex="1 0 auto"),
+            layout=widgets.Layout(max_height="20rem", flex="0 0 auto"),
         )
 
         self.autoscale_outputs = widgets.VBox(
@@ -112,7 +118,7 @@ class MapApp(widgets.VBox):
                 for x in reversed(self.map.layers)
                 if isinstance(x, WorkflowsLayer)
             ],
-            layout=widgets.Layout(flex="1 0 auto", max_height="16rem"),
+            layout=widgets.Layout(flex="0 0 auto", max_height="16rem"),
         )
 
         super(MapApp, self).__init__(
@@ -316,7 +322,9 @@ class Map(ipyleaflet.Map):
                     super().remove_layer(lyr)
                     break
             else:
-                raise ValueError("Layer {} does not exist on the map".format(layer_name))
+                raise ValueError(
+                    "Layer {} does not exist on the map".format(layer_name)
+                )
 
     def clear_layers(self):
         "Remove all layers from the map (besides the base layer)"

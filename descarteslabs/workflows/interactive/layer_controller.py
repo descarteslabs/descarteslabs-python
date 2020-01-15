@@ -26,7 +26,7 @@ class LayerControllerList(widgets.VBox):
 
         self.layout.overflow = "auto"
         self.layout.max_height = "12rem"
-        self.layout.flex = "1 0 auto"
+        self.layout.flex = "0 0 auto"
 
     def _layers_changed(self, change):
         new_layers = change["new"]
