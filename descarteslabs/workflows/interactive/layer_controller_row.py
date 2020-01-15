@@ -50,8 +50,8 @@ class LayerControllerRow(widgets.Box):
     autoscaleable = traitlets.Bool(True)
     colormappable = traitlets.Bool(True)
     checkerboardable = traitlets.Bool(True)
-    # TODO(gabe): would be sweet to be able to compute if the image was 1 vs 3 bands on __init__,
-    # so we could decide to show the colormap box vs scales control automatically
+
+    _colormap_legends = {}  # cache of pre-rendered colormap legends
 
     def __init__(self, layer, map):
         if layer.error_output is None:
@@ -105,10 +105,11 @@ class LayerControllerRow(widgets.Box):
         colormap = widgets.Dropdown(
             options=[None] + Image._colormaps,
             value=layer.colormap,
-            layout=widgets.Layout(width="initial", max_width="7vh"),
+            layout=widgets.Layout(width="initial", max_width="10.6em"),
         )
         widgets.link((colormap, "value"), (layer, "colormap"))
         colormap.observe(self._observe_supported_controls, names="value")
+        # ^ if colormap is set/unset from None, we need to re-render controls
         self._widgets["colormap"] = colormap
 
         # when using a colormap display 'min' and 'max' placeholders but link
@@ -118,7 +119,24 @@ class LayerControllerRow(widgets.Box):
         cmap_max = CText(placeholder="max", value=layer.r_max, layout=scale_width)
         widgets.link((cmap_max, "value"), (layer, "r_max"))
 
-        self._widgets["cmap_scales"] = [cmap_min, cmap_max]
+        if get_matplotlib() is not None:
+            legend = widgets.Image(
+                format="png",
+                layout=widgets.Layout(
+                    display="none",
+                    height="var(--jp-widgets-inline-height)",
+                    max_width="8.3em",  # ~width of 2 input boxes
+                ),
+            )
+            self._widgets["cmap_legend"] = legend
+            self._widgets["cmap_scales"] = [cmap_min, legend, cmap_max]
+
+            colormap.observe(
+                self._observe_colormap_make_legend, names="value", type="change"
+            )
+            self._observe_colormap_make_legend({})  # initialize colormap
+        else:
+            self._widgets["cmap_scales"] = [cmap_min, cmap_max]
 
         checkerboard = widgets.ToggleButton(
             value=layer.checkerboard,
@@ -179,7 +197,7 @@ class LayerControllerRow(widgets.Box):
         if self.colormappable:
             children.append(widgets["colormap"])
             widgets["colormap"].layout.width = (
-                "2em" if self.layer.colormap is None else ""
+                "2.1em" if self.layer.colormap is None else ""
             )
         if self.checkerboardable:
             children.append(widgets["checkerboard"])
@@ -195,6 +213,24 @@ class LayerControllerRow(widgets.Box):
     )
     def _observe_supported_controls(self, change):
         self.children = self._make_children()
+
+    def _observe_colormap_make_legend(self, change):
+        "use matplotlib (if available) to render a colorbar for the current colormap"
+        colormap = self.layer.colormap
+        legend = self._widgets["cmap_legend"]
+        if colormap is None:
+            png = b""
+        else:
+            try:
+                png = self._colormap_legends[colormap]
+            except KeyError:
+                png = colorbar_png(colormap)
+                if png is None:
+                    png = b""
+                self._colormap_legends[colormap] = png
+
+        legend.layout.display = "none" if len(png) == 0 else ""
+        legend.value = png
 
     def _autoscale(self, widget):
         old_icon = widget.icon
@@ -259,3 +295,45 @@ class LayerControllerRow(widgets.Box):
             # stops the error listener
             self.layer.error_output = None
         self.map.remove_layer(self.layer)
+
+
+def get_matplotlib():
+    try:
+        import matplotlib.pyplot
+
+        return matplotlib
+    except Exception:
+        return None
+
+
+def colorbar_png(colormap_name, figsize=(2.5, 0.5)):
+    """
+    Render a matplotlib colorbar for the named colormap
+
+    Returns a PNG as bytes, or None if matplotlib or the colormap is unavailable.
+    """
+    matplotlib = get_matplotlib()
+    if matplotlib is None:
+        return None
+
+    fig = matplotlib.figure.Figure(figsize=figsize)
+    ax = fig.add_axes([0, 0, 1, 1])
+
+    try:
+        cmap = matplotlib.cm.get_cmap(colormap_name)
+    except ValueError:
+        return None
+
+    matplotlib.colorbar.ColorbarBase(ax, cmap=cmap, orientation="horizontal")
+
+    # we use the matplotlib's object-oriented API instead of pyplot,
+    # and manually connect the `agg` backend, in order to not mess
+    # with any configuration a user might have made
+    matplotlib.backends.backend_agg.FigureCanvasAgg(fig)
+
+    import io
+
+    buffer = io.BytesIO()
+    fig.savefig(buffer, format="png")
+
+    return buffer.getvalue()
