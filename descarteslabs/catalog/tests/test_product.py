@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 import pytest
 import responses
-from datetime import datetime
 import textwrap
+import warnings
+
+from datetime import datetime
 from mock import patch
 
 from descarteslabs.client.exceptions import BadRequestError
-from .base import ClientTestCase
-from ..catalog_base import DocumentState, DeletedObjectError
+
+from .. import properties
 from ..attributes import AttributeValidationError, ListAttribute
+from ..band import DerivedBand
+from ..catalog_base import DocumentState, DeletedObjectError
+from ..image_upload import ImageUploadStatus
 from ..product import (
     Product,
     Resolution,
@@ -17,10 +22,7 @@ from ..product import (
     DeletionTaskStatus,
     UpdatePermissionsTaskStatus,
 )
-from ..band import DerivedBand
-
-from ..image_upload import ImageUploadStatus
-from .. import properties
+from .base import ClientTestCase
 
 
 class TestProduct(ClientTestCase):
@@ -839,3 +841,48 @@ class TestProduct(ClientTestCase):
     def test_named_id(self):
         p = Product(id="id1")
         assert p.named_id("band1") == "id1:band1"
+
+    @responses.activate
+    def test_warnings(self):
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "attributes": {
+                        "readers": [],
+                        "writers": [],
+                        "owners": ["org:descarteslabs"],
+                        "modified": "2019-06-11T23:31:33.714883Z",
+                        "created": "2019-06-11T23:31:33.714883Z",
+                        "is_core": False,
+                    },
+                    "type": "product",
+                    "id": "product_id",
+                },
+                "meta": {
+                    "warnings": [
+                        {
+                            "category": "DeprecationWarning",
+                            "message": "This is a test of a DeprecationWarning",
+                        },
+                        {
+                            "category": "SomeWarning",
+                            "message": "This is a test of a warning with a bad category",
+                        },
+                    ]
+                },
+                "jsonapi": {"version": "1.0"},
+            },
+        )
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            Product.get("product_id", client=self.client)
+
+        assert w[0].category is DeprecationWarning
+        assert str(w[0].message) == "This is a test of a DeprecationWarning"
+        assert w[1].category is UserWarning
+        assert (
+            str(w[1].message)
+            == "SomeWarning: This is a test of a warning with a bad category"
+        )

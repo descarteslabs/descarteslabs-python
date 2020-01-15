@@ -12,20 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+try:
+    import builtins
+except ImportError:
+    # Until we get rid of Python2 tests...
+    builtins = __builtins__
+
 import itertools
-import random
 import os
 import platform
+import random
+import requests
 import sys
 import uuid
 
-from warnings import warn
-
-import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from warnings import warn
+
 from descarteslabs.client.auth import Auth
-from descarteslabs.client.version import __version__
 from descarteslabs.client.exceptions import (
     ServerError,
     BadRequestError,
@@ -34,14 +39,63 @@ from descarteslabs.client.exceptions import (
     GatewayTimeoutError,
     ConflictError,
 )
-from descarteslabs.common.threading.local import ThreadLocalWrapper
+from descarteslabs.client.version import __version__
 from descarteslabs.common.http.authorization import add_bearer
+from descarteslabs.common.threading.local import ThreadLocalWrapper
+
+
+class HttpMountProtocol(object):
+    HTTP = "http://"
+    HTTPS = "https://"
+
+
+class HttpRequestMethod(object):
+    DELETE = "DELETE"
+    GET = "GET"
+    HEAD = "HEAD"
+    OPTIONS = "OPTIONS"
+    PATCH = "PATCH"
+    POST = "POST"
+    PUT = "PUT"
+    TRACE = "TRACE"
+
+
+class HttpStatusCode(object):
+    TooManyRequests = 429
+    InternalServerError = 500
+    BadGateway = 502
+    ServiceUnavailable = 503
+    GatewayTimeout = 504
+
+
+class HttpHeaderKeys(object):
+    Accept = "Accept"
+    Authorization = "Authorization"
+    ClientSession = "X-Client-Session"
+    Conda = "X-Conda"
+    ContentType = "Content-Type"
+    Notebook = "X-Notebook"
+    Platform = "X-Platform"
+    Python = "X-Python"
+    RequestGroup = "X-Request-Group"
+    RetryAfter = "Retry-After"
+    UserAgent = "User-Agent"
+
+
+class HttpHeaderValues(object):
+    ApplicationJson = "application/json"
+    ApplicationVndApiJson = "application/vnd.api+json"
+    ApplicationOctetStream = "application/octet-stream"
+    DlPython = "dl-python"
 
 
 class WrappedSession(requests.Session):
+    ATTR_BASE_URL = "base_url"
+    ATTR_HEADERS = "headers"
+    ATTR_TIMEOUT = "timeout"
 
     # Adapts the custom pickling protocol of requests.Session
-    __attrs__ = requests.Session.__attrs__ + ["base_url", "timeout"]
+    __attrs__ = requests.Session.__attrs__ + [ATTR_BASE_URL, ATTR_TIMEOUT]
 
     def __init__(self, base_url, timeout=None):
         self.base_url = base_url
@@ -49,13 +103,13 @@ class WrappedSession(requests.Session):
         super(WrappedSession, self).__init__()
 
     def request(self, method, url, **kwargs):
-        if self.timeout and "timeout" not in kwargs:
-            kwargs["timeout"] = self.timeout
+        if self.timeout and self.ATTR_TIMEOUT not in kwargs:
+            kwargs[self.ATTR_TIMEOUT] = self.timeout
 
-        if "headers" not in kwargs:
-            kwargs["headers"] = {}
+        if self.ATTR_HEADERS not in kwargs:
+            kwargs[self.ATTR_HEADERS] = {}
 
-        kwargs["headers"]["X-Request-Group"] = uuid.uuid4().hex
+        kwargs[self.ATTR_HEADERS][HttpHeaderKeys.RequestGroup] = uuid.uuid4().hex
 
         resp = super(WrappedSession, self).request(
             method, self.base_url + url, **kwargs
@@ -72,8 +126,12 @@ class WrappedSession(requests.Session):
             raise NotFoundError(text)
         elif resp.status_code == 409:
             raise ConflictError(resp.text)
+        elif resp.status_code == 422:
+            raise BadRequestError(resp.text)
         elif resp.status_code == 429:
-            raise RateLimitError(resp.text, retry_after=resp.headers.get("Retry-After"))
+            raise RateLimitError(
+                resp.text, retry_after=resp.headers.get(HttpHeaderKeys.RetryAfter)
+            )
         elif resp.status_code == 504:
             raise GatewayTimeoutError(
                 "Your request timed out on the server. "
@@ -84,7 +142,11 @@ class WrappedSession(requests.Session):
 
 
 class Service(object):
-    TIMEOUT = (9.5, 30)
+    # https://requests.readthedocs.io/en/master/user/advanced/#timeouts
+    CONNECT_TIMEOUT = 9.5
+    READ_TIMEOUT = 30
+
+    TIMEOUT = (CONNECT_TIMEOUT, READ_TIMEOUT)
 
     RETRY_CONFIG = Retry(
         total=3,
@@ -93,9 +155,22 @@ class Service(object):
         status=2,
         backoff_factor=random.uniform(1, 3),
         method_whitelist=frozenset(
-            ["HEAD", "TRACE", "GET", "POST", "PUT", "OPTIONS", "DELETE"]
+            [
+                HttpRequestMethod.HEAD,
+                HttpRequestMethod.TRACE,
+                HttpRequestMethod.GET,
+                HttpRequestMethod.POST,
+                HttpRequestMethod.PUT,
+                HttpRequestMethod.OPTIONS,
+                HttpRequestMethod.DELETE,
+            ]
         ),
-        status_forcelist=[500, 502, 503, 504],
+        status_forcelist=[
+            HttpStatusCode.InternalServerError,
+            HttpStatusCode.BadGateway,
+            HttpStatusCode.ServiceUnavailable,
+            HttpStatusCode.GatewayTimeout,
+        ],
     )
 
     # We share an adapter (one per thread/process) among all clients to take advantage
@@ -144,21 +219,23 @@ class Service(object):
     def session(self):
         session = self._session.get()
         auth = add_bearer(self.token)
-        if session.headers.get("Authorization") != auth:
-            session.headers["Authorization"] = auth
+        if session.headers.get(HttpHeaderKeys.Authorization) != auth:
+            session.headers[HttpHeaderKeys.Authorization] = auth
 
         return session
 
     def build_session(self):
         s = self._session_class(self.base_url, timeout=self.TIMEOUT)
         adapter = self._adapter.get()
-        s.mount("https://", adapter)
-        s.mount("http://", adapter)
+        s.mount(HttpMountProtocol.HTTPS, adapter)
+        s.mount(HttpMountProtocol.HTTP, adapter)
 
         s.headers.update(
             {
-                "Content-Type": "application/json",
-                "User-Agent": "dl-python/{}".format(__version__),
+                HttpHeaderKeys.ContentType: HttpHeaderValues.ApplicationJson,
+                HttpHeaderKeys.UserAgent: "{}/{}".format(
+                    HttpHeaderValues.DlPython, __version__
+                ),
             }
         )
 
@@ -166,17 +243,17 @@ class Service(object):
             s.headers.update(
                 {
                     # https://github.com/easybuilders/easybuild/wiki/OS_flavor_name_version
-                    "X-Platform": platform.platform(),
-                    "X-Python": platform.python_version(),
+                    HttpHeaderKeys.Platform: platform.platform(),
+                    HttpHeaderKeys.Python: platform.python_version(),
                     # https://stackoverflow.com/questions/47608532/how-to-detect-from-within-python-whether-packages-are-managed-with-conda
-                    "X-Conda": str(
+                    HttpHeaderKeys.Conda: str(
                         os.path.exists(
                             os.path.join(sys.prefix, "conda-meta", "history")
                         )
                     ),
                     # https://stackoverflow.com/questions/15411967/how-can-i-check-if-code-is-executed-in-the-ipython-notebook
-                    "X-Notebook": str("ipykernel" in sys.modules),
-                    "X-Client-Session": uuid.uuid4().hex,
+                    HttpHeaderKeys.Notebook: str("ipykernel" in sys.modules),
+                    HttpHeaderKeys.ClientSession: uuid.uuid4().hex,
                 }
             )
         except Exception:
@@ -185,22 +262,77 @@ class Service(object):
         return s
 
 
+class JsonApiSession(WrappedSession):
+    KEY_CATEGORY = "category"
+    KEY_MESSAGE = "message"
+    KEY_META = "meta"
+    KEY_WARNINGS = "warnings"
+
+    def request(self, *args, **kwargs):
+        resp = super(JsonApiSession, self).request(*args, **kwargs)
+
+        try:
+            json_response = resp.json()
+        except ValueError:
+            pass
+        else:
+            if (
+                self.KEY_META not in json_response
+                or self.KEY_WARNINGS not in json_response[self.KEY_META]
+            ):
+                return  # This activates the `finally` clause...
+
+            for warning in json_response[self.KEY_META][self.KEY_WARNINGS]:
+                if self.KEY_MESSAGE not in warning:  # Mandatory
+                    continue
+
+                message = warning[self.KEY_MESSAGE]
+                category = UserWarning
+
+                if self.KEY_CATEGORY in warning:
+                    category = getattr(builtins, warning[self.KEY_CATEGORY], None)
+
+                    if category is None:
+                        category = UserWarning
+                        message = "{}: {}".format(warning[self.KEY_CATEGORY], message)
+
+                warn(message, category)
+        finally:
+            return resp
+
+
 class JsonApiService(Service):
+    KEY_ATTRIBUTES = "attributes"
+    KEY_DATA = "data"
+    KEY_ID = "id"
+    KEY_TYPE = "type"
+
+    def __init__(self, url, session_class=None, **kwargs):
+        if session_class is None:
+            session_class = JsonApiSession
+
+        super(JsonApiService, self).__init__(url, session_class=session_class, **kwargs)
+
     def build_session(self):
         s = super(JsonApiService, self).build_session()
         s.headers.update(
             {
-                "Content-Type": "application/vnd.api+json",
-                "Accept": "application/vnd.api+json",
+                HttpHeaderKeys.ContentType: HttpHeaderValues.ApplicationVndApiJson,
+                HttpHeaderKeys.Accept: HttpHeaderValues.ApplicationVndApiJson,
             }
         )
         return s
 
     @staticmethod
     def jsonapi_document(type, attributes, id=None):
-        resource = {"data": {"type": type, "attributes": attributes}}
+        resource = {
+            JsonApiService.KEY_DATA: {
+                JsonApiService.KEY_TYPE: type,
+                JsonApiService.KEY_ATTRIBUTES: attributes,
+            }
+        }
         if id is not None:
-            resource["data"]["id"] = id
+            resource[JsonApiService.KEY_DATA][JsonApiService.KEY_ID] = id
         return resource
 
     @staticmethod
@@ -216,24 +348,43 @@ class JsonApiService(Service):
                 )
         resources = []
         for attributes, id in zip(attributes_list, ids_list):
-            resource = {"type": type, "attributes": attributes}
+            resource = {
+                JsonApiService.KEY_TYPE: type,
+                JsonApiService.KEY_ATTRIBUTES: attributes,
+            }
             if id is not None:
-                resource["id"] = id
+                resource[JsonApiService.KEY_ID] = id
             resources.append(resource)
-        return {"data": resources}
+        return {JsonApiService.KEY_DATA: resources}
 
 
 class ThirdPartyService(object):
-    TIMEOUT = (9.5, 30)
+    CONNECT_TIMEOUT = 9.5
+    READ_TIMEOUT = 30
+    TIMEOUT = (CONNECT_TIMEOUT, READ_TIMEOUT)
 
     RETRY_CONFIG = Retry(
         total=10,
         read=2,
         backoff_factor=random.uniform(1, 3),
         method_whitelist=frozenset(
-            ["HEAD", "TRACE", "GET", "POST", "PUT", "OPTIONS", "DELETE"]
+            [
+                HttpRequestMethod.HEAD,
+                HttpRequestMethod.TRACE,
+                HttpRequestMethod.GET,
+                HttpRequestMethod.POST,
+                HttpRequestMethod.PUT,
+                HttpRequestMethod.OPTIONS,
+                HttpRequestMethod.DELETE,
+            ]
         ),
-        status_forcelist=[429, 500, 502, 503, 504],
+        status_forcelist=[
+            HttpStatusCode.TooManyRequests,
+            HttpStatusCode.InternalServerError,
+            HttpStatusCode.BadGateway,
+            HttpStatusCode.ServiceUnavailable,
+            HttpStatusCode.GatewayTimeout,
+        ],
     )
 
     ADAPTER = ThreadLocalWrapper(
@@ -242,7 +393,6 @@ class ThirdPartyService(object):
 
     def __init__(self, url=""):
         self.base_url = url
-
         self._session = ThreadLocalWrapper(self.build_session)
 
     @property
@@ -251,12 +401,14 @@ class ThirdPartyService(object):
 
     def build_session(self):
         s = WrappedSession(self.base_url, timeout=self.TIMEOUT)
-        s.mount("https://", self.ADAPTER.get())
+        s.mount(HttpMountProtocol.HTTPS, self.ADAPTER.get())
 
         s.headers.update(
             {
-                "Content-Type": "application/octet-stream",
-                "User-Agent": "dl-python/{}".format(__version__),
+                HttpHeaderKeys.ContentType: HttpHeaderValues.ApplicationOctetStream,
+                HttpHeaderKeys.UserAgent: "{}/{}".format(
+                    HttpHeaderValues.DlPython, __version__
+                ),
             }
         )
 

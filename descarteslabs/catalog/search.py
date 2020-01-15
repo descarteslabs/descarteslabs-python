@@ -2,7 +2,7 @@ import copy
 import json
 import warnings
 
-from .catalog_base import CatalogClient
+from .catalog_client import CatalogClient
 from descarteslabs.common.property_filtering.filtering import AndExpression
 from descarteslabs.common.property_filtering.filtering import Expression  # noqa: F401
 

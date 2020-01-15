@@ -6,7 +6,7 @@ import json
 from six import ensure_str
 
 from descarteslabs.client.auth import Auth
-from ..catalog_base import CatalogClient
+from ..catalog_client import CatalogClient
 
 
 public_token = "header.e30.signature"

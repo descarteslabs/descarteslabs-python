@@ -3,6 +3,7 @@ import uuid
 import time
 
 from .catalog_base import CatalogObject
+from .catalog_client import HttpRequestMethod
 from .attributes import (
     DocumentState,
     Attribute,
@@ -266,7 +267,7 @@ class ImageUpload(CatalogObject):
 
         try:
             data, related_objects = self._send_data(
-                id=self.id, method=self._RequestMethod.GET, client=self._client
+                id=self.id, method=HttpRequestMethod.GET, client=self._client
             )
         except NotFoundError:
             # with tasks-based ingest, jobs are unknown until completed

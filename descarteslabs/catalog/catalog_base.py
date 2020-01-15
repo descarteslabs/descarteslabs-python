@@ -1,12 +1,8 @@
-import os
-from enum import Enum
 from six import add_metaclass, iteritems, ensure_str, wraps
 from types import MethodType
 import json
 
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.exceptions import ClientError, NotFoundError
-from descarteslabs.client.services.service.service import Service, WrappedSession
+from descarteslabs.client.exceptions import NotFoundError
 from .attributes import (
     Attribute,
     AttributeMeta,
@@ -16,6 +12,7 @@ from .attributes import (
     Timestamp,
     ListAttribute,
 )
+from .catalog_client import CatalogClient, HttpRequestMethod
 
 
 class DeletedObjectError(Exception):
@@ -79,120 +76,6 @@ def _new_abstract_class(cls, abstract_cls):
     return super(abstract_cls, cls).__new__(cls)
 
 
-class _RewriteErrorSession(WrappedSession):
-    """Rewrite JSON ClientErrors that are returned to make them easier to read"""
-
-    def request(self, *args, **kwargs):
-        try:
-            return super(_RewriteErrorSession, self).request(*args, **kwargs)
-        except ClientError as client_error:
-            self._rewrite_error(client_error)
-            raise
-
-    def _rewrite_error(self, client_error):
-        KEY_ERRORS = "errors"
-        KEY_TITLE = "title"
-        KEY_STATUS = "status"
-        KEY_DETAIL = "detail"
-        KEY_SOURCE = "source"
-        KEY_POINTER = "pointer"
-        message = ""
-
-        for arg in client_error.args:
-            try:
-                errors = json.loads(arg)[KEY_ERRORS]
-
-                for error in errors:
-                    line = ""
-                    seperator = ""
-
-                    if KEY_TITLE in error:
-                        line += error[KEY_TITLE]
-                        seperator = ": "
-                    elif KEY_STATUS in error:
-                        line += error[KEY_STATUS]
-                        seperator = ": "
-
-                    if KEY_DETAIL in error:
-                        line += seperator + error[KEY_DETAIL].strip(".")
-                        seperator = ": "
-
-                    if KEY_SOURCE in error:
-                        source = error[KEY_SOURCE]
-                        if KEY_POINTER in source:
-                            source = source[KEY_POINTER].split("/")[-1]
-                        line += seperator + source
-
-                    if line:
-                        message += "\n    " + line
-            except Exception:
-                return
-
-        if message:
-            client_error.args = (message,)
-
-
-class CatalogClient(Service):
-    """
-    The CatalogClient handles the HTTP communication with the Descartes Labs catalog.
-    It is almost sufficient to use the default client that is automatically retrieved
-    using `get_default_client`.  However, if you want to adjust e.g.  the retries, you
-    can create your own.
-
-    Parameters
-    ----------
-    url : str, optional
-        The URL to use when connecting to the Descartes Labs catalog.  Only change
-        this if you are being asked to use a non-default Descartes Labs catalog.  If
-        not set, the logic will first look for the environment variable
-        ``DESCARTESLABS_CATALOG_V2_URL`` and then use the default Descartes Labs
-        catalog.
-    auth : Auth, optional
-        The authentication object used when connecting to the Descartes Labs catalog.
-        This is typically the default `Auth` object that uses the cached authentication
-        token retrieved with the shell command "$ descarteslabs auth login".
-    retries : int, optional
-        The number of retries when there is a problem with the connection.  Set this to
-        zero to disable retries.  The default is 3 retries.
-    """
-
-    _instance = None
-
-    def __init__(self, url=None, auth=None, retries=None):
-        if auth is None:
-            auth = Auth()
-
-        if url is None:
-            url = os.environ.get(
-                "DESCARTESLABS_CATALOG_V2_URL",
-                "https://platform.descarteslabs.com/metadata/v1/catalog/v2",
-            )
-
-        super(CatalogClient, self).__init__(
-            url, auth=auth, retries=retries, session_class=_RewriteErrorSession
-        )
-
-    @staticmethod
-    def get_default_client():
-        """Retrieve the default client.
-
-        This client is used whenever you don't explicitly set the client.
-        """
-        if CatalogClient._instance is None:
-            CatalogClient._instance = CatalogClient()
-
-        return CatalogClient._instance
-
-    @staticmethod
-    def set_default_client(client):
-        """Change the default client to the given client.
-
-        This is the client that will be used whenever you don't explicitly set the
-        client
-        """
-        CatalogClient._instance = client
-
-
 class CatalogObjectMeta(AttributeMeta):
     def __new__(cls, name, bases, attrs):
         new_cls = super(CatalogObjectMeta, cls).__new__(cls, name, bases, attrs)
@@ -226,12 +109,6 @@ class CatalogObject(AttributeEqualityMixin):
     _derived_type_switch = None
 
     _model_classes_by_type_and_derived_type = {}
-
-    class _RequestMethod(str, Enum):
-        POST = "post"
-        PATCH = "patch"
-        PUT = "put"
-        GET = "get"
 
     id = Attribute(
         mutable=False,
@@ -575,9 +452,7 @@ class CatalogObject(AttributeEqualityMixin):
         attributes = self._serialize(keys, jsonapi_format=jsonapi_format)
 
         if jsonapi_format:
-            return dict(
-                data=dict(id=self.id, type=self._doc_type, attributes=attributes)
-            )
+            return self._client.jsonapi_document(self._doc_type, attributes, self.id)
         else:
             return attributes
 
@@ -626,7 +501,7 @@ class CatalogObject(AttributeEqualityMixin):
         """
         try:
             data, related_objects = cls._send_data(
-                method=cls._RequestMethod.GET, id=id, client=client
+                method=HttpRequestMethod.GET, id=id, client=client
             )
         except NotFoundError:
             return None
@@ -726,7 +601,7 @@ class CatalogObject(AttributeEqualityMixin):
         id_filter = {"name": "id", "op": "eq", "val": ids}
 
         raw_objects, related_objects = cls._send_data(
-            method=cls._RequestMethod.PUT,
+            method=HttpRequestMethod.PUT,
             client=client,
             json={"filter": json.dumps([id_filter], separators=(",", ":"))},
         )
@@ -892,10 +767,10 @@ class CatalogObject(AttributeEqualityMixin):
             return
 
         if self.state == DocumentState.UNSAVED:
-            method = self._RequestMethod.POST
+            method = HttpRequestMethod.POST
             json = self.serialize(modified_only=False, jsonapi_format=True)
         else:
-            method = self._RequestMethod.PATCH
+            method = HttpRequestMethod.PATCH
             json = self.serialize(modified_only=True, jsonapi_format=True)
 
         if extra_attributes:
@@ -964,7 +839,7 @@ class CatalogObject(AttributeEqualityMixin):
             )
 
         data, related_objects = self._send_data(
-            method=self._RequestMethod.GET, id=self.id, client=self._client
+            method=HttpRequestMethod.GET, id=self.id, client=self._client
         )
 
         # this will effectively wipe all current state & caching
@@ -1041,10 +916,10 @@ class CatalogObject(AttributeEqualityMixin):
     @check_derived
     def _send_data(cls, method, id=None, json=None, client=None):
         client = client or CatalogClient.get_default_client()
-        session_method = getattr(client.session, method)
+        session_method = getattr(client.session, method.lower())
         url = cls._url
 
-        if method not in (cls._RequestMethod.POST, cls._RequestMethod.PUT):
+        if method not in (HttpRequestMethod.POST, HttpRequestMethod.PUT):
             url += "/" + id
 
         if cls._default_includes:
