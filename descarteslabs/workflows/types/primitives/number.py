@@ -29,7 +29,7 @@ class Number(Primitive):
                 self.graft = obj.graft
             else:
                 self.graft = self._from_apply(
-                    "{}._cast".format(self.__class__.__name__), obj
+                    "{}.cast".format(self.__class__.__name__), obj
                 ).graft
         else:
             super(Number, self).__init__(obj)

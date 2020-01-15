@@ -51,12 +51,12 @@ class TestConstruct(object):
     def test_explicit_cast_to_int(self):
         i = Int(Float(1.0))
         assert isinstance(i, Int)
-        assert i.graft[i.graft["returns"]][0] == "Int._cast"
+        assert i.graft[i.graft["returns"]][0] == "Int.cast"
 
     def test_explicit_cast_to_float(self):
         f = Float(Int(1))
         assert isinstance(f, Float)
-        assert f.graft[f.graft["returns"]][0] == "Float._cast"
+        assert f.graft[f.graft["returns"]][0] == "Float.cast"
 
 
 @pytest.mark.parametrize(
