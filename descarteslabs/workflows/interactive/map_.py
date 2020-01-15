@@ -307,13 +307,16 @@ class Map(ipyleaflet.Map):
             self.layers = tuple_move(self.layers, old_i, old_i - 1)
 
     def remove_layer(self, layer_name):
-        "Remove a named layer from the map"
-        for lyr in self.layers:
-            if lyr.name == layer_name:
-                super().remove_layer(lyr)
-                break
+        "Remove a named layer or layer instance from the map"
+        if isinstance(layer_name, ipyleaflet.Layer):
+            super().remove_layer(layer_name)
         else:
-            raise ValueError("Layer {} does not exist on the map".format(layer_name))
+            for lyr in self.layers:
+                if lyr.name == layer_name:
+                    super().remove_layer(lyr)
+                    break
+            else:
+                raise ValueError("Layer {} does not exist on the map".format(layer_name))
 
     def clear_layers(self):
         "Remove all layers from the map (besides the base layer)"
