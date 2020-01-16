@@ -9,7 +9,29 @@ GeometryCollectionStruct = Struct[{"type": Str, "geometries": List[Geometry]}]
 
 @serializable(is_named_concrete_type=True)
 class GeometryCollection(GeometryCollectionStruct, Geometry):
-    "Proxy GeometryCollection constructed from a sequence of Geometries."
+    """Proxy GeoJSON GeometryCollection constructed from a sequence of Geometries.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Geometry, GeometryCollection
+    >>> geom = Geometry(type="Point", coordinates=[1, 2])
+    >>> gc = GeometryCollection(type="GeometryCollection", geometries=[geom, geom, geom])
+    >>> gc
+    <descarteslabs.workflows.types.geospatial.geometrycollection.GeometryCollection object at 0x...>
+    >>> gc.compute() # doctest: +SKIP
+    GeometryCollectionResult(type=GeometryCollection,
+            geometries=(
+                GeometryResult(type=Point, coordinates=[1, 2]),
+                GeometryResult(type=Point, coordinates=[1, 2]),
+                GeometryResult(type=Point, coordinates=[1, 2])))
+
+    >>> # constructing similar GeometryCollection to previous example, but using from_geojson
+    >>> from descarteslabs.workflows import GeometryCollection
+    >>> geojson = {"type": "GeometryCollection", "geometries": [{"type": "Point", "coordinates": [1, 2]}]}
+    >>> gc = GeometryCollection.from_geojson(geojson)
+    >>> gc.compute().__geo_interface__ # doctest: +SKIP
+    {'type': 'GeometryCollection', 'geometries': [{'type': 'Point', 'coordinates': [1, 2]}]}
+    """
 
     _constructor = "GeometryCollection.create"
 

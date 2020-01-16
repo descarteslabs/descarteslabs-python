@@ -11,7 +11,24 @@ GeometryStruct = Struct[{"type": Str, "coordinates": List[Any]}]
 
 @serializable(is_named_concrete_type=True)
 class Geometry(GeometryStruct, GeometryMixin):
-    "Proxy Geometry representing a geometry's type and coordinates."
+    """Proxy GeoJSON Geometry representing a geometry's type and coordinates.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Geometry
+    >>> geom = Geometry(type="Point", coordinates=[1, 2])
+    >>> geom
+    <descarteslabs.workflows.types.geospatial.geometry.Geometry object at 0x...>
+    >>> geom.compute() # doctest: +SKIP
+    GeometryResult(type=Point, coordinates=[1, 2])
+
+    >>> # constructing same Geometry as previous example, but using from_geojson
+    >>> from descarteslabs.workflows import Geometry
+    >>> geojson = {"type": "Point", "coordinates": [1, 2]}
+    >>> geom = Geometry.from_geojson(geojson)
+    >>> geom.compute().__geo_interface__ # doctest: +SKIP
+    {'type': 'Point', 'coordinates': [1, 2]}
+    """
 
     _constructor = "Geometry.create"
 

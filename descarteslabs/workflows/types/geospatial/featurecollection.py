@@ -10,7 +10,41 @@ FeatureCollectionStruct = Struct[{"features": List[Feature]}]
 
 @serializable(is_named_concrete_type=True)
 class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
-    "Proxy FeatureCollection constructed from a sequence of Features."
+    """Proxy GeoJSON FeatureCollection constructed from a sequence of Features.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Geometry, Feature, FeatureCollection
+    >>> geom = Geometry(type="Point", coordinates=[1, 2])
+    >>> feat = Feature(geometry=geom, properties={"foo": "bar"})
+    >>> fc = FeatureCollection(features=[feat, feat, feat])
+    >>> fc
+    <descarteslabs.workflows.types.geospatial.featurecollection.FeatureCollection object at 0x...>
+    >>> fc.compute() # doctest: +SKIP
+    FeatureCollectionResult(features=(
+        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2]), properties={'foo': 'bar'}),
+        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2]), properties={'foo': 'bar'}),
+        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2]), properties={'foo': 'bar'})))
+
+    >>> # constructing similar FeatureCollection to previous example, but using from_geojson
+    >>> from descarteslabs.workflows import FeatureCollection
+    >>> geojson = {
+    ...     "type": "FeatureCollection",
+    ...     "features": [
+    ...         {
+    ...             "type": "Feature",
+    ...             "geometry": {"type": "Point", "coordinates": [1, 2]},
+    ...             "properties": {"foo": "bar"},
+    ...         }
+    ...     ],
+    ... }
+    >>> fc = FeatureCollection.from_geojson(geojson)
+    >>> fc.compute().__geo_interface__ # doctest: +SKIP
+    {'type': 'FeatureCollection',
+     'features': [{'type': 'Feature',
+       'geometry': {'type': 'Point', 'coordinates': [1, 2]},
+       'properties': {'foo': 'bar'}}]}
+    """
 
     _constructor = "FeatureCollection.create"
     _element_type = Feature

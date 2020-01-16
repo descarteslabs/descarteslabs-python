@@ -47,10 +47,10 @@ class Function(GenericProxytype):
     >>> func_type = Function[{}, Int] # zero-argument function, returning a Int
 
     >>> from descarteslabs.workflows import Function, Int
-    >>> my_func = Function[Int, Int, {}, Int](lambda x, y: x + y) # function taking two Ints and adding them together
-    >>> my_func
+    >>> func = Function[Int, Int, {}, Int](lambda x, y: x + y) # function taking two Ints and adding them together
+    >>> func
     <descarteslabs.workflows.types.function.function.Function[Int, Int, {}, Int] object at 0x...>
-    >>> my_func(3, 4).compute() # doctest: +SKIP
+    >>> func(3, 4).compute() # doctest: +SKIP
     7
     """
 

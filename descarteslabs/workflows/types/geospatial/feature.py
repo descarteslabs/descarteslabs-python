@@ -12,7 +12,29 @@ FeatureStruct = Struct[{"properties": Dict[Str, Any], "geometry": Geometry}]
 
 @serializable(is_named_concrete_type=True)
 class Feature(FeatureStruct, GeometryMixin):
-    "Proxy Feature representing a `Geometry` and a `Dict` of properties."
+    """Proxy GeoJSON Feature representing a `Geometry` and a `Dict` of properties.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Geometry, Feature
+    >>> geom = Geometry(type="Point", coordinates=[1, 2])
+    >>> feat = Feature(geometry=geom, properties={"foo": "bar"})
+    >>> feat
+    <descarteslabs.workflows.types.geospatial.feature.Feature object at 0x...>
+    >>> feat.compute() # doctest: +SKIP
+    FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2]), properties={'foo': 'bar'})
+
+    >>> # constructing same Feature as previous example, but using from_geojson
+    >>> from descarteslabs.workflows import Feature
+    >>> geojson = {"type": "Feature",
+    ...            "geometry": {"type": "Point", "coordinates": [1, 2]},
+    ...            "properties": {"foo": "bar"}}
+    >>> feat = Feature.from_geojson(geojson)
+    >>> feat.compute().__geo_interface__ # doctest: +SKIP
+    {'type': 'Feature',
+     'geometry': {'type': 'Point', 'coordinates': [1, 2]},
+     'properties': {'foo': 'bar'}}
+    """
 
     _constructor = "Feature.create"
 

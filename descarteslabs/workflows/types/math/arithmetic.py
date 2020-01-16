@@ -17,6 +17,13 @@ def log(obj):
     Element-wise natural log of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
 
     Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(1)
+    >>> wf.log(my_int).compute() # doctest: +SKIP
+    0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
     return return_type._from_apply("log", obj)
@@ -28,6 +35,13 @@ def log2(obj):
     Element-wise base 2 log of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
 
     Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(1)
+    >>> wf.log2(my_int).compute() # doctest: +SKIP
+    0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
     return return_type._from_apply("log2", obj)
@@ -39,6 +53,13 @@ def log10(obj):
     Element-wise base 10 log of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
 
     Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(1)
+    >>> wf.log10(my_int).compute() # doctest: +SKIP
+    0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
     return return_type._from_apply("log10", obj)
@@ -50,6 +71,13 @@ def sqrt(obj):
     Element-wise square root of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
 
     Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(4)
+    >>> wf.sqrt(my_int).compute() # doctest: +SKIP
+    2.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
     return return_type._from_apply("sqrt", obj)
@@ -61,6 +89,13 @@ def cos(obj):
     Element-wise cosine of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
 
     Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(0)
+    >>> wf.cos(my_int).compute() # doctest: +SKIP
+    1.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
     return return_type._from_apply("cos", obj)
@@ -72,6 +107,13 @@ def sin(obj):
     Element-wise sine of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
 
     Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(0)
+    >>> wf.sin(my_int).compute() # doctest: +SKIP
+    0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
     return return_type._from_apply("sin", obj)
@@ -83,6 +125,13 @@ def tan(obj):
     Element-wise tangent of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
 
     Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(0)
+    >>> wf.tan(my_int).compute() # doctest: +SKIP
+    0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
     return return_type._from_apply("tan", obj)
@@ -96,9 +145,17 @@ def normalized_difference(x, y):
     Example
     -------
     >>> import descarteslabs.workflows as wf
-    >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
-    >>> nir, red = col.unpack_bands(["nir", "red"])
-    >>> ndvi = wf.normalized_difference(nir, red)
+    >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+    ...     start_datetime="2017-01-01",
+    ...     end_datetime="2017-05-30")
+    >>> nir, red = col.unpack_bands("nir red")
+    >>> # geoctx is an arbitrary geocontext for 'col'
+    >>> wf.normalized_difference(nir, red).compute(geoctx) # doctest: +SKIP
+    ImageCollectionResult of length 2:
+      * ndarray: MaskedArray<shape=(2, 1, 512, 512), dtype=float64>
+      * properties: 2 items
+      * bandinfo: 'nir_sub_red_div_nir_add_red'
+      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
     """
 
     return (x - y) / (x + y)
@@ -119,6 +176,23 @@ def arctan2(y, x):
     is the second.)  By IEEE convention, this function is defined for
     x = +/-0 and for either or both of y and x = +/-inf (see
     Notes for specific values).
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(1)
+    >>> wf.arctan2(my_int, my_int).compute() # doctest: +SKIP
+    0.7853981633974483
+
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(1)
+    >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
+    >>> wf.arctan2(img, my_int).compute(geoctx) # geoctx is an arbitrary geocontext for 'img' # doctest: +SKIP
+    ImageResult:
+      * ndarray: MaskedArray<shape=(1, 512, 512), dtype=float64>
+      * properties: 'acquired', 'area', 'bits_per_pixel', 'bright_fraction', ...
+      * bandinfo: 'red'
+      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
 
     Parameters
     ----------

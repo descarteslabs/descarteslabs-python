@@ -220,9 +220,9 @@ class GeometryResult(EqualityMixin):
     Examples
     --------
     >>> from descarteslabs.workflows import Geometry
-    >>> my_geom = Geometry(type="Point", coordinates=[1, 2, 3, 4])
+    >>> my_geom = Geometry(type="Point", coordinates=[1, 2])
     >>> my_geom.compute() # doctest: +SKIP
-    GeometryResult(type=Point, coordinates=[1, 2, 3, 4])
+    GeometryResult(type=Point, coordinates=[1, 2])
 
     Attributes
     ----------
@@ -300,14 +300,14 @@ class GeometryCollectionResult(GeometryResult):
     Examples
     --------
     >>> from descarteslabs.workflows import Geometry, GeometryCollection
-    >>> my_geom = Geometry(type="Point", coordinates=[1, 2, 3, 4])
+    >>> my_geom = Geometry(type="Point", coordinates=[1, 2])
     >>> my_gc = GeometryCollection(type="GeometryCollection", geometries=[my_geom, my_geom, my_geom])
     >>> my_gc.compute() # doctest: +SKIP
     GeometryCollectionResult(type=GeometryCollection,
             geometries=(
-                GeometryResult(type=Point, coordinates=[1, 2, 3, 4]),
-                GeometryResult(type=Point, coordinates=[1, 2, 3, 4]),
-                GeometryResult(type=Point, coordinates=[1, 2, 3, 4])))
+                GeometryResult(type=Point, coordinates=[1, 2]),
+                GeometryResult(type=Point, coordinates=[1, 2]),
+                GeometryResult(type=Point, coordinates=[1, 2])))
 
     Attributes
     ----------
@@ -371,10 +371,10 @@ class FeatureResult(EqualityMixin):
     Examples
     --------
     >>> from descarteslabs.workflows import Geometry, Feature
-    >>> my_geom = Geometry(type="Point", coordinates=[1, 2, 3, 4])
+    >>> my_geom = Geometry(type="Point", coordinates=[1, 2])
     >>> my_feat = Feature(geometry=my_geom, properties={"foo": "bar"})
     >>> my_feat.compute() # doctest: +SKIP
-    FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2, 3, 4]), properties={'foo': 'bar'})
+    FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2]), properties={'foo': 'bar'})
 
     Attributes
     ----------
@@ -448,14 +448,14 @@ class FeatureCollectionResult(EqualityMixin):
     Examples
     --------
     >>> from descarteslabs.workflows import Geometry, Feature, FeatureCollection
-    >>> my_geom = Geometry(type="Point", coordinates=[1, 2, 3, 4])
+    >>> my_geom = Geometry(type="Point", coordinates=[1, 2])
     >>> my_feat = Feature(geometry=my_geom, properties={"foo": "bar"})
     >>> my_fc = FeatureCollection(features=[my_feat, my_feat, my_feat])
     >>> my_fc.compute() # doctest: +SKIP
     FeatureCollectionResult(features=(
-        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2, 3, 4]), properties={'foo': 'bar'}),
-        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2, 3, 4]), properties={'foo': 'bar'}),
-        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2, 3, 4]), properties={'foo': 'bar'})))
+        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2]), properties={'foo': 'bar'}),
+        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2]), properties={'foo': 'bar'}),
+        FeatureResult(geometry=GeometryResult(type=Point, coordinates=[1, 2]), properties={'foo': 'bar'})))
 
     Attributes
     ----------

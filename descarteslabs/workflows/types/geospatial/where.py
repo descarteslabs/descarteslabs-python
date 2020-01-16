@@ -17,6 +17,29 @@ def where(condition, x, y):
     ``condition``. Depending on the number of bands in ``x`` and ``y``, <band name>
     can be taken from ``x``, ``y``, ``x_or_y``, or ``condition``.
 
+    Example
+    -------
+    >>> from descarteslabs.workflows import Image, ImageCollection, where
+    >>> img = Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
+    >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+    ...     start_datetime="2017-01-01",
+    ...     end_datetime="2017-05-30").pick_bands("blue")
+    >>> # geoctx is an arbitrary geocontext for the imagery
+    >>> # fill pixels where col < 0.5 with col (no change), others with 0
+    >>> where(col < 0.5, col, 0).compute(geoctx) # doctest: +SKIP
+    ImageCollectionResult of length 2:
+      * ndarray: MaskedArray<shape=(2, 1, 512, 512), dtype=float64>
+      * properties: 2 items
+      * bandinfo: 'blue_where_blue'
+      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
+    >>> # fill pixels where col < 0.5 with col (no change), others with pixels from img
+    >>> where(col < 0.5, col, img).compute(geoctx) # doctest: +SKIP
+    ImageCollectionResult of length 2:
+      * ndarray: MaskedArray<shape=(2, 1, 512, 512), dtype=float64>
+      * properties: 2 items
+      * bandinfo: 'red_or_blue_where_red'
+      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
+
     Parameters
     ----------
     condition: `Image`, `ImageCollection`, `Bool`

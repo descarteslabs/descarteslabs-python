@@ -31,9 +31,90 @@ class GeoContext(GeoContextBase):
     to use when loading geospatial data. Equivalent to a `.scenes.geocontext.AOI`,
     with the additional read-only properties ``arr_shape``, ``gdal_geotrans``, and ``projected_bounds``.
 
-    Note: You don't often need to construct a Workflows GeoContext yourself. When you call compute(),
+    You don't often need to construct a Workflows GeoContext yourself. When you call compute(),
     you can pass in any `.scenes.geocontext.GeoContext`, or use
     `wf.map.geocontext() <.interactive.Map.geocontext>` for the current map viewport.
+
+    Note: The ``raster_params`` of a GeoContext can be passed to `.raster.ndarray` to get an
+    equivalent array.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import GeoContext
+    >>> from descarteslabs import scenes
+    >>> scene = scenes.DLTile.from_latlon(10, 30, resolution=10, tilesize=512, pad=0)
+    >>> # the above scene could be passed to compute without being changed to a Workflows GeoContext
+    >>> geoctx = GeoContext.from_scenes(scene)
+    >>> geoctx
+    <descarteslabs.workflows.types.geospatial.geocontext.GeoContext object at 0x...>
+    >>> geoctx.compute() # doctest: +SKIP
+    {'geometry': {'type': 'Polygon',
+      'coordinates': (((29.964809031113013, 9.990748782946097),
+        (30.011460043000678, 9.991170922969406),
+        (30.011036444452188, 10.03741571582387),
+        (29.964378844777645, 10.036991583007385),
+        (29.964809031113013, 9.990748782946097)),)},
+     'key': '512:0:10.0:36:-65:216',
+     'resolution': 10.0,
+     'tilesize': 512,
+     'pad': 0,
+     'crs': 'EPSG:32636',
+     'bounds': (167200.0, 1105920.0, 172320.0, 1111040.0),
+     'bounds_crs': 'EPSG:32636',
+     'zone': 36,
+     'ti': -65,
+     'tj': 216,
+     'proj4': '+proj=utm +zone=36 +datum=WGS84 +units=m +no_defs ',
+     'wkt': 'PROJCS["WGS 84 / UTM zone 36N",GEOGCS["WGS 84",
+             DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,
+             AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],
+             PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],
+             UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],
+             AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],
+             PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",33],
+             PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],
+             PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],
+             AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32636"]]',
+     'projected_bounds': (167200.0, 1105920.0, 172320.0, 1111040.0),
+     'arr_shape': (512, 512),
+     'align_pixels': False,
+     'geotrans': (10.0, 0.0, 167200.0, 0.0, -10.0, 1111040.0, 0.0, 0.0, 1.0),
+     'gdal_geotrans': (167200.0, 10.0, 0.0, 1111040.0, 0.0, -10.0),
+     'raster_params': {'dltile': '512:0:10.0:36:-65:216', 'align_pixels': False}}
+
+    >>> from descarteslabs.workflows import GeoContext
+    >>> geoctx = GeoContext.from_dltile_key('512:0:10.0:36:-65:216')
+    >>> geoctx
+    <descarteslabs.workflows.types.geospatial.geocontext.GeoContext object at 0x...>
+    >>> geoctx.compute() # doctest: +SKIP
+    {'geometry': {'type': 'Polygon',
+                  'coordinates': (((29.964809031113013, 9.990748782946097),
+                                   (30.011460043000678, 9.991170922969406),
+                                   (30.011036444452188, 10.03741571582387),
+                                   (29.964378844777645, 10.036991583007385),
+                                   (29.964809031113013, 9.990748782946097)),)},
+     'key': '512:0:10.0:36:-65:216',
+     'resolution': 10.0,
+     'tilesize': 512,
+    ...
+
+    >>> from descarteslabs.workflows import GeoContext
+    >>> geoctx = GeoContext.from_xyz_tile(1, 2, 3)
+    >>> geoctx
+    <descarteslabs.workflows.types.geospatial.geocontext.GeoContext object at 0x...>
+    >>> geoctx.compute() # doctest: +SKIP
+    {'x': 1,
+     'y': 2,
+     'z': 3,
+     'geometry': {'type': 'Polygon',
+     'coordinates': (((-90.0, 40.97989806962013),
+                      (-90.0, 66.51326044311186),
+                      (-135.0, 66.51326044311186),
+                      (-135.0, 40.97989806962013),
+                      (-90.0, 40.97989806962013)),)},
+     'tilesize': 256,
+     'crs': 'EPSG:3857',
+    ...
     """
 
     _constructor = "GeoContext.create"
