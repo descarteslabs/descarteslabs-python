@@ -62,6 +62,34 @@ class Image(ImageBase, BandsMixin):
 
     Images don't have a set spatial extent, CRS, resolution, etc:
     that's determined at computation time by the `~.geospatial.GeoContext` passsed in.
+
+    Supports unary operations such as negation and absolute value, as well as arithmetic and comparison
+    operators such as ``>``, ``+``, and ``//``.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import Image
+    >>> from descarteslabs.scenes import DLTile
+    >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+    >>> img
+    <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
+    >>> # create a geocontext for our computation, using DLTile
+    >>> geoctx = DLTile.from_latlon(35.6, -105.4, resolution=10, tilesize=512, pad=0)
+    >>> img.compute(geoctx) # doctest: +SKIP
+    ImageResult:
+      * ndarray: MaskedArray<shape=(27, 512, 512), dtype=float64>
+      * properties: 'absolute_orbit', 'acquired', 'archived', 'area', ...
+      * bandinfo: 'coastal-aerosol', 'blue', 'green', 'red', ...
+      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
+    >>> rgb = img.pick_bands("red green blue") # an Image with the red, green, and blue bands only
+    >>> rgb.compute(geoctx) # doctest: +SKIP
+    ImageResult:
+      * ndarray: MaskedArray<shape=(3, 512, 512), dtype=float64>
+      * properties: 'absolute_orbit', 'acquired', 'archived', 'area', ...
+      * bandinfo: 'red', 'green', 'blue'
+      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
+    >>> rgb.min(axis="pixels").compute(geoctx) # min along the pixels axis # doctest: +SKIP
+    {'red': 0.0329, 'green': 0.0461, 'blue': 0.0629}
     """
 
     _doc = {

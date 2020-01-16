@@ -42,7 +42,45 @@ ImageCollectionBase = Struct[
 
 @serializable(is_named_concrete_type=True)
 class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
-    "Proxy object representing a stack of Images; typically construct with `~.ImageCollection.from_id`"
+    """Proxy object representing a stack of Images; typically construct with `~.ImageCollection.from_id`.
+
+    An ImageCollection is a proxy object holding multiple images, each with the same (ordered) bands of raster data,
+    plus metadata about each Image.
+
+    ImageCollections don't have a set spatial extent, CRS, resolution, etc:
+    that's determined at computation time by the `~.geospatial.GeoContext` passsed in.
+
+    Supports unary operations such as negation and absolute value, as well as arithmetic and comparison
+    operators such as ``>``, ``+``, and ``//``.
+
+    Examples
+    --------
+    >>> from descarteslabs.workflows import ImageCollection
+    >>> from descarteslabs.scenes import DLTile
+    >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+    ...        start_datetime="2017-01-01",
+    ...        end_datetime="2017-12-31")
+    >>> col
+    <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+    >>> # create a geocontext for our computation, using DLTile
+    >>> geoctx = DLTile.from_latlon(10, 30, resolution=10, tilesize=512, pad=0)
+    >>> col.compute(geoctx) # doctest: +SKIP
+    ImageCollectionResult of length 14:
+      * ndarray: MaskedArray<shape=(14, 27, 512, 512), dtype=float64>
+      * properties: 14 items
+      * bandinfo: 'coastal-aerosol', 'blue', 'green', 'red', ...
+      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
+    >>> rgb = col.pick_bands("red green blue") # an ImageCollection with the red, green, and blue bands only
+    >>> rgb.compute(geoctx) # doctest: +SKIP
+    ImageCollectionResult of length 14:
+      * ndarray: MaskedArray<shape=(14, 3, 512, 512), dtype=float64>
+      * properties: 14 items
+      * bandinfo: 'red', 'green', 'blue'
+      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
+    >>> rgb.max(axis=("images", "pixels")).compute(geoctx) # max along the images then pixels axis # doctest: +SKIP
+    {'red': 0.8074, 'green': 0.7857000000000001, 'blue': 0.8261000000000001}
+    """
+
     _doc = {
         "properties": """Metadata for each `Image` in the `ImageCollection`.
 
