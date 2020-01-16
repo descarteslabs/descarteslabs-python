@@ -154,7 +154,9 @@ class TestAOI(unittest.TestCase):
         )
         assert ctx_doesnt_overlap_updated.bounds == geom_doesnt_overlap.bounds
 
-        with pytest.raises(ValueError, match="A geometry must be given with which to update the bounds"):
+        with pytest.raises(
+            ValueError, match="A geometry must be given with which to update the bounds"
+        ):
             ctx.assign(bounds="update")
 
     def test_assign_update_bounds_crs(self):
@@ -168,7 +170,10 @@ class TestAOI(unittest.TestCase):
         ctx_update_bounds = ctx.assign(geometry=geom, bounds="update")
         assert ctx_update_bounds.bounds_crs == "EPSG:4326"
 
-        with pytest.raises(ValueError, match="Can't compute bounds from a geometry while also explicitly setting"):
+        with pytest.raises(
+            ValueError,
+            match="Can't compute bounds from a geometry while also explicitly setting",
+        ):
             ctx = geocontext.AOI(geometry=geom, resolution=40, bounds_crs="EPSG:32615")
 
     def test_validate_bounds_values_for_bounds_crs__latlon(self):
@@ -273,7 +278,9 @@ class TestAOI(unittest.TestCase):
             )
 
         # same CRSs, width < resolution, CRS is lat-lon --- error including "decimal degrees"
-        with pytest.raises(ValueError, match="resolution must be given in decimal degrees"):
+        with pytest.raises(
+            ValueError, match="resolution must be given in decimal degrees"
+        ):
             geocontext.AOI(
                 crs="EPSG:4326",
                 bounds_crs="EPSG:4326",
@@ -364,8 +371,10 @@ class TestDLTIle(unittest.TestCase):
         assert tile.raster_params == {"dltile": self.key, "align_pixels": False}
         assert tile.geotrans == (361760.0, 960, 0, 4684800.0, 0, -960)
         assert tile.proj4 == "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs "
-        assert tile.wkt == \
-            'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]'  # noqa
+        assert (
+            tile.wkt
+            == 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]'  # noqa
+        )
 
     @mock.patch("descarteslabs.scenes.geocontext.Raster")
     def test_assign(self, mock_raster):
@@ -410,6 +419,22 @@ class TestXYZTile(unittest.TestCase):
         tile = geocontext.XYZTile(1, 1, 2)
         assert tile.geometry.bounds == (-90.0, 0.0, 0.0, 66.51326044311186)
 
+    def test_resolution(self):
+        tile = geocontext.XYZTile(1, 1, 0)
+        assert tile.resolution == geocontext.EARTH_CIRCUMFERENCE_WGS84 / tile.tilesize
+        # resolution at zoom 0 is just the Earth's circumfrence divided by tilesize
+
+        assert geocontext.XYZTile(1, 1, 2).resolution == (
+            geocontext.XYZTile(1, 1, 3).resolution * 2
+        )
+        # resolution halves with each zoom level
+
+        assert (
+            geocontext.XYZTile(1, 1, 12).resolution
+            == geocontext.XYZTile(2048, 1024, 12).resolution
+        )
+        # resolution is invariant to location; only depends on zoom
+
     def test_raster_params(self):
         tile = geocontext.XYZTile(1, 1, 2)
         assert tile.raster_params == {
@@ -422,7 +447,7 @@ class TestXYZTile(unittest.TestCase):
             "srs": "EPSG:3857",
             "bounds_srs": "EPSG:3857",
             "align_pixels": False,
-            "dimensions": (256, 256),
+            "resolution": 39135.75848201024,
         }
 
     def test_children_parent(self):

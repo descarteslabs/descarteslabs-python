@@ -43,6 +43,7 @@ import shapely.geometry
 import six
 import threading
 import warnings
+import math
 
 from six.moves import reprlib
 
@@ -868,6 +869,10 @@ class DLTile(GeoContext):
             return self._geometry.__geo_interface__
 
 
+EARTH_CIRCUMFERENCE_WGS84 = 2 * math.pi * 6378137
+"Circumference of the earth, in meters, on the WGS84 ellipsoid"
+
+
 class XYZTile(GeoContext):
     """
     A GeoContext for XYZ tiles, such as those used in web maps.
@@ -972,6 +977,15 @@ class XYZTile(GeoContext):
         return 256
 
     @property
+    def resolution(self):
+        """
+        float: Distance, in meters, that the edge of each pixel represents in the
+        spherical Mercator ("Web Mercator", EPSG:3857) projection.
+        """
+        num_tiles = 1 << self.z
+        return EARTH_CIRCUMFERENCE_WGS84 / num_tiles / self.tilesize
+
+    @property
     def __geo_interface__(self):
         "dict: `geometry` as a GeoJSON Polygon"
 
@@ -989,5 +1003,5 @@ class XYZTile(GeoContext):
             "srs": self.crs,
             "bounds_srs": self.bounds_crs,
             "align_pixels": False,
-            "dimensions": (self.tilesize, self.tilesize),
+            "resolution": self.resolution,
         }
