@@ -15,6 +15,7 @@ GeoContextBase = Struct[
         "align_pixels": Bool,
         "bounds": Tuple[Float, Float, Float, Float],
         "bounds_crs": Str,
+        "shape": Tuple[Int, Int],
         "arr_shape": Tuple[Int, Int],
         "gdal_geotrans": Tuple[
             Float, Float, Float, Float, Float, Float
@@ -125,6 +126,7 @@ class GeoContext(GeoContextBase):
         "align_pixels",
         "bounds",
         "bounds_crs",
+        "shape",
     }
     _read_only = {"arr_shape", "gdal_geotrans", "projected_bounds"}
 
@@ -158,6 +160,9 @@ class GeoContext(GeoContextBase):
         "bounds_crs": """\
             The coordinate reference system of the `bounds`,
             expressed as an EPSG code (like ``EPSG:4326``) or a PROJ.4 definition.
+            """,
+        "shape": """\
+            The dimensions (rows, columns), in pixels, to fit the output array within.
             """,
         "arr_shape": """\
             ``(height, width)`` (i.e. ``(rows, cols)``) of the array this `GeoContext` will produce.
@@ -241,12 +246,13 @@ class GeoContext(GeoContextBase):
         ~descarteslabs.workflows.GeoContext
         """
         if isinstance(ctx, scenes.AOI):
-            if ctx.shape is not None:
-                raise ValueError("AOI shape is not supported.")
+            resolution = float(ctx.resolution) if ctx.resolution else None
+            # ^ often given as an int, but we're stricter here
+
             return cls(
                 geometry=ctx.geometry,
-                resolution=float(ctx.resolution),
-                # ^ often given as an int, but we're stricter here
+                resolution=resolution,
+                shape=ctx.shape,
                 crs=ctx.crs,
                 align_pixels=ctx.align_pixels,
                 bounds=ctx.bounds,

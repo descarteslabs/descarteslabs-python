@@ -1,15 +1,17 @@
 import textwrap
+import math
 
 import ipyleaflet
 import IPython
 import ipywidgets as widgets
 import traitlets
 
-from ..types import GeoContext
 from .clearable import ClearableOutput
 from .layer import WorkflowsLayer
 from .lonlat import PositionController
 from .utils import tuple_move
+
+EARTH_EQUATORIAL_RADIUS_WGS84_M = 6378137.0
 
 app_layout = widgets.Layout(height="100%", padding="0 0 8px 0")
 
@@ -197,6 +199,40 @@ class MapApp(widgets.VBox):
             self._handle_displayed(**kwargs)
 
 
+# Source: https://wiki.openstreetmap.org/wiki/Mercator#Python_implementation
+def merc_x(lon):
+    """convert from wgs84 longitude (decimal degrees) to epsg3857 meters"""
+    r_major = EARTH_EQUATORIAL_RADIUS_WGS84_M
+    return r_major * math.radians(lon)
+
+
+# Source: https://wiki.openstreetmap.org/wiki/Mercator#Python_implementation
+def merc_y(lat):
+    """convert from wgs84 latitude (decimal degrees) to epsg3857 meters"""
+    if lat > 89.5:
+        lat = 89.5
+    if lat < -89.5:
+        lat = -89.5
+    r_major = EARTH_EQUATORIAL_RADIUS_WGS84_M
+    r_minor = 6356752.3142
+    temp = r_minor / r_major
+    eccent = math.sqrt(1 - temp ** 2)
+    phi = math.radians(lat)
+    sinphi = math.sin(phi)
+    con = eccent * sinphi
+    com = eccent / 2
+    con = ((1.0 - con) / (1.0 + con)) ** com
+    ts = math.tan((math.pi / 2 - phi) / 2) / con
+    y = 0 - r_major * math.log(ts)
+    return y
+
+
+def resolution_from_zoom(z, tilesize=256):
+    """calculate resolution from zoom level (assuming epsg3857 crs)"""
+    num_tiles = 1 << z
+    return (2 * math.pi * EARTH_EQUATORIAL_RADIUS_WGS84_M) / num_tiles / tilesize
+
+
 class Map(ipyleaflet.Map):
     """
     Subclass of ``ipyleaflet.Map`` with Workflows defaults and extra helper methods.
@@ -330,14 +366,68 @@ class Map(ipyleaflet.Map):
         "Remove all layers from the map (besides the base layer)"
         self.layers = tuple(lyr for lyr in self.layers if lyr.base)
 
-    def geocontext(self):
+    def map_dimensions(self):
         """
-        A Workflows `~.geospatial.GeoContext` representing the current view area and resolution of the map.
+        Approximate (width, height) of the given ipyleaflet Map, in pixels.
+
+        These dimensions are not exposed directly by the ipyleaflet.Map widget
+        so this calculation approximates them by projecting the map bounds into
+        web mercator (EPSG3857).
+
+        Raises
+        ------
+        RuntimeError:
+            if ``crs`` is not 'EPSG3857'
+        """
+        if self.crs != "EPSG3857":
+            raise RuntimeError("CRS must be EPSG3857 to calculate map dimensions")
+
+        (miny, minx), (maxy, maxx) = self.bounds
+        maxy_m, miny_m = merc_y(maxy), merc_y(miny)
+        maxx_m, minx_m = merc_x(maxx), merc_x(minx)
+
+        width_m = maxx_m - minx_m
+        height_m = maxy_m - miny_m
+        resolution = resolution_from_zoom(self.zoom)
+
+        width = round(width_m / resolution)
+        height = round(height_m / resolution)
+
+        return width, height
+
+    def geocontext(self, resolution=None, shape=None, crs="EPSG:3857"):
+        """
+        A Scenes :class:`~descarteslabs.scenes.geocontext.AOI` representing
+        the current view area and resolution of the map. The ``bounds`` of the
+        of the returned geocontext are the current bounds of the map viewport.
+
+        Parameters
+        ----------
+        crs: str, default "EPSG:3857"
+            Coordinate reference system into which data will be projected,
+            expressed as an EPSG code (like ``EPSG:4326``), PROJ.4 definition,
+            or ``"utm"``. If crs is ``"utm"``, the zone is calculated automatically
+            from lat, lng of map center. Defaults to the Web Mercator projection
+            (``EPSG:3857``).
+
+        resolution: float, default: None
+            Distance, in units of the ``crs``, that the edge of each pixel
+            represents on the ground. Only one of ``resolution`` or ``shape``
+            can be given. If neither ``shape`` nor ``resolution`` is given,
+            ``shape`` defaults to the current dimensions of the map viewport.
+
+        shape: tuple, default: None
+            The dimensions (rows, columns), in pixels, to fit the output array within.
+            Only one of ``resolution`` or ``shape`` can be given. If neither ``shape``
+            nor ``resolution`` is given, ``shape`` defaults to the current dimensions
+            of the map viewport.
 
         Returns
         -------
-        geoctx: ~.geospatial.GeoContext
+        geoctx: descarteslabs.scenes.AOI
         """
+        from descarteslabs.scenes import AOI
+
         bounds = [self.west, self.south, self.east, self.north]
         if bounds == [0, 0, 0, 0]:
             raise RuntimeError(
@@ -346,15 +436,38 @@ class Map(ipyleaflet.Map):
                 "displayed the map yet, run `wf.map` in its own cell first."
             )
 
-        resolution = 156543.00 / 2 ** self.zoom
-        # TODO this resolution calculation is not quite right; assumes at equator.
-        # TODO more importantly: can we make the request using the component XYZ tiles,
-        # so that we get a cache hit when we repeat the same request after setting scaling client-side?
+        if shape is not None and resolution is not None:
+            raise RuntimeError("Must set only one of `resolution` or `shape`")
+        elif shape is None and resolution is None:
+            shape = self.map_dimensions()
 
-        return GeoContext(
+        if crs.lower() == "utm":
+            lat, lng = self.center
+
+            # Source: https://gis.stackexchange.com/questions/13291/computing-utm-zone-from-lat-long-point
+            if 56.0 <= lat < 64.0 and 3.0 <= lng < 12.0:
+                # western coast of Norway
+                zone = 32
+            elif lat >= 72.0 and lat < 84.0:
+                # special zones for Svalbard
+                if lng >= 0.0 and lng < 9.0:
+                    zone = 31
+                elif lng >= 9.0 and lng < 21.0:
+                    zone = 33
+                elif lng >= 21.0 and lng < 33.0:
+                    zone = 35
+                elif lng >= 33.0 and lng < 42.0:
+                    zone = 37
+            else:
+                zone = math.floor((lng + 180) / 6) + 1
+
+            crs = "+proj=utm +zone={} +datum=WGS84 +units=m +no_defs ".format(zone)
+
+        return AOI(
             bounds=bounds,
-            crs="EPSG:3857",
+            crs=crs,
             bounds_crs="EPSG:4326",
             resolution=resolution,
+            shape=shape,
             align_pixels=False,
         )
