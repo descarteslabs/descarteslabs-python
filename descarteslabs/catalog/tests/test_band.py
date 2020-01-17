@@ -413,3 +413,8 @@ class TestDerivedBand(ClientTestCase):
         p = b.product
         assert p.id == "p1"
         b.reload()
+
+    def test_make_valid_name(self):
+        name = "This is ań @#$^*% ïñvalid name!!!!"
+        valid_name = Band.make_valid_name(name)
+        assert valid_name == "This_is_a_valid_name_"

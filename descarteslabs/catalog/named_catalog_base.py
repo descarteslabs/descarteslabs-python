@@ -1,3 +1,5 @@
+import re
+
 from .attributes import Attribute, AttributeValidationError, CatalogObjectReference
 from .catalog_base import CatalogObject, _new_abstract_class
 from .product import Product
@@ -136,6 +138,8 @@ class NamedCatalogObject(CatalogObject):
     >>> image = Image(id=image_id)
     """
 
+    _invalid_sequence_pattern_for_name = re.compile(r"[^a-zA-Z0-9_.-]+")
+
     id = NamedIdAttribute()
     name = NameAttribute()
     product_id = ProductIdAttribute()
@@ -163,3 +167,40 @@ class NamedCatalogObject(CatalogObject):
                 kwargs["product_id"] = product.id
 
         super(NamedCatalogObject, self).__init__(**kwargs)
+
+    @classmethod
+    def make_valid_name(cls, name):
+        """Replace invalid characters in the given name and return a valid name.
+
+        Replace any sequence of invalid characters in a string with a single `_`
+        character to create a valid `~Image.name` for `Band` or `Image`.  Since the
+        Band and Image names have a limited character set, this method will replace
+        any sequence of characters outside that character set with a single ``_``
+        character.  The returned string is a safe name to use for a `Band` or `Image`.
+        The given string is unchanged.
+
+        Note that it is possible that two unique invalid names may turn into duplicate
+        valid names if the uniqueness is located in the same sequence of invalid
+        characters.
+
+        Parameters
+        ----------
+        name : str
+            A `~Image.name` for a `Band` or `Image` that may contain invalid characters.
+
+        Returns
+        -------
+        str
+            A `~Image.name` for a `Band` or `Image` that does not contain any invalid
+            characters.
+
+        Example
+        -------
+        >>> name = "This is ań @#$^*% ïñvalid name!!!!"
+        >>> band = SpectralBand()
+        >>> band.name = Band.make_valid_name(name)
+        >>> band.name
+        'This_is_a_valid_name_'
+        >>>
+        """
+        return cls._invalid_sequence_pattern_for_name.sub("_", name)
