@@ -114,6 +114,13 @@ class Geometry(GeometryStruct, GeometryMixin):
         -------
         rasterized: ~.geospatial.Image
             An Image with 1 band named ``"features"``, and empty properties and bandinfo.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> geom = wf.Geometry(type="Point", coordinates=[1, 2])
+        >>> geom.rasterize(value=0.5)
+        <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
         """
         from .image import Image
 

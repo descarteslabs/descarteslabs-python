@@ -31,6 +31,32 @@ def load_geojson(geojson):
     Returns
     -------
     geometry: `Geometry`, `GeometryCollection`, `Feature`, or `FeatureCollection`
+
+    Example
+    -------
+    >>> from descarteslabs.workflows import load_geojson
+    >>> # type will be inferred based on the contents of the GeoJSON
+    >>> # geometry
+    >>> geojson = {"type": "Point", "coordinates": [1, 2]}
+    >>> load_geojson(geojson)
+    <descarteslabs.workflows.types.geospatial.geometry.Geometry object at 0x...>
+    >>> # geometry collection
+    >>> geojson = {"type": "GeometryCollection", "geometries": [{"type": "Point", "coordinates": [1, 2]}]}
+    >>> load_geojson(geojson)
+    <descarteslabs.workflows.types.geospatial.geometrycollection.GeometryCollection object at 0x...>
+    >>> # feature
+    >>> geojson = {"type": "Feature",
+    ...            "geometry": {"type": "Point", "coordinates": [1, 2]},
+    ...            "properties": {"foo": "bar"}}
+    >>> load_geojson(geojson)
+    <descarteslabs.workflows.types.geospatial.feature.Feature object at 0x...>
+    >>> # feature collection
+    >>> geojson = {"type": "FeatureCollection",
+    ...            "features": [{"type": "Feature",
+    ...              "geometry": {"type": "Point", "coordinates": [1, 2]},
+    ...              "properties": {"foo": "bar"}}]}
+    >>> load_geojson(geojson)
+    <descarteslabs.workflows.types.geospatial.featurecollection.FeatureCollection object at 0x...>
     """
     try:
         geojson = geojson.__geo_interface__
@@ -71,6 +97,12 @@ def load_geojson_file(path):
     Returns
     -------
     geometry: `Geometry`, `GeometryCollection`, `Feature`, or `FeatureCollection`
+
+    Example
+    -------
+    >>> from descarteslabs.workflows import load_geojson_file
+    >>> # type will be inferred based on the contents of the GeoJSON in the file
+    >>> obj = load_geojson_file("path/to/geojson/file") # doctest: +SKIP
     """
     path = os.path.expanduser(path)
     with open(path) as f:

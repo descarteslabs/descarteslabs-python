@@ -104,6 +104,18 @@ class Feature(FeatureStruct, GeometryMixin):
         rasterized: ~.geospatial.Image
             An Image with 1 band named ``"features"``, the same properties
             as this `Feature`, and empty bandinfo.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> geom = wf.Geometry(type="Point", coordinates=[1, 2])
+        >>> feat = wf.Feature(geometry=geom, properties={"foo": 2})
+        >>> feat.rasterize(value=0.5)
+        <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
+        >>> feat.rasterize(value=0.5).mean().compute(geoctx) # doctest: +SKIP
+        0.5
+        >>> feat.rasterize(value="foo").mean().compute(geoctx) # doctest: +SKIP
+        2
         """
         from .image import Image
 

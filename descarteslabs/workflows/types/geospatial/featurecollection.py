@@ -148,6 +148,19 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
         -------
         rasterized: ~.geospatial.Image
             An Image with 1 band named ``"features"``, and empty properties and bandinfo.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> geom = wf.Geometry(type="Point", coordinates=[1, 2])
+        >>> feat = wf.Feature(geometry=geom, properties={"foo": 1})
+        >>> fc = wf.FeatureCollection(features=[feat, feat, feat])
+        >>> fc.rasterize(value=0.5)
+        <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
+        >>> fc.rasterize(value="foo").max().compute(geoctx) # doctest: +SKIP
+        3
+        >>> fc.rasterize(value="foo", merge_algorithm="replace").max().compute(geoctx) # doctest: +SKIP
+        1
         """
         from .image import Image
 

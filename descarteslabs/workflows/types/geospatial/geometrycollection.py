@@ -73,5 +73,13 @@ class GeometryCollection(GeometryCollectionStruct, Geometry):
         Returns
         -------
         ~descarteslabs.workflows.Geometry
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> geom = wf.Geometry(type="Point", coordinates=[1, 2])
+        >>> gc = wf.GeometryCollection(type="GeometryCollection", geometries=[geom, geom, geom])
+        >>> gc.buffer(2)
+        <descarteslabs.workflows.types.geospatial.geometry.Geometry object at 0x...>
         """
         return Geometry._from_apply("buffer", self, distance)

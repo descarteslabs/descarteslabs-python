@@ -215,5 +215,11 @@ class GeometryMixin:
         Returns
         -------
         Same type as self
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> geom = wf.Geometry(type="Point", coordinates=[1, 2])
+        >>> buffered = geom.buffer(2)
         """
         return self._from_apply("buffer", self, distance)

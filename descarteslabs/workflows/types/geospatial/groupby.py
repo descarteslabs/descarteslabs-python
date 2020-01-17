@@ -90,7 +90,18 @@ class ImageCollectionGroupby(GenericProxytype):
         return self._groups
 
     def one(self):
-        "A `Tuple` of (group key, `ImageCollection`) for one random group. Helpful for debugging."
+        """A `Tuple` of (group key, `ImageCollection`) for one random group. Helpful for debugging.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> groups = col.groupby(dates="month")
+        >>> groups.one().compute(geoctx) # doctest: +SKIP
+        (5, ImageCollection...)
+        """
         return Tuple[self.key_type, ImageCollection]._from_apply(
             "ImageCollectionGroupby.one", self
         )
@@ -123,6 +134,21 @@ class ImageCollectionGroupby(GenericProxytype):
         Note that every `Image` in every `ImageCollecion` gets a ``"group"`` field added to its `~.Image.properties`,
         so that field will be merged/dropped according to normal metadata broadcasting rules (i.e. will still be present
         on an `Image` composited from a group's `ImageCollection`, since it's the same for every `Image`.)
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> groups = col.groupby(dates="month")
+        >>> groups.map(lambda group, col: col.pick_bands("red green blue"))# pick rgb bands for each group
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> # since the mapper function returns an ImageCollection, they are combined back into a single collection
+        >>> # each have a group key in their properties
+        >>> groups.map(lambda group, col: col.mean()) # equivalent to groups.mean()
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Float] object at...>
+        >>> # since the mapper function returns a Dict, map returns a Dict of group key to func results
         """
         proxy_func = Function.from_callable(func, self.key_type, ImageCollection)
         result_type = proxy_func._type_params[-1]
@@ -136,29 +162,177 @@ class ImageCollectionGroupby(GenericProxytype):
         return out_type._from_apply(func, self, proxy_func)
 
     def count(self, axis=None):
-        "Apply `.ImageCollection.count` to each group"
+        """Apply `.ImageCollection.count` to each group.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> groups = col.groupby(lambda img: img.properties["date"].month)
+        >>> groups.count(axis="images")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.count(axis="bands")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.count(axis="pixels")
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Dict[Str, Float]]] object at 0x...>
+        >>> groups.count(axis=("bands", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Float]] object at 0x...>
+        >>> groups.count(axis=("images", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Dict[Str, Float]] object at 0x...>
+        >>> groups.count(axis=None)
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Float] object at 0x...>
+        """
         return self.map(lambda group, imgs: imgs.count(axis=axis))
 
     def sum(self, axis=None):
-        "Apply `.ImageCollection.sum` to each group"
+        """Apply `.ImageCollection.sum` to each group.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> groups = col.groupby(lambda img: img.properties["date"].month)
+        >>> groups.sum(axis="images")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.sum(axis="bands")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.sum(axis="pixels")
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Dict[Str, Float]]] object at 0x...>
+        >>> groups.sum(axis=("bands", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Float]] object at 0x...>
+        >>> groups.sum(axis=("images", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Dict[Str, Float]] object at 0x...>
+        >>> groups.sum(axis=None)
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Float] object at 0x...>
+        """
         return self.map(lambda group, imgs: imgs.sum(axis=axis))
 
     def min(self, axis=None):
-        "Apply `.ImageCollection.min` to each group"
+        """Apply `.ImageCollection.min` to each group.
+
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> groups = col.groupby(lambda img: img.properties["date"].month)
+        >>> groups.min(axis="images")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.min(axis="bands")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.min(axis="pixels")
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Dict[Str, Float]]] object at 0x...>
+        >>> groups.min(axis=("bands", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Float]] object at 0x...>
+        >>> groups.min(axis=("images", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Dict[Str, Float]] object at 0x...>
+        >>> groups.min(axis=None)
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Float] object at 0x...>
+        """
         return self.map(lambda group, imgs: imgs.min(axis=axis))
 
     def max(self, axis=None):
-        "Apply `.ImageCollection.max` to each group"
+        """Apply `.ImageCollection.max` to each group.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> groups = col.groupby(lambda img: img.properties["date"].month)
+        >>> groups.max(axis="images")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.max(axis="bands")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.max(axis="pixels")
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Dict[Str, Float]]] object at 0x...>
+        >>> groups.max(axis=("bands", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Float]] object at 0x...>
+        >>> groups.max(axis=("images", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Dict[Str, Float]] object at 0x...>
+        >>> groups.max(axis=None)
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Float] object at 0x...>
+        """
         return self.map(lambda group, imgs: imgs.max(axis=axis))
 
     def mean(self, axis=None):
-        "Apply `.ImageCollection.mean` to each group"
+        """Apply `.ImageCollection.mean` to each group.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> groups = col.groupby(lambda img: img.properties["date"].month)
+        >>> groups.mean(axis="images")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.mean(axis="bands")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.mean(axis="pixels")
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Dict[Str, Float]]] object at 0x...>
+        >>> groups.mean(axis=("bands", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Float]] object at 0x...>
+        >>> groups.mean(axis=("images", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Dict[Str, Float]] object at 0x...>
+        >>> groups.mean(axis=None)
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Float] object at 0x...>
+        """
         return self.map(lambda group, imgs: imgs.mean(axis=axis))
 
     def median(self, axis=None):
-        "Apply `.ImageCollection.median` to each group"
+        """Apply `.ImageCollection.median` to each group.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> groups = col.groupby(lambda img: img.properties["date"].month)
+        >>> groups.median(axis="images")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.median(axis="bands")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.median(axis="pixels")
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Dict[Str, Float]]] object at 0x...>
+        >>> groups.median(axis=("bands", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Float]] object at 0x...>
+        >>> groups.median(axis=("images", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Dict[Str, Float]] object at 0x...>
+        >>> groups.median(axis=None)
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Float] object at 0x...>
+        """
         return self.map(lambda group, imgs: imgs.median(axis=axis))
 
     def std(self, axis=None):
-        "Apply `.ImageCollection.std` to each group"
+        """Apply `.ImageCollection.std` to each group.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> groups = col.groupby(lambda img: img.properties["date"].month)
+        >>> groups.std(axis="images")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.std(axis="bands")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> groups.std(axis="pixels")
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Dict[Str, Float]]] object at 0x...>
+        >>> groups.std(axis=("bands", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, List[Float]] object at 0x...>
+        >>> groups.std(axis=("images", "pixels"))
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Dict[Str, Float]] object at 0x...>
+        >>> groups.std(axis=None)
+        <descarteslabs.workflows.types.containers.dict_.Dict[Int, Float] object at 0x...>
+        """
         return self.map(lambda group, imgs: imgs.std(axis=axis))

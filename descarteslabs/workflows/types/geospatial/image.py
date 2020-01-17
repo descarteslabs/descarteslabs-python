@@ -446,8 +446,7 @@ class Image(ImageBase, BandsMixin):
         >>> from descarteslabs.workflows import Image
         >>> img = Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         >>> red = img.pick_bands("red")
-        >>> green = img.pick_bands("green")
-        >>> masked = red.mask(green)
+        >>> masked = red.mask(red < 0.2) # mask all bands where red band is low
         """  # noqa
         if isinstance(mask, (Geometry, Feature, FeatureCollection)):
             mask = mask.rasterize().getmask()
@@ -568,8 +567,8 @@ class Image(ImageBase, BandsMixin):
 
         Example
         -------
-        >>> from descarteslabs.workflows import Image
-        >>> img = Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
         >>> min_img = img.min(axis="bands")
         >>> band_mins = img.min(axis="pixels")
         >>> min_pixel = img.min(axis=None)
@@ -607,8 +606,8 @@ class Image(ImageBase, BandsMixin):
 
         Example
         -------
-        >>> from descarteslabs.workflows import Image
-        >>> img = Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
         >>> max_img = img.max(axis="bands")
         >>> band_maxs = img.max(axis="pixels")
         >>> max_pixel = img.max(axis=None)
@@ -646,8 +645,8 @@ class Image(ImageBase, BandsMixin):
 
         Example
         -------
-        >>> from descarteslabs.workflows import Image
-        >>> img = Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
         >>> mean_img = img.mean(axis="bands")
         >>> band_means = img.mean(axis="pixels")
         >>> mean_pixel = img.mean(axis=None)
@@ -685,8 +684,8 @@ class Image(ImageBase, BandsMixin):
 
         Example
         -------
-        >>> from descarteslabs.workflows import Image
-        >>> img = Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
         >>> median_img = img.median(axis="bands")
         >>> band_medians = img.median(axis="pixels")
         >>> median_pixel = img.median(axis=None)
@@ -724,8 +723,8 @@ class Image(ImageBase, BandsMixin):
 
         Example
         -------
-        >>> from descarteslabs.workflows import Image
-        >>> img = Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
         >>> sum_img = img.sum(axis="bands")
         >>> band_sums = img.sum(axis="pixels")
         >>> sum_pixels = img.sum(axis=None)
@@ -764,8 +763,8 @@ class Image(ImageBase, BandsMixin):
 
         Example
         -------
-        >>> from descarteslabs.workflows import Image
-        >>> img = Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
         >>> std_img = img.std(axis="bands")
         >>> band_stds = img.std(axis="pixels")
         >>> std = img.std(axis=None)
@@ -804,8 +803,8 @@ class Image(ImageBase, BandsMixin):
 
         Example
         -------
-        >>> from descarteslabs.workflows import Image
-        >>> img = Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
         >>> count_img = img.count(axis="bands")
         >>> band_counts = img.count(axis="pixels")
         >>> count = img.count(axis=None)
@@ -899,7 +898,7 @@ class Image(ImageBase, BandsMixin):
         -------
         >>> import descarteslabs.workflows as wf
         >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
-        >>> wf.log(img).compute(geoctx) # doctest: +SKIP
+        >>> img.log().compute(geoctx) # doctest: +SKIP
         ImageResult:
         ...
         """
@@ -917,7 +916,7 @@ class Image(ImageBase, BandsMixin):
         -------
         >>> import descarteslabs.workflows as wf
         >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
-        >>> wf.log2(img).compute(geoctx) # doctest: +SKIP
+        >>> img.log2().compute(geoctx) # doctest: +SKIP
         ImageResult:
         ...
         """
@@ -935,7 +934,7 @@ class Image(ImageBase, BandsMixin):
         -------
         >>> import descarteslabs.workflows as wf
         >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
-        >>> wf.log10(img).compute(geoctx) # doctest: +SKIP
+        >>> img.log10().compute(geoctx) # doctest: +SKIP
         ImageResult:
         ...
         """
@@ -953,7 +952,7 @@ class Image(ImageBase, BandsMixin):
         -------
         >>> import descarteslabs.workflows as wf
         >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
-        >>> wf.sqrt(img).compute(geoctx) # doctest: +SKIP
+        >>> img.sqrt().compute(geoctx) # doctest: +SKIP
         ImageResult:
         ...
         """
@@ -971,7 +970,7 @@ class Image(ImageBase, BandsMixin):
         -------
         >>> import descarteslabs.workflows as wf
         >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
-        >>> wf.cos(img).compute(geoctx) # doctest: +SKIP
+        >>> img.cos().compute(geoctx) # doctest: +SKIP
         ImageResult:
         ...
         """
@@ -989,7 +988,7 @@ class Image(ImageBase, BandsMixin):
         -------
         >>> import descarteslabs.workflows as wf
         >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
-        >>> wf.sin(img).compute(geoctx) # doctest: +SKIP
+        >>> img.sin().compute(geoctx) # doctest: +SKIP
         ImageResult:
         ...
         """
@@ -1007,7 +1006,7 @@ class Image(ImageBase, BandsMixin):
         -------
         >>> import descarteslabs.workflows as wf
         >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
-        >>> wf.tan(img).compute(geoctx) # doctest: +SKIP
+        >>> img.tan().compute(geoctx) # doctest: +SKIP
         ImageResult:
         ...
         """
@@ -1120,7 +1119,7 @@ class Image(ImageBase, BandsMixin):
         Example
         -------
         >>> from descarteslabs.workflows import Image
-        >>> empty_img = Image.from_id("empty_img_id") # doctest: +SKIP
+        >>> empty_img = Image.from_id("id_without_surface_reflectance", processing_level="surface") # doctest: +SKIP
         >>> empty_img.compute(geoctx) # doctest: +SKIP
         EmptyImage
         >>> non_empty = empty_img.replace_empty_with(9999, bandinfo={"red":{}, "green":{}, "blue":{}}) # doctest: +SKIP

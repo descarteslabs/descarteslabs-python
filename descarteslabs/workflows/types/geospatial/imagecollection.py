@@ -100,8 +100,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
             Example
             -------
-            >>> import descarteslabs.workflows as wf
-            >>> imgs = wf.ImageCollection.from_id("landsat:LC08:PRE:TOAR")
+            >>> from descarteslabs.workflows import ImageCollection
+            >>> imgs = ImageCollection.from_id("landsat:LC08:PRE:TOAR")
             >>> result = imgs.properties.compute(ctx)  # doctest: +SKIP
             >>> type(result)  # doctest: +SKIP
             list
@@ -131,8 +131,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
             Example
             -------
-            >>> import descarteslabs.workflows as wf
-            >>> imgs = wf.ImageCollection.from_id("landsat:LC08:PRE:TOAR")
+            >>> from descarteslabs.workflows import ImageCollection
+            >>> imgs = ImageCollection.from_id("landsat:LC08:PRE:TOAR")
             >>> imgs.bandinfo['red']['data_range']
             <descarteslabs.workflows.types.containers.tuple_.Tuple[Float, Float] object at 0x...>
             >>> imgs.bandinfo['red']['foobar']  # almost certainly a compute-time error
@@ -217,6 +217,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Returns
         -------
         imgs: ImageCollection
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30", resampler="min")
+        >>> col.compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
         """
         if resampler.literal_value is not None and resampler.literal_value not in [
             "near",
@@ -271,6 +280,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             The name of the band whose bandinfo will be added to.
         **bandinfo: dict
             Fields that will be added to the band's bandinfo
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> with_foo = col.with_bandinfo("red", foo="baz")
+        >>> with_foo.bandinfo["red"]["foo"].compute(geoctx) # doctest: +SKIP
+        'baz'
         """
         return super(ImageCollection, self).with_bandinfo(band, **bandinfo)
 
@@ -289,6 +307,21 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             The name of the band whose bandinfo will be pruned.
         *bandinfo_keys: Str
             Fields that will be dropped from the band's bandinfo
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.bandinfo["red"].compute(geoctx) # doctest: +SKIP
+        {'color': 'Red',
+         'data_description': 'TOAR, 0-10000 is 0 - 100% reflective',
+        ...
+        >>> without_desc = col.without_bandinfo("red", "data_description")
+        >>> without_desc.bandinfo["red"].compute(geoctx) # doctest: +SKIP
+        {'color': 'Red',
+         'data_range': [0, 10000],
+        ...
         """
         return super(ImageCollection, self).without_bandinfo(band, *bandinfo_keys)
 
@@ -302,6 +335,13 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Bands on the Images will be in the order given.
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> rgb = col.pick_bands("red green blue")
         """
         return super(ImageCollection, self).pick_bands(bands)
 
@@ -318,6 +358,13 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         To eliminate ambiguity, names cannot be given both ways.
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> renamed = col.rename_bands(red="new_red", blue="new_blue", green="new_green")
         """
         return super(ImageCollection, self).rename_bands(
             *new_positional_names, **new_names
@@ -352,8 +399,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         Example
         -------
-        >>> import descarteslabs.workflows as wf
-        >>> col = wf.ImageCollection.from_id("sentinel-2:L1C")
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("sentinel-2:L1C")
         >>> dates = col.map(lambda img: img.properties["date"])
         >>> type(dates).__name__
         'List[Datetime]'
@@ -392,6 +439,13 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Returns
         -------
         sorted: ImageCollection
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> month_reverse_sort = col.sorted(key=lambda img: img.properties["date"].month, reverse=True)
         """
         key = self._make_sort_key(key)
         return self._from_apply("sorted", self, key, reverse=reverse)
@@ -435,6 +489,17 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             all of them are concatenated together and returned as one `ImageCollection`.
 
             Otherwise, returns a `List` of the values returned by ``func``.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection, concat
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-06-30")
+        >>> new_col = col.map_window(lambda back, img, fwd:
+        ...     concat(back, img, fwd).mean(axis="images").with_properties(date=img.properties['date']), back=1, fwd=1)
+        >>> new_col.compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
         """
         delayed_func = Function.from_callable(
             func, ImageCollection, Image, ImageCollection
@@ -483,6 +548,14 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         -------
         `ImageCollection` if ``func`` returns `ImageCollection`,
         otherwise ``Dict[Str, T]``, where ``T`` is the return type of ``func``.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> band_means = col.mean(axis=("images", "pixels"))
+        >>> deviations = col.map_bands(lambda name, imgs: imgs - band_means[name])
         """
         return super(ImageCollection, self).map_bands(func)
 
@@ -506,6 +579,17 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Returns
         -------
         concatenated: ImageCollection
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> red = col.pick_bands("red")
+        >>> green = col.pick_bands("green")
+        >>> rg = red.concat_bands(green).compute(geoctx) # doctest: +SKIP
+        >>> rg.bandinfo.keys() # doctest: +SKIP
+        ['red', 'green']
         """
         return self._from_apply("ImageCollection.concat_bands", self, other)
 
@@ -527,6 +611,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Returns
         -------
         concatenated: ImageCollection
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.concat(col, col).compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 6:
+        ...
         """
         from .concat import concat as wf_concat
 
@@ -552,6 +645,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Returns
         -------
         imgs: ImageCollection
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.head(2).compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
         """
         return ImageCollection._from_apply("ImageCollection.head", self, n)
 
@@ -571,6 +673,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Returns
         -------
         imgs: ImageCollection
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.tail(1).compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 1:
+        ...
         """
         return ImageCollection._from_apply("ImageCollection.tail", self, n)
 
@@ -591,6 +702,19 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Returns
         -------
         Tuple[ImageCollection, ImageCollection]
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> head, tail = col.partition(1)
+        >>> head.compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 1:
+        ...
+        >>> tail.compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 1:
+        ...
         """
         return Tuple[ImageCollection, ImageCollection]._from_apply(
             "ImageCollection.partition", self, i
@@ -625,6 +749,14 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             If False (default), adds this mask to the current one,
             so already-masked pixels remain masked,
             or replaces the current mask with this new one if True.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> red = col.pick_bands("red")
+        >>> masked = red.mask(red < 0.2) # mask all the bands where the red band is low
         """  # noqa
         if isinstance(mask, (Geometry, Feature, FeatureCollection)):
             mask = mask.rasterize().getmask()
@@ -635,6 +767,19 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Mask of this `ImageCollection`, as a new `ImageCollection` with one boolean band named 'mask'.
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> mask = col.getmask().compute(geoctx) # doctest: +SKIP
+        >>> mask.ndarray # doctest: +SKIP
+        masked_array(
+          data=[[[[0, 0, 0, ..., 1, 1, 1],
+        ...
+        >>> mask.bandinfo # doctest: +SKIP
+        {'mask': {}}
         """
         return self._from_apply("getmask", self)
 
@@ -658,6 +803,18 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             If specified, vmin must be specified as well.
 
         Note: If neither vmin nor vmax are specified, the min and max values in each `Image` will be used.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.pick_bands("red").colormap("magma", vmin=0.1, vmax=0.8).compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+          * ndarray: MaskedArray<shape=(2, 3, 512, 512), dtype=float64>
+          * properties: 2 items
+          * bandinfo: 'red', 'green', 'blue'
+          * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
         """
         if (vmin is not None and vmax is None) or (vmin is None and vmax is not None):
             raise ValueError("Must specify both vmin and vmax, or neither.")
@@ -692,6 +849,21 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         If the `ImageCollection` is empty, or ``func`` results in empty groups,
         `ImageCollectionGroupby.groups` will return an empty `Dict`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> # group all Images from the same year and month, then take the mean (along the 'images' axis) of each group
+        >>> col.groupby(dates=("year", "month")).mean(axis="images")
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        >>> # group all Images from the same month, get Images from April, and take the median along the 'images' axis
+        >>> col.groupby(dates="month")[4].median(axis="images")
+        <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
+        >>> # place images in 14 day bins, and take the min for each group (using a mapper function)
+        >>> col.groupby(lambda img: img.properties['date'] // wf.Timedelta(days=14)).map(lambda group, img: img.min())
+        <descarteslabs.workflows.types.containers.dict_.Dict[Datetime, Float] object at 0x...>
         """
         from .groupby import ImageCollectionGroupby
 
@@ -1191,6 +1363,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Element-wise natural log of an `ImageCollection`.
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.log().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
         """
         from ..math import arithmetic
 
@@ -1201,6 +1382,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Element-wise base 2 log of an `ImageCollection`.
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.log2().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
         """
         from ..math import arithmetic
 
@@ -1211,6 +1401,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Element-wise base 10 log of an `ImageCollection`.
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.log10().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
         """
         from ..math import arithmetic
 
@@ -1221,6 +1420,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Element-wise square root of an `ImageCollection`.
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.sqrt().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
         """
         from ..math import arithmetic
 
@@ -1231,6 +1439,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Element-wise cosine of an `ImageCollection`.
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.cos().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
         """
         from ..math import arithmetic
 
@@ -1241,6 +1458,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Element-wise sine of an `ImageCollection`.
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.sin().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
         """
         from ..math import arithmetic
 
@@ -1251,6 +1477,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Element-wise tangent of an `ImageCollection`.
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.tan().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
         """
         from ..math import arithmetic
 
@@ -1276,6 +1511,22 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             in which case they must be the same length as the number of bands.
 
         Note: ``min`` and ``max`` cannot both be None. At least one must be specified.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.compute(geoctx).ndarray # doctest: +SKIP
+        masked_array(
+          data=[[[[0.1578, 0.1578, 0.1578, ..., 0.13920000000000002, 0.1376,
+                         0.1376],
+        ...
+        >>> clipped = col.clip_values(0.14, 0.3).compute(geoctx) # doctest: +SKIP
+        >>> clipped.ndarray # doctest: +SKIP
+        masked_array(
+          data=[[[[0.1578, 0.1578, 0.1578, ..., 0.14, 0.14, 0.14],
+        ...
         """
         if min is None and max is None:
             raise ValueError(
@@ -1299,6 +1550,22 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             Minimum value of the domain. If None, the band minimum is used.
         domain_max: float, default None
             Maximum value of the domain. If None, the band maximum is used.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.compute(geoctx).ndarray # doctest: +SKIP
+        masked_array(
+          data=[[[[0.1578, 0.1578, 0.1578, ..., 0.13920000000000002, 0.1376,
+                         0.1376],
+        ...
+        >>> scaled = col.scale_values(0.1, 0.5).compute(geoctx) # doctest: +SKIP
+        >>> scaled.ndarray # doctest: +SKIP
+        masked_array(
+          data=[[[[0.10000706665039064, 0.10000706665039064,
+        ...
         """
         return self._from_apply(
             "scale_values", self, range_min, range_max, domain_min, domain_max
@@ -1329,6 +1596,23 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             bandinfo is optional, and will be ignored if provided. If ``fill`` is a scalar,
             the bandinfo will be used to determine the number of bands on the new `ImageCollection`,
             as well as become the bandinfo for it.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> # no imagery exists for this product within the date range
+        >>> empty_col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-02-28")
+        >>> empty_col.compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 0:
+        ...
+        >>> non_empty = empty_col.replace_empty_with(9999, bandinfo={"red":{}, "green":{}, "blue":{}})
+        >>> non_empty.compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 0:
+          * ndarray: MaskedArray<shape=(1, 3, 512, 512), dtype=int64>
+          * properties: 0 items
+          * bandinfo: 'red', 'green', 'blue'
+          * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
         """
         if isinstance(fill, (Int, Float)) and isinstance(bandinfo, NoneType):
             # filling with scalar requires bandinfo to be provided
