@@ -886,3 +886,16 @@ class TestProduct(ClientTestCase):
             str(w[1].message)
             == "SomeWarning: This is a test of a warning with a bad category"
         )
+
+    def test_extra_properties(self):
+        p = Product(id="id1", extra_properties={"one": "two"}, _saved=True)
+        assert p.extra_properties["one"] == "two"
+        assert not p.is_modified
+
+        p.extra_properties["three"] = "four"
+        assert p.extra_properties["one"] == "two"
+        assert p.extra_properties["three"] == "four"
+        assert p.is_modified
+
+        with self.assertRaises(AttributeValidationError):
+            p.extra_properties["five"] = object()

@@ -11,6 +11,7 @@ from .attributes import (
     DocumentState,
     Timestamp,
     ListAttribute,
+    ExtraPropertiesAttribute,
 )
 from .catalog_client import CatalogClient, HttpRequestMethod
 
@@ -162,7 +163,7 @@ class CatalogObject(AttributeEqualityMixin):
         object.  :ref:`See this note <product_note>`.
         """,
     )
-    extra_properties = Attribute(
+    extra_properties = ExtraPropertiesAttribute(
         doc="""dict, optional: A dictionary of up to 50 key/value pairs.
 
         The keys of this dictonary must be strings, and the values of this dictionary
@@ -357,7 +358,7 @@ class CatalogObject(AttributeEqualityMixin):
         """
         attribute_type = cls._get_attribute_type(name)
         if isinstance(attribute_type, ListAttribute):
-            attribute_type = attribute_type._item_type
+            attribute_type = attribute_type._attribute_type
         return attribute_type.serialize(value)
 
     def _set_modified(self, attr_name, changed=True, validate=True):

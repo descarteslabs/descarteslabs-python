@@ -1,10 +1,11 @@
-from enum import Enum
-from datetime import datetime
-from pytz import utc
 import numbers
 import re
 
-from six import add_metaclass, PY2, PY3, iteritems, itervalues
+from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence
+from datetime import datetime
+from enum import Enum
+from pytz import utc
+
 from descarteslabs.common.shapely_support import (
     geometry_like_to_shapely,
     shapely_to_geojson,
@@ -27,6 +28,10 @@ def parse_iso_datetime(date_str):
 
 
 def serialize_datetime(value):
+    """Serialize a value to a json-serializable type.
+
+    See :meth:`Attribute.serialize`.
+    """
     return datetime.isoformat(value) if isinstance(value, datetime) else value
 
 
@@ -129,37 +134,8 @@ class Attribute(object):
         if doc is not None:
             self.__doc__ = doc
 
-    def _get_attr_params(self, **extra_params):
-        # We don't need _PARAM_DOC
-        params = {
-            self._PARAM_MUTABLE: self._mutable,
-            self._PARAM_SERIALIZABLE: self._serializable,
-            self._PARAM_STICKY: self._sticky,
-            self._PARAM_READONLY: self._readonly,
-        }
-        if extra_params is not None:
-            params.update(extra_params)
-        return params
-
-    def serialize(self, value, jsonapi_format=False):
-        """
-        Serializes a value for this attribute to a JSONAPI representation fit to
-        send to the Descartes Labs catalog.
-        """
-        return value
-
-    def deserialize(self, value, validate=True):
-        """
-        Deserializes a value for this attribute from a JSONAPI representation as it
-        comes from the Descartes Labs catalog.  Optionally indicates whether the data
-        should be validated.
-        """
-        return value
-
     def __get__(self, obj, objtype):
-        """
-        Gets the value for this attribute on the given object.
-        """
+        """Gets the value for this attribute on the given object."""
         # Attributes cannot be used as class properties
         if obj is None:
             raise AttributeError(
@@ -170,27 +146,28 @@ class Attribute(object):
 
         return obj._attributes.get(self._attribute_name)
 
-    def _raise_if_immutable_or_readonly(self, operation, obj=None):
-        if self._readonly:
-            raise AttributeValidationError(
-                "Can't {} '{}' item because it is a readonly attribute".format(
-                    operation, self._attribute_name
-                )
-            )
-        if not self._mutable and (
-            obj is None or self._attribute_name in obj._attributes
-        ):
-            raise AttributeValidationError(
-                "Can't {} '{}' item because it is an immutable attribute".format(
-                    operation, self._attribute_name
-                )
-            )
-
     def __set__(self, obj, value, validate=True):
-        """
-        Sets a value for this attribute on the given model object at the
-        given attribute name, deserializing it if necessary.  Optionally
-        indicates whether the data should be validated.
+        """Sets the value for this attribute on the given object.
+
+        Sets a value for this attribute on the given model object at the given attribute
+        name, deserializing it if necessary.  Optionally indicates whether the data
+        should be validated.
+
+        Parameters
+        ----------
+        obj : object
+            The `CatalogObject` on which to set the value.
+        value : object
+            The value to set on the given `CatalogObject`.  The value will be deserialized before being set.
+        validate : bool
+            Whether or not to check whether the value is allowed to be set and to
+            validate the value itself.  ``True`` by default.
+
+        Raises
+        ------
+        AttributeValidationError
+            When `validate` is ``True``, and the attribute cannot be assigned to
+            (readonly or immutable) or the value is invalid.
         """
         if validate:
             self._raise_if_immutable_or_readonly("set", obj)
@@ -211,12 +188,100 @@ class Attribute(object):
 
         obj._attributes.pop(self._attribute_name, None)
 
+    def _get_attr_params(self, **extra_params):
+        # We don't need _PARAM_DOC
+        params = {
+            self._PARAM_MUTABLE: self._mutable,
+            self._PARAM_SERIALIZABLE: self._serializable,
+            self._PARAM_STICKY: self._sticky,
+            self._PARAM_READONLY: self._readonly,
+        }
+        if extra_params is not None:
+            params.update(extra_params)
+        return params
+
+    def _raise_if_immutable_or_readonly(self, operation, obj=None):
+        if self._readonly:
+            raise AttributeValidationError(
+                "Can't {} '{}' item because it is a readonly attribute".format(
+                    operation, self._attribute_name
+                )
+            )
+        if not self._mutable and (
+            obj is None or self._attribute_name in obj._attributes
+        ):
+            raise AttributeValidationError(
+                "Can't {} '{}' item because it is an immutable attribute".format(
+                    operation, self._attribute_name
+                )
+            )
+
+    def serialize(self, value, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        Serializes a value for this attribute to a value that can be serialized to a
+        JSONAPI representation fit to send to the Descartes Labs catalog.
+
+        Parameters
+        ----------
+        value : object
+            Any Python object.
+        jsonapi_format : bool
+            Whether or not to prepend the attributes with a JSONAPI block.  ``False``
+            by default.  This is only relevant for top-level catalog objects which may
+            be embedded as attributes.
+
+        Returns
+        -------
+        object
+            Any Python object.
+        """
+        return value
+
+    def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        Deserializes a value for this attribute from a plain python type, possibly
+        generated through JSONAPI deserialization as it comes from the Descartes Labs
+        catalog.  Optionally indicates whether the data should be validated.
+
+        Parameters
+        ----------
+        value : object
+            Any Python object
+        validate : bool
+            Whether or not the value should be validated.  This value is ``True`` be
+            default, and this method can raise an `AttributeValidationError` in that
+            case.
+
+        Returns
+        -------
+        object
+            Any Python object.
+
+        Raises
+        ------
+        AttributeValidationError
+            When `validate` is ``True`` and a validation error was encountered.
+        """
+        return value
+
 
 class CatalogObjectReference(Attribute):
-    """
-    An attribute that holds another CatalogObject, referenced by id through
-    another attribute that by convention should be the name of this attribute
-    plus the suffix "_id".
+    """A reference to another CatalogObject.
+
+    An attribute that holds another CatalogObject, referenced by id through another
+    attribute that by convention should be the name of this attribute plus the suffix
+    "_id".
+
+    Parameters
+    ----------
+    reference_class : CatalogObject
+        The class for the CatalogObject instance that this attribute will hold a
+        reference to.
+    allow_unsaved : bool
+        Whether the reference is allowed even if the CatalogObject instance is not in
+        the `SAVED` state.
     """
 
     def __init__(self, reference_class, allow_unsaved=False, **kwargs):
@@ -227,50 +292,38 @@ class CatalogObjectReference(Attribute):
         self.reference_class = reference_class
         self._allow_unsaved = allow_unsaved
 
-    @property
-    def id_field(self):
-        return "{}_id".format(self._attribute_name)
+    def __get__(self, obj, objtype):
+        """Gets the value for this attribute on the given object.
 
-    def serialize(self, value, jsonapi_format=False):
-        """
-        Serializes a value for this attribute to a JSONAPI representation fit to
-        send to the Descartes Labs catalog.
-        """
-        return value.serialize(modified_only=False, jsonapi_format=jsonapi_format)
-
-    def __get__(self, model_object, objtype):
-        """
         Access the referenced object by looking it up in related objects or else on
         the Descartes Labs catalog.  Values are cached until this attribute or the
         corresponding id field are modified.
         """
-        if model_object is None:
-            return super(CatalogObjectReference, self).__get__(
-                self, model_object, objtype
-            )
+        if obj is None:
+            return super(CatalogObjectReference, self).__get__(self, obj, objtype)
 
-        cached_value = model_object._attributes.get(self._attribute_name)
-        reference_id = getattr(model_object, self.id_field)
+        cached_value = obj._attributes.get(self._attribute_name)
+        reference_id = getattr(obj, self.id_field)
         if cached_value and cached_value.id == reference_id:
             return cached_value
 
         if reference_id:
-            new_value = self.reference_class.get(
-                reference_id, client=model_object._client
-            )
+            new_value = self.reference_class.get(reference_id, client=obj._client)
         else:
             new_value = None
 
-        model_object._attributes[self._attribute_name] = new_value
+        obj._attributes[self._attribute_name] = new_value
         return new_value
 
-    def __set__(self, model_object, value, validate=True):
-        """
-        Sets a new referenced object. Must be a saved object of the correct
-        type.
+    def __set__(self, obj, value, validate=True):
+        """Sets the value for this attribute on the given object.
+
+        See :meth:`Attribute.__set__`.
+
+        Sets a new referenced object.  Must be a saved object of the correct type.
         """
         if validate:
-            self._raise_if_immutable_or_readonly("set", model_object)
+            self._raise_if_immutable_or_readonly("set", obj)
 
         if value is not None:
             if not isinstance(value, self.reference_class):
@@ -287,24 +340,52 @@ class CatalogObjectReference(Attribute):
                 )
 
         changed = not (
-            self._attribute_name in model_object._attributes
-            and model_object._attributes[self._attribute_name] == value
+            self._attribute_name in obj._attributes
+            and obj._attributes[self._attribute_name] == value
         )
 
         # `_set_modified()` will raise exception if change is not allowed
-        model_object._set_modified(self._attribute_name, changed, validate)
-        model_object._attributes[self._attribute_name] = value
+        obj._set_modified(self._attribute_name, changed, validate)
+        obj._attributes[self._attribute_name] = value
         # Jam in the `id`
-        model_object._set_modified(self.id_field, changed, validate=False)
-        model_object._attributes[self.id_field] = None if value is None else value.id
+        obj._set_modified(self.id_field, changed, validate=False)
+        obj._attributes[self.id_field] = None if value is None else value.id
+
+    @property
+    def id_field(self):
+        return "{}_id".format(self._attribute_name)
+
+    def serialize(self, value, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
+        """
+        return value.serialize(modified_only=False, jsonapi_format=jsonapi_format)
 
 
 class Timestamp(Attribute):
+    def serialize(self, value, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
+        """
+        return serialize_datetime(value)
+
     def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        See :meth:`Attribute.deserialize`.
+
+        Returns
+        -------
+        datetime or str
+            Any Python object if `validate` is ``True``, otherwise a `datetime` instance
+            representing the timestamp, typically in UTC.
+        """
         if value is None or validate:
-            # in this case `validate` is a misnomer because we do not want to validate or
-            # deserialize datetimes set by the user on the client.
-            # validation and timestamp parsing happens on the server.
+            # In this case `validate` is a misnomer because we do not want to validate
+            # or deserialize datetimes set by the user on the client.
+            # Validation and timestamp parsing happens on the server.
             return value
         elif isinstance(value, datetime):
             if value.tzinfo is None:
@@ -320,9 +401,6 @@ class Timestamp(Attribute):
                     " Value must match format '%Y-%m-%dT%H:%M:%S.%fZ'".format(value)
                 )
 
-    def serialize(self, value, jsonapi_format=False):
-        return serialize_datetime(value)
-
 
 class EnumAttribute(Attribute):
     def __init__(self, enum, **kwargs):
@@ -333,12 +411,25 @@ class EnumAttribute(Attribute):
         self._enum_cls = enum
 
     def serialize(self, value, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
+        """
         if type(value) is self._enum_cls:
             return value.value
         else:
             return value
 
     def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        See :meth:`Attribute.deserialize`.
+
+        Returns
+        -------
+        str
+            A string representing the enum value.
+        """
         if validate:
             # Validate that the value is allowed, but don't return the Enum instance
             return self._enum_cls(value).value
@@ -348,12 +439,29 @@ class EnumAttribute(Attribute):
 
 
 class GeometryAttribute(Attribute):
-    """
+    """An attribute that holds a geometry.
+
     Accepts geometry in a geojson-like format and always represents them as a shapely
     shape.
     """
 
+    def serialize(self, value, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
+        """
+        return shapely_to_geojson(value)
+
     def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        See :meth:`Attribute.deserialize`.
+
+        Returns
+        -------
+        shapely.geometry.base.BaseGeometry
+            A shapely instance.
+        """
         if value is None:
             return value
         else:
@@ -362,24 +470,35 @@ class GeometryAttribute(Attribute):
             except (ValueError, TypeError) as ex:
                 raise AttributeValidationError(ex)
 
-    def serialize(self, value, jsonapi_format=False):
-        return shapely_to_geojson(value)
-
 
 class BooleanAttribute(Attribute):
-    def deserialize(self, value, validate=True):
+    def serialize(self, value, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
+        """
         return bool(value)
 
-    def serialize(self, value, jsonapi_format=False):
+    def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        See :meth:`Attribute.deserialize`.
+
+        Returns
+        -------
+        bool
+            The boolean value.  Note that any non-empty string, include "False" will
+            return ``True``.
+        """
         return bool(value)
 
 
 class AttributeEqualityMixin(object):
-    """
-    A mixin that defines equality for classes that have an Attribute dictionary
-    property at `_attribute_types` and the values dictionary at `_attributes`.
-    Equality is defined as equality of all serializable attributes in serialized
-    form.
+    """Tests for equality and inequality.
+
+    A mixin that defines equality for classes that have an Attribute dictionary property
+    at `_attribute_types` and the values dictionary at `_attributes`.  Equality is
+    defined as equality of all serializable attributes in serialized form.
     """
 
     def __eq__(self, other):
@@ -396,13 +515,114 @@ class AttributeEqualityMixin(object):
 
         return True
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
-    if PY2:
+class ModelAttribute(Attribute):
+    """A class that allows for models to be registered and updated."""
 
-        def __hash__(self):
-            raise TypeError("unhashable type: '{}'".format(self.__class__.__name__))
+    def __init__(self, **kwargs):
+        self._model_objects = {}
+        super(ModelAttribute, self).__init__(**kwargs)
+
+    def __set__(self, obj, value, validate=True):
+        """Sets the value for this attribute on the given object.
+
+        See :meth:`Attribute.__set__`.
+
+        This will also register the model with the given `ModelAttribute` instance
+        value and deregister the model from the old `ModelAttribute` instance value.
+
+        Parameters
+        ----------
+        value : ModelAttribute or object
+            The value will be deserialized to a `ModelAttribute`.
+        """
+        if validate:
+            self._raise_if_immutable_or_readonly("delete", obj)
+
+        value = self.deserialize(value, validate=validate)
+        previous_value = obj._attributes.get(self._attribute_name, None)
+
+        changed = not (
+            self._attribute_name in obj._attributes and previous_value == value
+        )
+
+        # `_set_modified()` will raise exception if change is not allowed
+        obj._set_modified(self._attribute_name, changed, validate)
+
+        # deregister the previous value and register the new one
+        if previous_value is not None:
+            previous_value._remove_model_object(obj)
+        if value is not None:
+            value._add_model_object(obj, self._attribute_name)
+
+        obj._attributes[self._attribute_name] = value
+
+    def __delete__(self, obj, validate=True):
+        """Delete the value for this attribute on the given object.
+
+        It will remove the reference to the old value.
+        """
+        if validate:
+            self._raise_if_immutable_or_readonly("delete", obj)
+
+        previous_value = obj._attributes.pop(self._attribute_name, None)
+        if previous_value is not None:
+            previous_value._remove_model_object(obj)
+
+    def _add_model_object(self, model, attr_name=None):
+        """Register a model and attribute name.
+
+        Since we can reuse one MappingAttribute object across different
+        model object types, each with potentially different attribute names,
+        we register the name of the attribute on the specific model object,
+        to avoid propagating bad changes.
+
+        Parameters
+        ----------
+        model : CatalogObject
+            The model to add to the registered models for this value instance.
+        attr_name : str
+            The name of the attribute in this model that this value belongs to.
+        """
+        id_ = id(model)
+        self._model_objects[id_] = (model, attr_name)
+
+    def _remove_model_object(self, model):
+        """Deregister a model.
+
+        Parameters
+        ----------
+        model : CatalogObject
+            The model to remove from the registered models for this instance.
+        """
+        id_ = id(model)
+        self._model_objects.pop(id_, None)
+
+    def _set_modified(self, attr_name=None, changed=True, validate=True):
+        """Verify change on all the referenced model objects and trigger modification.
+
+        The model can reject this change by raising an `AttributeValidationError` if
+        validate is ``True``.  If the new value is identical to the old value, the
+        modification is **not** triggered (and changed will be ``False``).
+
+        Parameters
+        ----------
+        attr_name : str
+            The name of the attribute.  ``None`` by default.  Note that the attr_name
+            argument is ignored because of the chaining.
+        changed : bool
+            Whether or not the actual value changed.  ``True`` by default.
+        validate : bool
+            Whether or not to verify that the value can be assigned.  ``True`` by
+            default.
+
+        Raises
+        ------
+        AttributeValidationError
+            When `validate` is ``True`` and the attribute cannot be assigned to.
+        """
+        for model_object, attr_name in self._model_objects.values():
+            model_object._set_modified(attr_name, changed, validate)
 
 
 class AttributeMeta(type):
@@ -447,24 +667,25 @@ class AttributeMeta(type):
         return super(AttributeMeta, cls).__new__(cls, name, bases, attrs)
 
 
-@add_metaclass(AttributeMeta)
-class MappingAttribute(Attribute, AttributeEqualityMixin):
-    """
-    Base class for attributes that are mapping types. Can be set using
-    a dict, or an instance of a MappingAttribute derived type.
+class MappingAttribute(ModelAttribute, AttributeEqualityMixin, metaclass=AttributeMeta):
+    """Base class for attributes that are mapping types.
+
+
+    Can be set using a mapping, or an instance of a MappingAttribute derived type.
 
     MappingAttributes differ from other Attribute subclasses in a few key respects:
-    - MappingAttribute shouldn't ever be instantiated directly, but subclassed
-      and the subclass should be instantiated
-    - MappingAttribute subclasses have two "modes": they are instantiated on classes directly,
-      just like the other Attribute types they're also instantiated directly and used in
-      value assignments.
+
+    - MappingAttribute shouldn't ever be instantiated directly, but subclassed and the
+      subclass should be instantiated
+    - MappingAttribute subclasses have two "modes": they are instantiated on classes
+      directly, just like the other Attribute types they're also instantiated directly
+      and used in value assignments.
     - MappingAttribute subclasses keep track of their own state, rather than delegating
-      this to the model object they're attached to. This allows these objects to be instantiated
-      directly without being attached to a model object, and it allows a single instance to be
-      attached to multiple model objects Since, they track their own state, the model
-      objects they're attached to retain references to instances in their _attributes,
-      like with other type (e.g. datetime).
+      this to the model object they're attached to.  This allows these objects to be
+      instantiated directly without being attached to a model object, and it allows a
+      single instance to be attached to multiple model objects.  Since they track their
+      own state, the model objects they're attached to retain references to instances
+      in their _attributes, like with other type (e.g.  datetime).
 
     Examples
     --------
@@ -474,23 +695,19 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
 
     >>> class MyMapping(MappingAttribute):
     ...     foo = Attribute()
-
-    >>> class FakeCatalogObject(CatalogObject):
+    >>> class ExampleCatalogObject(CatalogObject):
     ...     map_attr = MyMapping()
 
-    The other way mapping attributes are used is but instantiating a new
-    instance and assigning that instance to a model object.
+    The other way mapping attributes are used is but instantiating a new instance and
+    assigning that instance to a model object.
 
     >>> my_map = MyMapping(foo="bar")
-    >>> obj1 = FakeCatalogObject(map_attr=my_map)
-    >>> obj2 = FakeCatalogObject(map_attr=my_map)
+    >>> obj1 = ExampleCatalogObject(map_attr=my_map)
+    >>> obj2 = ExampleCatalogObject(map_attr=my_map)
     >>> assert obj1.map_attr is obj2.map_attr is my_map
-
     >>> my_map.foo = "baz"
     >>> assert obj1.is_modified
     >>> assert obj2.is_modified
-
-
     """
 
     # this value is ONLY used for for instances of the attribute that
@@ -500,7 +717,6 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
     _attribute_name = None
 
     def __init__(self, **kwargs):
-        self._model_objects = {}
         self._attributes = {}
 
         attr_params = {
@@ -513,7 +729,7 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
         super(MappingAttribute, self).__init__(**attr_params)
 
         validate = kwargs.pop("validate", True)
-        for attr_name, value in iteritems(kwargs):
+        for attr_name, value in kwargs.items():
             attr = (
                 self.get_attribute_type(attr_name)
                 if validate
@@ -523,6 +739,10 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
                 attr.__set__(self, value, validate=validate)
 
     def __repr__(self):
+        """A string representation for the instance.
+
+        The representation is broken up over multiple lines for readability.
+        """
         sections = ["{}:".format(self.__class__.__name__)]
         for key, val in sorted(self._attributes.items()):
             val_sections = ["  " + v for v in repr(val).split("\n")]
@@ -531,15 +751,18 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
         return "\n".join(sections)
 
     def __setattr__(self, name, value):
+        """Set the value on the given attribute.
+
+        Check that the attribute exists (unless it's a private attribute starting with
+        ``_``) before setting the value.
+        """
         if not name.startswith("_"):
             # Make sure it's a proper attribute
             self.get_attribute_type(name)
         super(MappingAttribute, self).__setattr__(name, value)
 
     def get_attribute_type(self, name):
-        """
-        Get the type definition for an attribute by name.
-        """
+        """Get the type definition for an attribute by name."""
         try:
             return self._attribute_types[name]
         except KeyError:
@@ -547,82 +770,10 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
                 "{} has no attribute {}".format(self.__class__.__name__, name)
             )
 
-    def _add_model_object(self, model_object, attr_name):
-        """
-        Register a model object and attribute name.
-
-        Since we can reuse one MappingAttribute object across different
-        model object types, each with potentially different attribute names,
-        we register the name of the attribute on the specific model object,
-        to avoid propagating bad changes.
-        """
-        id_ = id(model_object)
-        self._model_objects[id_] = (model_object, attr_name)
-
-    def _remove_model_object(self, model_object):
-        """
-        Deregister a model object.
-        """
-        id_ = id(model_object)
-        self._model_objects.pop(id_, None)
-
-    def _set_modified(self, attr_name=None, changed=True, validate=True):
-        """
-        Trigger modifications on all the referenced model objects.
-
-        Attributes expect to provide an argument to this function, but we ignore
-        it in the case of List/MappingAttribute types because they retain
-        references to the names of attributes on objects they're attached to.
-        """
-        for model_object, attr_name in itervalues(self._model_objects):
-            model_object._set_modified(attr_name, changed, validate)
-
-    def __get__(self, model_object, objtype):
-        """
-        Get the value from the model object.
-        """
-        return model_object._attributes.get(self._attribute_name)
-
-    def __set__(self, model_object, value, validate=True):
-        """
-        Set the value for the model object.
-
-        Allows setting using either a dict or from an already instantiated
-        MappingAttribute.
-        """
-        if validate:
-            self._raise_if_immutable_or_readonly("set", model_object)
-
-        value = self.deserialize(value, validate=validate)
-        previous_value = model_object._attributes.get(self._attribute_name, None)
-
-        changed = not (
-            self._attribute_name in model_object._attributes and previous_value == value
-        )
-
-        # `_set_modified()` will raise exception if change is not allowed
-        model_object._set_modified(self._attribute_name, changed, validate)
-
-        # deregister the previous value and register the new one
-        if previous_value is not None:
-            previous_value._remove_model_object(model_object)
-        if value is not None:
-            value._add_model_object(model_object, self._attribute_name)
-
-        model_object._attributes[self._attribute_name] = value
-
-    def __delete__(self, model_object, validate=True):
-        if validate:
-            self._raise_if_immutable_or_readonly("delete", model_object)
-
-        previous_value = model_object._attributes.pop(self._attribute_name, None)
-        if previous_value is not None:
-            previous_value._remove_model_object(model_object)
-
     def serialize(self, attrs, jsonapi_format=False):
-        """
-        Serialize the provided values to a JSON-serializable dict based on the class
-        definition for this MappingAttribute.
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
         """
         if attrs is None:
             return None
@@ -634,7 +785,7 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
             data = attrs
 
         serialized = {}
-        for name, value in iteritems(data):
+        for name, value in data.items():
             attribute_type = self.get_attribute_type(name)
             if attribute_type._serializable:
                 serialized[name] = attribute_type.serialize(value)
@@ -642,12 +793,19 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
         return serialized
 
     def deserialize(self, values, validate=True):
-        """
-        Deserialize the provided JSON-deserialized dict to a MappingAttribute
-        based on the class definition.
+        """Deserialize a value to a native type.
 
-        If the provided values are already a MappingAttribute, that value is
-        returned.
+        See :meth:`Attribute.deserialize`.
+
+        Parameters
+        ----------
+        values : dict or MappingAttribute
+            The values to use to initialize a new MappingAttribute.
+
+        Returns
+        -------
+        MappingAttribute
+            A `MappingAttribute` instance with the given values.
         """
         if values is None:
             return None
@@ -655,9 +813,9 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
         if isinstance(values, MappingAttribute):
             return values
 
-        if not isinstance(values, dict):
+        if not isinstance(values, Mapping):
             raise AttributeValidationError(
-                "Expected a dict or {} for attribute {}".format(
+                "Expected a mapping or {} for attribute {}".format(
                     self.__class__.__name__, self._attribute_name
                 )
             )
@@ -666,8 +824,7 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
 
 
 class ResolutionUnit(str, Enum):
-    """
-    Valid units of measure for Resolution.
+    """Valid units of measure for Resolution.
 
     Attributes
     ----------
@@ -732,6 +889,10 @@ class Resolution(MappingAttribute):
             self.unit = r.unit
 
     def serialize(self, value, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
+        """
         # Serialize a single number as is - this supports filtering resolution
         # attributes by meters.
         if isinstance(value, numbers.Number):
@@ -742,6 +903,21 @@ class Resolution(MappingAttribute):
             )
 
     def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        See :meth:`Attribute.deserialize`.
+
+        Parameters
+        ----------
+        values : dict or MappingAttribute
+            The values to use to initialize a new MappingAttribute.  The two keys that
+            can be used as ``value`` and ``unit``.
+
+        Returns
+        -------
+        Resolution
+            A `Resolution` instance with the given values.
+        """
         if isinstance(value, str):
             match = self._pattern.match(value)
             unit = match and match.group(2).lower().rstrip(".")
@@ -757,8 +933,7 @@ class Resolution(MappingAttribute):
 
 
 class File(MappingAttribute):
-    """
-    File definition for an Image.
+    """File definition for an Image.
 
     Attributes
     ----------
@@ -793,29 +968,50 @@ class File(MappingAttribute):
     provider_href = Attribute()
 
 
-class ListAttribute(Attribute):
-    """
-    Base class for attributes that are lists. Can be set using
-    a list of items, or an instance of a List derived type.
+class ListAttribute(ModelAttribute, MutableSequence):
+    """Base class for attributes that are lists.
 
-    ListAttributes behave similarly to MappingAttributes but provide additional operations
-    that allow list-like interactions (slicing, appending, etc.)
+    Can be set using an iterable of items.  The type is the same for all list items,
+    and created automatically to hold a given deserialized value if it's not already
+    that type.  The type can reject the value with a `AttributeValidationError`.
 
-    One major difference between ListAttributes and MappingAttributes is that ListAttributes
-    shouldn't be subclassed or instantiated directly - it's much easier for users to construct
-    and assign a list, and allow __set__ handle the coercing the values to the correct type.
+    ListAttributes behave similarly to MappingAttributes but provide additional
+    operations that allow list-like interactions (slicing, appending, etc.)
+
+    One major difference between ListAttributes and MappingAttributes is that
+    ListAttributes shouldn't be subclassed or instantiated directly - it's much easier
+    for users to construct and assign a list or iterable, and allow __set__ to handle
+    the coercing of the values to the correct type.
+
+    Parameters
+    ----------
+    attribute_type : Attribute
+        All items in the ListAttribute must be of the same Attribute type.  The actual
+        values must be able to be deserialized by that Attribute type.
+    items : Iterable
+        An iterable of items from which to construct the initial content.
+    validate : bool
+        Whether or not to verify whether the values are valid for the given Attribute
+        type.  ``True`` be default.
+
+    Raises
+    ------
+    AttributeValidationError
+        If any of the values cannot be successfully deserialized to the given attribute
+        type.
 
     Example
     -------
     This is the recommended way to instantiate a ListAttribute, you don't maintain a
     reference to the original list but the semantics are much cleaner.
-    >>> class FakeCatalogObject(CatalogObject):
+
+    >>> class ExampleCatalogObject(CatalogObject):
     ...     files = ListAttribute(File)
     >>> files = [
     ...     File(href="https://foo.com/1"),
     ...     File(href="https://foo.com/2"),
     ... ]
-    >>> obj = FakeCatalogObject(files=files)
+    >>> obj = ExampleCatalogObject(files=files)
     >>> assert obj.files is not files
     """
 
@@ -825,108 +1021,77 @@ class ListAttribute(Attribute):
     # from AttributeMeta.__new__, after it's already been instantiated
     _attribute_name = None
 
-    def __init__(self, item_cls, validate=True, items=None, **kwargs):
-        self._model_objects = {}
-        self._item_cls = item_cls
-        self._item_type = item_cls(**kwargs)
+    def __init__(self, attribute_type, validate=True, items=None, **kwargs):
+        if isinstance(attribute_type, Attribute):
+            self._attribute_type = attribute_type
+        elif issubclass(attribute_type, Attribute):
+            self._attribute_type = attribute_type(**kwargs)
+        else:
+            raise AttributeValidationError(
+                "First argument for {} must be an Attribute type".format(
+                    self.__class__.__name__
+                )
+            )
+        self._items = []
 
         super(ListAttribute, self).__init__(**kwargs)
 
-        # ensure we can deserilize data correctly
-        if not issubclass(item_cls, Attribute):
-            raise AttributeValidationError("expected an Attribute type")
+        if items is not None:
+            self._items = [
+                self._instantiate_item(item, validate=validate) for item in items
+            ]
 
-        if items is None:
-            items = []
-        self._items = [
-            self._instantiate_item(item, validate=validate) for item in items
-        ]
+    def __repr__(self):
+        """A string representation for this instance.
+
+        The representation is broken up over multiple lines for readability.
+        """
+        sections = []
+        for item in self._items:
+            sections.append(repr(item))
+        return "[" + ", ".join(sections) + "]"
 
     def _instantiate_item(self, item, validate=True, add_model=True):
-        """
-        Handles coercing the provided value to the correct type, optionally
-        registers this instance of the ListAttribute as the model object for
-        MappingAttribute item types.
-        """
-        if isinstance(self._item_type, MappingAttribute):
-            # create a new instance
-            if not isinstance(item, MappingAttribute):
-                item = self._item_cls(validate=validate, **item)
+        """Handles coercing the provided value to the correct type.
 
-            if add_model:
-                # no attribute name is provided because the object are
-                # accessed by index on this ListAttribute's _items
-                item._add_model_object(self, None)
+        Handles coercing the provided value to the correct type, optionally registers
+        this instance of the ListAttribute as the model object for ModelAttribute
+        item types.
+        """
+        item = self._attribute_type.deserialize(item, validate=validate)
+
+        if add_model and isinstance(item, ModelAttribute):
+            item._add_model_object(self)
 
         return item
 
-    def _add_model_object(self, model_object, attr_name):
+    def serialize(self, values, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
         """
-        Register a model object and attribute name.
+        if values is None:
+            return None
 
-        Since we can reuse one MappingAttribute object across different
-        model object types, each with potentially different attribute names,
-        we register the name of the attribute on the specific model object,
-        to avoid propagating bad changes.
-        """
-        id_ = id(model_object)
-        self._model_objects[id_] = (model_object, attr_name)
-
-    def _remove_model_object(self, model_object):
-        id_ = id(model_object)
-        try:
-            del self._model_objects[id_]
-        except KeyError:
-            pass
-
-    def _set_modified(self, attr_name=None, changed=True, validate=True):
-        """
-        Trigger modifications on all the referenced model objects.
-
-        Attributes expect to provide an argument to this function, but we ignore
-        it in the case of List/MappingAttribute types because they retain
-        references to the names of attributes on objects they're attached to.
-        """
-        for model_object, attr_name in itervalues(self._model_objects):
-            model_object._set_modified(attr_name, changed, validate)
-
-    def __set__(self, model_object, value, validate=True):
-        if validate:
-            self._raise_if_immutable_or_readonly("set", model_object)
-
-        value = self.deserialize(value, validate=validate)
-        previous_value = model_object._attributes.get(self._attribute_name, None)
-
-        changed = not (
-            self._attribute_name in model_object._attributes and previous_value == value
-        )
-
-        # `_set_modified()` will raise exception if change is not allowed
-        model_object._set_modified(self._attribute_name, changed, validate)
-
-        # deregister and register
-        if previous_value is not None:
-            previous_value._remove_model_object(model_object)
-        if value is not None:
-            value._add_model_object(model_object, self._attribute_name)
-
-        model_object._attributes[self._attribute_name] = value
-
-    def __delete__(self, model_object, validate=True):
-        if validate:
-            self._raise_if_immutable_or_readonly("delete", model_object)
-
-        previous_value = model_object._attributes.pop(self._attribute_name, None)
-        if previous_value is not None:
-            previous_value._remove_model_object(model_object)
+        return [
+            self._attribute_type.serialize(v, jsonapi_format=jsonapi_format)
+            for v in values
+        ]
 
     def deserialize(self, values, validate=True):
-        """
-        Deserialize the provided JSON-deserialized dict to a ListAttribute
-        based on the class definition.
+        """Deserialize a value to a native type.
 
-        If the provided values are already a ListAttribute, that value is
-        returned.
+        See :meth:`Attribute.deserialize`.
+
+        Parameters
+        ----------
+        values : Iterable
+            An iterator used to initialize a `ListAttribute` instance.
+
+        Returns
+        -------
+        ListAttribute
+            A `ListAttribute` with the given items.
         """
         if values is None:
             return None
@@ -934,168 +1099,31 @@ class ListAttribute(Attribute):
         if isinstance(values, ListAttribute):
             return values
 
-        if not isinstance(values, list):
+        if not isinstance(values, Iterable) or isinstance(values, (str, bytes)):
             raise AttributeValidationError(
-                "Expected a list or {} for attribute {}".format(
-                    self.__class__.__name__, self._attribute_name
+                "{} expects a non-string/bytes iterable for attribute {}, not {}".format(
+                    self.__class__.__name__,
+                    self._attribute_name,
+                    values.__class__.__name__,
                 )
             )
 
         # ensures subclasses are handled correctly
         type_ = type(self)
         return type_(
-            self._item_cls, validate=validate, items=values, **self._get_attr_params()
+            self._attribute_type,
+            validate=validate,
+            items=values,
+            **self._get_attr_params()
         )
 
-    def serialize(self, values, jsonapi_format=False):
-        """
-        Serialize the provided values to a JSON-serializable list based on the class definition for this
-        ListAttribute.
-        """
-        if values is None:
-            return None
-
-        return [
-            self._item_type.serialize(v, jsonapi_format=jsonapi_format) for v in values
-        ]
-
-    # list methods
-
-    def append(self, item):
-        """ Append object to the end of the list. """
-        self._raise_if_immutable_or_readonly(operation="append")
-
-        value = self._instantiate_item(item)
-
-        # `_set_modified()` will raise exception if change is not allowed
-        self._set_modified()
-        self._items.append(value)
-
-    # these two methods only appear on py3 lists
-    if PY3:
-
-        def clear(self):
-            """Remove all items from list."""
-            self._raise_if_immutable_or_readonly(operation="clear")
-
-            # `_set_modified()` will raise exception if change is not allowed
-            self._set_modified(changed=bool(self._items))
-            del self[:]
-
-        def copy(self):
-            """Return a shallow copy of the list."""
-            return self._items.copy()
-
-    def count(self, value):
-        """Return number of occurrences of value."""
-        new_value = self._instantiate_item(value, add_model=False)
-        return self._items.count(new_value)
-
-    def extend(self, other):
-        """Extend list by appending elements from the iterable."""
-        self._raise_if_immutable_or_readonly(operation="extend")
-
-        new_others = (self._instantiate_item(o) for o in other)
-
-        # `_set_modified()` will raise exception if change is not allowed
-        self._set_modified()
-        self._items.extend(new_others)
-
-    def index(self, value, *args):
-        """Return first index of value.
-
-        Raises ValueError if the value is not present.
-        """
-        # I don't like using varargs here because help(list.index) lists the signature as
-        # index(...) on python 2 and
-        # index(value, start=0, stop=9223372036854775807, /) on python 3
-        # in all cases, all parameters are positional only, and varars seems like the cleanest
-        # way to continue that in the absence of "/" notation
-        new_value = self._instantiate_item(value)
-        return self._items.index(new_value, *args)
-
-    def insert(self, index, value):
-        """Insert object before index."""
-        self._raise_if_immutable_or_readonly(operation="insert")
-
-        new_value = self._instantiate_item(value)
-
-        # `_set_modified()` will raise exception if change is not allowed
-        self._set_modified()
-        self._items.insert(index, new_value)
-
-    def pop(self, index=-1):
-        """
-        Remove and return item at index (default last).
-
-        Raises IndexError if list is empty or index is out of range.
-        """
-        self._raise_if_immutable_or_readonly(operation="pop")
-
-        # `_set_modified()` will raise exception if change is not allowed
-        self._set_modified()
-        popped = self._items.pop(index)
-
-        if isinstance(popped, MappingAttribute):
-            popped._remove_model_object(self)
-
-        return popped
-
-    def remove(self, value):
-        """Remove first occurrence of value.
-
-        Raises ValueError if the value is not present.
-        """
-        self._raise_if_immutable_or_readonly(operation="remove")
-        i = self.index(value)
-        self.pop(index=i)  # will set_modified
-
-    def reverse(self):
-        """Reverse *IN PLACE*."""
-        self._raise_if_immutable_or_readonly(operation="reverse")
-
-        new_items = list(self._items)
-        new_items.reverse()
-
-        # `_set_modified()` will raise exception if change is not allowed
-        self._set_modified(changed=(self._items != new_items))
-        self._items = new_items
-
-    # sort changed signatures between py2 and py3
-    if PY2:
-
-        def sort(self, cmp=None, key=None, reverse=False):
-            """Stable sort *IN PLACE*."""
-            self._raise_if_immutable_or_readonly(operation="sort")
-
-            new_items = list(self._items)
-            new_items.sort(cmp=cmp, key=key, reverse=reverse)
-
-            # `_set_modified()` will raise exception if change is not allowed
-            self._set_modified(changed=(self._items != new_items))
-            self._items = new_items
-
-    else:
-
-        def sort(self, key=None, reverse=False):
-            """Stable sort *IN PLACE*."""
-            self._raise_if_immutable_or_readonly(operation="sort")
-
-            new_items = list(self._items)
-            new_items.sort(key=key, reverse=reverse)
-
-            # `_set_modified()` will raise exception if change is not allowed
-            self._set_modified(changed=(self._items != new_items))
-            self._items = new_items
+    # MutableSequence methods
 
     def __getitem__(self, n):
         return self._items[n]
 
     def __setitem__(self, n, item):
-        # will throw IndexError which is what we want
-        # if previous value isn't set
-        self._raise_if_immutable_or_readonly(operation="__setitem__")
-
+        self._raise_if_immutable_or_readonly("set")
         previous_value = self._items[n]
 
         # handling slice assignment
@@ -1104,7 +1132,7 @@ class ListAttribute(Attribute):
                 iter(item)
             except TypeError:
                 # mimic the error you get from the builtin
-                raise TypeError("can only assign an iterable")
+                raise TypeError("Can only assign an iterable")
 
             new_item = list(self._instantiate_item(o) for o in item)
         else:
@@ -1112,6 +1140,7 @@ class ListAttribute(Attribute):
 
         # `_set_modified()` will raise exception if change is not allowed
         self._set_modified(changed=(previous_value != new_item))
+        # will throw IndexError which is what we want if previous value isn't set
         self._items[n] = new_item
 
         # slicing returns a list of items
@@ -1123,9 +1152,7 @@ class ListAttribute(Attribute):
                 val._remove_model_object(self)
 
     def __delitem__(self, n):
-        # will throw IndexError which is what we want
-        # if previous value isn't set
-        self._raise_if_immutable_or_readonly(operation="__delitem__")
+        self._raise_if_immutable_or_readonly("delete")
         previous_value = self._items[n]
 
         # slicing returns a list of items
@@ -1137,6 +1164,7 @@ class ListAttribute(Attribute):
                 val._remove_model_object(self)
 
         new_items = list(self._items)
+        # will throw IndexError which is what we want if previous value isn't set
         del new_items[n]
 
         # `_set_modified()` will raise exception if change is not allowed
@@ -1146,12 +1174,25 @@ class ListAttribute(Attribute):
     def __len__(self):
         return len(self._items)
 
+    def insert(self, index, value):
+        self._raise_if_immutable_or_readonly("insert")
+        new_value = self._instantiate_item(value)
+
+        # `_set_modified()` will raise exception if change is not allowed
+        self._set_modified()
+        self._items.insert(index, new_value)
+
+    # Remaining Sequence methods
+
     def __add__(self, other):
         # emulating how concatenation works for lists
-        if not isinstance(other, (list, ListAttribute)):
+        if not isinstance(other, Iterable) or isinstance(other, (str, bytes)):
             raise TypeError(
-                'can only concatenate list (not "{}") to list'.format(
-                    other.__class__.__name__
+                "{} can only concatenate non-string/bytes iterables"
+                "for attribute {}, not {}".format(
+                    self.__class__.__name__,
+                    self._attribute_name,
+                    other.__class__.__name__,
                 )
             )
 
@@ -1160,54 +1201,40 @@ class ListAttribute(Attribute):
         new_other = [self._instantiate_item(o, add_model=False) for o in other]
         return self._items + new_other
 
-    def __contains__(self, value):
-        new_value = self._instantiate_item(value)
-        return new_value in self._items
-
-    def __iadd__(self, other):
-        # this raises a TypeError which mimics normal list behavior when given
-        # a non-iterable "other"
-        self._raise_if_immutable_or_readonly(operation="__iadd__")
-
-        new_other = (self._instantiate_item(o) for o in other)
-
-        # `_set_modified()` will raise exception if change is not allowed
-        self._set_modified(changed=bool(other))
-        self._items += new_other
-        return self
+    def __mul__(self, other):
+        return self._items * other
 
     def __imul__(self, other):
-        self._raise_if_immutable_or_readonly(operation="__imul__")
-
         # `_set_modified()` will raise exception if change is not allowed
         self._set_modified(changed=(self._items and other != 1))
         self._items *= other
         return self
 
-    def __iter__(self):
-        return iter(self._items)
-
-    def __mul__(self, other):
-        return self._items * other
-
-    def __repr__(self):
-        sections = []
-        for item in self._items:
-            sections.append(repr(item))
-        return "[" + ",\n".join(sections) + "\n]\n"
-
-    def __reversed__(self):
-        return reversed(self._items)
-
     def __rmul__(self, other):
         return self._items * other
 
-    # comparison magicmethods
+    def copy(self):
+        """Return a shallow copy of the list."""
+        return self._items.copy()
+
+    def sort(self, key=None, reverse=False):
+        self._raise_if_immutable_or_readonly("insert")
+
+        """Stable sort *IN PLACE*."""
+        new_items = list(self._items)
+        new_items.sort(key=key, reverse=reverse)
+
+        # `_set_modified()` will raise exception if change is not allowed
+        self._set_modified(changed=(self._items != new_items))
+        self._items = new_items
+
+    # Comparison methods
+
     def __eq__(self, other):
         if self is other:
             return True
 
-        if not isinstance(other, (self.__class__, list)):
+        if not isinstance(other, (self.__class__, Iterable)):
             return False
 
         if len(self) != len(other):
@@ -1219,33 +1246,174 @@ class ListAttribute(Attribute):
 
         return True
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     def __ge__(self, other):
         if isinstance(other, self.__class__):
             other = other._items
 
-        # allow list __ge__ to raise/return depending on python version
+        # allow list __ge__ to raise/return
         return self._items >= other
 
     def __gt__(self, other):
         if isinstance(other, self.__class__):
             other = other._items
 
-        # allow list __gt__ to raise/return depending on python version
+        # allow list __gt__ to raise/return
         return self._items > other
 
     def __le__(self, other):
         if isinstance(other, self.__class__):
             other = other._items
 
-        # allow list __le__ to raise/return depending on python version
+        # allow list __le__ to raise/return
         return self._items <= other
 
     def __lt__(self, other):
         if isinstance(other, self.__class__):
             other = other._items
 
-        # allow list __lt__ to raise/return depending on python version
+        # allow list __lt__ to raise/return
         return self._items < other
+
+
+class ExtraPropertiesAttribute(ModelAttribute, MutableMapping):
+    """An attribute that contains properties (key/value pairs).
+
+    Can be set using a dictionary of items or any mapping, or an instance of this
+    attribute.  All keys must be string and values can be string or numbers.
+    ExtraPropertiesAttribute behaves similar to dictionaries.
+
+    Example
+    -------
+    This is the recommended way to instantiate a ExtraPropertiesAttribute, you don't
+    maintain a reference to the original list but the semantics are much cleaner.
+
+    >>> class ExampleCatalogObject(CatalogObject):
+    ...     extra_properties = ExtraPropertiesAttribute()
+    >>> properties = {
+    ...     "prop1": "value1",
+    ...     "prop2": "value2",
+    ... }
+    >>> obj = ExampleCatalogObject(extra_properties=properties)
+    >>> assert obj.extra_properties is not properties
+    >>> obj.extra_properties["prop3"] = "value3"
+    """
+
+    # this value is ONLY used for for instances of the attribute that
+    # are attached to class definitions. It's confusing to put this
+    # instantiation into __init__, because the value is only ever set
+    # from AttributeMeta.__new__, after it's already been instantiated
+    _attribute_name = None
+
+    def __init__(self, value=None, validate=True, **kwargs):
+        self._items = {}
+
+        super(ExtraPropertiesAttribute, self).__init__(**kwargs)
+
+        if value is not None:
+            if validate:
+                for key, val in value.items():
+                    self.validate_key_and_value(key, val)
+
+            self._items.update(value)
+
+    def __repr__(self):
+        return "{{{}}}".format(
+            ", ".join(
+                [
+                    "{}: {}".format(repr(key), repr(value))
+                    for key, value in self._items.items()
+                ]
+            )
+        )
+
+    def validate_key_and_value(self, key, value):
+        """Validate the key and value.
+
+        The key must be a string, and the value either a string or a number.
+        """
+        if not isinstance(key, str):
+            raise AttributeValidationError(
+                "Keys for property {} must be strings: {}".format(
+                    self._attribute_name, key
+                )
+            )
+        elif not isinstance(value, (str, int, float)):
+            raise AttributeValidationError(
+                "The value for property {} with key {} must be a string or a number: {}".format(
+                    self._attribute_name, key, value
+                )
+            )
+
+    def serialize(self, value, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
+        """
+        if value is None:
+            return None
+
+        # Shallow copy
+        return dict(value._items)
+
+    def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        See :meth:`Attribute.deserialize`.
+
+        Parameters
+        ----------
+        value : dict or ExtraPropertiesAttribute
+            A set of values to use to initialize a new ExtraPropertiesAttribute
+            instance.  All keys must be strings, and values can be strings or numbers.
+
+        Returns
+        -------
+        ExtraPropertiesAttribute
+            A `ExtraPropertiesAttribute` with the given items.
+        """
+        if value is None:
+            return None
+
+        if isinstance(value, ExtraPropertiesAttribute):
+            return value
+
+        if validate:
+            if not isinstance(value, Mapping):
+                raise AttributeValidationError(
+                    "A ExtraPropertiesAttribute expects a mapping: {}".format(
+                        self._attribute_name
+                    )
+                )
+
+            for key, val in value.items():
+                self.validate_key_and_value(key, val)
+
+        return ExtraPropertiesAttribute(
+            value, validate=validate, **self._get_attr_params()
+        )
+
+    # Mapping methods
+
+    def __getitem__(self, key):
+        return self._items[key]
+
+    def __setitem__(self, key, value):
+        self._raise_if_immutable_or_readonly("set")
+        self.validate_key_and_value(key, value)
+
+        old_value = self._items.get(key, None)
+        changed = key not in self._items or old_value != value
+        self._set_modified(changed=changed)
+        self._items[key] = value
+
+    def __delitem__(self, key):
+        self._raise_if_immutable_or_readonly("delete")
+        if key in self._items:
+            self._set_modified(changed=True)
+        del self._items[key]
+
+    def __iter__(self):
+        return iter(self._items)
+
+    def __len__(self):
+        return len(self._items)

@@ -5,8 +5,6 @@ from copy import deepcopy
 from datetime import datetime
 from enum import Enum
 
-from six import PY2, PY3
-
 from ..catalog_base import CatalogObject
 from ..attributes import (
     Attribute,
@@ -19,6 +17,7 @@ from ..attributes import (
     Resolution,
     File,
     AttributeValidationError,
+    ExtraPropertiesAttribute,
 )
 from ..band import BandType
 
@@ -294,12 +293,10 @@ class TestAttributes(unittest.TestCase):
             [Mapping:
               nested: Nested:
                 dt: 2019-02-01 00:00:00+00:00
-                foo: zap,
-            Mapping:
+                foo: zap, Mapping:
               nested: Nested:
                 dt: 2019-02-02 00:00:00+00:00
-                foo: zip
-            ]"""
+                foo: zip]"""
 
         assert m_repr.strip("\n") == textwrap.dedent(match_str)
 
@@ -449,13 +446,8 @@ class TestAttributes(unittest.TestCase):
         assert map_la <= [mapping1, mapping2]
         assert map_la < [mapping1, mapping2, mapping2]
 
-        # py2 and py3 differ when comparing lists to non-Container types
-        # this isn't exhaustive, just use to keep track of this odd fact
-        if PY2:
-            assert la >= 1
-        else:
-            with pytest.raises(TypeError):
-                la >= 1
+        with pytest.raises(TypeError):
+            la >= 1
 
         # other methods
         assert la.count("bye") == 1
@@ -465,14 +457,13 @@ class TestAttributes(unittest.TestCase):
         assert map_la.index(mapping2) == 1
 
         # copy is only in py3
-        if PY3:
-            copy = la.copy()
-            assert copy is not la
-            assert copy == la
+        copy = la.copy()
+        assert copy is not la
+        assert copy == la
 
-            map_copy = map_la.copy()
-            assert map_copy is not map_la
-            assert map_copy == map_la
+        map_copy = map_la.copy()
+        assert map_copy is not map_la
+        assert map_copy == map_la
 
         # none of these should have changed the list
         assert la == ["hi", "bye"]
@@ -480,8 +471,8 @@ class TestAttributes(unittest.TestCase):
         assert not model_object.is_modified
 
         # methods that create copies are shallow and don't detach the ListAttribute from
-        # contained MappingAttributes, so modifications to those contained objects still propagate
-        # changes
+        # contained MappingAttributes, so modifications to those contained objects
+        # still propagate changes
         new_map_la = map_la + [dict(bar="baz")]
         assert len(new_map_la) == 3
         assert not model_object.is_modified
@@ -517,12 +508,11 @@ class TestAttributes(unittest.TestCase):
         assert model_object.is_modified
         model_object._clear_modified_attributes()
 
-        if PY3:
-            la.append(0)
-            la.clear()
-            assert la == []
-            assert model_object.is_modified
-            model_object._clear_modified_attributes()
+        la.append(0)
+        la.clear()
+        assert la == []
+        assert model_object.is_modified
+        model_object._clear_modified_attributes()
 
         la.extend([1, 2])
         assert la == [1, 2]
@@ -649,15 +639,14 @@ class TestAttributes(unittest.TestCase):
         mapping1.bar = "baz"
         assert not model_object.is_modified
 
-        if PY3:
-            la.append(dict(bar="foo"))
-            new_mapping = la[0]
-            la.clear()
-            assert la == []
-            assert model_object.is_modified
-            model_object._clear_modified_attributes()
-            new_mapping.bar = "baz"
-            assert not model_object.is_modified
+        la.append(dict(bar="foo"))
+        new_mapping = la[0]
+        la.clear()
+        assert la == []
+        assert model_object.is_modified
+        model_object._clear_modified_attributes()
+        new_mapping.bar = "baz"
+        assert not model_object.is_modified
 
         la.extend([dict(bar="foo"), dict(bar="baz")])
         assert la == [Mapping(bar="foo"), Mapping(bar="baz")]
@@ -697,6 +686,26 @@ class TestAttributes(unittest.TestCase):
         model_object._clear_modified_attributes()
         la[-1].bar = 4
         assert model_object.is_modified
+
+    def test_listattribute_extra_properties_attribute(self):
+        la = ListAttribute(ExtraPropertiesAttribute(mutable=False))
+        la.append({"one": "two"})
+        la.append({"three": "four"})
+        assert la[0] == ExtraPropertiesAttribute({"one": "two"})
+        assert la[1] == ExtraPropertiesAttribute({"three": "four"})
+
+        with self.assertRaises(AttributeValidationError):
+            la[1]["three"] = "six"
+
+        class ExtraPropertiesListCatalogObject(CatalogObject):
+            epl = ListAttribute(ExtraPropertiesAttribute)
+
+        eplco = ExtraPropertiesListCatalogObject(
+            epl=[{"one": "two"}, {"three": "four"}], _saved=True
+        )
+        assert not eplco.is_modified
+        eplco.epl.append({"five": "six", "seven": "eight"})
+        assert eplco.is_modified
 
     def test_deepcopy(self):
         r = Resolution(value=2, unit="meters")
@@ -908,3 +917,78 @@ class TestAttributes(unittest.TestCase):
         Foo.r = "1.234 °"
         with self.assertRaises(AttributeValidationError):
             Resolution("m")
+
+    def test_create_and_assign_property_attribute(self):
+        d = {"one": "two", "three": "four"}
+        p = ExtraPropertiesAttribute(d)
+        assert p.serialize(p) == d
+        assert p.serialize(p) is not d
+
+        class Foo(CatalogObject):
+            properties = ExtraPropertiesAttribute()
+
+        f = Foo(properties=d)
+        f = Foo(properties=ExtraPropertiesAttribute(d))
+        f.properties = d
+        f.properties = ExtraPropertiesAttribute(d)
+
+    def test_model_for_property_attribute(self):
+        class Foo(CatalogObject):
+            properties = ExtraPropertiesAttribute()
+
+        d = {"one": "two", "three": "four"}
+        f = Foo(properties=d)
+        assert f.is_modified
+
+        p = f.properties
+        f.properties = d
+        f._clear_modified_attributes()
+        assert not f.is_modified
+
+        p["five"] = "six"
+        assert not f.is_modified
+
+        f.properties["seven"] = "eight"
+        assert f.is_modified
+        f._clear_modified_attributes()
+
+        del f.properties["seven"]
+        assert f.is_modified
+        assert f.properties == d
+        assert f.properties != p
+
+        del p["five"]
+        assert f.properties == p
+        assert f.properties is not p
+
+    def test_create_bad_property_attribute(self):
+        with self.assertRaises(AttributeValidationError):
+            ExtraPropertiesAttribute({15: "something"})
+        with self.assertRaises(AttributeValidationError):
+            ExtraPropertiesAttribute({"something": object()})
+        with self.assertRaises(AttributeValidationError):
+            ExtraPropertiesAttribute({"something": {"something_else": 15}})
+
+        class Foo(CatalogObject):
+            properties = ExtraPropertiesAttribute()
+
+        with self.assertRaises(AttributeValidationError):
+            Foo(properties=True)
+        with self.assertRaises(AttributeValidationError):
+            f = Foo(properties={})
+            f.properties = object()
+
+    def test_readonly_property_attribute(self):
+        class Foo(CatalogObject):
+            properties = ExtraPropertiesAttribute(readonly=True)
+
+        d = {"one": "two", "three": "four"}
+        f = Foo(properties=d, _saved=True)
+        assert not f.is_modified
+
+        with self.assertRaises(AttributeValidationError):
+            f.properties = d
+        with self.assertRaises(AttributeValidationError):
+            f.properties["six"] = "seven"
+        with self.assertRaises(AttributeValidationError):
+            del f.properties["one"]
