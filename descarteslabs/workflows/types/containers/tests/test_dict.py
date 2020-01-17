@@ -100,6 +100,20 @@ def test_init_wrongtype():
         Dict[Str, Int](Str("sdf"))
 
 
+def test_from_pairs():
+    pairs = List[Tuple[Str, Int]]([("foo", 1), ("bar", 2)])
+    dct = Dict[Str, Int].from_pairs(pairs)
+    assert isinstance(dct, Dict)
+
+    pairs = [("foo", 1), ("bar", 2)]
+    dct = Dict[Str, Int].from_pairs(pairs)
+    assert isinstance(dct, Dict)
+
+    with pytest.raises(TypeError):
+        # wrong Dict type
+        Dict[Int, Int].from_pairs(pairs)
+
+
 def test_getitem_type():
     dct = Dict[Str, Int](a=1, b=2)
     assert isinstance(dct["a"], Int)

@@ -2,7 +2,7 @@ import six
 
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import ProxyTypeError, GenericProxytype
+from ..core import ProxyTypeError, GenericProxytype, typecheck_promote
 from ..primitives import Str
 from .list_ import List
 from .tuple_ import Tuple
@@ -122,6 +122,24 @@ class Dict(GenericProxytype):
                 "Dict keys are of type {}, but indexed with {}".format(kt, item)
             )
         return vt._from_apply("getitem", self, item)
+
+    @classmethod
+    @typecheck_promote(lambda cls: List[Tuple[cls._type_params]])
+    def from_pairs(cls, pairs):
+        """
+        Construct a Dict from a list of key-value pairs.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Dict, Str, Int
+        >>> pairs = [("foo", 1), ("bar", 2), ("baz", 3)]
+        >>> my_dict = Dict[Str, Int].from_pairs(pairs)
+        >>> my_dict
+        <descarteslabs.workflows.types.containers.dict_.Dict[Str, Int] object at 0x...>
+        >>> my_dict.compute() # doctest: +SKIP
+        {'foo': 1, 'bar': 2, 'baz': 3}
+        """
+        return cls._from_apply("dict.from_pairs", pairs)
 
     def keys(self):
         """Get a list of all the dictionary keys.
