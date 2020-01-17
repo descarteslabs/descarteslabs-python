@@ -899,3 +899,41 @@ class TestProduct(ClientTestCase):
 
         with self.assertRaises(AttributeValidationError):
             p.extra_properties["five"] = object()
+
+    @responses.activate
+    def test_bad_warnings(self):
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "attributes": {
+                        "readers": [],
+                        "writers": [],
+                        "owners": ["org:descarteslabs"],
+                        "modified": "2019-06-11T23:31:33.714883Z",
+                        "created": "2019-06-11T23:31:33.714883Z",
+                        "is_core": False,
+                    },
+                    "type": "product",
+                    "id": "product_id",
+                },
+                "meta": {
+                    "warnings": [
+                        {
+                            "category": "DeprecationWarning",
+                            "bad_message": "This is a test of a DeprecationWarning",
+                        },
+                        "some_other_garbage",
+                    ]
+                },
+                "jsonapi": {"version": "1.0"},
+            },
+        )
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            p = Product.get("product_id", client=self.client)
+            assert isinstance(p, Product)
+            assert p.id == "product_id"
+
+        assert len(w) == 0
