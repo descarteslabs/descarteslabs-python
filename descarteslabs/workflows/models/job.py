@@ -116,6 +116,14 @@ class Job(object):
         -------
         Job
             The job waiting to be executed.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Job, Int, parameter
+        >>> my_int = Int(1) + parameter("other_int", Int)
+        >>> job = Job.build(my_int, {"other_int": 10})
+        >>> # the job does not execute until `.execute` is called
+        >>> job.execute() # doctest: +SKIP
         """
         if channel is None:
             # NOTE(gabe): we look up the variable from the `_channel` package here,
@@ -144,7 +152,13 @@ class Job(object):
 
     @classmethod
     def get(cls, id, client=None):
-        "Get a currently-running `Job` by its ID."
+        """Get a currently-running `Job` by its ID.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Job
+        >>> job = Job.get('3754676080bbb2b857fbc04a3e48f6312732e1bc42e0bd7b') # doctest: +SKIP
+        """
         if client is None:
             client = Client()
 
@@ -161,6 +175,12 @@ class Job(object):
 
         This method is idempotent: calling it multiple times on the same `Job` object
         will only trigger execution once.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Job, Int
+        >>> job = Job.build(Int(1), {})
+        >>> job.execute() # doctest: +SKIP
         """
         if self.id is not None:
             return
@@ -180,23 +200,58 @@ class Job(object):
     def refresh(self):
         """
         Refresh the attributes and status of the job.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Job, Int
+        >>> job = Job.build(Int(1), {})
+        >>> job.execute() # doctest: +SKIP
+        >>> job.stage # doctest: +SKIP
+        STAGE_UNKNOWN
+        >>> job.refresh() # doctest: +SKIP
+        >>> job.stage # doctest: +SKIP
+        STAGE_DONE
         """
         message = self._client.api["GetJob"](
             job_pb2.GetJobRequest(id=self.id), timeout=self._client.DEFAULT_TIMEOUT
         )
         self._message = message
 
-    def cancel(self):
-        """
-        Cancel a running job.
-        """
-        message = self._client.api["CancelJob"](
-            job_pb2.CancelJobRequest(id=self.id), timeout=self._client.DEFAULT_TIMEOUT
-        )
-        self._message = message
+    # Not implemented on the backend yet
+    # def cancel(self):
+    #     """
+    #     Cancel a running job.
+
+    #     Example
+    #     -------
+    #     >>> from descarteslabs.workflows import Job, Int, parameter
+    #     >>> my_int = Int(1) + parameter("other_int", Int)
+    #     >>> job = Job.build(my_int, {"other_int": 10})
+    #     >>> job.execute() # doctest: +SKIP
+    #     >>> job.cancel() # doctest: +SKIP
+    #     """
+    #     message = self._client.api["CancelJob"](
+    #         job_pb2.CancelJobRequest(id=self.id), timeout=self._client.DEFAULT_TIMEOUT
+    #     )
+    #     self._message = message
 
     def watch(self):
-        "Generator that yields ``self`` each time an update to the Job occurs."
+        """Generator that yields ``self`` each time an update to the Job occurs.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Job, Int
+        >>> job = Job.build(Int(1), {})
+        >>> job.execute() # doctest: +SKIP
+        >>> for job in job.watch(): # doctest: +SKIP
+        ...     print(job.stage)
+        STAGE_UNKNOWN
+        STAGE_PREPARING
+        STAGE_PREPARING
+        STAGE_RUNNING
+        STAGE_SAVING
+        STAGE_DONE
+        """
         # Note(Winston): If we need to support long-running connections,
         # this is where we would infinitely loop on `grpc.StatusCode.DEADLINE_EXCEEDED` exceptions.
         # Currently, this will timeout as specified with `client.STREAM_TIMEOUT`, (as of writing, 24 hours).
@@ -231,9 +286,10 @@ class Job(object):
 
         Example
         -------
-        >>> import descarteslabs.workflows as wf
-        >>> job = wf.Int(1).compute()  # doctest: +SKIP
-        >>> job.result(timeout=10)  # doctest: +SKIP
+        >>> from descarteslabs.workflows import Job, Int
+        >>> job = Job.build(Int(1), {})
+        >>> job.execute() # doctest: +SKIP
+        >>> job.result() # doctest: +SKIP
         1
         """
 

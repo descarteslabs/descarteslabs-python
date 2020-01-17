@@ -28,7 +28,7 @@ def parameter(name, type_):
     -------
     >>> from descarteslabs.workflows import Float, parameter
     >>> my_program = Float(0.42) * parameter("scale", Float)
-    >>> my_program.compute(scale=wf.Float(0.99))  # doctest: +SKIP
+    >>> my_program.compute(scale=Float(0.99))  # doctest: +SKIP
     """
 
     if name.isdigit():

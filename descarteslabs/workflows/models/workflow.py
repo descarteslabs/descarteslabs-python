@@ -81,6 +81,14 @@ class Workflow(object):
         Returns
         -------
         Workflow
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow, Int
+        >>> my_int = Int(1) + 1
+        >>> workflow = Workflow.build(my_int, name="one-plus-one", description="The result of 1 plus 1")
+        >>> workflow
+        <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
         """
         typespec = serialize_typespec(type(proxy_object))
         graft = proxy_object.graft
@@ -110,6 +118,13 @@ class Workflow(object):
         Returns
         -------
         Workflow
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow
+        >>> workflow = Workflow.get('0eb6676dbe2de3ceb1990d9669f4ceb35c9309795d842c86') # doctest: +SKIP
+        >>> workflow # doctest: +SKIP
+        <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
         """
         if client is None:
             client = Client()
@@ -120,43 +135,60 @@ class Workflow(object):
         )
         return cls._from_proto(message, client)
 
-    def update(self, proxy_object=None, name=None, description=None):
-        """
-        Update the proxy object and/or metadata of this Workflow.
+    # Not implemented on the backend yet
+    # def update(self, proxy_object=None, name=None, description=None):
+    #     """
+    #     Update the proxy object and/or metadata of this Workflow.
 
-        Values given as None are left unchanged.
+    #     Values given as None are left unchanged.
 
-        Parameters
-        ----------
-        proxy_object: Proxytype or None, default None
-            New proxy object for this workflow
-        name: str or None, default None
-            New name for the Workflow
-        description: str or None, default None
-            New long-form description of this Workflow. Markdown is supported.
-        """
-        message = self._message
-        if proxy_object is not None:
-            typespec = serialize_typespec(type(proxy_object))
-            message.serialized_typespec = json.dumps(typespec)
-            message.serialized_graft = json.dumps(proxy_object.graft)
+    #     Parameters
+    #     ----------
+    #     proxy_object: Proxytype or None, default None
+    #         New proxy object for this workflow
+    #     name: str or None, default None
+    #         New name for the Workflow
+    #     description: str or None, default None
+    #         New long-form description of this Workflow. Markdown is supported.
 
-        if name is not None:
-            message.name = name
-        if description is not None:
-            message.description = description
+    #     Example
+    #     -------
+    #     >>> from descarteslabs.workflows import Workflow, Int
+    #     >>> my_int = Int(1) + 1
+    #     >>> workflow = Workflow.build(my_int, name="one-plus-one", description="The result of 1 plus 1")
+    #     >>> updated = workflow.update(name="new-name", description="new-description") # doctest: +SKIP
+    #     """
+    #     message = self._message
+    #     if proxy_object is not None:
+    #         typespec = serialize_typespec(type(proxy_object))
+    #         message.serialized_typespec = json.dumps(typespec)
+    #         message.serialized_graft = json.dumps(proxy_object.graft)
 
-        new_message = self._client.api["UpdateWorkflow"](
-            workflow_pb2.UpdateWorkflowRequest(workflow=message),
-            timeout=self._client.DEFAULT_TIMEOUT,
-        )
-        self._message = new_message
+    #     if name is not None:
+    #         message.name = name
+    #     if description is not None:
+    #         message.description = description
+
+    #     new_message = self._client.api["UpdateWorkflow"](
+    #         workflow_pb2.UpdateWorkflowRequest(workflow=message),
+    #         timeout=self._client.DEFAULT_TIMEOUT,
+    #     )
+    #     self._message = new_message
 
     def save(self):
         """
         Persist this Workflow.
 
         After saving, ``self.id`` will contain the new ID of the Workflow.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow, Int
+        >>> my_int = Int(1) + 1
+        >>> workflow = Workflow.build(my_int, name="one-plus-one", description="The result of 1 plus 1")
+        >>> workflow.save() # doctest: +SKIP
+        >>> workflow.id # doctest: +SKIP
+        '0eb6676dbe2de3ceb1990d9669f4ceb35c9309795d842c86'
         """
         message = self._client.api["CreateWorkflow"](
             workflow_pb2.CreateWorkflowRequest(workflow=self._message),

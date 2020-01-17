@@ -112,6 +112,15 @@ class XYZ(object):
         Returns
         -------
         XYZ
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image, XYZ
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> rgb = img.pick_bands("red green blue")
+        >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
+        >>> xyz # doctest: +SKIP
+        <descarteslabs.workflows.models.xyz.XYZ object at 0x...>
         """
         typespec = serialize_typespec(type(proxy_object))
         graft = proxy_object.graft
@@ -141,6 +150,13 @@ class XYZ(object):
         Returns
         -------
         XYZ
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import XYZ
+        >>> xyz = XYZ.get('24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6') # doctest: +SKIP
+        >>> xyz # doctest: +SKIP
+        <descarteslabs.workflows.models.xyz.XYZ object at 0x...>
         """
         if client is None:
             client = Client()
@@ -155,6 +171,16 @@ class XYZ(object):
         Persist this XYZ layer.
 
         After saving, ``self.id`` will contain the new ID of the XYZ layer.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image, XYZ
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> rgb = img.pick_bands("red green blue")
+        >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
+        >>> xyz.save() # doctest: +SKIP
+        >>> xyz.id # doctest: +SKIP
+        '24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6'
         """
         message = self._client.api["CreateXYZ"](
             xyz_pb2.CreateXYZRequest(xyz=self._message),
@@ -211,6 +237,18 @@ class XYZ(object):
 
         TypeError
             If the ``scales`` or ``parameters`` are of invalid type.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> red = img.pick_bands("red")
+        >>> viz = red ** wf.parameter("exponent", wf.Float)
+        >>> xyz = wf.XYZ.build(viz, name="Red band raised to exponent")
+        >>> xyz.save() # doctest: +SKIP
+        >>> xyz.url("some_session", colormap="magma", scales=[(0.2, 0.8)], exponent=2.5) # doctest: +SKIP
+        'https://workflows.descarteslabs.com/master/xyz/0d21037edb4bdd16b735f24bb3bff6d4202a71c20404b101/
+         {z}/{x}/{y}.png?session_id=some_session&colormap=magma&scales=[[0.2, 0.8]]&exponent=2.5'
         """
         if self.id is None:
             raise ValueError(
@@ -352,13 +390,39 @@ class XYZ(object):
         error: descarteslabs.common.proto.xyz_pb2.XYZError
             Errors in protobuf message objects,
             with fields ``code``, ``message``, ``timestamp``, ``session_id``.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image, XYZ
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> rgb = img.pick_bands("red green blue")
+        >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
+        >>> url = xyz.url(session_id="some_session") # doctest: +SKIP
+        >>> for error in xyz.iter_tile_errors("some_session", start_datetime=datetime.datetime.now()): # doctest: +SKIP
+        ...     print(error.code, error.message)
+        >>>     # any errors that occur loading tiles from the generated URL will be printed here
         """
         return _tile_error_stream(
             self.id, session_id, start_datetime, client=self._client
         )
 
     def error_listener(self):
-        "An `XYZErrorListener` to trigger callbacks when errors occur computing tiles"
+        """An `XYZErrorListener` to trigger callbacks when errors occur computing tiles.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image, XYZ
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> rgb = img.pick_bands("red green blue")
+        >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
+        >>> url = xyz.url(session_id="some_session") # doctest: +SKIP
+        >>> listener = xyz.error_listener() # doctest: +SKIP
+        >>> errors_log = []
+        >>> listener.add_callback(lambda error: errors_log.append(error.message)) # doctest: +SKIP
+        >>> listener.listen("some_session") # doctest: +SKIP
+        >>> # any errors that occur loading tiles from the generated URL will be appended
+        >>> # to `errors_log` in the background
+        """
         return XYZErrorListener(self.id, client=self._client)
 
     @property
@@ -464,6 +528,14 @@ class XYZErrorListener(object):
             The function will be called within a separate thread,
             therefore it must behave thread-safely. Any errors raised by the function will
             terminate the listener.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import XYZErrorListener
+        >>> listener = XYZErrorListener("xyz_id") # doctest: +SKIP
+        >>> def callback(msg):
+        ...     print(msg.code, msg.message)
+        >>> listener.add_callback(callback) # doctest: +SKIP
         """
         self.callbacks.append(callback)
 
@@ -478,6 +550,12 @@ class XYZErrorListener(object):
             See `XYZ.url` for more information.
         start_datetime: datetime.datetime
             Only listen for errors occuring after this datetime.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import XYZErrorListener
+        >>> listener = XYZErrorListener("xyz_id") # doctest: +SKIP
+        >>> listener.listen("session-id", start_datetime=datetime.datetime.now()) #doctest: +SKIP
         """
         self._rendezvous = _tile_error_stream(
             self.xyz_id, session_id, start_datetime=start_datetime, client=self._client
@@ -487,7 +565,16 @@ class XYZErrorListener(object):
         self._thread.start()
 
     def running(self):
-        "bool: whether this is an active listener"
+        """bool: whether this is an active listener
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import XYZErrorListener
+        >>> listener = XYZErrorListener("xyz_id") # doctest: +SKIP
+        >>> listener.listen("session-id", start_datetime=datetime.datetime.now()) # doctest: +SKIP
+        >>> listener.running() # doctest: +SKIP
+        True
+        """
         return self._thread and self._thread.is_alive()
 
     def stop(self, timeout=None):
@@ -495,6 +582,15 @@ class XYZErrorListener(object):
         Cancel and clean up the listener. Blocks up to ``timeout`` seconds, or forever if None.
 
         Returns True if the background thread stopped successfully.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import XYZErrorListener
+        >>> listener = XYZErrorListener("xyz_id") # doctest: +SKIP
+        >>> listener.listen("session-id", start_datetime=datetime.datetime.now()) # doctest: +SKIP
+        >>> listener.stop() # doctest: +SKIP
+        >>> listener.running() # doctest: +SKIP
+        False
         """
         self._rendezvous.cancel()
         self._thread.join(timeout)

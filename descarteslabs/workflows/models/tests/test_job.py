@@ -134,19 +134,19 @@ class TestJob(object):
         )
         assert job._message == refresh_message
 
-    def test_cancel(self, stub):
-        message = job_pb2.Job(id="foo")
-        cancel_message = job_pb2.Job(
-            id="foo", status=job_pb2.STATUS_FAILURE, terminated=True
-        )
+    # def test_cancel(self, stub):
+    #     message = job_pb2.Job(id="foo")
+    #     cancel_message = job_pb2.Job(
+    #         id="foo", status=job_pb2.STATUS_FAILURE, terminated=True
+    #     )
 
-        job = Job(message)
-        stub.return_value.CancelJob.return_value = cancel_message
-        job.cancel()
-        stub.return_value.CancelJob.assert_called_with(
-            job_pb2.CancelJobRequest(id=job.id), timeout=Client.DEFAULT_TIMEOUT
-        )
-        assert job._message == cancel_message
+    #     job = Job(message)
+    #     stub.return_value.CancelJob.return_value = cancel_message
+    #     job.cancel()
+    #     stub.return_value.CancelJob.assert_called_with(
+    #         job_pb2.CancelJobRequest(id=job.id), timeout=Client.DEFAULT_TIMEOUT
+    #     )
+    #     assert job._message == cancel_message
 
     def test_watch(self, stub):
         id_ = "foo"
