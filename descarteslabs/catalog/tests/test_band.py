@@ -2,9 +2,11 @@ import pytest
 import responses
 import textwrap
 
+from descarteslabs.client.exceptions import NotFoundError
+
 from .base import ClientTestCase
 from ..attributes import AttributeValidationError
-from ..band import Band, MaskBand, SpectralBand, DerivedBand
+from ..band import Band, MaskBand, SpectralBand, DerivedBand, GenericBand, MicrowaveBand
 from ..product import Product
 
 
@@ -418,3 +420,70 @@ class TestDerivedBand(ClientTestCase):
         name = "This is ań @#$^*% ïñvalid name!!!!"
         valid_name = Band.make_valid_name(name)
         assert valid_name == "This_is_a_valid_name_"
+
+    @responses.activate
+    def test_get_incorrect_band_type(self):
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "type": "band",
+                    "id": "p1:b1",
+                    "attributes": {"type": "spectral"},
+                },
+                "jsonapi": {"version": "1.0"},
+            },
+        )
+        assert MaskBand.get("p1:b1", client=self.client) is None
+        assert DerivedBand.get("p1:b1", client=self.client) is None
+        assert SpectralBand.get("p1:b1", client=self.client) is not None
+        assert Band.get("p1:b1", client=self.client) is not None
+
+    @responses.activate
+    def test_get_many_incorrect_band_type(self):
+        self.mock_response(
+            responses.PUT,
+            {
+                "data": [
+                    {"type": "band", "id": "p1:b1", "attributes": {"type": "spectral"}},
+                    {"type": "band", "id": "p1:b2", "attributes": {"type": "spectral"}},
+                    {"type": "band", "id": "p1:b3", "attributes": {"type": "mask"}},
+                    {
+                        "type": "band",
+                        "id": "p1:b4",
+                        "attributes": {"type": "microwave"},
+                    },
+                ],
+                "jsonapi": {"version": "1.0"},
+            },
+        )
+        all_bands = ["p1:b1", "p1:b2", "p1:b3", "p1:b4"]
+        more_bands = ["p1:b1", "p1:b2", "p1:b3", "p1:b4", "p1:b5"]
+
+        assert len(MaskBand.get_many(all_bands, client=self.client)) == 1
+        assert len(GenericBand.get_many(all_bands, client=self.client)) == 0
+        assert len(SpectralBand.get_many(all_bands, client=self.client)) == 2
+        assert len(Band.get_many(all_bands, client=self.client)) == 4
+
+        with self.assertRaises(NotFoundError):
+            GenericBand.get_many(more_bands, client=self.client)
+
+        assert (
+            len(
+                GenericBand.get_many(
+                    more_bands, ignore_missing=True, client=self.client
+                )
+            )
+            == 0
+        )
+        assert (
+            len(
+                MicrowaveBand.get_many(
+                    more_bands, ignore_missing=True, client=self.client
+                )
+            )
+            == 1
+        )
+        assert (
+            len(Band.get_many(more_bands, ignore_missing=True, client=self.client)) == 4
+        )

@@ -439,6 +439,10 @@ class CatalogObjectBase(AttributeEqualityMixin):
         and you can use :py:meth:`save` to commit those changes and update the Descartes
         Labs catalog object.  Also see the example for :py:meth:`save`.
 
+        For bands, if you request a specific band type, for example
+        :meth:`SpectralBand.get`, you will only receive that type.  Use :meth:`Band.get`
+        to receive any type.
+
         Parameters
         ----------
         id : str
@@ -464,6 +468,9 @@ class CatalogObjectBase(AttributeEqualityMixin):
             return None
 
         model_class = cls._get_model_class(data)
+        if not issubclass(model_class, cls):
+            return None
+
         return model_class(
             id=data["id"],
             client=client,
@@ -525,6 +532,10 @@ class CatalogObjectBase(AttributeEqualityMixin):
         All returned Descartes Labs catalog objects will be in the
         `~descarteslabs.catalog.DocumentState.SAVED` state.  Also see :py:meth:`get`.
 
+        For bands, if you request a specific band type, for example
+        :meth:`SpectralBand.get_many`, you will only receive that type.  Use
+        :meth:`Band.get_many` to receive any type.
+
         Parameters
         ----------
         ids : list(str)
@@ -573,7 +584,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
                 )
 
         objects = [
-            cls._get_model_class(obj)(
+            model_class(
                 id=obj["id"],
                 client=client,
                 _saved=True,
@@ -582,6 +593,8 @@ class CatalogObjectBase(AttributeEqualityMixin):
                 **obj["attributes"]
             )
             for obj in raw_objects
+            for model_class in (cls._get_model_class(obj),)
+            if issubclass(model_class, cls)
         ]
 
         return objects
@@ -620,7 +633,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
     @classmethod
     @check_derived
     def search(cls, client=None):
-        """A search query for all object of the type this class represents.
+        """A search query for all objects of the type this class represents.
 
         Parameters
         ----------
