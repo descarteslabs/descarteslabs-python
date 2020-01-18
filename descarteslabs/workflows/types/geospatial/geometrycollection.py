@@ -34,6 +34,7 @@ class GeometryCollection(GeometryCollectionStruct, Geometry):
     """
 
     _constructor = "GeometryCollection.create"
+    _element_type = Geometry
 
     @classmethod
     def from_geojson(cls, geojson):

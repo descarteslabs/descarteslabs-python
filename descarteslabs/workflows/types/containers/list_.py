@@ -83,3 +83,7 @@ class List(GenericProxytype, CollectionMixin):
         raise TypeError(
             "Proxy List object is not iterable, since it contains an unknown number of elements"
         )
+
+    @property
+    def _element_type(self):
+        return self._type_params[0]

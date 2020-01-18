@@ -3,29 +3,49 @@ from ..core import ProxyTypeError
 from .list_ import List
 from .tuple_ import Tuple
 
+from ..primitives import Str
+from ..geospatial import ImageCollection, FeatureCollection, GeometryCollection
 
-def zip(*lists):
+zippable_types = (List, ImageCollection, FeatureCollection, GeometryCollection, Str)
+
+
+def zip(*sequences):
     """
     Returns a `List` of `Tuple`, where each tuple contains the i-th element
-    from each of the argument `List`. All arguments must be Proxytype `List`.
+    from each of the arguments. All arguments must be Proxytype `List`,
+    `~.geospatial.ImageCollection`, `~.geospatial.FeatureCollection`,
+    `~.geospatial.GeometryCollection`, or `Str`.
+
     The returned `List` is truncated in length to the length of the shortest
     argument sequence.
 
     Example
     -------
-    >>> from descarteslabs.workflows import List, Int, Str, zip
-    >>> my_list = List[Int]([1, 2, 3, 4])
-    >>> other_list = List[Str](["foo", "bar", "baz"])
-    >>> zip(my_list, other_list).compute() # doctest: +SKIP
-    [(1, 'foo'), (2, 'bar'), (3, 'baz')]
+    >>> import descarteslabs.workflows as wf
+    >>> imagecollection = wf.ImageCollection.from_id("sentinel-2:L1C")
+    >>> int_list = wf.List[wf.Int]([1, 2, 3, 4])
+    >>> str_list = wf.List[wf.Str](["foo", "bar", "baz"])
+    >>> zipped = wf.zip(imagecollection, int_list, str_list)
+    >>> zipped
+    <descarteslabs.workflows.types.containers.list_.List[Tuple[Image, Int, Str]] object at 0x...>
+    >>> wf.zip(int_list, str_list, wf.Str("abcdefg")).compute() # doctest: +SKIP
+    [(1, 'foo', 'a'), (2, 'bar', 'b'), (3, 'baz', 'c')]
     """
-    for i, seq in enumerate(lists):
-        if not isinstance(seq, List):
+    for i, seq in enumerate(sequences):
+        if not isinstance(seq, zippable_types):
             raise ProxyTypeError(
-                "All arguments to 'zip' must be Proxytype Lists, "
-                "but argument {} is {!r}: {}".format(i, type(seq).__name__, seq)
+                "All arguments to 'zip' must be Proxytype sequences (the Python equivalents are not supported): "
+                "one of {}.\n"
+                "Argument {} is {!r}: {}".format(
+                    ", ".join(t.__name__ for t in zippable_types),
+                    i,
+                    type(seq).__name__,
+                    seq,
+                )
             )
-    itemtypes = tuple(l._type_params[0] for l in lists)
+    itemtypes = tuple(
+        seq._element_type if not isinstance(seq, Str) else Str for seq in sequences
+    )
     tuple_type = Tuple[itemtypes]
 
-    return List[tuple_type]._from_apply("zip", *lists)
+    return List[tuple_type]._from_apply("zip", *sequences)
