@@ -104,7 +104,9 @@ Guide <catalog_v2_guide>`.
   ~descarteslabs.catalog.ImageUploadType
   ~descarteslabs.catalog.OverviewResampler
   ~descarteslabs.catalog.ImageUploadStatus
-  ~descarteslabs.catalog.UploadError
+  ~descarteslabs.catalog.ImageUploadEvent
+  ~descarteslabs.catalog.ImageUploadEventType
+  ~descarteslabs.catalog.ImageUploadEventSeverity
 
 :nontoc_heading:`Exceptions`
 

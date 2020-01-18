@@ -629,35 +629,33 @@ class TestProduct(ClientTestCase):
                 "meta": {"count": 1},
                 "data": [
                     {
+                        "type": "image_upload",
+                        "id": "1",
                         "attributes": {
+                            "created": "2020-01-01T00:00:00.000000Z",
+                            "modified": "2020-01-01T00:00:00.000000Z",
                             "product_id": product_id,
                             "image_id": product_id + ":image",
-                            "end_datetime": "2019-01-01T00:10:00Z",
-                            "start_datetime": "2019-01-01T00:00:00Z",
-                            "status": "success",
+                            "start_datetime": "2020-01-01T00:00:00Z",
+                            "end_datetime": "2020-01-01T00:00:00Z",
+                            "status": ImageUploadStatus.SUCCESS.value,
                         },
-                        "id": "cDE=:umyimage",
-                        "type": "image_upload",
                     },
                     {
                         "type": "image_upload",
-                        "id": "ZGVzY2FydGVzbGFiczptb2xseS10ZXN0LXVwbG9hZA==:blue.tif",
+                        "id": "2",
                         "attributes": {
-                            "status": "failure",
+                            "created": "2020-01-01T00:00:00.000000Z",
+                            "modified": "2020-01-01T00:00:00.000000Z",
                             "product_id": product_id,
                             "image_id": product_id + ":image2",
-                            "errors": [
-                                {
-                                    "component": "worker",
-                                    "stacktrace": "Traceback",
-                                    "error_type": "NotFoundError",
-                                    "component_id": "a107d4d2_751402964324890",
-                                }
-                            ],
+                            "start_datetime": "2020-01-01T00:00:00Z",
+                            "end_datetime": "2020-01-01T00:00:00Z",
+                            "status": ImageUploadStatus.FAILURE.value,
                         },
                     },
                 ],
-                "links": {"self": "https://www.example.com/catalog/v2/uploads"},
+                "links": {},
                 "jsonapi": {"version": "1.0"},
             },
         )
@@ -668,20 +666,14 @@ class TestProduct(ClientTestCase):
 
         assert len(uploads) == 2
         upload = uploads[0]
-        assert upload.id == "cDE=:umyimage"
+        assert upload.id == "1"
         assert upload.product_id == product_id
         assert upload.image_id == product_id + ":image"
         assert upload.status == ImageUploadStatus.SUCCESS
         failed_upload = uploads[1]
+        assert failed_upload.id == "2"
+        assert failed_upload.image_id == product_id + ":image2"
         assert failed_upload.status == ImageUploadStatus.FAILURE
-        assert isinstance(failed_upload.errors, ListAttribute)
-        assert failed_upload.errors[0].component == "worker"
-
-        with pytest.raises(AttributeValidationError):
-            failed_upload.errors.append({"error_type": "ImportError"})
-
-        with pytest.raises(AttributeValidationError):
-            failed_upload.errors[0].component = "task-controller"
 
     @responses.activate
     def test_derived_bands(self):

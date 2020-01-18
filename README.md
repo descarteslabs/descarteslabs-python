@@ -13,9 +13,15 @@ Changelog
 | After January 1st, 2020, all future client library releases will be Python 3 only. For more information, please contact support@descarteslabs.com. For porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html. |
 | --------- |
 
-### Added
+### Catalog client
+- There is an entirely new backend supporting the asynchronous upload of image files and ndarrays with
+  the catalog client. There are minor changes to the `ImageUpload` class (added the `events` member,
+  updated the fields in the `errors` member, and removed the `job_id` member) but the basic interface is
+  unchanged and so most client code will also function without changes.
+- It is now possible to cancel an image upload, but good luck typing the command fast enough before it completes!
 
 ### Changed
+- The client package is now distributed on PyPI as a Python 3 wheel and will install/update more quickly.
 
 ### Workflows - Added
 - `wf.concat` for concatentating `Image` and `ImageCollection` objects

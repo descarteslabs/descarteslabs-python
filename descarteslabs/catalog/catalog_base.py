@@ -89,8 +89,8 @@ class CatalogObjectMeta(AttributeMeta):
 
 
 @add_metaclass(CatalogObjectMeta)
-class CatalogObject(AttributeEqualityMixin):
-    """A base class for all representations of objects in the Descartes Labs catalog."""
+class CatalogObjectBase(AttributeEqualityMixin):
+    """A base class for all representations of top level objects in the Catalog API."""
 
     # The following can be overridden by subclasses to customize behavior:
 
@@ -136,53 +136,9 @@ class CatalogObject(AttributeEqualityMixin):
         *Filterable, sortable*.
         """,
     )
-    owners = ListAttribute(
-        Attribute,
-        doc="""list(str), optional: User, group, or organization IDs that own this object.
-
-        Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
-        delete, and change access to this object.  :ref:`See this note <product_note>`.
-
-        *Filterable*.
-        """,
-    )
-    readers = ListAttribute(
-        Attribute,
-        doc="""list(str), optional: User, group, or organization IDs that can read this object.
-
-        Will be empty by default.  This attribute is only available to the `owners`
-        of a catalog object.  :ref:`See this note <product_note>`.
-        """,
-    )
-    writers = ListAttribute(
-        Attribute,
-        doc="""list(str), optional: User, group, or organization IDs that can edit this object.
-
-        Writers will also have read permission.  Writers will be empty by default.
-        See note below.  This attribute is only available to the `owners` of a catalog
-        object.  :ref:`See this note <product_note>`.
-        """,
-    )
-    extra_properties = ExtraPropertiesAttribute(
-        doc="""dict, optional: A dictionary of up to 50 key/value pairs.
-
-        The keys of this dictonary must be strings, and the values of this dictionary
-        can be strings or numbers.  This allows for more structured custom metadata
-        to be associated with objects.
-        """
-    )
-    tags = ListAttribute(
-        Attribute,
-        doc="""list, optional: A list of up to 20 tags.
-
-        The tags may support the classification and custom filtering of objects.
-
-        *Filterable*.
-        """,
-    )
 
     def __new__(cls, *args, **kwargs):
-        return _new_abstract_class(cls, CatalogObject)
+        return _new_abstract_class(cls, CatalogObjectBase)
 
     def __init__(self, **kwargs):
         self.delete = self._instance_delete
@@ -297,13 +253,13 @@ class CatalogObject(AttributeEqualityMixin):
         ):
             return False
 
-        return super(CatalogObject, self).__eq__(other)
+        return super(CatalogObjectBase, self).__eq__(other)
 
     def __setattr__(self, name, value):
         if not (name.startswith("_") or isinstance(value, MethodType)):
             # Make sure it's a proper attribute
             self._get_attribute_type(name)
-        super(CatalogObject, self).__setattr__(name, value)
+        super(CatalogObjectBase, self).__setattr__(name, value)
 
     @property
     def is_modified(self):
@@ -949,3 +905,56 @@ class CatalogObject(AttributeEqualityMixin):
                     related_objects[(serialized["type"], serialized["id"])] = related
 
         return related_objects
+
+
+class CatalogObject(CatalogObjectBase):
+    """A base class for all representations of objects in the Descartes Labs catalog.
+    """
+
+    owners = ListAttribute(
+        Attribute,
+        doc="""list(str), optional: User, group, or organization IDs that own this object.
+
+        Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
+        delete, and change access to this object.  :ref:`See this note <product_note>`.
+
+        *Filterable*.
+        """,
+    )
+    readers = ListAttribute(
+        Attribute,
+        doc="""list(str), optional: User, group, or organization IDs that can read this object.
+
+        Will be empty by default.  This attribute is only available to the `owners`
+        of a catalog object.  :ref:`See this note <product_note>`.
+        """,
+    )
+    writers = ListAttribute(
+        Attribute,
+        doc="""list(str), optional: User, group, or organization IDs that can edit this object.
+
+        Writers will also have read permission.  Writers will be empty by default.
+        See note below.  This attribute is only available to the `owners` of a catalog
+        object.  :ref:`See this note <product_note>`.
+        """,
+    )
+    extra_properties = ExtraPropertiesAttribute(
+        doc="""dict, optional: A dictionary of up to 50 key/value pairs.
+
+        The keys of this dictonary must be strings, and the values of this dictionary
+        can be strings or numbers.  This allows for more structured custom metadata
+        to be associated with objects.
+        """
+    )
+    tags = ListAttribute(
+        Attribute,
+        doc="""list, optional: A list of up to 20 tags.
+
+        The tags may support the classification and custom filtering of objects.
+
+        *Filterable*.
+        """,
+    )
+
+    def __new__(cls, *args, **kwargs):
+        return _new_abstract_class(cls, CatalogObject)

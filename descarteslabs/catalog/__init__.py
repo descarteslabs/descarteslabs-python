@@ -23,7 +23,9 @@ from .image_upload import (
     ImageUploadStatus,
     ImageUploadType,
     OverviewResampler,
-    UploadError,
+    ImageUploadEvent,
+    ImageUploadEventType,
+    ImageUploadEventSeverity,
 )
 from .search import ImageSearch, Search, SummaryResult
 from .catalog_base import (
@@ -63,6 +65,9 @@ __all__ = [
     "Image",
     "ImageSearch",
     "ImageUpload",
+    "ImageUploadEvent",
+    "ImageUploadEventSeverity",
+    "ImageUploadEventType",
     "ImageUploadOptions",
     "ImageUploadStatus",
     "ImageUploadType",
@@ -81,5 +86,4 @@ __all__ = [
     "TaskState",
     "UnsavedObjectError",
     "UpdatePermissionsTaskStatus",
-    "UploadError",
 ]

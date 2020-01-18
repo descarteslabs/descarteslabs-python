@@ -6,7 +6,6 @@ import textwrap
 import datetime
 from tempfile import NamedTemporaryFile
 import os.path
-from base64 import b64encode
 import warnings
 
 import shapely.geometry
@@ -234,7 +233,7 @@ class TestImage(ClientTestCase):
         ]
 
     @patch("descarteslabs.catalog.image.Image._gcs_upload_service")
-    @patch("descarteslabs.catalog.image_upload.ImageUpload._POLLING_INTERVAL", 1)
+    @patch("descarteslabs.catalog.image_upload.ImageUpload._POLLING_INTERVALS", [1])
     @responses.activate
     def test_upload(self, upload_mock):
         with NamedTemporaryFile(suffix=".tif", delete=False) as f:
@@ -243,14 +242,8 @@ class TestImage(ClientTestCase):
                 # this is copied from the upload impl, should go away with new ingest
                 product_id = "p1"
                 image_name = "image"
-                image_key = os.path.basename(f.name)
-                upload_id = "{}:{}".format(
-                    b64encode(product_id.encode("utf-8")).decode("utf-8"), image_key
-                )
-                user_sub = "user:123"
-                upload_url = "https:www.example.com/bucket/{}/{}/{}".format(
-                    product_id, user_sub, image_key
-                )
+                image_id = "{}:{}".format(product_id, image_name)
+                upload_url = "https:www.fake.com/1"
 
                 self.mock_response(
                     responses.GET,
@@ -270,19 +263,33 @@ class TestImage(ClientTestCase):
                     },
                 )
                 self.mock_response(
+                    responses.HEAD,
+                    {
+                        "errors": [
+                            {
+                                "detail": "Object not found: {}".format(image_id),
+                                "status": "404",
+                                "title": "Object not found",
+                            }
+                        ],
+                        "jsonapi": {"version": "1.0"},
+                    },
+                    status=404,
+                )
+                self.mock_response(
                     responses.POST,
                     {
                         "data": {
-                            "attributes": {
-                                "product_id": product_id,
-                                "image_id": "{}:{}".format(product_id, image_name),
-                                "modified": "2019-01-02T03:04:05Z",
-                                "created": "2019-01-02T03:04:05Z",
-                                "resumable_urls": [upload_url],
-                                "status": "uploading",
-                            },
                             "type": "image_upload",
-                            "id": upload_id,
+                            "id": "1",
+                            "attributes": {
+                                "created": "2019-01-02T03:04:05Z",
+                                "modified": "2019-01-02T03:04:05Z",
+                                "product_id": product_id,
+                                "image_id": image_id,
+                                "resumable_urls": [upload_url],
+                                "status": ImageUploadStatus.TRANSFERRING.value,
+                            },
                         },
                         "jsonapi": {"version": "1.0"},
                     },
@@ -291,37 +298,53 @@ class TestImage(ClientTestCase):
                     responses.PATCH,
                     {
                         "data": {
-                            "attributes": {
-                                "product_id": product_id,
-                                "image_id": "{}:{}".format(product_id, image_name),
-                                "modified": "2019-01-02T03:04:06Z",
-                                "created": "2019-01-02T03:04:05Z",
-                                "status": "pending",
-                                "job_id": "job_id",
-                                "events": [],
-                                "errors": [],
-                            },
                             "type": "image_upload",
-                            "id": upload_id,
+                            "id": "1",
+                            "attributes": {
+                                "created": "2019-01-02T03:04:05Z",
+                                "modified": "2019-01-02T03:04:06Z",
+                                "product_id": product_id,
+                                "image_id": image_id,
+                                "status": ImageUploadStatus.PENDING.value,
+                            },
                         },
                         "jsonapi": {"version": "1.0"},
                     },
                 )
-                self.mock_response(responses.GET, None, 404)
+                self.mock_response(
+                    responses.GET,
+                    {
+                        "data": {
+                            "type": "image_upload",
+                            "id": "1",
+                            "attributes": {
+                                "created": "2019-01-02T03:04:05Z",
+                                "modified": "2019-01-02T03:04:06Z",
+                                "product_id": product_id,
+                                "image_id": image_id,
+                                "status": ImageUploadStatus.SUCCESS.value,
+                            },
+                        },
+                        "jsonapi": {"version": "1.0"},
+                    },
+                )
                 self.mock_response(
                     responses.GET,
                     {
                         "data": {
                             "attributes": {
+                                "readers": [],
+                                "writers": [],
+                                "owners": ["org:descarteslabs"],
+                                "modified": "2019-06-11T23:31:33.714883Z",
+                                "created": "2019-06-11T23:31:33.714883Z",
+                                "name": image_name,
                                 "product_id": product_id,
-                                "image_id": "{}:{}".format(product_id, image_name),
-                                "status": "success",
-                                "job_id": "job_id",
-                                "events": [],
-                                "errors": [],
+                                "acquired": "2001-01-01T00:00:00Z",
+                                "geometry": self.geometry,
                             },
-                            "type": "image_upload",
-                            "id": upload_id,
+                            "type": "image",
+                            "id": image_id,
                         },
                         "jsonapi": {"version": "1.0"},
                     },
@@ -340,7 +363,7 @@ class TestImage(ClientTestCase):
                 os.unlink(f.name)
 
         assert image.state == DocumentState.UNSAVED
-        assert upload.id == upload_id
+        assert upload.id == "1"
         assert upload.product_id == product_id
         assert upload.image_id == image.id
         assert upload.status == ImageUploadStatus.PENDING
@@ -355,7 +378,7 @@ class TestImage(ClientTestCase):
         # of the updated Image...
 
     @patch("descarteslabs.catalog.image.Image._gcs_upload_service")
-    @patch("descarteslabs.catalog.image_upload.ImageUpload._POLLING_INTERVAL", 1)
+    @patch("descarteslabs.catalog.image_upload.ImageUpload._POLLING_INTERVALS", [1])
     @responses.activate
     def test_upload_multi_file(self, upload_mock):
         with NamedTemporaryFile(suffix=".tif", delete=False) as f1:
@@ -366,19 +389,9 @@ class TestImage(ClientTestCase):
                     # this is copied from the upload impl, should go away with new ingest
                     product_id = "p1"
                     image_name = "image"
-                    user_sub = "user:123"
-                    image_key1 = os.path.basename(f1.name)
-                    upload_url1 = "https:www.example.com/bucket/{}/{}/{}".format(
-                        product_id, user_sub, image_key1
-                    )
-                    image_key2 = os.path.basename(f2.name)
-                    upload_id2 = "{}:{}".format(
-                        b64encode(product_id.encode("utf-8")).decode("utf-8"),
-                        image_key2,
-                    )
-                    upload_url2 = "https:www.example.com/bucket/{}/{}/{}".format(
-                        product_id, user_sub, image_key2
-                    )
+                    image_id = "{}:{}".format(product_id, image_name)
+                    upload_url1 = "https:www.fake.com/1"
+                    upload_url2 = "https:www.fake.com/2"
 
                     self.mock_response(
                         responses.GET,
@@ -398,19 +411,33 @@ class TestImage(ClientTestCase):
                         },
                     )
                     self.mock_response(
+                        responses.HEAD,
+                        {
+                            "errors": [
+                                {
+                                    "detail": "Object not found: {}".format(image_id),
+                                    "status": "404",
+                                    "title": "Object not found",
+                                }
+                            ],
+                            "jsonapi": {"version": "1.0"},
+                        },
+                        status=404,
+                    )
+                    self.mock_response(
                         responses.POST,
                         {
                             "data": {
-                                "attributes": {
-                                    "product_id": product_id,
-                                    "image_id": "{}:{}".format(product_id, image_name),
-                                    "modified": "2019-01-02T03:04:05Z",
-                                    "created": "2019-01-02T03:04:05Z",
-                                    "resumable_urls": [upload_url1, upload_url2],
-                                    "status": "uploading",
-                                },
                                 "type": "image_upload",
-                                "id": upload_id2,
+                                "id": "1",
+                                "attributes": {
+                                    "created": "2019-01-02T03:04:05Z",
+                                    "modified": "2019-01-02T03:04:05Z",
+                                    "product_id": product_id,
+                                    "image_id": image_id,
+                                    "resumable_urls": [upload_url1, upload_url2],
+                                    "status": ImageUploadStatus.TRANSFERRING.value,
+                                },
                             },
                             "jsonapi": {"version": "1.0"},
                         },
@@ -419,37 +446,53 @@ class TestImage(ClientTestCase):
                         responses.PATCH,
                         {
                             "data": {
-                                "attributes": {
-                                    "product_id": product_id,
-                                    "image_id": "{}:{}".format(product_id, image_name),
-                                    "modified": "2019-01-02T03:04:06Z",
-                                    "created": "2019-01-02T03:04:05Z",
-                                    "status": "pending",
-                                    "job_id": "job_id",
-                                    "events": [],
-                                    "errors": [],
-                                },
                                 "type": "image_upload",
-                                "id": upload_id2,
+                                "id": "1",
+                                "attributes": {
+                                    "created": "2019-01-02T03:04:05Z",
+                                    "modified": "2019-01-02T03:04:05Z",
+                                    "product_id": product_id,
+                                    "image_id": image_id,
+                                    "status": ImageUploadStatus.PENDING.value,
+                                },
                             },
                             "jsonapi": {"version": "1.0"},
                         },
                     )
-                    self.mock_response(responses.GET, None, 404)
+                    self.mock_response(
+                        responses.GET,
+                        {
+                            "data": {
+                                "type": "image_upload",
+                                "id": "1",
+                                "attributes": {
+                                    "created": "2019-01-02T03:04:05Z",
+                                    "modified": "2019-01-02T03:04:05Z",
+                                    "product_id": product_id,
+                                    "image_id": image_id,
+                                    "status": ImageUploadStatus.SUCCESS.value,
+                                },
+                            },
+                            "jsonapi": {"version": "1.0"},
+                        },
+                    )
                     self.mock_response(
                         responses.GET,
                         {
                             "data": {
                                 "attributes": {
+                                    "readers": [],
+                                    "writers": [],
+                                    "owners": ["org:descarteslabs"],
+                                    "modified": "2019-06-11T23:31:33.714883Z",
+                                    "created": "2019-06-11T23:31:33.714883Z",
+                                    "name": image_name,
                                     "product_id": product_id,
-                                    "image_id": "{}:{}".format(product_id, image_name),
-                                    "status": "success",
-                                    "job_id": "job_id",
-                                    "events": [],
-                                    "errors": [],
+                                    "acquired": "2001-01-01T00:00:00Z",
+                                    "geometry": self.geometry,
                                 },
-                                "type": "image_upload",
-                                "id": upload_id2,
+                                "type": "image",
+                                "id": image_id,
                             },
                             "jsonapi": {"version": "1.0"},
                         },
@@ -469,7 +512,7 @@ class TestImage(ClientTestCase):
                     os.unlink(f2.name)
 
         assert image.state == DocumentState.UNSAVED
-        assert upload.id == upload_id2
+        assert upload.id == "1"
         assert upload.product_id == product_id
         assert upload.image_id == image.id
         assert upload.status == ImageUploadStatus.PENDING
@@ -485,20 +528,14 @@ class TestImage(ClientTestCase):
         # of the updated Image...
 
     @patch("descarteslabs.catalog.image.Image._gcs_upload_service")
-    @patch("descarteslabs.catalog.image_upload.ImageUpload._POLLING_INTERVAL", 1)
+    @patch("descarteslabs.catalog.image_upload.ImageUpload._POLLING_INTERVALS", [1])
     @responses.activate
     def test_upload_ndarray(self, upload_mock):
         # this is copied from the upload impl, should go away with new ingest
         product_id = "p1"
         image_name = "image"
-        image_key = "npsave"
-        upload_id = "{}:{}{}".format(
-            b64encode(product_id.encode("utf-8")).decode("utf-8"), image_key, ".tif"
-        )
-        user_sub = "user:123"
-        upload_url = "https:www.example.com/bucket/{}/{}/{}".format(
-            product_id, user_sub, image_key
-        )
+        image_id = "{}:{}".format(product_id, image_name)
+        upload_url = "https:www.fake.com/1"
 
         self.mock_response(
             responses.GET,
@@ -518,19 +555,33 @@ class TestImage(ClientTestCase):
             },
         )
         self.mock_response(
+            responses.HEAD,
+            {
+                "errors": [
+                    {
+                        "detail": "Object not found: {}".format(image_id),
+                        "status": "404",
+                        "title": "Object not found",
+                    }
+                ],
+                "jsonapi": {"version": "1.0"},
+            },
+            status=404,
+        )
+        self.mock_response(
             responses.POST,
             {
                 "data": {
-                    "attributes": {
-                        "product_id": product_id,
-                        "image_id": "{}:{}".format(product_id, image_name),
-                        "modified": "2019-01-02T03:04:05Z",
-                        "created": "2019-01-02T03:04:05Z",
-                        "resumable_urls": [upload_url],
-                        "status": "uploading",
-                    },
                     "type": "image_upload",
-                    "id": upload_id,
+                    "id": "1",
+                    "attributes": {
+                        "created": "2019-01-02T03:04:05Z",
+                        "modified": "2019-01-02T03:04:05Z",
+                        "product_id": product_id,
+                        "image_id": image_id,
+                        "resumable_urls": [upload_url],
+                        "status": ImageUploadStatus.TRANSFERRING.value,
+                    },
                 },
                 "jsonapi": {"version": "1.0"},
             },
@@ -539,37 +590,51 @@ class TestImage(ClientTestCase):
             responses.PATCH,
             {
                 "data": {
-                    "attributes": {
-                        "product_id": product_id,
-                        "image_id": "{}:{}".format(product_id, image_name),
-                        "modified": "2019-01-02T03:04:06Z",
-                        "created": "2019-01-02T03:04:05Z",
-                        "status": "pending",
-                        "job_id": "job_id",
-                        "events": [],
-                        "errors": [],
-                    },
                     "type": "image_upload",
-                    "id": upload_id,
+                    "id": "1",
+                    "attributes": {
+                        "created": "2019-01-02T03:04:05Z",
+                        "modified": "2019-01-02T03:04:05Z",
+                        "product_id": product_id,
+                        "image_id": image_id,
+                        "status": ImageUploadStatus.PENDING.value,
+                    },
                 },
                 "jsonapi": {"version": "1.0"},
             },
         )
-        self.mock_response(responses.GET, None, 404)
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "type": "image_upload",
+                    "id": "1",
+                    "attributes": {
+                        "product_id": product_id,
+                        "image_id": image_id,
+                        "status": ImageUploadStatus.SUCCESS.value,
+                    },
+                },
+                "jsonapi": {"version": "1.0"},
+            },
+        )
         self.mock_response(
             responses.GET,
             {
                 "data": {
                     "attributes": {
+                        "readers": [],
+                        "writers": [],
+                        "owners": ["org:descarteslabs"],
+                        "modified": "2019-06-11T23:31:33.714883Z",
+                        "created": "2019-06-11T23:31:33.714883Z",
+                        "name": image_name,
                         "product_id": product_id,
-                        "image_id": "{}:{}".format(product_id, image_name),
-                        "status": "success",
-                        "job_id": "job_id",
-                        "events": [],
-                        "errors": [],
+                        "acquired": "2001-01-01T00:00:00Z",
+                        "geometry": self.geometry,
                     },
-                    "type": "image_upload",
-                    "id": upload_id,
+                    "type": "image",
+                    "id": image_id,
                 },
                 "jsonapi": {"version": "1.0"},
             },
@@ -590,7 +655,7 @@ class TestImage(ClientTestCase):
         upload = image.upload_ndarray(ary, raster_meta=raster_meta)
 
         assert image.state == DocumentState.UNSAVED
-        assert upload.id == upload_id
+        assert upload.id == "1"
         assert upload.product_id == product_id
         assert upload.image_id == image.id
         assert upload.status == ImageUploadStatus.PENDING

@@ -2,7 +2,6 @@ from enum import Enum
 import os.path
 import six
 import io
-from base64 import b64encode
 from tempfile import NamedTemporaryFile
 import warnings
 
@@ -300,7 +299,7 @@ class Image(NamedCatalogObject):
         return ImageSearch(cls, client=client)
 
     @check_deleted
-    def upload(self, files, upload_options=None):
+    def upload(self, files, upload_options=None, overwrite=False):
         """Uploads imagery from a file (or files).
 
         Uploads imagery from a file (or files) in GeoTIFF or JP2 format to be ingested
@@ -314,7 +313,10 @@ class Image(NamedCatalogObject):
             either of these when multiple files make up the image.
         upload_options : `~descarteslabs.catalog.ImageUploadOptions`, optional
             Control of the upload process.
-
+        overwrite : bool, optional
+            If True, then permit overwriting of an existing image with the same id
+            in the catalog. Defaults to False. Note that in all cases, the image
+            object must have a state of `~descarteslabs.catalog.DocumentState.UNSAVED`.
         Raises
         ------
         ValueError
@@ -336,6 +338,20 @@ class Image(NamedCatalogObject):
         if not self.acquired:
             raise ValueError("acquired field required")
 
+        if self.state != DocumentState.UNSAVED:
+            raise ValueError(
+                "Image {} has been saved. Please use an unsaved image for uploading".format(
+                    self.id
+                )
+            )
+
+        if not overwrite and Image.exists(self.id):
+            raise ValueError(
+                "Image {} already exists in the catalog. Please either use a new image id or overwrite=True".format(
+                    self.id
+                )
+            )
+
         if self.product.state != DocumentState.SAVED:
             raise ValueError(
                 "Product {} has not been saved. Please save before uploading images".format(
@@ -353,9 +369,9 @@ class Image(NamedCatalogObject):
         filenames = []
         for f in files:
             if isinstance(f, six.string_types):
-                filenames.append(os.path.basename(f))
+                filenames.append(f)
             elif isinstance(f, io.IOBase):
-                filenames.append(os.path.basename(f.name))
+                filenames.append(f.name)
             else:
                 raise ValueError(
                     "Invalid files value: must be string, IOBase, or iterable of the same"
@@ -369,7 +385,6 @@ class Image(NamedCatalogObject):
         upload_options.upload_type = ImageUploadType.FILE
         upload_options.image_files = filenames
 
-        # Note that this uses a V1 code path
         return self._do_upload(files, upload_options)
 
     @check_deleted
@@ -380,6 +395,7 @@ class Image(NamedCatalogObject):
         raster_meta=None,
         overviews=None,
         overview_resampler=None,
+        overwrite=False,
     ):
         """Uploads imagery from an ndarray to be ingested as an Image.
 
@@ -419,6 +435,10 @@ class Image(NamedCatalogObject):
             algorithms are: [``nearest``, ``average``, ``gauss``, ``cubic``,
             ``cubicspline``, ``lanczos``, ``average_mp``, ``average_magphase``,
             ``mode``].  Can also be set in the `upload_options` parameter.
+        overwrite : bool, optional
+            If True, then permit overwriting of an existing image with the same id
+            in the catalog. Defaults to False. Note that in all cases, the image
+            object must have a state of `~descarteslabs.catalog.DocumentState.UNSAVED`.
 
         Raises
         ------
@@ -440,6 +460,20 @@ class Image(NamedCatalogObject):
             raise ValueError("id field required")
         if not self.acquired:
             raise ValueError("acquired field required")
+
+        if self.state != DocumentState.UNSAVED:
+            raise ValueError(
+                "Image {} has been saved. Please use an unsaved image for uploading".format(
+                    self.id
+                )
+            )
+
+        if not overwrite and Image.exists(self.id):
+            raise ValueError(
+                "Image {} already exists in the catalog. Please either use a new image id or overwrite=True".format(
+                    self.id
+                )
+            )
 
         if self.product.state != DocumentState.SAVED:
             raise ValueError(
@@ -504,7 +538,7 @@ class Image(NamedCatalogObject):
                 # the path again in a cross platform compatible way.
                 # Cleanup is manual in the finally block.
                 tmp.close()
-                upload_options.image_files = [os.path.basename(tmp.name)]
+                upload_options.image_files = [tmp.name]
                 return self._do_upload([tmp.name], upload_options)
             finally:
                 os.unlink(tmp.name)
@@ -526,28 +560,10 @@ class Image(NamedCatalogObject):
         )
 
     def _do_upload(self, files, upload_options):
-        # This uses the existing V1 code path for uploading images
+        from .image_upload import ImageUpload, ImageUploadStatus
 
-        from .image_upload import ImageUpload, ImageUploadType, ImageUploadStatus
-
-        # With the new ingest, we will not specify id here and ImageUpload
-        # will default to a uuid4. But to keep the old ingest happy,
-        # we need to use a specially encoded id that can be decoded by
-        # the service to search the tasks. The use of the last filename
-        # ensures we track the one task which will actually perform the ingest.
-        upload_id = "{}:{}{}".format(
-            b64encode(self.product_id.encode("utf-8")).decode("utf-8"),
-            os.path.basename(files[-1]),
-            ".tif"
-            if upload_options.upload_type == ImageUploadType.NDARRAY
-            and not files[-1].endswith(".tif")
-            else "",
-        )
         upload = ImageUpload(
-            id=upload_id,
-            client=self._client,
-            image=self,
-            image_upload_options=upload_options,
+            client=self._client, image=self, image_upload_options=upload_options
         )
 
         upload.save()

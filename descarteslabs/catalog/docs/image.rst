@@ -21,4 +21,6 @@ Image
 .. autoclass:: descarteslabs.catalog.ImageUpload
   :autosummary:
   :members:
+  :inherited-members:
   :undoc-members:
+  :exclude-members: INCLUDE_EVENTS, resumable_urls

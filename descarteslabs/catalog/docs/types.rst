@@ -20,7 +20,7 @@ Types
   ~descarteslabs.catalog.ImageUploadType
   ~descarteslabs.catalog.OverviewResampler
   ~descarteslabs.catalog.ImageUploadStatus
-  ~descarteslabs.catalog.UploadError
+  ~descarteslabs.catalog.ImageUploadEvent
 
 -----
 
@@ -52,4 +52,9 @@ Types
 
 .. autoclass:: descarteslabs.catalog.ImageUploadStatus
 
-.. autoclass:: descarteslabs.catalog.UploadError
+.. autoclass:: descarteslabs.catalog.ImageUploadEvent
+  :members:
+
+.. autoclass:: descarteslabs.catalog.ImageUploadEventType
+
+.. autoclass:: descarteslabs.catalog.ImageUploadEventSeverity

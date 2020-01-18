@@ -284,13 +284,13 @@ class CatalogObjectReference(Attribute):
         the `SAVED` state.
     """
 
-    def __init__(self, reference_class, allow_unsaved=False, **kwargs):
+    def __init__(self, reference_class, require_unsaved=False, **kwargs):
         # Serializable defaults to `False` for reference objects
         kwargs[self._PARAM_SERIALIZABLE] = kwargs.pop(self._PARAM_SERIALIZABLE, False)
         super(CatalogObjectReference, self).__init__(**kwargs)
 
         self.reference_class = reference_class
-        self._allow_unsaved = allow_unsaved
+        self._require_unsaved = require_unsaved
 
     def __get__(self, obj, objtype):
         """Gets the value for this attribute on the given object.
@@ -332,9 +332,15 @@ class CatalogObjectReference(Attribute):
                         self.reference_class.__name__, self._attribute_name, value
                     )
                 )
-            if not self._allow_unsaved and value.state == DocumentState.UNSAVED:
+            if not self._require_unsaved and value.state == DocumentState.UNSAVED:
                 raise AttributeValidationError(
                     "Can't assign unsaved related object to '{}'. Save it first.".format(
+                        self._attribute_name
+                    )
+                )
+            elif self._require_unsaved and value.state != DocumentState.UNSAVED:
+                raise AttributeValidationError(
+                    "Can't assign saved related object to '{}'. Use a new unsaved object.".format(
                         self._attribute_name
                     )
                 )
@@ -661,8 +667,8 @@ class AttributeMeta(type):
                         references[attr_name] = attr_type
 
         attrs["ATTRIBUTES"] = tuple(types.keys())
-        attrs["_attribute_types"] = types
-        attrs["_reference_attribute_types"] = references
+        attrs[AttributeMeta._KEY_ATTR_TYPES] = types
+        attrs[AttributeMeta._KEY_REF_ATTR_TYPES] = references
 
         return super(AttributeMeta, cls).__new__(cls, name, bases, attrs)
 
