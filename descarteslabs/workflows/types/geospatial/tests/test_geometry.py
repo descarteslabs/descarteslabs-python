@@ -3,6 +3,7 @@ import pytest
 
 import shapely.geometry
 
+from ...primitives import Int
 from .. import Geometry, GeometryCollection, Image
 
 
@@ -93,3 +94,19 @@ def test_gc_from_geojson():
     shape = shapely.geometry.GeometryCollection(geoms)
     geom = GeometryCollection.from_geojson(shape.__geo_interface__)
     assert isinstance(geom, GeometryCollection)
+
+
+def test_gc_length():
+    gc = GeometryCollection.from_geojson(
+        {"type": "GeometryCollection", "geometries": []}
+    )
+    assert isinstance(gc.length(), Int)
+
+
+def test_gc_reversed():
+    gc = GeometryCollection.from_geojson(
+        {"type": "GeometryCollection", "geometries": []}
+    )
+    rev = reversed(gc)
+    assert isinstance(rev, GeometryCollection)
+    assert rev is not gc

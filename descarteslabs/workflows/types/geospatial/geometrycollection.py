@@ -83,3 +83,23 @@ class GeometryCollection(GeometryCollectionStruct, Geometry):
         <descarteslabs.workflows.types.geospatial.geometry.Geometry object at 0x...>
         """
         return Geometry._from_apply("buffer", self, distance)
+
+    def length(self):
+        """Length is equivalent to the Python ``len`` operator.
+
+        Returns
+        -------
+        Int
+            An Int Proxytype
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import List, Int
+        >>> my_list = List[Int]([1, 2, 3])
+        >>> my_list.length().compute() # doctest: +SKIP
+        3
+        """
+        return Int._from_apply("length", self)
+
+    def __reversed__(self):
+        return self._from_apply("reversed", self)
