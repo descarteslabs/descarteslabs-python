@@ -471,6 +471,11 @@ class CatalogObjectBase(AttributeEqualityMixin):
             The object you requested, or ``None`` if an object with the given `id`
             does not exist in the Descartes Labs catalog.
 
+        Raises
+        ------
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
         """
         try:
             data, related_objects = cls._send_data(
@@ -562,17 +567,19 @@ class CatalogObjectBase(AttributeEqualityMixin):
             :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
             be used if not set.
 
-        Raises
-        ------
-        NotFoundError
-            If any of the requested objects do not exist in the Descartes Labs catalog
-            and `ignore_missing` is ``False``.
-
         Returns
         -------
         list(:py:class:`~descarteslabs.catalog.CatalogObject`)
             List of the objects you requested in the same order.
 
+        Raises
+        ------
+        NotFoundError
+            If any of the requested objects do not exist in the Descartes Labs catalog
+            and `ignore_missing` is ``False``.
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
         """
 
         if not isinstance(ids, list) or any(not isinstance(id_, str) for id_ in ids):
@@ -626,12 +633,17 @@ class CatalogObjectBase(AttributeEqualityMixin):
             :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
             be used if not set.
 
-
         Returns
         -------
         bool
             Returns ``True`` if the given ``id`` represents an existing object in
             the Descartes Labs catalog and ``False`` if not.
+
+        Raises
+        ------
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
         """
         client = client or CatalogClient.get_default_client()
         r = None
@@ -712,6 +724,9 @@ class CatalogObjectBase(AttributeEqualityMixin):
             If any of the attribute values are invalid.
         DeletedObjectError
             If this catalog object was deleted.
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
 
         Example
         -------
@@ -788,6 +803,9 @@ class CatalogObjectBase(AttributeEqualityMixin):
             If the catalog object is not in the ``SAVED`` state.
         DeletedObjectError
             If this catalog object was deleted.
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
 
         Example
         -------
@@ -858,6 +876,9 @@ class CatalogObjectBase(AttributeEqualityMixin):
         ------
         ConflictError
             If the object has related objects (bands, images) that exist.
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
 
         Example
         -------
@@ -885,6 +906,9 @@ class CatalogObjectBase(AttributeEqualityMixin):
             If this catalog object was already deleted.
         UnsavedObjectError
             If this catalog object is being deleted without having been saved.
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
         """
         if self.state == DocumentState.UNSAVED:
             raise UnsavedObjectError("You cannot delete an unsaved object.")

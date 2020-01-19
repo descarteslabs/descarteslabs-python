@@ -117,6 +117,22 @@ Guide <catalog_v2_guide>`.
   ~descarteslabs.catalog.DeletedObjectError
   ~descarteslabs.catalog.UnsavedObjectError
 
+.. _network_exceptions:
+
+Note that many API calls result in a network request, which can result in a spurious
+`ClientError` or `ServerError` exception.  This has been documented for all calls that
+are susceptible to this.  A non-exhaustive list of potential exceptions that can occur
+are:
+
+* `~descarteslabs.client.exceptions.AuthError` when you don't have the necessary
+  credentials to access the Descartes Labs services.
+* `~descarteslabs.client.exceptions.RateLimitError` when there are too many request
+  within a given time interval.
+* `~descarteslabs.client.exceptions.ServerError` when there is an internal error in one
+  of the Descartes Labs services.
+* `~descarteslabs.client.exceptions.GatewayTimeoutError` when there is congestion in
+  the Descartes Labs networks.
+
 :nontoc_heading:`Catalog Client`
 
 .. autosummary::

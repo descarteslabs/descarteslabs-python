@@ -231,7 +231,9 @@ class Product(CatalogObject):
             If a deletion process is already in progress.
         DeletedObjectError
             If this product was deleted.
-
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
         """
         r = self._client.session.post(
             "/products/{}/delete_related_objects".format(self.id),
@@ -258,6 +260,9 @@ class Product(CatalogObject):
         ------
         DeletedObjectError
             If this product was deleted.
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
         """
         r = self._client.session.get(
             "/products/{}/delete_related_objects".format(self.id)
@@ -307,7 +312,9 @@ class Product(CatalogObject):
             If an update task is already in progress.
         DeletedObjectError
             If this product was deleted.
-
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
         """
         attributes = {"owners": owners, "readers": readers, "writers": writers}
         for name, parameter in attributes.items():
@@ -349,6 +356,9 @@ class Product(CatalogObject):
         ------
         DeletedObjectError
             If this product was deleted.
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
 
         Example
         -------
@@ -567,7 +577,14 @@ class TaskStatus(object):
         return "\n".join(text)
 
     def reload(self):
-        "Update the task information."
+        """Update the task information.
+
+        Raises
+        ------
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
+        """
         r = self._client.session.get(self._url.format(self.product_id))
         response = r.json()
         new_values = response["data"]["attributes"]

@@ -114,16 +114,16 @@ class Search(object):
             :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
             are not supported.
 
-        Raises
-        ------
-        ValueError
-            If the properties filter provided is not supported.
-
         Returns
         -------
         Search
             A new :py:class:`~descarteslabs.catalog.Search` instance with the
             new filter(s) applied (using ``and`` if there were existing filters)
+
+        Raises
+        ------
+        ValueError
+            If the properties filter provided is not supported.
 
         Example
         -------
@@ -211,6 +211,9 @@ class Search(object):
         ------
         BadRequestError
             If any of the query parameters or filters are invalid
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
 
         Example
         -------
@@ -237,6 +240,9 @@ class Search(object):
         ------
         BadRequestError
             If any of the query parameters or filters are invalid
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
 
         Example
         -------
@@ -351,6 +357,12 @@ class ImageSearch(Search):
         SummaryResult
             The summary statistics as a `SummaryResult` object.
 
+        Raises
+        ------
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
+
         Example
         -------
         >>> s = Image
@@ -400,6 +412,12 @@ class ImageSearch(Search):
         list(SummaryResult)
             The summary statistics for each interval, as a list of `SummaryResult`
             objects.
+
+        Raises
+        ------
+        ClientError or ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
 
         Example
         -------

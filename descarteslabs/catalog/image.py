@@ -317,12 +317,6 @@ class Image(NamedCatalogObject):
             If True, then permit overwriting of an existing image with the same id
             in the catalog. Defaults to False. Note that in all cases, the image
             object must have a state of `~descarteslabs.catalog.DocumentState.UNSAVED`.
-        Raises
-        ------
-        ValueError
-            If any improper arguments are supplied.
-        DeletedObjectError
-            If this image was deleted.
 
         Returns
         -------
@@ -330,6 +324,13 @@ class Image(NamedCatalogObject):
             An `~descarteslabs.catalog.ImageUpload` instance which can
             be used to check the status or wait on the asynchronous upload process to
             complete.
+
+        Raises
+        ------
+        ValueError
+            If any improper arguments are supplied.
+        DeletedObjectError
+            If this image was deleted.
         """
         from .image_upload import ImageUploadType, ImageUploadOptions
 
