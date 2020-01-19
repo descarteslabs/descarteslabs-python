@@ -277,8 +277,8 @@ class TestProduct(ClientTestCase):
             },
         )
 
-        deleted = p.delete()
-        assert deleted
+        p.delete()
+        assert p.state == DocumentState.DELETED
 
     @responses.activate
     def test_delete_non_existent(self):

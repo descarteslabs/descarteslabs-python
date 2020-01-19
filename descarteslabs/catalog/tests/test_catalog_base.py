@@ -4,7 +4,11 @@ from six import assertCountEqual
 from datetime import datetime
 from pytz import utc
 
-from descarteslabs.client.exceptions import NotFoundError, BadRequestError
+from descarteslabs.client.exceptions import (
+    NotFoundError,
+    BadRequestError,
+    ConflictError,
+)
 
 from .base import ClientTestCase
 from ..attributes import (
@@ -335,11 +339,26 @@ class TestCatalogObject(ClientTestCase):
             },
             status=404,
         )
-        with pytest.raises(NotFoundError):
-            Foo.delete("nerp", client=self.client)
+        assert not Foo.delete("nerp", client=self.client)
 
-        r = Foo.delete("nerp", ignore_missing=True, client=self.client)
-        assert r is False
+    @responses.activate
+    def test_delete_classmethod_conflict(self):
+        self.mock_response(
+            responses.DELETE,
+            {
+                "errors": [
+                    {
+                        "detail": "One or more related objects exist",
+                        "status": "409",
+                        "title": "Related objects exist",
+                    }
+                ],
+                "jsonapi": {"version": "1.0"},
+            },
+            status=409,
+        )
+        with self.assertRaises(ConflictError):
+            Foo.delete("nerp", client=self.client)
 
     @responses.activate
     def test_delete_classmethod(self):
@@ -351,8 +370,7 @@ class TestCatalogObject(ClientTestCase):
             },
         )
 
-        r = Foo.delete("nerp", client=self.client)
-        assert r is True
+        assert Foo.delete("nerp", client=self.client)
 
     @responses.activate
     def test_delete_instancemethod(self):
@@ -363,9 +381,8 @@ class TestCatalogObject(ClientTestCase):
                 "jsonapi": {"version": "1.0"},
             },
         )
-        instance = Foo(id="merp", client=self.client, _saved=True)
-        r = instance.delete()
-        assert r is True
+        instance = Foo(id="nerp", client=self.client, _saved=True)
+        instance.delete()
         assert instance.state == DocumentState.DELETED
         assert "* Deleted" in repr(instance)
 
@@ -391,13 +408,10 @@ class TestCatalogObject(ClientTestCase):
             status=404,
         )
         foo = Foo(id="nerp", client=self.client, _saved=True)
+        assert foo.state == DocumentState.SAVED
         with pytest.raises(DeletedObjectError):
             foo.delete()
-
-        instance = Foo(id="nerp", client=self.client, _saved=True)
-        r = instance.delete(ignore_missing=True)
-        assert r is False
-        assert instance.state != DocumentState.DELETED
+        assert foo.state == DocumentState.DELETED
 
     @responses.activate
     def test_prevent_operations_after_delete(self):

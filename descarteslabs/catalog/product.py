@@ -58,7 +58,6 @@ class Product(CatalogObject):
     are only visible to the `owners`, you will not see them otherwise.
 
     Also see `Sharing Resources </guides/sharing.html>`_.
-
     """
 
     _doc_type = "product"

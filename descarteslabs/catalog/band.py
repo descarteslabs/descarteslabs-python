@@ -532,16 +532,6 @@ class DerivedBand(CatalogObject):
         be used if not set.
     kwargs : dict, optional
         You cannot set any additional keyword arguments as a derived band is readonly.
-
-    Methods
-    -------
-    delete(ignore_missing=False)
-        You cannot delete a derived band.
-
-        Raises
-        ------
-        NotImplementedError
-            This method is not supported for DerivedBands.
     """
 
     _doc_type = "derived_band"
@@ -597,7 +587,7 @@ class DerivedBand(CatalogObject):
         raise NotImplementedError("Saving DerivedBands is not permitted")
 
     @classmethod
-    def delete(cls, id, client=None, ignore_missing=False):
+    def delete(cls, id, client=None):
         """You cannot delete a derived band.
 
         Raises
@@ -607,5 +597,12 @@ class DerivedBand(CatalogObject):
         """
         raise NotImplementedError("Deleting DerivedBands is not permitted")
 
-    def _instance_delete(self, ignore_missing=False):
+    def _instance_delete(self):
+        """You cannot delete a derived band.
+
+        Raises
+        ------
+        NotImplementedError
+            This method is not supported for DerivedBands.
+        """
         raise NotImplementedError("Deleting DerivedBands is not permitted")

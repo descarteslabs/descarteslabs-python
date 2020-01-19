@@ -85,6 +85,18 @@ class CatalogObjectMeta(AttributeMeta):
             new_cls._model_classes_by_type_and_derived_type[
                 (new_cls._doc_type, new_cls._derived_type)
             ] = new_cls
+
+        if new_cls.__doc__ is not None and new_cls._instance_delete.__doc__ is not None:
+            # Careful with this; leading white space is very significant
+            new_cls.__doc__ += (
+                """
+    Methods
+    -------
+    delete()
+        """
+                + new_cls._instance_delete.__doc__
+            )
+
         return new_cls
 
 
@@ -823,7 +835,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
 
     @classmethod
     @check_derived
-    def _class_delete(cls, id, ignore_missing=False, client=None):
+    def delete(cls, id, client=None):
         """Delete the catalog object with the given `id`.
 
         Parameters
@@ -835,25 +847,17 @@ class CatalogObjectBase(AttributeEqualityMixin):
             catalog.  The
             :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
             be used if not set.
-        ignore_missing : bool, optional
-            Whether to ignore (not raise) the
-            `~descarteslabs.client.exceptions.NotFoundError` exception if the object
-            to be deleted is not found in the Descartes Labs catalog.  ``False`` by
-            default which raises the exception.
 
         Returns
         -------
         bool
             ``True`` if this object was successfully deleted. ``False`` if the
-            object was not found, and `ignore_missing` = ``True``.
+            object was not found.
 
         Raises
         ------
         ConflictError
             If the object has related objects (bands, images) that exist.
-        NotFoundError
-            If the object does not exist in the Descartes Labs catalog and
-            `ignore_missing` is ``False``.
 
         Example
         -------
@@ -861,26 +865,32 @@ class CatalogObjectBase(AttributeEqualityMixin):
         """
         if client is None:
             client = CatalogClient.get_default_client()
+
         try:
-            r = client.session.delete(cls._url + "/" + id)
-            return r.status_code == 200
+            client.session.delete(cls._url + "/" + id)
+            return True  # non-200 will raise an exception
         except NotFoundError:
-            if not ignore_missing:
-                raise
             return False
 
-    delete = _class_delete
-
     @check_deleted
-    def _instance_delete(self, ignore_missing=False):
+    def _instance_delete(self):
+        """Delete this catalog object from the Descartes Labs catalog.
+
+        Once deleted, you cannot use the catalog object and should release any
+        references.
+
+        Raises
+        ------
+        DeletedObjectError
+            If this catalog object was already deleted.
+        UnsavedObjectError
+            If this catalog object is being deleted without having been saved.
+        """
         if self.state == DocumentState.UNSAVED:
             raise UnsavedObjectError("You cannot delete an unsaved object.")
 
-        deleted = self._class_delete(
-            self.id, ignore_missing=ignore_missing, client=self._client
-        )
-        self._deleted = deleted
-        return deleted
+        self._client.session.delete(self._url + "/" + self.id)
+        self._deleted = True  # non-200 will raise an exception
 
     @classmethod
     @check_derived
