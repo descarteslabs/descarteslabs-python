@@ -10,16 +10,18 @@ from descarteslabs.common.proto import (
     xyz_pb2_grpc,
     workflow_pb2_grpc,
 )
-from descarteslabs.common.retry import Retry
+from descarteslabs.common.retry import Retry, RetryError
 from descarteslabs.common.retry.retry import _wraps
 
-_RETRYABLE_STATUS_CODES = (
+from .exceptions import from_grpc_error
+
+_RETRYABLE_STATUS_CODES = {
     grpc.StatusCode.UNAVAILABLE,
     grpc.StatusCode.INTERNAL,
     grpc.StatusCode.RESOURCE_EXHAUSTED,
     grpc.StatusCode.UNKNOWN,
     grpc.StatusCode.DEADLINE_EXCEEDED,
-)
+}
 
 
 def wrap_stub(func, default_retry):
@@ -30,7 +32,16 @@ def wrap_stub(func, default_retry):
         if retry is None:
             retry = default_retry
 
-        return retry(func)(*args, **kwargs)
+        try:
+            return retry(func)(*args, **kwargs)
+        except grpc.RpcError as e:
+            raise from_grpc_error(e) from None
+        except RetryError as e:
+            e._exceptions = [
+                from_grpc_error(exc) if isinstance(exc, grpc.RpcError) else exc
+                for exc in e._exceptions
+            ]
+            raise e from e._exceptions[-1]
 
     return wrapper
 

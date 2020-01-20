@@ -65,7 +65,7 @@ from .interactive import map, Map, WorkflowsLayer, LayerController, LayerControl
 
 from . import env
 from ._channel import __channel__, _set_channel
-from .client import Client
+from .client import Client, exceptions
 
 
 # NOTE(gabe): we define this top-level `publish` implementation, which tries to proxify
@@ -143,6 +143,7 @@ __all__ = [
     "_set_channel",
     # .client
     "Client",
+    "exceptions",
     # __init__
     "publish",
     # .interactive
