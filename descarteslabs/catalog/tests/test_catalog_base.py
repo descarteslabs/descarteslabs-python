@@ -325,20 +325,7 @@ class TestCatalogObject(ClientTestCase):
 
     @responses.activate
     def test_delete_classmethod_notfound(self):
-        self.mock_response(
-            responses.DELETE,
-            {
-                "errors": [
-                    {
-                        "detail": "Object not found: nerp",
-                        "status": "404",
-                        "title": "Object not found",
-                    }
-                ],
-                "jsonapi": {"version": "1.0"},
-            },
-            status=404,
-        )
+        self.mock_response(responses.DELETE, self.not_found_json, status=404)
         assert not Foo.delete("nerp", client=self.client)
 
     @responses.activate
@@ -393,20 +380,7 @@ class TestCatalogObject(ClientTestCase):
 
     @responses.activate
     def test_delete_instancemethod_notfound(self):
-        self.mock_response(
-            responses.DELETE,
-            {
-                "errors": [
-                    {
-                        "detail": "Object not found: nerp",
-                        "status": "404",
-                        "title": "Object not found",
-                    }
-                ],
-                "jsonapi": {"version": "1.0"},
-            },
-            status=404,
-        )
+        self.mock_response(responses.DELETE, self.not_found_json, status=404)
         foo = Foo(id="nerp", client=self.client, _saved=True)
         assert foo.state == DocumentState.SAVED
         with pytest.raises(DeletedObjectError):
@@ -546,19 +520,7 @@ class TestCatalogObject(ClientTestCase):
 
     @responses.activate
     def test_get_or_create(self):
-        not_found_json = {
-            "errors": [
-                {
-                    "detail": "Object not found: foo1",
-                    "status": "404",
-                    "title": "Object not found",
-                }
-            ],
-            "jsonapi": {"version": "1.0"},
-        }
-
-        self.mock_response(responses.GET, not_found_json, status=404)
-        self.mock_response(responses.GET, not_found_json, status=404)
+        self.mock_response(responses.GET, self.not_found_json, status=404)
 
         foo = Foo.get("foo1", client=self.client)
         assert foo is None
@@ -568,3 +530,20 @@ class TestCatalogObject(ClientTestCase):
         assert foo.id == "foo1"
         assert foo.bar == "baz"
         assert foo.state == DocumentState.UNSAVED
+
+    @responses.activate
+    def test_deleted_notfound(self):
+        self.mock_response(responses.PATCH, self.not_found_json, status=404)
+        instance = Foo(id="foo", client=self.client, _saved=True)
+        instance.bar = "something"
+
+        with pytest.raises(DeletedObjectError):
+            instance.save()
+        assert instance.state == DocumentState.DELETED
+
+        self.mock_response(responses.GET, self.not_found_json, status=404)
+        instance = Foo(id="foo", client=self.client, _saved=True)
+
+        with pytest.raises(DeletedObjectError):
+            instance.reload()
+        assert instance.state == DocumentState.DELETED

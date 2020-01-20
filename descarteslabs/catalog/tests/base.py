@@ -13,6 +13,17 @@ public_token = "header.e30.signature"
 
 
 class ClientTestCase(unittest.TestCase):
+    not_found_json = {
+        "errors": [
+            {
+                "detail": "Object not found: foo",
+                "status": "404",
+                "title": "Object not found",
+            }
+        ],
+        "jsonapi": {"version": "1.0"},
+    }
+
     def setUp(self):
         self.url = "https://example.com/catalog/v2"
         self.client = CatalogClient(

@@ -285,20 +285,7 @@ class TestProduct(ClientTestCase):
         p = Product(
             id="ne-my-product", name="Non-existent", client=self.client, _saved=True
         )
-        self.mock_response(
-            responses.DELETE,
-            {
-                "errors": [
-                    {
-                        "detail": "Object not found: ne",
-                        "status": "404",
-                        "title": "Object not found",
-                    }
-                ],
-                "jsonapi": {"version": "1.0"},
-            },
-            status=404,
-        )
+        self.mock_response(responses.DELETE, self.not_found_json, status=404)
 
         with pytest.raises(DeletedObjectError):
             p.delete()
@@ -315,7 +302,7 @@ class TestProduct(ClientTestCase):
 
     @responses.activate
     def test_exists_false(self):
-        self.mock_response(responses.HEAD, {}, status=404)
+        self.mock_response(responses.HEAD, self.not_found_json, status=404)
         assert not Product.exists("my-id:id", client=self.client)
         assert (
             responses.calls[0].request.url
@@ -929,3 +916,35 @@ class TestProduct(ClientTestCase):
             assert p.id == "product_id"
 
         assert len(w) == 0
+
+    @responses.activate
+    def test_deleted_band_image(self):
+        self.mock_response(responses.GET, self.not_found_json, status=404)
+        p = Product(id="p1", name="Product 1", client=self.client, _saved=True)
+        p.get_band("p1:b1", client=self.client)
+        p.get_image("p1:i1", client=self.client)
+
+    @responses.activate
+    def test_deleted(self):
+        self.mock_response(responses.POST, self.not_found_json, status=404)
+        self.mock_response(responses.GET, self.not_found_json, status=404)
+
+        p = Product(id="p1", name="Product 1", client=self.client, _saved=True)
+        with self.assertRaises(DeletedObjectError):
+            p.delete_related_objects()
+        assert p.state == DocumentState.DELETED
+
+        p = Product(id="p1", name="Product 1", client=self.client, _saved=True)
+        with self.assertRaises(DeletedObjectError):
+            p.get_delete_status()
+        assert p.state == DocumentState.DELETED
+
+        p = Product(id="p1", name="Product 1", client=self.client, _saved=True)
+        with self.assertRaises(DeletedObjectError):
+            p.update_related_objects_permissions(inherit=True)
+        assert p.state == DocumentState.DELETED
+
+        p = Product(id="p1", name="Product 1", client=self.client, _saved=True)
+        with self.assertRaises(DeletedObjectError):
+            p.get_update_permissions_status()
+        assert p.state == DocumentState.DELETED
