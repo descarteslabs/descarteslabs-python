@@ -120,9 +120,10 @@ Guide <catalog_v2_guide>`.
 .. _network_exceptions:
 
 Note that many API calls result in a network request, which can result in a spurious
-`ClientError` or `ServerError` exception.  This has been documented for all calls that
-are susceptible to this.  A non-exhaustive list of potential exceptions that can occur
-are:
+`~descarteslabs.client.exceptions.ClientError` or
+`~descarteslabs.client.exceptions.ServerError` exception.  This has been documented
+for all calls that are susceptible to this.  A non-exhaustive list of potential
+exceptions that can occur are:
 
 * `~descarteslabs.client.exceptions.AuthError` when you don't have the necessary
   credentials to access the Descartes Labs services.
