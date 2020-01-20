@@ -304,7 +304,7 @@ class Map(ipyleaflet.Map):
 
     def move_layer(self, layer, new_index):
         """
-        Move a layer to a new index.
+        Move a layer to a new index. Indices are one-indexed.
 
         Parameters
         ----------
@@ -313,8 +313,18 @@ class Map(ipyleaflet.Map):
 
         Raises
         ------
-        ValueError:
+        ValueError
             If ``layer`` is a base layer, or does not already exist on the map.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> wf.map # doctest: +SKIP
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1")
+        >>> red = img.pick_bands("red").visualize("red layer") # doctest: +SKIP
+        >>> blue = img.pick_bands("blue").visualize("blue layer") # doctest: +SKIP
+        >>> wf.map.move_layer(red_layer, 2) # doctest: +SKIP
+        >>> # "red layer" will now be displayed on top of "blue layer"
         """
         if layer.base:
             raise ValueError("Cannot reorder base layer {}".format(layer))
@@ -336,8 +346,19 @@ class Map(ipyleaflet.Map):
 
         Raises
         ------
-        ValueError:
+        ValueError
             If ``layer`` is a base layer, or does not already exist on the map.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> wf.map # doctest: +SKIP
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1")
+        >>> red = img.pick_bands("red").visualize("red layer") # doctest: +SKIP
+        >>> blue = img.pick_bands("blue").visualize("blue layer") # doctest: +SKIP
+        >>> wf.map.move_layer_up(red_layer) # doctest: +SKIP
+        >>> # ^ display red_layer above blue_layer
+
         """
         if layer.base:
             raise ValueError("Cannot reorder base layer {}".format(layer))
@@ -360,8 +381,18 @@ class Map(ipyleaflet.Map):
 
         Raises
         ------
-        ValueError:
+        ValueError
             If ``layer`` is a base layer, or does not already exist on the map.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> wf.map # doctest: +SKIP
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1")
+        >>> red = img.pick_bands("red").visualize("red layer") # doctest: +SKIP
+        >>> blue = img.pick_bands("blue").visualize("blue layer") # doctest: +SKIP
+        >>> wf.map.move_layer_down(blue_layer) # doctest: +SKIP
+        >>> # ^ display blue_layer below red_layer
         """
         if layer.base:
             raise ValueError("Cannot reorder base layer {}".format(layer))
@@ -375,7 +406,24 @@ class Map(ipyleaflet.Map):
             self.layers = tuple_move(self.layers, old_i, old_i - 1)
 
     def remove_layer(self, layer_name):
-        "Remove a named layer or layer instance from the map"
+        """
+        Remove a named layer or layer instance from the map
+
+        Parameters
+        ----------
+        layer_name: str or ipyleaflet.Layer
+            Name of the layer or Layer instance to remove
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> wf.map # doctest: +SKIP
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1")
+        >>> red = img.pick_bands("red").visualize("red layer") # doctest: +SKIP
+        >>> blue = img.pick_bands("blue").visualize("blue layer") # doctest: +SKIP
+        >>> wf.map.remove_layer("red layer") # doctest: +SKIP
+        >>> # ^ remove "red layer" from the map
+        """
         if isinstance(layer_name, ipyleaflet.Layer):
             super().remove_layer(layer_name)
         else:
@@ -389,7 +437,17 @@ class Map(ipyleaflet.Map):
                 )
 
     def clear_layers(self):
-        "Remove all layers from the map (besides the base layer)"
+        """
+        Remove all layers from the map (besides the base layer)
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> wf.map # doctest: +SKIP
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1")
+        >>> red = img.pick_bands("red").visualize("red layer") # doctest: +SKIP
+        >>> wf.map.clear_layers() # doctest: +SKIP
+        """
         self.layers = tuple(lyr for lyr in self.layers if lyr.base)
 
     def map_dimensions(self):
@@ -402,8 +460,15 @@ class Map(ipyleaflet.Map):
 
         Raises
         ------
-        RuntimeError:
+        RuntimeError
             if ``crs`` is not 'EPSG3857'
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> wf.map # doctest: +SKIP
+        >>> wf.map.map_dimensions() # doctest: +SKIP
+        (1182, 398)
         """
         if self.crs != "EPSG3857":
             raise RuntimeError("CRS must be EPSG3857 to calculate map dimensions")
@@ -447,6 +512,27 @@ class Map(ipyleaflet.Map):
             Only one of ``resolution`` or ``shape`` can be given. If neither ``shape``
             nor ``resolution`` is given, ``shape`` defaults to the current dimensions
             of the map viewport.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> wf.map # doctest: +SKIP
+        >>> wf.map.geocontext() # doctest: +SKIP
+        AOI(geometry=None,
+            resolution=None,
+            crs='EPSG:3857',
+            align_pixels=False,
+            bounds=(-106.14303588867188, 35.631349127185125, -105.73276519775392, 35.7428898051826),
+            bounds_crs='EPSG:4326',
+            shape=(1195, 398))
+        >>> wf.map.geocontext(crs="utm") # doctest: +SKIP
+        AOI(geometry=None,
+            resolution=None,
+            crs='+proj=utm +zone=13 +datum=WGS84 +units=m +no_defs ',
+            align_pixels=False,
+            bounds=(-106.14303588867188, 35.631349127185125, -105.73276519775392, 35.7428898051826),
+            bounds_crs='EPSG:4326',
+            shape=(1195, 398))
 
         Returns
         -------

@@ -125,6 +125,15 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         Generate the URL for this layer.
 
         This is called automatically as the attributes (`image`, `colormap`, scales, etc.) are changed.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+        >>> img = img.pick_bands("red blue green") # doctest: +SKIP
+        >>> layer = img.visualize("sample") # doctest: +SKIP
+        >>> layer.make_url() # doctest: +SKIP
+        'https://workflows.descarteslabs.com/master/xyz/9ec70d0e99db7f50c856c774809ae454ffd8475816e05c5c/{z}/{x}/{y}.png?session_id=xxx&checkerboard=true'
         """
         if not self.visible:
             # workaround for the fact that Leaflet still loads tiles from inactive layers,
@@ -231,7 +240,20 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         super(WorkflowsLayer, self).__del__()
 
     def forget_errors(self):
-        "Clear the set of known errors, so they are re-displayed if they occur again"
+        """
+        Clear the set of known errors, so they are re-displayed if they occur again
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+        >>> wf.map # doctest: +SKIP
+        >>> layer = img.visualize("sample visualization") # doctest: +SKIP
+        >>> # ^ will show an error for attempting to visualize more than 3 bands
+        >>> layer.forget_errors() # doctest: +SKIP
+        >>> wf.map.zoom = 10 # doctest: +SKIP
+        >>> # ^ attempting to load more tiles from img will cause the same error to appear
+        """
         with self._known_errors_lock:
             self._known_errors.clear()
 
@@ -253,6 +275,15 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             based on the min and max values of its data.
         new_colormap: str, None, or False, optional, default False
             A new colormap to set at the same time, or False to use the current colormap.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+        >>> img = img.pick_bands("red") # doctest: +SKIP
+        >>> layer = img.visualize("sample visualization", colormap="viridis") # doctest: +SKIP
+        >>> layer.set_scales((0.08, 0.3), new_colormap="plasma") # doctest: +SKIP
+        >>> # ^ optionally set new colormap
         """
         colormap = self.colormap if new_colormap is False else new_colormap
 
@@ -321,6 +352,21 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         params: JSON-serializable value, Proxytype, or ipywidgets.Widget
             Paramter names to new values. Values can be Python types,
             `Proxytype` instances, or ``ipywidgets.Widget`` instances.
+
+        Example
+        -------
+
+        >>> import descarteslabs.workflows as wf
+        >>> from ipywidgets import FloatSlider
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+        >>> img = img.pick_bands("red") # doctest: +SKIP
+        >>> masked_img = img.mask(img > wf.parameter("threshold", wf.Float)) # doctest: +SKIP
+        >>> layer = masked_img.tile_layer("sample", colormap="plasma", threshold=0.07) # doctest: +SKIP
+        >>> scaled_img = img * wf.parameter("scale", wf.Float) + wf.parameter("offset", wf.Float) # doctest: +SKIP
+        >>> with layer.hold_trait_notifications(): # doctest: +SKIP
+        ...     layer.image = scaled_img # doctest: +SKIP
+        ...     layer.set_parameters(scale=FloatSlider(min=0, max=10, value=2), offset=2.5) # doctest: +SKIP
+        >>> # ^ re-use the same layer instance for a new Image with different parameters
         """
         param_set = self.parameters
         if param_set is None:

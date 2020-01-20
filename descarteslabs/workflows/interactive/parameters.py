@@ -256,6 +256,23 @@ class ParameterSet(traitlets.HasTraits):
         attr: str, default "value"
             The name of the attribute on ``target`` to link to.
             Defaults to ``"value"``, since that works for most ipywidgets.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> from ipywidgets import FloatSlider
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+        >>> img = img.pick_bands("red") # doctest: +SKIP
+        >>> masked_img = img.mask(img > wf.parameter("threshold", wf.Float)) # doctest: +SKIP
+        >>> layer = masked_img.visualize("sample", colormap="plasma", threshold=0.07) # doctest: +SKIP
+        >>> layer.parameters.link("threshold", my_ipywidget) # doctest: +SKIP
+        >>> # ^ links the "threshold" parameter to an ipywidget's value
+        >>> layer2 = masked_img.visualize("sample", colormap="plasma", threshold=0.3) # doctest: +SKIP
+        >>> layer2.parameters.link("threshold", layer.parameters, attr="threshold") # doctest: +SKIP
+        >>> # ^ now the `threshold` parameter is linked between `layer` and `layer2`
+        >>> widget = FloatSlider(min=0, max=1) # doctest: +SKIP
+        >>> layer2.parameters.link("threshold", widget) # doctest: +SKIP
+        >>> # ^ now `threshold` is linked to the widget, and the link is broken to `layer`
         """
         current_link = self._links.get(name, None)
 
@@ -270,7 +287,19 @@ class ParameterSet(traitlets.HasTraits):
                 del self._links[name]
 
     def to_dict(self):
-        "Key-value pairs of the parameters."
+        """
+        Key-value pairs of the parameters.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+        >>> img = img.pick_bands("red") # doctest: +SKIP
+        >>> masked_img = img.mask(img > wf.parameter("threshold", wf.Float)) # doctest: +SKIP
+        >>> layer = masked_img.visualize("sample", colormap="plasma", threshold=0.07) # doctest: +SKIP
+        >>> layer.parameters.to_dict() # doctest: +SKIP
+        {'threshold': 0.07}
+        """
         return {name: getattr(self, name) for name in self.trait_names()}
 
     def _make_widget_contents(self, skip=None):
@@ -344,6 +373,17 @@ class ParameterSet(traitlets.HasTraits):
             A widget showing a table of controls, linked to this `ParameterSet`.
             Updating the widgets causes the map to update.
             If there are no parameters to display, returns None.
+
+        Example
+        -------
+        >>> import traitlets
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+        >>> img = img.pick_bands("red") # doctest: +SKIP
+        >>> masked_img = img.mask(img > wf.parameter("threshold", wf.Float)) # doctest: +SKIP
+        >>> layer = masked_img.visualize("sample", colormap="plasma", threshold=0.07, sample_param=0.0) # doctest: +SKIP
+        >>> layer.parameters.make_widget(skip=["sample_param"]) # doctest: +SKIP
+        >>> # ^ displays a widget for modifying a layer's parameters, optionally skipping params
         """
         return ipywidgets.VBox(self._make_widget_contents(skip=skip))
 
@@ -371,6 +411,20 @@ class ParameterSet(traitlets.HasTraits):
         **new_values: JSON-serializable value, Proxytype, or ipywidgets.Widget
             Parameter names to new values. Values can be Python types,
             `Proxytype` instances, or ``ipywidgets.Widget`` instances.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> from ipywidgets import FloatSlider
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+        >>> img = img.pick_bands("red") # doctest: +SKIP
+        >>> masked_img = img.mask(img > wf.parameter("threshold", wf.Float)) # doctest: +SKIP
+        >>> layer = masked_img.visualize("sample", colormap="plasma", threshold=0.07) # doctest: +SKIP
+        >>> scaled_img = img * wf.parameter("scale", wf.Float) + wf.parameter("offset", wf.Float) # doctest: +SKIP
+        >>> with layer.hold_trait_notifications(): # doctest: +SKIP
+        ...     layer.image = scaled_img # doctest: +SKIP
+        ...     layer.parameters.update(scale=FloatSlider(min=0, max=10, value=2), offset=2.5) # doctest: +SKIP
+        >>> # ^ re-use the same layer instance for a new Image with different parameters
         """
         self._update_traits_for_new_values(new_values)
         self._assign_new_values(new_values)
@@ -450,7 +504,48 @@ class ParameterSet(traitlets.HasTraits):
                     self.set_trait(name, value)
 
     def add_traits(self, **traits):
-        "Dynamically add trait attributes to the HasTraits instance."
+        """
+        Dynamically add trait attributes to the HasTraits instance.
+
+        If you are manipulating a ParameterSet generated from a layer, instead
+        use :meth:`update <descarteslabs.workflows.interactive.ParameterSet.update>`,
+        which handles adding and removing traits in a more delclarative way.
+
+        Example
+        -------
+        >>> import traitlets
+        >>> import descarteslabs.workflows as wf
+        >>> class Listener(traitlets.HasTraits):
+        ...     @traitlets.observe("param")
+        ...     def handler(self, change):
+        ...         print(change['key'])
+        ...         print(change)
+        >>> listener = Listener()
+        >>> ps = wf.interactive.ParameterSet(listener, "param", foo=traitlets.Float()) # doctest: +SKIP
+        >>> ps.foo = 1.1 # doctest: +SKIP
+        foo
+        {'name': 'param',
+         'old': 0.0,
+         'new': 1.1,
+         'owner': ParameterSet({'foo': 1.1}),
+         'type': 'change',
+         'key': 'foo'
+         }
+        >>> ps.bar = "baz" # doctest: +SKIP
+        >>> # ^ nothing is printed, `bar` is not a trait
+        >>> ps.add_traits(bar=traitlets.Unicode()) # doctest: +SKIP
+        >>> ps.bar # doctest: +SKIP
+        ''
+        >>> ps.bar = "quix" # doctest: +SKIP
+        bar
+        {'name': 'param',
+         'old': '',
+         'new': 'quix',
+         'owner': ParameterSet({'bar': 'quix', 'foo': 1.1}),
+         'type': 'change',
+         'key': 'bar'
+         }
+        """
         # Normally, `HasTraits.add_traits` dynamically constructs a new type
         # that's a subclass of `type(self)`, appends *just* the new traits to that class's `__dict__`,
         # and modifies `self.__class__` to point at the new subtype, using inheritance
@@ -491,7 +586,49 @@ class ParameterSet(traitlets.HasTraits):
             trait.instance_init(self)
 
     def remove_traits(self, *names):
-        "Remove traits that were dynamically added to the HasTraits instance"
+        """
+        Remove traits that were dynamically added to the HasTraits instance
+
+        If you are manipulating a ParameterSet generated from a layer, instead
+        use :meth:`update <descarteslabs.workflows.interactive.ParameterSet.update>`,
+        which handles adding and removing traits in a more delclarative way.
+
+        Example
+        -------
+        >>> import traitlets
+        >>> import descarteslabs.workflows as wf
+        >>> class Listener(traitlets.HasTraits):
+        ...     @traitlets.observe("param")
+        ...     def handler(self, change):
+        ...         print(change['key'])
+        ...         print(change)
+        >>> listener = Listener()
+        >>> ps = wf.interactive.ParameterSet(listener, "param", foo=traitlets.Float()) # doctest: +SKIP
+        >>> ps.foo = 1.1 # doctest: +SKIP
+        foo
+        {'name': 'param',
+         'old': 0.0,
+         'new': 1.1,
+         'owner': ParameterSet({'foo': 1.1}),
+         'type': 'change',
+         'key': 'foo'
+         }
+        >>> ps.add_traits(bar=traitlets.Unicode()) # doctest: +SKIP
+        >>> ps.bar = 'quix' # doctest: +SKIP
+        bar
+        {'name': 'param',
+         'old': '',
+         'new': 'quix',
+         'owner': ParameterSet({'bar': 'quix', 'foo': 1.1}),
+         'type': 'change',
+         'key': 'bar'
+         }
+        >>> ps.remove_traits("foo") # doctest: +SKIP
+        >>> ps.foo = 2.2 # doctest: +SKIP
+        >>> # ^ nothing is printed, `foo` is no longer a trait
+        >>> ps.to_dict() # doctest: +SKIP
+        {'bar': 'quix'}
+        """
         # Thanks to our guarantee from our `add_traits` that:
         # - `type(self)` is a singleton class and nobody else cares about it
         # - all relevant `TraitType`s are set on `type(self).__dict__` and nowhere else
