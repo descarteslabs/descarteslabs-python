@@ -33,6 +33,9 @@ class Kernel(KernelBase):
     }
     _constructor = "Kernel.load"
 
+    def __init__(self, dims, data):
+        return super(Kernel, self).__init__(dims=dims, data=data)
+
 
 @typecheck_promote((Image, ImageCollection), Kernel)
 def conv2d(obj, filt):

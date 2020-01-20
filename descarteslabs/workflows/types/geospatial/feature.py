@@ -38,6 +38,9 @@ class Feature(FeatureStruct, GeometryMixin):
 
     _constructor = "Feature.create"
 
+    def __init__(self, geometry, properties):
+        return super(Feature, self).__init__(geometry=geometry, properties=properties)
+
     @classmethod
     def from_geojson(cls, geojson):
         """

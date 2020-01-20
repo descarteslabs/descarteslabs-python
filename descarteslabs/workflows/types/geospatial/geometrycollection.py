@@ -3,12 +3,13 @@ from ..core import typecheck_promote
 from ..primitives import Str, Int, Float
 from ..containers import List, Struct
 from .geometry import Geometry
+from .mixins import GeometryMixin
 
 GeometryCollectionStruct = Struct[{"type": Str, "geometries": List[Geometry]}]
 
 
 @serializable(is_named_concrete_type=True)
-class GeometryCollection(GeometryCollectionStruct, Geometry):
+class GeometryCollection(GeometryCollectionStruct, GeometryMixin):
     """Proxy GeoJSON GeometryCollection constructed from a sequence of Geometries.
 
     Examples
@@ -36,6 +37,11 @@ class GeometryCollection(GeometryCollectionStruct, Geometry):
     _constructor = "GeometryCollection.create"
     _element_type = Geometry
 
+    def __init__(self, geometries, type="GeometryCollection"):
+        return super(GeometryCollection, self).__init__(
+            type=type, geometries=geometries
+        )
+
     @classmethod
     def from_geojson(cls, geojson):
         """
@@ -60,6 +66,14 @@ class GeometryCollection(GeometryCollectionStruct, Geometry):
                 "Expected a GeoJSON mapping containing the fields 'type' and 'geometries', "
                 "but got {}".format(geojson)
             )
+
+    @classmethod
+    def _promote(cls, obj):
+        if hasattr(obj, "__geo_interface__"):
+            return cls.from_geo_interface(obj)
+        if isinstance(obj, dict):
+            return cls.from_geojson(obj)
+        return super()._promote(obj)
 
     @typecheck_promote((Int, Float))
     def buffer(self, distance):

@@ -198,6 +198,26 @@ class GeoContext(GeoContextBase):
             """,
     }
 
+    def __init__(
+        self,
+        geometry=None,
+        resolution=None,
+        crs=None,
+        align_pixels=True,
+        bounds=None,
+        bounds_crs="EPSG:4326",
+        shape=None,
+    ):
+        return super(GeoContext, self).__init__(
+            geometry=geometry,
+            resolution=resolution,
+            crs=crs,
+            align_pixels=align_pixels,
+            bounds=bounds,
+            bounds_crs=bounds_crs,
+            shape=shape,
+        )
+
     @classmethod
     @typecheck_promote(Str)
     def from_dltile_key(cls, key):

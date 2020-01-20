@@ -1,8 +1,5 @@
-from ... import env
-
 from ...cereal import serializable
-from ..core import typecheck_promote
-from ..primitives import Any, Str, Int, Float
+from ..primitives import Any, Str
 from ..containers import List, Struct
 from .mixins import GeometryMixin
 
@@ -31,6 +28,9 @@ class Geometry(GeometryStruct, GeometryMixin):
     """
 
     _constructor = "Geometry.create"
+
+    def __init__(self, type, coordinates):
+        return super(Geometry, self).__init__(type=type, coordinates=coordinates)
 
     @classmethod
     def from_geo_interface(cls, obj):
@@ -92,36 +92,3 @@ class Geometry(GeometryStruct, GeometryMixin):
         if isinstance(obj, dict):
             return cls.from_geojson(obj)
         return super(Geometry, cls)._promote(obj)
-
-    @typecheck_promote((Int, Float))
-    def rasterize(self, value=1):
-        """
-        Rasterize this Geometry into an `~.geospatial.Image`
-
-        Parameters
-        ----------
-        value: Int, Float, default=1
-            Fill pixels within the Geometry with this value.
-            Pixels outside the Geometry will be masked, and set to 0.
-
-        Note
-        ----
-        Rasterization happens according to the `~.workflows.types.geospatial.GeoContext`
-        of the `.Job`, so the geometry is projected into and rasterized at
-        that CRS and resolution.
-
-        Returns
-        -------
-        rasterized: ~.geospatial.Image
-            An Image with 1 band named ``"features"``, and empty properties and bandinfo.
-
-        Example
-        -------
-        >>> import descarteslabs.workflows as wf
-        >>> geom = wf.Geometry(type="Point", coordinates=[1, 2])
-        >>> geom.rasterize(value=0.5)
-        <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
-        """
-        from .image import Image
-
-        return Image._from_apply("rasterize", self, value, env.geoctx)
