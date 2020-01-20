@@ -102,7 +102,7 @@ class TestImageUpload(ClientTestCase):
                 "jsonapi": {"version": "1.0"},
             },
         )
-        # The update of the update request
+        # The update of the upload request
         self.mock_response(
             responses.PATCH,
             {
@@ -133,6 +133,58 @@ class TestImageUpload(ClientTestCase):
                             "message": "message-id=1",
                         },
                     }
+                ],
+                "jsonapi": {"version": "1.0"},
+            },
+        )
+        # The cancel of the upload request
+        self.mock_response(
+            responses.PATCH,
+            {
+                "data": {
+                    "type": "image_upload",
+                    "id": "1",
+                    "attributes": {
+                        "created": "2020-01-01T00:00:00.000000Z",
+                        "modified": "2020-01-01T00:00:00.000000Z",
+                        "status": ImageUploadStatus.CANCELED.value,
+                        "product_id": "product_id",
+                        "image_id": "product_id:image_name",
+                    },
+                    "relationships": {
+                        "events": {
+                            "data": [
+                                {"type": "image_upload_event", "id": "1"},
+                                {"type": "image_upload_event", "id": "2"},
+                            ]
+                        }
+                    },
+                },
+                "included": [
+                    {
+                        "type": "image_upload_event",
+                        "id": "1",
+                        "attributes": {
+                            "event_datetime": "2020-01-01T00:00:00.000000Z",
+                            "component": "yaas",
+                            "component_id": "yaas-1",
+                            "event_type": ImageUploadEventType.QUEUE.value,
+                            "severity": ImageUploadEventSeverity.INFO.value,
+                            "message": "message-id=1",
+                        },
+                    },
+                    {
+                        "type": "image_upload_event",
+                        "id": "2",
+                        "attributes": {
+                            "event_datetime": "2020-01-01T00:00:00.000000Z",
+                            "component": "yaas",
+                            "component_id": "yaas-1",
+                            "event_type": ImageUploadEventType.CANCEL.value,
+                            "severity": ImageUploadEventSeverity.INFO.value,
+                            "message": "Canceled",
+                        },
+                    },
                 ],
                 "jsonapi": {"version": "1.0"},
             },
@@ -172,6 +224,15 @@ class TestImageUpload(ClientTestCase):
         assert u.events[0].event_datetime == datetime(2020, 1, 1, 0, 0, 0, tzinfo=utc)
         assert u.events[0].event_type == ImageUploadEventType.QUEUE
         assert u.events[0].severity == ImageUploadEventSeverity.INFO
+
+        u.cancel()
+
+        assert u.status == ImageUploadStatus.CANCELED
+        assert u.state == DocumentState.SAVED
+        assert len(u.events) == 2
+        assert u.events[1].event_datetime == datetime(2020, 1, 1, 0, 0, 0, tzinfo=utc)
+        assert u.events[1].event_type == ImageUploadEventType.CANCEL
+        assert u.events[1].severity == ImageUploadEventSeverity.INFO
 
     @responses.activate
     @patch("descarteslabs.catalog.image_upload.ImageUpload._POLLING_INTERVALS", [1])

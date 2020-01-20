@@ -473,7 +473,8 @@ class ImageUpload(CatalogObjectBase):
         ConflictError
             If the upload has a current status which does not allow it to be canceled.
         """
-        self.update(status=ImageUploadStatus.CANCELED)
+        self.status = ImageUploadStatus.CANCELED
+        self.save()
 
     @classmethod
     def _load_related_objects(cls, response, client):
