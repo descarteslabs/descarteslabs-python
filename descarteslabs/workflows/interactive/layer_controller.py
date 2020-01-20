@@ -10,7 +10,23 @@ from .map_ import Map
 
 
 class LayerControllerList(widgets.VBox):
-    "Widget displaying a list of `LayerControllerRow` widgets for a `Map`."
+    """
+    Widget displaying a list of `LayerControllerRow` widgets for a `Map`.
+
+    Example
+    -------
+    >>> import descarteslabs.workflows as wf
+    >>> my_map = wf.Map() # doctest: +SKIP
+    >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1").pick_bands("red") # doctest: +SKIP
+    >>> img.visualize("sample visualization", map=my_map) # doctest: +SKIP
+    >>> my_map # doctest: +SKIP
+    >>> # ^ shows map with no layer controls
+    >>> layer_controller = wf.interactive.LayerControllerList(my_map) # doctest: +SKIP
+    >>> layer_controller # doctest: +SKIP
+    >>> # ^ shows layer controls as a separate widget
+    >>> layer_controller.children # doctest: +SKIP
+    >>> # ^ list of individual widgets controlling each layer
+    """
     map = traitlets.Instance(Map, help="The map being controlled")
 
     def __init__(self, map):
@@ -55,12 +71,12 @@ class LayerController(ipyleaflet.WidgetControl):
     Example
     -------
     >>> import descarteslabs.workflows as wf
-    >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red green blue")
-    >>> map = wf.Map()  # doctest: +SKIP
+    >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1").pick_bands("red green blue")
+    >>> my_map = wf.Map()  # doctest: +SKIP
     >>> layer = wf.WorkflowsLayer(img)  # doctest: +SKIP
-    >>> map.add_layer(layer)  # doctest: +SKIP
-    >>> ctl = wf.LayerController(map)  # doctest: +SKIP
-    >>> map  # doctest: +SKIP
+    >>> my_map.add_layer(layer)  # doctest: +SKIP
+    >>> ctl = wf.LayerController(my_map)  # doctest: +SKIP
+    >>> my_map  # doctest: +SKIP
 
     Attributes
     ----------

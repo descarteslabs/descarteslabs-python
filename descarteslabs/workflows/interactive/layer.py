@@ -61,6 +61,21 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     error_output: ipywidgets.Output, optional, default None
         If set, write unique errors from tiles computation to this output area
         from a background thread. Setting to None stops the listener thread.
+
+    Example
+    -------
+    >>> import descarteslabs.workflows as wf
+    >>> wf.map # doctest: +SKIP
+    >>> # ^ display interactive map
+    >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1").pick_bands("red")
+    >>> masked_img = img.mask(img > wf.parameter("threshold", wf.Float))
+    >>> layer = masked_img.visualize("sample", colormap="viridis", threshold=0.07) # doctest: +SKIP
+    >>> layer.colormap = "plasma" # doctest: +SKIP
+    >>> # ^ change colormap (this will update the layer on the map)
+    >>> layer.parameters.threshold = 0.13 # doctest: +SKIP
+    >>> # ^ adjust parameters (this also updates the layer)
+    >>> layer.set_scales((0.01, 0.3)) # doctest: +SKIP
+    >>> # ^ adjust scaling (this also updates the layer)
     """
 
     attribution = traitlets.Unicode("Descartes Labs").tag(sync=True, o=True)

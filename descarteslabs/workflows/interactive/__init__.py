@@ -9,7 +9,8 @@ try:
 
     map = MapApp()
     """
-    A single `MapApp` instance that all ``visualize`` calls are automatically added to.
+    A single `MapApp` instance that all ``visualize`` calls are automatically
+    added to. This is the best starting point for using Workflows interactive maps.
 
     Run::
 

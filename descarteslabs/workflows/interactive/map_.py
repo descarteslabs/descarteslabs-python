@@ -27,6 +27,23 @@ class MapApp(widgets.VBox):
     map widget, ``wf.map`` is the container with the layer controls, which will
     resize accordingly.) Setting the height on just ``wf.map`` will also work,
     but if you use an output view, then the map won't resize itself to fit in within it.
+
+    Example
+    -------
+    >>> import descarteslabs.workflows as wf
+    >>> from ipywidgets import HBox # doctest: +SKIP
+    >>> map1 = wf.interactive.MapApp() # doctest: +SKIP
+    >>> map2 = wf.interactive.MapApp() # doctest: +SKIP
+    >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+    >>> img1 = img.pick_bands("red") # doctest: +SKIP
+    >>> img2 = img.pick_bands("nir") # doctest: +SKIP
+    >>> img1.visualize("red band", map=map1) # doctest: +SKIP
+    >>> img2.visualize("nir band", map=map2) # doctest: +SKIP
+    >>> # ^ view the red band on map1 and the nir band on map2
+    >>> HBox([map1, map2]) # doctest: +SKIP
+    >>> # ^ view the two maps in a custom layout
+    >>> ctx = map1.geocontext() # doctest: +SKIP
+    >>> # get the geocontext of the first map
     """
 
     _forward_attrs_to_map = {
@@ -242,6 +259,15 @@ class Map(ipyleaflet.Map):
     output_log: ipywidgets.Output
         Widget where functions doing operations on this map (especially compute operations,
         like autoscaling or timeseries) can log their output.
+
+    Example
+    -------
+    >>> import descarteslabs.workflows as wf
+    >>> from ipywidgets import HBox # doctest: +SKIP
+    >>> map1 = wf.Map() # doctest: +SKIP
+    >>> map2 = wf.Map() # doctest: +SKIP
+    >>> HBox([map1, map2]) # doctest: +SKIP
+    >>> # ^ view multiple maps in a custom layout
     """
 
     center = traitlets.List(

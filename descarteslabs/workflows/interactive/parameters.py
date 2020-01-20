@@ -9,7 +9,28 @@ from .. import types
 
 
 class ProxytypeInstance(traitlets.Instance):
-    "Trait type that tries to promote values to a given Proxytype"
+    """
+    Trait type that tries to promote values to a given Proxytype
+
+    Example
+    -------
+    >>> import traitlets
+    >>> import descarteslabs.workflows as wf
+    >>> from descarteslabs.workflows.interactive import ProxytypeInstance
+    >>> class ProxyTraits(traitlets.HasTraits): # doctest: +SKIP
+    ...     int_list = ProxytypeInstance(klass=wf.List[wf.Int]) # doctest: +SKIP
+    ...     @traitlets.observe('int_list') # doctest: +SKIP
+    ...     def int_list_changed(self, change): # doctest: +SKIP
+    ...         print(f"new int list: {change['new']}") # doctest: +SKIP
+    >>> pt = ProxyTraits() # doctest: +SKIP
+    >>> pt.int_list = [1, 2, 3] # doctest: +SKIP
+    new int list: <descarteslabs.workflows.types.containers.list_.List[Int] object at 0x...>
+    >>> pt.int_list = [1, 2, "not an int"] # doctest: +SKIP
+    TraitError: For parameter 'int_list', could not promote [1, 2, 'not an int']
+    to <class 'descarteslabs.workflows.types.containers.list_.List[Int]'>: List[Int]:
+    Expected iterable values of type <class 'descarteslabs.workflows.types.primitives.number.Int'>,
+    but for item 2, got 'not an int'
+    """
 
     def validate(self, obj, value):
         if isinstance(value, self.klass):
