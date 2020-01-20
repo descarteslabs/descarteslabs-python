@@ -213,6 +213,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             Reflectance processing level. Possible values are ``'toa'`` (top of atmosphere)
             and ``'surface'``. For products that support it, ``'surface'`` applies
             Descartes Labs' general surface reflectance algorithm to the output.
+            Any Images that have not been processed for surface reflectance are filtered out.
+            If no Images support surface reflectance, returns an empty `ImageCollection`.
 
         Returns
         -------
