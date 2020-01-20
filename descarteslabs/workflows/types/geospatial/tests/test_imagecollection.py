@@ -112,6 +112,7 @@ def test_all_methods_nonstats():
     assert isinstance(
         col.replace_empty_with(0.1, bandinfo={"red": {}}), ImageCollection
     )
+    assert isinstance(col.mosaic(), Image)
     assert isinstance(col.concat(img), ImageCollection)
     assert isinstance(col.mask(img), ImageCollection)
     assert isinstance(col.mask(img, replace=True), ImageCollection)

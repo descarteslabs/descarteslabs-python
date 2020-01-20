@@ -36,6 +36,7 @@ Changelog
 - Map displays a **fullscreen button** by default (**[breaking]** if your code adds one, you'll now get two)
 - **`wf.concat`** for concatentating `Image` and `ImageCollection` objects
   - `ImageCollection.concat` now accepts `Image` objects; new `Image.concat` accepts `Image` or `ImageCollection`
+- **`ImageCollection.mosaic()`**
 - `FeatureCollection.sorted()`, `FeatureCollection.length()`, `FeatureCollection.__reversed__()`
 - `GeometryCollection.length()`, `GeometryCollection.__reversed__()`
 

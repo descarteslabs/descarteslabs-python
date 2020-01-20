@@ -1284,6 +1284,28 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("count", self, axis)
 
+    def mosaic(self):
+        """
+        Composite the `ImageCollection` into a single `~.geospatial.Image` by picking each first-unmasked pixel.
+
+        Mosaicing occurs in the order of the `ImageCollection`; combine with `sorted` to control this.
+
+        Returns
+        -------
+        mosaicked: ~.geospatial.Image
+            The mosaicked Image
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
+        >>> col.mosaic()
+        <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
+        >>> date_mosaic = col.sorted(lambda img: img.properties['date']).mosaic()
+        >>> cloudfree_mosaic = col.sorted(lambda img: img.properties['cloud_fraction']).mosaic()
+        """
+        return Image._from_apply("mosaic", self)
+
     @typecheck_promote(Int)
     def __getitem__(self, item):
         # TODO(gabe): slices
