@@ -17,6 +17,7 @@ import os
 import struct
 from io import BytesIO
 import logging
+import warnings
 
 import six
 
@@ -111,8 +112,7 @@ class Raster(Service):
 
         super(Raster, self).__init__(url, auth=auth, retries=retries)
 
-    # please keep default maxtiles value equal to MAXTILES in the service
-    def iter_dltiles_from_shape(self, resolution, tilesize, pad, shape, maxtiles=5000):
+    def iter_dltiles_from_shape(self, resolution, tilesize, pad, shape, maxtiles=None):
         """
         Iterates over all DLTiles as GeoJSONs features that intersect the
         GeoJSON geometry ``shape`` or Shapely shape object.
@@ -122,7 +122,6 @@ class Raster(Service):
         :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
         :param str shape: A GeoJSON geometry or Shapely shape specifying a shape over
             which to intersect DLTiles.
-        :param int maxtiles: Maximum number of tiles per paged request
 
         :return: An iterator over GeoJSON features representing
             intersecting DLTiles
@@ -184,6 +183,11 @@ class Raster(Service):
               'type': 'Feature'
             }
         """
+
+        if maxtiles is not None:
+            warnings.warn("The maxtiles argument is deprecated and will be removed in a future "
+                          "release.", DeprecationWarning)
+
         shape = shapely_to_geojson(shape)
         shape = as_json_string(shape)
         params = {
@@ -191,7 +195,7 @@ class Raster(Service):
             "tilesize": tilesize,
             "pad": pad,
             "shape": shape,
-            "maxtiles": maxtiles,
+            "maxtiles": 5000,
         }
 
         while True:
