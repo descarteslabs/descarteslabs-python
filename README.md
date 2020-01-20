@@ -23,10 +23,45 @@ Changelog
 ### Changed
 - The client package is now distributed on PyPI as a Python 3 wheel and will install/update more quickly.
 
-### Workflows - Added
-- `wf.concat` for concatentating `Image` and `ImageCollection` objects
-- `ImageCollection.concat` now accepts `Image` objects
-- Images: `concat` method 
+### Workflows (channel `v0-11`) - Added
+- **Handling of missing data** via empty ImageCollections
+  - `ImageCollection.from_id` returns an empty ImageCollection if no data exist for the given time/place, rather than an error
+  - `ImageCollection.filter` returns an empty ImageCollection if the predicate is False for every Image, rather than an error
+  - `Image.replace_empty_with` and `ImageCollection.replace_empty_with` for explicitly filling in missing data
+  - See the [Workflows guide](https://docs.descarteslabs.com/guides/workflows.html) for more information
+- **Docstrings and examples** on every class and function!
+- **Assigning new metadata to Image properties** & bandinfo: `Image.with_properties()`, `Image.with_bandinfo()`
+- Interactive map: **colorbar legends** on layers with colormaps (requires matplotlib)
+- **`Dict.from_pairs`**: construct a Dict from a sequence of key-value pairs
+- Map displays a **fullscreen button** by default (**[breaking]** if your code adds one, you'll now get two)
+- **`wf.concat`** for concatentating `Image` and `ImageCollection` objects
+  - `ImageCollection.concat` now accepts `Image` objects; new `Image.concat` accepts `Image` or `ImageCollection`
+- `FeatureCollection.sorted()`, `FeatureCollection.length()`, `FeatureCollection.__reversed__()`
+- `GeometryCollection.length()`, `GeometryCollection.__reversed__()`
+
+### Workflows - Changed
+- **`wf.zip` now supports `ImageCollection`**, `FeatureCollection`, `GeometryCollection` as well as `List` and `Str`
+- **Get a GeoContext for the current bounds of the map in any resolution, shape, or CRS** (including `"utm"`, which automatically picks the right UTM zone for you) with `wf.map.geocontext`. Also now returns a Scenes GeoContext for better introspection and use with Raster.
+- Better backend type-checking displays the possible arguments for most functions if called incorrectly
+- `arr_shape` included when calling `wf.GeoContext.compute()`
+- More readable errors when communication with the backend fails
+- Interactive map: layout handles being resized, for example setting `wf.map.layout.height = '1000px'`
+- `Any` is no longer callable; `Any.cast` encouraged
+- `remove_layer` and `clear_layers` moved from `wf.interactive.MapApp` class to `wf.interactive.Map` (non-breaking change)
+- **[possibly breaking]** band renaming in binary operators only occurs when broadcasting: `red + red` is just `red`, rather than `red_add_red`. `red + blue` is still `red_add_blue`. Code which depends on accessing bands by name may need to change.
+
+### Workflows - Fixed
+- `wf.where` propagates masks correctly, and handles metadata correctly with multi-band inputs
+- `processing_level="surface"` actually returns surface-reflectance-processed imagery
+- `ImageCollection.sorted()` works properly
+- Viewing global-extent WGS84 images on the Workflows map no longer causes errors
+- `List` proxytype no longer infinitely iterable in Python
+- Repeated use of `axis="bands"` works correctly
+- `ImageCollection.from_images` correctly aligns the bands of the inputs
+- Numeric casting (`wf.Int(wf.Float(2.2))`) works as expected
+- More descriptive error when constructing an invalid `wf.Datetime`
+- Computing a single `Bool` value derived from imagery works correctly
+
 
 ## [0.28.1] - 2019-12-10
 ### Changed
