@@ -8,20 +8,40 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## [Unreleased]
+## [1.0.0] - 2020-01-20
 
-| After January 1st, 2020, all future client library releases will be Python 3 only. For more information, please contact support@descarteslabs.com. For porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html. |
+| As of January 1st, 2020, the client library no longer supports Python 2. For more information, please contact support@descarteslabs.com. For help with porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html. |
 | --------- |
 
 ### Catalog client
-- There is an entirely new backend supporting the asynchronous upload of image files and ndarrays with
-  the catalog client. There are minor changes to the `ImageUpload` class (added the `events` member,
-  updated the fields in the `errors` member, and removed the `job_id` member) but the basic interface is
-  unchanged and so most client code will also function without changes.
-- It is now possible to cancel an image upload, but good luck typing the command fast enough before it completes!
+- There is an entirely new backend supporting asynchronous uploads of image files and ndarrays with
+  the catalog client. There are minor changes to the `ImageUpload` class (a new `events` field has subsumed
+  `errors`, and the `job_id` field has been removed) but the basic interface is unchanged so most
+  code will keep functioning without any changes.
+- It is now possible to cancel image uploads.
+- Errors messages are now easier to read.
+- Many improvements to the documentation.
+- You can now create or retrieve an existing object using the `get_or_create` method.
+- Retrieving a `Band` or `Image` by name is now possible by calling `get_band` or `get_image` on the
+  `Product` instance. You can also use the Product's `named_id` function to get a complete id for
+  images and bands.
+- A new convenience function `make_valid_name` on `Image` and `Band` classes will return a sanitized
+  name without invalid characters.
+- A new property `ATTRIBUTES` enumerates which attributes are available for a specific catalog object.
+- Trying to set an attribute that does not exist will now raise `AttributeError`.
+- `update_related_objects_permissions()` should no longer fail with a JSON serialization error.
+- Setting a read-only attribute will now raise an `AttributeValidationError`.
+- Saving a new object while one with the same id already exists will now raise a `ConflictError`
+  instead of `BadRequestError`.
+- If a retrieved object has since been deleted from the catalog, saving any changes or trying to
+  reload it will now raise a `DeletedObjectError`.
+- Resolution fields now accept string values such as "10m" or "0.008 degrees". If the value cannot
+  be parsed, an `AttributeValidationError` will be raised.
+- Changes to the `extra_properties` attribute are now tracked correctly.
 
-### Changed
-- The client package is now distributed on PyPI as a Python 3 wheel and will install/update more quickly.
+### Packaging
+- This release no longer supports Python 2.
+- This package is now distributed as a Python 3 wheel which will speed up installation.
 
 ### Workflows (channel `v0-11`) - Added
 - **Handling of missing data** via empty ImageCollections
@@ -65,6 +85,7 @@ Changelog
 
 
 ## [0.28.1] - 2019-12-10
+
 ### Changed
 - Update workflows client channel
 - Workflows map UI is more stable: errors and layers won't fill the screen

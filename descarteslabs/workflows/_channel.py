@@ -1,4 +1,4 @@
-__channel__ = "v0-10"
+__channel__ = "v0-11"
 
 
 def _set_channel(channel):
