@@ -1,7 +1,11 @@
+import operator
+
 from ..function import Function
-from ..primitives import Any, Bool, Int, NoneType
+from ..primitives import Bool, Int, NoneType
 from ..core import Proxytype, ProxyTypeError, typecheck_promote
 
+
+from ._check_valid_binop import check_valid_binop_for
 
 REDUCE_INITIAL_DEFAULT = "__NO_INITIAL_REDUCE_VALUE__"
 
@@ -205,30 +209,29 @@ class CollectionMixin:
     def _make_sort_key(self, key):
         "Delay a Python sort key function, or None, and ensure it produces an orderable type"
         if key is None or isinstance(key, NoneType):
-            key_result = self._element_type._from_apply("")
-            nonbool_msg = nonorderable_msg = (
+            key_type = self._element_type
+            invalid_msg = unsupported_msg = (
                 "{} does not contain orderable items and cannot be sorted directly. "
                 "Please provide a key function.".format(type(self).__name__)
             )
         else:
-            key = Function._delay(key, None, self._element_type)
-            # ^ NOTE(gabe): we use `._delay` instead of `from_callable`
-            # to get the object returned by the function, so we can use
-            # comparison operators on it directly. Same graft as a Function,
-            # just a different Python type.
-            key_result = key
-            nonbool_msg = "In sort key: comparing {} did not result in Bool".format(
-                type(key).__name__
+            key = Function.from_callable(key, self._element_type)
+            key_type = key._type_params[-1]
+            invalid_msg = (
+                "Sort key function produced {type_name}, which is not orderable, "
+                "since comparing {type_name}s produces {result_name}, not Bool."
             )
-            nonorderable_msg = "Sort key function produced non-orderable type {}".format(
-                type(key).__name__
+            unsupported_msg = (
+                "Sort key function produced non-orderable type {type_name}"
             )
 
-        try:
-            if type(key_result < key_result) not in (Any, Bool):
-                raise TypeError(nonbool_msg)
-        except TypeError:
-            raise TypeError(nonorderable_msg)
+        check_valid_binop_for(
+            operator.lt,
+            key_type,
+            error_prefix=None,
+            unsupported_msg=unsupported_msg,
+            invalid_msg=invalid_msg,
+        )
 
         return key
 

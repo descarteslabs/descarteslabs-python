@@ -1,8 +1,12 @@
+import operator
+
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import ProxyTypeError, GenericProxytype
-from ..primitives import Int
+from ..core import ProxyTypeError, GenericProxytype, typecheck_promote
+from ..primitives import Int, Bool
 from .collection import CollectionMixin
+
+from ._check_valid_binop import check_valid_binop_for
 
 try:
     # only after py3.4
@@ -34,6 +38,10 @@ class List(GenericProxytype, CollectionMixin):
     [1.1, 2.2, 3.3, 4.4]
     >>> my_list[2].compute() # doctest: +SKIP
     3.3
+    >>> (my_list * 2).compute() # doctest: +SKIP
+    [1.1, 2.2, 3.3, 4.4, 1.1, 2.2, 3.3, 4.4]
+    >>> (my_list == my_list).compute() # doctest: +SKIP
+    True
     """
 
     def __init__(self, iterable):
@@ -87,3 +95,73 @@ class List(GenericProxytype, CollectionMixin):
     @property
     def _element_type(self):
         return self._type_params[0]
+
+    @typecheck_promote(lambda self: type(self))
+    def __lt__(self, other):
+        check_valid_binop_for(
+            operator.lt,
+            self._type_params[0],
+            f"Operator `<` invalid for {type(self).__name__}",
+        )
+        return Bool._from_apply("lt", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __le__(self, other):
+        check_valid_binop_for(
+            operator.le,
+            self._type_params[0],
+            f"Operator `<=` invalid for {type(self).__name__}",
+        )
+        return Bool._from_apply("le", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __gt__(self, other):
+        check_valid_binop_for(
+            operator.gt,
+            self._type_params[0],
+            f"Operator `>` invalid for {type(self).__name__}",
+        )
+        return Bool._from_apply("gt", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __ge__(self, other):
+        check_valid_binop_for(
+            operator.ge,
+            self._type_params[0],
+            f"Operator `>=` invalid for {type(self).__name__}",
+        )
+        return Bool._from_apply("ge", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __eq__(self, other):
+        check_valid_binop_for(
+            operator.eq,
+            self._type_params[0],
+            f"Operator `==` invalid for {type(self).__name__}",
+        )
+        return Bool._from_apply("eq", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __ne__(self, other):
+        check_valid_binop_for(
+            operator.ne,
+            self._type_params[0],
+            f"Operator `!=` invalid for {type(self).__name__}",
+        )
+        return Bool._from_apply("ne", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __add__(self, other):
+        return self._from_apply("add", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __radd__(self, other):
+        return self._from_apply("add", other, self)
+
+    @typecheck_promote(Int)
+    def __mul__(self, times):
+        return self._from_apply("mul", self, times)
+
+    @typecheck_promote(Int)
+    def __rmul__(self, times):
+        return self._from_apply("mul", times, self)

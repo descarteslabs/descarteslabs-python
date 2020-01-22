@@ -6,7 +6,7 @@ from descarteslabs.common.graft import client
 from descarteslabs.common.graft import interpreter
 
 from ...core import ProxyTypeError
-from ...primitives import Int, Str
+from ...primitives import Int, Str, Bool, NoneType
 from .. import List
 
 
@@ -71,3 +71,53 @@ def test_getitem_roundtrip():
             builtins={"list": lambda *args: list(args), "getitem": operator.getitem},
         )()
         assert value == truth
+
+
+@pytest.mark.parametrize(
+    "method",
+    [operator.lt, operator.le, operator.gt, operator.ge, operator.eq, operator.ne],
+)
+@pytest.mark.parametrize("other", [List[Int]([2, 3, 4]), [2, 3, 4]])
+def test_container_methods(method, other):
+    list_ = List[Int]([1, 2, 3])
+    result = method(list_, other)
+    assert isinstance(result, Bool)
+
+
+def test_container_methods_check_elem_type():
+    list_ = List[NoneType]([])
+    with pytest.raises(TypeError, match=r"Operator `<` invalid for List\[NoneType\]"):
+        list_ < list_
+
+
+def test_container_methods_recursive_check():
+    list_ = List[List[Int]]([[1], [2]])
+    assert isinstance(list_ < list_, Bool)
+
+    list_ = List[List[NoneType]]([[None], [None]])
+    with pytest.raises(TypeError, match=r"Operator `<` invalid for List\[List\[NoneType\]\]"):
+        list_ < list_
+
+
+@pytest.mark.parametrize("other", [List[Int]([2, 3, 4]), [2, 3, 4]])
+def test_add(other):
+    list_ = List[Int]([1, 2, 3])
+    assert isinstance(list_ + other, type(list_))
+    assert isinstance(other + list_, type(list_))
+
+
+def test_add_check():
+    with pytest.raises(TypeError, match="promoting"):
+        List[Int]([1, 2, 3]) + ["a", "b", "c"]
+
+
+@pytest.mark.parametrize("other", [3, Int(3)])
+def test_mul(other):
+    list_ = List[Int]([1, 2, 3])
+    assert isinstance(list_ * other, type(list_))
+    assert isinstance(other * list_, type(list_))
+
+
+def test_mul_check():
+    with pytest.raises(TypeError, match="promoting"):
+        List[Int]([1, 2, 3]) * 5.5

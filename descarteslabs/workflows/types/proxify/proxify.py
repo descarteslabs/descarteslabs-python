@@ -23,12 +23,12 @@ def proxify(obj):
             return List[types[0]](contents)
         else:
             return Tuple[types](contents)
+    elif isinstance(obj, bool):
+        return Bool(obj)
     elif isinstance(obj, int):
         return Int(obj)
     elif isinstance(obj, float):
         return Float(obj)
-    elif isinstance(obj, bool):
-        return Bool(obj)
     elif isinstance(obj, str):
         return Str(obj)
     elif obj is None:

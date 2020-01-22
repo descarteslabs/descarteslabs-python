@@ -53,26 +53,26 @@ class Number(Primitive):
     def __abs__(self):
         return self._from_apply("abs", self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __add__(self, other):
         return _binop_result(self, other)._from_apply("add", self, other)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __div__(self, other):
         return Float._from_apply("div", self, other)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __divmod__(self, other):
         from ..containers import Tuple
 
         restype = _binop_result(self, other)
         return Tuple[restype, restype]._from_apply("divmod", self, other)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __eq__(self, other):
         return Bool._from_apply("eq", self, other)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __floordiv__(self, other):
         return _binop_result(self, other)._from_apply("floordiv", self, other)
 
@@ -81,11 +81,11 @@ class Number(Primitive):
             ("Cannot convert {} to Python string.").format(self.__class__.__name__)
         )
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __ge__(self, other):
         return Bool._from_apply("ge", self, other)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __gt__(self, other):
         return Bool._from_apply("gt", self, other)
 
@@ -100,23 +100,23 @@ class Number(Primitive):
     def __invert__(self):
         return self._from_apply("invert", self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __le__(self, other):
         return Bool._from_apply("le", self, other)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __lt__(self, other):
         return Bool._from_apply("lt", self, other)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __mod__(self, other):
         return _binop_result(self, other)._from_apply("mod", self, other)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __mul__(self, other):
         return _binop_result(self, other)._from_apply("mul", self, other)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __ne__(self, other):
         return Bool._from_apply("ne", self, other)
 
@@ -126,7 +126,7 @@ class Number(Primitive):
     def __pos__(self):
         return self._from_apply("pos", self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __pow__(self, other):
         return _binop_result(self, other)._from_apply("pow", self, other)
 
@@ -169,11 +169,11 @@ class Number(Primitive):
     def __rtruediv__(self, other):
         return Float._from_apply("div", other, self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __sub__(self, other):
         return _binop_result(self, other)._from_apply("sub", self, other)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float), _reflect=True)
     def __truediv__(self, other):
         return Float._from_apply("div", self, other)
 
@@ -200,15 +200,15 @@ class Int(Number):
 
     _pytype = int
 
-    @typecheck_promote(lambda: Int)
+    @typecheck_promote(lambda: Int, _reflect=True)
     def __and__(self, other):
         return self._from_apply("and", self, other)
 
-    @typecheck_promote(lambda: Int)
+    @typecheck_promote(lambda: Int, _reflect=True)
     def __lshift__(self, other):
         return self._from_apply("lshift", self, other)
 
-    @typecheck_promote(lambda: Int)
+    @typecheck_promote(lambda: Int, _reflect=True)
     def __or__(self, other):
         return self._from_apply("or", self, other)
 
@@ -236,7 +236,7 @@ class Int(Number):
     def __rxor__(self, other):
         return self._from_apply("xor", other, self)
 
-    @typecheck_promote(lambda: Int)
+    @typecheck_promote(lambda: Int, _reflect=True)
     def __xor__(self, other):
         return self._from_apply("xor", self, other)
 

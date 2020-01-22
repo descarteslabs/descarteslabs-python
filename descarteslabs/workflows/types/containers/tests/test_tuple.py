@@ -6,7 +6,7 @@ from descarteslabs.common.graft import client
 from descarteslabs.common.graft import interpreter
 
 from ...core import ProxyTypeError
-from ...primitives import Int, Str
+from ...primitives import Int, Str, Bool
 from .. import Tuple
 
 
@@ -86,3 +86,59 @@ def test_getitem_roundtrip():
 def test_len():
     tup = Tuple[Int, Str, Int]([1, "foo", 3])
     assert len(tup) == 3
+
+
+@pytest.mark.parametrize(
+    "method",
+    [operator.lt, operator.le, operator.gt, operator.ge, operator.eq, operator.ne],
+)
+@pytest.mark.parametrize("other", [Tuple[Int, Str]([2, "foo"]), (2, "foo")])
+def test_container_methods(method, other):
+    tuple_ = Tuple[Int, Str]([1, "baz"])
+    result = method(tuple_, other)
+    assert isinstance(result, Bool)
+
+
+def test_container_methods_check_elem_type():
+    tuple_ = Tuple[Bool]([True])
+    with pytest.raises(TypeError, match=r"Operator `<` invalid for element Bool in Tuple\[Bool\]"):
+        tuple_ < tuple_
+
+
+def test_container_methods_recursive_check():
+    tuple_ = Tuple[Tuple[Int, Str], Tuple[Str], Int](((1, "foo"), ("bar",), 2))
+    assert isinstance(tuple_ < tuple_, Bool)
+
+    tuple_ = Tuple[Tuple[Bool]]([[True]])
+    with pytest.raises(
+        TypeError,
+        match=r"Operator `<` invalid for element Tuple\[Bool\] in Tuple\[Tuple\[Bool\]\]",
+    ):
+        tuple_ < tuple_
+
+    tuple_ = Tuple[Tuple[Int], Bool]([[1], True])
+    with pytest.raises(
+        TypeError,
+        match=r"Operator `<` invalid for element Bool in Tuple\[Tuple\[Int\], Bool\]",
+    ):
+        tuple_ < tuple_
+
+
+@pytest.mark.parametrize(
+    "other",
+    [Tuple[Bool, Str, Tuple[Int, Int]]((True, "foo", (1, 2))), (True, "foo", (1, 2))],
+)
+def test_add(other):
+    tuple_ = Tuple[Int, Str]([1, "baz"])
+    add = tuple_ + other
+    assert isinstance(add, Tuple[Int, Str, Bool, Str, Tuple[Int, Int]])
+    radd = other + tuple_
+    assert isinstance(radd, Tuple[Bool, Str, Tuple[Int, Int], Int, Str])
+
+
+def test_add_check():
+    with pytest.raises(TypeError):
+        Tuple[Int, Str]([1, "baz"]) + "blah"
+
+    with pytest.raises(TypeError):
+        [1, 2] + Tuple[Int, Str]([1, "baz"])

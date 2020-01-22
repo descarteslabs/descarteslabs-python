@@ -117,13 +117,17 @@ def test_sorted_bad_key():
     col = List[Int]([0, 1, 2])
 
     with pytest.raises(
-        TypeError, match=r"Sort key function produced non-orderable type List\[Int\]"
+        TypeError, match="Sort key function produced non-orderable type Feature"
     ):
         # < operator fails
-        col.sorted(key=lambda x: List[Int]([x]))
+        col.sorted(key=lambda x: Feature._from_apply(""))
 
     with pytest.raises(
-        TypeError, match="Sort key function produced non-orderable type Image"
+        TypeError,
+        match=(
+            "Sort key function produced Image, which is not orderable, "
+            "since comparing Images produces Image, not Bool."
+        ),
     ):
         # < operator doesn't produce Bool
         col.sorted(key=lambda x: Image.from_id("foo") + x)

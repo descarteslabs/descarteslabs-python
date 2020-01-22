@@ -1,7 +1,12 @@
+import operator
+
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import ProxyTypeError, GenericProxytype
-from ..primitives import Any, Int
+from ..core import ProxyTypeError, GenericProxytype, typecheck_promote
+from ..proxify import proxify
+from ..primitives import Any, Int, Bool
+
+from ._check_valid_binop import check_valid_binop_for
 
 try:
     # only after py3.4
@@ -38,6 +43,14 @@ class Tuple(GenericProxytype):
     ('hello', 'world')
     >>> my_tuple[0].compute() # doctest: +SKIP
     'hello'
+
+    >>> from descarteslabs.workflows import Tuple, Int, Float, Str
+    >>> tuple_a = Tuple[Int, Float]([1, 2.2])
+    >>> tuple_b = Tuple[Str, Float](["foo", 3.3])
+    >>> tuple_a + tuple_b
+    <descarteslabs.workflows.types.containers.tuple_.Tuple[Int, Float, Str, Float] object at 0x...>
+    >>> (tuple_a + ("x", False)).compute() # doctest: +SKIP
+    (1, 2.2, "x", False)
     """
 
     def __init__(self, iterable):
@@ -120,3 +133,91 @@ class Tuple(GenericProxytype):
     def __iter__(self):
         for i in range(len(self)):
             yield self[i]
+
+    @typecheck_promote(lambda self: type(self))
+    def __lt__(self, other):
+        for elemtype in set(self._type_params):
+            check_valid_binop_for(
+                operator.lt,
+                elemtype,
+                f"Operator `<` invalid for element {elemtype.__name__} in {type(self).__name__}",
+            )
+        return Bool._from_apply("lt", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __le__(self, other):
+        for elemtype in set(self._type_params):
+            check_valid_binop_for(
+                operator.le,
+                elemtype,
+                f"Operator `<=` invalid for element {elemtype.__name__} in {type(self).__name__}",
+            )
+        return Bool._from_apply("le", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __gt__(self, other):
+        for elemtype in set(self._type_params):
+            check_valid_binop_for(
+                operator.gt,
+                elemtype,
+                f"Operator `>` invalid for element {elemtype.__name__} in {type(self).__name__}",
+            )
+        return Bool._from_apply("gt", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __ge__(self, other):
+        for elemtype in set(self._type_params):
+            check_valid_binop_for(
+                operator.ge,
+                elemtype,
+                f"Operator `>=` invalid for element {elemtype.__name__} in {type(self).__name__}",
+            )
+        return Bool._from_apply("ge", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __eq__(self, other):
+        for elemtype in set(self._type_params):
+            check_valid_binop_for(
+                operator.eq,
+                elemtype,
+                f"Operator `==` invalid for element {elemtype.__name__} in {type(self).__name__}",
+            )
+        return Bool._from_apply("eq", self, other)
+
+    @typecheck_promote(lambda self: type(self))
+    def __ne__(self, other):
+        for elemtype in set(self._type_params):
+            check_valid_binop_for(
+                operator.ne,
+                elemtype,
+                f"Operator `!=` invalid for element {elemtype.__name__} in {type(self).__name__}",
+            )
+        return Bool._from_apply("ne", self, other)
+
+    def __add__(self, other):
+        if isinstance(other, Tuple):
+            concat_type = Tuple[self._type_params + other._type_params]
+        elif isinstance(other, tuple):
+            try:
+                proxified = proxify(other)
+            except NotImplementedError:
+                return NotImplemented
+            return self + proxified
+        else:
+            return NotImplemented
+
+        return concat_type._from_apply("add", self, other)
+
+    def __radd__(self, other):
+        if isinstance(other, Tuple):
+            concat_type = Tuple[other._type_params + self._type_params]
+        elif isinstance(other, tuple):
+            try:
+                proxified = proxify(other)
+            except NotImplementedError:
+                return NotImplemented
+            return proxified + self
+        else:
+            return NotImplemented
+
+        return concat_type._from_apply("add", other, self)
