@@ -20,7 +20,7 @@ matrix:
 git:
   lfs_skip_smudge: true
 before_install:
-- pip install --upgrade pip setuptools wheel
+- pip install --upgrade pip==19.3.1 setuptools==45.1.0 wheel==0.33.6
 install:
 - pip wheel --no-deps --wheel-dir wheels -e .
 - pip install `ls wheels/*.whl`\[complete,tests\]
