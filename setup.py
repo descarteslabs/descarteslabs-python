@@ -89,7 +89,7 @@ def do_setup():
             "complete": [
                 'blosc;platform_system!="Windows"',
                 "numpy>=1.17.4",
-                "matplotlib>=3.1.2",
+                "matplotlib>=3.0.3",
                 "mercantile>=1.1.2",
                 "ipyleaflet>=0.12.1",
                 "ipywidgets>=7.5.1",
