@@ -140,7 +140,9 @@ class Tuple(GenericProxytype):
             check_valid_binop_for(
                 operator.lt,
                 elemtype,
-                f"Operator `<` invalid for element {elemtype.__name__} in {type(self).__name__}",
+                "Operator `<` invalid for element {} in {}".format(
+                    elemtype.__name__, type(self).__name__
+                ),
             )
         return Bool._from_apply("lt", self, other)
 
@@ -150,7 +152,9 @@ class Tuple(GenericProxytype):
             check_valid_binop_for(
                 operator.le,
                 elemtype,
-                f"Operator `<=` invalid for element {elemtype.__name__} in {type(self).__name__}",
+                "Operator `<=` invalid for element {} in {}".format(
+                    elemtype.__name__, type(self).__name__
+                ),
             )
         return Bool._from_apply("le", self, other)
 
@@ -160,7 +164,9 @@ class Tuple(GenericProxytype):
             check_valid_binop_for(
                 operator.gt,
                 elemtype,
-                f"Operator `>` invalid for element {elemtype.__name__} in {type(self).__name__}",
+                "Operator `>` invalid for element {} in {}".format(
+                    elemtype.__name__, type(self).__name__
+                ),
             )
         return Bool._from_apply("gt", self, other)
 
@@ -170,7 +176,9 @@ class Tuple(GenericProxytype):
             check_valid_binop_for(
                 operator.ge,
                 elemtype,
-                f"Operator `>=` invalid for element {elemtype.__name__} in {type(self).__name__}",
+                "Operator `>=` invalid for element {} in {}".format(
+                    elemtype.__name__, type(self).__name__
+                ),
             )
         return Bool._from_apply("ge", self, other)
 
@@ -180,7 +188,9 @@ class Tuple(GenericProxytype):
             check_valid_binop_for(
                 operator.eq,
                 elemtype,
-                f"Operator `==` invalid for element {elemtype.__name__} in {type(self).__name__}",
+                "Operator `==` invalid for element {} in {}".format(
+                    elemtype.__name__, type(self).__name__
+                ),
             )
         return Bool._from_apply("eq", self, other)
 
@@ -190,7 +200,9 @@ class Tuple(GenericProxytype):
             check_valid_binop_for(
                 operator.ne,
                 elemtype,
-                f"Operator `!=` invalid for element {elemtype.__name__} in {type(self).__name__}",
+                "Operator `!=` invalid for element {} in {}".format(
+                    elemtype.__name__, type(self).__name__
+                ),
             )
         return Bool._from_apply("ne", self, other)
 
