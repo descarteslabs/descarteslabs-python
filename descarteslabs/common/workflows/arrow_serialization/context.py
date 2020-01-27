@@ -1,4 +1,3 @@
-import numbers
 import numpy as np
 import pyarrow as pa
 
@@ -9,30 +8,37 @@ from pyarrow.serialization import (
 
 
 def _serialize_numpy_masked_array(obj):
+    data = np.ma.getdata(obj)
+    mask = np.ma.getmask(obj)
     return (
-        _serialize_numpy_array_list(np.ma.getdata(obj)),
-        _serialize_numpy_array_list(np.ma.getmaskarray(obj)),
+        _serialize_numpy_array_list(data),
+        _serialize_numpy_array_mask(mask),
         obj.fill_value,
         obj.hardmask,
     )
 
 
-def _deserialize_numpy_masked_array(obj):
-    serialized_data, serialized_mask, fill_value, hardmask = obj
-    data = _deserialize_numpy_array_list(serialized_data)
-    # Handle the np.ma.nomask case, where the serialized mask will be the
-    # the integer 0.
-    mask = (
-        _deserialize_numpy_array_list(serialized_mask)
-        if not isinstance(serialized_mask[0], numbers.Number)
-        else np.ma.nomask
-    )
-    return np.ma.MaskedArray(data, mask=mask, fill_value=fill_value, hard_mask=hardmask)
+def _serialize_numpy_array_mask(obj):
+    # mask is either a boolean array or np.ma.nomask
+    # we will represent np.ma.nomask as None
+    return None if obj is np.ma.nomask else _serialize_numpy_array_list(obj)
 
 
 def _serialize_numpy_masked_constant(obj):
     # Workaround for "Changing the dtype of a 0d array is only supported if the itemsize is unchanged" error
     return None
+
+
+def _deserialize_numpy_masked_array(obj):
+    serialized_data, serialized_mask, fill_value, hardmask = obj
+    data = _deserialize_numpy_array_list(serialized_data)
+    mask = _deserialize_numpy_array_mask(serialized_mask)
+    return np.ma.MaskedArray(data, mask=mask, fill_value=fill_value, hard_mask=hardmask)
+
+
+def _deserialize_numpy_array_mask(obj):
+    # mask is either a boolean array or np.ma.nomask
+    return _deserialize_numpy_array_list(obj) if obj is not None else np.ma.nomask
 
 
 def _deserialize_numpy_masked_constant(obj):

@@ -61,11 +61,15 @@ def do_setup():
             "Programming Language :: Python :: 3.7",
         ],
         license="Apache 2.0",
-        download_url="https://github.com/descarteslabs/descarteslabs-python/archive/v{}.tar.gz".format(version),
+        download_url="https://github.com/descarteslabs/descarteslabs-python/archive/v{}.tar.gz".format(
+            version
+        ),
         version=version,
         packages=find_packages(),
         entry_points={
-            "console_scripts": ["descarteslabs = descarteslabs.client.scripts.__main__:main"]
+            "console_scripts": [
+                "descarteslabs = descarteslabs.client.scripts.__main__:main"
+            ]
         },
         python_requires="~=3.5",
         install_requires=[
@@ -75,7 +79,7 @@ def do_setup():
             "geojson>=2.5.0",
             "grpcio>=1.16.1,<2",
             "protobuf==3.11.2,<4",
-            "pyarrow==0.13.0",
+            "pyarrow==0.15.1",
             "pytz>=2019.1",
             "requests[security]>=2.20.1,<3",
             "six>=1.12.0",
@@ -96,11 +100,9 @@ def do_setup():
                 "mock",
                 "pytest==4.3.1",
                 "responses",
-            ]
+            ],
         },
-        data_files=[
-            ("docs/descarteslabs", ["README.md"]),
-        ]
+        data_files=[("docs/descarteslabs", ["README.md"])],
     )
 
 
