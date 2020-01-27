@@ -161,6 +161,7 @@ class Service(object):
                 HttpRequestMethod.GET,
                 HttpRequestMethod.POST,
                 HttpRequestMethod.PUT,
+                HttpRequestMethod.PATCH,
                 HttpRequestMethod.OPTIONS,
                 HttpRequestMethod.DELETE,
             ]
