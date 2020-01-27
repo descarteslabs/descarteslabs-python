@@ -101,7 +101,7 @@ class List(GenericProxytype, CollectionMixin):
         check_valid_binop_for(
             operator.lt,
             self._type_params[0],
-            f"Operator `<` invalid for {type(self).__name__}",
+            "Operator `<` invalid for {}".format(type(self).__name__),
         )
         return Bool._from_apply("lt", self, other)
 
@@ -110,7 +110,7 @@ class List(GenericProxytype, CollectionMixin):
         check_valid_binop_for(
             operator.le,
             self._type_params[0],
-            f"Operator `<=` invalid for {type(self).__name__}",
+            "Operator `<=` invalid for {}".format(type(self).__name__),
         )
         return Bool._from_apply("le", self, other)
 
@@ -119,7 +119,7 @@ class List(GenericProxytype, CollectionMixin):
         check_valid_binop_for(
             operator.gt,
             self._type_params[0],
-            f"Operator `>` invalid for {type(self).__name__}",
+            "Operator `>` invalid for {}".format(type(self).__name__),
         )
         return Bool._from_apply("gt", self, other)
 
@@ -128,7 +128,7 @@ class List(GenericProxytype, CollectionMixin):
         check_valid_binop_for(
             operator.ge,
             self._type_params[0],
-            f"Operator `>=` invalid for {type(self).__name__}",
+            "Operator `>=` invalid for {}".format(type(self).__name__),
         )
         return Bool._from_apply("ge", self, other)
 
@@ -137,7 +137,7 @@ class List(GenericProxytype, CollectionMixin):
         check_valid_binop_for(
             operator.eq,
             self._type_params[0],
-            f"Operator `==` invalid for {type(self).__name__}",
+            "Operator `==` invalid for {}".format(type(self).__name__),
         )
         return Bool._from_apply("eq", self, other)
 
@@ -146,7 +146,7 @@ class List(GenericProxytype, CollectionMixin):
         check_valid_binop_for(
             operator.ne,
             self._type_params[0],
-            f"Operator `!=` invalid for {type(self).__name__}",
+            "Operator `!=` invalid for {}".format(type(self).__name__),
         )
         return Bool._from_apply("ne", self, other)
 
