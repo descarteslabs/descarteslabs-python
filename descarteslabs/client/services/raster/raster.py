@@ -1,4 +1,4 @@
-# Copyright 2018-2019 Descartes Labs.
+# Copyright 2018-2020 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -185,8 +185,11 @@ class Raster(Service):
         """
 
         if maxtiles is not None:
-            warnings.warn("The maxtiles argument is deprecated and will be removed in a future "
-                          "release.", DeprecationWarning)
+            warnings.warn(
+                "The maxtiles argument is deprecated and will be removed in a future "
+                "release.",
+                DeprecationWarning,
+            )
 
         shape = shapely_to_geojson(shape)
         shape = as_json_string(shape)

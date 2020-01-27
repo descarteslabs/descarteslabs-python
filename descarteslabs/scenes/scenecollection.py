@@ -1,4 +1,4 @@
-# Copyright 2018-2019 Descartes Labs.
+# Copyright 2018-2020 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -726,7 +726,7 @@ class SceneCollection(Collection):
                 futures = {
                     executor.submit(
                         scene.download, bands, ctx, dest=path, **download_args
-                    ) : path
+                    ): path
                     for scene, path in zip(self, dest)
                 }
                 exceptions = []
@@ -736,7 +736,9 @@ class SceneCollection(Collection):
                     except Exception as ex:
                         exceptions.append((futures[future], ex))
                 if exceptions:
-                    raise RuntimeError("One or more downloads failed: {}".format(exceptions))
+                    raise RuntimeError(
+                        "One or more downloads failed: {}".format(exceptions)
+                    )
         return dest
 
     def download_mosaic(

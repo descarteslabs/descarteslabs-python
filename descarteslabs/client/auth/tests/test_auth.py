@@ -1,4 +1,4 @@
-# Copyright 2018-2019 Descartes Labs.
+# Copyright 2018-2020 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -261,8 +261,7 @@ class TestAuth(unittest.TestCase):
             # when refresh_token and client_secret do not match,
             # the Auth implementation sets both to the value of
             # refresh_token
-            assert auth.client_secret == \
-                environ.get("DESCARTESLABS_REFRESH_TOKEN")
+            assert auth.client_secret == environ.get("DESCARTESLABS_REFRESH_TOKEN")
             assert auth.client_id == environ.get("DESCARTESLABS_CLIENT_ID")
 
         # remove the namespaced ones, except the refresh token because

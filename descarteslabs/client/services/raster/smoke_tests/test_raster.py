@@ -1,4 +1,4 @@
-# Copyright 2018-2019 Descartes Labs.
+# Copyright 2018-2020 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,8 +46,10 @@ class TestRaster(unittest.TestCase):
         )
         assert "metadata" in r
         assert "files" in r
-        assert "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif" \
+        assert (
+            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif"
             in r["files"]
+        )
 
         # test with scene id
         r = self.raster.raster(
@@ -57,8 +59,10 @@ class TestRaster(unittest.TestCase):
         )
         assert "metadata" in r
         assert "files" in r
-        assert "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif" \
+        assert (
+            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif"
             in r["files"]
+        )
 
     def test_raster_save(self):
         tmpdir = tempfile.mkdtemp()
@@ -307,9 +311,12 @@ class TestRaster(unittest.TestCase):
         )
         assert "metadata" in r
         assert "files" in r
-        assert r["files"][
+        assert (
+            r["files"][
                 "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.png"
-            ] is not None
+            ]
+            is not None
+        )
 
     def test_iter_dltiles_from_place(self):
         n = 0

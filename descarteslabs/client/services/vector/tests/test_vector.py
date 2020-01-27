@@ -1,4 +1,4 @@
-# Copyright 2018-2019 Descartes Labs.
+# Copyright 2018-2020 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -170,7 +170,10 @@ class VectorsTest(ClientTestCase):
 
         assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert json.loads(request.body.decode("utf-8"))["geometry"] == self.attrs["geometry"]
+        assert (
+            json.loads(request.body.decode("utf-8"))["geometry"]
+            == self.attrs["geometry"]
+        )
 
     @responses.activate
     def test_search_features_shapely(self):
@@ -185,7 +188,10 @@ class VectorsTest(ClientTestCase):
 
         assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert json.loads(request.body.decode("utf-8"))["geometry"] == self.attrs["geometry"]
+        assert (
+            json.loads(request.body.decode("utf-8"))["geometry"]
+            == self.attrs["geometry"]
+        )
 
     @responses.activate
     def test_create_product_from_query(self):
