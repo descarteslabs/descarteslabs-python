@@ -1323,13 +1323,15 @@ class ExtraPropertiesAttribute(ModelAttribute, MutableMapping):
             self._items.update(value)
 
     def __repr__(self):
-        return "{{{}}}".format(
+        return "{}{}{}".format(
+            "{",
             ", ".join(
                 [
                     "{}: {}".format(repr(key), repr(value))
                     for key, value in self._items.items()
                 ]
-            )
+            ),
+            "}",
         )
 
     def validate_key_and_value(self, key, value):
