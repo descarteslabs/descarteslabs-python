@@ -189,12 +189,20 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     )
     @traitlets.observe("parameters", type="delete")
     def _update_url(self, change):
-        self.set_trait("url", self.make_url())
+        try:
+            self.set_trait("url", self.make_url())
+        except ValueError as e:
+            if "Invalid scales passed" not in str(e):
+                raise e
 
     @traitlets.observe("parameters", type="delete")
     def _update_url_on_param_delete(self, change):
         # traitlets is dumb and decorator stacking doesn't work so we have to repeat this
-        self.set_trait("url", self.make_url())
+        try:
+            self.set_trait("url", self.make_url())
+        except ValueError as e:
+            if "Invalid scales passed" not in str(e):
+                raise e
 
     @traitlets.observe("xyz_obj", "session_id")
     def _update_error_logger(self, change):

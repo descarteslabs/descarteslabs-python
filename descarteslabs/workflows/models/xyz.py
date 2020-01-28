@@ -345,8 +345,12 @@ class XYZ(object):
                 scales = (scales,)
 
             if len(scales) not in (0, 1, 3):
-                raise ValueError(
-                    "Expected 0, 1, or 3 scales, but got {}".format(len(scales))
+                raise (
+                    ValueError(
+                        "Invalid scales passed: expected 0, 1, or 3 scales, but got {}".format(
+                            len(scales)
+                        )
+                    )
                 )
 
             for i, scaling in enumerate(scales):
@@ -364,6 +368,16 @@ class XYZ(object):
                     raise TypeError(
                         "Scaling {}: items in scaling must be numbers or None; "
                         "got {}".format(i, scaling)
+                    )
+                # At this point we know they are all int, float, or None
+                # So we check to see if we have an int/float and a None
+                if any(isinstance(x, (int, float)) for x in scaling) and any(
+                    x is None for x in scaling
+                ):
+                    raise ValueError(
+                        "Invalid scales passed: one number and one None in scaling {}".format(
+                            i, scaling
+                        )
                     )
 
             return [

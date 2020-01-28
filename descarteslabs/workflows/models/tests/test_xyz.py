@@ -191,7 +191,6 @@ class TestXYZ(object):
         assert XYZ._validate_scales([[0, 1]]) == [[0.0, 1.0]]
         # 1-band convenience
         assert XYZ._validate_scales([0, 1]) == [[0.0, 1.0]]
-        assert XYZ._validate_scales([None, 1]) == [[None, 1.0]]
         # no scalings
         assert XYZ._validate_scales(None) == []
         assert XYZ._validate_scales([]) == []
@@ -208,14 +207,16 @@ class TestXYZ(object):
             TypeError, match="Scaling 0: items in scaling must be numbers"
         ):
             XYZ._validate_scales([1, "foo"])
-        with pytest.raises(ValueError, match="Expected 0, 1, or 3 scales, but got 2"):
+        with pytest.raises(ValueError, match="expected 0, 1, or 3 scales, but got 2"):
             XYZ._validate_scales([[0.0, 1.0], [0.0, 1.0]])
-        with pytest.raises(ValueError, match="Expected 0, 1, or 3 scales, but got 4"):
+        with pytest.raises(ValueError, match="expected 0, 1, or 3 scales, but got 4"):
             XYZ._validate_scales([[0.0, 1.0], [0.0, 1.0], [0.0, 1.0], [0.0, 1.0]])
         with pytest.raises(ValueError, match="but length was 3"):
             XYZ._validate_scales([[0.0, 1.0, 2.0]])
         with pytest.raises(ValueError, match="but length was 1"):
             XYZ._validate_scales([[0.0]])
+        with pytest.raises(ValueError, match="one number and one None in scaling"):
+            XYZ._validate_scales([[None, 1.0]])
 
 
 @mock.patch("descarteslabs.workflows.models.xyz._tile_error_stream")

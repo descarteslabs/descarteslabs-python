@@ -13,6 +13,9 @@ from .layer import WorkflowsLayer
 
 initial_width = widgets.Layout(width="initial")
 scale_width = widgets.Layout(min_width="1.3em", max_width="4em", width="initial")
+scale_red_border = widgets.Layout(
+    min_width="1.3em", max_width="4em", width="initial", border="2px solid #a81f00"
+)
 button_layout = widgets.Layout(width="initial", overflow="visible")
 
 
@@ -89,16 +92,27 @@ class LayerControllerRow(widgets.Box):
 
         r_min = CText(placeholder="r min", value=layer.r_min, layout=scale_width)
         widgets.link((r_min, "value"), (layer, "r_min"))
+        r_min.observe(self._observe_scales_validity, names="value")
+
         r_max = CText(placeholder="r max", value=layer.r_max, layout=scale_width)
         widgets.link((r_max, "value"), (layer, "r_max"))
+        r_max.observe(self._observe_scales_validity, names="value")
+
         g_min = CText(placeholder="g min", value=layer.g_min, layout=scale_width)
         widgets.link((g_min, "value"), (layer, "g_min"))
+        g_min.observe(self._observe_scales_validity, names="value")
+
         g_max = CText(placeholder="g max", value=layer.g_max, layout=scale_width)
         widgets.link((g_max, "value"), (layer, "g_max"))
+        g_max.observe(self._observe_scales_validity, names="value")
+
         b_min = CText(placeholder="b min", value=layer.b_min, layout=scale_width)
         widgets.link((b_min, "value"), (layer, "b_min"))
+        b_min.observe(self._observe_scales_validity, names="value")
+
         b_max = CText(placeholder="b max", value=layer.b_max, layout=scale_width)
         widgets.link((b_max, "value"), (layer, "b_max"))
+        b_max.observe(self._observe_scales_validity, names="value")
 
         self._widgets["scales"] = [r_min, r_max, g_min, g_max, b_min, b_max]
 
@@ -109,6 +123,7 @@ class LayerControllerRow(widgets.Box):
         )
         widgets.link((colormap, "value"), (layer, "colormap"))
         colormap.observe(self._observe_supported_controls, names="value")
+        colormap.observe(self._observe_scales_validity, names="value")
         # ^ if colormap is set/unset from None, we need to re-render controls
         self._widgets["colormap"] = colormap
 
@@ -118,6 +133,8 @@ class LayerControllerRow(widgets.Box):
         widgets.link((cmap_min, "value"), (layer, "r_min"))
         cmap_max = CText(placeholder="max", value=layer.r_max, layout=scale_width)
         widgets.link((cmap_max, "value"), (layer, "r_max"))
+
+        self._widgets["cmap_scales"] = [cmap_min, cmap_max]
 
         if get_matplotlib() is not None:
             legend = widgets.Image(
@@ -129,14 +146,11 @@ class LayerControllerRow(widgets.Box):
                 ),
             )
             self._widgets["cmap_legend"] = legend
-            self._widgets["cmap_scales"] = [cmap_min, legend, cmap_max]
 
             colormap.observe(
                 self._observe_colormap_make_legend, names="value", type="change"
             )
             self._observe_colormap_make_legend({})  # initialize colormap
-        else:
-            self._widgets["cmap_scales"] = [cmap_min, cmap_max]
 
         checkerboard = widgets.ToggleButton(
             value=layer.checkerboard,
@@ -185,6 +199,38 @@ class LayerControllerRow(widgets.Box):
 
         return _observer
 
+    def _observe_scales_validity(self, change):
+        vals = self._widgets["scales" if self.layer.colormap is None else "cmap_scales"]
+        names = ["r_min", "r_max", "g_min", "g_max", "b_min", "b_max"]
+        unfilled_pairs = []
+        num_filled_pairs = 0
+        # Iterate through names and values as pairs
+        for i in range(0, len(vals), 2):
+            # Get scales names and corresponding widgets
+            min_name, max_name = names[i : i + 2]
+            min_scale, max_scale = vals[i : i + 2]
+            # Set to default layout so we don't have to worry about unsetting red borders
+            min_scale.layout = scale_width
+            max_scale.layout = scale_width
+            # Get the min and max values
+            min_val = getattr(self.layer, min_name, None)
+            max_val = getattr(self.layer, max_name, None)
+            if min_val is None and max_val is None:
+                unfilled_pairs.extend([min_scale, max_scale])
+            else:
+                if min_val is None:
+                    min_scale.layout = scale_red_border
+                elif max_val is None:
+                    max_scale.layout = scale_red_border
+                else:
+                    # They both have values
+                    num_filled_pairs += 1
+
+        # If 2 of 3 pairs are filled, add red border to each scale in the unfilled pair
+        if num_filled_pairs == 2:
+            for chunk in unfilled_pairs:
+                chunk.layout = scale_red_border
+
     def _make_children(self):
         widgets = self._widgets
         children = [widgets["visible"], widgets["opacity"], widgets["name"]]
@@ -193,7 +239,13 @@ class LayerControllerRow(widgets.Box):
             if self.layer.colormap is None:
                 children.extend(widgets["scales"])
             else:
-                children.extend(widgets["cmap_scales"])
+                children.extend(
+                    [
+                        widgets["cmap_scales"][0],
+                        widgets["cmap_legend"],
+                        widgets["cmap_scales"][1],
+                    ]
+                )
         if self.colormappable:
             children.append(widgets["colormap"])
             widgets["colormap"].layout.width = (
@@ -269,7 +321,6 @@ class LayerControllerRow(widgets.Box):
                     if isinstance(band, np.ma.MaskedArray):
                         data = band.compressed()  # drop masked data
                     min, max = np.percentile(data, [2, 98])
-
                     setattr(self.layer, scale_min, min)
                     setattr(self.layer, scale_max, max)
         finally:
