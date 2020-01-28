@@ -276,10 +276,7 @@ class TestErrors(object):
     )
     def test_name_error(self, expr):
         graft = {"one": 1, "y": expr, "returns": "y"}
-        with pytest.raises(
-            interpreter.exceptions.GraftNameError,
-            match="key 'doesnt_exist' is not defined",
-        ):
+        with pytest.raises(interpreter.exceptions.GraftNameError, match="doesnt_exist"):
             interpreter.interpret(graft, builtins={"foo": lambda x: x})()
 
     @pytest.mark.parametrize("apply_expr", [["func"], ["func", {}]])

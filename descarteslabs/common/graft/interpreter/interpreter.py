@@ -91,7 +91,7 @@ def get(key, body, env, debug=None):
     else:
         if env_level == out_of_scope:
             # we check env_level instead of body_level because the key may be in builtins of env, but not in body at all
-            raise exceptions.GraftNameError("key '{}' is not defined".format(key))
+            raise exceptions.GraftNameError(key)
         # key was precomputed in env at closer or equal scope, so we can use it
 
         if debug is not None:
