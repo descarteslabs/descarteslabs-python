@@ -141,7 +141,9 @@ class CollectionMixin:
         if initial is REDUCE_INITIAL_DEFAULT:
             return initial_type._from_apply("reduce", self, delayed_func)
         else:
-            return initial_type._from_apply("reduce", self, delayed_func, initial)
+            return initial_type._from_apply(
+                "reduce", self, delayed_func, initial=initial
+            )
 
     def length(self):
         """Length is equivalent to the Python ``len`` operator.
