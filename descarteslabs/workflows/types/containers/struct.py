@@ -79,13 +79,13 @@ class Struct(GenericProxytype):
 
     >>> from descarteslabs.workflows import Struct, Str, Int
     >>> class Foo(Struct[{'x': Int, 'y': Str}]): # doctest: +SKIP
-            _doc = {
-                'x': "the x field",
-                'y': "the y field, derived from x",
-            }
-            _constructor = "make_foo"
-            _optional = {'x'}
-            _read_only = {'y'}
+    ...     _doc = {
+    ...         'x': "the x field",
+    ...         'y': "the y field, derived from x",
+    ...     }
+    ...     _constructor = "make_foo"
+    ...     _optional = {'x'}
+    ...     _read_only = {'y'}
     >>> my_struct = Foo(10) # doctest: +SKIP
     >>> my_struct.x.compute() # doctest: +SKIP
     10
