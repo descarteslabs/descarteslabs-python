@@ -60,7 +60,8 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
         """
         Construct a Workflows FeatureCollection from a vector ID.
 
-        The FeatureCollection will contain all `Feature`s within the `GeoContext` used in the computation.
+        The FeatureCollection will contain every `Feature` within the
+        `~.geospatial.GeoContext` used in the computation.
 
         Parameters
         ----------
