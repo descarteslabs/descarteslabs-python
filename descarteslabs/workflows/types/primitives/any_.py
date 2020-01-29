@@ -213,6 +213,9 @@ class Any(Proxytype):
     def __reversed__(self):
         return self._from_apply("reversed", self)
 
+    def __iter__(self):
+        raise TypeError("Any object is not iterable")
+
     def contains(self, other):
         """
         Contains is equivalient to the Python ``in`` operator.

@@ -112,3 +112,9 @@ def test_getters():
 
     assert isinstance(getattr(any_, "foo"), Any)
     assert isinstance(any_[0], Any)
+
+
+def test_cant_iter():
+    any_ = Any(0)
+    with pytest.raises(TypeError, match="Any object is not iterable"):
+        iter(any_)
