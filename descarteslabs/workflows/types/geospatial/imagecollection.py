@@ -4,7 +4,7 @@ from descarteslabs.common.graft import client
 
 from ... import env
 from ...cereal import serializable
-from ..containers import CollectionMixin, Dict, KnownDict, List, Struct, Tuple
+from ..containers import CollectionMixin, Dict, KnownDict, List, Slice, Struct, Tuple
 from ..core import _resolve_lambdas, typecheck_promote
 from ..datetimes import Datetime
 from ..function import Function
@@ -1306,10 +1306,10 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         return Image._from_apply("mosaic", self)
 
-    @typecheck_promote(Int)
+    @typecheck_promote((Int, Slice))
     def __getitem__(self, item):
-        # TODO(gabe): slices
-        return Image._from_apply("getitem", self, item)
+        return_type = Image if isinstance(item, Int) else self
+        return return_type._from_apply("getitem", self, item)
 
     # Binary comparators
     @typecheck_promote((Image, lambda: ImageCollection, Int, Float))

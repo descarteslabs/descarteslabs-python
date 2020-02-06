@@ -67,6 +67,7 @@ def test_getitem_type():
     assert isinstance(tup[0], Int)
     assert isinstance(tup[1], Str)
     assert isinstance(tup[2], Int)
+    assert isinstance(tup[:2], Tuple)
     with pytest.raises(IndexError):
         tup[4]
 

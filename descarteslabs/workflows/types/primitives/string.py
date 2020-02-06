@@ -15,6 +15,13 @@ def ListType(param):
     return List[param]
 
 
+def SliceType():
+    # necessary to delay circular imports for typechecks
+    from ..containers import Slice
+
+    return Slice
+
+
 @serializable()
 class Str(Primitive):
     """
@@ -84,9 +91,8 @@ class Str(Primitive):
     def __reversed__(self):
         return self._from_apply("reversed", self)
 
-    @typecheck_promote(Int)
+    @typecheck_promote((Int, SliceType))
     def __getitem__(self, idx):
-        # TODO(gabe): slices
         return self._from_apply("getitem", self, idx)
 
     def length(self):

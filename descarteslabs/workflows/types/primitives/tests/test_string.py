@@ -62,6 +62,8 @@ def test_length():
         ("expandtabs", Str, []),
         ("find", Int, [""]),
         ("format", Str, [""]),
+        ("__getitem__", Str, [0]),
+        ("__getitem__", Str, [slice(0, 1, 0)]),
         ("isalnum", Bool, []),
         ("isalpha", Bool, []),
         ("isdigit", Bool, []),

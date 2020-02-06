@@ -5,6 +5,7 @@ from ...cereal import serializable
 from ..core import ProxyTypeError, GenericProxytype, typecheck_promote
 from ..proxify import proxify
 from ..primitives import Any, Int, Bool
+from .slice import Slice
 
 from ._check_valid_binop import check_valid_binop_for
 
@@ -22,6 +23,14 @@ class Tuple(GenericProxytype):
     A type must be specified for each item in the tuple.
 
     Can be instantiated from any Python iterable.
+
+    When indexing with a modified proxy integer, the return type will be `Tuple[Any]` because the type of
+    the value at the index is unknown (the index is unknown), but we know the length is 1. When slicing a
+    Tuple with modified proxy integers, an `Any` will be returned because the types of the values at the
+    indices is unknown, and the length of the resulting Tuple is unknown.
+
+    Note: A modified proxy integer is a proxy integer that has been changed through other operations
+    (`wf.Int(1) + 1` is a proxy Int that has been modified with an addition, `wf.Int(2)` has not been modified)
 
     Examples
     --------
@@ -91,19 +100,20 @@ class Tuple(GenericProxytype):
         iterable = tuple(checker_promoter(i, x) for i, x in enumerate(iterable))
         self.graft = client.apply_graft("tuple", *iterable)
 
+    @typecheck_promote((Int, Slice))
     def __getitem__(self, item):
-        # TODO(gabe): slices
         # TODO(gabe): cache
         # TODO(gabe): no nested traceback on out-of-bounds index?
-        try:
-            promoted_item = Int._promote(item)
-        except ProxyTypeError:
-            raise ProxyTypeError(
-                "Tuple indicies must be integers, not {}".format(type(item))
+        type_slice = item.literal_value
+        if isinstance(item, Int):
+            item_type = (
+                self._type_params[type_slice] if isinstance(type_slice, int) else Any
             )
-        item_type = self._type_params[item] if isinstance(item, int) else Any
-        # ^ if `idx` is a proxy Int, we don't know which index we're selecting and therefore the return type
-        return item_type._from_apply("getitem", self, promoted_item)
+        else:
+            item_type = (
+                Any if type_slice is None else Tuple[self._type_params[type_slice]]
+            )
+        return item_type._from_apply("getitem", self, item)
 
     def __len__(self):
         try:

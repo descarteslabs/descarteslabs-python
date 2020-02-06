@@ -29,6 +29,10 @@ def _serialize_numpy_masked_constant(obj):
     return None
 
 
+def _serialize_python_slice(obj):
+    return (obj.start, obj.stop, obj.step)
+
+
 def _deserialize_numpy_masked_array(obj):
     serialized_data, serialized_mask, fill_value, hardmask = obj
     data = _deserialize_numpy_array_list(serialized_data)
@@ -43,6 +47,11 @@ def _deserialize_numpy_array_mask(obj):
 
 def _deserialize_numpy_masked_constant(obj):
     return np.ma.masked
+
+
+def _deserialize_python_slice(obj):
+    start, stop, step = obj
+    return slice(start, stop, step)
 
 
 serialization_context = pa.SerializationContext()
@@ -60,4 +69,11 @@ serialization_context.register_type(
     "numpy.ma.core.MaskedConstant",
     custom_serializer=_serialize_numpy_masked_constant,
     custom_deserializer=_deserialize_numpy_masked_constant,
+)
+
+serialization_context.register_type(
+    slice,
+    "slice",
+    custom_serializer=_serialize_python_slice,
+    custom_deserializer=_deserialize_python_slice,
 )

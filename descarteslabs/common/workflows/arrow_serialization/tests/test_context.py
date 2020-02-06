@@ -33,3 +33,12 @@ def test_numpy_masked_constant_serialization():
     deserialized = pa.deserialize(serialized.to_buffer(), context=serialization_context)
 
     assert deserialized is np.ma.masked
+
+
+def test_python_slice_serialization():
+    s = slice(1, 2, 3)
+
+    serialized = pa.serialize(s, context=serialization_context)
+    deserialized = pa.deserialize(serialized.to_buffer(), context=serialization_context)
+
+    assert deserialized == s

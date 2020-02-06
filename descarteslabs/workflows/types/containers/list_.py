@@ -5,6 +5,7 @@ from ...cereal import serializable
 from ..core import ProxyTypeError, GenericProxytype, typecheck_promote
 from ..primitives import Int, Bool
 from .collection import CollectionMixin
+from .slice import Slice
 
 from ._check_valid_binop import check_valid_binop_for
 
@@ -76,16 +77,11 @@ class List(GenericProxytype, CollectionMixin):
             iterable = tuple(checker_promoter(i, x) for i, x in enumerate(iterable))
             self.graft = client.apply_graft("list", *iterable)
 
+    @typecheck_promote((Int, Slice))
     def __getitem__(self, item):
-        # TODO(gabe): slices
         # TODO(gabe): cache
-        try:
-            item = Int._promote(item)
-        except ProxyTypeError:
-            raise ProxyTypeError(
-                "List indicies must be integers, not {}".format(type(item))
-            )
-        return self._type_params[0]._from_apply("getitem", self, item)
+        return_type = self._type_params[0] if isinstance(item, Int) else type(self)
+        return return_type._from_apply("getitem", self, item)
 
     def __iter__(self):
         raise TypeError(

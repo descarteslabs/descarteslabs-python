@@ -6,7 +6,7 @@ from ...core import _resolve_lambdas
 from ...core.tests import utils
 
 from .... import env
-from ...containers import Dict, List, Tuple
+from ...containers import Dict, List, Slice, Tuple
 from ...primitives import Float, Int, Str, Bool, NoneType, Any
 
 from .. import (
@@ -193,7 +193,7 @@ base_types = [ImageCollection, Image, Int, Any]
         ["sin", (), ImageCollection],
         ["tan", (), ImageCollection],
         ["__reversed__", (), ImageCollection],
-        ["__getitem__", [Any, Int], Image],
+        ["__getitem__", [Any, Int, Slice], (Image, ImageCollection)],
         ["__lt__", base_types + [Float], ImageCollection],
         ["__le__", base_types + [Float], ImageCollection],
         ["__eq__", base_types + [Float, Bool], ImageCollection],

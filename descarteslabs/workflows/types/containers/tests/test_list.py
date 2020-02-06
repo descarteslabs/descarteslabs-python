@@ -59,6 +59,7 @@ def test_getitem_type():
     lst = List[Int]([1, 2, 3])
     assert isinstance(lst[0], Int)
     assert isinstance(lst[100], Int)
+    assert isinstance(lst[:1], List[Int])
 
 
 def test_getitem_roundtrip():
@@ -95,7 +96,9 @@ def test_container_methods_recursive_check():
     assert isinstance(list_ < list_, Bool)
 
     list_ = List[List[NoneType]]([[None], [None]])
-    with pytest.raises(TypeError, match=r"Operator `<` invalid for List\[List\[NoneType\]\]"):
+    with pytest.raises(
+        TypeError, match=r"Operator `<` invalid for List\[List\[NoneType\]\]"
+    ):
         list_ < list_
 
 
