@@ -9,6 +9,8 @@ from .groupby import ImageCollectionGroupby
 from .image import Image
 from .imagecollection import ImageCollection
 from .load_geojson import load_geojson, load_geojson_file
+
+# from .pca import PCA
 from .where import where
 
 __all__ = [
@@ -25,5 +27,6 @@ __all__ = [
     "ImageCollection",
     "load_geojson",
     "load_geojson_file",
+    #    "PCA",
     "where",
 ]

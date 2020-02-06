@@ -25,6 +25,7 @@ from .geospatial import (
     ImageCollection,
     load_geojson,
     load_geojson_file,
+    #    PCA,
     where,
 )
 from .math import arctan2, log, log2, log10, sqrt, cos, sin, tan, normalized_difference
@@ -75,6 +76,7 @@ __all__ = [
     "ImageCollection",
     "load_geojson",
     "load_geojson_file",
+    #    "PCA",
     "where",
     # .math
     "arctan2",
