@@ -79,3 +79,8 @@ def test_binary_op_casts_to():
 def test_datetime_struct(field, type_):
     dt = Datetime.from_string("")
     assert isinstance(getattr(dt, field), type_)
+
+
+def test_is_between():
+    dt = Datetime(2018, 1, 2)
+    assert isinstance(dt.is_between("2017-01-01", Datetime(2019)), Bool)

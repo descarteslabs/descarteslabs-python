@@ -199,3 +199,36 @@ class Datetime(DatetimeStruct):
     @typecheck_promote(lambda: Datetime)
     def __ne__(self, other):
         return Bool._from_apply("ne", self, other)
+
+    @typecheck_promote(lambda: Datetime, lambda: Datetime, inclusive=Bool)
+    def is_between(self, start, end, inclusive=True):
+        """
+        Whether the datetime is between these ``start`` and ``end`` dates.
+
+        Parameters
+        ----------
+        start: Datetime
+            Start date
+        end: Datetime
+            End date
+        inclusive: Bool, optional, default True
+            If True, equivalent to ``start <= self <= end``
+
+            If False, equivalent to ``start < self < end``
+
+        Returns
+        -------
+        Bool
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> dt = wf.Datetime(2019, 6, 1)
+        >>> dt.is_between("2019-01-01", "2020-01-01").compute()  # doctest: +SKIP
+        True
+        >>> dt.is_between("2019-06-01", "2020-07-01").compute()  # doctest: +SKIP
+        True
+        >>> dt.is_between("2019-06-01", "2020-07-01", inclusive=False).compute()  # doctest: +SKIP
+        False
+        """
+        return Bool._from_apply("datetime.is_between", self, start, end, inclusive=inclusive)
