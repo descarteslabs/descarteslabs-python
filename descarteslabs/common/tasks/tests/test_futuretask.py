@@ -66,14 +66,20 @@ class TestFutureTask(ClientTestCase):
         with pytest.raises(TypeError):
             ft = FutureTask()
 
+    @responses.activate
     def test_transient_result(self):
         ft = FutureTask(guid=guid, tuid=tuid, client=self.client)
+
+        self.mock_response(responses.GET, {}, status=404)
 
         with pytest.raises(TransientResultError):
             ft.get_result(wait=False)
 
-    def test_getattr_access(self):
+    @responses.activate
+    def test_get_result(self):
         ft = FutureTask(guid=guid, tuid=tuid, client=self.client)
+
+        self.mock_response(responses.GET, {}, status=404)
 
         with pytest.raises(TimeoutError):
             ft.get_result(wait=True, timeout=1)
