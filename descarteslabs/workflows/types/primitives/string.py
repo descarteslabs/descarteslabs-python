@@ -84,6 +84,11 @@ class Str(Primitive):
     def __reversed__(self):
         return self._from_apply("reversed", self)
 
+    @typecheck_promote(Int)
+    def __getitem__(self, idx):
+        # TODO(gabe): slices
+        return self._from_apply("getitem", self, idx)
+
     def length(self):
         """The length of the string (returns `Int`)
 

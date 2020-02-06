@@ -67,11 +67,11 @@ class Proxytype(Castable):
                 (
                     "Please use {}.contains(other). Python requires a bool to be returned "
                     "from __contains__ and this value cannot be known for proxy types."
-                ).format(self.__class__.__name__)
+                ).format(type(self).__name__)
             )
         else:
             raise TypeError(
-                "object of type {} has no contains().".format(self.__class__.__name__)
+                "object of type {} does not support `in`.".format(type(self).__name__)
             )
 
     def __len__(self):
@@ -80,11 +80,23 @@ class Proxytype(Castable):
                 (
                     "Please use {}.length(). Python requires an int to be returned "
                     "from __len__ and this value cannot be known for proxy types."
-                ).format(self.__class__.__name__)
+                ).format(type(self).__name__)
             )
         else:
             raise TypeError(
-                "object of type {} has no length()".format(self.__class__.__name__)
+                "object of type {} has no len()".format(type(self).__name__)
+            )
+
+    def __iter__(self):
+        if hasattr(self, "map"):
+            raise TypeError(
+                (
+                    "Proxy {0} is not iterable. Consider using {0}.map(...) instead."
+                ).format(type(self).__name__)
+            )
+        else:
+            raise TypeError(
+                "object of type {} is not iterable.".format(type(self).__name__)
             )
 
     # NOTE(gabe): if you're looking for the `compute` and `persist` helper methods,

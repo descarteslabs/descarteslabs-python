@@ -151,3 +151,9 @@ def test_items():
     dct = Dict[Str, Float](x=1.0, y=2.2)
     items = dct.items()
     assert isinstance(items, List[Tuple[Str, Float]])
+
+
+def test_iter_error():
+    dct = Dict[Str, Float](x=1.0, y=2.2)
+    with pytest.raises(TypeError, match=r"Consider \.keys\(\)\.map\(\.\.\.\)"):
+        iter(dct)

@@ -88,6 +88,14 @@ def test_len():
     assert len(tup) == 3
 
 
+def test_iter():
+    tup = Tuple[Int, Str, Int]([1, "foo", 3])
+    itered = list(tup)
+    assert isinstance(itered[0], Int)
+    assert isinstance(itered[1], Str)
+    assert isinstance(itered[2], Int)
+
+
 @pytest.mark.parametrize(
     "method",
     [operator.lt, operator.le, operator.gt, operator.ge, operator.eq, operator.ne],
@@ -101,7 +109,9 @@ def test_container_methods(method, other):
 
 def test_container_methods_check_elem_type():
     tuple_ = Tuple[Bool]([True])
-    with pytest.raises(TypeError, match=r"Operator `<` invalid for element Bool in Tuple\[Bool\]"):
+    with pytest.raises(
+        TypeError, match=r"Operator `<` invalid for element Bool in Tuple\[Bool\]"
+    ):
         tuple_ < tuple_
 
 

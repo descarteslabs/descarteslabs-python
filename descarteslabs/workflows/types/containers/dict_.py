@@ -123,6 +123,12 @@ class Dict(GenericProxytype):
             )
         return vt._from_apply("getitem", self, item)
 
+    def __iter__(self):
+        raise TypeError(
+            "Proxy {} is not iterable. Consider .keys().map(...) "
+            "to achieve something similar.".format(type(self).__name__)
+        )
+
     @classmethod
     @typecheck_promote(lambda cls: List[Tuple[cls._type_params]])
     def from_pairs(cls, pairs):

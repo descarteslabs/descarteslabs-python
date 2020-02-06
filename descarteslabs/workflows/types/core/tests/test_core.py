@@ -1,3 +1,5 @@
+import pytest
+
 from ..core import _type_params_issubclass
 from .. import Proxytype, GenericProxytype, is_generic
 from ... import List, Int
@@ -223,3 +225,52 @@ def test_is_generic_on_list_of_generic_list():
 
 def test_not_is_generic_on_list_of_list():
     assert not is_generic(List[List[Int]])
+
+
+class TestProxytypePyInterfaceErrors:
+    def test_bool(self):
+        with pytest.raises(
+            TypeError, match="Truth value of Proxytype Foo objects is not supported"
+        ):
+            bool(Foo())
+
+    def test_contains(self):
+        with pytest.raises(TypeError, match="object of type Foo does not support `in`"):
+            Foo() in Foo()
+
+        class HasContains(Proxytype):
+            def contains(self, other):
+                pass
+
+        with pytest.raises(
+            TypeError, match=r"Please use HasContains\.contains\(other\)"
+        ):
+            HasContains() in HasContains()
+
+    def test_len(self):
+        with pytest.raises(TypeError, match="object of type Foo has no len()"):
+            len(Foo())
+
+        class HasLength(Proxytype):
+            def length(self):
+                pass
+
+        with pytest.raises(TypeError, match=r"Please use HasLength\.length\(\)"):
+            len(HasLength())
+
+    def test_iter(self):
+        with pytest.raises(TypeError, match="object of type Foo is not iterable"):
+            iter(Foo())
+
+        class HasMap(Proxytype):
+            def map(self, func):
+                pass
+
+        with pytest.raises(
+            TypeError,
+            match=(
+                r"Proxy HasMap is not iterable\. "
+                r"Consider using HasMap\.map\(\.\.\.\)"
+            ),
+        ):
+            iter(HasMap())
