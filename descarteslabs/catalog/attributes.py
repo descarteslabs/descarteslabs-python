@@ -944,10 +944,14 @@ class File(MappingAttribute):
     Attributes
     ----------
     href : str
-        A valid reference to a file object using one of the schemas ``gs``, ``http``,
-        ``https``, ``ftp``, or ``ftps``.  Required when the
-        :py:class:`~descarteslabs.catalog.StorageState` is
-        :py:attr:`~descarteslabs.catalog.StorageState.AVAILABLE`.  Optional otherwise.
+        If the :py:class:`~descarteslabs.catalog.StorageState` is
+        :py:attr:`~descarteslabs.catalog.StorageState.AVAILABLE`, this field is required
+        and it must be a valid reference to either a JP2 or a GeoTiff file using the
+        ``gs`` scheme.  If the :py:class:`~descarteslabs.catalog.StorageState` is
+        :py:attr:`~descarteslabs.catalog.StorageState.REMOTE`, this field is optional
+        and you can use one of the schemes ``gs``, ``http``, ``https``, ``ftp``, or
+        ``ftps``; if the scheme is ``gs``, it must be a valid reference
+        but can be any format.
     size_bytes : int
         Size of the file in bytes.  Required when the
         :py:class:`~descarteslabs.catalog.StorageState` is
