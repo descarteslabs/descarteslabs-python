@@ -3,7 +3,15 @@ from enum import Enum
 from descarteslabs.common.property_filtering import GenericProperties
 from .catalog_base import CatalogObject, _new_abstract_class
 from .named_catalog_base import NamedCatalogObject
-from .attributes import Attribute, EnumAttribute, Resolution, BooleanAttribute
+from .attributes import (
+    Attribute,
+    EnumAttribute,
+    Resolution,
+    BooleanAttribute,
+    ListAttribute,
+    TupleAttribute,
+    TypedAttribute,
+)
 
 
 properties = GenericProperties()
@@ -221,26 +229,37 @@ class Band(NamedCatalogObject):
         *Filterable*.
         """,
     )
-    sort_order = Attribute(
+    sort_order = TypedAttribute(
+        int,
         doc="""int, optional: A number defining the default sort order for bands within a product.
 
         If not set for newly created bands, this will default to the current maximum
         sort order + 1 in the product.
 
         *Sortable*.
-        """
+        """,
     )
     data_type = EnumAttribute(DataType, doc="str or DataType: " + _DOC_DATATYPE)
     nodata = Attribute(
         doc="""float, optional: A value representing missing data in a pixel in this band."""
     )
-    data_range = Attribute(doc="tuple(float, float): " + _DOC_DATARANGE)
-    display_range = Attribute(
+    data_range = TupleAttribute(
+        min_length=2,
+        max_length=2,
+        coerce=True,
+        attribute_type=float,
+        doc="tuple(float, float): " + _DOC_DATARANGE,
+    )
+    display_range = TupleAttribute(
+        min_length=2,
+        max_length=2,
+        coerce=True,
+        attribute_type=float,
         doc="""tuple(float, float): The range of pixel values for display purposes.
 
         The two floats are the minimum and maximum values indicating a default reasonable
         range of pixel values usd when rastering this band for display purposes.
-        """
+        """,
     )
     resolution = Resolution(
         doc="""Resolution, optional: The spatial resolution of this band.
@@ -248,8 +267,8 @@ class Band(NamedCatalogObject):
         *Filterable, sortable*.
         """
     )
-    band_index = Attribute(
-        doc="int: The 0-based index into the source data to access this band."
+    band_index = TypedAttribute(
+        int, doc="int: The 0-based index into the source data to access this band."
     )
     file_index = Attribute(
         doc="""int, optional: The 0-based index into the list of source files.
@@ -258,11 +277,12 @@ class Band(NamedCatalogObject):
         to 0 (first file).
         """
     )
-    jpx_layer_index = Attribute(
+    jpx_layer_index = TypedAttribute(
+        int,
         doc="""int, optional: The 0-based layer index if the source data is JPEG2000 with layers.
 
         Defaults to 0.
-        """
+        """,
     )
 
     def __new__(cls, *args, **kwargs):
@@ -470,12 +490,13 @@ class ClassBand(Band):
 
     colormap_name = EnumAttribute(Colormap, doc=Band._DOC_COLORMAPNAME)
     colormap = Attribute(Band._DOC_COLORMAP)
-    class_labels = Attribute(
+    class_labels = ListAttribute(
+        TypedAttribute(str),
         doc="""list(str or None), optional: A list of labels.
 
         A list of labels where each element is a name for the class with the value at
         that index.  Elements can be null if there is no label at that value.
-        """
+        """,
     )
 
 

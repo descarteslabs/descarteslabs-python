@@ -4,7 +4,6 @@ import json
 
 from descarteslabs.client.exceptions import NotFoundError
 from .attributes import (
-    Attribute,
     AttributeMeta,
     AttributeValidationError,
     AttributeEqualityMixin,
@@ -12,6 +11,7 @@ from .attributes import (
     Timestamp,
     ListAttribute,
     ExtraPropertiesAttribute,
+    TypedAttribute,
 )
 from .catalog_client import CatalogClient, HttpRequestMethod
 
@@ -123,7 +123,8 @@ class CatalogObjectBase(AttributeEqualityMixin):
 
     _model_classes_by_type_and_derived_type = {}
 
-    id = Attribute(
+    id = TypedAttribute(
+        str,
         mutable=False,
         serializable=False,
         doc="""str, immutable: A unique identifier for this object.
@@ -959,7 +960,7 @@ class CatalogObject(CatalogObjectBase):
     """
 
     owners = ListAttribute(
-        Attribute,
+        TypedAttribute(str),
         doc="""list(str), optional: User, group, or organization IDs that own this object.
 
         Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
@@ -969,7 +970,7 @@ class CatalogObject(CatalogObjectBase):
         """,
     )
     readers = ListAttribute(
-        Attribute,
+        TypedAttribute(str),
         doc="""list(str), optional: User, group, or organization IDs that can read this object.
 
         Will be empty by default.  This attribute is only available to the `owners`
@@ -977,7 +978,7 @@ class CatalogObject(CatalogObjectBase):
         """,
     )
     writers = ListAttribute(
-        Attribute,
+        TypedAttribute(str),
         doc="""list(str), optional: User, group, or organization IDs that can edit this object.
 
         Writers will also have read permission.  Writers will be empty by default.
@@ -994,7 +995,7 @@ class CatalogObject(CatalogObjectBase):
         """
     )
     tags = ListAttribute(
-        Attribute,
+        TypedAttribute(str),
         doc="""list, optional: A list of up to 20 tags.
 
         The tags may support the classification and custom filtering of objects.

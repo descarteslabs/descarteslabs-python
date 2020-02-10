@@ -99,8 +99,8 @@ class TestAttributes(unittest.TestCase):
         assert obj.date is None
 
     def test_datetime_invalid(self):
-        with pytest.raises(ValueError):
-            Timestamp(readonly=True).deserialize("123439", validate=False)
+        # This should not raise an exception
+        Timestamp(readonly=True).deserialize("123439", validate=False)
 
     def test_enum_attribute(self):
         enum_attr = EnumAttribute(BandType)

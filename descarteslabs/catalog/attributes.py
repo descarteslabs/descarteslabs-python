@@ -89,20 +89,20 @@ class Attribute(object):
     """A description of an attribute as received from the Descartes Labs catalog or
     set by the end-user.
 
+    Changing the value of an attribute will set the corresponding CatalogObject to
+    modified.
+
     Parameters
     ----------
     mutable : bool
-        Whether this attribute can be changed.
-        Set to ``True`` by default.
-        If set to ``False``, the attribute can be set once and after that can only be
-        set with the same value. If set with a different value, an
+        Whether this attribute can be changed.  Set to ``True`` by default.  If set
+        to ``False``, the attribute can be set once and after that can only be set
+        with the same value.  If set with a different value, an
         `AttributeValidationError` will be raised.
     serializable : bool
-        Whether this attribute will be included during serialization.
-        Set to ``True`` by default.
-        If set to ``False``, the attribute will be skipped during serialized and will
-        throw an AttributeValidationError if serialized explicitly using
-        `serialize_attribute_for_filter`.
+        Whether this attribute will be included during serialization.  Set to ``True``
+        by default.  If set to ``False``, the attribute will be skipped during
+        serialization.
     sticky : bool
         Whether this attribute will be cleared when new attribute values are loaded
         from the Descartes Labs catalog.  Set to ``False`` by default.  This is used
@@ -111,9 +111,8 @@ class Attribute(object):
         the Descartes Labs catalog, and to allow them to persist you can set the _sticky
         parameter to True.
     readonly : bool
-        Whether this attribute can be set.
-        Set to ``False`` by default.
-        If set to ``True``, the attribute can never be set and will raise an
+        Whether this attribute can be set.  Set to ``False`` by default.  If set to
+        ``True``, the attribute can never be set and will raise an
         `AttributeValidationError` it set.
     """
 
@@ -267,6 +266,50 @@ class Attribute(object):
         return value
 
 
+class TypedAttribute(Attribute):
+    """The value of the attribute is checked against the given type.
+
+    Parameters
+    ----------
+    attribute_type : type
+        The type of the attribute.
+    coerce : bool, optional
+        Whether a non-conforming value should be coerced to that type.  ``False`` by
+        default.
+    **kwargs : optional
+        See `Attribute`.
+    """
+
+    def __init__(self, attribute_type, coerce=False, **kwargs):
+        super(TypedAttribute, self).__init__(**kwargs)
+
+        self.attribute_type = attribute_type
+        self.coerce = coerce
+
+    def __set__(self, obj, value, validate=True):
+        """Assign the given value to the attribute.
+
+        Raises
+        ------
+        AttributeValidationError
+            If a coercion failed or if the value is not of the given type.
+        """
+        if self.attribute_type and value is not None:
+            if self.coerce:
+                try:
+                    value = self.attribute_type(value)
+                except ValueError as e:
+                    raise AttributeValidationError(e)
+            elif not isinstance(value, self.attribute_type):
+                raise AttributeValidationError(
+                    "The attribute type is {} for {}".format(
+                        self.attribute_type, self._attribute_name
+                    )
+                )
+
+        super(TypedAttribute, self).__set__(obj, value, validate)
+
+
 class CatalogObjectReference(Attribute):
     """A reference to another CatalogObject.
 
@@ -279,9 +322,11 @@ class CatalogObjectReference(Attribute):
     reference_class : CatalogObject
         The class for the CatalogObject instance that this attribute will hold a
         reference to.
-    allow_unsaved : bool
+    require_unsaved : bool, optional
         Whether the reference is allowed even if the CatalogObject instance is not in
-        the `SAVED` state.
+        the `SAVED` state.  ``False`` by default.
+    **kwargs : optional
+        See `Attribute`.
     """
 
     def __init__(self, reference_class, require_unsaved=False, **kwargs):
@@ -321,6 +366,14 @@ class CatalogObjectReference(Attribute):
         See :meth:`Attribute.__set__`.
 
         Sets a new referenced object.  Must be a saved object of the correct type.
+
+        Raises
+        ------
+        AttributeValidationError
+            If the given reference is not a CatalogObject reference, or the referred-to
+            instance is `DocumentState.UNSAVED` and `require_unsaved` is ``False``,
+            or the referred-to instance not in `DocumentState.UNSAVED` and
+            `require_unsaved` is ``True``
         """
         if validate:
             self._raise_if_immutable_or_readonly("set", obj)
@@ -370,6 +423,8 @@ class CatalogObjectReference(Attribute):
 
 
 class Timestamp(Attribute):
+    """A datetime backed timestamp.  No validation is done."""
+
     def serialize(self, value, jsonapi_format=False):
         """Serialize a value to a json-serializable type.
 
@@ -402,13 +457,22 @@ class Timestamp(Attribute):
             try:
                 return parse_iso_datetime(value)
             except ValueError:
-                raise AttributeValidationError(
-                    "{} is not a valid value for a DateTime attribute."
-                    " Value must match format '%Y-%m-%dT%H:%M:%S.%fZ'".format(value)
-                )
+                # Not sure what's going on, but since this came from the service,
+                # don't raise an exception...
+                return value
 
 
 class EnumAttribute(Attribute):
+    """An attribute backed by an enumeration.
+
+    Parameters
+    ----------
+    enum : enum
+        The enumeration that the value must confirm to.
+    **kwargs : optional
+        See `Attribute`.
+    """
+
     def __init__(self, enum, **kwargs):
         super(EnumAttribute, self).__init__(**kwargs)
 
@@ -435,10 +499,18 @@ class EnumAttribute(Attribute):
         -------
         str
             A string representing the enum value.
+
+        Raises
+        ------
+        AttributeValidationError
+            When a non-enum value is given.
         """
         if validate:
             # Validate that the value is allowed, but don't return the Enum instance
-            return self._enum_cls(value).value
+            try:
+                return self._enum_cls(value).value
+            except ValueError as e:
+                raise AttributeValidationError(e)
         else:
             # No validation; allow values outside the enum range
             return value
@@ -467,6 +539,11 @@ class GeometryAttribute(Attribute):
         -------
         shapely.geometry.base.BaseGeometry
             A shapely instance.
+
+        Raises
+        ------
+        AttributeValidationError
+            When the given value cannot be coerced into a geometry.
         """
         if value is None:
             return value
@@ -478,6 +555,8 @@ class GeometryAttribute(Attribute):
 
 
 class BooleanAttribute(Attribute):
+    """An attribute with a boolean value.  Exactly like the Python bool."""
+
     def serialize(self, value, jsonapi_format=False):
         """Serialize a value to a json-serializable type.
 
@@ -523,7 +602,13 @@ class AttributeEqualityMixin(object):
 
 
 class ModelAttribute(Attribute):
-    """A class that allows for models to be registered and updated."""
+    """A class that allows for models to be registered and updated.
+
+    Parameters
+    ----------
+    **kwargs : optional
+        See `Attribute`.
+    """
 
     def __init__(self, **kwargs):
         self._model_objects = {}
@@ -578,7 +663,7 @@ class ModelAttribute(Attribute):
     def _add_model_object(self, model, attr_name=None):
         """Register a model and attribute name.
 
-        Since we can reuse one MappingAttribute object across different
+        Since we can reuse one ModelAttribute object across different
         model object types, each with potentially different attribute names,
         we register the name of the attribute on the specific model object,
         to avoid propagating bad changes.
@@ -632,6 +717,8 @@ class ModelAttribute(Attribute):
 
 
 class AttributeMeta(type):
+    """Apply the class attribute instances to the instance."""
+
     _KEY_ATTR_TYPES = "_attribute_types"
     _KEY_REF_ATTR_TYPES = "_reference_attribute_types"
 
@@ -692,6 +779,11 @@ class MappingAttribute(ModelAttribute, AttributeEqualityMixin, metaclass=Attribu
       single instance to be attached to multiple model objects.  Since they track their
       own state, the model objects they're attached to retain references to instances
       in their _attributes, like with other type (e.g.  datetime).
+
+    Parameters
+    ----------
+    **kwargs : optional
+        See `Attribute`.
 
     Examples
     --------
@@ -812,6 +904,12 @@ class MappingAttribute(ModelAttribute, AttributeEqualityMixin, metaclass=Attribu
         -------
         MappingAttribute
             A `MappingAttribute` instance with the given values.
+
+        Raises
+        ------
+            AttributeValidationError
+                If the given value is not a `Mapping`, or the value does not
+                conform to the attribute type.
         """
         if values is None:
             return None
@@ -862,6 +960,14 @@ class Resolution(MappingAttribute):
 
     >>> Band.search().filter(p.resolution == 60)
 
+    Parameters
+    ----------
+    values : Mapping or str
+        A mapping that either contains the `value` and `unit` key/value pairs,
+        or is a string that can be parsed to a `value` and a `unit`.
+    **kwargs : optional
+        See `Attribute`.
+
     Attributes
     ----------
     value : float
@@ -886,11 +992,11 @@ class Resolution(MappingAttribute):
     value = Attribute()
     unit = EnumAttribute(ResolutionUnit)
 
-    def __init__(self, string=None, **kwargs):
+    def __init__(self, values=None, **kwargs):
         super(Resolution, self).__init__(**kwargs)
 
-        if string is not None:
-            r = self.deserialize(string)
+        if values is not None:
+            r = self.deserialize(values)
             self.value = r.value
             self.unit = r.unit
 
@@ -923,6 +1029,12 @@ class Resolution(MappingAttribute):
         -------
         Resolution
             A `Resolution` instance with the given values.
+
+        Raises
+        ------
+        AttributeValidationError
+            If the value is not a `Resolution` or a mapping with a `value` and `unit`
+            key, or cannot be parsed into a compatible `value` and `unit`.
         """
         if isinstance(value, str):
             match = self._pattern.match(value)
@@ -985,10 +1097,10 @@ class ListAttribute(ModelAttribute, MutableSequence):
     and created automatically to hold a given deserialized value if it's not already
     that type.  The type can reject the value with a `AttributeValidationError`.
 
-    ListAttributes behave similarly to MappingAttributes but provide additional
+    ListAttributes behave similarly to `MappingAttributes` but provide additional
     operations that allow list-like interactions (slicing, appending, etc.)
 
-    One major difference between ListAttributes and MappingAttributes is that
+    One major difference between ListAttributes and `MappingAttributes` is that
     ListAttributes shouldn't be subclassed or instantiated directly - it's much easier
     for users to construct and assign a list or iterable, and allow __set__ to handle
     the coercing of the values to the correct type.
@@ -1007,8 +1119,8 @@ class ListAttribute(ModelAttribute, MutableSequence):
     Raises
     ------
     AttributeValidationError
-        If any of the values cannot be successfully deserialized to the given attribute
-        type.
+        If any of the items cannot be successfully deserialized to the given attribute
+        type and `validate` is ``True``.
 
     Example
     -------
@@ -1102,6 +1214,12 @@ class ListAttribute(ModelAttribute, MutableSequence):
         -------
         ListAttribute
             A `ListAttribute` with the given items.
+
+        Raises
+        ------
+        AttributeValidationError
+            If the value is not an iterable or if the value cannot be successfully
+            deserialized to the given attribute type and `validate` is ``True``.
         """
         if values is None:
             return None
@@ -1288,7 +1406,7 @@ class ListAttribute(ModelAttribute, MutableSequence):
 class ExtraPropertiesAttribute(ModelAttribute, MutableMapping):
     """An attribute that contains properties (key/value pairs).
 
-    Can be set using a dictionary of items or any mapping, or an instance of this
+    Can be set using a dictionary of items or any `Mapping`, or an instance of this
     attribute.  All keys must be string and values can be string or numbers.
     ExtraPropertiesAttribute behaves similar to dictionaries.
 
@@ -1382,6 +1500,12 @@ class ExtraPropertiesAttribute(ModelAttribute, MutableMapping):
         -------
         ExtraPropertiesAttribute
             A `ExtraPropertiesAttribute` with the given items.
+
+        Raises
+        ------
+        AttributeValidationError
+            If the value is not a mapping or any of the keys are not strings, or any
+            of the values are not strings or numbers.
         """
         if value is None:
             return None
@@ -1429,3 +1553,123 @@ class ExtraPropertiesAttribute(ModelAttribute, MutableMapping):
 
     def __len__(self):
         return len(self._items)
+
+
+class TupleAttribute(Attribute):
+    """An attribute that represents a tuple.
+
+    The minimum and maximum size of the tuple can be specified.  If the minimum and
+    maximum size are identical, the tuple must be exactly that size.
+
+    Parameters
+    ----------
+    attribute_type : type, optional
+        Each item in the tuple must be of the given type.
+    coerce : bool, optional
+        If an `attribute_type` is given, whether a non-conforming value should be
+        coerced to that type.  ``False`` by default.
+    min : int, optional
+        The minimum number of items the tuple must contain.  If not set, there is no
+        minimum.
+    max : int, optional
+        The maximum number of items the table can contain.  If not set, there is no
+        maximum.
+    **kwargs : optional
+        See `Attribute`.
+
+    Raises
+    ------
+    ValueError
+        If a coercion failed.
+    AttributeValidationError
+        If the value doesn't confirm to the tuple specification.
+    """
+
+    def __init__(
+        self,
+        attribute_type=None,
+        coerce=False,
+        min_length=None,
+        max_length=None,
+        **kwargs
+    ):
+        super(TupleAttribute, self).__init__(**kwargs)
+
+        self.attribute_type = attribute_type
+        self.coerce = coerce
+        self.min_length = None if min_length is None else int(min_length)
+        self.max_length = None if max_length is None else int(max_length)
+
+    def __set__(self, obj, value, validate=True):
+        """Sets the value for this attribute on the given object.
+
+        See :meth:`Attribute.__set__`.
+
+        Raises
+        ------
+        AttributeValidationError
+            If the value cannot be coerced into a tuple, or if any of the tuple items
+            cannot be coerced into, or match the given attribute type, or if the tuple
+            length does not confirm to the given min_length and max_length.
+        """
+        # Make sure it's a tuple
+        if isinstance(value, Iterable) and not isinstance(value, (str, bytes, tuple)):
+            value = tuple(value)
+
+        if validate:
+            value = self.validate_value(value)
+
+        super(TupleAttribute, self).__set__(obj, value, validate)
+
+    def validate_value(self, value):
+        # Validate the value, optionally coercing it, and return the value
+        if not isinstance(value, tuple):
+            raise AttributeValidationError(
+                "You must specify a tuple for {}".format(self._attribute_name)
+            )
+
+        if self.attribute_type:
+            if self.coerce:
+                items = []
+            for item in value:
+                if self.coerce:
+                    try:
+                        item = self.attribute_type(item)
+                    except ValueError as e:
+                        raise AttributeValidationError(e)
+                    items.append(item)
+                elif not isinstance(item, self.attribute_type):
+                    raise AttributeValidationError(
+                        "Not all items are of type {} for {}".format(
+                            self.attribute_type, self._attribute_name
+                        )
+                    )
+            if self.coerce:
+                value = tuple(items)
+
+        if (
+            self.min_length is not None
+            and self.min_length == self.max_length
+            and len(value) != self.min_length
+        ):
+            raise AttributeValidationError(
+                "Tuple must contain exactly {} items for {}".format(
+                    self.min_length, self._attribute_name
+                )
+            )
+
+        if self.min_length is not None and len(value) < self.min_length:
+            raise AttributeValidationError(
+                "Tuple must contain at least {} items for {}".format(
+                    self.min_length, self._attribute_name
+                )
+            )
+
+        if self.max_length is not None and len(value) < self.max_length:
+            raise AttributeValidationError(
+                "Tuple can contain up to {} items for {}".format(
+                    self.max_length, self._attribute_name
+                )
+            )
+
+        return value

@@ -10,7 +10,7 @@ from .catalog_base import (
     check_deleted,
     _new_abstract_class,
 )
-from .attributes import Attribute, Resolution, Timestamp, BooleanAttribute
+from .attributes import Resolution, Timestamp, BooleanAttribute, TypedAttribute
 
 try:
     import collections.abc as abc
@@ -64,7 +64,8 @@ class Product(CatalogObject):
     _url = "/products"
 
     # Product Attributes
-    name = Attribute(
+    name = TypedAttribute(
+        str,
         doc="""str: The name of this product.
 
         This should not be confused with a band name or image name.  Unlike the band
@@ -73,16 +74,17 @@ class Product(CatalogObject):
         to 2000 arbitrary characters.
 
         *Searchable, sortable*.
-        """
+        """,
     )
-    description = Attribute(
+    description = TypedAttribute(
+        str,
         doc="""str, optional: A description with further details on this product.
 
         The description can be up to 80,000 characters and is used by
         :py:meth:`Search.find_text`.
 
         *Searchable*
-        """
+        """,
     )
     is_core = BooleanAttribute(
         doc="""bool, optional: Whether this is a Descartes Labs catalog core product.
@@ -94,23 +96,27 @@ class Product(CatalogObject):
         *Filterable, sortable*.
         """
     )
-    revisit_period_minutes_min = Attribute(
+    revisit_period_minutes_min = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Minimum length of the time interval between observations.
 
         The minimum length of the time interval between observations of any given area
         in minutes.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    revisit_period_minutes_max = Attribute(
+    revisit_period_minutes_max = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Maximum length of the time interval between observations.
 
         The maximum length of the time interval between observations of any given area
         in minutes.
 
         *Filterable, sortable*.
-        """
+        """,
     )
     start_datetime = Timestamp(
         doc="""str or datetime, optional: The beginning of the mission for this product.

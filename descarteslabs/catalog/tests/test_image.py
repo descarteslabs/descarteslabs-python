@@ -673,7 +673,7 @@ class TestImage(ClientTestCase):
             id="p1:image",
             product=p,
             acquired="2012-05-06",
-            geotrans=[42],
+            geotrans=[42, 0, 0, 0, 0, 0],
             projection="foo",
         )
 
@@ -697,5 +697,10 @@ class TestImage(ClientTestCase):
 
     def test_upload_ndarray_bad_georef(self):
         p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
-        image = Image(id="p1:image", product=p, acquired="2012-05-06", geotrans=[42])
+        image = Image(
+            id="p1:image",
+            product=p,
+            acquired="2012-05-06",
+            geotrans=[42, 0, 0, 0, 0, 0],
+        )
         pytest.raises(ValueError, image.upload_ndarray, np.zeros((100, 100)))

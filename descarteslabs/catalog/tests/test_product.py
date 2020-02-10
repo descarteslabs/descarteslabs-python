@@ -67,7 +67,7 @@ class TestProduct(ClientTestCase):
         )
 
         assert p.resolution_min.unit == "miles"
-        with pytest.raises(ValueError):
+        with pytest.raises(AttributeValidationError):
             Resolution(value=15.0, unit="miles")
 
     @responses.activate

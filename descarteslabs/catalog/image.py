@@ -18,12 +18,13 @@ from descarteslabs.client.services.service import ThirdPartyService
 from .catalog_base import DocumentState, check_deleted
 from .named_catalog_base import NamedCatalogObject
 from .attributes import (
-    Attribute,
     EnumAttribute,
     GeometryAttribute,
     Timestamp,
     ListAttribute,
     File,
+    TupleAttribute,
+    TypedAttribute,
 )
 
 properties = GenericProperties()
@@ -82,35 +83,43 @@ class Image(NamedCatalogObject):
         <descarteslabs.catalog.ImageSearch.intersects>` to search based on geometry)
         """
     )
-    cs_code = Attribute(
+    cs_code = TypedAttribute(
+        str,
         doc="""str: The coordinate reference system used by the image as an EPSG or ESRI code.
 
         An example of a EPSG code is ``"EPSG:4326"``.  One of `cs_code` and `projection`
         is required.  If both are set and disagree, `cs_code` takes precedence.
-        """
+        """,
     )
-    projection = Attribute(
+    projection = TypedAttribute(
+        str,
         doc="""str: The spatial reference system used by the image.
 
         The projection can be specified as either a proj.4 string or a a WKT string.
         One of `cs_code` and `projection` is required.  If both are set and disagree,
         `cs_code` takes precedence.
-        """
+        """,
     )
-    geotrans = Attribute(
-        doc="""list of six float elements, optional if `~StorageState.REMOTE`: GDAL-style geotransform matrix.
+    geotrans = TupleAttribute(
+        min_length=6,
+        max_length=6,
+        coerce=True,
+        attribute_type=float,
+        doc="""tuple of six float elements, optional if `~StorageState.REMOTE`: GDAL-style geotransform matrix.
 
         A GDAL-style `geotransform matrix
         <https://gdal.org/user/raster_data_model.html#affine-geotransform>`_ that
         transforms pixel coordinates into the spatial reference system defined by the
         `cs_code` or `projection` attributes.
-        """
+        """,
     )
-    x_pixels = Attribute(
-        doc="int, optional if `~StorageState.REMOTE`: X dimension of the image in pixels."
+    x_pixels = TypedAttribute(
+        int,
+        doc="int, optional if `~StorageState.REMOTE`: X dimension of the image in pixels.",
     )
-    y_pixels = Attribute(
-        doc="int, optional if `~StorageState.REMOTE`: Y dimension of the image in pixels."
+    y_pixels = TypedAttribute(
+        int,
+        doc="int, optional if `~StorageState.REMOTE`: Y dimension of the image in pixels.",
     )
 
     # Time dimensions
@@ -149,112 +158,141 @@ class Image(NamedCatalogObject):
     )
 
     # Image properties
-    area = Attribute(
+    area = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Surface area the image covers.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    azimuth_angle = Attribute(
+    azimuth_angle = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Sensor azimuth angle in degrees.
 
         *Filterable, sortable*.
-        """
+        """,
     )
     bits_per_pixel = ListAttribute(
-        Attribute, doc="list(float), optional: Average bits of data per pixel per band."
+        TypedAttribute(float, coerce=True),
+        doc="list(float), optional: Average bits of data per pixel per band.",
     )
-    bright_fraction = Attribute(
+    bright_fraction = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Fraction of the image that has reflectance greater than .4 in the blue band.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    cloud_fraction = Attribute(
+    cloud_fraction = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Fraction of pixels which are obscured by clouds.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    alt_cloud_fraction = Attribute(
+    alt_cloud_fraction = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Fraction of pixels which are obscured by clouds.
 
         This is as per an alternative algorithm.  See the product documentation in the
         `Descartes Labs catalog <catalog.descarteslabs.com>`_ for more information.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    processing_pipeline_id = Attribute(
+    processing_pipeline_id = TypedAttribute(
+        str,
         doc="""str, optional: Identifier for the pipeline that processed this image from raw data.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    fill_fraction = Attribute(
+    fill_fraction = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Fraction of this image which has data.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    incidence_angle = Attribute(
+    incidence_angle = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Sensor incidence angle in degrees.
 
         *Filterable, sortable*.
-        """
+        """,
     )
     reflectance_scale = ListAttribute(
-        Attribute,
+        TypedAttribute(float, coerce=True),
         doc="list(float), optional: Scale factors converting TOA radiances to TOA reflectances.",
     )
-    roll_angle = Attribute(
+    roll_angle = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Applicable only to Landsat 8, roll angle in degrees.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    solar_azimuth_angle = Attribute(
+    solar_azimuth_angle = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Solar azimuth angle at capture time.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    solar_elevation_angle = Attribute(
+    solar_elevation_angle = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Solar elevation angle at capture time.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    view_angle = Attribute(
+    view_angle = TypedAttribute(
+        float,
+        coerce=True,
         doc="""float, optional: Sensor view angle in degrees.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    satellite_id = Attribute(
+    satellite_id = TypedAttribute(
+        str,
         doc="""str, optional: Id of the capturing satellite/sensor among a constellation of many satellites.
 
         *Filterable, sortable*.
-        """
+        """,
     )
 
     # Provider info
-    provider_id = Attribute(
+    provider_id = TypedAttribute(
+        str,
         doc="""str, optional: Id that uniquely ties this image to an entity as understood by the data provider.
 
         *Filterable, sortable*.
-        """
+        """,
     )
-    provider_url = Attribute(
-        doc="str, optional: An external (http) URL that has more details about the image"
+    provider_url = TypedAttribute(
+        str,
+        doc="str, optional: An external (http) URL that has more details about the image",
     )
-    preview_url = Attribute(
+    preview_url = TypedAttribute(
+        str,
         doc="""str, optional: An external (http) URL to a preview image.
 
         This image could be inlined in a UI to show a preview for the image.
-        """
+        """,
     )
-    preview_file = Attribute(
+    preview_file = TypedAttribute(
+        str,
         doc="""str, optional: A GCS URL with a georeferenced image.
 
         Use a GCS URL (``gs://...```) with appropriate access permissions.  This
@@ -262,7 +300,7 @@ class Image(NamedCatalogObject):
         low resolution.  It should be a 3-band (RBG) or a 4-band (RGBA) image suitable
         for visual preview.  (It's not expected to conform to the bands of the
         products.)
-        """
+        """,
     )
 
     @classmethod

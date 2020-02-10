@@ -1,11 +1,11 @@
 import re
 
-from .attributes import Attribute, AttributeValidationError, CatalogObjectReference
+from .attributes import AttributeValidationError, CatalogObjectReference, TypedAttribute
 from .catalog_base import CatalogObject, _new_abstract_class
 from .product import Product
 
 
-class NamedIdAttribute(Attribute):
+class NamedIdAttribute(TypedAttribute):
     """str, immutable: An optional unique identifier for this object.
 
     The identifier for a named catalog object is the concatenation of the `product_id`
@@ -20,7 +20,7 @@ class NamedIdAttribute(Attribute):
     # they are set.  It will set the `name` and `product_id` atttributes otherwise.
 
     def __init__(self):
-        super(NamedIdAttribute, self).__init__(mutable=False, serializable=False)
+        super(NamedIdAttribute, self).__init__(str, mutable=False, serializable=False)
 
     def __set__(self, obj, value, validate=True):
         last_colon = value.rfind(":")
@@ -50,7 +50,7 @@ class NamedIdAttribute(Attribute):
                 obj._get_attribute_type("name").__set__(obj, name, validate=validate)
 
 
-class NameAttribute(Attribute):
+class NameAttribute(TypedAttribute):
     """str, immutable: The name of the catalog object.
 
     The name of a named catalog object is unique within a product and object type
@@ -64,7 +64,7 @@ class NameAttribute(Attribute):
     # Sets the id if the `product_id` is already set."""
 
     def __init__(self):
-        super(NameAttribute, self).__init__(mutable=False)
+        super(NameAttribute, self).__init__(str, mutable=False)
 
     def __set__(self, obj, value, validate=True):
         # Only update if it differs
@@ -78,7 +78,7 @@ class NameAttribute(Attribute):
                 obj._get_attribute_type("id").__set__(obj, id_, validate=validate)
 
 
-class ProductIdAttribute(Attribute):
+class ProductIdAttribute(TypedAttribute):
     """str, immutable: The id of the product this catalog object belongs to.
 
     If the `id` contains a product id, it will be used instead.  Once set, it cannot
@@ -90,7 +90,7 @@ class ProductIdAttribute(Attribute):
     # Sets the id if the `name` is already set."""
 
     def __init__(self):
-        super(ProductIdAttribute, self).__init__(mutable=False)
+        super(ProductIdAttribute, self).__init__(str, mutable=False)
 
     def __set__(self, obj, value, validate=True):
         # Only update if it differs

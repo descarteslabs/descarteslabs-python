@@ -10,6 +10,7 @@ from .attributes import (
     EnumAttribute,
     MappingAttribute,
     ListAttribute,
+    TypedAttribute,
 )
 from .image import Image
 
@@ -267,12 +268,14 @@ class ImageUpload(CatalogObjectBase):
     _default_includes = [INCLUDE_EVENTS]
     _no_inherit = True
 
-    id = Attribute(
+    id = TypedAttribute(
+        str,
         mutable=False,
         serializable=False,
         doc="str: Globally unique identifier for the upload.",
     )
-    product_id = Attribute(
+    product_id = TypedAttribute(
+        attribute_type=str,
         mutable=False,
         doc="""str: Product id of the product for this imagery.
 
@@ -282,7 +285,8 @@ class ImageUpload(CatalogObjectBase):
         *Filterable, sortable*.
         """,
     )
-    image_id = Attribute(
+    image_id = TypedAttribute(
+        str,
         mutable=False,
         doc="""str: Image id of the image for this imagery.
 
