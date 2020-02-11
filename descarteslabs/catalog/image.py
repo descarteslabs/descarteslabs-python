@@ -343,6 +343,12 @@ class Image(NamedCatalogObject):
         Uploads imagery from a file (or files) in GeoTIFF or JP2 format to be ingested
         as an Image.
 
+        The Image must be in the state `~descarteslabs.catalog.DocumentState.UNSAVED`.
+        The `product` or `product_id` attribute, the `name` attribute, and the
+        `acquired` attribute must all be set. If either the `cs_code` or `projection`
+        attributes is set (deprecated), it must agree with the projection defined in the file,
+        otherwise an upload error will occur during processing.
+
         Parameters
         ----------
         files : str or io.IOBase or iterable of same
@@ -376,6 +382,12 @@ class Image(NamedCatalogObject):
             raise ValueError("id field required")
         if not self.acquired:
             raise ValueError("acquired field required")
+        if self.cs_code or self.projection:
+            print("warning!")
+            warnings.warn(
+                "cs_code and projection fields not permitted", DeprecationWarning
+            )
+            # raise ValueError("cs_code and projection fields not permitted")
 
         if self.state != DocumentState.UNSAVED:
             raise ValueError(
@@ -438,8 +450,14 @@ class Image(NamedCatalogObject):
     ):
         """Uploads imagery from an ndarray to be ingested as an Image.
 
-        Note that one of the spatial reference attributes (`cs_code` and
-        `projection`), and/or `geotrans` parameters can be
+        The Image must be in the state `~descarteslabs.catalog.DocumentState.UNSAVED`.
+        The `product` or `product_id` attribute, the `name` attribute, and the
+        `acquired` attribute must all be set. Either (but not both) the `cs_code`
+        or `projection` attributes must be set, or the `raster_meta` parameter must be provided.
+        Similarly, either the `geotrans` attribute must be set or `raster_meta` must be provided.
+
+        Note that one of the spatial reference attributes (`cs_code` or
+        `projection`), or the `geotrans` attribute can be
         specified explicitly in the image, or the `raster_meta` parameter can be
         specified.  Likewise, `overviews` and `overview_resampler` can be
         specified explicitly, or via the `upload_options` parameter.
@@ -499,6 +517,12 @@ class Image(NamedCatalogObject):
             raise ValueError("id field required")
         if not self.acquired:
             raise ValueError("acquired field required")
+        if self.cs_code and self.projection:
+            warnings.warn(
+                "Only one of cs_code and projection fields permitted",
+                DeprecationWarning,
+            )
+            # raise ValueError("only one of cs_code and projection fields permitted")
 
         if self.state != DocumentState.UNSAVED:
             raise ValueError(
@@ -545,8 +569,8 @@ class Image(NamedCatalogObject):
             if not self.geotrans:
                 self.geotrans = raster_meta.get("geoTransform")
             if not self.cs_code and not self.projection:
-                # doesn't yet exist!
-                self.projection = raster_meta.get("coordinateSystem", {}).get("proj4")
+                cs = raster_meta.get("coordinateSystem", {})
+                self.projection = cs.get("wkt") or cs.get("proj4")
 
         if not self.geotrans:
             raise ValueError("geotrans field or raster_meta parameter is required")

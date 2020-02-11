@@ -527,6 +527,17 @@ class TestImage(ClientTestCase):
         # when the new ingest is completed, we may implement the reload
         # of the updated Image...
 
+    @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
+    def test_upload_warnings(self, *mocks):
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
+        image = Image(id="p1:image", product=p, acquired="2012-05-06", projection="foo")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            image.upload("somefile")
+            assert 1 == len(w)
+            assert "cs_code" in str(w[0].message)
+
     @patch("descarteslabs.catalog.image.Image._gcs_upload_service")
     @patch("descarteslabs.catalog.image_upload.ImageUpload._POLLING_INTERVALS", [1])
     @responses.activate
@@ -694,6 +705,14 @@ class TestImage(ClientTestCase):
         with warnings.catch_warnings(record=True) as w:
             image.upload_ndarray(array)
             assert 1 == len(w)
+
+        array = np.zeros((1, 100, 100))
+        image.cs_code = "FOO:1"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            image.upload_ndarray(array)
+            assert 1 == len(w)
+            assert "cs_code" in str(w[0].message)
 
     def test_upload_ndarray_bad_georef(self):
         p = Product(id="p1", name="Test Product", client=self.client, _saved=True)

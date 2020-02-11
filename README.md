@@ -8,6 +8,15 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## Pending
+
+### Catalog client
+
+- `Image.upload()` now emits a deprecation warning if the image has a `cs_code` or `projection` property.
+  The projection defined in the uploaded file is always used and applied to the resulting image in the Catalog.
+- `Image.upload_ndarray()` now emits a deprecation warning if the image has both a `cs_code` and a `projection`
+  property. Only one of them may be supplied, and `cs_code` is given preference.
+
 ## [1.0.0] - 2020-01-20
 
 | As of January 1st, 2020, the client library no longer supports Python 2. For more information, please contact support@descarteslabs.com. For help with porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html. |
