@@ -569,8 +569,8 @@ class Image(NamedCatalogObject):
             if not self.geotrans:
                 self.geotrans = raster_meta.get("geoTransform")
             if not self.cs_code and not self.projection:
-                cs = raster_meta.get("coordinateSystem", {})
-                self.projection = cs.get("wkt") or cs.get("proj4")
+                # doesn't yet exist!
+                self.projection = raster_meta.get("coordinateSystem", {}).get("proj4")
 
         if not self.geotrans:
             raise ValueError("geotrans field or raster_meta parameter is required")
