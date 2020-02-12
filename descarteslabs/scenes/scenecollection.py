@@ -235,7 +235,7 @@ class SceneCollection(Collection):
             )  # the bands axis for each component ndarray call in the stack
 
         if flatten is not None:
-            if isinstance(flatten, six.string_types) or not hasattr(flatten, "__len__"):
+            if isinstance(flatten, str) or not hasattr(flatten, "__len__"):
                 flatten = [flatten]
             scenes = [
                 sc if len(sc) > 1 else sc[0] for group, sc in self.groupby(*flatten)
@@ -248,18 +248,10 @@ class SceneCollection(Collection):
         if raster_info:
             raster_infos = [None] * len(scenes)
 
-        alpha_band_name = "alpha"
-        if isinstance(mask_alpha, six.string_types):
-            alpha_band_name = mask_alpha
-        elif mask_alpha is None:
-            mask_alpha = self._collection_has_alpha(alpha_band_name)
-
         bands = Scene._bands_to_list(bands)
-        pop_alpha = False
-        if mask_alpha and alpha_band_name not in bands:
-            pop_alpha = True
-            bands.append(alpha_band_name)
-            scaling = _scaling.append_alpha_scaling(scaling)
+        (bands, scaling, mask_alpha, pop_alpha) = self._mask_alpha_if_applicable(
+            bands, mask_alpha=mask_alpha, scaling=scaling
+        )
 
         scales, data_type = _scaling.multiproduct_scaling_parameters(
             self._product_band_properties(), bands, scaling, data_type
@@ -440,30 +432,13 @@ class SceneCollection(Collection):
             )
 
         bands = Scene._bands_to_list(bands)
-        alpha_band_name = "alpha"
-        if isinstance(mask_alpha, six.string_types):
-            alpha_band_name = mask_alpha
-        elif mask_alpha is None:
-            mask_alpha = self._collection_has_alpha(alpha_band_name)
-
-        if mask_alpha:
-            try:
-                alpha_i = bands.index(alpha_band_name)
-            except ValueError:
-                bands.append(alpha_band_name)
-                drop_alpha = True
-                scaling = _scaling.append_alpha_scaling(scaling)
-            else:
-                if alpha_i != len(bands) - 1:
-                    raise ValueError(
-                        "Alpha must be the last band in order to reduce rasterization errors"
-                    )
-                drop_alpha = False
+        (bands, scaling, mask_alpha, drop_alpha) = self._mask_alpha_if_applicable(
+            bands, mask_alpha=mask_alpha, scaling=scaling
+        )
 
         scales, data_type = _scaling.multiproduct_scaling_parameters(
             self._product_band_properties(), bands, scaling, data_type
         )
-
         raster_params = ctx.raster_params
         full_raster_args = dict(
             inputs=[scene.properties["id"] for scene in self],
@@ -751,6 +726,7 @@ class SceneCollection(Collection):
         processing_level=None,
         scaling=None,
         data_type=None,
+        mask_alpha=None,
     ):
         """
         Download all scenes as a single image file.
@@ -801,6 +777,12 @@ class SceneCollection(Collection):
         data_type : None, str
             Output data type. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
+        mask_alpha : bool or str or None, default None
+            Whether to mask pixels in all bands where the alpha band of all scenes is 0.
+            Provide a string to use an alternate band name for masking.
+            If the alpha band is available for all scenes in the collection and
+            ``mask_alpha`` is None, ``mask_alpha`` is set to True. If not,
+            mask_alpha is set to False.
 
         Returns
         -------
@@ -838,6 +820,9 @@ class SceneCollection(Collection):
             raise ValueError("This SceneCollection is empty")
 
         bands = Scene._bands_to_list(bands)
+        (bands, scaling, mask_alpha, drop_alpha) = self._mask_alpha_if_applicable(
+            bands, mask_alpha=mask_alpha, scaling=scaling
+        )
         scales, data_type = _scaling.multiproduct_scaling_parameters(
             self._product_band_properties(), bands, scaling, data_type
         )
@@ -944,6 +929,28 @@ class SceneCollection(Collection):
 
     def _collection_has_alpha(self, alpha_band_name):
         return all(scene.has_alpha(alpha_band_name) for scene in self)
+
+    def _mask_alpha_if_applicable(self, bands, mask_alpha=None, scaling=None):
+        alpha_band_name = "alpha"
+        if isinstance(mask_alpha, str):
+            alpha_band_name = mask_alpha
+        elif mask_alpha is None:
+            mask_alpha = self._collection_has_alpha(alpha_band_name)
+
+        drop_alpha = False
+        if mask_alpha:
+            try:
+                alpha_i = bands.index(alpha_band_name)
+            except ValueError:
+                bands.append(alpha_band_name)
+                drop_alpha = True
+                scaling = _scaling.append_alpha_scaling(scaling)
+            else:
+                if alpha_i != len(bands) - 1:
+                    raise ValueError(
+                        "Alpha must be the last band in order to reduce rasterization errors"
+                    )
+        return (bands, scaling, mask_alpha, drop_alpha)
 
     def _product_band_properties(self):
         result = {}

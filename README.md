@@ -17,6 +17,12 @@ Changelog
 - `Image.upload_ndarray()` now emits a deprecation warning if the image has both a `cs_code` and a `projection`
   property. Only one of them may be supplied, and `cs_code` is given preference.
 
+### Scenes
+- `SceneCollection.download_mosaic` has new default behavior for `mask_alpha` wherein the `alpha` band will be
+  used as a mask by default if it is available for all scenes in the collection, even if it is not specified in
+  the list of bands.
+
+
 ## [1.0.0] - 2020-01-20
 
 | As of January 1st, 2020, the client library no longer supports Python 2. For more information, please contact support@descarteslabs.com. For help with porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html. |

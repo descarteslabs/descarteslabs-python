@@ -388,11 +388,10 @@ class Scene(object):
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
         mask_alpha : bool or str or None, default None
-            Whether to mask pixels in all bands where the alpha band of all scenes is 0.
+            Whether to mask pixels in all bands where the alpha band of the scene is 0.
             Provide a string to use an alternate band name for masking.
-            If the alpha band is available for all scenes in the collection and
-            ``mask_alpha`` is None, ``mask_alpha`` is set to True. If not,
-            mask_alpha is set to False.
+            If the alpha band is available and ``mask_alpha`` is None, ``mask_alpha``
+            is set to True. If not, mask_alpha is set to False.
         bands_axis : int, default 0
             Axis along which bands should be located in the returned array.
             If 0, the array will have shape ``(band, y, x)``, if -1,
