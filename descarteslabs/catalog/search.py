@@ -2,6 +2,8 @@ import copy
 import json
 import warnings
 
+from enum import Enum
+
 from .catalog_client import CatalogClient
 from descarteslabs.common.property_filtering.filtering import AndExpression
 from descarteslabs.common.property_filtering.filtering import Expression  # noqa: F401
@@ -298,6 +300,58 @@ class Search(object):
         return result
 
 
+class Interval(str, Enum):
+    """An interval for the :py:meth:`ImageSearch.summary_interval` method.
+
+    Attributes
+    ----------
+    YEAR : enum
+        Aggregate on a yearly basis
+    QUARTER : enum
+        Aggregate on a quarterly basis
+    MONTH : enum
+        Aggregate on a monthly basis
+    WEEK : enum
+        Aggregate on a weekly basis
+    DAY : enum
+        Aggregate on a daily basis
+    HOUR : enum
+        Aggregate on a hourly basis
+    MINUTE : enum
+        Aggregate per minute
+    """
+
+    YEAR = "year"
+    QUARTER = "quarter"
+    MONTH = "month"
+    WEEK = "week"
+    DAY = "day"
+    HOUR = "hour"
+    MINUTE = "minute"
+
+
+class AggregateDateField(str, Enum):
+    """A date field to use for aggragation for the :py:meth:`ImageSearch.summary_interval` method.
+
+
+    Attributes
+    ----------
+    ACQUIRED : enum
+        Aggregate on the `Image.acquired` field.
+    CREATED : enum
+        Aggregate on the `Image.created` field.
+    MODIFIED : enum
+        Aggregate on the `Image.modified` field.
+    PUBLISHED : enum
+        Aggregate on the `Image.published` field.
+    """
+
+    ACQUIRED = "acquired"
+    CREATED = "created"
+    MODIFIED = "modified"
+    PUBLISHED = "published"
+
+
 class ImageSearch(Search):
     # Be aware that the `|` characters below add whitespace.  The first one is needed
     # avoid the `Inheritance` section from appearing before the auto summary.
@@ -392,20 +446,26 @@ class ImageSearch(Search):
         Parameters
         ----------
 
-        aggregate_date_field : str, optional
+        aggregate_date_field : str or AggregateDateField, optional
             The date field to use for aggregating summary results over time.  Valid
-            inputs are ``acquired``, ``created``, ``modified``, ``published``.
-            The default is ``acquired``.
-        interval : str, optional
+            inputs are `~AggregateDateField.ACQUIRED`, `~AggregateDateField.CREATED`,
+            `~AggregateDateField.MODIFIED`, `~AggregateDateField.PUBLISHED`.  The
+            default is `~AggregateDateField.ACQUIRED`.
+        interval : str or Interval, optional
             The time interval to use for aggregating summary results.  Valid inputs
-            are ``year``, ``quarter``, ``month``, ``week``, ``day``, ``hour``,
-            ``minute``.  The default is ``year``.
+            are `~Interval.YEAR`, `~Interval.QUARTER`, `~Interval.MONTH`,
+            `~Interval.WEEK`, `~Interval.DAY`, `~Interval.HOUR`, `~Interval.MINUTE`.
+            The default is `~Interval.YEAR`.
         start_datetime : str or datetime, optional
             Beginning of the date range over which to summarize data in ISO format.
-            The default is any start_datetime (unbounded).
+            The default is least recent date found in the search result based on the
+            `aggregate_date_field`.  The start_datetime is included in the result.  To
+            set it as unbounded, use the value ``0``.
         end_datetime : str or datetime, optional
-            End of the date range over which to summarize data in ISO format.
-            The default is any end_datetime (unbounded).
+            End of the date range over which to summarize data in ISO format.  The
+            default is most recent date found in the search result based on the
+            `aggregate_date_field`.  The end_datetime is included in the result.  To
+            set it as unbounded, use the value ``0``.
 
         Returns
         -------
@@ -421,20 +481,29 @@ class ImageSearch(Search):
 
         Example
         -------
-        >>> s = Image
-        ...     .search()
-        ...     .filter(p.product_id=="landsat:LC08:01:RT:TOAR")
-        ...     .summary_interval(aggregate_date_field="acquired", interval="month)
+        >>> from descarteslabs.catalog import Image, AggregateDateField, Interval, properties
+        >>> interval_results = (
+        ...     Image.search()
+        ...     .filter(properties.product_id == "landsat:LC08:01:RT:TOAR")
+        ...     .summary_interval(
+        ...         aggregate_date_field=AggregateDateField.ACQUIRED, interval=Interval.MONTH
+        ...     )
+        ... )
         >>> print([(i.interval_start, i.count) for i in interval_results])
         """
         s = copy.deepcopy(self)
-        summary_url = s._url + "/summary"
+        summary_url = "{}/summary/{}/{}".format(s._url, aggregate_date_field, interval)
 
-        summary_url = "{}/{}/{}".format(summary_url, aggregate_date_field, interval)
-        if start_datetime:
+        # The service will calculate start/end if not given
+        if start_datetime is not None:
             s._request_params["_start"] = serialize_datetime(start_datetime)
-        if end_datetime:
+        elif not start_datetime:
+            s._request_params["_start"] = ""  # Unbounded
+
+        if end_datetime is not None:
             s._request_params["_end"] = serialize_datetime(end_datetime)
+        elif not end_datetime:
+            s._request_params["_end"] = ""  # Unbounded
 
         r = self._client.session.put(summary_url, json=s._summary_request())
         response = r.json()

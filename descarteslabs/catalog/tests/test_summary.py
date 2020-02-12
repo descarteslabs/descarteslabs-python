@@ -121,7 +121,7 @@ class TestImageSummary(ClientTestCase):
                 },
             },
         )
-        results = self.search.summary_interval()
+        results = self.search.summary_interval(start_datetime="", end_datetime="")
         parsed_url = urlparse(responses.calls[0].request.url)
         assert parsed_url.path == "/catalog/v2/images/summary/acquired/year"
 

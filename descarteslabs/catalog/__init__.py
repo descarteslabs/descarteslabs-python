@@ -27,7 +27,7 @@ from .image_upload import (
     ImageUploadEventType,
     ImageUploadEventSeverity,
 )
-from .search import ImageSearch, Search, SummaryResult
+from .search import ImageSearch, Search, Interval, AggregateDateField, SummaryResult
 from .catalog_base import (
     CatalogClient,
     CatalogObject,
@@ -48,6 +48,7 @@ from descarteslabs.common.property_filtering import GenericProperties
 properties = GenericProperties()
 
 __all__ = [
+    "AggregateDateField",
     "AttributeValidationError",
     "Band",
     "BandType",
@@ -71,6 +72,7 @@ __all__ = [
     "ImageUploadOptions",
     "ImageUploadStatus",
     "ImageUploadType",
+    "Interval",
     "MaskBand",
     "MicrowaveBand",
     "NamedCatalogObject",

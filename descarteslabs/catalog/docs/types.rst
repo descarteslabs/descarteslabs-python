@@ -16,6 +16,8 @@ Types
   ~descarteslabs.catalog.ResolutionUnit
   ~descarteslabs.catalog.File
   ~descarteslabs.catalog.StorageState
+  ~descarteslabs.catalog.AggregateDateField
+  ~descarteslabs.catalog.Interval
   ~descarteslabs.catalog.ImageUploadOptions
   ~descarteslabs.catalog.ImageUploadType
   ~descarteslabs.catalog.OverviewResampler
@@ -43,6 +45,10 @@ Types
 .. autoclass:: descarteslabs.catalog.File
 
 .. autoclass:: descarteslabs.catalog.StorageState
+
+.. autoclass:: descarteslabs.catalog.AggregateDateField
+
+.. autoclass:: descarteslabs.catalog.Interval
 
 .. autoclass:: descarteslabs.catalog.ImageUploadOptions
 
