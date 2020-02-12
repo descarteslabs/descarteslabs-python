@@ -60,29 +60,33 @@ class TestImageSummary(ClientTestCase):
 
         assert summary_repr.strip("\n") == textwrap.dedent(match_str)
 
+    INTERVAL_RESPONSE = {
+        "meta": {"count": 1},
+        "data": [
+            {
+                "attributes": {
+                    "count": 1,
+                    "interval_start": "2019-01-01T00:00:00Z",
+                    "bytes": 44306192,
+                },
+                "type": "image_interval_summary",
+                "id": "2019-01-01T00:00:00Z",
+            }
+        ],
+        "jsonapi": {"version": "1.0"},
+        "links": {
+            "self": "https://www.example.com/catalog/v2/images/summary/acquired/year"
+        },
+    }
+
     @responses.activate
     def test_summary_interval(self):
-        self.mock_response(
-            responses.PUT,
-            {
-                "meta": {"count": 1},
-                "data": [
-                    {
-                        "attributes": {
-                            "count": 1,
-                            "interval_start": "2019-01-01T00:00:00Z",
-                            "bytes": 44306192,
-                        },
-                        "type": "image_interval_summary",
-                        "id": "2019-01-01T00:00:00Z",
-                    }
-                ],
-                "jsonapi": {"version": "1.0"},
-                "links": {
-                    "self": "https://www.example.com/catalog/v2/images/summary/created/month"
-                },
-            },
+        response = self.INTERVAL_RESPONSE
+        response["links"] = dict(
+            self="https://www.example.com/catalog/v2/images/summary/created/month"
         )
+        self.mock_response(responses.PUT, response)
+
         results = self.search.summary_interval(
             aggregate_date_field="created",
             interval="month",
@@ -100,33 +104,26 @@ class TestImageSummary(ClientTestCase):
 
     @responses.activate
     def test_summary_interval_defaults(self):
-        self.mock_response(
-            responses.PUT,
-            {
-                "meta": {"count": 1},
-                "data": [
-                    {
-                        "attributes": {
-                            "count": 1,
-                            "interval_start": "2019-01-01T00:00:00Z",
-                            "bytes": 44306192,
-                        },
-                        "type": "image_interval_summary",
-                        "id": "2019-01-01T00:00:00Z",
-                    }
-                ],
-                "jsonapi": {"version": "1.0"},
-                "links": {
-                    "self": "https://www.example.com/catalog/v2/images/summary/acquired/year"
-                },
-            },
-        )
-        results = self.search.summary_interval(start_datetime="", end_datetime="")
+        self.mock_response(responses.PUT, self.INTERVAL_RESPONSE)
+        results = self.search.summary_interval()
         parsed_url = urlparse(responses.calls[0].request.url)
         assert parsed_url.path == "/catalog/v2/images/summary/acquired/year"
 
+        request_params = self.get_request_body(0)
+        assert request_params == {}
+
         assert len(results) == 1
         assert isinstance(results[0].interval_start, datetime)
+
+    @responses.activate
+    def test_summary_interval_unbounded(self):
+        self.mock_response(responses.PUT, self.INTERVAL_RESPONSE)
+        self.search.summary_interval(start_datetime=0, end_datetime=0)
+        parsed_url = urlparse(responses.calls[0].request.url)
+        assert parsed_url.path == "/catalog/v2/images/summary/acquired/year"
+
+        request_params = self.get_request_body(0)
+        assert request_params == {"_start": "", "_end": ""}
 
     def test_invalid_summary(self):
         with pytest.raises(AttributeError):

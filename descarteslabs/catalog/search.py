@@ -496,14 +496,16 @@ class ImageSearch(Search):
 
         # The service will calculate start/end if not given
         if start_datetime is not None:
-            s._request_params["_start"] = serialize_datetime(start_datetime)
-        elif not start_datetime:
-            s._request_params["_start"] = ""  # Unbounded
+            if start_datetime:
+                s._request_params["_start"] = serialize_datetime(start_datetime)
+            else:
+                s._request_params["_start"] = ""  # Unbounded
 
         if end_datetime is not None:
-            s._request_params["_end"] = serialize_datetime(end_datetime)
-        elif not end_datetime:
-            s._request_params["_end"] = ""  # Unbounded
+            if end_datetime:
+                s._request_params["_end"] = serialize_datetime(end_datetime)
+            else:
+                s._request_params["_end"] = ""  # Unbounded
 
         r = self._client.session.put(summary_url, json=s._summary_request())
         response = r.json()
