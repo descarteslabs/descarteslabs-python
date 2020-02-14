@@ -174,7 +174,7 @@ class Image(ImageBase, BandsMixin):
         resampler: Str, optional, default None
             Algorithm used to interpolate pixel values when scaling and transforming
             the image to the resolution and CRS eventually defined by a `~.geospatial.GeoContext`.
-            Possible values are ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicsplice``,
+            Possible values are ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicspline``,
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         processing_level : Str, optional
             Reflectance processing level. Possible values are ``'toa'`` (top of atmosphere)
@@ -197,7 +197,7 @@ class Image(ImageBase, BandsMixin):
             "near",
             "bilinear",
             "cubic",
-            "cubicsplice",
+            "cubicspline",
             "lanczos",
             "average",
             "mode",
