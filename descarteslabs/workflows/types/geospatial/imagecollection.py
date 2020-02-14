@@ -1129,6 +1129,48 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("median", self, axis)
 
+    @typecheck_promote(band=(lambda: ImageCollection, Str), operation=Str)
+    def sortby_composite(self, band, operation="argmax"):
+        """
+        Sort-by composite of an `ImageCollection`
+        Creates a composite of an `ImageCollection` using the argmin or argmax of
+        a specified band as the per-pixel ordering.
+
+        Parameters
+        ----------
+        band: Str or `ImageCollection`
+            If Str, the name of the band in ``self`` to use as the sorting band.
+            If `ImageCollection`, use this single-band `ImageCollection`
+            as the sorting band. The `.Image` returned will have this band concatenated
+            to the existing bands.
+
+        operation: {"argmin", "argmax"}, default "argmax"
+            A string indicating whether to use the minimum or maximum from ``band``
+            when computing the sort-by composite.
+
+        Returns
+        -------
+        composite: `.Image`
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> rgb = col.pick_bands("red green blue")
+        >>> min_red_composite = rgb.sortby_composite("red", operation="argmin")
+        >>> # ^ compute a minimum sort-by composite with an existing band
+        >>> quality_band = col.pick_bands("swir1")
+        >>> max_swir_composite = rgb.sortby_composite(quality_band)
+        >>> # ^ compute a maximum sort-by composite with a provided band
+        """
+        if operation.literal_value is not None and operation.literal_value not in ["argmin", "argmax"]:
+            raise ValueError("Invalid operation {!r}, must be 'argmin' or 'argmax'.".format(operation.literal_value))
+
+        return Image._from_apply(
+            "ImageCollection.sortby_composite", self, band, operation=operation
+        )
+
     def sum(self, axis=None):
         """
         Sum of pixel values across the provided ``axis``, or across all pixels in the image
