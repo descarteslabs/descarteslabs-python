@@ -16,7 +16,7 @@ class GeometryCollection(GeometryCollectionStruct, GeometryMixin):
     --------
     >>> from descarteslabs.workflows import Geometry, GeometryCollection
     >>> geom = Geometry(type="Point", coordinates=[1, 2])
-    >>> gc = GeometryCollection(type="GeometryCollection", geometries=[geom, geom, geom])
+    >>> gc = GeometryCollection(geometries=[geom, geom, geom])
     >>> gc
     <descarteslabs.workflows.types.geospatial.geometrycollection.GeometryCollection object at 0x...>
     >>> gc.compute() # doctest: +SKIP
@@ -56,6 +56,14 @@ class GeometryCollection(GeometryCollectionStruct, GeometryMixin):
         Returns
         -------
         ~descarteslabs.workflows.GeometryCollection
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import GeometryCollection
+        >>> geojson = {"type": "GeometryCollection", "geometries": [{"type": "Point", "coordinates": [1, 2]}]}
+        >>> gc = GeometryCollection.from_geojson(geojson)
+        >>> gc.compute().__geo_interface__ # doctest: +SKIP
+        {'type': 'GeometryCollection', 'geometries': [{'type': 'Point', 'coordinates': [1, 2]}]}
         """
         try:
             return cls._from_apply(
@@ -93,7 +101,7 @@ class GeometryCollection(GeometryCollectionStruct, GeometryMixin):
         -------
         >>> import descarteslabs.workflows as wf
         >>> geom = wf.Geometry(type="Point", coordinates=[1, 2])
-        >>> gc = wf.GeometryCollection(type="GeometryCollection", geometries=[geom, geom, geom])
+        >>> gc = wf.GeometryCollection(geometries=[geom, geom, geom])
         >>> gc.buffer(2)
         <descarteslabs.workflows.types.geospatial.geometry.Geometry object at 0x...>
         """
