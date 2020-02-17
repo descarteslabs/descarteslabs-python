@@ -79,7 +79,7 @@ def do_setup():
             "geojson>=2.5.0",
             "grpcio>=1.16.1,<2",
             "protobuf==3.11.2,<4",
-            "pyarrow==0.15.1",
+            "pyarrow==0.16.0",
             "pytz>=2019.1",
             "requests[security]>=2.20.1,<3",
             "six>=1.12.0",
