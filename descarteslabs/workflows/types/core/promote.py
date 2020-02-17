@@ -1,6 +1,8 @@
 import inspect
 import types
+
 import six
+
 from collections import abc
 
 from descarteslabs.third_party import boltons

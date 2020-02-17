@@ -1,18 +1,13 @@
 import six
 
 from ... import env
+from collections import abc
 
 from ..containers import Dict, List
 from ..core import typecheck_promote
 from ..primitives import Float, Int, Str
 from ..proxify import proxify
 from ..function import Function
-
-try:
-    # only after py3.4
-    from collections import abc
-except ImportError:
-    import collections as abc
 
 
 class BandsMixin:

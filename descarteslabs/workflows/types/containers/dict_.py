@@ -1,17 +1,13 @@
 import six
 
+from collections import abc
+
 from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..core import ProxyTypeError, GenericProxytype, typecheck_promote
 from ..primitives import Str
 from .list_ import List
 from .tuple_ import Tuple
-
-try:
-    # only after py3.4
-    from collections import abc
-except ImportError:
-    import collections as abc
 
 
 @serializable()

@@ -1,5 +1,7 @@
 import operator
 
+from collections import abc
+
 from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..core import ProxyTypeError, GenericProxytype, typecheck_promote
@@ -8,12 +10,6 @@ from ..primitives import Any, Int, Bool
 from .slice import Slice
 
 from ._check_valid_binop import check_valid_binop_for
-
-try:
-    # only after py3.4
-    from collections import abc
-except ImportError:
-    import collections as abc
 
 
 @serializable()
