@@ -139,7 +139,7 @@ class GenericProxytypeMetaclass(type):
     This ensure that, for example, ``List[Int]`` is always the same object,
     so comparing ``typA is typB`` is a safe way to determine iff they're exactly the same type.
 
-    Horrifyingly, it also implements ``__getitem__`` to emulate ``__class_getitem__`` in Python 2,
+    Horrifyingly, it also implements ``__getitem__`` to emulate ``__class_getitem__`` in Python < 3.7,
     so ``List[Str]`` works in both versions.
 
     The backport of ``__init_subclass__`` in Python < 3.6 matches
@@ -216,7 +216,7 @@ class GenericProxytypeMetaclass(type):
                 # so this correctly follows the `__init_subclass__` py3.6 API.
 
     def __getitem__(cls, idx):
-        "Emulate __class_getitem__ for Python 2"
+        "Emulate __class_getitem__ for Python < 3.7"
         try:
             return cls.__class_getitem__(idx)
         except AttributeError:
