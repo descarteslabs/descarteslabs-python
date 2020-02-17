@@ -59,8 +59,6 @@ class Proxytype(Castable):
             )
         )
 
-    __nonzero__ = __bool__  # for python 2
-
     def __contains__(self, _):
         if hasattr(self, "contains"):
             raise TypeError(
@@ -141,9 +139,6 @@ class GenericProxytypeMetaclass(type):
     This ensure that, for example, ``List[Int]`` is always the same object,
     so comparing ``typA is typB`` is a safe way to determine iff they're exactly the same type.
 
-    Horrifyingly, it also implements ``__getitem__`` to emulate ``__class_getitem__`` in Python 2,
-    so ``List[Str]`` works in both versions.
-
     The backport of ``__init_subclass__`` in Python < 3.6 matches
     https://docs.python.org/3/reference/datamodel.html#object.__init_subclass__,
     except that ``__init_subclass__`` must be decorated with ``@classmethod``.
@@ -216,13 +211,6 @@ class GenericProxytypeMetaclass(type):
                 # NOTE(gabe): you'd think the `cls` argument passed into the `__init_subclass__`
                 # classmethod would be `parent_cls` here, but it's actualy just `cls`,
                 # so this correctly follows the `__init_subclass__` py3.6 API.
-
-    def __getitem__(cls, idx):
-        "Emulate __class_getitem__ for Python 2"
-        try:
-            return cls.__class_getitem__(idx)
-        except AttributeError:
-            raise TypeError("{!r} object is not subscriptable".format(cls.__name__))
 
 
 def _type_params_issubclass(type_params, super_type_params):

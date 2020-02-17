@@ -1,4 +1,3 @@
-import six
 import pytest
 
 from hypothesis import given, settings, HealthCheck
@@ -84,11 +83,7 @@ def test_serializable_helpful_error():
 
 primitives_st = st.sampled_from([Int, Bool, Float, Str, NoneType, KnownClass])
 
-strings = (
-    st.text(st.characters(min_codepoint=32, max_codepoint=126)).map(str)
-    if six.PY2
-    else st.text()
-)
+strings = st.text()
 
 proxytypes = st.deferred(
     lambda: (

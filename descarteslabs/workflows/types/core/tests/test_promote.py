@@ -1,5 +1,4 @@
 import pytest
-import six
 
 from ..promote import _promote, _resolve_lambdas
 from .. import typecheck_promote, Proxytype
@@ -57,19 +56,11 @@ class TestDecorator(object):
 
     def test_decorator_bad_args(self):
         with pytest.raises(
-            TypeError,
-            match="takes at least 2 arguments"
-            if six.PY2
-            else "missing 1 required positional argument: 'a2'",
+            TypeError, match="missing 1 required positional argument: 'a2'"
         ):
             func(42, x=[True, False], y=None)
 
-        with pytest.raises(
-            TypeError,
-            match="multiple values for keyword argument 'x'"
-            if six.PY2
-            else "multiple values for argument 'x'",
-        ):
+        with pytest.raises(TypeError, match="multiple values for argument 'x'"):
             func(42, (0.0, "foo"), "extra", x=[True, False], y=None)
 
         with pytest.raises(TypeError, match="got an unexpected keyword argument 'z'"):
@@ -123,12 +114,7 @@ class TestDecorator(object):
         def func(x):
             pass
 
-        with pytest.raises(
-            TypeError,
-            match="takes exactly 1 argument"
-            if six.PY2
-            else "missing 1 required positional argument",
-        ):
+        with pytest.raises(TypeError, match="missing 1 required positional argument"):
             func(1)
 
 
@@ -193,10 +179,7 @@ class TestDecoratorOnClasses(object):
     def test_method_decorator_basic_wrong_args(self):
         obj = WithPromotedMethods()
         with pytest.raises(
-            TypeError,
-            match="takes at least 2 arguments"
-            if six.PY2
-            else "missing 1 required positional argument: 'an_int'",
+            TypeError, match="missing 1 required positional argument: 'an_int'"
         ):
             obj.basic(x=2.2)
 

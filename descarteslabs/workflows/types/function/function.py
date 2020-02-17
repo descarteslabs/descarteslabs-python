@@ -1,6 +1,5 @@
-import sys
-
 import six
+from inspect import signature
 
 from descarteslabs.common.graft import client
 
@@ -9,15 +8,6 @@ from ..core import GenericProxytype, ProxyTypeError
 from ..primitives import Any
 from ..identifier import identifier
 from ..proxify import proxify
-
-if sys.version_info[:2] >= (3, 5):
-    # `inspect.BoundArguments.apply_defaults()` was added in Python 3.5,
-    # so we use the backport for any older versions, even early 3.x versions
-    # that do include `inspect.signature`
-    from inspect import signature
-else:
-    # backport for Python <= 3.5
-    from descarteslabs.third_party.funcsigs.funcsigs import signature
 
 
 def _promote_arg(value, arg_type, arg_name, func_name):

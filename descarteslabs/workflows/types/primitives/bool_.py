@@ -36,8 +36,6 @@ class Bool(Primitive):
             "is lower than that of `and` and `or`.".format(type(self).__name__)
         )
 
-    __nonzero__ = __bool__  # for python 2
-
     def __invert__(self):
         return self._from_apply("not", self)
 

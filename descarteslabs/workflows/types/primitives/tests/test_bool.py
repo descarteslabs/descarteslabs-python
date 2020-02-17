@@ -36,6 +36,3 @@ def test_helpful_error():
 
     with pytest.raises(TypeError, match="Instead, use bitwise operators"):
         b and b
-
-    with pytest.raises(TypeError, match="Instead, use bitwise operators"):
-        b.__nonzero__()  # extra sure for py2

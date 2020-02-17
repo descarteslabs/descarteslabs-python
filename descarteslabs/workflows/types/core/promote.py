@@ -1,27 +1,11 @@
 import inspect
-import sys
 import types
-
 import six
+from collections import abc
 
 from descarteslabs.third_party import boltons
 
 from .exceptions import ProxyTypeError
-
-try:
-    # only after py3.4
-    from collections import abc
-except ImportError:
-    import collections as abc
-
-if sys.version_info[:2] >= (3, 5):
-    # `inspect.BoundArguments.apply_defaults()` was added in Python 3.5,
-    # so we use the backport for any older versions, even early 3.x versions
-    # that do include `inspect.signature`
-    from inspect import signature
-else:
-    # backport for Python <= 3.5
-    from descarteslabs.third_party.funcsigs.funcsigs import signature
 
 
 def _promote(obj, to_classes, argument_id, name):
@@ -80,7 +64,7 @@ def _is_method(func):
 def _requires_self(func):
     # NOTE: we cannot use callable(to_classes); many things are callable
     if isinstance(func, types.FunctionType):
-        sig = signature(func)
+        sig = inspect.signature(func)
         return len(sig.parameters) > 0
     else:
         return False
@@ -194,7 +178,7 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
 
     def decorator(func):
         func_name = "{}()".format(func.__name__)
-        func_signature = signature(func)
+        func_signature = inspect.signature(func)
         is_method = _is_method(func)
 
         # insert placeholder for `self`/`cls`, so `bind` doesn't raise a TypeError

@@ -17,7 +17,6 @@ unmarshal.register("Float", unmarshal.identity)
 unmarshal.register("NoneType", unmarshal.identity)
 unmarshal.register("Bool", unmarshal.astype(bool))
 unmarshal.register("Str", unmarshal.astype(str))
-# ^ TODO(gabe): on py2 these should possibly be unicode
 unmarshal.register("List", unmarshal.astype(list))
 unmarshal.register("Tuple", unmarshal.astype(tuple))
 unmarshal.register("Dict", unmarshal.astype(dict))
@@ -30,12 +29,7 @@ unmarshal.register("GeoContext", unmarshal.astype(dict))
 
 
 def datetime_from_string(s):
-    try:
-        return datetime.datetime.fromisoformat(s)
-    except AttributeError:
-        raise TypeError(
-            "Datetime unmarshalling failed. If you are using PY2, update to PY3 to fix this error."
-        )
+    return datetime.datetime.fromisoformat(s)
 
 
 def timedelta_from_seconds(s):
