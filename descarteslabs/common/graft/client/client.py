@@ -374,7 +374,12 @@ def merge_value_grafts(**grafts):
                     "Value graft for {}: expected a graft that takes no parameters, "
                     "but this one takes {}".format(name, parameters)
                 )
-            returned = subgraft[subgraft["returns"]]
+            try:
+                returned = subgraft[subgraft["returns"]]
+            except KeyError as e:
+                raise KeyError(
+                    "In subgraft {!r}: returned key {} is undefined".format(name, e)
+                )
             if syntax.is_literal(returned) or syntax.is_quoted_json(returned):
                 merged[name] = returned
             else:
