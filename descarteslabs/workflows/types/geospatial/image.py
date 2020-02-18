@@ -979,6 +979,24 @@ class Image(ImageBase, BandsMixin):
 
         return arithmetic.cos(self)
 
+    def arccos(self):
+        """
+        Element-wise inverse cosine of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
+        >>> img.arccos().compute(geoctx) # doctest: +SKIP
+        ImageResult:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.arccos(self)
+
     def sin(self):
         """
         Element-wise sine of an `Image`.
@@ -997,6 +1015,24 @@ class Image(ImageBase, BandsMixin):
 
         return arithmetic.sin(self)
 
+    def arcsin(self):
+        """
+        Element-wise inverse sine of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
+        >>> img.arcsin().compute(geoctx) # doctest: +SKIP
+        ImageResult:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.arcsin(self)
+
     def tan(self):
         """
         Element-wise tangent of an `Image`.
@@ -1014,6 +1050,24 @@ class Image(ImageBase, BandsMixin):
         from ..math import arithmetic
 
         return arithmetic.tan(self)
+
+    def arctan(self):
+        """
+        Element-wise inverse tangent of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
+        >>> img.arctan().compute(geoctx) # doctest: +SKIP
+        ImageResult:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.arctan(self)
 
     @typecheck_promote(
         (Int, Float, NoneType, List[Int], List[Float], List[NoneType]),

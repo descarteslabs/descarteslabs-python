@@ -102,6 +102,24 @@ def cos(obj):
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
+def arccos(obj):
+    """
+    Element-wise inverse cosine of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
+
+    Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(0)
+    >>> wf.arccos(my_int).compute() # doctest: +SKIP
+    1.0
+    """
+    return_type = Float if isinstance(obj, Number) else type(obj)
+    return return_type._from_apply("arccos", obj)
+
+
+@typecheck_promote((Int, Float, Image, ImageCollection))
 def sin(obj):
     """
     Element-wise sine of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
@@ -120,6 +138,24 @@ def sin(obj):
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
+def arcsin(obj):
+    """
+    Element-wise inverse sine of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
+
+    Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(0)
+    >>> wf.arcsin(my_int).compute() # doctest: +SKIP
+    0.0
+    """
+    return_type = Float if isinstance(obj, Number) else type(obj)
+    return return_type._from_apply("arcsin", obj)
+
+
+@typecheck_promote((Int, Float, Image, ImageCollection))
 def tan(obj):
     """
     Element-wise tangent of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
@@ -135,6 +171,24 @@ def tan(obj):
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
     return return_type._from_apply("tan", obj)
+
+
+@typecheck_promote((Int, Float, Image, ImageCollection))
+def arctan(obj):
+    """
+    Element-wise inverse tangent of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
+
+    Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(0)
+    >>> wf.arctan(my_int).compute() # doctest: +SKIP
+    0.0
+    """
+    return_type = Float if isinstance(obj, Number) else type(obj)
+    return return_type._from_apply("arctan", obj)
 
 
 def normalized_difference(x, y):

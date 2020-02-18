@@ -1,10 +1,24 @@
 import pytest
 
 from ... import Image, ImageCollection
-from .. import cos, log, log2, log10, normalized_difference, sin, sqrt, tan
+from .. import (
+    cos,
+    arccos,
+    log,
+    log2,
+    log10,
+    normalized_difference,
+    sin,
+    arcsin,
+    sqrt,
+    tan,
+    arctan,
+)
 
 
-@pytest.mark.parametrize("func", [log, log2, log10, sqrt, cos, sin, tan])
+@pytest.mark.parametrize(
+    "func", [log, log2, log10, sqrt, cos, arccos, sin, arcsin, tan, arctan]
+)
 @pytest.mark.parametrize(
     "obj", [1, 1.2, Image.from_id("foo"), ImageCollection.from_id("bar")]
 )

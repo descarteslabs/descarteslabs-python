@@ -1527,6 +1527,25 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         return arithmetic.cos(self)
 
+    def arccos(self):
+        """
+        Element-wise inverse cosine of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.arccos().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.arccos(self)
+
     def sin(self):
         """
         Element-wise sine of an `ImageCollection`.
@@ -1546,6 +1565,25 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         return arithmetic.sin(self)
 
+    def arcsin(self):
+        """
+        Element-wise inverse sine of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.arcsin().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.arcsin(self)
+
     def tan(self):
         """
         Element-wise tangent of an `ImageCollection`.
@@ -1564,6 +1602,25 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         from ..math import arithmetic
 
         return arithmetic.tan(self)
+
+    def arctan(self):
+        """
+        Element-wise inverse tangent of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.arctan().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.arctan(self)
 
     @typecheck_promote(
         (Int, Float, NoneType, List[Int], List[Float], List[NoneType]),

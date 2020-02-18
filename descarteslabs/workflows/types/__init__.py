@@ -28,7 +28,20 @@ from .geospatial import (
     #    PCA,
     where,
 )
-from .math import arctan2, log, log2, log10, sqrt, cos, sin, tan, normalized_difference
+from .math import (
+    arctan2,
+    log,
+    log2,
+    log10,
+    sqrt,
+    cos,
+    arccos,
+    sin,
+    arcsin,
+    tan,
+    arctan,
+    normalized_difference,
+)
 from .constants import e, inf, nan, pi
 from .identifier import parameter, identifier
 
@@ -85,8 +98,11 @@ __all__ = [
     "log10",
     "sqrt",
     "cos",
+    "arccos",
     "sin",
+    "arcsin",
     "tan",
+    "arctan",
     "arctan2",
     "normalized_difference",
     # .identifier
