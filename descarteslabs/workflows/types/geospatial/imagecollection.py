@@ -70,6 +70,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
       * properties: 14 items
       * bandinfo: 'coastal-aerosol', 'blue', 'green', 'red', ...
       * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
+    >>>
     >>> rgb = col.pick_bands("red green blue") # an ImageCollection with the red, green, and blue bands only
     >>> rgb.compute(geoctx) # doctest: +SKIP
     ImageCollectionResult of length 14:
@@ -1164,8 +1165,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         >>> max_swir_composite = rgb.sortby_composite(quality_band)
         >>> # ^ compute a maximum sort-by composite with a provided band
         """
-        if operation.literal_value is not None and operation.literal_value not in ["argmin", "argmax"]:
-            raise ValueError("Invalid operation {!r}, must be 'argmin' or 'argmax'.".format(operation.literal_value))
+        if operation.literal_value is not None and operation.literal_value not in [
+            "argmin",
+            "argmax",
+        ]:
+            raise ValueError(
+                "Invalid operation {!r}, must be 'argmin' or 'argmax'.".format(
+                    operation.literal_value
+                )
+            )
 
         return Image._from_apply(
             "ImageCollection.sortby_composite", self, band, operation=operation

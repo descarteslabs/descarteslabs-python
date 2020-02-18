@@ -32,6 +32,7 @@ def where(condition, x, y):
       * properties: 2 items
       * bandinfo: 'blue_where_blue'
       * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
+    >>>
     >>> # fill pixels where col < 0.5 with col (no change), others with pixels from img
     >>> where(col < 0.5, col, img).compute(geoctx) # doctest: +SKIP
     ImageCollectionResult of length 2:

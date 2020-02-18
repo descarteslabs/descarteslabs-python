@@ -20,23 +20,35 @@ class ImageCollectionGroupby(GenericProxytype):
     >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
     ...        start_datetime="2017-01-01",
     ...        end_datetime="2017-12-31")
-    >>> col.groupby(dates="month")  # all Images from the same month, regardless of year
+    >>> # all Images from the same month, regardless of year
+    >>> col.groupby(dates="month")
     <descarteslabs.workflows.types.geospatial.groupby.ImageCollectionGroupby[Int] object at 0x...>
-    >>> col.groupby(lambda img: img.properties["date"] // wf.Timedelta(days=14))  # group into 14-day bins
+    >>>
+    >>> # group into 14-day bins
+    >>> col.groupby(lambda img: img.properties["date"] // wf.Timedelta(days=14))
     <descarteslabs.workflows.types.geospatial.groupby.ImageCollectionGroupby[Datetime] object at 0x...>
-    >>> col.groupby(lambda img: img.properties["pass"]) # group by "pass" ("ASCENDING" or "DESCENDING")
+    >>>
+    >>> # group by "pass" ("ASCENDING" or "DESCENDING")
+    >>> col.groupby(lambda img: img.properties["pass"])
     <descarteslabs.workflows.types.geospatial.groupby.ImageCollectionGroupby[Any] object at 0x...>
-    >>> month_grouped = col.groupby(dates=("year", "month"))  # all Images from the same year and month
+    >>>
+    >>> # all Images from the same year and month
+    >>> month_grouped = col.groupby(dates=("year", "month"))
+    >>>
     >>> # .mean(), etc. are applied to each group, then combined into one ImageCollection
     >>> monthly = month_grouped.mean(axis="images")  # ImageCollection of monthly mean composites
+    >>>
     >>> # a `group` field is added to each Image
     >>> monthly.map(lambda img: img.properties['group']).compute(geoctx) # doctest: +SKIP
     [(2018, 1), (2018, 2), ... ]
+    >>>
     >>> # use .map() to apply a function to each group, then combine into a Dict or ImageCollection
     >>> monthly_l2_norm = month_grouped.map(lambda group, imgs: (imgs ** 2).sum(axis="images").sqrt())
     >>> # ^ ImageCollection of each month's L2 norm
+    >>>
     >>> monthly_medians = month_grouped.map(lambda group, imgs: imgs.median())
     >>> # ^ Dict of (year, month) to median pixel value
+    >>>
     >>> # you can select a single group with dict-like syntax
     >>> feb = month_grouped[(2018, 2)]
     >>> feb.compute(geoctx) # doctest: +SKIP
