@@ -1,7 +1,7 @@
 from ...cereal import serializable
 from ..core import typecheck_promote
 from ..primitives import Str, Int, Float
-from ..containers import List, Struct
+from ..containers import List, Struct, CollectionMixin
 from .geometry import Geometry
 from .mixins import GeometryMixin
 
@@ -9,7 +9,7 @@ GeometryCollectionStruct = Struct[{"type": Str, "geometries": List[Geometry]}]
 
 
 @serializable(is_named_concrete_type=True)
-class GeometryCollection(GeometryCollectionStruct, GeometryMixin):
+class GeometryCollection(GeometryCollectionStruct, GeometryMixin, CollectionMixin):
     """Proxy GeoJSON GeometryCollection constructed from a sequence of Geometries.
 
     Examples
