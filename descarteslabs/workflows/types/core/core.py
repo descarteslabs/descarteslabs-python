@@ -48,7 +48,15 @@ class Proxytype(Castable):
         "Returns `obj` as type `cls`, or raises `ProxyTypeError` if promotion is not possible."
         if isinstance(obj, cls):
             return obj
-        raise ProxyTypeError("Cannot promote {} to {}".format(obj, cls.__name__))
+        try:
+            # Promote Any via casting. To avoid circular imports, we duck-type this
+            # and consider `.cast` to be an interface; if an object has a `.cast` method
+            # we might as well try it.
+            return obj.cast(cls)
+        except Exception:
+            raise ProxyTypeError(
+                "Cannot promote {} to {}".format(obj, cls.__name__)
+            ) from None
 
     def __bool__(self):
         # Ensure Proxytypes can't be used in conditionals;
@@ -419,6 +427,13 @@ class GenericProxytype(Proxytype):
     def _promote(cls, obj):
         if isinstance(obj, cls):
             return obj
+        try:
+            # Promote Any via casting. To avoid circular imports, we duck-type this
+            # and consider `.cast` to be an interface; if an object has a `.cast` method
+            # we might as well try it.
+            return obj.cast(cls)
+        except Exception:
+            pass
         return cls(obj)
 
     @classmethod
