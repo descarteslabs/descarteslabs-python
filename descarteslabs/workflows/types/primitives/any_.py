@@ -209,8 +209,8 @@ class Any(Proxytype):
     def __getattr__(self, attr):
         if attr[0] == "_":
             raise AttributeError(
-                f"'Any' object has no attribute {attr!r}. Perhaps you need "
-                f"to change it to the correct type via `.cast`?"
+                "'Any' object has no attribute {!r}. Perhaps you need "
+                "to change it to the correct type via `.cast`?".format(attr)
             )
         return self._from_apply("getattr", self, attr)
 
