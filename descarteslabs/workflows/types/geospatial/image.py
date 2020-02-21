@@ -1087,6 +1087,42 @@ class Image(ImageBase, BandsMixin):
 
         return arithmetic.arctan(self)
 
+    def exp(self):
+        """
+        Element-wise exponential of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
+        >>> img.exp().compute(geoctx) # doctest: +SKIP
+        ImageResult:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.exp(self)
+
+    def square(self):
+        """
+        Element-wise square of an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
+        >>> img.square().compute(geoctx) # doctest: +SKIP
+        ImageResult:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.square(self)
+
     @typecheck_promote(
         (Int, Float, NoneType, List[Int], List[Float], List[NoneType]),
         (Int, Float, NoneType, List[Int], List[Float], List[NoneType]),

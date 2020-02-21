@@ -149,6 +149,8 @@ returns_img_or_coll = {ImageCollection: ImageCollection, "default": Image}
         ["arcsin", (), Image],
         ["tan", (), Image],
         ["arctan", (), Image],
+        ["exp", (), Image],
+        ["square", (), Image],
         ["__lt__", base_types + [Float], returns_img_or_coll],
         ["__le__", base_types + [Float], returns_img_or_coll],
         ["__eq__", base_types + [Float, Bool], returns_img_or_coll],

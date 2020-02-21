@@ -84,6 +84,8 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.types.math.log10
   ~descarteslabs.workflows.types.math.log1p
   ~descarteslabs.workflows.types.math.sqrt
+  ~descarteslabs.workflows.types.math.exp
+  ~descarteslabs.workflows.types.math.square
   ~descarteslabs.workflows.types.math.cos
   ~descarteslabs.workflows.types.math.arccos
   ~descarteslabs.workflows.types.math.sin

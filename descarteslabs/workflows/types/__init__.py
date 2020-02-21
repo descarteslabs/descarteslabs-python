@@ -42,6 +42,8 @@ from .math import (
     tan,
     arctan,
     normalized_difference,
+    exp,
+    square,
 )
 from .constants import e, inf, nan, pi
 from .identifier import parameter, identifier
@@ -106,6 +108,8 @@ __all__ = [
     "tan",
     "arctan",
     "arctan2",
+    "exp",
+    "square",
     "normalized_difference",
     # .identifier
     "parameter",

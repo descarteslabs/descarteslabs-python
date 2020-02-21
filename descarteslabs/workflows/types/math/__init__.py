@@ -12,6 +12,8 @@ from .arithmetic import (
     sqrt,
     tan,
     arctan,
+    exp,
+    square,
 )
 
 __all__ = [
@@ -29,4 +31,6 @@ __all__ = [
     "sqrt",
     "tan",
     "arctan",
+    "exp",
+    "square",
 ]

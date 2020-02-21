@@ -77,7 +77,7 @@ def log1p(obj):
     >>> import descarteslabs.workflows as wf
     >>> my_int = wf.Int(1)
     >>> wf.log1p(my_int).compute() # doctest: +SKIP
-    0.0
+    0.6931471805599453
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
     return return_type._from_apply("log1p", obj)
@@ -306,3 +306,39 @@ def arctan2(y, x):
     """
     return_type = _higher_precedence_type(type(y), type(x))
     return return_type._from_apply("arctan2", y, x)
+
+
+@typecheck_promote((Int, Float, Image, ImageCollection))
+def exp(obj):
+    """
+    Element-wise exponential of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
+
+    Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(1)
+    >>> wf.exp(my_int).compute() # doctest: +SKIP
+    2.718281828459045
+    """
+    return_type = Float if isinstance(obj, Number) else type(obj)
+    return return_type._from_apply("exp", obj)
+
+
+@typecheck_promote((Int, Float, Image, ImageCollection))
+def square(obj):
+    """
+    Element-wise square of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
+
+    Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(2)
+    >>> wf.square(my_int).compute() # doctest: +SKIP
+    4.0
+    """
+    return_type = Float if isinstance(obj, Number) else type(obj)
+    return return_type._from_apply("square", obj)

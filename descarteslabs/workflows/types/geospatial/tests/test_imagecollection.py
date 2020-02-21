@@ -196,6 +196,8 @@ base_types = [ImageCollection, Image, Int, Any]
         ["arcsin", (), ImageCollection],
         ["tan", (), ImageCollection],
         ["arctan", (), ImageCollection],
+        ["exp", (), ImageCollection],
+        ["square", (), ImageCollection],
         ["__reversed__", (), ImageCollection],
         ["__getitem__", [Any, Int, Slice], (Image, ImageCollection)],
         ["__lt__", base_types + [Float], ImageCollection],

@@ -1641,6 +1641,44 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         return arithmetic.arctan(self)
 
+    def exp(self):
+        """
+        Element-wise exponential of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.exp().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.exp(self)
+
+    def square(self):
+        """
+        Element-wise square of an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.square().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.square(self)
+
     @typecheck_promote(
         (Int, Float, NoneType, List[Int], List[Float], List[NoneType]),
         (Int, Float, NoneType, List[Int], List[Float], List[NoneType]),
