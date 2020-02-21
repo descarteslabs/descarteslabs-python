@@ -141,6 +141,7 @@ returns_img_or_coll = {ImageCollection: ImageCollection, "default": Image}
         ["log", (), Image],
         ["log2", (), Image],
         ["log10", (), Image],
+        ["log1p", (), Image],
         ["sqrt", (), Image],
         ["cos", (), Image],
         ["arccos", (), Image],

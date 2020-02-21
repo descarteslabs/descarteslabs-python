@@ -7,6 +7,7 @@ from .. import (
     log,
     log2,
     log10,
+    log1p,
     normalized_difference,
     sin,
     arcsin,
@@ -17,7 +18,7 @@ from .. import (
 
 
 @pytest.mark.parametrize(
-    "func", [log, log2, log10, sqrt, cos, arccos, sin, arcsin, tan, arctan]
+    "func", [log, log2, log10, log1p, sqrt, cos, arccos, sin, arcsin, tan, arctan]
 )
 @pytest.mark.parametrize(
     "obj", [1, 1.2, Image.from_id("foo"), ImageCollection.from_id("bar")]

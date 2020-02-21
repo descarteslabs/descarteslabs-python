@@ -66,6 +66,24 @@ def log10(obj):
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
+def log1p(obj):
+    """
+    Element-wise log of 1 + an `~.geospatial.Image` or `~.geospatial.ImageCollection`.
+
+    Can also be used with `.Int` and `.Float` types.
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> my_int = wf.Int(1)
+    >>> wf.log1p(my_int).compute() # doctest: +SKIP
+    0.0
+    """
+    return_type = Float if isinstance(obj, Number) else type(obj)
+    return return_type._from_apply("log1p", obj)
+
+
+@typecheck_promote((Int, Float, Image, ImageCollection))
 def sqrt(obj):
     """
     Element-wise square root of an `~.geospatial.Image` or `~.geospatial.ImageCollection`.

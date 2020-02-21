@@ -1489,6 +1489,25 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         return arithmetic.log10(ic)
 
+    def log1p(ic):
+        """
+        Element-wise log of 1 + an `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.log1p().compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 2:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.log1p(ic)
+
     def sqrt(self):
         """
         Element-wise square root of an `ImageCollection`.

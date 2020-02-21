@@ -943,6 +943,24 @@ class Image(ImageBase, BandsMixin):
 
         return arithmetic.log10(img)
 
+    def log1p(img):
+        """
+        Element-wise log of 1 + an `Image`.
+
+        If the `Image` is empty, returns the empty `Image`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1").pick_bands("red")
+        >>> img.log1p().compute(geoctx) # doctest: +SKIP
+        ImageResult:
+        ...
+        """
+        from ..math import arithmetic
+
+        return arithmetic.log1p(img)
+
     def sqrt(self):
         """
         Element-wise square root of an `Image`.

@@ -188,6 +188,7 @@ base_types = [ImageCollection, Image, Int, Any]
         ["log", (), ImageCollection],
         ["log2", (), ImageCollection],
         ["log10", (), ImageCollection],
+        ["log1p", (), ImageCollection],
         ["sqrt", (), ImageCollection],
         ["cos", (), ImageCollection],
         ["arccos", (), ImageCollection],
