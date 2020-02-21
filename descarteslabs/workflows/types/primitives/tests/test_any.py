@@ -113,6 +113,10 @@ def test_getters():
     assert isinstance(getattr(any_, "foo"), Any)
     assert isinstance(any_[0], Any)
 
+    with pytest.raises(AttributeError):
+        # private attributes are blocked
+        any_._foo
+
 
 def test_cant_iter():
     any_ = Any(0)

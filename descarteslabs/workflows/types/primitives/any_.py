@@ -207,6 +207,11 @@ class Any(Proxytype):
         return self._from_apply("getitem", self, item)
 
     def __getattr__(self, attr):
+        if attr[0] == "_":
+            raise AttributeError(
+                f"'Any' object has no attribute {attr!r}. Perhaps you need "
+                f"to change it to the correct type via `.cast`?"
+            )
         return self._from_apply("getattr", self, attr)
 
     # Sequence operators
