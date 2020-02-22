@@ -7,7 +7,7 @@ from descarteslabs.common.graft import interpreter
 
 from ...core import ProxyTypeError
 from ...primitives import Int, Str, Bool
-from .. import Tuple
+from .. import Tuple, List
 
 
 def test_init_unparameterized():
@@ -60,6 +60,14 @@ def test_init_wrongtypes():
         match=r"While constructing Tuple\[Int, Str, Int\], expected .*Str.* for tuple element 1, but got 2",
     ):
         Tuple[Int, Str, Int]([1, 2, 3])
+
+
+def test_validate_params():
+    Tuple[Str, Int]
+    Tuple[List[Int], Str]
+
+    with pytest.raises(TypeError, match="must be Proxytypes"):
+        Tuple[1]
 
 
 def test_getitem_type():

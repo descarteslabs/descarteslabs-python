@@ -4,7 +4,12 @@ from collections import abc
 
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import ProxyTypeError, GenericProxytype, typecheck_promote
+from ..core import (
+    ProxyTypeError,
+    GenericProxytype,
+    typecheck_promote,
+    assert_is_proxytype,
+)
 from ..primitives import Int, Bool
 from .collection import CollectionMixin
 from .slice import Slice
@@ -72,6 +77,13 @@ class List(GenericProxytype, CollectionMixin):
 
             iterable = tuple(checker_promoter(i, x) for i, x in enumerate(iterable))
             self.graft = client.apply_graft("list", *iterable)
+
+    @classmethod
+    def _validate_params(cls, type_params):
+        assert len(type_params) == 1, "List can only have one element type specified"
+        type_param = type_params[0]
+        error_message = "List type must be a Proxytype, got {}".format(type_param)
+        assert_is_proxytype(type_param, error_message=error_message)
 
     @typecheck_promote((Int, Slice))
     def __getitem__(self, item):

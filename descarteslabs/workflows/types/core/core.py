@@ -341,6 +341,10 @@ class GenericProxytype(Proxytype):
     Since `GenericProxytype` uses the `GenericProxytypeMetaclass`, by inheriting from it,
     the Python ``isinstance`` and ``issubclass`` methods will also behave covariantly for your
     custom generic type: ``issubclass(MyType[MyIntSubclass], `MyType[Int])`` will be True.
+
+    By implementing ``_validate_params``, you can customize the valid type parameters of a class.
+    ``_validate_params`` should take a tuple of type parameters and apply appropriate validation
+    to each (in most cases you will at least want to validate that each type parameter is a subclass of Proxytype).
     """
 
     _type_params = None
@@ -354,22 +358,8 @@ class GenericProxytype(Proxytype):
                     cls.__name__
                 )
             )
-        if not isinstance(type_params, tuple):
-            type_params = (type_params,)
-        for i, type_param in enumerate(type_params):
-            if isinstance(type_param, dict):
-                assert all(
-                    issubclass(param_cls, Proxytype)
-                    for param_cls in six.itervalues(type_param)
-                ), "Values in type parameter dict must all be Proxytypes: parameter {}: {}".format(
-                    i, type_param
-                )
-            else:
-                assert issubclass(
-                    type_param, Proxytype
-                ), "Type parameters must be Proxytypes, but for parameter {}, got {}".format(
-                    i, type_param
-                )
+
+        type_params = validate_typespec(type_params)
 
         # Look up these parameters in the _concrete_subtypes registry. If we've already created a
         # type for these parameters, return that object instead of making a duplicate.
@@ -384,6 +374,9 @@ class GenericProxytype(Proxytype):
         try:
             return cls._concrete_subtypes[hashable_type_params]
         except KeyError:
+            if hasattr(cls, "_validate_params"):
+                cls._validate_params(type_params)
+
             param_names = (
                 # Default dict formatting would print values like `<class 'descarteslabs.common.proxytypes.Int'>`,
                 # so we do our own dict formatting using `cls.__name__` for read/copy-ability
@@ -395,6 +388,8 @@ class GenericProxytype(Proxytype):
                 )
                 if isinstance(type_param, dict)
                 else type_param.__name__
+                if isinstance(type_param, type)
+                else str(type_param)
                 for type_param in type_params
             )
 
@@ -468,3 +463,38 @@ def is_generic(type_):
         return any(map(is_generic, complex_type.values()))
 
     return issubclass(type_, GenericProxytype)
+
+
+PRIMITIVES = (int, float, bool, str)
+
+
+def validate_typespec(type_params):
+    "Ensures that type parameters are of a valid form (Proxytype, Python primitive, tuples or dicts of these)"
+    if not isinstance(type_params, tuple):
+        type_params = (type_params,)
+    for i, type_param in enumerate(type_params):
+        if isinstance(type_param, dict):
+            for key, param_cls in six.iteritems(type_param):
+                validate_typespec(key)
+                validate_typespec(param_cls)
+        elif isinstance(type_param, PRIMITIVES):
+            pass
+        elif issubclass(type_param, Proxytype):
+            pass
+        else:
+            raise TypeError(
+                "Type parameters must be Proxytypes, Python primitive values, "
+                "or tuples or dicts of those, but got {!r}".format(type_param)
+            )
+    return type_params
+
+
+def assert_is_proxytype(type_, error_message=None):
+    try:
+        assert issubclass(type_, Proxytype)
+    except (AssertionError, TypeError):
+        if error_message is None:
+            error_message = "Expected a Proxytype type object, but got {!r}".format(
+                type_
+            )
+        raise TypeError(error_message) from None

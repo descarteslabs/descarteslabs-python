@@ -100,6 +100,18 @@ def test_init_wrongtype():
         Dict[Str, Int](Str("sdf"))
 
 
+def test_validate_params():
+    Dict[Str, Int]
+    Dict[Str, List[Tuple[Str, Float]]]
+
+    with pytest.raises(
+        AssertionError, match="Both Dict key and value types must be specified"
+    ):
+        Dict[Str]
+    with pytest.raises(TypeError, match="must be Proxytypes"):
+        Dict[Str, 1]
+
+
 def test_from_pairs():
     pairs = List[Tuple[Str, Int]]([("foo", 1), ("bar", 2)])
     dct = Dict[Str, Int].from_pairs(pairs)

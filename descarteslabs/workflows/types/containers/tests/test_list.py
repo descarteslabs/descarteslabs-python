@@ -7,7 +7,7 @@ from descarteslabs.common.graft import interpreter
 
 from ...core import ProxyTypeError
 from ...primitives import Int, Str, Bool, NoneType
-from .. import List
+from .. import List, Tuple
 
 
 def test_init_unparameterized():
@@ -53,6 +53,17 @@ def test_init_wrong_list_type():
         match=r"Cannot convert List\[Int\] to List\[Str\], since they have different value types",
     ):
         List[Str](lst)
+
+
+def test_validate_params():
+    List[Int]
+    List[List[Tuple[Str, Int]]]
+
+    with pytest.raises(AssertionError, match="only have one element type specified"):
+        List[Str, Int]
+    with pytest.raises(TypeError, match="must be a Proxytype"):
+        List[1]
+        List[List["test"]]
 
 
 def test_getitem_type():

@@ -165,6 +165,29 @@ class TestFunction(object):
         with pytest.raises(ProxyTypeError, match=r"Expected .*Int.* for argument 'x'"):
             Function[Str, {"x": Int}, Str]("func")("foo", x="not_int")
 
+    def test_validate_params(self):
+        Function[Int, {}, Str]
+        Function[Int, {"a": Any}, Str]
+
+        with pytest.raises(
+            TypeError, match="argument type parameters must be Proxytypes"
+        ):
+            Function[1, 2, 3]
+        with pytest.raises(
+            AssertionError, match="kwarg type parameters must be a dict"
+        ):
+            Function[Int, Str]
+        with pytest.raises(
+            AssertionError, match="Keyword argument names must be strings"
+        ):
+            Function[Int, {1: Str}, Str]
+        with pytest.raises(TypeError, match="kwarg type parameters must be Proxytypes"):
+            Function[Int, {"a": 1}, Str]
+        with pytest.raises(
+            TypeError, match="return type parameter must be a Proxytype"
+        ):
+            Function[Int, {}, "test"]
+
     def test_from_callable(self):
         def py_func(a, b, c):
             return (a + b) / c

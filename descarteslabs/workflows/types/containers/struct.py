@@ -2,7 +2,7 @@ import six
 
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import ProxyTypeError, GenericProxytype
+from ..core import ProxyTypeError, GenericProxytype, assert_is_proxytype
 from ..primitives import NoneType, Any
 
 
@@ -166,6 +166,23 @@ class Struct(GenericProxytype):
         self._items_cache = promoted
         # ^ this _might_ be wrong, since the getattr graft won't include `getattr`
         # and just directly reference the promoted object, but that seems ok (while everything is immutable)
+
+    @classmethod
+    def _validate_params(cls, type_params):
+        for type_param in type_params:
+            assert isinstance(
+                type_param, dict
+            ), "Struct type parameters must be specified with a dictionary of field name to type"
+            for key, param_cls in six.iteritems(type_param):
+                assert isinstance(
+                    key, str
+                ), "Field names must be strings, but '{}' is a {!r}".format(
+                    key, type(key)
+                )
+                error_message = "Struct item type parameters must be Proxytypes but for field '{}', got {}".format(
+                    key, param_cls
+                )
+                assert_is_proxytype(param_cls, error_message=error_message)
 
     @classmethod
     def _promote(cls, obj):

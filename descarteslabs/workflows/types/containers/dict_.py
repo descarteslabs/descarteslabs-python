@@ -4,7 +4,12 @@ from collections import abc
 
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import ProxyTypeError, GenericProxytype, typecheck_promote
+from ..core import (
+    ProxyTypeError,
+    GenericProxytype,
+    typecheck_promote,
+    assert_is_proxytype,
+)
 from ..primitives import Str
 from .list_ import List
 from .tuple_ import Tuple
@@ -106,6 +111,15 @@ class Dict(GenericProxytype):
                 self.graft = client.apply_graft("dict.create", **promoted)
             else:
                 self.graft = client.apply_graft("dict.create", *promoted)
+
+    @classmethod
+    def _validate_params(cls, type_params):
+        assert len(type_params) == 2, "Both Dict key and value types must be specified"
+        for i, type_param in enumerate(type_params):
+            error_message = "Dict key and value types must be Proxytypes but for parameter {}, got {}".format(
+                i, type_param
+            )
+            assert_is_proxytype(type_param, error_message=error_message)
 
     def __getitem__(self, item):
         # TODO: cache

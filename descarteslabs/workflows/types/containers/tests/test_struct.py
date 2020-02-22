@@ -4,12 +4,25 @@ from descarteslabs.common.graft import client
 
 from ...core import ProxyTypeError
 from ...primitives import Int, Str
-from .. import Struct, List, struct as struct_
+from .. import Struct, List, Tuple, struct as struct_
 
 
 def test_init_unparameterized():
     with pytest.raises(TypeError, match="Cannot instantiate a generic Struct"):
         Struct(x=1)
+
+
+def test_validate_params():
+    Struct[{"a": Int}]
+    Struct[{"a": Tuple[Int, Str], "b": Struct[{"x": Int}]}]
+
+    with pytest.raises(AssertionError, match="must be specified with a dictionary"):
+        Struct[Int]
+    with pytest.raises(AssertionError, match="Field names must be strings"):
+        Struct[{1: Str}]
+    with pytest.raises(TypeError, match="must be Proxytypes"):
+        Struct[{"a": 2}]
+        Struct[{"a": Tuple[Int, Str], "b": Struct[{"x": Int, "y": 1}]}]
 
 
 def test_promote_kwargs():

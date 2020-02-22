@@ -4,7 +4,12 @@ from collections import abc
 
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import ProxyTypeError, GenericProxytype, typecheck_promote
+from ..core import (
+    ProxyTypeError,
+    GenericProxytype,
+    typecheck_promote,
+    assert_is_proxytype,
+)
 from ..proxify import proxify
 from ..primitives import Any, Int, Bool
 from .slice import Slice
@@ -95,6 +100,14 @@ class Tuple(GenericProxytype):
 
         iterable = tuple(checker_promoter(i, x) for i, x in enumerate(iterable))
         self.graft = client.apply_graft("tuple", *iterable)
+
+    @classmethod
+    def _validate_params(cls, type_params):
+        for i, type_param in enumerate(type_params):
+            error_message = "Tuple type parameters must be Proxytypes but for parameter {}, got {}".format(
+                i, type_param
+            )
+            assert_is_proxytype(type_param, error_message=error_message)
 
     @typecheck_promote((Int, Slice))
     def __getitem__(self, item):

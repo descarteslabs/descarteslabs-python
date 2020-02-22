@@ -1,5 +1,7 @@
+import six
+
 from ...cereal import serializable
-from ..core import GenericProxytype, ProxyTypeError
+from ..core import GenericProxytype, ProxyTypeError, assert_is_proxytype
 
 
 @serializable()
@@ -33,6 +35,31 @@ class KnownDict(GenericProxytype):
                 "(like `KnownDict[Str, Bool]`)"
             )
         super(KnownDict, self).__init__()
+
+    @classmethod
+    def _validate_params(cls, type_params):
+        if len(type_params) not in (2, 3):
+            raise TypeError(
+                "KnownDict takes 2 or 3 type parameters, not {}".format(
+                    len(type_params)
+                )
+            )
+        if len(type_params) == 3:
+            assert isinstance(type_params[0], dict)
+            for key, param_cls in six.iteritems(type_params[0]):
+                error_message = "KnownDict item type parameters must be Proxytypes but for key '{}', got {!r}".format(
+                    key, param_cls
+                )
+                assert_is_proxytype(param_cls, error_message=error_message)
+
+        assert_is_proxytype(
+            type_params[-2],
+            error_message="KnownDict key type parameter must be a Proxytype, not a value",
+        )
+        assert_is_proxytype(
+            type_params[-1],
+            error_message="KnownDict value type parameter must be a Proxytype, not a value",
+        )
 
     def __getitem__(self, item):
         items, kt, vt = self._type_params

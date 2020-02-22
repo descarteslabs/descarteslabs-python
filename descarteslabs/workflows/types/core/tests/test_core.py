@@ -1,8 +1,8 @@
 import pytest
 
 from ..core import _type_params_issubclass
-from .. import Proxytype, GenericProxytype, is_generic
-from ... import List, Int
+from .. import Proxytype, GenericProxytype, is_generic, validate_typespec
+from ... import Struct, List, Tuple, Int, Float, Str
 
 # NOTE: we test with non-Proxytype classes for this first test to be a little more hermetic,
 # since the GenericProxytypeMetaclass messes around with `isinstance` (to recursively call `_type_params_issubclass`)
@@ -225,6 +225,24 @@ def test_is_generic_on_list_of_generic_list():
 
 def test_not_is_generic_on_list_of_list():
     assert not is_generic(List[List[Int]])
+
+
+def test_validate_typespec():
+    validate_typespec((1,))
+    validate_typespec((Int,))
+    validate_typespec((List[Int],))
+    validate_typespec((Int, Float, Str))
+    validate_typespec({"a": "test"})
+    validate_typespec({"a": List[Int], "b": 1, "c": Struct[{"x": Tuple[Int, Float]}]})
+
+    with pytest.raises(TypeError, match="must be Proxytypes, Python primitive values"):
+        validate_typespec((int,))
+        validate_typespec((List[int],))
+        validate_typespec((Int, Float, str))
+        validate_typespec({"a": str})
+        validate_typespec(
+            {"a": List[Int], "b": 1, "c": Struct[{"x": Tuple[Int, float]}]}
+        )
 
 
 class TestProxytypePyInterfaceErrors:

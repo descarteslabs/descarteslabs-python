@@ -5,7 +5,7 @@ from inspect import signature
 from descarteslabs.common.graft import client
 
 from ...cereal import serializable
-from ..core import GenericProxytype, ProxyTypeError
+from ..core import GenericProxytype, ProxyTypeError, assert_is_proxytype
 from ..primitives import Any
 from ..identifier import identifier
 from ..proxify import proxify
@@ -117,6 +117,48 @@ class Function(GenericProxytype):
         }
 
         return return_type._from_apply(self.function, *promoted_args, **promoted_kwargs)
+
+    @classmethod
+    def _validate_params(cls, type_params):
+        try:
+            *arg_types, kwargs_types, return_type = type_params
+        except ValueError:
+            raise ValueError(
+                "Not enough type parameters supplied to Function. Function requires 0 or more "
+                "positional argument types, a dict of keyword-argument types (which is usually empty), "
+                "and one return type. For example, `Function[Int, Float, {'x': Int}, Int']`"
+            ) from None
+
+        # Check arg types
+        for i, type_param in enumerate(arg_types):
+            error_message = (
+                "Function argument type parameters must be Proxytypes, "
+                "but for argument parameter {}, got {}".format(i, type_param)
+            )
+            assert_is_proxytype(type_param, error_message=error_message)
+
+        # Check format of kwargs and types
+        assert isinstance(
+            kwargs_types, dict
+        ), "Function kwarg type parameters must be a dict, not {!r}".format(
+            kwargs_types
+        )
+        for name, type_param in six.iteritems(kwargs_types):
+            assert isinstance(
+                name, str
+            ), "Keyword argument names must be strings, but '{}' is a {!r}".format(
+                name, type(name)
+            )
+            error_message = "Function kwarg type parameters must be Proxytypes, but for kwarg {}, got {!r}".format(
+                name, type_param
+            )
+            assert_is_proxytype(type_param, error_message=error_message)
+
+        # Check return type
+        error_message = "Function return type parameter must be a Proxytype, but got {!r}".format(
+            return_type
+        )
+        assert_is_proxytype(return_type, error_message=error_message)
 
     @classmethod
     def _from_graft(cls, graft):
