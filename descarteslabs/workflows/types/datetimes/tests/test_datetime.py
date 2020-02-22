@@ -3,7 +3,7 @@ import operator
 
 import pytest
 
-from ...primitives import Bool, Int
+from ...primitives import Bool, Int, Any
 from ..datetime_ import Datetime, _binary_op_casts_to
 from ..timedelta import Timedelta
 
@@ -21,6 +21,7 @@ def test_promote():
         ),
         Datetime,
     )
+    assert isinstance(Datetime._promote(Any(1)), Datetime)
     with pytest.raises(TypeError):
         Datetime._promote({})
 

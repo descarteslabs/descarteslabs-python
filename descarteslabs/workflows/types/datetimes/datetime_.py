@@ -3,7 +3,7 @@ import six
 
 from ...cereal import serializable
 from ..core import typecheck_promote
-from ..primitives import Int, Float, Str, Bool
+from ..primitives import Int, Float, Str, Bool, Any
 from ..containers import Struct, Tuple
 from .timedelta import Timedelta
 
@@ -76,6 +76,10 @@ class Datetime(DatetimeStruct):
 
     @classmethod
     def _promote(cls, obj):
+        if isinstance(obj, cls):
+            return obj
+        if isinstance(obj, Any):
+            return obj.cast(cls)
         try:
             return cls.from_string(obj.isoformat())
         except AttributeError:
@@ -231,4 +235,6 @@ class Datetime(DatetimeStruct):
         >>> dt.is_between("2019-06-01", "2020-07-01", inclusive=False).compute()  # doctest: +SKIP
         False
         """
-        return Bool._from_apply("datetime.is_between", self, start, end, inclusive=inclusive)
+        return Bool._from_apply(
+            "datetime.is_between", self, start, end, inclusive=inclusive
+        )

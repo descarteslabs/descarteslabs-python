@@ -3,7 +3,7 @@ import six
 from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..core import ProxyTypeError, GenericProxytype
-from ..primitives import NoneType
+from ..primitives import NoneType, Any
 
 
 def _dict_repr_to_constructor_syntax(string):
@@ -171,8 +171,10 @@ class Struct(GenericProxytype):
     def _promote(cls, obj):
         if isinstance(obj, cls):
             return obj
+        if isinstance(obj, Any):
+            return obj.cast(cls)
         else:
-            raise ProxyTypeError("Cannot promote {} to {}".format(obj, cls))
+            raise ProxyTypeError("Cannot promote {} to {}".format(obj, cls)) from None
 
     @classmethod
     def _promote_kwargs(cls, kwargs, optional=None, read_only=None):

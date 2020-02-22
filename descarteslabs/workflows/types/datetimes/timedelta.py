@@ -2,7 +2,7 @@ from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..core import typecheck_promote
 from ..containers import Struct
-from ..primitives import Bool, Float, Int, Number
+from ..primitives import Bool, Float, Int, Number, Any
 
 TimedeltaStruct = Struct[{"days": Int, "seconds": Int, "microseconds": Int}]
 
@@ -63,6 +63,8 @@ class Timedelta(TimedeltaStruct):
     def _promote(cls, obj):
         if isinstance(obj, cls):
             return obj
+        if isinstance(obj, Any):
+            return obj.cast(cls)
         try:
             return cls(
                 days=obj.days, seconds=obj.seconds, microseconds=obj.microseconds

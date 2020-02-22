@@ -3,13 +3,14 @@ import operator
 
 import pytest
 
-from ...primitives import Float, Bool, Int
+from ...primitives import Float, Bool, Int, Any
 from ..timedelta import Timedelta
 from ..datetime_ import Datetime
 
 
 def test_promote():
     assert isinstance(Timedelta._promote(datetime.timedelta(hours=1)), Timedelta)
+    assert isinstance(Timedelta._promote(Any(1)), Timedelta)
     with pytest.raises(TypeError):
         Timedelta._promote({})
 
