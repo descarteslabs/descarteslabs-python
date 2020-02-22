@@ -33,3 +33,4 @@ def test_all_methods():
     assert isinstance(groupby1.mean(axis="bands"), ImageCollection)
     assert isinstance(groupby1.median(axis="bands"), ImageCollection)
     assert isinstance(groupby1.std(axis="bands"), ImageCollection)
+    assert isinstance(groupby1.mosaic(), ImageCollection)

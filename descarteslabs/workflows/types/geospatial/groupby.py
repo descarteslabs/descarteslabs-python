@@ -348,3 +348,20 @@ class ImageCollectionGroupby(GenericProxytype):
         <descarteslabs.workflows.types.containers.dict_.Dict[Int, Float] object at 0x...>
         """
         return self.map(lambda group, imgs: imgs.std(axis=axis))
+
+    def mosaic(self):
+        """Apply `.ImageCollection.mosaic` to each group.
+
+        Always returns an `.ImageCollection`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> groups = col.groupby(lambda img: img.properties["date"].month)
+        >>> groups.mosaic()
+        <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
+        """
+        return self.map(lambda group, imgs: imgs.mosaic())
