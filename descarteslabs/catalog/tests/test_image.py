@@ -714,6 +714,27 @@ class TestImage(ClientTestCase):
             assert 1 == len(w)
             assert "cs_code" in str(w[0].message)
 
+    @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
+    def test_upload_ndarray_dtype(self, *mocks):
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
+        image = Image(
+            id="p1:image",
+            product=p,
+            acquired="2012-05-06",
+            geotrans=[42, 0, 0, 0, 0, 0],
+            projection="foo",
+        )
+
+        pytest.raises(
+            ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.uint8)
+        )
+        pytest.raises(
+            ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.int64)
+        )
+        pytest.raises(
+            ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.uint64)
+        )
+
     def test_upload_ndarray_bad_georef(self):
         p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(

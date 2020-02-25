@@ -303,6 +303,16 @@ class Image(NamedCatalogObject):
         """,
     )
 
+    SUPPORTED_DATATYPES = (
+        "int8",
+        "int16",
+        "uint16",
+        "int32",
+        "uint32",
+        "float32",
+        "float64",
+    )
+
     @classmethod
     def search(cls, client=None):
         """A search query for all images.
@@ -563,6 +573,13 @@ class Image(NamedCatalogObject):
                 )
             # v1 ingest expects (X,Y,bands)
             ndarray = np.moveaxis(ndarray, 0, -1)
+
+        if ndarray.dtype.name not in self.SUPPORTED_DATATYPES:
+            raise ValueError(
+                "The array has an unsupported data type {}. Only the following data types are supported: {}".format(
+                    ndarray.dtype.name, ",".join(self.SUPPORTED_DATATYPES)
+                )
+            )
 
         # default to raster_meta fields if not explicitly provided
         if raster_meta:
