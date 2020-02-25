@@ -209,6 +209,14 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         if self.error_output is None:
             return
 
+        # Remove old errors for the layer
+        self.forget_errors()
+        new_errors = []
+        for error in self.error_output.outputs:
+            if not error["text"].startswith(self.name + ": "):
+                new_errors.append(error)
+        self.error_output.outputs = tuple(new_errors)
+
         if self._error_listener is not None:
             self._error_listener.stop(timeout=1)
 
