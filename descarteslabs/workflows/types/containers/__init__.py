@@ -5,6 +5,7 @@ from .slice import Slice
 from .struct import Struct
 from .tuple_ import Tuple
 from .known_dict import KnownDict
+from .range_ import range
 from .zip_ import zip
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
     "Struct",
     "Tuple",
     "KnownDict",
+    "range",
     "zip",
 ]
