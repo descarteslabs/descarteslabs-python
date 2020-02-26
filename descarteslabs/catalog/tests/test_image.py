@@ -672,6 +672,12 @@ class TestImage(ClientTestCase):
         assert upload.status == ImageUploadStatus.PENDING
         upload_mock.session.put.assert_called_once()
         assert upload_mock.session.put.call_args[0][0] == upload_url
+        assert (
+            self.get_request_body(2)["data"]["attributes"]["image_upload_options"][
+                "upload_size"
+            ]
+            == 200
+        )
 
         upload.wait_for_completion(15)
 

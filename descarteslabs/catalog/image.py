@@ -605,6 +605,8 @@ class Image(NamedCatalogObject):
         if overview_resampler:
             upload_options.overview_resampler = overview_resampler
 
+        upload_options.upload_size = ndarray.nbytes
+
         with NamedTemporaryFile(delete=False) as tmp:
             try:
                 np.save(tmp, ndarray, allow_pickle=False)

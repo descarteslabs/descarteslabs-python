@@ -178,12 +178,16 @@ class ImageUploadOptions(MappingAttribute):
     overview_resampler : str or OverviewResampler
         Overview resampler method, only used when `upload_type` is
         `ImageUploadType.NDARRAY`.
+    upload_size : int
+        When `upload_type` is `ImageUploadType.NDARRAY`,
+        the total size of the array in bytes.
     """
 
     upload_type = EnumAttribute(ImageUploadType)
     image_files = ListAttribute(Attribute)
     overviews = ListAttribute(Attribute)
     overview_resampler = EnumAttribute(OverviewResampler)
+    upload_size = Attribute()
     # worker_tag is for development and testing and should not be used by ordinary
     # clients, and as such is not documented above.
     worker_tag = Attribute()
