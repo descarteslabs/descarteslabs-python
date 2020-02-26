@@ -13,6 +13,13 @@ class ImageCollectionGroupby(GenericProxytype):
     """
     Dict-like object for a grouped `ImageCollection`.
 
+    If constructed from an empty `ImageCollection` or ``func`` results in empty groups,
+    `ImageCollectionGroupby.groups` will return an empty Dict. Other operations (like `map` and `count`)
+    will also return an empty Dict or an empty `Image`/`ImageCollection`.
+
+    Groups can be accessed with dict-like syntax.
+    If indexing with a key that does not exist, an empty `ImageCollection` is returned.
+
     Examples
     --------
     >>> import descarteslabs.workflows as wf
