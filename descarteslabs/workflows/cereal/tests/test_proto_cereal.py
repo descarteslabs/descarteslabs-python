@@ -42,7 +42,7 @@ def test_cant_serialize_generic():
 
 
 @serializable()
-class Bar(GenericProxytype):
+class FooBar(GenericProxytype):
     pass
 
 
@@ -51,9 +51,9 @@ def test_named_concrete_type():
     assert deserialize_typespec(typespec) is KnownClass
     assert deserialize_typespec(typespec) is not Tuple[Int, Str]
 
-    typespec = serialize_typespec(Bar[Int, 1])
-    assert deserialize_typespec(typespec) is Bar[Int, 1]
-    assert deserialize_typespec(typespec) is not Bar
+    typespec = serialize_typespec(FooBar[Int, 1])
+    assert deserialize_typespec(typespec) is FooBar[Int, 1]
+    assert deserialize_typespec(typespec) is not FooBar
 
 
 def test_serializable_helpful_error():
