@@ -238,22 +238,22 @@ def _type_params_issubclass(type_params, super_type_params):
     Recursively descends tuples and dicts in the type params to determine if
     `type_params` covariantly describes a subclass of `super_type_params`.
     """
-    if isinstance(type_params, tuple) and isinstance(super_type_params, tuple):
+    if type(type_params) is not type(super_type_params):
+        return False
+
+    if isinstance(type_params, PRIMITIVES):
+        return type_params == super_type_params
+    elif isinstance(type_params, tuple):
         return len(type_params) == len(super_type_params) and all(
             _type_params_issubclass(cls, super_cls)
             for cls, super_cls in zip(type_params, super_type_params)
         )
-    elif isinstance(type_params, dict) and isinstance(super_type_params, dict):
+    elif isinstance(type_params, dict):
         return six.viewkeys(type_params) == six.viewkeys(super_type_params) and all(
             _type_params_issubclass(cls, super_type_params[key])
             for key, cls in six.iteritems(type_params)
         )
     else:
-        if isinstance(type_params, (tuple, dict)) or isinstance(
-            super_type_params, (tuple, dict)
-        ):
-            # above checks don't catch just 1 param being a tuple or dict
-            return False
         return issubclass(type_params, super_type_params)
 
 

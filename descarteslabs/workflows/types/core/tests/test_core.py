@@ -137,6 +137,13 @@ def test_singleton_concrete_subtypes():
 
     assert Containy[Foo] is not OtherContainy[Foo]
 
+    assert Containy[1] is Containy[1]
+    assert Containy[1] is not Containy[2]
+    assert Containy[Containy[1]] is Containy[Containy[1]]
+    assert SubContainy[1] is SubContainy[1]
+    assert SubContainy[1] is not Containy[1]
+    assert Containy[1] is not OtherContainy[1]
+
 
 class TestCovariantSubclass(object):
     def test_basic(self):
@@ -157,6 +164,22 @@ class TestCovariantSubclass(object):
         assert not issubclass(Containy, Containy[Foo])
         assert not issubclass(OtherContainy[Foo], Containy[Foo])
         assert not issubclass(Containy[Foo], SubContainy[Foo])
+
+    def test_concrete_with_value_basic(self):
+        assert issubclass(Containy[1], Containy)
+        assert issubclass(Containy[1], Containy[1])
+        assert issubclass(Containy[Foo, 1], Containy[Foo, 1])
+        assert issubclass(Containy[SubContainy[1]], Containy[SubContainy[1]])
+        assert issubclass(Containy[SubContainy[1]], Containy[SubContainy])
+        assert issubclass(Containy[FooChild, 1], Containy[Foo, 1])
+
+        assert not issubclass(Containy, Containy[1])
+        assert not issubclass(Containy[1], Containy[2])
+        assert not issubclass(Containy[1], Containy[Int])
+        assert not issubclass(Containy[Foo, 1], Containy[Foo, 2])
+        assert not issubclass(Containy[FooChild, 1], Containy[Foo, 2])
+        assert not issubclass(OtherContainy[1], Containy[1])
+        assert not issubclass(Containy[1], SubContainy[1])
 
     def test_covariance(self):
         assert issubclass(Containy[BarChild], Containy[Bar])
