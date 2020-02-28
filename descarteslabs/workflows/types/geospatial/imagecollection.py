@@ -1142,8 +1142,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         band: Str or `ImageCollection`
             If Str, the name of the band in ``self`` to use as the sorting band.
             If `ImageCollection`, use this single-band `ImageCollection`
-            as the sorting band. The `.Image` returned will have this band concatenated
-            to the existing bands.
+            as the sorting band.
 
         operation: {"argmin", "argmax"}, default "argmax"
             A string indicating whether to use the minimum or maximum from ``band``
