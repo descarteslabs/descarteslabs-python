@@ -290,11 +290,14 @@ class Product(CatalogObject):
         Parameters
         ----------
         owners : str or iterable(str), optional
-            A single owner or a list of owners; see `~CatalogObject.owners`.
+            An empty list, a single owner or a list of owners; see
+            `~CatalogObject.owners`.  If None, ignored.
         readers : str or iterable(str), optional
-            A single reader or a list of readers; see `~CatalogObject.readers`.
+            An empty list, a single reader or a list of readers; see
+            `~CatalogObject.readers`.  If None, ignored.
         writers : str or iterable(str), optional
-            A single writer or a list of writers; see `~CatalogObject.writers`.
+            An empty list, a single writer or a list of writers; see
+            `~CatalogObject.writers`.  If None, ignored.
         inherit : bool, optional
             Whether to inherit the values from the product for owners, readers, and/or
             writers that have not been set in this request.  By default, this value
