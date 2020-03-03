@@ -7,7 +7,9 @@ import responses
 
 from descarteslabs.workflows.client import Client
 
-from descarteslabs.common.proto import errors_pb2, job_pb2, types_pb2
+from descarteslabs.common.proto.errors import errors_pb2
+from descarteslabs.common.proto.job import job_pb2
+from descarteslabs.common.proto.types import types_pb2
 from descarteslabs.common.workflows.arrow_serialization import serialization_context
 from descarteslabs.common.graft import client as graft_client
 
@@ -37,7 +39,7 @@ class TestTypespecToUnmarshalStr(object):
 @mock.patch.object(
     Client, "_open_channel", new=lambda *args, **kwargs: mock.MagicMock()
 )
-@mock.patch("descarteslabs.common.proto.job_pb2_grpc.JobAPIStub")
+@mock.patch("descarteslabs.common.proto.job.job_pb2_grpc.JobAPIStub")
 class TestJob(object):
     @pytest.mark.parametrize("client", [mock.Mock(), None])
     def test_instantiate(self, stub, client):

@@ -6,7 +6,7 @@ from six.moves import queue
 import grpc
 import mock
 import pytest
-from descarteslabs.common.proto import xyz_pb2
+from descarteslabs.common.proto.xyz import xyz_pb2
 
 from ... import _channel
 from ...client import Client
@@ -18,7 +18,7 @@ from . import utils
 @mock.patch.object(
     Client, "_open_channel", new=lambda *args, **kwargs: mock.MagicMock()
 )
-@mock.patch("descarteslabs.common.proto.xyz_pb2_grpc.XYZAPIStub")
+@mock.patch("descarteslabs.common.proto.xyz.xyz_pb2_grpc.XYZAPIStub")
 class TestXYZ(object):
     def test_build(self, stub):
         obj = utils.Foo(1)

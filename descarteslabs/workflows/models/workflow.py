@@ -1,7 +1,11 @@
 import json
 
 from descarteslabs.common.graft import client as graft_client
-from descarteslabs.common.proto import workflow_pb2
+
+from descarteslabs.common.proto.workflow import (
+    workflow_pb2
+)
+
 
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec

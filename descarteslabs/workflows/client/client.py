@@ -3,13 +3,10 @@ import os
 import certifi
 import grpc
 from descarteslabs.client.auth import Auth
-from descarteslabs.common.proto import (
-    health_pb2,
-    health_pb2_grpc,
-    job_pb2_grpc,
-    xyz_pb2_grpc,
-    workflow_pb2_grpc,
-)
+from descarteslabs.common.proto.health import health_pb2, health_pb2_grpc
+from descarteslabs.common.proto.job import job_pb2_grpc
+from descarteslabs.common.proto.xyz import xyz_pb2_grpc
+from descarteslabs.common.proto.workflow import workflow_pb2_grpc
 from descarteslabs.common.retry import Retry, RetryError
 from descarteslabs.common.retry.retry import _wraps
 

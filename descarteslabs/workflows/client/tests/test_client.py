@@ -16,7 +16,7 @@ class FakeRpcError(grpc.RpcError):
         return self._code
 
 
-@mock.patch("descarteslabs.common.proto.health_pb2_grpc.HealthStub")
+@mock.patch("descarteslabs.common.proto.health.health_pb2_grpc.HealthStub")
 def test_client_health(stub):
     stub.return_value.Check.return_value = True
     client = Client(auth=mock.Mock())
@@ -24,7 +24,7 @@ def test_client_health(stub):
     assert stub.return_value.Check.call_args_list[0][1]["timeout"] == 5
 
 
-@mock.patch("descarteslabs.common.proto.health_pb2_grpc.HealthStub")
+@mock.patch("descarteslabs.common.proto.health.health_pb2_grpc.HealthStub")
 def test_client_health_default_retry_false_predicate(stub):
     stub.return_value.Check.side_effect = [TypeError(), True]
     client = Client(auth=mock.Mock())

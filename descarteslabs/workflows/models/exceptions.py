@@ -1,4 +1,4 @@
-from descarteslabs.common.proto import errors_pb2
+from descarteslabs.common.proto.errors import errors_pb2
 
 
 class JobComputeError(Exception):

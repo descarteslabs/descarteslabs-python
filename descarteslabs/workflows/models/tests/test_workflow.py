@@ -3,7 +3,7 @@ import json
 import hypothesis.strategies as st
 import mock
 import pytest
-from descarteslabs.common.proto import workflow_pb2
+from descarteslabs.common.proto.workflow import workflow_pb2
 from hypothesis import given
 
 from ... import _channel, cereal
@@ -16,7 +16,7 @@ from . import utils
 @mock.patch.object(
     Client, "_open_channel", new=lambda *args, **kwargs: mock.MagicMock()
 )
-@mock.patch("descarteslabs.common.proto.workflow_pb2_grpc.WorkflowAPIStub")
+@mock.patch("descarteslabs.common.proto.workflow.workflow_pb2_grpc.WorkflowAPIStub")
 class TestWorkflow(object):
     def test_build(self, stub):
         obj = utils.Foo(1)

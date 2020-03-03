@@ -10,7 +10,8 @@ import six
 import pyarrow as pa
 import requests
 from descarteslabs.common.graft import client as graft_client
-from descarteslabs.common.proto import job_pb2, types_pb2
+from descarteslabs.common.proto.job import job_pb2
+from descarteslabs.common.proto.types import types_pb2
 from descarteslabs.common.workflows.arrow_serialization import serialization_context
 
 from .. import _channel

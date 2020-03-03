@@ -1,4 +1,5 @@
-from descarteslabs.common.proto import errors_pb2, job_pb2
+from descarteslabs.common.proto.errors import errors_pb2
+from descarteslabs.common.proto.job import job_pb2
 
 from ..exceptions import JobComputeError
 from ..job import Job
