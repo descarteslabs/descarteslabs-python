@@ -1,0 +1,104 @@
+
+syntax="proto3";
+
+package descarteslabs.workflows;
+
+import "descarteslabs/common/proto/types/types.proto";
+import public "descarteslabs/common/proto/errors/errors.proto"; // backwards compatible fix for ErrorCode
+
+
+service JobAPI {
+    rpc CreateJob(CreateJobRequest) returns (Job) {}
+    rpc ListJobs(ListJobsRequest) returns (stream Job) {}
+    rpc GetJob(GetJobRequest) returns (Job) {}
+    rpc CancelJob(CancelJobRequest) returns (Job) {}
+    rpc WatchJob(WatchJobRequest) returns (stream Job) {}
+}
+
+enum JobStatus {
+    STATUS_UNKNOWN = 0;
+    STATUS_SUCCESS = 1;
+    STATUS_FAILURE = 2;
+}
+
+enum JobStage {
+    STAGE_UNKNOWN = 0;
+    STAGE_PENDING = 1;
+    STAGE_PREPARING = 2;
+    STAGE_RUNNING = 3;
+    STAGE_SAVING = 4;
+    STAGE_DONE = 5;
+    STAGE_EXPIRED = 6;
+}
+
+message JobError {
+    ErrorCode code = 1;
+    string message = 2;
+}
+
+message JobProgress {
+    uint32 waiting = 1;
+    uint32 ready = 2;
+    uint32 running = 3;
+    uint32 finished = 4;
+}
+
+message Entry {
+    int64 timestamp = 1;
+    JobStage stage = 2;
+    JobError error = 3;
+    JobProgress progress = 4;
+}
+
+message Job {
+    string id = 1;
+    int64 created_timestamp = 2;
+    int64 updated_timestamp = 3;
+    JobStage stage = 4;
+    JobStatus status = 5;
+    JobError error = 6;
+
+    bool terminated = 7;
+    string channel = 8;
+
+    string parameters = 10;
+    ResultType type = 17;
+    string workflow_id = 18;
+
+    repeated Entry log = 19;
+    JobProgress progress = 20;
+
+    string serialized_graft = 21;
+    string serialized_typespec = 22;
+
+    string user = 23;
+    string org = 24;
+}
+
+message CreateJobRequest {
+    string parameters = 2;
+    string workflow_id = 3;
+    ResultType type = 4;
+
+    string serialized_graft = 5;
+    string serialized_typespec = 6;
+    string channel = 7;
+}
+
+message GetJobRequest {
+    string id = 1;
+}
+
+message CancelJobRequest {
+    string id = 1;
+}
+
+message WatchJobRequest {
+    string id = 1;
+}
+
+message ListJobsRequest {
+    string workflow_id = 1;
+    string start_datetime = 2;
+    string end_datetime = 3;
+}

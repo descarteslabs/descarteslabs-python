@@ -1,0 +1,51 @@
+
+syntax="proto3";
+
+package descarteslabs.workflows;
+
+import "descarteslabs/common/proto/types/types.proto";
+import "descarteslabs/common/proto/errors/errors.proto"; // backwards compatible fix for ErrorCode
+
+
+service XYZAPI {
+    rpc CreateXYZ(CreateXYZRequest) returns (XYZ) {}
+    rpc GetXYZ(GetXYZRequest) returns (XYZ) {}
+    rpc GetXYZSessionErrors(GetXYZSessionErrorsRequest) returns (stream XYZError) {}
+}
+
+message XYZ {
+    string id = 1;
+    int64 created_timestamp = 2;
+    int64 updated_timestamp = 3;
+    string name = 7;
+    string description = 8;
+    ResultType type = 9;
+    string channel = 10;
+
+    string serialized_graft = 21;
+    string serialized_typespec = 22;
+
+    string user = 23;
+    string org = 24;
+}
+
+message CreateXYZRequest {
+    XYZ xyz = 1;
+}
+
+message GetXYZRequest {
+    string xyz_id = 1;
+}
+
+message GetXYZSessionErrorsRequest {
+    string xyz_id = 1;
+    string session_id = 2;
+    int64 start_timestamp = 3;
+}
+
+message XYZError {
+    ErrorCode code = 1;
+    string message = 2;
+    int64 timestamp = 3;
+    string session_id = 4;
+}
