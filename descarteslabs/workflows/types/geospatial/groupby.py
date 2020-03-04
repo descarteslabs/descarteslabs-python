@@ -356,7 +356,7 @@ class ImageCollectionGroupby(GenericProxytype):
         """
         return self.map(lambda group, imgs: imgs.std(axis=axis))
 
-    def mosaic(self):
+    def mosaic(self, reverse=False):
         """Apply `.ImageCollection.mosaic` to each group.
 
         Always returns an `.ImageCollection`.
@@ -371,4 +371,4 @@ class ImageCollectionGroupby(GenericProxytype):
         >>> groups.mosaic()
         <descarteslabs.workflows.types.geospatial.imagecollection.ImageCollection object at 0x...>
         """
-        return self.map(lambda group, imgs: imgs.mosaic())
+        return self.map(lambda group, imgs: imgs.mosaic(reverse=reverse))

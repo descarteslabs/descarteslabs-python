@@ -1343,11 +1343,18 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("count", self, axis)
 
-    def mosaic(self):
+    @typecheck_promote(Bool)
+    def mosaic(self, reverse=False):
         """
         Composite the `ImageCollection` into a single `~.geospatial.Image` by picking each first-unmasked pixel.
 
-        Mosaicing occurs in the order of the `ImageCollection`; combine with `sorted` to control this.
+        The order of mosaicing is from last to first, meaning the last `Image` in the `ImageCollection` is on top.
+
+        Parameters
+        ----------
+        reverse: Bool, default False
+            The order of mosaicing. If False (default), the last `Image` in the `ImageCollection is on top. If True,
+            the first `Image` in the `ImageCollection` is on top.
 
         Returns
         -------
@@ -1363,7 +1370,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         >>> date_mosaic = col.sorted(lambda img: img.properties['date']).mosaic()
         >>> cloudfree_mosaic = col.sorted(lambda img: img.properties['cloud_fraction']).mosaic()
         """
-        return Image._from_apply("mosaic", self)
+        return Image._from_apply("mosaic", self, reverse=reverse)
 
     @typecheck_promote((Int, Slice))
     def __getitem__(self, item):
