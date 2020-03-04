@@ -4,7 +4,16 @@ from descarteslabs.common.graft import client
 
 from ... import env
 from ...cereal import serializable
-from ..containers import CollectionMixin, Dict, KnownDict, List, Slice, Struct, Tuple
+from ..containers import (
+    CollectionMixin,
+    Dict,
+    KnownDict,
+    List,
+    Slice,
+    Struct,
+    Tuple,
+    Array,
+)
 from ..core import _resolve_lambdas, typecheck_promote
 from ..datetimes import Datetime
 from ..function import Function
@@ -17,6 +26,7 @@ from .mixins import BandsMixin
 
 ImageCollectionBase = Struct[
     {
+        "ndarray": Array[Float, 4],
         "properties": List[
             KnownDict[
                 {

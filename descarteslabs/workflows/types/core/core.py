@@ -458,10 +458,14 @@ def is_generic(type_):
         return any(map(is_generic, type_parameters))
 
     if isinstance(type_, dict):
-        # in this case `type_` is a 'complex type', `dict[Str:Type]`
+        # in this case `type_` is a 'complex type', `dict[Type:Type]`
         complex_type = type_
-        return any(map(is_generic, complex_type.values()))
+        return any(map(is_generic, complex_type.keys())) and any(
+            map(is_generic, complex_type.values())
+        )
 
+    if isinstance(type_, PRIMITIVES):
+        return False
     return issubclass(type_, GenericProxytype)
 
 

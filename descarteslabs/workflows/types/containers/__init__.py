@@ -1,3 +1,4 @@
+from .array_ import Array
 from .collection import CollectionMixin
 from .dict_ import Dict
 from .list_ import List
@@ -9,6 +10,7 @@ from .range_ import range
 from .zip_ import zip
 
 __all__ = [
+    "Array",
     "CollectionMixin",
     "Dict",
     "List",
