@@ -12,6 +12,7 @@ _sym_db = _symbol_database.Default()
 
 
 from descarteslabs.common.proto.types import types_pb2 as descarteslabs_dot_common_dot_proto_dot_types_dot_types__pb2
+from descarteslabs.common.proto.typespec import typespec_pb2 as descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -19,9 +20,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n2descarteslabs/common/proto/workflow/workflow.proto\x12\x17\x64\x65scarteslabs.workflows\x1a,descarteslabs/common/proto/types/types.proto\"\xff\x02\n\x08Workflow\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12+\n\x11\x63reated_timestamp\x18\x02 \x01(\x03R\x10\x63reatedTimestamp\x12+\n\x11updated_timestamp\x18\x03 \x01(\x03R\x10updatedTimestamp\x12\x12\n\x04name\x18\x07 \x01(\tR\x04name\x12 \n\x0b\x64\x65scription\x18\x08 \x01(\tR\x0b\x64\x65scription\x12\x37\n\x04type\x18\t \x01(\x0e\x32#.descarteslabs.workflows.ResultTypeR\x04type\x12\x18\n\x07\x63hannel\x18\n \x01(\tR\x07\x63hannel\x12)\n\x10serialized_graft\x18\x15 \x01(\tR\x0fserializedGraft\x12/\n\x13serialized_typespec\x18\x16 \x01(\tR\x12serializedTypespec\x12\x12\n\x04user\x18\x17 \x01(\tR\x04user\x12\x10\n\x03org\x18\x18 \x01(\tR\x03org\"V\n\x15\x43reateWorkflowRequest\x12=\n\x08workflow\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.WorkflowR\x08workflow\"$\n\x12GetWorkflowRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"V\n\x15UpdateWorkflowRequest\x12=\n\x08workflow\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.WorkflowR\x08workflow\"`\n\x14ListWorkflowsRequest\x12%\n\x0estart_datetime\x18\x01 \x01(\tR\rstartDatetime\x12!\n\x0c\x65nd_datetime\x18\x02 \x01(\tR\x0b\x65ndDatetime2\xa3\x03\n\x0bWorkflowAPI\x12\x65\n\x0e\x43reateWorkflow\x12..descarteslabs.workflows.CreateWorkflowRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x12\x65\n\rListWorkflows\x12-.descarteslabs.workflows.ListWorkflowsRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x30\x01\x12_\n\x0bGetWorkflow\x12+.descarteslabs.workflows.GetWorkflowRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x12\x65\n\x0eUpdateWorkflow\x12..descarteslabs.workflows.UpdateWorkflowRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x62\x06proto3'
+  serialized_pb=b'\n2descarteslabs/common/proto/workflow/workflow.proto\x12\x17\x64\x65scarteslabs.workflows\x1a,descarteslabs/common/proto/types/types.proto\x1a\x32\x64\x65scarteslabs/common/proto/typespec/typespec.proto\"\xc2\x03\n\x08Workflow\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12+\n\x11\x63reated_timestamp\x18\x02 \x01(\x03R\x10\x63reatedTimestamp\x12+\n\x11updated_timestamp\x18\x03 \x01(\x03R\x10updatedTimestamp\x12\x12\n\x04name\x18\x07 \x01(\tR\x04name\x12 \n\x0b\x64\x65scription\x18\x08 \x01(\tR\x0b\x64\x65scription\x12\x37\n\x04type\x18\t \x01(\x0e\x32#.descarteslabs.workflows.ResultTypeR\x04type\x12\x18\n\x07\x63hannel\x18\n \x01(\tR\x07\x63hannel\x12)\n\x10serialized_graft\x18\x15 \x01(\tR\x0fserializedGraft\x12\x33\n\x13serialized_typespec\x18\x16 \x01(\tB\x02\x18\x01R\x12serializedTypespec\x12=\n\x08typespec\x18\x19 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x08typespec\x12\x12\n\x04user\x18\x17 \x01(\tR\x04user\x12\x10\n\x03org\x18\x18 \x01(\tR\x03org\"V\n\x15\x43reateWorkflowRequest\x12=\n\x08workflow\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.WorkflowR\x08workflow\"$\n\x12GetWorkflowRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"V\n\x15UpdateWorkflowRequest\x12=\n\x08workflow\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.WorkflowR\x08workflow\"`\n\x14ListWorkflowsRequest\x12%\n\x0estart_datetime\x18\x01 \x01(\tR\rstartDatetime\x12!\n\x0c\x65nd_datetime\x18\x02 \x01(\tR\x0b\x65ndDatetime2\xa3\x03\n\x0bWorkflowAPI\x12\x65\n\x0e\x43reateWorkflow\x12..descarteslabs.workflows.CreateWorkflowRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x12\x65\n\rListWorkflows\x12-.descarteslabs.workflows.ListWorkflowsRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x30\x01\x12_\n\x0bGetWorkflow\x12+.descarteslabs.workflows.GetWorkflowRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x12\x65\n\x0eUpdateWorkflow\x12..descarteslabs.workflows.UpdateWorkflowRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x62\x06proto3'
   ,
-  dependencies=[descarteslabs_dot_common_dot_proto_dot_types_dot_types__pb2.DESCRIPTOR,])
+  dependencies=[descarteslabs_dot_common_dot_proto_dot_types_dot_types__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2.DESCRIPTOR,])
 
 
 
@@ -95,16 +96,23 @@ _WORKFLOW = _descriptor.Descriptor(
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='serializedTypespec', file=DESCRIPTOR),
+      serialized_options=b'\030\001', json_name='serializedTypespec', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='user', full_name='descarteslabs.workflows.Workflow.user', index=9,
+      name='typespec', full_name='descarteslabs.workflows.Workflow.typespec', index=9,
+      number=25, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='typespec', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='user', full_name='descarteslabs.workflows.Workflow.user', index=10,
       number=23, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='user', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='org', full_name='descarteslabs.workflows.Workflow.org', index=10,
+      name='org', full_name='descarteslabs.workflows.Workflow.org', index=11,
       number=24, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -122,8 +130,8 @@ _WORKFLOW = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=126,
-  serialized_end=509,
+  serialized_start=178,
+  serialized_end=628,
 )
 
 
@@ -153,8 +161,8 @@ _CREATEWORKFLOWREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=511,
-  serialized_end=597,
+  serialized_start=630,
+  serialized_end=716,
 )
 
 
@@ -184,8 +192,8 @@ _GETWORKFLOWREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=599,
-  serialized_end=635,
+  serialized_start=718,
+  serialized_end=754,
 )
 
 
@@ -215,8 +223,8 @@ _UPDATEWORKFLOWREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=637,
-  serialized_end=723,
+  serialized_start=756,
+  serialized_end=842,
 )
 
 
@@ -253,11 +261,12 @@ _LISTWORKFLOWSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=725,
-  serialized_end=821,
+  serialized_start=844,
+  serialized_end=940,
 )
 
 _WORKFLOW.fields_by_name['type'].enum_type = descarteslabs_dot_common_dot_proto_dot_types_dot_types__pb2._RESULTTYPE
+_WORKFLOW.fields_by_name['typespec'].message_type = descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2._TYPESPEC
 _CREATEWORKFLOWREQUEST.fields_by_name['workflow'].message_type = _WORKFLOW
 _UPDATEWORKFLOWREQUEST.fields_by_name['workflow'].message_type = _WORKFLOW
 DESCRIPTOR.message_types_by_name['Workflow'] = _WORKFLOW
@@ -303,6 +312,7 @@ ListWorkflowsRequest = _reflection.GeneratedProtocolMessageType('ListWorkflowsRe
 _sym_db.RegisterMessage(ListWorkflowsRequest)
 
 
+_WORKFLOW.fields_by_name['serialized_typespec']._options = None
 
 _WORKFLOWAPI = _descriptor.ServiceDescriptor(
   name='WorkflowAPI',
@@ -310,8 +320,8 @@ _WORKFLOWAPI = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=824,
-  serialized_end=1243,
+  serialized_start=943,
+  serialized_end=1362,
   methods=[
   _descriptor.MethodDescriptor(
     name='CreateWorkflow',

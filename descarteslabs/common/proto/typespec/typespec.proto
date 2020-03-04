@@ -1,0 +1,41 @@
+syntax="proto3";
+
+package descarteslabs.workflows;
+
+message Typespec {
+    Primitive prim = 1;
+    string type = 2;
+    Map map = 3;
+    CompositeType comp = 4;
+
+    bool has_prim = 5;
+    bool has_type = 6;
+    bool has_map = 7;
+    bool has_comp = 8; 
+}
+
+message Primitive {
+    int32 int_  = 1;
+    float float_ = 2;
+    bool bool_ = 3;
+    string string_ = 4;
+
+    bool has_int = 5;
+    bool has_float = 6;
+    bool has_bool = 7;
+    bool has_string = 8; 
+}
+
+message MapFieldEntry {
+     Typespec key = 1;
+     Typespec val = 2;
+}
+
+message Map {
+     repeated MapFieldEntry items = 1;
+}
+
+message CompositeType {
+     string type = 1;
+     repeated Typespec params = 2;
+}

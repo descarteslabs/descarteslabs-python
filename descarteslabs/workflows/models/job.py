@@ -31,10 +31,13 @@ logger = logging.getLogger(__name__)
 
 
 def _typespec_to_unmarshal_str(typespec):
-    if isinstance(typespec, six.string_types):
-        marshal_type = typespec
+    if typespec.has_type:
+        marshal_type = typespec.type
+    elif typespec.has_comp:
+        marshal_type = typespec.comp.type
     else:
-        marshal_type = typespec["type"]
+        raise ValueError("Invalid typespec: has_type or has_comp must be set.")
+
     if marshal_type not in unmarshal.registry:
         raise TypeError(
             "{!r} is not a computable type. Note that if this is a function-like type, "
@@ -142,7 +145,7 @@ class Job(object):
         message = job_pb2.Job(
             parameters=json.dumps(parameters),
             serialized_graft=json.dumps(proxy_object.graft),
-            serialized_typespec=json.dumps(typespec),
+            typespec=typespec,
             type=types_pb2.ResultType.Value(result_type),
             channel=channel,
         )
@@ -190,7 +193,7 @@ class Job(object):
             job_pb2.CreateJobRequest(
                 parameters=self._message.parameters,
                 serialized_graft=self._message.serialized_graft,
-                serialized_typespec=self._message.serialized_typespec,
+                typespec=self._message.typespec,
                 type=self._message.type,
                 channel=self._message.channel,
             ),
@@ -303,7 +306,7 @@ class Job(object):
     def object(self):
         "Proxytype: The proxy object this Job computes."
         if self._object is None:
-            typespec = json.loads(self._message.serialized_typespec)
+            typespec = self._message.typespec
             proxytype = deserialize_typespec(typespec)
             graft = json.loads(self._message.serialized_graft)
             isolated = graft_client.isolate_keys(graft)

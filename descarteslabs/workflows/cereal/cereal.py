@@ -1,77 +1,71 @@
 import six
-from collections import abc
 
-# Typespec:
-#
-# typespec       :: type
-#                :: composite-type
-#
-# type           :: str
-# composite-type :: {
-#                       "type": type,
-#                       "params": [type-param, ...]
-#                   }
-# type-param    :: typespec
-#               :: [string-key, typespec]  # for encoding a dict type param
+from descarteslabs.common.proto.typespec.typespec_pb2 import (
+    Typespec,
+    Primitive,
+    MapFieldEntry,
+    Map,
+    CompositeType,
+)
 
-# >>> serialize_typespec(Int)
-# "Int"
-#
-# >>> serialize_typespec(List[Int])
-# {"type": "List", "params": ["Int"]}
-#
-# >>> serialize_typespec(Tuple[Str, List[Int]])
-# {"type": "Tuple", "params": ["Str", {"type": "List", "params": ["Int"]}]}
-#
-# >>> serialize_typespec(Function[{'x': Float, 'y': Bool}, List[Float]])
-# {
-#     "type": "Function",
-#     "params": [[("x", "Float"), ("y", "Bool")], {"type": "List", "params": ["Float"]}],
-# }
+
+PRIMITIVES = (int, float, bool, str)
+
 
 types = {}
 
 
 def deserialize_typespec(spec):
-    if isinstance(spec, six.string_types):
+    if spec.has_prim:
+        if spec.prim.has_int:
+            return spec.prim.int_
+        if spec.prim.has_float:
+            return spec.prim.float_
+        if spec.prim.has_bool:
+            return spec.prim.bool_
+        else:
+            return spec.prim.string_
+    elif spec.has_type:
         try:
-            return types[spec]
+            return types[spec.type]
         except KeyError:
-            raise ValueError("No known type {!r}".format(spec))
+            raise ValueError("No known type {!r}".format(spec.type))
+    elif spec.has_map:
+        return {
+            deserialize_typespec(param.key): deserialize_typespec(param.val)
+            for param in spec.map.items
+        }
+    elif spec.has_comp:
+        generic = deserialize_typespec(Typespec(type=spec.comp.type, has_type=True))
+        params = tuple(deserialize_typespec(param) for param in spec.comp.params)
+        return generic[params]
     else:
-        try:
-            generic = spec["type"]
-        except KeyError:
-            raise ValueError("Typespec missing the key 'type': {}".format(spec))
-        except TypeError:
-            raise TypeError("Expected a mapping, got {}".format(spec))
-
-        generic = deserialize_typespec(generic)
-
-        try:
-            params = spec["params"]
-        except KeyError:
-            raise ValueError("Typespec missing the key 'params': {}".format(spec))
-
-        if not isinstance(params, abc.Sequence) or isinstance(params, six.string_types):
-            raise TypeError(
-                "Expected sequence for typespec params, got {}".format(params)
-            )
-
-        params = tuple(
-            {key: deserialize_typespec(p) for (key, p) in param}
-            if isinstance(param, (list, tuple))
-            else deserialize_typespec(param)
-            for param in params
+        raise ValueError(
+            "Invalid typespec in ``deserialize_typespec``: none of the has_ values are set."
         )
-
-        return generic.__class_getitem__(params)
 
 
 def serialize_typespec(cls):
-    assert isinstance(
-        cls, type
-    ), "Can only serialize typespecs of classes, not instances"
+    if isinstance(cls, int):
+        return Typespec(prim=Primitive(int_=cls, has_int=True), has_prim=True)
+    if isinstance(cls, float):
+        return Typespec(prim=Primitive(float_=cls, has_float=True), has_prim=True)
+    if isinstance(cls, bool):
+        return Typespec(prim=Primitive(bool_=cls, has_bool=True), has_prim=True)
+    if isinstance(cls, str):
+        return Typespec(prim=Primitive(string_=cls, has_string=True), has_prim=True)
+    if isinstance(cls, dict):
+        return Typespec(
+            map=Map(
+                items=[
+                    MapFieldEntry(
+                        key=serialize_typespec(key), val=serialize_typespec(val)
+                    )
+                    for key, val in six.iteritems(cls)
+                ]
+            ),
+            has_map=True,
+        )
 
     if getattr(cls, "_named_concrete_type", False):
         # ^ cls doesn't have that attribute, or it does and the value is falsey
@@ -97,7 +91,7 @@ def serialize_typespec(cls):
         )
 
     if not hasattr(cls, "_type_params") or getattr(cls, "_named_concrete_type", False):
-        return name
+        return Typespec(type=name, has_type=True)
     else:
         type_params = cls._type_params
         if type_params is None:
@@ -105,14 +99,11 @@ def serialize_typespec(cls):
                 "Can only serialize concrete types, not the generic type {}".format(cls)
             )
 
-        serialized_params = [
-            [(key, serialize_typespec(param)) for key, param in six.iteritems(param)]
-            if isinstance(param, dict)
-            else serialize_typespec(param)
-            for param in type_params
-        ]
+        serialized_params = [serialize_typespec(param) for param in type_params]
 
-        return {"type": name, "params": serialized_params}
+        return Typespec(
+            comp=CompositeType(type=name, params=serialized_params), has_comp=True
+        )
 
 
 def serializable(is_named_concrete_type=False):

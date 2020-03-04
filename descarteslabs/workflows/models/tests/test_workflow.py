@@ -27,7 +27,6 @@ class TestWorkflow(object):
         message = wf._message
 
         assert json.loads(message.serialized_graft) == utils.json_normalize(obj.graft)
-        assert "Foo" in message.serialized_typespec
         assert message.name == "foo"
         assert message.description == "a foo"
         assert message.channel == _channel.__channel__
@@ -96,9 +95,7 @@ class TestWorkflow(object):
         assert json.loads(message.serialized_graft) == utils.json_normalize(
             should_be_obj.graft
         )
-        assert json.loads(message.serialized_typespec) == utils.json_normalize(
-            cereal.serialize_typespec(type(should_be_obj))
-        )
+        assert message.typespec == cereal.serialize_typespec(type(should_be_obj))
 
         assert message.name == new_name if new_name is not None else old_name
         assert (

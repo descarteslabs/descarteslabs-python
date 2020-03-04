@@ -29,7 +29,6 @@ class TestXYZ(object):
         message = xyz._message
 
         assert json.loads(message.serialized_graft) == utils.json_normalize(obj.graft)
-        assert "Foo" in message.serialized_typespec
         assert message.name == "foo"
         assert message.description == "a foo"
         assert message.channel == _channel.__channel__

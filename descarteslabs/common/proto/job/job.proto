@@ -4,6 +4,7 @@ syntax="proto3";
 package descarteslabs.workflows;
 
 import "descarteslabs/common/proto/types/types.proto";
+import "descarteslabs/common/proto/typespec/typespec.proto";
 import public "descarteslabs/common/proto/errors/errors.proto"; // backwards compatible fix for ErrorCode
 
 
@@ -69,7 +70,9 @@ message Job {
     JobProgress progress = 20;
 
     string serialized_graft = 21;
-    string serialized_typespec = 22;
+    // TODO: remove serialized_typespec
+    string serialized_typespec = 22 [deprecated=true];
+    Typespec typespec = 25;
 
     string user = 23;
     string org = 24;
@@ -81,7 +84,9 @@ message CreateJobRequest {
     ResultType type = 4;
 
     string serialized_graft = 5;
-    string serialized_typespec = 6;
+    // TODO: remove serialized_typespec
+    string serialized_typespec = 6 [deprecated=true];
+    Typespec typespec = 8;
     string channel = 7;
 }
 

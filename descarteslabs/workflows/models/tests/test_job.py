@@ -84,7 +84,7 @@ class TestJob(object):
             {"foo": graft_client.value_graft(parameters["foo"])}
         )
         assert json.loads(message.serialized_graft) == utils.json_normalize(obj.graft)
-        assert message.serialized_typespec == json.dumps("Int")
+        assert message.typespec == cereal.serialize_typespec(type(obj))
         assert message.type == types_pb2.Int
 
         if client is not None:
@@ -102,7 +102,7 @@ class TestJob(object):
             id="foo",
             parameters=job._message.parameters,
             serialized_graft=job._message.serialized_graft,
-            serialized_typespec=job._message.serialized_typespec,
+            typespec=job._message.typespec,
             type=job._message.type,
             channel="foo",
         )
@@ -115,7 +115,7 @@ class TestJob(object):
             job_pb2.CreateJobRequest(
                 parameters=job._message.parameters,
                 serialized_graft=job._message.serialized_graft,
-                serialized_typespec=job._message.serialized_typespec,
+                typespec=job._message.typespec,
                 type=job._message.type,
                 channel="foo",
             ),

@@ -71,7 +71,7 @@ class XYZ(object):
 
     @classmethod
     def _from_proto(cls, message, client=None):
-        typespec = json.loads(message.serialized_typespec)
+        typespec = message.typespec
         proxytype = deserialize_typespec(typespec)
 
         if message.serialized_graft:
@@ -129,7 +129,7 @@ class XYZ(object):
             name=name,
             description=description,
             serialized_graft=json.dumps(graft),
-            serialized_typespec=json.dumps(typespec),
+            typespec=typespec,
             channel=_channel.__channel__,
         )
         return cls(proxy_object, message, client=client)

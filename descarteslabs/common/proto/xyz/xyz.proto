@@ -4,8 +4,8 @@ syntax="proto3";
 package descarteslabs.workflows;
 
 import "descarteslabs/common/proto/types/types.proto";
+import "descarteslabs/common/proto/typespec/typespec.proto";
 import "descarteslabs/common/proto/errors/errors.proto"; // backwards compatible fix for ErrorCode
-
 
 service XYZAPI {
     rpc CreateXYZ(CreateXYZRequest) returns (XYZ) {}
@@ -23,7 +23,9 @@ message XYZ {
     string channel = 10;
 
     string serialized_graft = 21;
-    string serialized_typespec = 22;
+    //TODO: remove serialized_typespec
+    string serialized_typespec = 22 [deprecated=true];
+    Typespec typespec = 25;
 
     string user = 23;
     string org = 24;
