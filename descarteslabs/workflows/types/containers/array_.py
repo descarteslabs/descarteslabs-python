@@ -265,15 +265,17 @@ def typecheck_getitem(idx, ndim):
                 return_ndim += 1
                 _type_params += (NoneType,)
             else:
-                raise ValueError(f"Invalid Array index {idx_type!r}.")
+                raise ValueError("Invalid Array index {!r}.".format(idx_type))
         idx = Tuple[_type_params](idx)
     elif isinstance(idx, (list, List)):
         try:
             idx = List[Int]._promote(idx)
         except ProxyTypeError:
             raise ValueError(
-                f"Cannot slice an Array with list {idx!r}. "
-                "It must be an integer list and cannot have lists in multiple axes."
+                "Cannot slice an Array with list {!r}. "
+                "It must be an integer list and cannot have lists in multiple axes.".format(
+                    idx
+                )
             )
     elif isinstance(idx, Array):
         if idx.dtype not in (Int, Bool):
