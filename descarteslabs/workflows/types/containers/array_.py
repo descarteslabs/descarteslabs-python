@@ -1,5 +1,6 @@
 import functools
 
+from ... import env
 from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..core import (
@@ -12,6 +13,7 @@ from ..primitives import Int, Float, Bool, NoneType
 from .slice import Slice
 from .tuple_ import Tuple
 from .list_ import List
+from .dict_ import Dict
 
 
 @serializable()
@@ -79,6 +81,57 @@ class Array(GenericProxytype):
         elif return_ndim > 0:
             return_type = Array[self.dtype, return_ndim]
         return return_type._from_apply("array.getitem", self, idx)
+
+    def to_imagery(self, properties, bandinfo):
+        """
+        Turns a proxy Array into an `~.geospatial.Image` or `~.geospatial.ImageCollection`
+        depending on the dimenstionalty of the Array.
+
+        Parameters
+        ----------
+        properties: Dict or List
+            Properties of the new `~.geospatial.Image` or `~.geospatial.ImageCollection`.
+            If the Array is 3-dimensional, properties should be a dictionary. If the Array is
+            4-dimensional and properties is a dictionary, the properties will be broadcast to the
+            length of the new `~.geospatial.ImageCollection`. If the Array is 4-dimensional and
+            properties is a list, the length of the list must be equal to the length of the outermost
+            dimension of the Array (``arr.shape[0]``).
+
+        bandinfo: Dict
+            Bandinfo for the new `~.geospatial.Image` or `~.geospatial.ImageCollection`.
+            Must be equal in length to the number of bands in the Array.
+            Therefore, if the Array is 3-dimensional (an `~.geospatial.Image`), bandinfo
+            must be the length of ``arr.shape[0]``. If the Array is 4-dimensional
+            (an `~.geospatial.ImageCollection`), bandinfo must be the length of ``arr.shape[1]``.
+        """
+        from ..geospatial import Image, ImageCollection
+
+        if not isinstance(properties, (dict, list, Dict, List)):
+            raise TypeError(
+                "Provided properties must be a Dict (3-dimensional Array) or List (4-dimensional Array), got {}".format(
+                    type(properties)
+                )
+            )
+
+        if not isinstance(properties, (dict, Dict)):
+            raise TypeError(
+                "Provided bandinfo must be a Dict, got {}".format(type(properties))
+            )
+
+        if self.ndim == 3:
+            return_type = Image
+        elif self.ndim == 4:
+            return_type = ImageCollection
+        else:
+            raise ValueError(
+                "Cannot turn a {}-dimensional Array into an Image/ImageCollection, must be 3 or 4-dimensional.".format(
+                    self.ndim
+                )
+            )
+
+        return return_type._from_apply(
+            "to_imagery", self, properties, bandinfo, env.geoctx
+        )
 
     def __neg__(self):
         return self._from_apply("neg", self)

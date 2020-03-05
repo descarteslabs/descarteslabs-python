@@ -3,6 +3,7 @@ import operator
 import pytest
 
 from ...primitives import Int, Float, Bool
+from ...geospatial import Image, ImageCollection
 from .. import Array, Tuple
 
 
@@ -57,6 +58,19 @@ def test_dtype_ndim_shape():
 def test_getitem(idx, expected_ndim):
     arr = Array[Int, 3]([[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]])
     assert arr[idx].ndim == expected_ndim
+
+
+def test_to_imagery():
+    arr = Array[Int, 2]([[10, 11, 12], [13, 14, 15]])
+
+    with pytest.raises(ValueError, match="must be 3 or 4-dimensional"):
+        arr.to_imagery({}, {})
+
+    arr = Array[Int, 3]([[[]]])
+    assert isinstance(arr.to_imagery({}, {}), Image)
+
+    arr = Array[Int, 4]([[[[]]]])
+    assert isinstance(arr.to_imagery({}, {}), ImageCollection)
 
 
 @pytest.mark.parametrize("method", [operator.lt, operator.le, operator.gt, operator.ge])
