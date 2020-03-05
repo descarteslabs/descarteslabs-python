@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n,descarteslabs/common/proto/types/types.proto\x12\x17\x64\x65scarteslabs.workflows*\xad\x02\n\nResultType\x12\x0b\n\x07Unknown\x10\x00\x12\t\n\x05Image\x10\x01\x12\x13\n\x0fImageCollection\x10\x02\x12\x0b\n\x07\x46\x65\x61ture\x10\x03\x12\x15\n\x11\x46\x65\x61tureCollection\x10\x04\x12\n\n\x06String\x10\x05\x12\n\n\x06Number\x10\x06\x12\x08\n\x04List\x10\x07\x12\x0e\n\nDictionary\x10\x08\x12\x07\n\x03Int\x10\t\x12\t\n\x05\x46loat\x10\n\x12\x07\n\x03Str\x10\x0b\x12\t\n\x05Tuple\x10\x0c\x12\x08\n\x04\x44ict\x10\r\x12\x0c\n\x08\x44\x61tetime\x10\x0e\x12\r\n\tTimedelta\x10\x0f\x12\x08\n\x04\x42ool\x10\x10\x12\x0c\n\x08Geometry\x10\x11\x12\r\n\tKnownDict\x10\x12\x12\x0e\n\nGeoContext\x10\x13\x12\x16\n\x12GeometryCollection\x10\x14\x62\x06proto3'
+  serialized_pb=b'\n,descarteslabs/common/proto/types/types.proto\x12\x17\x64\x65scarteslabs.workflows*\xb8\x02\n\nResultType\x12\x0b\n\x07Unknown\x10\x00\x12\t\n\x05Image\x10\x01\x12\x13\n\x0fImageCollection\x10\x02\x12\x0b\n\x07\x46\x65\x61ture\x10\x03\x12\x15\n\x11\x46\x65\x61tureCollection\x10\x04\x12\n\n\x06String\x10\x05\x12\n\n\x06Number\x10\x06\x12\x08\n\x04List\x10\x07\x12\x0e\n\nDictionary\x10\x08\x12\x07\n\x03Int\x10\t\x12\t\n\x05\x46loat\x10\n\x12\x07\n\x03Str\x10\x0b\x12\t\n\x05Tuple\x10\x0c\x12\x08\n\x04\x44ict\x10\r\x12\x0c\n\x08\x44\x61tetime\x10\x0e\x12\r\n\tTimedelta\x10\x0f\x12\x08\n\x04\x42ool\x10\x10\x12\x0c\n\x08Geometry\x10\x11\x12\r\n\tKnownDict\x10\x12\x12\x0e\n\nGeoContext\x10\x13\x12\x16\n\x12GeometryCollection\x10\x14\x12\t\n\x05\x41rray\x10\x15\x62\x06proto3'
 )
 
 _RESULTTYPE = _descriptor.EnumDescriptor(
@@ -112,11 +112,15 @@ _RESULTTYPE = _descriptor.EnumDescriptor(
       name='GeometryCollection', index=20, number=20,
       serialized_options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='Array', index=21, number=21,
+      serialized_options=None,
+      type=None),
   ],
   containing_type=None,
   serialized_options=None,
   serialized_start=74,
-  serialized_end=375,
+  serialized_end=386,
 )
 _sym_db.RegisterEnumDescriptor(_RESULTTYPE)
 
@@ -142,6 +146,7 @@ Geometry = 17
 KnownDict = 18
 GeoContext = 19
 GeometryCollection = 20
+Array = 21
 
 
 DESCRIPTOR.enum_types_by_name['ResultType'] = _RESULTTYPE
