@@ -24,7 +24,7 @@ from descarteslabs.common.dotdict import DotDict, DotList
 
 
 class Places(Service):
-    TIMEOUT = (9.5, 360)
+    TIMEOUT = (9.5, 30)
     """Places and statistics service"""
 
     def __init__(self, url=None, auth=None, maxsize=10, ttl=600, retries=None):
