@@ -255,11 +255,12 @@ def _result_type(self, other, is_bool=False):
 def _result_dtype(self, other, is_bool=False):
     if is_bool:
         return Bool
+    other_dtype = getattr(other, "dtype", None)
     # If either are Float, the result is a Float
-    if self.dtype is Float or other.dtype is Float:
+    if self.dtype is Float or other_dtype is Float:
         return Float
     # Neither are Float, so if either are Int, the result is an Int
-    if self.dtype is Int or other.dtype is Int:
+    if self.dtype is Int or other_dtype is Int:
         return Int
     # Neither are Float, neither are Int, they must be Bool, so the result is Bool
     return Bool
