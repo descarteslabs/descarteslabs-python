@@ -101,6 +101,13 @@ class MapApp(widgets.VBox):
         "on_interaction",
         "geocontext",
     }
+    control_tile_layers = traitlets.Bool(
+        default_value=True, help="Show controls for `ipyleaflet.TileLayer`s"
+    )
+    control_other_layers = traitlets.Bool(
+        default_value=False,
+        help="Show generic controls for other ipyleaflet layer types",
+    )
 
     def __init__(self, map=None, layer_controller_list=None, position_controller=None):
         if map is None:
@@ -116,6 +123,14 @@ class MapApp(widgets.VBox):
 
         self.map = map
         self.controller_list = layer_controller_list
+        widgets.link(
+            (self, "control_tile_layers"),
+            (layer_controller_list, "control_tile_layers"),
+        )
+        widgets.link(
+            (self, "control_other_layers"),
+            (layer_controller_list, "control_other_layers"),
+        )
         self.position_controller = position_controller
 
         def on_clear():

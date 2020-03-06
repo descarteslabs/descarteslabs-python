@@ -5,7 +5,11 @@ import ipywidgets as widgets
 import traitlets
 
 from .layer import WorkflowsLayer
-from .layer_controller_row import LayerControllerRow
+from .layer_controller_row import (
+    LayerControllerRow,
+    WorkflowsLayerControllerRow,
+    TileLayerControllerRow,
+)
 from .map_ import Map
 
 
@@ -27,15 +31,31 @@ class LayerControllerList(widgets.VBox):
     >>> layer_controller.children # doctest: +SKIP
     >>> # ^ list of individual widgets controlling each layer
     """
-    map = traitlets.Instance(Map, help="The map being controlled")
 
-    def __init__(self, map):
+    map = traitlets.Instance(Map, help="The map being controlled")
+    control_tile_layers = traitlets.Bool(
+        default_value=True, help="Show controls for `ipyleaflet.TileLayer`s"
+    )
+    control_other_layers = traitlets.Bool(
+        default_value=False,
+        help="Show generic controls for other ipyleaflet layer types",
+    )
+
+    def __init__(self, map, control_tile_layers=True, control_other_layers=False):
         super(LayerControllerList, self).__init__()
 
         self.map = map
         self._controllers_by_id = weakref.WeakValueDictionary()
 
         map.observe(self._layers_changed, names=["layers"])
+
+        self.control_tile_layers = control_tile_layers
+        self.control_other_layers = control_other_layers
+
+        self.observe(
+            self._controls_changed, ["control_tile_layers", "control_other_layers"]
+        )
+        # ^ if these settings are updated, we need to recompute the layers we're displaying
 
         self._layers_changed({"old": [], "new": map.layers})
         # initialize with the current layers on the map, if any
@@ -44,19 +64,37 @@ class LayerControllerList(widgets.VBox):
         self.layout.max_height = "12rem"
         self.layout.flex = "0 0 auto"
 
+    def _controls_changed(self, change):
+        # the variables are already changed from traitlets
+        # so call _layers_changed with current layers
+        self._layers_changed({"old": [], "new": self.map.layers})
+
     def _layers_changed(self, change):
         new_layers = change["new"]
         controllers = []
 
         for layer in new_layers:
-            if isinstance(layer, WorkflowsLayer):
-                try:
-                    controller = self._controllers_by_id[layer.model_id]
-                except KeyError:
-                    controller = LayerControllerRow(layer, self.map)
-                    self._controllers_by_id[layer.model_id] = controller
+            if layer.base:
+                # base layer is not in controller
+                continue
 
-                controllers.append(controller)
+            if isinstance(layer, WorkflowsLayer):
+                controller_type = WorkflowsLayerControllerRow
+            elif self.control_tile_layers and isinstance(layer, ipyleaflet.TileLayer):
+                controller_type = TileLayerControllerRow
+            elif self.control_other_layers:
+                # fallback to LayerControllerRow
+                controller_type = LayerControllerRow
+            else:
+                continue
+
+            try:
+                controller = self._controllers_by_id[layer.model_id]
+            except KeyError:
+                controller = controller_type(layer, self.map)
+                self._controllers_by_id[layer.model_id] = controller
+
+            controllers.append(controller)
 
         self.children = tuple(reversed(controllers))
 
