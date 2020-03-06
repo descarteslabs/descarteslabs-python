@@ -114,4 +114,3 @@ def test_stats(axis, return_type):
     assert isinstance(arr.median(axis=axis), return_type)
     assert isinstance(arr.sum(axis=axis), return_type)
     assert isinstance(arr.std(axis=axis), return_type)
-    assert isinstance(arr.count(axis=axis), return_type)

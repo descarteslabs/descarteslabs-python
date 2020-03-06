@@ -9,7 +9,17 @@ from .core import (
 from .function import Function
 from .primitives import Primitive, Number, Int, Float, Bool, Str, NoneType, Any
 from .proxify import proxify
-from .containers import Array, CollectionMixin, Tuple, List, Dict, Struct, range, zip
+from .containers import (
+    Array,
+    CollectionMixin,
+    Tuple,
+    List,
+    MaskedArray,
+    Dict,
+    Struct,
+    range,
+    zip,
+)
 from .datetimes import Datetime, Timedelta
 from .geospatial import (
     concat,
@@ -70,6 +80,7 @@ __all__ = [
     "Any",
     # .containers
     "Array",
+    "MaskedArray",
     "CollectionMixin",
     "Tuple",
     "List",

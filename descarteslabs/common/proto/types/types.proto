@@ -26,4 +26,5 @@ enum ResultType {
     GeoContext = 19;
     GeometryCollection = 20;
     Array = 21;
+    MaskedArray = 22;
 }

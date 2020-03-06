@@ -79,7 +79,7 @@ class Array(GenericProxytype):
         if return_ndim == 0:
             return_type = self.dtype
         elif return_ndim > 0:
-            return_type = Array[self.dtype, return_ndim]
+            return_type = type(self)._generictype[self.dtype, return_ndim]
         return return_type._from_apply("array.getitem", self, idx)
 
     def to_imagery(self, properties, bandinfo):
@@ -144,148 +144,151 @@ class Array(GenericProxytype):
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __lt__(self, other):
-        return _result_type(self, other, is_bool=True)._from_apply("lt", self, other)
+        return self._result_type(other, is_bool=True)._from_apply("lt", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __le__(self, other):
-        return _result_type(self, other, is_bool=True)._from_apply("le", self, other)
+        return self._result_type(other, is_bool=True)._from_apply("le", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __gt__(self, other):
-        return _result_type(self, other, is_bool=True)._from_apply("gt", self, other)
+        return self._result_type(other, is_bool=True)._from_apply("gt", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __ge__(self, other):
-        return _result_type(self, other, is_bool=True)._from_apply("ge", self, other)
+        return self._result_type(other, is_bool=True)._from_apply("ge", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __add__(self, other):
-        return _result_type(self, other)._from_apply("add", self, other)
+        return self._result_type(other)._from_apply("add", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __sub__(self, other):
-        return _result_type(self, other)._from_apply("sub", self, other)
+        return self._result_type(other)._from_apply("sub", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __mul__(self, other):
-        return _result_type(self, other)._from_apply("mul", self, other)
+        return self._result_type(other)._from_apply("mul", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __div__(self, other):
-        return _result_type(self, other)._from_apply("div", self, other)
+        return self._result_type(other)._from_apply("div", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __floordiv__(self, other):
-        return _result_type(self, other)._from_apply("floordiv", self, other)
+        return self._result_type(other)._from_apply("floordiv", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __truediv__(self, other):
-        return _result_type(self, other)._from_apply("truediv", self, other)
+        return self._result_type(other)._from_apply("truediv", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __mod__(self, other):
-        return _result_type(self, other)._from_apply("mod", self, other)
+        return self._result_type(other)._from_apply("mod", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __pow__(self, other):
-        return _result_type(self, other)._from_apply("pow", self, other)
+        return self._result_type(other)._from_apply("pow", self, other)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __radd__(self, other):
-        return _result_type(self, other)._from_apply("add", other, self)
+        return self._result_type(other)._from_apply("add", other, self)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __rsub__(self, other):
-        return _result_type(self, other)._from_apply("sub", other, self)
+        return self._result_type(other)._from_apply("sub", other, self)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __rmul__(self, other):
-        return _result_type(self, other)._from_apply("mul", other, self)
+        return self._result_type(other)._from_apply("mul", other, self)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __rdiv__(self, other):
-        return _result_type(self, other)._from_apply("div", other, self)
+        return self._result_type(other)._from_apply("div", other, self)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __rfloordiv__(self, other):
-        return _result_type(self, other)._from_apply("floordiv", other, self)
+        return self._result_type(other)._from_apply("floordiv", other, self)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __rtruediv__(self, other):
-        return _result_type(self, other)._from_apply("truediv", other, self)
+        return self._result_type(other)._from_apply("truediv", other, self)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __rmod__(self, other):
-        return _result_type(self, other)._from_apply("mod", other, self)
+        return self._result_type(other)._from_apply("mod", other, self)
 
     @typecheck_promote((lambda: Array, Int, Float))
     def __rpow__(self, other):
-        return _result_type(self, other)._from_apply("pow", other, self)
+        return self._result_type(other)._from_apply("pow", other, self)
 
     def min(self, axis=None):
-        return _stats_return_type(self, axis)._from_apply("min", self, axis)
+        return self._stats_return_type(axis)._from_apply("min", self, axis)
 
     def max(self, axis=None):
-        return _stats_return_type(self, axis)._from_apply("max", self, axis)
+        return self._stats_return_type(axis)._from_apply("max", self, axis)
 
     def mean(self, axis=None):
-        return _stats_return_type(self, axis)._from_apply("mean", self, axis)
+        return self._stats_return_type(axis)._from_apply("mean", self, axis)
 
     def median(self, axis=None):
-        return _stats_return_type(self, axis)._from_apply("median", self, axis)
+        return self._stats_return_type(axis)._from_apply("median", self, axis)
 
     def sum(self, axis=None):
-        return _stats_return_type(self, axis)._from_apply("sum", self, axis)
+        return self._stats_return_type(axis)._from_apply("sum", self, axis)
 
     def std(self, axis=None):
-        return _stats_return_type(self, axis)._from_apply("std", self, axis)
+        return self._stats_return_type(axis)._from_apply("std", self, axis)
 
-    def count(self, axis=None):
-        return _stats_return_type(self, axis)._from_apply("count", self, axis)
-
-
-def _result_type(self, other, is_bool=False):
-    dtype = _result_dtype(self, other, is_bool)
-    ndim = self.ndim
-    if self.ndim < getattr(other, "ndim", -1):
-        ndim = other.ndim
-    return Array[dtype, ndim]
-
-
-def _result_dtype(self, other, is_bool=False):
-    if is_bool:
-        return Bool
-    other_dtype = getattr(other, "dtype", None)
-    # If either are Float, the result is a Float
-    if self.dtype is Float or other_dtype is Float:
-        return Float
-    # Neither are Float, so if either are Int, the result is an Int
-    if self.dtype is Int or other_dtype is Int:
-        return Int
-    # Neither are Float, neither are Int, they must be Bool, so the result is Bool
-    return Bool
-
-
-def _stats_return_type(self, axis):
-    if axis is None:
-        return_type = self.dtype
-    if isinstance(axis, tuple):
-        for a in axis:
-            assert isinstance(a, (int, Int)), "Axis must be an integer, got {}".format(
-                type(a)
-            )
-        num_axes = len(axis)
-        if self.ndim - num_axes < 0:
-            raise ValueError(
-                "Too many axes for {}-dimensional array.".format(self.ndim)
-            )
-        elif self.ndim - num_axes == 0:
+    def _stats_return_type(self, axis):
+        if axis is None:
             return_type = self.dtype
+        if isinstance(axis, tuple):
+            for a in axis:
+                assert isinstance(
+                    a, (int, Int)
+                ), "Axis must be an integer, got {}".format(type(a))
+            num_axes = len(axis)
+            if self.ndim - num_axes < 0:
+                raise ValueError(
+                    "Too many axes for {}-dimensional array.".format(self.ndim)
+                )
+            elif self.ndim - num_axes == 0:
+                return_type = self.dtype
+            else:
+                return_type = type(self)._generictype[self.dtype, self.ndim - num_axes]
         else:
-            return_type = Array[self.dtype, self.ndim - num_axes]
-    else:
-        return_type = Array[self.dtype, self.ndim - 1]
-    return return_type
+            return_type = type(self)._generictype[self.dtype, self.ndim - 1]
+        return return_type
+
+    def _result_type(self, other, is_bool=False):
+        result_generictype = type(self)._generictype
+        try:
+            other_generictype = type(other)._generictype
+        except AttributeError:
+            pass
+        else:
+            if issubclass(other_generictype, result_generictype):
+                result_generictype = other_generictype
+        dtype = self._result_dtype(other, is_bool)
+        ndim = self.ndim
+        other_ndim = getattr(other, "ndim", -1)
+        if ndim < other_ndim:
+            ndim = other_ndim
+        return result_generictype[dtype, ndim]
+
+    def _result_dtype(self, other, is_bool=False):
+        if is_bool:
+            return Bool
+        other_dtype = getattr(other, "dtype", None)
+        # If either are Float, the result is a Float
+        if self.dtype is Float or other_dtype is Float:
+            return Float
+        # Neither are Float, so if either are Int, the result is an Int
+        if self.dtype is Int or other.dtype is Int:
+            return Int
+        # Neither are Float, neither are Int, they must be Bool, so the result is Bool
+        return Bool
 
 
 def typecheck_getitem(idx, ndim):

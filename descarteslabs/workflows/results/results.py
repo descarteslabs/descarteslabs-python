@@ -27,6 +27,7 @@ unmarshal.register("DLTile", unmarshal.astype(dict))
 unmarshal.register("XYZTile", unmarshal.astype(dict))
 unmarshal.register("GeoContext", unmarshal.astype(dict))
 unmarshal.register("Array", unmarshal.identity)
+unmarshal.register("MaskedArray", unmarshal.identity)
 
 
 def datetime_from_string(s):
