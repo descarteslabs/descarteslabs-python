@@ -298,58 +298,120 @@ class Array(GenericProxytype):
 
 def typecheck_getitem(idx, ndim):
     return_ndim = ndim
+    list_or_array_seen = False
+    proxy_idx = []
 
-    if idx is None or isinstance(idx, NoneType):
-        return_ndim += 1
-    elif isinstance(idx, (int, Int)):
-        return_ndim -= 1
-        idx = Int._promote(idx)
-    elif isinstance(idx, (tuple, Tuple)):
-        list_seen = False
-        _type_params = ()
-        idx_types = (
-            tuple(map(type, idx)) if isinstance(idx, tuple) else idx._type_params
-        )
-        for idx_type in idx_types:
-            if issubclass(idx_type, (int, Int)):
-                return_ndim -= 1
-                _type_params += (Int,)
-            elif issubclass(idx_type, (list, List)):
-                if list_seen:
-                    raise ValueError(
-                        "Cannot slice an Array with lists in multiple axes."
+    if not isinstance(idx, (tuple, Tuple)):
+        idx = (idx,)
+
+    num_newindex = sum(1 for x in idx if isinstance(x, (NoneType._pytype, NoneType)))
+    num_idx = len(idx) - num_newindex
+    if num_idx > ndim:
+        raise ValueError("Too many indicies ({}) for a {}D Array".format(num_idx, ndim))
+
+    for i, idx_elem in enumerate(idx):
+        if isinstance(idx_elem, (int, Int)):
+            return_ndim -= 1
+            proxy_idx.append(Int._promote(idx_elem))
+        elif isinstance(idx_elem, (slice, Slice)):
+            proxy_idx.append(Slice._promote(idx_elem))
+        elif isinstance(idx_elem, (NoneType._pytype, NoneType)):
+            proxy_idx.append(NoneType._promote(idx_elem))
+
+        elif isinstance(idx_elem, (list, List)):
+            if list_or_array_seen:
+                raise ValueError(
+                    "While slicing Array, position {}: cannot slice an Array "
+                    "with lists or Arrays in multiple axes.".format(i)
+                )
+            list_or_array_seen = True
+
+            # Python container case
+            if isinstance(idx_elem, list):
+                try:
+                    # NOTE(gabe): `bool` is a subclass of `int` in Python, so bools work here too.
+                    # Doesn't ultimately matter that we mangle the type.
+                    idx_elem = List[Int]._promote(idx_elem)
+                except ProxyTypeError:
+                    raise TypeError(
+                        "While slicing Array, position {}: Arrays can only be sliced with 1D lists, "
+                        "and elements must be all Ints or Bools. Invalid types "
+                        "in {!r}".format(i, idx_elem)
                     )
-                list_seen = True
-                _type_params += (List[Int],)
-            elif issubclass(idx_type, (slice, Slice)):
-                _type_params += (Slice,)
-            elif issubclass(idx_type, (type(None), NoneType)):
-                return_ndim += 1
-                _type_params += (NoneType,)
-            else:
-                raise ValueError("Invalid Array index {!r}.".format(idx_type))
-        idx = Tuple[_type_params](idx)
-    elif isinstance(idx, (list, List)):
-        try:
-            idx = List[Int]._promote(idx)
-        except ProxyTypeError:
-            raise ValueError(
-                "Cannot slice an Array with list {!r}. "
-                "It must be an integer list and cannot have lists in multiple axes.".format(
-                    idx
-                )
-            )
-    elif isinstance(idx, Array):
-        if idx.dtype not in (Int, Bool):
-            raise ValueError(
-                "Cannot slice an Array with an Array of type {}. Must be Int.".format(
-                    idx.dtype
-                )
-            )
-        return_ndim += idx.ndim - 1
-    elif isinstance(idx, (slice, Slice)):
-        idx = Slice._promote(idx)
-    else:
-        raise TypeError("Invalid type for indexing: {}.".format(type(idx).__name__))
 
-    return idx, return_ndim
+            # Proxy List case
+            else:
+                if not isinstance(idx_elem._element_type, (Int, Bool)):
+                    raise TypeError(
+                        "While slicing Array, position {}: Arrays can only be sliced with 1D List[Int] "
+                        "or List[Bool], not {}".format(i, type(idx_elem).__name__)
+                    )
+            proxy_idx.append(idx_elem)
+
+        elif isinstance(idx_elem, Array):
+            if list_or_array_seen:
+                raise ValueError(
+                    "While slicing Array, position {}: cannot slice an Array "
+                    "with lists or Arrays in multiple axes.".format(i)
+                )
+            list_or_array_seen = True
+
+            if idx_elem.dtype not in (Int, Bool):
+                raise TypeError(
+                    "While slicing Array, position {}: "
+                    "cannot slice an Array with an Array of type {}. "
+                    "Must be Int or Bool.".format(i, idx_elem.dtype)
+                )
+            if idx_elem.dtype is Int:
+                if idx_elem.ndim != 1:
+                    raise ValueError(
+                        "While slicing Array, position {}: "
+                        "tried to slice with a {}D Int Array, must be 1D.\n"
+                        "Slicing an Array with a multidimensional Array of Ints "
+                        "is not supported.".format(i, idx_elem.ndim)
+                    )
+                # No change in ndim
+            else:
+                if idx_elem.ndim == return_ndim:
+                    # NOTE(gabe): we use `return_ndim`, not `ndim`, to capture any slicing that's
+                    # already occurred in the idx tuple before this bool array.
+                    # For example, in `arr3D[idx]`, `idx` must be 3D. In `arr3D[0, idx]`, `idx` must be 2D.
+                    # NOTE(gabe) also we don't have to worry about `return_ndim == 0`
+                    # (weird edge case that breaks stuff) thanks to the "Too many indicies for Array" check
+
+                    return_ndim = 1
+                    # "If obj.ndim == x.ndim, x[obj] returns a 1-dimensional array"
+                    # (otherwise, no change in ndim)
+                elif idx_elem.ndim != 1:
+                    raise ValueError(
+                        "While slicing Array, position {}: "
+                        "tried to slice with a {}D Bool Array, must be 1D{}.\n"
+                        "Slicing with an Array of Bools is only supported when it's 1D, "
+                        "or has the same dimensionality as the array once it's been "
+                        "sliced by any prior indexing.".format(
+                            i,
+                            idx_elem.ndim,
+                            " or {}D".format(return_ndim) if return_ndim > 1 else "",
+                        )
+                    )
+            proxy_idx.append(idx_elem)
+        else:
+            raise TypeError(
+                "While slicing Array, position {}: "
+                "Invalid Array index {!r}.".format(i, idx_elem)
+            )
+
+    if isinstance(idx, Tuple):
+        # it's passed all the checks; return the original Tuple
+        # instead of building a new one from `(idx[0], idx[1], ...)`
+        proxy_idx = idx
+    else:
+        if len(proxy_idx) == 1:
+            proxy_idx = proxy_idx[0]
+            # cleaner graft for a common case
+        else:
+            types = tuple(map(type, proxy_idx))
+            proxy_idx = Tuple[types](proxy_idx)
+            # ^ NOTE(gabe): not try/excepting this because we've already promoted everything in `proxy_idx`
+
+    return proxy_idx, return_ndim + num_newindex

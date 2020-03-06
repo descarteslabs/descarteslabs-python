@@ -2,9 +2,9 @@ import operator
 
 import pytest
 
-from ...primitives import Int, Float, Bool
+from ...primitives import Int, Float, Bool, Str
 from ...geospatial import Image, ImageCollection
-from .. import Array, Tuple
+from .. import Array, Tuple, List
 
 
 def test_init_unparameterized():
@@ -52,16 +52,73 @@ def test_dtype_ndim_shape():
     "idx, expected_ndim",
     [
         (None, 4),
+        ((0, 0, 0), 0),
+        ((None, 0, 0, 0), 1),
         (1, 2),
         ((1, None), 3),
         ([1, 2], 3),
         (Array[Int, 1]([1, 2]), 3),
+        (Array[Bool, 1]([True, False]), 3),
+        (Array[Bool, 3]([[[]]]), 1),
+        ((Array[Bool, 3]([[[]]]), None), 2),
+        ((0, Array[Bool, 2]([[]])), 1),
+        ((0, Array[Bool, 2]([[]]), None), 2),
         (slice(2), 3),
     ],
 )
 def test_getitem(idx, expected_ndim):
     arr = Array[Int, 3]([[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]])
-    assert arr[idx].ndim == expected_ndim
+    result = arr[idx]
+    if expected_ndim > 0:
+        assert result.ndim == expected_ndim
+    else:
+        assert isinstance(result, arr.dtype)
+
+
+@pytest.mark.parametrize(
+    "idx, err_type, msg",
+    [
+        ((1, 2, 3, 4, 5), ValueError, r"Too many indicies \(5\) for a 4D Array"),
+        ((None, 1, 2, 3, 4, 5), ValueError, r"Too many indicies \(5\) for a 4D Array"),
+        ([1, 2.2], TypeError, r"Invalid types in \[1, 2.2\]"),
+        (
+            List[Str]([]),
+            TypeError,
+            r"only be sliced with 1D List\[Int\] or List\[Bool\], not List\[Str\]",
+        ),
+        (
+            Array[Int, 2]([[]]),
+            ValueError,
+            "Slicing an Array with a multidimensional Array of Ints is not supported",
+        ),
+        (
+            Array[Int, 0](1),
+            ValueError,
+            "tried to slice with a 0D Int Array, must be 1D",
+        ),
+        (
+            (Array[Int, 1]([]), Array[Int, 1]([])),
+            ValueError,
+            "cannot slice an Array with lists or Arrays in multiple axes",
+        ),
+        (
+            ([1], [2]),
+            ValueError,
+            "cannot slice an Array with lists or Arrays in multiple axes",
+        ),
+        (
+            ([1], Array[Int, 1]([])),
+            ValueError,
+            "cannot slice an Array with lists or Arrays in multiple axes",
+        ),
+        (Array[Bool, 3]([[[]]]), ValueError, "must be 1D or 4D"),
+        ((0, Array[Bool, 2]([[]])), ValueError, "must be 1D or 3D"),
+    ],
+)
+def test_getitem_error(idx, err_type, msg):
+    arr = Array[Int, 4]([[[[]]]])
+    with pytest.raises(err_type, match=msg):
+        arr[idx]
 
 
 def test_to_imagery():
