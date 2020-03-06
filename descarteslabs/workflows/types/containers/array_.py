@@ -69,7 +69,7 @@ class Array(GenericProxytype):
 
     @property
     def shape(self):
-        "The shape of the Array."
+        "The shape of the Array. If the shape of the Array is unknown along a dimension, it will be -1."
         return_type = Tuple[(Int,) * self.ndim]
         return return_type._from_apply("array.shape", self)
 
