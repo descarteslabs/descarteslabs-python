@@ -23,6 +23,7 @@ def test_validate_params():
     Array[Int, 1]
     Array[Float, 2]
     Array[Bool, 3]
+    Array[Bool, 0]
 
     with pytest.raises(
         AssertionError, match="Both Array dtype and ndim must be specified"
@@ -32,9 +33,12 @@ def test_validate_params():
     with pytest.raises(TypeError, match="dtype must be a Proxytype"):
         Array[1, 1]
 
-    with pytest.raises(AssertionError, match="ndim must be an instance"):
+    with pytest.raises(AssertionError, match="ndim must be a Python integer"):
         Array[Int, Int]
         Array[Int, "test"]
+
+    with pytest.raises(AssertionError, match="Array ndim must be >= 0, not -1"):
+        Array[Int, -1]
 
 
 def test_dtype_ndim_shape():

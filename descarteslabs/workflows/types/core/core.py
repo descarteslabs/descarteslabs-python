@@ -483,13 +483,17 @@ def validate_typespec(type_params):
                 validate_typespec(param_cls)
         elif isinstance(type_param, PRIMITIVES):
             pass
-        elif issubclass(type_param, Proxytype):
-            pass
         else:
-            raise TypeError(
-                "Type parameters must be Proxytypes, Python primitive values, "
-                "or tuples or dicts of those, but got {!r}".format(type_param)
-            )
+            # we try-except here so we can throw a better
+            # error when type_param is a Proxytype instance
+            # rather than the issubclass error
+            try:
+                assert issubclass(type_param, Proxytype)
+            except (TypeError, AssertionError):
+                raise TypeError(
+                    "Type parameters must be Proxytypes, Python primitive values, "
+                    "or tuples or dicts of those, but got {!r}".format(type_param)
+                )
     return type_params
 
 

@@ -4,7 +4,7 @@ from descarteslabs import scenes
 
 from ... import env
 from ...cereal import serializable
-from ..containers import Dict, KnownDict, Struct, Tuple, List, Array
+from ..containers import Dict, KnownDict, Struct, Tuple, List, MaskedArray
 from ..core import typecheck_promote, _resolve_lambdas
 from ..datetimes import Datetime
 from ..primitives import Any, Bool, Float, Int, Str, NoneType
@@ -23,7 +23,7 @@ def _DelayedImageCollection():
 
 ImageBase = Struct[
     {
-        "ndarray": Array[Float, 3],
+        "ndarray": MaskedArray[Float, 3],
         "properties": KnownDict[
             {
                 "id": Str,

@@ -12,7 +12,7 @@ from ..containers import (
     Slice,
     Struct,
     Tuple,
-    Array,
+    MaskedArray,
 )
 from ..core import _resolve_lambdas, typecheck_promote
 from ..datetimes import Datetime
@@ -26,7 +26,7 @@ from .mixins import BandsMixin
 
 ImageCollectionBase = Struct[
     {
-        "ndarray": Array[Float, 4],
+        "ndarray": MaskedArray[Float, 4],
         "properties": List[
             KnownDict[
                 {

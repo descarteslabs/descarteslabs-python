@@ -42,11 +42,12 @@ class Array(GenericProxytype):
         assert len(type_params) == 2, "Both Array dtype and ndim must be specified"
         error_message = "Array dtype must be a Proxytype, got {}".format(type_params[0])
         assert_is_proxytype(type_params[0], error_message=error_message)
+
+        ndim = type_params[1]
         assert isinstance(
-            type_params[1], (int, Int)
-        ), "Array ndim must be an instance of a python integer or proxy integer, got {}".format(
-            type_params[1]
-        )
+            ndim, int
+        ), "Array ndim must be a Python integer, got {}".format(ndim)
+        assert ndim >= 0, "Array ndim must be >= 0, not {}".format(ndim)
 
     @classmethod
     def _promote(cls, obj):
