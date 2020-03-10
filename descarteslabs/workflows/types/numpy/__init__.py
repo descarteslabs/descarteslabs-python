@@ -79,6 +79,7 @@ from .numpy_overrides import (
     absolute,
     transpose,
     concatenate,
+    histogram,
 )
 
 __all__ = [
@@ -162,4 +163,5 @@ __all__ = [
     "absolute",
     "transpose",
     "concatenate",
+    "histogram",
 ]

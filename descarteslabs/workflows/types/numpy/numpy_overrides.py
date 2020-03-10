@@ -2,7 +2,7 @@ import numpy as np
 
 from ..core import typecheck_promote, ProxyTypeError, Proxytype
 from ..primitives import Float, Int, Bool, NoneType
-from ..containers import Array, List
+from ..containers import Array, List, Tuple
 
 
 def _ufunc_result_dtype(obj, other=None):
@@ -303,3 +303,28 @@ def concatenate(seq, axis=0):
 @typecheck_promote(Array, axes=(List[Int], NoneType))
 def transpose(arr, axes=None):
     return arr._from_apply("transpose", arr, axes=axes)
+
+
+@implements(np.histogram)
+@typecheck_promote(
+    Array,
+    bins=(List[Int], List[Float], Int),
+    range=(Tuple[Int, Int], NoneType),
+    weights=(Array, NoneType),
+    density=None,
+)
+def histogram(arr, bins=10, range=None, weights=None, density=None):
+    if density is not None and not isinstance(density, bool):
+        raise TypeError("Histogram argument 'density' must be None or a bool.")
+
+    if isinstance(bins, Int) and isinstance(range, NoneType):
+        raise ValueError(
+            "Histogram requires range to be specified if bins is given as an int."
+        )
+
+    hist_return_dtype = Float if density else Int
+    hist_return_type = Array[hist_return_dtype, 1]
+
+    return Tuple[hist_return_type, Array[Float, 1]]._from_apply(
+        "histogram", arr, bins=bins, range=range, weights=weights, density=density
+    )

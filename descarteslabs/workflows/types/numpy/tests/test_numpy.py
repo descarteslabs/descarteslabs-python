@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
 
-from ...containers import Array, List
-from ...primitives import Int, Float
+from ...containers import Array, List, Tuple
+from ...primitives import Float, Int
 import descarteslabs.workflows.types.numpy as wf_np
 
 img_arr = Array[Float, 3](np.ones((3, 3, 3)))
@@ -170,3 +170,34 @@ def test_promote_to_list_of_same_arrays(obj, expected_type):
 def test_promote_to_list_of_same_arrays_errors(obj, error):
     with pytest.raises(type(error), match=error.args[0]):
         wf_np.numpy_overrides._promote_to_list_of_same_arrays(obj, "frobnicate")
+
+
+@pytest.mark.parametrize(
+    "bins, range, bins_return_type",
+    [
+        [5, (0, 10), Array[Float, 1]],
+        [[1, 2, 3], None, Array[Float, 1]],
+        [[0.5, 1.0, 1.5], None, Array[Float, 1]],
+    ],
+)
+@pytest.mark.parametrize(
+    "density, hist_return_type",
+    [[None, Array[Int, 1]], [False, Array[Int, 1]], [True, Array[Float, 1]]],
+)
+def test_histogram(bins, range, bins_return_type, density, hist_return_type):
+    result = wf_np.histogram(img_arr, bins=bins, range=range, density=density)
+    assert isinstance(result, Tuple[hist_return_type, bins_return_type])
+
+
+def test_histogram_bins_range_raises():
+    with pytest.raises(ValueError):
+        wf_np.histogram(img_arr, bins=5, range=None)
+
+    with pytest.raises(ValueError):
+        wf_np.histogram(img_arr, bins=5)
+
+
+@pytest.mark.parametrize("density", ["foo", 5, object()])
+def test_histogram_manual_density_typecheck(density):
+    with pytest.raises(TypeError):
+        wf_np.histogram(img_arr, bins=5, range=(0, 1), density=density)
