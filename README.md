@@ -22,6 +22,41 @@ Changelog
   used as a mask by default if it is available for all scenes in the collection, even if it is not specified in
   the list of bands.
 
+### Workflows (channel `v0-12`) - Added
+- **Experimental Array API** following the same syntax as NumPy arrays. It supports vectorized operations, broadcasting,
+  and multidimensional indexing.
+  - `ndarray` attribute of `Image` and `ImageCollection` will return a `MaskedArray`.
+  - Over 60 NumPy ufuncs are now callable with Workflows `Array`.
+  - Includes other useful `Array` functions like `min()`, `median()`, `transpose()`, and `concatenate()`.
+- **`ImageCollection.sortby_composite()`** for creating an argmin/argmax composite of an `ImageCollection`.
+- **Slicing** of `List`, `Tuple`, `Str`, and `ImageCollection`.
+- `wf.range` for generating a sequence of numbers between start and stop values.
+- `ImageCollectionGroupby.mosaic()` for applying `ImageCollection.mosaic` to each group.
+- `wf.exp()`, `wf.square()`, `wf.log1p()`, `wf.arcsin()`, `wf.arccos()`, and `wf.arctan()`
+- `Datetime.is_between()` for checking if a `Datetime` falls within a specified date range
+- `FeatureCollection.contains()`
+- Container operations on `GeometryCollection` including:
+  - `GeometryCollection.contains()`
+  - `GeometryCollection.sorted()`
+  - `GeometryCollection.map()`
+  - `GeometryCollection.filter()`
+  - `GeometryCollection.reduce()`
+- `List` and `Tuple` can now be compared with other instances of their type via `__lt__()`, `__eq__()` etc.
+- `List.__add__()` and `List.__mul__()` for concatenating and duplicating `List`s.
+
+### Workflows - Changed
+- Products without alpha band and `nodata` value are rejected, instead of silently producing unwanted behavior.
+- `ImageCollection.concat_bands` now throws a better error when trying to concatenate bands from another `ImageCollection` that is not the same length.
+- `Any` is now promotable to all other types automatically.
+- Better error when trying to iterate over Proxytypes.
+- Interactive map: calls to `visualize` now clear layer errors.
+- Interactive map: when setting scales, invalid values are highlighted in red.
+
+### Workflows - Fixed
+- Better errors when specifying invalid type parameters for Proxytypes that require them.
+- Field access on `Feature`, `FeatureCollection`, `Geometry`, and `GeomeryCollection` no longer fails.
+- In `from_id`, processing level 'cubespline' no longer fails.
+
 
 ## [1.0.0] - 2020-01-20
 
