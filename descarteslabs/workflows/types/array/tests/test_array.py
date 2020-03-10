@@ -4,7 +4,8 @@ import pytest
 
 from ...primitives import Int, Float, Bool, Str
 from ...geospatial import Image, ImageCollection
-from .. import Array, Tuple, List
+from ...containers import Tuple, List
+from .. import Array
 
 
 def test_init_unparameterized():

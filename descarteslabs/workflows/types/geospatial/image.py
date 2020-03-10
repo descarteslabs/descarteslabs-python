@@ -4,7 +4,8 @@ from descarteslabs import scenes
 
 from ... import env
 from ...cereal import serializable
-from ..containers import Dict, KnownDict, Struct, Tuple, List, MaskedArray
+from ..array import MaskedArray
+from ..containers import Dict, KnownDict, Struct, Tuple, List
 from ..core import typecheck_promote, _resolve_lambdas
 from ..datetimes import Datetime
 from ..primitives import Any, Bool, Float, Int, Str, NoneType

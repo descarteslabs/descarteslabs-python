@@ -175,7 +175,7 @@ __all__ = [
     "LayerController",
     "LayerControllerList",
     # .numpy
-    "numpy"
+    "numpy",
 ]
 
 # NOTE(gabe): we monkey-patch these `.compute` and `.persist` methods onto the base

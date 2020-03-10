@@ -10,11 +10,8 @@ from ..core import (
     ProxyTypeError,
     assert_is_proxytype,
 )
+from ..containers import Slice, Tuple, List, Dict
 from ..primitives import Int, Float, Bool, NoneType
-from .slice import Slice
-from .tuple_ import Tuple
-from .list_ import List
-from .dict_ import Dict
 
 
 DTYPE_KIND_TO_WF = {"b": Bool, "i": Int, "f": Float}
@@ -44,7 +41,7 @@ class Array(GenericProxytype):
     >>> # Create a 1-dimensional Array of Ints
     >>> arr = wf.Array[wf.Int, 1]([1, 2, 3, 4, 5])
     >>> arr
-    <descarteslabs.workflows.types.containers.array_.Array[Int, 1] object at 0x...>
+    <descarteslabs.workflows.types.array.array_.Array[Int, 1] object at 0x...>
     >>> arr.compute(geoctx) # doctest: +SKIP
     array([1, 2, 3, 4, 5])
 
@@ -52,9 +49,9 @@ class Array(GenericProxytype):
     >>> import descarteslabs.workflows as wf
     >>> ndarray = np.ones((3, 10, 10))
     >>> # Create an Array from the 3-dimensional numpy array
-    >>> arr = wf.Array.from_numpy(ndarray) # doctest: +SKIP
-    >>> arr # doctest: +SKIP
-    <descarteslabs.workflows.types.containers.array_.Array[Float, 3] object at 0x...>
+    >>> arr = wf.Array.from_numpy(ndarray)
+    >>> arr
+    <descarteslabs.workflows.types.array.array_.Array[Float, 3] object at 0x...>
     """
 
     def __init__(self, arr):

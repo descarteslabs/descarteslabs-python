@@ -1,8 +1,9 @@
 import pytest
 import numpy as np
 
-from ...containers import Array, List, Tuple
-from ...primitives import Float, Int
+from descarteslabs.workflows.types.array import Array
+from descarteslabs.workflows.types.containers import List, Tuple
+from descarteslabs.workflows.types.primitives import Int, Float
 import descarteslabs.workflows.types.numpy as wf_np
 
 img_arr = Array[Float, 3](np.ones((3, 3, 3)))

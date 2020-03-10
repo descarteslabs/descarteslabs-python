@@ -2,7 +2,8 @@ import numpy as np
 
 from ..core import typecheck_promote, ProxyTypeError, Proxytype
 from ..primitives import Float, Int, Bool, NoneType
-from ..containers import Array, List, Tuple
+from ..array import Array
+from ..containers import List, Tuple
 
 
 def _ufunc_result_dtype(obj, other=None):

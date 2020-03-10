@@ -34,6 +34,14 @@ The tables below list the types and functions available through the Workflows AP
   ~descarteslabs.workflows.types.geospatial.load_geojson_file
   ~descarteslabs.workflows.types.geospatial.where
 
+:workflow_api_nontoc_heading:`Array`
+
+.. autosummary::
+  :nosignatures:
+
+  ~descarteslabs.workflows.types.array.Array
+  ~descarteslabs.workflows.types.array.MaskedArray
+
 :workflow_api_nontoc_heading:`Primitives`
 
 .. autosummary::
@@ -53,8 +61,6 @@ The tables below list the types and functions available through the Workflows AP
 .. autosummary::
   :nosignatures:
 
-  ~descarteslabs.workflows.types.containers.Array
-  ~descarteslabs.workflows.types.containers.MaskedArray
   ~descarteslabs.workflows.types.containers.Dict
   ~descarteslabs.workflows.types.containers.Tuple
   ~descarteslabs.workflows.types.containers.List
@@ -179,6 +185,7 @@ The tables below list the types and functions available through the Workflows AP
   :glob:
 
   docs/types/geospatial
+  docs/types/array
   docs/types/primitives
   docs/types/containers
   docs/types/datetimes

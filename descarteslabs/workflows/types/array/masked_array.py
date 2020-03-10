@@ -5,9 +5,9 @@ import numpy as np
 from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..core import ProxyTypeError
+from ..containers import List
 from ..primitives import Bool
 from .array_ import Array
-from .list_ import List
 
 
 @serializable()
@@ -30,7 +30,7 @@ class MaskedArray(Array):
     >>> import descarteslabs.workflows as wf
     >>> arr = wf.MaskedArray[wf.Int, 1](data=[1, 2, 3, 4], mask=[True, False, False, True], fill_value=0)
     >>> arr
-    <descarteslabs.workflows.types.containers.masked_array.MaskedArray[Int, 1] object at 0x...>
+    <descarteslabs.workflows.types.array.masked_array.MaskedArray[Int, 1] object at 0x...>
     >>> arr.compute(geoctx) # doctest: +SKIP
     masked_array(data=[--, 2, 3, --],
                  mask=[ True, False, False,  True],

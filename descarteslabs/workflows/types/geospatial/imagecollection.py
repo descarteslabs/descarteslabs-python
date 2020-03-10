@@ -4,16 +4,8 @@ from descarteslabs.common.graft import client
 
 from ... import env
 from ...cereal import serializable
-from ..containers import (
-    CollectionMixin,
-    Dict,
-    KnownDict,
-    List,
-    Slice,
-    Struct,
-    Tuple,
-    MaskedArray,
-)
+from ..array import MaskedArray
+from ..containers import CollectionMixin, Dict, KnownDict, List, Slice, Struct, Tuple
 from ..core import _resolve_lambdas, typecheck_promote
 from ..datetimes import Datetime
 from ..function import Function
