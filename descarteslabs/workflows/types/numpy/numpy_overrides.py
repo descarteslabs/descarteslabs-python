@@ -51,7 +51,7 @@ class ufunc:
         self._ufunc = ufunc
         self.__name__ = ufunc.__name__
 
-        HANDLED_UFUNCS[ufunc.__name__] = ufunc
+        HANDLED_UFUNCS[ufunc.__name__] = self
 
     def __call__(self, *args, **kwargs):
         if len(args) != self._ufunc.nin:
