@@ -1,30 +1,11 @@
 import numpy as np
 
-from ..core import typecheck_promote, ProxyTypeError
+from ..core import typecheck_promote, ProxyTypeError, Proxytype
 from ..primitives import Float, Int, Bool, NoneType
-
-
-def _DelayedTuple():
-    from ..containers import Tuple
-
-    return Tuple
-
-
-def _DelayedArray():
-    from ..containers import Array
-
-    return Array
-
-
-def _DelayedIntList():
-    from ..containers import List
-
-    return List[Int]
+from ..containers import Array, List
 
 
 def _ufunc_result_dtype(obj, other=None):
-    from ..containers import Array
-
     if other is None:
         return obj.dtype if isinstance(obj, Array) else type(obj)
     else:
@@ -73,8 +54,6 @@ class ufunc:
         HANDLED_UFUNCS[ufunc.__name__] = ufunc
 
     def __call__(self, *args, **kwargs):
-        from ..containers import Array
-
         if len(args) != self._ufunc.nin:
             raise TypeError(
                 "Invalid number of arguments to function `{}`".format(self.__name__)
@@ -239,40 +218,88 @@ def implements(numpy_func):
     return decorator
 
 
-# Once we support checking variadic positional args in typecheck_promote, we can use typecheck_promote instead
+def asarray(obj):
+    # TODO dtype!!
+    if isinstance(obj, Array):
+        return obj
+    if isinstance(obj, np.ndarray):
+        return Array.from_numpy(obj)
+    else:
+        # Dumb hack to save writing list traversal ourselves: just try to make it into an ndarray
+        np_array = np.asarray(obj)
+        return Array.from_numpy(np_array)
+
+
+def _promote_to_list_of_same_arrays(seq, func_name):
+    if isinstance(seq, List[Array]):
+        # All elements in List are the same type, so we don't have to check that dtype/ndim match
+        return seq
+    elif isinstance(seq, Proxytype):
+        raise TypeError(
+            "Cannot {} type {}. Must be a proxy List[Array], "
+            "or a Python iterable of Arrays.".format(func_name, type(seq).__name__)
+        )
+    else:
+        # Python iterable of array-like objects
+        try:
+            iterator = iter(seq)
+        except TypeError:
+            raise TypeError(
+                "{} expected an iterable of Array-like objects. "
+                "{!r} is not iterable.".format(func_name, seq)
+            )
+
+        promoted = []
+        return_type = None
+        for i, elem in enumerate(iterator):
+            try:
+                promoted_elem = asarray(elem)
+            except ProxyTypeError:
+                raise TypeError(
+                    "Element {} to {}: expected an Array-like object, "
+                    "but got {!r}".format(i, func_name, elem)
+                )
+
+            if return_type is not None:
+                if promoted_elem.ndim != return_type._type_params[1]:
+                    raise ValueError(
+                        "Cannot {} Arrays of different dimensionality. "
+                        "Element 0 is {}-dimensional, and element {} is {}-dimensional.".format(
+                            func_name,
+                            return_type._type_params[1],
+                            i,
+                            promoted_elem.ndim,
+                        )
+                    )
+                if not issubclass(promoted_elem.dtype, return_type._type_params[0]):
+                    raise TypeError(
+                        "Cannot {} Arrays with different dtypes."
+                        " Element 0 has dtype {}, and element {} has dtype {}.".format(
+                            func_name,
+                            return_type._type_params[0].__name__,
+                            i,
+                            promoted_elem.dtype.__name__,
+                        )
+                    )
+            else:
+                return_type = type(promoted_elem)
+
+            promoted.append(promoted_elem)
+        if len(promoted) == 0:
+            raise ValueError("need at least one Array to {}".format(func_name))
+
+        return List[return_type](seq)
+
+
 @implements(np.concatenate)
 @typecheck_promote(None, axis=Int)
 def concatenate(seq, axis=0):
-    from ..containers import Array
-
-    if len(seq) < 2:
-        raise ValueError("Concatenate requires at least 2 Arrays for concatenation")
-
-    for obj in seq:
-        if not isinstance(obj, Array):
-            raise TypeError(
-                "Argument 'seq' to concatenate(): expected sequence of Array objects but got ({})".format(
-                    ", ".join(type(a).__name__ for a in seq)
-                )
-            )
-
-    for i in range(len(seq)):
-        try:
-            if seq[i].ndim != seq[i + 1].ndim:
-                raise ValueError(
-                    "All input arrays must have the same number of dimensions, "
-                    "but the array at index {} has {} dimension(s) "
-                    "and the array at index {} has {} dimension(s).".format(
-                        i, seq[i].ndim, i + 1, seq[i + 1].ndim
-                    )
-                )
-        except IndexError:
-            pass
-
-    return seq[0]._from_apply("concatenate", seq, axis=axis)
+    seq = _promote_to_list_of_same_arrays(seq, "concatenate")
+    return_type = seq._element_type
+    return return_type._from_apply("concatenate", seq, axis=axis)
 
 
 @implements(np.transpose)
-@typecheck_promote(_DelayedArray, axes=(_DelayedIntList, NoneType))
+@typecheck_promote(Array, axes=(List[Int], NoneType))
 def transpose(arr, axes=None):
     return arr._from_apply("transpose", arr, axes=axes)

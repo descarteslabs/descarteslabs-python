@@ -118,6 +118,11 @@ class Array(GenericProxytype):
         -------
         ~descarteslabs.workflows.Array
         """
+        if cls._type_params:
+            # don't infer dtype, ndim from `arr`, since our cls is already parametrized
+            return cls(arr)
+
+        # infer dtype, ndim from numpy array
         try:
             dtype = DTYPE_KIND_TO_WF[arr.dtype.kind]
         except KeyError:
@@ -130,11 +135,10 @@ class Array(GenericProxytype):
 
     @classmethod
     def _promote(cls, obj):
-        if isinstance(obj, cls):
-            return obj
         try:
             return super(Array, cls)._promote(obj)
         except TypeError:
+            # `_promote` contract expectes ProxyTypeError, not TypeError
             raise ProxyTypeError("Cannot promote {} to {}".format(obj, cls))
 
     @property
