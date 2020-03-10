@@ -1,4 +1,5 @@
 import functools
+import numpy as np
 
 from ... import env
 from descarteslabs.common.graft import client
@@ -14,6 +15,10 @@ from .slice import Slice
 from .tuple_ import Tuple
 from .list_ import List
 from .dict_ import Dict
+
+
+DTYPE_KIND_TO_WF = {"b": Bool, "i": Int, "f": Float}
+WF_TO_DTYPE_KIND = dict(zip(DTYPE_KIND_TO_WF.values(), DTYPE_KIND_TO_WF.keys()))
 
 
 @serializable()
@@ -56,20 +61,37 @@ class Array(GenericProxytype):
         if self._type_params is None:
             raise TypeError(
                 "Cannot instantiate a generic Array; "
-                "the dtype must and dimensionality must be specified (like `Array[Float, 3]`)"
+                "the dtype and dimensionality must be specified (like `Array[Float, 3]`). "
+                "Alternatively, Arrays can be instantiated with `from_numpy` "
+                "(like `Array.from_numpy(my_array)`)."
             )
 
-        list_type = functools.reduce(
-            lambda accum, cur: List[accum],
-            range(self._type_params[1]),
-            self._type_params[0],
-        )
-        try:
-            arr = list_type._promote(arr)
-        except ProxyTypeError:
-            raise ValueError("Cannot instantiate an Array from {!r}".format(arr))
+        if isinstance(arr, np.ndarray):
+            if arr.dtype.kind != WF_TO_DTYPE_KIND[self.dtype]:
+                raise TypeError(
+                    "Invalid dtype {} for an {}".format(arr.dtype, type(self).__name__)
+                )
+            if arr.ndim != self.ndim:
+                raise ValueError(
+                    "Cannot instantiate a {}-dimensional Workflows Array from a "
+                    "{}-dimensional NumPy array".format(self.ndim, arr.ndim)
+                )
 
-        self.graft = client.apply_graft("array.create", arr)
+            arr_list = arr.tolist()
+            self.graft = client.apply_graft("array.create", arr_list)
+
+        else:
+            list_type = functools.reduce(
+                lambda accum, cur: List[accum],
+                range(self._type_params[1]),
+                self._type_params[0],
+            )
+            try:
+                arr = list_type._promote(arr)
+            except ProxyTypeError:
+                raise ValueError("Cannot instantiate an Array from {!r}".format(arr))
+
+            self.graft = client.apply_graft("array.create", arr)
 
     @classmethod
     def _validate_params(cls, type_params):
@@ -82,6 +104,29 @@ class Array(GenericProxytype):
             ndim, int
         ), "Array ndim must be a Python integer, got {}".format(ndim)
         assert ndim >= 0, "Array ndim must be >= 0, not {}".format(ndim)
+
+    @classmethod
+    def from_numpy(cls, arr):
+        """
+        Construct a Workflows Array from a NumPy ndarray, inferring `dtype` and `ndim`
+
+        Parameters
+        ----------
+        arr: numpy.ndarray
+
+        Returns
+        -------
+        ~descarteslabs.workflows.Array
+        """
+        try:
+            dtype = DTYPE_KIND_TO_WF[arr.dtype.kind]
+        except KeyError:
+            raise ProxyTypeError(
+                "Creating a Workflows Array from a NumPy Array with dtype "
+                "`{}` is not supported. Supported dtypes kinds are float, "
+                "int, and bool.".format(arr.dtype)
+            )
+        return cls[dtype, arr.ndim](arr)
 
     @classmethod
     def _promote(cls, obj):
@@ -220,6 +265,63 @@ class Array(GenericProxytype):
         return return_type._from_apply(
             "to_imagery", self, properties, bandinfo, env.geoctx
         )
+
+    def __array_function__(self, func, types, args, kwargs):
+        """
+        Override the behavior of a subset of NumPy functionality.
+
+        Parameters
+        ----------
+        func: The NumPy function object that was called
+        types: Collection of unique argument types from the original NumPy function
+            call that implement `__array_function__`
+        args: arguments directly passed from the original call
+        kwargs: kwargs directly passed from the original call
+        """
+        from descarteslabs.workflows.types.numpy import numpy_overrides
+
+        if func not in numpy_overrides.HANDLED_FUNCTIONS:
+            raise NotImplementedError(
+                "Using `{}` with a Workflows "
+                "Array is not supported. If you want to use "
+                "this function, you will first need to call "
+                "`.compute` on your Workflows Array.".format(func.__name__)
+            )
+
+        try:
+            return numpy_overrides.HANDLED_FUNCTIONS[func](*args, **kwargs)
+        except TypeError as e:
+            e.args = (
+                "When attempting to call numpy.{} with a "
+                "Workflows Array, the following error occurred:\n\n".format(
+                    func.__name__
+                )
+                + e.args[0],
+            )
+            raise
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        """
+        Override the behavior of NumPy's ufuncs.
+
+        Parameters
+        ----------
+        ufunc: The ufunc object that was called
+        method: Which ufunc method was called (one of "__call__", "reduce",
+            "reduceat", "accumulate", "outer" or "inner")
+        inputs: Tuple of the input arguments to ufunc
+        kwargs: Dict of optional input arguments to ufunc
+        """
+        from descarteslabs.workflows.types.numpy import numpy_overrides
+
+        if method == "__call__":
+            if ufunc.__name__ not in numpy_overrides.HANDLED_UFUNCS:
+                return NotImplemented
+            else:
+                return numpy_overrides.HANDLED_UFUNCS[ufunc.__name__](*inputs, **kwargs)
+        else:
+            # We currently don't support ufunc methods apart from __call__
+            return NotImplemented
 
     def __neg__(self):
         return self._from_apply("neg", self)

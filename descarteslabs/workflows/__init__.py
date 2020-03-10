@@ -56,6 +56,8 @@ from .types import (
     nan,
     pi,
     parameter,
+    # numpy
+    numpy,
 )
 
 from .models import (
@@ -172,6 +174,8 @@ __all__ = [
     "WorkflowsLayer",
     "LayerController",
     "LayerControllerList",
+    # .numpy
+    "numpy"
 ]
 
 # NOTE(gabe): we monkey-patch these `.compute` and `.persist` methods onto the base
