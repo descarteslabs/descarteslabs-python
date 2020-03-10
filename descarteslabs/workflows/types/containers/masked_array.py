@@ -12,6 +12,31 @@ from .list_ import List
 
 @serializable()
 class MaskedArray(Array):
+    """
+    ``MaskedArray[DType, NDim]``: Proxy object representing a multidimensional, homogenous array of fixed-size items
+    that may have missing or invalid entries.
+    The data-type must be a Proxytype (Int, Float, Bool etc.) and the number of dimensions must be a Python integer.
+    MaskedArray follows the same syntax as NumPy masked arrays. It supports vectorized operations, broadcasting,
+    and multidimensional indexing. There are some limitations including slicing with lists/arrays in multiple
+    axes (``x[[1, 2, 3], [3, 2, 1]]``) and slicing with a multidimensional list/array of integers.
+
+    Note
+    ----
+    MaskedArray is an experimental API. It may be changed in the future, will not necessarily be
+    backwards compatible, and may have unexpected bugs. Please contact us with any feedback!
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> arr = wf.MaskedArray[wf.Int, 1](data=[1, 2, 3, 4], mask=[True, False, False, True], fill_value=0)
+    >>> arr
+    <descarteslabs.workflows.types.containers.masked_array.MaskedArray[Int, 1] object at 0x...>
+    >>> arr.compute(geoctx) # doctest: +SKIP
+    masked_array(data=[--, 2, 3, --],
+                 mask=[ True, False, False,  True],
+           fill_value=0)
+    """
+
     def __init__(self, data, mask=False, fill_value=None):
         if self._type_params is None:
             raise TypeError(
@@ -49,12 +74,36 @@ class MaskedArray(Array):
         self.graft = client.apply_graft("maskedarray.create", data, mask, fill_value)
 
     def getdata(self):
-        "The data array underlying this `MaskedArray`."
+        """The data array underlying this `MaskedArray`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> arr.getdata().compute(geoctx) # doctest: +SKIP
+        array([[[0.3429, 0.3429, 0.3429, ..., 0.0952, 0.0952, 0.0952],
+                [0.3429, 0.3429, 0.3429, ..., 0.0952, 0.0952, 0.0952],
+                [0.3429, 0.3429, 0.3429, ..., 0.0952, 0.0952, 0.0952],
+        ...
+        """
         return_type = Array[self.dtype, self.ndim]
         return return_type._from_apply("maskedarray.getdata", self)
 
     def getmaskarray(self):
-        "The mask array underlying this `MaskedArray`."
+        """The mask array underlying this `MaskedArray`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> arr.getmaskarray().compute(geoctx) # doctest: +SKIP
+        array([[[False, False, False, ..., False, False, False],
+                [False, False, False, ..., False, False, False],
+                [False, False, False, ..., False, False, False],
+        ...
+        """
         return_type = Array[Bool, self.ndim]
         return return_type._from_apply("maskedarray.getmaskarray", self)
 
@@ -72,12 +121,43 @@ class MaskedArray(Array):
         Returns
         -------
         a: Array
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> # In this case, 'geoctx' results in fully masked data
+        >>> arr.filled(0.1).compute(geoctx) # doctest: +SKIP
+        array([[[0.1, 0.1, 0.1, ..., 0.1, 0.1, 0.1],
+                [0.1, 0.1, 0.1, ..., 0.1, 0.1, 0.1],
+                [0.1, 0.1, 0.1, ..., 0.1, 0.1, 0.1],
+        ...
         """
         return_type = Array[self.dtype, self.ndim]
         fill_value = _promote_fill_value(self, fill_value)
         return return_type._from_apply("maskedarray.filled", self, fill_value)
 
     def count(self, axis=None):
+        """ Count unmasked pixels along a given axis.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> arr.count(axis=2).compute(geoctx) # doctest: +SKIP
+        masked_array(
+          data=[[512., 512., 512., ..., 512., 512., 512.],
+                [512., 512., 512., ..., 512., 512., 512.],
+                [512., 512., 512., ..., 512., 512., 512.],
+                ...,
+                [512., 512., 512., ..., 512., 512., 512.],
+                [512., 512., 512., ..., 512., 512., 512.],
+                [512., 512., 512., ..., 512., 512., 512.]],
+        mask=False,
+        fill_value=1e+20)
+        """
         return self._stats_return_type(axis)._from_apply("count", self, axis)
 
 

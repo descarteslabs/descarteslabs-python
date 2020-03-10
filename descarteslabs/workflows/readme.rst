@@ -53,6 +53,8 @@ The tables below list the types and functions available through the Workflows AP
 .. autosummary::
   :nosignatures:
 
+  ~descarteslabs.workflows.types.containers.Array
+  ~descarteslabs.workflows.types.containers.MaskedArray
   ~descarteslabs.workflows.types.containers.Dict
   ~descarteslabs.workflows.types.containers.Tuple
   ~descarteslabs.workflows.types.containers.List

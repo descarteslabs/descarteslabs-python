@@ -18,6 +18,40 @@ from .dict_ import Dict
 
 @serializable()
 class Array(GenericProxytype):
+    """
+    ``Array[DType, NDim]``: Proxy object representing a multidimensional, homogenous array of fixed-size items.
+    The data-type must be a Proxytype (Int, Float, Bool etc.) and the number of dimensions must be a Python integer.
+
+    Can be instantiated from a NumPy ndarray (via `from_numpy`), or a Python iterable.
+    Currently, Arrays can only be constructed from small local arrays (< 10MB).
+    Array follows the same syntax as NumPy arrays. It supports vectorized operations, broadcasting,
+    and multidimensional indexing. There are some limitations including slicing with lists/arrays in multiple
+    axes (``x[[1, 2, 3], [3, 2, 1]]``) and slicing with a multidimensional list/array of integers.
+
+    Note
+    ----
+    Array is an experimental API. It may be changed in the future, will not necessarily be
+    backwards compatible, and may have unexpected bugs. Please contact us with any feedback!
+
+    Examples
+    --------
+    >>> import descarteslabs.workflows as wf
+    >>> # Create a 1-dimensional Array of Ints
+    >>> arr = wf.Array[wf.Int, 1]([1, 2, 3, 4, 5])
+    >>> arr
+    <descarteslabs.workflows.types.containers.array_.Array[Int, 1] object at 0x...>
+    >>> arr.compute(geoctx) # doctest: +SKIP
+    array([1, 2, 3, 4, 5])
+
+    >>> import numpy as np
+    >>> import descarteslabs.workflows as wf
+    >>> ndarray = np.ones((3, 10, 10))
+    >>> # Create an Array from the 3-dimensional numpy array
+    >>> arr = wf.Array.from_numpy(ndarray) # doctest: +SKIP
+    >>> arr # doctest: +SKIP
+    <descarteslabs.workflows.types.containers.array_.Array[Float, 3] object at 0x...>
+    """
+
     def __init__(self, arr):
         if self._type_params is None:
             raise TypeError(
@@ -60,17 +94,46 @@ class Array(GenericProxytype):
 
     @property
     def dtype(self):
-        "The type of the data contained in the Array."
+        """The type of the data contained in the Array.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> arr.dtype
+        <class 'descarteslabs.workflows.types.primitives.number.Float'>
+        """
         return self._type_params[0]
 
     @property
     def ndim(self):
-        "The number of dimensions of the Array."
+        """The number of dimensions of the Array.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> arr.ndim
+        3
+        """
         return self._type_params[1]
 
     @property
     def shape(self):
-        "The shape of the Array. If the shape of the Array is unknown along a dimension, it will be -1."
+        """The shape of the Array. If the shape of the Array is unknown along a dimension, it will be -1.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> rgb = img.pick_bands("red green blue")
+        >>> arr = rgb.ndarray
+        >>> # The x and y pixel shapes are dependent upon 'geoctx'
+        >>> arr.shape.compute(geoctx) # doctest: +SKIP
+        (3, 512, 512)
+        """
         return_type = Tuple[(Int,) * self.ndim]
         return return_type._from_apply("array.shape", self)
 
@@ -108,6 +171,26 @@ class Array(GenericProxytype):
             (an `~.geospatial.ImageCollection`), bandinfo must be the length of ``arr.shape[1]``.
             If no bandinfo is given, the bandinfo will be a dict of bandname (of the format 'band_<num>',
             where 'num' is 1...N) to empty dictionary.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-12-01")
+        >>>
+        >>> # Take images 1, 2, and 3, as well as their first 3 bands
+        >>> # This complicated indexing cannot be done on an ImageCollection
+        >>> # so we index the underlying Array instead
+        >>> arr = col.ndarray[[1, 2, 3], :3]
+        >>>
+        >>> # Construct a new ImageCollection with specified bandinfo
+        >>> new_col = arr.to_imagery(bandinfo={"red": {}, "green": {}, "blue": {}})
+        >>> new_col.compute(geoctx) # doctest: +SKIP
+        ImageCollectionResult of length 3:
+          * ndarray: MaskedArray<shape=(3, 3, 512, 512), dtype=float64>
+          * properties: 3 items
+          * bandinfo: 'red', 'green', 'blue'
+          * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
         """
         from ..geospatial import Image, ImageCollection
 
@@ -228,21 +311,135 @@ class Array(GenericProxytype):
         return self._result_type(other)._from_apply("pow", other, self)
 
     def min(self, axis=None):
+        """ Minimum along a given axis.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> arr.min(axis=2).compute(geoctx) # doctest: +SKIP
+        masked_array(
+          data=[[0.0901, 0.0901, 0.0901, ..., 0.1025, 0.1025, 0.1025],
+                [0.0642, 0.0645, 0.065 , ..., 0.0792, 0.0788, 0.079 ],
+                [0.0462, 0.0462, 0.0464, ..., 0.0614, 0.0616, 0.0622],
+                ...,
+                [0.    , 0.    , 0.    , ..., 0.    , 0.    , 0.    ],
+                [0.    , 0.    , 0.    , ..., 0.    , 0.    , 0.    ],
+                [0.    , 0.    , 0.    , ..., 0.    , 0.    , 0.    ]],
+        mask=False,
+        fill_value=1e+20)
+        """
         return self._stats_return_type(axis)._from_apply("min", self, axis)
 
     def max(self, axis=None):
+        """ Maximum along a given axis.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> arr.max(axis=2).compute(geoctx) # doctest: +SKIP
+        masked_array(
+          data=[[0.3429, 0.3429, 0.3429, ..., 0.4685, 0.4685, 0.4685],
+                [0.4548, 0.4758, 0.5089, ..., 0.4457, 0.4548, 0.4589],
+                [0.4095, 0.4338, 0.439 , ..., 0.417 , 0.4261, 0.4361],
+                ...,
+                [0.    , 0.    , 0.    , ..., 0.    , 0.    , 0.    ],
+                [1.    , 1.    , 1.    , ..., 1.    , 1.    , 1.    ],
+                [1.    , 1.    , 1.    , ..., 1.    , 1.    , 1.    ]],
+        mask=False,
+        fill_value=1e+20)
+        """
         return self._stats_return_type(axis)._from_apply("max", self, axis)
 
     def mean(self, axis=None):
+        """ Mean along a given axis.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> arr.mean(axis=2).compute(geoctx) # doctest: +SKIP
+        masked_array(
+          data=[[0.12258809, 0.12258809, 0.12258809, ..., 0.20478262, 0.20478262, 0.20478262],
+                [0.11682598, 0.11911875, 0.11996387, ..., 0.17967012, 0.18027852, 0.1817543 ],
+                [0.10004336, 0.10156348, 0.10262227, ..., 0.17302051, 0.17299277, 0.17431074],
+                ...,
+                [0.        , 0.        , 0.        , ..., 0.        , 0.        , 0.        ],
+                [0.00390625, 0.00390625, 0.00390625, ..., 0.05859375, 0.05859375, 0.05859375],
+                [0.00390625, 0.00390625, 0.00390625, ..., 0.05859375, 0.05859375, 0.05859375]],
+        mask=False,
+        fill_value=1e+20)
+        """
         return self._stats_return_type(axis)._from_apply("mean", self, axis)
 
     def median(self, axis=None):
+        """ Median along a given axis.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> arr.median(axis=2).compute(geoctx) # doctest: +SKIP
+        masked_array(
+          data=[[0.1128 , 0.1128 , 0.1128 , ..., 0.1613 , 0.1613 , 0.1613 ],
+                [0.0881 , 0.08595, 0.08545, ..., 0.133  , 0.1306 , 0.13135],
+                [0.0739 , 0.0702 , 0.0695 , ..., 0.13035, 0.13025, 0.1308 ],
+                ...,
+                [0.     , 0.     , 0.     , ..., 0.     , 0.     , 0.     ],
+                [0.     , 0.     , 0.     , ..., 0.     , 0.     , 0.     ],
+                [0.     , 0.     , 0.     , ..., 0.     , 0.     , 0.     ]],
+        mask=False,
+        fill_value=1e+20)
+        """
         return self._stats_return_type(axis)._from_apply("median", self, axis)
 
     def sum(self, axis=None):
+        """ Sum along a given axis.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> arr.sum(axis=2).compute(geoctx) # doctest: +SKIP
+        masked_array(
+          data=[[ 62.7651,  62.7651,  62.7651, ..., 104.8487, 104.8487, 104.8487],
+                [ 59.8149,  60.9888,  61.4215, ...,  91.9911,  92.3026,  93.0582],
+                [ 51.2222,  52.0005,  52.5426, ...,  88.5865,  88.5723,  89.2471],
+                ...,
+                [  0.    ,   0.    ,   0.    , ...,   0.    ,   0.    ,   0.    ],
+                [  2.    ,   2.    ,   2.    , ...,  30.    ,  30.    ,  30.    ],
+                [  2.    ,   2.    ,   2.    , ...,  30.    ,  30.    ,  30.    ]],
+        mask=False,
+        fill_value=1e+20)
+        """
         return self._stats_return_type(axis)._from_apply("sum", self, axis)
 
     def std(self, axis=None):
+        """ Standard deviation along a given axis.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> arr = img.ndarray
+        >>> arr.std(axis=2).compute(geoctx) # doctest: +SKIP
+        masked_array(
+          data=[[0.04008153, 0.04008153, 0.04008153, ..., 0.09525769, 0.09525769, 0.09525769],
+                [0.08456076, 0.09000384, 0.09356615, ..., 0.09512879, 0.09453823, 0.09345682],
+                [0.07483621, 0.08026347, 0.08554651, ..., 0.0923489 , 0.09133476, 0.09047391],
+                ...,
+                [0.        , 0.        , 0.        , ..., 0.        , 0.        , 0.        ],
+                [0.06237781, 0.06237781, 0.06237781, ..., 0.23486277, 0.23486277, 0.23486277],
+                [0.06237781, 0.06237781, 0.06237781, ..., 0.23486277, 0.23486277, 0.23486277]],
+        mask=False,
+        fill_value=1e+20)
+        """
         return self._stats_return_type(axis)._from_apply("std", self, axis)
 
     def _stats_return_type(self, axis):
