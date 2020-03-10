@@ -315,6 +315,9 @@ def typecheck_getitem(idx, ndim):
             proxy_idx.append(Int._promote(idx_elem))
         elif isinstance(idx_elem, (slice, Slice)):
             proxy_idx.append(Slice._promote(idx_elem))
+        elif isinstance(idx_elem, type(Ellipsis)):
+            num_ellipsis = ndim - (num_idx - 1)
+            proxy_idx += [Slice(None, None, None)] * num_ellipsis
         elif isinstance(idx_elem, (NoneType._pytype, NoneType)):
             proxy_idx.append(NoneType._promote(idx_elem))
 
