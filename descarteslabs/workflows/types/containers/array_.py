@@ -647,7 +647,7 @@ def typecheck_getitem(idx, ndim):
 
             # Proxy List case
             else:
-                if not isinstance(idx_elem._element_type, (Int, Bool)):
+                if idx_elem._element_type not in (Int, Bool):
                     raise TypeError(
                         "While slicing Array, position {}: Arrays can only be sliced with 1D List[Int] "
                         "or List[Bool], not {}".format(i, type(idx_elem).__name__)
