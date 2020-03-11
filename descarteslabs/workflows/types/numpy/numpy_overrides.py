@@ -37,6 +37,55 @@ def _ufunc_result_type(obj, other=None, is_bool=False):
         return dtype
 
 
+def derived_from(original_method):
+    """Decorator to attach original method's docstring to the wrapped method"""
+
+    def wrapper(method):
+        doc = original_method.__doc__.replace("*,", "\*,")  # noqa
+        doc = doc.replace(
+            ":ref:`ufunc docs <ufuncs.kwargs>`.",
+            "`ufunc docs <https://docs.scipy.org/doc/numpy/reference/ufuncs.html#ufuncs-kwargs>`_.",
+        )
+
+        # remove examples
+        doc = doc.split("\n\n    Examples\n")[0]
+
+        # remove references
+        doc = [a for a in doc.split("\n\n") if "References\n----------\n" not in a]
+
+        l1 = "This docstring was copied from numpy.{}".format(original_method.__name__)
+        l2 = "Some inconsistencies with the Workflows version may exist"
+
+        if isinstance(original_method, np.ufunc):
+            # what the function does
+            info = doc[1]
+
+            # parameters (sometimes listed on separate lines, someimtes not)
+            parameters = [a for a in doc if "Parameters\n" in a][0].split("\n")
+            if parameters[4][0] == "x":
+                parameters = "\n".join(parameters[:6])
+            else:
+                parameters = "\n".join(parameters[:4])
+
+            # return value
+            returns = [a for a in doc if "Returns\n" in a][0]
+
+            # final docstring
+            doc = "\n\n".join([info, l1, l2, parameters, returns])
+        else:
+            # does the first line contain the function signature? (not always the case)
+            if doc[0][-1] == ")":
+                doc = [doc[1]] + ["\n\n" + "    {}\n\n    {}\n\n".format(l1, l2)] + doc[2:]
+            else:
+                doc = [doc[0]] + ["\n\n" + "    {}\n\n    {}\n\n".format(l1, l2)] + doc[1:]
+            doc = "\n\n".join(doc)
+
+        method.__doc__ = doc
+        return method
+
+    return wrapper
+
+
 HANDLED_FUNCTIONS = {}
 HANDLED_UFUNCS = {}
 
@@ -65,6 +114,9 @@ class ufunc:
         self._ufunc = ufunc
         self.__name__ = ufunc.__name__
         self._is_bool = is_bool
+
+        if isinstance(ufunc, np.ufunc):
+            derived_from(ufunc)(self)
 
         HANDLED_UFUNCS[ufunc.__name__] = self
 
@@ -300,6 +352,7 @@ def _promote_to_list_of_same_arrays(seq, func_name):
 
 @implements(np.concatenate)
 @typecheck_promote(None, axis=Int)
+@derived_from(np.concatenate)
 def concatenate(seq, axis=0):
     seq = _promote_to_list_of_same_arrays(seq, "concatenate")
     return_type = seq._element_type
@@ -308,6 +361,7 @@ def concatenate(seq, axis=0):
 
 @implements(np.transpose)
 @typecheck_promote(Array, axes=(List[Int], NoneType))
+@derived_from(np.transpose)
 def transpose(arr, axes=None):
     return arr._from_apply("transpose", arr, axes=axes)
 
@@ -320,6 +374,7 @@ def transpose(arr, axes=None):
     weights=(Array, NoneType),
     density=None,
 )
+@derived_from(np.histogram)
 def histogram(arr, bins=10, range=None, weights=None, density=None):
     if density is not None and not isinstance(density, bool):
         raise TypeError("Histogram argument 'density' must be None or a bool.")
@@ -339,6 +394,7 @@ def histogram(arr, bins=10, range=None, weights=None, density=None):
 
 @implements(np.reshape)
 @typecheck_promote(Array, None)
+@derived_from(np.reshape)
 def reshape(arr, newshape):
     newshape = _promote_newshape(newshape)
     ndim = len(newshape)
@@ -359,6 +415,7 @@ def _promote_newshape(newshape):
 
 @implements(np.stack)
 @typecheck_promote(None, axis=Int)
+@derived_from(np.stack)
 def stack(seq, axis=0):
     seq = _promote_to_list_of_same_arrays(seq, "stack")
     return_type = Array[
