@@ -1,21 +1,30 @@
 import pytest
 import numpy as np
 
-from descarteslabs.workflows.types.array import Array
+from descarteslabs.workflows.types.array import Array, MaskedArray
 from descarteslabs.workflows.types.containers import List, Tuple
 from descarteslabs.workflows.types.primitives import Int, Float, Bool
 from descarteslabs.workflows.types import proxify
 import descarteslabs.workflows.types.numpy as wf_np
 
+
 img_arr = Array[Float, 3](np.ones((3, 3, 3)))
 col_arr = Array[Float, 4](np.ones((2, 3, 3, 3)))
+data = np.ones((3, 3, 3))
+mask = (np.arange(data.size) % 3 == 0).reshape(data.shape)
+img_arr_masked = MaskedArray[Float, 3](data, mask)
+data = np.ones((2, 3, 3, 3))
+mask = (np.arange(data.size) % 3 == 0).reshape(data.shape)
+col_arr_masked = MaskedArray[Float, 4](data, mask)
 
 
 @pytest.mark.parametrize(
     "arg, return_ndim",
     [
         [img_arr, 3],
+        [img_arr_masked, 3],
         [col_arr, 4],
+        [col_arr_masked, 4],
         [Int(1), -1],
         [Float(2.2), -1],
         [Bool(True), -1],
@@ -85,16 +94,24 @@ def test_single_arg_methods(arg, return_ndim, operator):
 
 
 @pytest.mark.parametrize(
-    "args, return_ndim",
+    "args, return_ndim, return_type",
     [
-        [[img_arr, img_arr], 3],
-        [[col_arr, img_arr], 4],
-        [[img_arr, col_arr], 4],
-        [[col_arr, col_arr], 4],
-        [[col_arr, 1], 4],
-        [[img_arr, 1], 3],
-        [[1, col_arr], 4],
-        [[1, img_arr], 3],
+        [[img_arr, img_arr], 3, Array],
+        [[col_arr, img_arr], 4, Array],
+        [[img_arr, col_arr], 4, Array],
+        [[col_arr, col_arr], 4, Array],
+        [[col_arr, 1], 4, Array],
+        [[img_arr, 1], 3, Array],
+        [[1, col_arr], 4, Array],
+        [[1, img_arr], 3, Array],
+        [[img_arr_masked, 1], 3, MaskedArray],
+        [[1, img_arr_masked], 3, MaskedArray],
+        [[img_arr_masked, img_arr_masked], 3, MaskedArray],
+        [[img_arr_masked, img_arr], 3, MaskedArray],
+        [[img_arr, img_arr_masked], 3, MaskedArray],
+        [[img_arr_masked, col_arr], 4, MaskedArray],
+        [[img_arr_masked, col_arr_masked], 4, MaskedArray],
+        [[col_arr_masked, img_arr_masked], 4, MaskedArray],
     ],
 )
 @pytest.mark.parametrize(
@@ -135,12 +152,12 @@ def test_single_arg_methods(arg, return_ndim, operator):
         "fmod",
     ],
 )
-def test_double_arg_methods(args, return_ndim, operator):
+def test_double_arg_methods(args, return_ndim, return_type, operator):
     method = getattr(wf_np, operator)
     result = method(*args)
 
     if return_ndim >= 0:
-        assert isinstance(result, Array)
+        assert isinstance(result, return_type)
         assert result.ndim == return_ndim
         assert (result.dtype is Bool) == method._is_bool
     else:
@@ -156,6 +173,21 @@ def test_double_arg_methods(args, return_ndim, operator):
         ([Array[Int, 1]([]), [1, 2]], List[Array[Int, 1]]),
         ([np.array([1, 2]), Array[Int, 1]([])], List[Array[Int, 1]]),
         ([np.array([[1, 2]]), np.array([[3, 2]])], List[Array[Int, 2]]),
+        (List[MaskedArray[Int, 1]]([]), List[MaskedArray[Int, 1]]),
+        ([MaskedArray[Int, 1]([])], List[MaskedArray[Int, 1]]),
+        ([MaskedArray[Int, 1]([]), MaskedArray[Int, 1]([])], List[MaskedArray[Int, 1]]),
+        ([MaskedArray[Int, 1]([]), [1, 2]], List[MaskedArray[Int, 1]]),
+        (
+            [np.ma.masked_array([1, 2], [True, False]), MaskedArray[Int, 1]([])],
+            List[MaskedArray[Int, 1]],
+        ),
+        (
+            [
+                np.ma.masked_array([[1, 2]], [[True, False]]),
+                np.ma.masked_array([[3, 2]], [[False, True]]),
+            ],
+            List[MaskedArray[Int, 2]],
+        ),
     ],
 )
 def test_promote_to_list_of_same_arrays(obj, expected_type):
@@ -230,12 +262,15 @@ def test_histogram_manual_density_typecheck(density):
 
 
 @pytest.mark.parametrize(
+    "arr, return_type", [(img_arr, Array), (img_arr_masked, MaskedArray)]
+)
+@pytest.mark.parametrize(
     "newshape, new_ndim",
     [[(1,), 1], [(2, 4), 2], [(3, 3, 3), 3], [[2, 2], 2], [Tuple[Int, Int]((5, 5)), 2]],
 )
-def test_reshape(newshape, new_ndim):
-    result = wf_np.reshape(img_arr, newshape)
-    assert isinstance(result, Array[img_arr.dtype, new_ndim])
+def test_reshape(arr, return_type, newshape, new_ndim):
+    result = wf_np.reshape(arr, newshape)
+    assert isinstance(result, return_type[img_arr.dtype, new_ndim])
 
 
 @pytest.mark.parametrize(
@@ -246,11 +281,14 @@ def test_reshape_newshape_raises(newshape):
         wf_np.reshape(img_arr, newshape)
 
 
+@pytest.mark.parametrize(
+    "base_arr, return_type", [(img_arr, Array), (img_arr_masked, MaskedArray)]
+)
 @pytest.mark.parametrize("axis", [0, 1, 2])
 @pytest.mark.parametrize("num_arr", [2, 4, 6])
-def test_stack(num_arr, axis):
-    result = wf_np.stack([img_arr] * num_arr, axis=axis)
-    assert isinstance(result, Array[Float, 4])
+def test_stack(base_arr, return_type, num_arr, axis):
+    result = wf_np.stack([base_arr] * num_arr, axis=axis)
+    assert isinstance(result, return_type[Float, 4])
 
 
 def test_stack_raises():

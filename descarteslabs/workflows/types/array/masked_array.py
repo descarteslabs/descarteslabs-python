@@ -7,7 +7,7 @@ from ...cereal import serializable
 from ..core import ProxyTypeError
 from ..containers import List
 from ..primitives import Bool
-from .array_ import Array
+from .array_ import Array, WF_TO_DTYPE_KIND, DTYPE_KIND_TO_WF
 
 
 @serializable()
@@ -43,19 +43,45 @@ class MaskedArray(Array):
                 "Cannot instantiate a generic MaskedArray; "
                 "the dtype and dimensionality must be specified (like `MaskedArray[Float, 3]`)"
             )
+        if isinstance(data, np.ndarray):
+            if data.dtype.kind != WF_TO_DTYPE_KIND[self._type_params[0]]:
+                raise TypeError(
+                    "Invalid dtype {} for {}".format(data.dtype, type(self).__name__)
+                )
+            if data.ndim != self.ndim:
+                raise ValueError(
+                    "Cannot instantiate a {}-dimensional Workflows MaskedArray from a "
+                    "{}-dimensional NumPy data array".format(self.ndim, data.ndim)
+                )
 
-        data_list_type = functools.reduce(
-            lambda accum, cur: List[accum],
-            range(self._type_params[1]),
-            self._type_params[0],
-        )
-        try:
-            data = data_list_type._promote(data)
-        except ProxyTypeError:
-            raise ValueError("Cannot instantiate the data Array from {!r}".format(data))
+            data = data.tolist()
+        else:
+            data_list_type = functools.reduce(
+                lambda accum, cur: List[accum], range(self.ndim), self.dtype
+            )
+            try:
+                data = data_list_type._promote(data)
+            except ProxyTypeError:
+                raise ValueError(
+                    "Cannot instantiate the data Array from {!r}".format(data)
+                )
 
         if isinstance(mask, (bool, np.bool_, Bool)):
             mask = Bool._promote(mask)
+        elif isinstance(mask, np.ndarray):
+            if mask.dtype.kind != "b":
+                raise TypeError(
+                    "Invalid dtype {} for a mask array, should be boolean".format(
+                        mask.dtype
+                    )
+                )
+            if mask.ndim != self.ndim:
+                raise ValueError(
+                    "Cannot instantiate a {}-dimensional Workflows MaskedArray with a "
+                    "{}-dimensional NumPy mask array".format(self.ndim, mask.ndim)
+                )
+
+            mask = mask.tolist()
         else:
             # TODO(Clark): Support mask broadcasting to data shape?  This could be done
             # client-side or server-side.
@@ -72,6 +98,39 @@ class MaskedArray(Array):
         fill_value = _promote_fill_value(self, fill_value)
 
         self.graft = client.apply_graft("maskedarray.create", data, mask, fill_value)
+
+    @classmethod
+    def from_numpy(cls, arr):
+        """
+        Construct a Workflows MaskedArray from a NumPy MaskedArray, inferring `dtype`
+        and `ndim`.
+
+        Parameters
+        ----------
+        arr: numpy.ma.MaskedArray
+
+        Returns
+        -------
+        ~descarteslabs.workflows.MaskedArray
+        """
+        data = np.ma.getdata(arr)
+        mask = np.ma.getmask(arr)
+        fill_value = getattr(arr, "fill_value", None)
+
+        if cls._type_params:
+            # don't infer dtype, ndim from `arr`, since our cls is already parametrized
+            return cls(data, mask, fill_value)
+        else:
+            # infer dtype, ndim from numpy array
+            try:
+                dtype = DTYPE_KIND_TO_WF[arr.dtype.kind]
+            except KeyError:
+                raise ProxyTypeError(
+                    "Creating a Workflows MaskedArray from a NumPy Array with dtype "
+                    "`{}` is not supported. Supported dtypes kinds are float, "
+                    "int, and bool.".format(arr.dtype)
+                )
+            return cls[dtype, arr.ndim](data, mask, fill_value)
 
     def getdata(self):
         """The data array underlying this `MaskedArray`.
@@ -174,6 +233,18 @@ def _promote_fill_value(self, fill_value):
                 )
             )
         return fill_value
+
+    if isinstance(fill_value, np.generic):
+        cast_func = None
+        if isinstance(fill_value, np.integer):
+            cast_func = int
+        elif isinstance(fill_value, np.float):
+            cast_func = float
+        elif isinstance(fill_value, np.bool):
+            cast_func = bool
+
+        if cast_func is not None:
+            fill_value = cast_func(fill_value)
 
     try:
         return self._type_params[0]._promote(fill_value)

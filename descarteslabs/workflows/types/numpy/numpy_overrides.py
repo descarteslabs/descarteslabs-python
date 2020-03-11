@@ -3,7 +3,7 @@ import numpy as np
 from ..core import typecheck_promote, ProxyTypeError, Proxytype
 from ..core.promote import _promote
 from ..primitives import Float, Int, Bool, NoneType
-from ..array import Array
+from ..array import Array, MaskedArray
 from ..containers import List, Tuple
 
 
@@ -32,7 +32,18 @@ def _ufunc_result_type(obj, other=None, is_bool=False):
 
     if isinstance(obj, Array) or isinstance(other, Array):
         ndim = max(getattr(a, "ndim", -1) for a in (obj, other))
-        return Array[dtype, ndim]
+        if isinstance(obj, Array) and isinstance(other, Array):
+            result_generictype = type(obj)._generictype
+            other_generictype = type(other)._generictype
+            if issubclass(other_generictype, result_generictype):
+                result_generictype = other_generictype
+        else:
+            result_generictype = (
+                type(obj)._generictype
+                if isinstance(obj, Array)
+                else type(other)._generictype
+            )
+        return result_generictype[dtype, ndim]
     else:
         return dtype
 
@@ -134,7 +145,12 @@ class ufunc:
                 if isinstance(arg, Array):
                     promoted.append(arg)
                 elif isinstance(arg, np.ndarray):
-                    promoted.append(Array.from_numpy(arg))
+                    numpy_promoter = (
+                        MaskedArray.from_numpy
+                        if isinstance(arg, np.ma.MaskedArray)
+                        else Array.from_numpy
+                    )
+                    promoted.append(numpy_promoter(arg))
                 else:
                     promoted.append(_promote(arg, (Bool, Int, Float), i, self.__name__))
                     # TODO(gabe) not great to be relying on internal `_promote` here
@@ -281,12 +297,15 @@ def asarray(obj):
     # TODO dtype!!
     if isinstance(obj, Array):
         return obj
-    if isinstance(obj, np.ndarray):
-        return Array.from_numpy(obj)
-    else:
+    if not isinstance(obj, np.ndarray):
         # Dumb hack to save writing list traversal ourselves: just try to make it into an ndarray
-        np_array = np.asarray(obj)
-        return Array.from_numpy(np_array)
+        obj = np.asarray(obj)
+    numpy_promoter = (
+        MaskedArray.from_numpy
+        if isinstance(obj, np.ma.MaskedArray)
+        else Array.from_numpy
+    )
+    return numpy_promoter(obj)
 
 
 def _promote_to_list_of_same_arrays(seq, func_name):
@@ -398,7 +417,7 @@ def histogram(arr, bins=10, range=None, weights=None, density=None):
 def reshape(arr, newshape):
     newshape = _promote_newshape(newshape)
     ndim = len(newshape)
-    return Array[arr.dtype, ndim]._from_apply("reshape", arr, newshape)
+    return type(arr)._generictype[arr.dtype, ndim]._from_apply("reshape", arr, newshape)
 
 
 def _promote_newshape(newshape):
@@ -418,7 +437,8 @@ def _promote_newshape(newshape):
 @derived_from(np.stack)
 def stack(seq, axis=0):
     seq = _promote_to_list_of_same_arrays(seq, "stack")
-    return_type = Array[
-        seq._element_type._type_params[0], seq._element_type._type_params[1] + 1
+    element_type = seq._element_type
+    return_type = element_type._generictype[
+        element_type._type_params[0], element_type._type_params[1] + 1
     ]
     return return_type._from_apply("stack", seq, axis=axis)
