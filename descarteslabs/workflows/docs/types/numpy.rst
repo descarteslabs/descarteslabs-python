@@ -2,7 +2,7 @@
 
 Numpy Functions
 ---------------
-Workflows provides equivalents to some NumPy functions through the ``workflows.numpy`` module, for use on the Workflows :class:`Array <descarteslabs.workflows.types.array_.Array>` type. Supported functions are listed here.
+Workflows provides equivalents to some NumPy functions through the ``workflows.numpy`` module, for use on the Workflows :class:`Array <descarteslabs.workflows.types.array.Array>` type. Supported functions are listed here. For more information, see the :ref:`Workflows guide <workflows-numpy-guide>`.
 
 Use of these docstrings is subject to the `NumPy license <https://numpy.org/license.html>`_.
 

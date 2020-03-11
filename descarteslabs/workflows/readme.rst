@@ -36,7 +36,7 @@ The tables below list the types and functions available through the Workflows AP
 
 :workflow_api_nontoc_heading:`Array`
 
-For NumPy functionality that can be used with `Array` see :ref:`numpy-functions`.
+For NumPy functionality that can be used with `.Array`, see :ref:`numpy-functions`.
 
 .. autosummary::
   :nosignatures:
