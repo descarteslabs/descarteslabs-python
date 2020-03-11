@@ -4,13 +4,31 @@ import numpy as np
 from ... import env
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import GenericProxytype, typecheck_promote, ProxyTypeError
+from ..core import GenericProxytype, ProxyTypeError
 from ..containers import Slice, Tuple, List, Dict
 from ..primitives import Int, Float, Bool, NoneType
 
 
 DTYPE_KIND_TO_WF = {"b": Bool, "i": Int, "f": Float}
 WF_TO_DTYPE_KIND = dict(zip(DTYPE_KIND_TO_WF.values(), DTYPE_KIND_TO_WF.keys()))
+
+
+def _delayed_numpy_overrides():
+    # avoid circular imports
+    from descarteslabs.workflows.types.numpy import numpy_overrides
+
+    return numpy_overrides
+
+
+def allow_reflect(func):
+    @functools.wraps(func)
+    def wrapped(*args):
+        try:
+            return func(*args)
+        except ProxyTypeError:
+            return NotImplemented
+
+    return wrapped
 
 
 @serializable()
@@ -286,7 +304,7 @@ class Array(GenericProxytype):
         args: arguments directly passed from the original call
         kwargs: kwargs directly passed from the original call
         """
-        from descarteslabs.workflows.types.numpy import numpy_overrides
+        numpy_overrides = _delayed_numpy_overrides()
 
         if func not in numpy_overrides.HANDLED_FUNCTIONS:
             raise NotImplementedError(
@@ -320,7 +338,7 @@ class Array(GenericProxytype):
         inputs: Tuple of the input arguments to ufunc
         kwargs: Dict of optional input arguments to ufunc
         """
-        from descarteslabs.workflows.types.numpy import numpy_overrides
+        numpy_overrides = _delayed_numpy_overrides()
 
         if method == "__call__":
             if ufunc.__name__ not in numpy_overrides.HANDLED_UFUNCS:
@@ -332,93 +350,101 @@ class Array(GenericProxytype):
             return NotImplemented
 
     def __neg__(self):
-        return self._from_apply("neg", self)
+        return _delayed_numpy_overrides().negative(self)
 
     def __pos__(self):
         return self._from_apply("pos", self)
 
     def __abs__(self):
-        return self._from_apply("abs", self)
+        return _delayed_numpy_overrides().absolute(self)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __lt__(self, other):
-        return self._result_type(other, is_bool=True)._from_apply("lt", self, other)
+        return _delayed_numpy_overrides().less(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __le__(self, other):
-        return self._result_type(other, is_bool=True)._from_apply("le", self, other)
+        return _delayed_numpy_overrides().less_equal(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __gt__(self, other):
-        return self._result_type(other, is_bool=True)._from_apply("gt", self, other)
+        return _delayed_numpy_overrides().greater(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __ge__(self, other):
-        return self._result_type(other, is_bool=True)._from_apply("ge", self, other)
+        return _delayed_numpy_overrides().greater_equal(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
+    def __eq__(self, other):
+        return _delayed_numpy_overrides().equal(self, other)
+
+    @allow_reflect
+    def __ne__(self, other):
+        return _delayed_numpy_overrides().not_equal(self, other)
+
+    @allow_reflect
     def __add__(self, other):
-        return self._result_type(other)._from_apply("add", self, other)
+        return _delayed_numpy_overrides().add(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __sub__(self, other):
-        return self._result_type(other)._from_apply("sub", self, other)
+        return _delayed_numpy_overrides().subtract(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __mul__(self, other):
-        return self._result_type(other)._from_apply("mul", self, other)
+        return _delayed_numpy_overrides().multiply(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __div__(self, other):
-        return self._result_type(other)._from_apply("div", self, other)
+        return _delayed_numpy_overrides().divide(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __floordiv__(self, other):
-        return self._result_type(other)._from_apply("floordiv", self, other)
+        return _delayed_numpy_overrides().floor_divide(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __truediv__(self, other):
-        return self._result_type(other)._from_apply("truediv", self, other)
+        return _delayed_numpy_overrides().true_divide(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __mod__(self, other):
-        return self._result_type(other)._from_apply("mod", self, other)
+        return _delayed_numpy_overrides().mod(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __pow__(self, other):
-        return self._result_type(other)._from_apply("pow", self, other)
+        return _delayed_numpy_overrides().power(self, other)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __radd__(self, other):
-        return self._result_type(other)._from_apply("add", other, self)
+        return _delayed_numpy_overrides().add(other, self)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __rsub__(self, other):
-        return self._result_type(other)._from_apply("sub", other, self)
+        return _delayed_numpy_overrides().subtract(other, self)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __rmul__(self, other):
-        return self._result_type(other)._from_apply("mul", other, self)
+        return _delayed_numpy_overrides().multiply(other, self)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __rdiv__(self, other):
-        return self._result_type(other)._from_apply("div", other, self)
+        return _delayed_numpy_overrides().divide(other, self)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __rfloordiv__(self, other):
-        return self._result_type(other)._from_apply("floordiv", other, self)
+        return _delayed_numpy_overrides().floor_divide(other, self)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __rtruediv__(self, other):
-        return self._result_type(other)._from_apply("truediv", other, self)
+        return _delayed_numpy_overrides().true_divide(other, self)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __rmod__(self, other):
-        return self._result_type(other)._from_apply("mod", other, self)
+        return _delayed_numpy_overrides().mod(other, self)
 
-    @typecheck_promote((lambda: Array, Int, Float))
+    @allow_reflect
     def __rpow__(self, other):
-        return self._result_type(other)._from_apply("pow", other, self)
+        return _delayed_numpy_overrides().power(other, self)
 
     def min(self, axis=None):
         """ Minimum along a given axis.
@@ -572,35 +598,6 @@ class Array(GenericProxytype):
         else:
             return_type = type(self)._generictype[self.dtype, self.ndim - 1]
         return return_type
-
-    def _result_type(self, other, is_bool=False):
-        result_generictype = type(self)._generictype
-        try:
-            other_generictype = type(other)._generictype
-        except AttributeError:
-            pass
-        else:
-            if issubclass(other_generictype, result_generictype):
-                result_generictype = other_generictype
-        dtype = self._result_dtype(other, is_bool)
-        ndim = self.ndim
-        other_ndim = getattr(other, "ndim", -1)
-        if ndim < other_ndim:
-            ndim = other_ndim
-        return result_generictype[dtype, ndim]
-
-    def _result_dtype(self, other, is_bool=False):
-        if is_bool:
-            return Bool
-        other_dtype = getattr(other, "dtype", None)
-        # If either are Float, the result is a Float
-        if self.dtype is Float or other_dtype is Float:
-            return Float
-        # Neither are Float, so if either are Int, the result is an Int
-        if self.dtype is Int or other.dtype is Int:
-            return Int
-        # Neither are Float, neither are Int, they must be Bool, so the result is Bool
-        return Bool
 
 
 def typecheck_getitem(idx, ndim):

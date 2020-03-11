@@ -137,12 +137,17 @@ def test_to_imagery():
     assert isinstance(arr.to_imagery({}, {}), ImageCollection)
 
 
-@pytest.mark.parametrize("method", [operator.lt, operator.le, operator.gt, operator.ge])
+@pytest.mark.parametrize(
+    "method",
+    [operator.lt, operator.le, operator.gt, operator.ge, operator.eq, operator.ne],
+)
 @pytest.mark.parametrize("other", [Array[Int, 2]([[1, 2, 3], [4, 5, 6]]), 1, 0.5])
 def test_container_bool_methods(method, other):
     arr = Array[Int, 2]([[10, 11, 12], [13, 14, 15]])
     result = method(arr, other)
+    r_result = method(other, arr)
     assert isinstance(result, Array[Bool, 2])
+    assert isinstance(r_result, Array[Bool, 2])
 
 
 @pytest.mark.parametrize(
