@@ -349,3 +349,13 @@ def _promote_newshape(newshape):
     raise TypeError(
         "'newshape' must be a list or tuple of ints, received {!r}".format(newshape)
     )
+
+
+@implements(np.stack)
+@typecheck_promote(None, axis=Int)
+def stack(seq, axis=0):
+    seq = _promote_to_list_of_same_arrays(seq, "stack")
+    return_type = Array[
+        seq._element_type._type_params[0], seq._element_type._type_params[1] + 1
+    ]
+    return return_type._from_apply("stack", seq, axis=axis)

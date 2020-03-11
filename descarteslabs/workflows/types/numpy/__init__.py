@@ -81,6 +81,7 @@ from .numpy_overrides import (
     concatenate,
     histogram,
     reshape,
+    stack,
 )
 
 __all__ = [
@@ -166,4 +167,5 @@ __all__ = [
     "concatenate",
     "histogram",
     "reshape",
+    "stack",
 ]

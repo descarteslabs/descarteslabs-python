@@ -219,3 +219,16 @@ def test_reshape(newshape, new_ndim):
 def test_reshape_newshape_raises(newshape):
     with pytest.raises(TypeError):
         wf_np.reshape(img_arr, newshape)
+
+
+@pytest.mark.parametrize("axis", [0, 1, 2])
+@pytest.mark.parametrize("num_arr", [2, 4, 6])
+def test_stack(num_arr, axis):
+    result = wf_np.stack([img_arr] * num_arr, axis=axis)
+    assert isinstance(result, Array[Float, 4])
+
+
+def test_stack_raises():
+    other = Array[Int, 2]([[]])
+    with pytest.raises(ValueError):
+        wf_np.stack([img_arr, other])
