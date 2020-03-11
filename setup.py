@@ -79,6 +79,7 @@ def do_setup():
             "geojson>=2.5.0",
             "grpcio>=1.16.1,<2",
             "protobuf==3.11.2,<4",
+            "numpy>=1.17.4",
             "pyarrow==0.16.0",
             "pytz>=2019.1",
             "requests[security]>=2.20.1,<3",
@@ -88,7 +89,6 @@ def do_setup():
         extras_require={
             "complete": [
                 'blosc;platform_system!="Windows"',
-                "numpy>=1.17.4",
                 "matplotlib>=3.0.3",
                 "mercantile>=1.1.2",
                 "ipyleaflet>=0.12.2,<1",
