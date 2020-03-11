@@ -7,23 +7,28 @@ from ..array import Array
 from ..containers import List, Tuple
 
 
-def _ufunc_result_type(obj, other=None):
+def _ufunc_result_type(obj, other=None, is_bool=False):
     if other is None:
-        return type(obj)
+        if not is_bool:
+            return type(obj)
+        return Bool if not isinstance(obj, Array) else Array[Bool, obj.ndim]
+
+    if is_bool:
+        dtype = Bool
     else:
         obj_dtype, other_dtype = (
             a.dtype if isinstance(a, Array) else type(a) for a in (obj, other)
         )
 
-    # If either are Float, the result is a Float
-    if obj_dtype is Float or other_dtype is Float:
-        dtype = Float
-    # Neither are Float, so if either are Int, the result is an Int
-    elif obj_dtype is Int or other_dtype is Int:
-        dtype = Int
-    # Neither are Float, neither are Int, they must be Bool, so the result is Bool
-    else:
-        dtype = Bool
+        # If either are Float, the result is a Float
+        if obj_dtype is Float or other_dtype is Float:
+            dtype = Float
+        # Neither are Float, so if either are Int, the result is an Int
+        elif obj_dtype is Int or other_dtype is Int:
+            dtype = Int
+        # Neither are Float, neither are Int, they must be Bool, so the result is Bool
+        else:
+            dtype = Bool
 
     if isinstance(obj, Array) or isinstance(other, Array):
         ndim = max(getattr(a, "ndim", -1) for a in (obj, other))
@@ -51,7 +56,7 @@ class ufunc:
         "types",
     }
 
-    def __init__(self, ufunc):
+    def __init__(self, ufunc, is_bool=False):
         if not isinstance(ufunc, np.ufunc):
             raise TypeError(
                 "Must be an instance of `np.ufunc`, got {}".format(type(ufunc))
@@ -59,6 +64,7 @@ class ufunc:
 
         self._ufunc = ufunc
         self.__name__ = ufunc.__name__
+        self._is_bool = is_bool
 
         HANDLED_UFUNCS[ufunc.__name__] = self
 
@@ -88,7 +94,7 @@ class ufunc:
                     )
                 )
 
-        return_type = _ufunc_result_type(*promoted)
+        return_type = _ufunc_result_type(*promoted, is_bool=self._is_bool)
         return return_type._from_apply(self.__name__, *promoted)
 
     def reduce(self):
@@ -165,28 +171,28 @@ rad2deg = ufunc(np.rad2deg)
 # TODO: invert
 
 # comparision functions
-greater = ufunc(np.greater)
-greater_equal = ufunc(np.greater_equal)
-less = ufunc(np.less)
-less_equal = ufunc(np.less_equal)
-not_equal = ufunc(np.not_equal)
-equal = ufunc(np.equal)
+greater = ufunc(np.greater, is_bool=True)
+greater_equal = ufunc(np.greater_equal, is_bool=True)
+less = ufunc(np.less, is_bool=True)
+less_equal = ufunc(np.less_equal, is_bool=True)
+not_equal = ufunc(np.not_equal, is_bool=True)
+equal = ufunc(np.equal, is_bool=True)
 # isneginf = partial(equal, -np.inf)
 # isposinf = partial(equal, np.inf)
-logical_and = ufunc(np.logical_and)
-logical_or = ufunc(np.logical_or)
-logical_xor = ufunc(np.logical_xor)
-logical_not = ufunc(np.logical_not)
+logical_and = ufunc(np.logical_and, is_bool=True)
+logical_or = ufunc(np.logical_or, is_bool=True)
+logical_xor = ufunc(np.logical_xor, is_bool=True)
+logical_not = ufunc(np.logical_not, is_bool=True)
 maximum = ufunc(np.maximum)
 minimum = ufunc(np.minimum)
 fmax = ufunc(np.fmax)
 fmin = ufunc(np.fmin)
 
 # floating functions
-isfinite = ufunc(np.isfinite)
-isinf = ufunc(np.isinf)
-isnan = ufunc(np.isnan)
-signbit = ufunc(np.signbit)
+isfinite = ufunc(np.isfinite, is_bool=True)
+isinf = ufunc(np.isinf, is_bool=True)
+isnan = ufunc(np.isnan, is_bool=True)
+signbit = ufunc(np.signbit, is_bool=True)
 copysign = ufunc(np.copysign)
 nextafter = ufunc(np.nextafter)
 spacing = ufunc(np.spacing)

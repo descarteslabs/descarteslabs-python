@@ -31,8 +31,10 @@ def test_validate_params():
     ):
         Array[Int]
 
-    with pytest.raises(TypeError, match="dtype must be a Proxytype"):
+    with pytest.raises(AssertionError, match="Array dtype must be Int"):
         Array[1, 1]
+    with pytest.raises(AssertionError, match="Array dtype must be Int"):
+        Array[List[Int], 1]
 
     with pytest.raises(AssertionError, match="ndim must be a Python integer"):
         Array[Int, Int]

@@ -4,12 +4,7 @@ import numpy as np
 from ... import env
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import (
-    GenericProxytype,
-    typecheck_promote,
-    ProxyTypeError,
-    assert_is_proxytype,
-)
+from ..core import GenericProxytype, typecheck_promote, ProxyTypeError
 from ..containers import Slice, Tuple, List, Dict
 from ..primitives import Int, Float, Bool, NoneType
 
@@ -93,10 +88,12 @@ class Array(GenericProxytype):
     @classmethod
     def _validate_params(cls, type_params):
         assert len(type_params) == 2, "Both Array dtype and ndim must be specified"
-        error_message = "Array dtype must be a Proxytype, got {}".format(type_params[0])
-        assert_is_proxytype(type_params[0], error_message=error_message)
-
-        ndim = type_params[1]
+        dtype, ndim = type_params
+        assert dtype in (
+            Int,
+            Float,
+            Bool,
+        ), "Array dtype must be Int, Float, or Bool, got {}".format(dtype)
         assert isinstance(
             ndim, int
         ), "Array ndim must be a Python integer, got {}".format(ndim)

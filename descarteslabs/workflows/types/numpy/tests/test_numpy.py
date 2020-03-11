@@ -77,10 +77,11 @@ def test_single_arg_methods(arg, return_ndim, operator):
     result = method(arg)
 
     if return_ndim >= 0:
-        assert isinstance(result, Array)
-        assert result.ndim == return_ndim
+        assert isinstance(
+            result, Array[Bool if method._is_bool else arg.dtype, return_ndim]
+        )
     else:
-        assert isinstance(result, type(proxify(arg)))
+        assert isinstance(result, Bool if method._is_bool else type(proxify(arg)))
 
 
 @pytest.mark.parametrize(
@@ -141,8 +142,9 @@ def test_double_arg_methods(args, return_ndim, operator):
     if return_ndim >= 0:
         assert isinstance(result, Array)
         assert result.ndim == return_ndim
+        assert (result.dtype is Bool) == method._is_bool
     else:
-        assert isinstance(result, (Int, Float, Bool))
+        assert isinstance(result, Bool if method._is_bool else (Int, Float))
 
 
 @pytest.mark.parametrize(
