@@ -202,3 +202,20 @@ def test_histogram_bins_range_raises():
 def test_histogram_manual_density_typecheck(density):
     with pytest.raises(TypeError):
         wf_np.histogram(img_arr, bins=5, range=(0, 1), density=density)
+
+
+@pytest.mark.parametrize(
+    "newshape, new_ndim",
+    [[(1,), 1], [(2, 4), 2], [(3, 3, 3), 3], [[2, 2], 2], [Tuple[Int, Int]((5, 5)), 2]],
+)
+def test_reshape(newshape, new_ndim):
+    result = wf_np.reshape(img_arr, newshape)
+    assert isinstance(result, Array[img_arr.dtype, new_ndim])
+
+
+@pytest.mark.parametrize(
+    "newshape", ["foo", 5, List[Int]([1, 2]), Tuple[Float]((1.0,))]
+)
+def test_reshape_newshape_raises(newshape):
+    with pytest.raises(TypeError):
+        wf_np.reshape(img_arr, newshape)

@@ -80,6 +80,7 @@ from .numpy_overrides import (
     transpose,
     concatenate,
     histogram,
+    reshape,
 )
 
 __all__ = [
@@ -164,4 +165,5 @@ __all__ = [
     "transpose",
     "concatenate",
     "histogram",
+    "reshape",
 ]

@@ -329,3 +329,23 @@ def histogram(arr, bins=10, range=None, weights=None, density=None):
     return Tuple[hist_return_type, Array[Float, 1]]._from_apply(
         "histogram", arr, bins=bins, range=range, weights=weights, density=density
     )
+
+
+@implements(np.reshape)
+@typecheck_promote(Array, None)
+def reshape(arr, newshape):
+    newshape = _promote_newshape(newshape)
+    ndim = len(newshape)
+    return Array[arr.dtype, ndim]._from_apply("reshape", arr, newshape)
+
+
+def _promote_newshape(newshape):
+    if isinstance(newshape, (Tuple, tuple, list)):
+        type_params = (Int,) * len(newshape)
+        try:
+            return Tuple[type_params]._promote(newshape)
+        except ProxyTypeError:
+            pass
+    raise TypeError(
+        "'newshape' must be a list or tuple of ints, received {!r}".format(newshape)
+    )

@@ -183,6 +183,16 @@ class Array(GenericProxytype):
         return_type = Tuple[(Int,) * self.ndim]
         return return_type._from_apply("array.shape", self)
 
+    def reshape(self, *newshape):
+        """
+        Returns an `Array` containing the same data with a new shape.
+
+        See `~.numpy.reshape` for full documentation.
+        """
+        from ..numpy import reshape
+
+        return reshape(self, newshape)
+
     def __getitem__(self, idx):
         idx, return_ndim = typecheck_getitem(idx, self.ndim)
 

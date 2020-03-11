@@ -27,7 +27,7 @@ Changelog
   and multidimensional indexing.
   - `ndarray` attribute of `Image` and `ImageCollection` will return a `MaskedArray`.
   - Over 60 NumPy ufuncs are now callable with Workflows `Array`.
-  - Includes other useful `Array` functions like `min()`, `median()`, `transpose()`, and `concatenate()`.
+  - Includes other useful `Array` functions like `min()`, `median()`, `transpose()`, `concatenate()`, `histogram()`, and `reshape()`.
 - **`ImageCollection.sortby_composite()`** for creating an argmin/argmax composite of an `ImageCollection`.
 - **Slicing** of `List`, `Tuple`, `Str`, and `ImageCollection`.
 - `wf.range` for generating a sequence of numbers between start and stop values.
