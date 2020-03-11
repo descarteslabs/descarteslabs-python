@@ -10,6 +10,14 @@ Changelog
 
 ## Pending
 
+## [1.1.1] - 2020-03-11
+
+1.1.1 fixes a packaging issue that caused `import descarteslabs.workflows` to fail.
+
+It also makes NumPy an explicit dependency. NumPy was already a transitive dependency, so this shouldn't cause any changes.
+
+You should _NOT_ install version 1.1.0; 1.1.1 should be used instead in all circumstances.
+
 ## [1.1.0] - 2020-03-11
 
 ### Catalog client
