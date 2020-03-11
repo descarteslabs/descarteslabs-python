@@ -113,6 +113,7 @@ class MapApp(widgets.VBox):
         if map is None:
             map = Map()
             map.add_control(ipyleaflet.FullScreenControl())
+            map.add_control(ipyleaflet.ScaleControl(position="bottomleft"))
 
         if layer_controller_list is None:
             from .layer_controller import LayerControllerList
@@ -197,7 +198,7 @@ class MapApp(widgets.VBox):
             !jupyter labextension install jupyter-leaflet @jupyter-widgets/jupyterlab-manager
         To install for plain Jupyter Notebook, run this in a cell:
             !jupyter nbextension enable --py --sys-prefix ipyleaflet
-        Then, restart Jupyter and re-run this notebook.
+        Then, restart the kernel and refresh the webpage.
         """
         return textwrap.dedent(msg)
 

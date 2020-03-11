@@ -91,9 +91,9 @@ def do_setup():
                 "numpy>=1.17.4",
                 "matplotlib>=3.0.3",
                 "mercantile>=1.1.2",
-                "ipyleaflet>=0.12.1",
-                "ipywidgets>=7.5.1",
-                "traitlets==4.3.2",
+                "ipyleaflet>=0.12.2,<1",
+                "ipywidgets>=7.5.1,<8",
+                "traitlets>=4.3.3,<5",
             ],
             "tests": [
                 "hypothesis[numpy]==4.24.5",
