@@ -1,27 +1,35 @@
 import numpy as np
 
 from ..core import typecheck_promote, ProxyTypeError, Proxytype
+from ..core.promote import _promote
 from ..primitives import Float, Int, Bool, NoneType
 from ..array import Array
 from ..containers import List, Tuple
 
 
-def _ufunc_result_dtype(obj, other=None):
+def _ufunc_result_type(obj, other=None):
     if other is None:
-        return obj.dtype if isinstance(obj, Array) else type(obj)
+        return type(obj)
     else:
-        obj, other = (
+        obj_dtype, other_dtype = (
             a.dtype if isinstance(a, Array) else type(a) for a in (obj, other)
         )
 
     # If either are Float, the result is a Float
-    if obj is Float or other is Float:
-        return Float
+    if obj_dtype is Float or other_dtype is Float:
+        dtype = Float
     # Neither are Float, so if either are Int, the result is an Int
-    if obj is Int or other is Int:
-        return Int
+    elif obj_dtype is Int or other_dtype is Int:
+        dtype = Int
     # Neither are Float, neither are Int, they must be Bool, so the result is Bool
-    return Bool
+    else:
+        dtype = Bool
+
+    if isinstance(obj, Array) or isinstance(other, Array):
+        ndim = max(getattr(a, "ndim", -1) for a in (obj, other))
+        return Array[dtype, ndim]
+    else:
+        return dtype
 
 
 HANDLED_FUNCTIONS = {}
@@ -61,35 +69,27 @@ class ufunc:
             )
 
         # Since typecheck_promote doesn't support variadic arguments, manually
-        # attempt to promote each argument to an Array
+        # attempt to promote each argument to an Array or scalar
         promoted = []
         for i, arg in enumerate(args):
             try:
-                if isinstance(arg, np.ndarray):
+                if isinstance(arg, Array):
+                    promoted.append(arg)
+                elif isinstance(arg, np.ndarray):
                     promoted.append(Array.from_numpy(arg))
                 else:
-                    promoted.append(Array._promote(arg))
-            except ProxyTypeError:
-                try:
-                    promoted.append(Int._promote(arg))
-                except ProxyTypeError:
-                    try:
-                        promoted.append(Float._promote(arg))
-                    except ProxyTypeError:
-                        raise ProxyTypeError(
-                            "Argument {} to function {} must be a Workflows Array, number, or "
-                            "a type promotable to one of those, not {}".format(
-                                i + 1, self.__name__, type(arg)
-                            )
-                        )
+                    promoted.append(_promote(arg, (Bool, Int, Float), i, self.__name__))
+                    # TODO(gabe) not great to be relying on internal `_promote` here
+            except (ProxyTypeError, TypeError):
+                raise ProxyTypeError(
+                    "Argument {} to function {} must be a Workflows Array, number, bool, or "
+                    "a type promotable to one of those, not {}".format(
+                        i + 1, self.__name__, type(arg)
+                    )
+                )
 
-        return_dtype = _ufunc_result_dtype(*promoted)
-        if any(isinstance(p, Array) for p in promoted):
-            return Array[return_dtype, args[0].ndim]._from_apply(
-                self.__name__, *promoted
-            )
-        else:
-            return return_dtype._from_apply(self.__name__, *promoted)
+        return_type = _ufunc_result_type(*promoted)
+        return return_type._from_apply(self.__name__, *promoted)
 
     def reduce(self):
         raise NotImplementedError(

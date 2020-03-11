@@ -3,14 +3,27 @@ import numpy as np
 
 from descarteslabs.workflows.types.array import Array
 from descarteslabs.workflows.types.containers import List, Tuple
-from descarteslabs.workflows.types.primitives import Int, Float
+from descarteslabs.workflows.types.primitives import Int, Float, Bool
+from descarteslabs.workflows.types import proxify
 import descarteslabs.workflows.types.numpy as wf_np
 
 img_arr = Array[Float, 3](np.ones((3, 3, 3)))
 col_arr = Array[Float, 4](np.ones((2, 3, 3, 3)))
 
 
-@pytest.mark.parametrize("args, return_ndim", [[[img_arr], 3], [[col_arr], 4]])
+@pytest.mark.parametrize(
+    "arg, return_ndim",
+    [
+        [img_arr, 3],
+        [col_arr, 4],
+        [Int(1), -1],
+        [Float(2.2), -1],
+        [Bool(True), -1],
+        [1, -1],
+        [2.2, -1],
+        [True, -1],
+    ],
+)
 @pytest.mark.parametrize(
     "operator",
     [
@@ -59,12 +72,15 @@ col_arr = Array[Float, 4](np.ones((2, 3, 3, 3)))
         "absolute",
     ],
 )
-def test_single_arg_methods(args, return_ndim, operator):
+def test_single_arg_methods(arg, return_ndim, operator):
     method = getattr(wf_np, operator)
-    result = method(*args)
+    result = method(arg)
 
-    assert isinstance(result, Array)
-    assert result.ndim == return_ndim
+    if return_ndim >= 0:
+        assert isinstance(result, Array)
+        assert result.ndim == return_ndim
+    else:
+        assert isinstance(result, type(proxify(arg)))
 
 
 @pytest.mark.parametrize(
@@ -72,8 +88,12 @@ def test_single_arg_methods(args, return_ndim, operator):
     [
         [[img_arr, img_arr], 3],
         [[col_arr, img_arr], 4],
-        [[img_arr, col_arr], 3],
+        [[img_arr, col_arr], 4],
         [[col_arr, col_arr], 4],
+        [[col_arr, 1], 4],
+        [[img_arr, 1], 3],
+        [[1, col_arr], 4],
+        [[1, img_arr], 3],
     ],
 )
 @pytest.mark.parametrize(
@@ -118,8 +138,11 @@ def test_double_arg_methods(args, return_ndim, operator):
     method = getattr(wf_np, operator)
     result = method(*args)
 
-    assert isinstance(result, Array)
-    assert result.ndim == return_ndim
+    if return_ndim >= 0:
+        assert isinstance(result, Array)
+        assert result.ndim == return_ndim
+    else:
+        assert isinstance(result, (Int, Float, Bool))
 
 
 @pytest.mark.parametrize(
