@@ -61,6 +61,8 @@ You should _NOT_ install version 1.1.0; 1.1.1 should be used instead in all circ
 - Better error when trying to iterate over Proxytypes.
 - Interactive map: calls to `visualize` now clear layer errors.
 - Interactive map: when setting scales, invalid values are highlighted in red.
+- Interactive map: a scalebar is shown on the bottom-left by default.
+- `ImageCollection.mosaic()` now in "last-on-top" order, which matches with GDAL and `dl.raster`. Use `mosaic(reverse=True)` for the same ordering as in v1.0.0.
 
 ### Workflows - Fixed
 - Better errors when specifying invalid type parameters for Proxytypes that require them.
