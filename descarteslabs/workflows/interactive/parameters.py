@@ -280,8 +280,9 @@ class ParameterSet(traitlets.HasTraits):
             current_link.unlink()
 
         if target is not None:
-            link = traitlets.link((target, attr), (self, name))
-            self._links[name] = link
+            with self.hold_trait_notifications():
+                link = traitlets.link((target, attr), (self, name))
+                self._links[name] = link
         else:
             if current_link is not None:
                 del self._links[name]
@@ -315,13 +316,13 @@ class ParameterSet(traitlets.HasTraits):
         widgets = []
         for name, value in zip(names, values):
             link = self._links.get(name, None)
-            if link is not None:
+            if link is not None and link.source is not None:
                 widget = link.source[0]
                 if not isinstance(widget, ipywidgets.Widget):
                     raise TypeError(
                         "The parameter {!r} is already linked to the non-widget {}. "
                         "To auto-generate controls for a ParameterSet, existing links must only be to widgets. "
-                        "Instead, manually construct this link (with `ipywidgets.link()`) "
+                        "Instead, manually construct this link (with `ipywidgets.link()`, not `self.link()`) "
                         "*after* auto-generating the controls.".format(name, widget)
                     )
             else:

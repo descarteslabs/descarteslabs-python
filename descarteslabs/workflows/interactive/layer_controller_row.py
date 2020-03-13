@@ -39,7 +39,7 @@ class LayerControllerRow(widgets.Box):
     """
 
     map = traitlets.Instance(Map)
-    _widgets = {}
+    _widgets = traitlets.Dict()
 
     def __init__(self, layer, map):
         self.layer = layer
@@ -131,7 +131,6 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
     checkerboardable = traitlets.Bool(True)
 
     _colormap_legends = {}  # cache of pre-rendered colormap legends
-    _widgets = {}
 
     def __init__(self, layer, map):
         if layer.error_output is None:
@@ -396,7 +395,6 @@ class TileLayerControllerRow(LayerControllerRow):
 
     map = traitlets.Instance(Map)
     layer = traitlets.Instance(TileLayer)
-    _widgets = {}
 
     def __init__(self, layer, map):
         self.layer = layer
