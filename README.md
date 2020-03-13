@@ -10,6 +10,10 @@ Changelog
 
 ## Pending
 
+## [1.1.2] - 2020-03-12
+
+1.1.2 fixes a bug which caused Workflows map layers to behave erratically when changing colormaps.
+
 ## [1.1.1] - 2020-03-11
 
 1.1.1 fixes a packaging issue that caused `import descarteslabs.workflows` to fail.
