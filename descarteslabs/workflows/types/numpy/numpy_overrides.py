@@ -64,6 +64,9 @@ def derived_from(original_method):
         # remove references
         doc = [a for a in doc.split("\n\n") if "References\n----------\n" not in a]
 
+        # remove "See Also" section
+        doc = [a for a in doc if "See Also\n" not in a]
+
         l1 = "This docstring was copied from numpy.{}".format(original_method.__name__)
         l2 = "Some inconsistencies with the Workflows version may exist"
 
@@ -86,9 +89,17 @@ def derived_from(original_method):
         else:
             # does the first line contain the function signature? (not always the case)
             if doc[0][-1] == ")":
-                doc = [doc[1]] + ["\n\n" + "    {}\n\n    {}\n\n".format(l1, l2)] + doc[2:]
+                doc = (
+                    [doc[1]]
+                    + ["\n\n" + "    {}\n\n    {}\n\n".format(l1, l2)]
+                    + doc[2:]
+                )
             else:
-                doc = [doc[0]] + ["\n\n" + "    {}\n\n    {}\n\n".format(l1, l2)] + doc[1:]
+                doc = (
+                    [doc[0]]
+                    + ["\n\n" + "    {}\n\n    {}\n\n".format(l1, l2)]
+                    + doc[1:]
+                )
             doc = "\n\n".join(doc)
 
         method.__doc__ = doc
