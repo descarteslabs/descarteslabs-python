@@ -7,8 +7,8 @@ It looks like this:
 ```yaml
 params: ["p1", "p2"]
 a: 10
-b: ["multiply", "a", "param1"]
-c: ["subtract", "b", "param2"]
+b: ["multiply", "a", "p1"]
+c: ["subtract", "b", "p2"]
 returns: "c"
 ```
 
