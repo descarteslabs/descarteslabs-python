@@ -295,3 +295,39 @@ def test_stack_raises():
     other = Array[Int, 2]([[]])
     with pytest.raises(ValueError):
         wf_np.stack([img_arr, other])
+
+
+@pytest.mark.parametrize("func", [(wf_np.argmin), (wf_np.argmax)])
+@pytest.mark.parametrize(
+    "arr, axis, new_ndim",
+    [(img_arr, None, None), (col_arr, None, None), (img_arr, 0, 2), (col_arr, 1, 3)],
+)
+def test_argmin_argmax(func, arr, axis, new_ndim):
+    result = func(arr, axis=axis)
+    if axis is None:
+        assert isinstance(result, Int)
+    else:
+        assert isinstance(result, Array[Int, new_ndim])
+
+
+@pytest.mark.parametrize("func", [(wf_np.all), (wf_np.any)])
+@pytest.mark.parametrize(
+    "arr, axis", [(img_arr, None), (col_arr, 0), (col_arr, [0, 2])]
+)
+def test_all_any(func, arr, axis):
+    result = func(arr, axis=axis)
+    if axis is None:
+        assert isinstance(result, Bool)
+    elif isinstance(axis, int):
+        assert isinstance(result, Array[Bool, arr.ndim - 1])
+    elif isinstance(axis, (tuple, list)):
+        assert isinstance(result, Array[Bool, arr.ndim - len(axis)])
+
+
+@pytest.mark.parametrize("func", [(wf_np.all), (wf_np.any)])
+def test_all_any_incorrect_axis(func):
+    with pytest.raises(TypeError, match="expected int but got type"):
+        func(img_arr, axis=(1, "foo", 3))
+
+    with pytest.raises(TypeError, match="Expected None, int, or tuple of ints"):
+        func(img_arr, axis="foo")

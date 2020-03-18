@@ -453,3 +453,79 @@ def stack(seq, axis=0):
         element_type._type_params[0], element_type._type_params[1] + 1
     ]
     return return_type._from_apply("stack", seq, axis=axis)
+
+
+@implements(np.argmin)
+@typecheck_promote(Array, axis=(NoneType, Int))
+@derived_from(np.argmin)
+def argmin(arr, axis=None):
+    if isinstance(axis, NoneType):
+        return_type = Int
+    else:
+        return_type = type(arr)._generictype[Int, arr.ndim - 1]
+    return return_type._from_apply("argmin", arr, axis=axis)
+
+
+@implements(np.argmax)
+@typecheck_promote(Array, axis=(NoneType, Int))
+@derived_from(np.argmax)
+def argmax(arr, axis=None):
+    if isinstance(axis, NoneType):
+        return_type = Int
+    else:
+        return_type = type(arr)._generictype[Int, arr.ndim - 1]
+    return return_type._from_apply("argmax", arr, axis=axis)
+
+
+@implements(np.all)
+@typecheck_promote(Array, axis=None)
+@derived_from(np.all)
+def all(arr, axis=None):
+    if axis is None:
+        return_type = Bool
+    elif isinstance(axis, int):
+        return_type = type(arr)._generictype[Bool, arr.ndim - 1]
+    elif isinstance(axis, (list, tuple)):
+        for idx, ax in enumerate(axis):
+            if not isinstance(ax, int):
+                raise TypeError(
+                    "In all: Element {} to `axis`: expected int but got type {!r}".format(
+                        idx, type(ax)
+                    )
+                )
+        new_ndim = arr.ndim - len(axis)
+        return_type = type(arr)._generictype[Bool, new_ndim]
+    else:
+        raise TypeError(
+            "In all: Expected None, int, or tuple of ints for argument `axis`, but got type `{}`".format(
+                type(axis)
+            )
+        )
+    return return_type._from_apply("all", arr, axis=axis)
+
+
+@implements(np.any)
+@typecheck_promote(Array, axis=None)
+@derived_from(np.any)
+def any(arr, axis=None):
+    if axis is None:
+        return_type = Bool
+    elif isinstance(axis, int):
+        return_type = type(arr)._generictype[Bool, arr.ndim - 1]
+    elif isinstance(axis, (list, tuple)):
+        for idx, ax in enumerate(axis):
+            if not isinstance(ax, int):
+                raise TypeError(
+                    "In any: Element {} to `axis`: expected int but got type {!r}".format(
+                        idx, type(ax)
+                    )
+                )
+        new_ndim = arr.ndim - len(axis)
+        return_type = type(arr)._generictype[Bool, new_ndim]
+    else:
+        raise TypeError(
+            "In any: Expected None, int, or tuple of ints for argument `axis`, but got type `{}`".format(
+                type(axis)
+            )
+        )
+    return return_type._from_apply("any", arr, axis=axis)

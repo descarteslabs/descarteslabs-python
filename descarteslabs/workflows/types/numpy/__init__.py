@@ -82,6 +82,10 @@ from .numpy_overrides import (
     histogram,
     reshape,
     stack,
+    argmin,
+    argmax,
+    all,
+    any,
 )
 
 __all__ = [
@@ -168,4 +172,8 @@ __all__ = [
     "histogram",
     "reshape",
     "stack",
+    "argmin",
+    "argmax",
+    "all",
+    "any",
 ]
