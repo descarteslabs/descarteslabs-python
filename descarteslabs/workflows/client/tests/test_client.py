@@ -3,6 +3,7 @@ import mock
 import pytest
 
 from descarteslabs.common.retry import Retry
+from descarteslabs.workflows import _channel
 
 from .. import Client
 from ..client import wrap_stub
@@ -45,9 +46,13 @@ def test_wrap_stub_with_default_retry():
     retry.assert_called_once_with(f)
 
 
-def test_wrap_stub_with_retry_as_kwarg():
+def test_wrap_stub_with_kwarg():
     args = (0,)
-    kwargs = {"foo": "bar"}
+    kwargs = {
+        "foo": "bar",
+        "metadata": (("x-wf-channel", _channel.__channel__),),
+    }
+
     f = mock.Mock()
 
     wrapped = wrap_stub(f, mock.Mock())
@@ -57,12 +62,61 @@ def test_wrap_stub_with_retry_as_kwarg():
 
 def test_wrap_stub_args_kwargs():
     args = (0,)
-    kwargs = {"foo": "bar"}
+    kwargs = {
+        "foo": "bar",
+        "metadata": (("x-wf-channel", _channel.__channel__),),
+    }
+
     f = mock.Mock()
 
     wrapped = wrap_stub(f, Retry())
     wrapped(*args, **kwargs)
     f.assert_called_once_with(*args, **kwargs)
+
+
+def test_metadata_header():
+    # Test that channel is added as a header
+    args = (0,)
+    kwargs = {
+        "foo": "bar",
+    }
+
+    f = mock.Mock()
+
+    wrapped = wrap_stub(f, Retry())
+    wrapped(*args, **kwargs)
+
+    kwargs_w_header = kwargs.copy()
+    kwargs_w_header["metadata"] = (
+        ("x-wf-channel", _channel.__channel__),
+    )
+
+    f.assert_called_once_with(*args, **kwargs_w_header)
+
+    # Test header can be shadowed when function is called
+    f = mock.Mock()
+
+    wrapped = wrap_stub(f, Retry())
+    wrapped(*args, metadata=(('x-wf-channel', 'override_value'),), **kwargs)
+
+    kwargs_w_header = kwargs.copy()
+    kwargs_w_header["metadata"] = (('x-wf-channel', 'override_value'),)
+
+    f.assert_called_once_with(*args, **kwargs_w_header)
+
+    # Test headrs can be merged
+    f = mock.Mock()
+
+    wrapped = wrap_stub(f, Retry())
+    wrapped(*args, metadata=(('key', 'val'),), **kwargs)
+
+    kwargs_w_header = kwargs.copy()
+    kwargs_w_header["metadata"] = (
+        ("x-wf-channel", _channel.__channel__),
+        ('key', 'val'),
+    )
+
+    f.assert_called_once_with(*args, **kwargs_w_header)
 
 
 def test_close():

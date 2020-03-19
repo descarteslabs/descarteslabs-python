@@ -13,6 +13,8 @@ from descarteslabs.common.proto.types import types_pb2
 from descarteslabs.common.workflows.arrow_serialization import serialization_context
 from descarteslabs.common.graft import client as graft_client
 
+from descarteslabs.workflows import _channel
+
 from ... import cereal, types
 from ..exceptions import JobInvalid
 from ..job import Job, _typespec_to_unmarshal_str
@@ -61,7 +63,9 @@ class TestJob(object):
         job = Job.get(id_, client=client)
         assert job._message == message
         stub.return_value.GetJob.assert_called_with(
-            job_pb2.GetJobRequest(id=id_), timeout=Client.DEFAULT_TIMEOUT
+            job_pb2.GetJobRequest(id=id_),
+            timeout=Client.DEFAULT_TIMEOUT,
+            metadata=(("x-wf-channel", _channel.__channel__),),
         )
 
         if client is not None:
@@ -74,11 +78,11 @@ class TestJob(object):
         obj = types.Int(1)
         parameters = {"foo": types.Str("bar")}
 
-        job = Job.build(obj, parameters, channel="foo", client=client)
+        job = Job.build(obj, parameters, client=client)
         message = job._message
 
         assert message.workflow_id == ""
-        assert message.channel == "foo"
+        assert message.channel == _channel.__channel__
 
         assert json.loads(message.parameters) == utils.json_normalize(
             {"foo": graft_client.value_graft(parameters["foo"])}
@@ -96,7 +100,7 @@ class TestJob(object):
         obj = types.Int(1)
         parameters = {"foo": types.Str("bar")}
 
-        job = Job.build(obj, parameters, channel="foo")
+        job = Job.build(obj, parameters)
 
         new_message = job_pb2.Job(
             id="foo",
@@ -104,7 +108,7 @@ class TestJob(object):
             serialized_graft=job._message.serialized_graft,
             typespec=job._message.typespec,
             type=job._message.type,
-            channel="foo",
+            channel=_channel.__channel__,
         )
         stub.return_value.CreateJob.return_value = new_message
 
@@ -117,9 +121,10 @@ class TestJob(object):
                 serialized_graft=job._message.serialized_graft,
                 typespec=job._message.typespec,
                 type=job._message.type,
-                channel="foo",
+                channel=_channel.__channel__,
             ),
             timeout=Client.DEFAULT_TIMEOUT,
+            metadata=(("x-wf-channel", _channel.__channel__),),
         )
         assert job._message is new_message
 
@@ -132,7 +137,9 @@ class TestJob(object):
         stub.return_value.GetJob.return_value = refresh_message
         job.refresh()
         stub.return_value.GetJob.assert_called_with(
-            job_pb2.GetJobRequest(id=job.id), timeout=Client.DEFAULT_TIMEOUT
+            job_pb2.GetJobRequest(id=job.id),
+            timeout=Client.DEFAULT_TIMEOUT,
+            metadata=(("x-wf-channel", _channel.__channel__),),
         )
         assert job._message == refresh_message
 
@@ -175,7 +182,7 @@ class TestJob(object):
         obj = types.Int(1)
         parameters = {"foo": types.Str("bar")}
 
-        job = Job.build(obj, parameters, channel="foo")
+        job = Job.build(obj, parameters)
         job_from_msg = Job(job._message, client=job._client)
 
         assert job.object is obj
@@ -187,7 +194,7 @@ class TestJob(object):
         assert job.parameters == {"foo": graft_client.value_graft(parameters["foo"])}
 
         assert job.id is None
-        assert job.channel == "foo"
+        assert job.channel == _channel.__channel__
         assert job.status == "STATUS_UNKNOWN"
         assert job.stage == "STAGE_UNKNOWN"
         assert job.created_datetime is None

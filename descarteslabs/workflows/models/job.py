@@ -91,7 +91,7 @@ class Job(object):
         self._object = None
 
     @classmethod
-    def build(cls, proxy_object, parameters, channel=None, client=None):
+    def build(cls, proxy_object, parameters, client=None):
         """
         Build a new `Job` for computing a proxy object under certain parameters.
         Does not actually trigger computation; call `Job.execute` on the result to do so.
@@ -102,16 +102,6 @@ class Job(object):
             Proxy object to compute
         parameters: dict[str, Proxytype]
             Python dictionary of parameter names and values
-        channel: str or None, optional
-            Channel name to submit the `Job` to.
-            If None, uses the default channel for this client
-            (``descarteslabs.workflows.__channel__``).
-
-            Channels are different versions of the backend,
-            to allow for feature changes without breaking existing code.
-            Not all clients are compatible with all channels.
-            This client is only guaranteed to work with its default channel,
-            whose name can be found under ``descarteslabs.workflows.__channel__``.
         client : `.workflows.client.Client`, optional
             Allows you to use a specific client instance with non-default
             auth and parameters
@@ -129,11 +119,6 @@ class Job(object):
         >>> # the job does not execute until `.execute` is called
         >>> job.execute() # doctest: +SKIP
         """
-        if channel is None:
-            # NOTE(gabe): we look up the variable from the `_channel` package here,
-            # rather than importing it directly at the top,
-            # so it can easily be changed during an interactive session.
-            channel = _channel.__channel__
         if client is None:
             client = Client()
 
@@ -147,7 +132,7 @@ class Job(object):
             serialized_graft=json.dumps(proxy_object.graft),
             typespec=typespec,
             type=types_pb2.ResultType.Value(result_type),
-            channel=channel,
+            channel=_channel.__channel__,
         )
 
         instance = cls(message, client)

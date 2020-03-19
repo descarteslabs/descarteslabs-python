@@ -70,6 +70,7 @@ class TestWorkflow(object):
             stub.return_value.GetWorkflow.assert_called_once_with(
                 workflow_pb2.GetWorkflowRequest(id="fake_id"),
                 timeout=Client.DEFAULT_TIMEOUT,
+                metadata=(("x-wf-channel", _channel.__channel__),),
             )
 
     @pytest.mark.skip(
@@ -117,6 +118,7 @@ class TestWorkflow(object):
         stub.return_value.CreateWorkflow.assert_called_once_with(
             workflow_pb2.CreateWorkflowRequest(workflow=old_message),
             timeout=Client.DEFAULT_TIMEOUT,
+            metadata=(("x-wf-channel", _channel.__channel__),),
         )
 
     def test_properties(self, stub):

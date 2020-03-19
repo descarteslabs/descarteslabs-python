@@ -53,7 +53,9 @@ class TestXYZ(object):
             _from_proto.assert_called_once()
             assert _from_proto.call_args[0][0] is message
             stub.return_value.GetXYZ.assert_called_once_with(
-                xyz_pb2.GetXYZRequest(xyz_id="fake_id"), timeout=Client.DEFAULT_TIMEOUT
+                xyz_pb2.GetXYZRequest(xyz_id="fake_id"),
+                timeout=Client.DEFAULT_TIMEOUT,
+                metadata=(("x-wf-channel", _channel.__channel__),),
             )
 
     def test_save(self, stub):
@@ -67,7 +69,9 @@ class TestXYZ(object):
         xyz.save()
         assert xyz._message is new_message
         stub.return_value.CreateXYZ.assert_called_once_with(
-            xyz_pb2.CreateXYZRequest(xyz=old_message), timeout=Client.DEFAULT_TIMEOUT
+            xyz_pb2.CreateXYZRequest(xyz=old_message),
+            timeout=Client.DEFAULT_TIMEOUT,
+            metadata=(("x-wf-channel", _channel.__channel__),),
         )
 
     def test_properties(self, stub):
@@ -127,6 +131,7 @@ class TestXYZ(object):
                 xyz_id=xyz.id,
             ),
             timeout=Client.STREAM_TIMEOUT,
+            metadata=(("x-wf-channel", _channel.__channel__),),
         )
 
     def test_from_proto(self, stub):

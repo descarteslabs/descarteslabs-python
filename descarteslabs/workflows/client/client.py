@@ -10,6 +10,8 @@ from descarteslabs.common.proto.workflow import workflow_pb2_grpc
 from descarteslabs.common.retry import Retry, RetryError
 from descarteslabs.common.retry.retry import _wraps
 
+from descarteslabs.workflows import _channel
+
 from .exceptions import from_grpc_error
 
 _RETRYABLE_STATUS_CODES = {
@@ -24,10 +26,20 @@ _RETRYABLE_STATUS_CODES = {
 def wrap_stub(func, default_retry):
     @_wraps(func)
     def wrapper(*args, **kwargs):
-        retry = kwargs.pop("retry", None)
+        retry = kwargs.pop("retry", default_retry)
 
+        # If retry is none, use identity function.
         if retry is None:
-            retry = default_retry
+            retry = lambda f: f  # noqa: E73
+
+        # set channel as header
+        default_metadata = (("x-wf-channel", _channel.__channel__),)
+
+        # Merge and set default request headers
+        # example: https://github.com/grpc/grpc/blob/master/examples/python/metadata/metadata_client.py
+        merged_metadata = dict(default_metadata + kwargs.get("metadata", tuple()))
+
+        kwargs["metadata"] = tuple(merged_metadata.items())
 
         try:
             return retry(func)(*args, **kwargs)
@@ -74,7 +86,7 @@ class Client:
 
         if host is None:
             host = os.environ.get(
-                "DESCARTESLABS_WORKFLOWS_HOST", "workflows.descarteslabs.com"
+                "DESCARTESLABS_WORKFLOWS_HOST", "workflows-api.descarteslabs.com"
             )
 
         self.auth = auth
@@ -124,47 +136,47 @@ class Client:
             "XYZ": xyz_pb2_grpc.XYZAPIStub(self.channel),
         }
 
-        # TODO wrap these functions in retry
         self._api = {
-            "Check": self._stubs["Health"].Check,
+            "Check": wrap_stub(self._stubs["Health"].Check, default_retry=None),
             "CreateWorkflow": wrap_stub(
                 self._stubs["Workflow"].CreateWorkflow,
                 default_retry=self._default_retry,
             ),
             "GetWorkflow": wrap_stub(
-                self._stubs["Workflow"].GetWorkflow, default_retry=self._default_retry
+                self._stubs["Workflow"].GetWorkflow, default_retry=self._default_retry,
             ),
             "ListWorkflows": wrap_stub(
-                self._stubs["Workflow"].ListWorkflows, default_retry=self._default_retry
+                self._stubs["Workflow"].ListWorkflows,
+                default_retry=self._default_retry,
             ),
             "UpdateWorkflow": wrap_stub(
                 self._stubs["Workflow"].UpdateWorkflow,
                 default_retry=self._default_retry,
             ),
             "CreateXYZ": wrap_stub(
-                self._stubs["XYZ"].CreateXYZ, default_retry=self._default_retry
+                self._stubs["XYZ"].CreateXYZ, default_retry=self._default_retry,
             ),
             "GetXYZ": wrap_stub(
-                self._stubs["XYZ"].GetXYZ, default_retry=self._default_retry
+                self._stubs["XYZ"].GetXYZ, default_retry=self._default_retry,
             ),
             "GetXYZSessionErrors": wrap_stub(
                 self._stubs["XYZ"].GetXYZSessionErrors,
                 default_retry=self._default_retry,
             ),
             "CreateJob": wrap_stub(
-                self._stubs["Job"].CreateJob, default_retry=self._default_retry
+                self._stubs["Job"].CreateJob, default_retry=self._default_retry,
             ),
             "WatchJob": wrap_stub(
-                self._stubs["Job"].WatchJob, default_retry=self._default_retry
+                self._stubs["Job"].WatchJob, default_retry=self._default_retry,
             ),
             "GetJob": wrap_stub(
-                self._stubs["Job"].GetJob, default_retry=self._default_retry
+                self._stubs["Job"].GetJob, default_retry=self._default_retry,
             ),
             "ListJobs": wrap_stub(
-                self._stubs["Job"].ListJobs, default_retry=self._default_retry
+                self._stubs["Job"].ListJobs, default_retry=self._default_retry,
             ),
             "CancelJob": wrap_stub(
-                self._stubs["Job"].CancelJob, default_retry=self._default_retry
+                self._stubs["Job"].CancelJob, default_retry=self._default_retry,
             ),
         }
 
@@ -196,7 +208,7 @@ class Client:
             timeout = self.DEFAULT_TIMEOUT
 
         return self.api["Check"](
-            health_pb2.HealthCheckRequest(), timeout=self.DEFAULT_TIMEOUT
+            health_pb2.HealthCheckRequest(), timeout=self.DEFAULT_TIMEOUT,
         )
 
     def close(self):
