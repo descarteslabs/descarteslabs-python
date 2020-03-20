@@ -96,7 +96,7 @@ def do_setup():
                 "traitlets>=4.3.3,<5",
             ],
             "tests": [
-                "hypothesis[numpy]==4.24.5",
+                "hypothesis[numpy]==5.7.0",
                 "mock",
                 "pytest==4.6.3",
                 "responses",

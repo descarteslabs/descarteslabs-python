@@ -1,6 +1,13 @@
 from ...cereal import serializable
-from ..core import typecheck_promote
+from ..core import allow_reflect
 from .primitive import Primitive
+
+
+def _delayed_numpy_overrides():
+    # avoid circular imports
+    from descarteslabs.workflows.types.numpy import numpy_overrides
+
+    return numpy_overrides
 
 
 @serializable()
@@ -36,37 +43,96 @@ class Bool(Primitive):
             "is lower than that of `and` and `or`.".format(type(self).__name__)
         )
 
+    def __array_function__(self, func, types, args, kwargs):
+        """
+        Override the behavior of a subset of NumPy functionality.
+
+        Parameters
+        ----------
+        func: The NumPy function object that was called
+        types: Collection of unique argument types from the original NumPy function
+            call that implement `__array_function__`
+        args: arguments directly passed from the original call
+        kwargs: kwargs directly passed from the original call
+        """
+        numpy_overrides = _delayed_numpy_overrides()
+
+        if func not in numpy_overrides.HANDLED_FUNCTIONS:
+            raise NotImplementedError(
+                "Using `{}` with a Workflows "
+                "{} is not supported. If you want to use "
+                "this function, you will first need to call "
+                "`.compute` on your Workflows Array.".format(
+                    func.__name__, type(self).__name__
+                )
+            )
+
+        try:
+            return numpy_overrides.HANDLED_FUNCTIONS[func](*args, **kwargs)
+        except TypeError as e:
+            e.args = (
+                "When attempting to call numpy.{} with a "
+                "Workflows {}, the following error occurred:\n\n".format(
+                    func.__name__, type(self).__name__
+                )
+                + e.args[0],
+            )
+            raise
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        """
+        Override the behavior of NumPy's ufuncs.
+
+        Parameters
+        ----------
+        ufunc: The ufunc object that was called
+        method: Which ufunc method was called (one of "__call__", "reduce",
+            "reduceat", "accumulate", "outer" or "inner")
+        inputs: Tuple of the input arguments to ufunc
+        kwargs: Dict of optional input arguments to ufunc
+        """
+        numpy_overrides = _delayed_numpy_overrides()
+
+        if method == "__call__":
+            if ufunc.__name__ not in numpy_overrides.HANDLED_UFUNCS:
+                return NotImplemented
+            else:
+                return numpy_overrides.HANDLED_UFUNCS[ufunc.__name__](*inputs, **kwargs)
+        else:
+            # We currently don't support ufunc methods apart from __call__
+            return NotImplemented
+
     def __invert__(self):
-        return self._from_apply("not", self)
+        return _delayed_numpy_overrides().logical_not(self)
 
-    @typecheck_promote(lambda: Bool)
+    @allow_reflect
     def __eq__(self, other):
-        return self._from_apply("eq", self, other)
+        return _delayed_numpy_overrides().equal(self, other)
 
-    @typecheck_promote(lambda: Bool)
+    @allow_reflect
     def __ne__(self, other):
-        return self._from_apply("ne", self, other)
+        return _delayed_numpy_overrides().not_equal(self, other)
 
-    @typecheck_promote(lambda: Bool)
+    @allow_reflect
     def __and__(self, other):
-        return self._from_apply("and", self, other)
+        return _delayed_numpy_overrides().logical_and(self, other)
 
-    @typecheck_promote(lambda: Bool)
+    @allow_reflect
     def __or__(self, other):
-        return self._from_apply("or", self, other)
+        return _delayed_numpy_overrides().logical_or(self, other)
 
-    @typecheck_promote(lambda: Bool)
+    @allow_reflect
     def __xor__(self, other):
-        return self._from_apply("xor", self, other)
+        return _delayed_numpy_overrides().logical_xor(self, other)
 
-    @typecheck_promote(lambda: Bool)
+    @allow_reflect
     def __rand__(self, other):
-        return self._from_apply("and", other, self)
+        return _delayed_numpy_overrides().logical_and(other, self)
 
-    @typecheck_promote(lambda: Bool)
+    @allow_reflect
     def __ror__(self, other):
-        return self._from_apply("or", other, self)
+        return _delayed_numpy_overrides().logical_or(other, self)
 
-    @typecheck_promote(lambda: Bool)
+    @allow_reflect
     def __rxor__(self, other):
-        return self._from_apply("xor", other, self)
+        return _delayed_numpy_overrides().logical_xor(other, self)

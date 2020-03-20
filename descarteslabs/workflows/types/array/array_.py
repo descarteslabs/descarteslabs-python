@@ -4,7 +4,7 @@ import numpy as np
 from ... import env
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import GenericProxytype, ProxyTypeError
+from ..core import GenericProxytype, ProxyTypeError, allow_reflect
 from ..containers import Slice, Tuple, List, Dict
 from ..primitives import Int, Float, Bool, NoneType
 
@@ -18,17 +18,6 @@ def _delayed_numpy_overrides():
     from descarteslabs.workflows.types.numpy import numpy_overrides
 
     return numpy_overrides
-
-
-def allow_reflect(func):
-    @functools.wraps(func)
-    def wrapped(*args):
-        try:
-            return func(*args)
-        except ProxyTypeError:
-            return NotImplemented
-
-    return wrapped
 
 
 @serializable()
@@ -75,6 +64,8 @@ class Array(GenericProxytype):
                 "Alternatively, Arrays can be instantiated with `from_numpy` "
                 "(like `Array.from_numpy(my_array)`)."
             )
+
+        self._literal_value = arr
 
         if isinstance(arr, np.ndarray):
             if arr.dtype.kind != WF_TO_DTYPE_KIND[self.dtype]:
@@ -152,6 +143,11 @@ class Array(GenericProxytype):
         except TypeError:
             # `_promote` contract expectes ProxyTypeError, not TypeError
             raise ProxyTypeError("Cannot promote {} to {}".format(obj, cls))
+
+    @property
+    def literal_value(self):
+        "Python literal value this proxy object was constructed with, or None if not constructed from a literal value."
+        return getattr(self, "_literal_value", None)
 
     @property
     def dtype(self):

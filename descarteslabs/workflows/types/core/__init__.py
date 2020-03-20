@@ -7,7 +7,7 @@ from .core import (
     assert_is_proxytype,
 )
 from .exceptions import ProxyTypeError
-from .promote import typecheck_promote, _resolve_lambdas
+from .promote import typecheck_promote, _resolve_lambdas, allow_reflect
 
 __all__ = [
     # .core
@@ -22,4 +22,5 @@ __all__ = [
     # .promote
     "typecheck_promote",
     "_resolve_lambdas",
+    "allow_reflect",
 ]

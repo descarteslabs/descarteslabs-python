@@ -308,6 +308,8 @@ def asarray(obj):
     # TODO dtype!!
     if isinstance(obj, Array):
         return obj
+    if isinstance(obj, (Int, Float, Bool)):
+        return Array[type(obj), 0](obj)
     if not isinstance(obj, np.ndarray):
         # Dumb hack to save writing list traversal ourselves: just try to make it into an ndarray
         obj = np.asarray(obj)
@@ -386,19 +388,22 @@ def _promote_to_list_of_same_arrays(seq, func_name):
 def concatenate(seq, axis=0):
     seq = _promote_to_list_of_same_arrays(seq, "concatenate")
     return_type = seq._element_type
+    if not return_type._type_params[1] > 0:
+        raise ValueError("zero-dimensional arrays cannot be concatenated")
     return return_type._from_apply("concatenate", seq, axis=axis)
 
 
 @implements(np.transpose)
-@typecheck_promote(Array, axes=(List[Int], NoneType))
+@typecheck_promote(None, axes=(List[Int], NoneType))
 @derived_from(np.transpose)
 def transpose(arr, axes=None):
+    arr = asarray(arr)
     return arr._from_apply("transpose", arr, axes=axes)
 
 
 @implements(np.histogram)
 @typecheck_promote(
-    Array,
+    None,
     bins=(List[Int], List[Float], Int),
     range=(Tuple[Int, Int], Tuple[Float, Float], NoneType),
     weights=(Array, NoneType),
@@ -414,6 +419,8 @@ def histogram(arr, bins=10, range=None, weights=None, density=None):
             "Histogram requires range to be specified if bins is given as an int."
         )
 
+    arr = asarray(arr)
+
     hist_return_dtype = Float if density else Int
     hist_return_type = Array[hist_return_dtype, 1]
 
@@ -423,9 +430,9 @@ def histogram(arr, bins=10, range=None, weights=None, density=None):
 
 
 @implements(np.reshape)
-@typecheck_promote(Array, None)
 @derived_from(np.reshape)
 def reshape(arr, newshape):
+    arr = asarray(arr)
     newshape = _promote_newshape(newshape)
     ndim = len(newshape)
     return type(arr)._generictype[arr.dtype, ndim]._from_apply("reshape", arr, newshape)

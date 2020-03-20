@@ -1,3 +1,4 @@
+import functools
 import inspect
 import types
 
@@ -257,3 +258,14 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
         return typechecked_func
 
     return decorator
+
+
+def allow_reflect(func):
+    @functools.wraps(func)
+    def wrapped(*args):
+        try:
+            return func(*args)
+        except ProxyTypeError:
+            return NotImplemented
+
+    return wrapped

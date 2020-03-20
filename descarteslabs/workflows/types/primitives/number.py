@@ -1,7 +1,14 @@
 from ...cereal import serializable
-from ..core import ProxyTypeError, typecheck_promote
-from .bool_ import Bool  # noqa TODO remove noqa later
+from ..core import ProxyTypeError, typecheck_promote, allow_reflect
+from .bool_ import Bool
 from .primitive import Primitive
+
+
+def _delayed_numpy_overrides():
+    # avoid circular imports
+    from descarteslabs.workflows.types.numpy import numpy_overrides
+
+    return numpy_overrides
 
 
 def _binop_result(a, b):
@@ -50,44 +57,103 @@ class Number(Primitive):
         else:
             return cls(obj)
 
+    def __array_function__(self, func, types, args, kwargs):
+        """
+        Override the behavior of a subset of NumPy functionality.
+
+        Parameters
+        ----------
+        func: The NumPy function object that was called
+        types: Collection of unique argument types from the original NumPy function
+            call that implement `__array_function__`
+        args: arguments directly passed from the original call
+        kwargs: kwargs directly passed from the original call
+        """
+        numpy_overrides = _delayed_numpy_overrides()
+
+        if func not in numpy_overrides.HANDLED_FUNCTIONS:
+            raise NotImplementedError(
+                "Using `{}` with a Workflows "
+                "{} is not supported. If you want to use "
+                "this function, you will first need to call "
+                "`.compute` on your Workflows Array.".format(
+                    func.__name__, type(self).__name__
+                )
+            )
+
+        try:
+            return numpy_overrides.HANDLED_FUNCTIONS[func](*args, **kwargs)
+        except TypeError as e:
+            e.args = (
+                "When attempting to call numpy.{} with a "
+                "Workflows {}, the following error occurred:\n\n".format(
+                    func.__name__, type(self).__name__
+                )
+                + e.args[0],
+            )
+            raise
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        """
+        Override the behavior of NumPy's ufuncs.
+
+        Parameters
+        ----------
+        ufunc: The ufunc object that was called
+        method: Which ufunc method was called (one of "__call__", "reduce",
+            "reduceat", "accumulate", "outer" or "inner")
+        inputs: Tuple of the input arguments to ufunc
+        kwargs: Dict of optional input arguments to ufunc
+        """
+        numpy_overrides = _delayed_numpy_overrides()
+
+        if method == "__call__":
+            if ufunc.__name__ not in numpy_overrides.HANDLED_UFUNCS:
+                return NotImplemented
+            else:
+                return numpy_overrides.HANDLED_UFUNCS[ufunc.__name__](*inputs, **kwargs)
+        else:
+            # We currently don't support ufunc methods apart from __call__
+            return NotImplemented
+
     def __abs__(self):
-        return self._from_apply("abs", self)
+        return _delayed_numpy_overrides().absolute(self)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __add__(self, other):
-        return _binop_result(self, other)._from_apply("add", self, other)
+        return _delayed_numpy_overrides().add(self, other)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __div__(self, other):
-        return Float._from_apply("div", self, other)
+        return _delayed_numpy_overrides().divide(self, other)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @typecheck_promote(lambda: (Int, Float, Bool), _reflect=True)
     def __divmod__(self, other):
         from ..containers import Tuple
 
         restype = _binop_result(self, other)
         return Tuple[restype, restype]._from_apply("divmod", self, other)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __eq__(self, other):
-        return Bool._from_apply("eq", self, other)
+        return _delayed_numpy_overrides().equal(self, other)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __floordiv__(self, other):
-        return _binop_result(self, other)._from_apply("floordiv", self, other)
+        return _delayed_numpy_overrides().floor_divide(self, other)
 
     def __hex__(self):
         raise TypeError(
             ("Cannot convert {} to Python string.").format(self.__class__.__name__)
         )
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __ge__(self, other):
-        return Bool._from_apply("ge", self, other)
+        return _delayed_numpy_overrides().greater_equal(self, other)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __gt__(self, other):
-        return Bool._from_apply("gt", self, other)
+        return _delayed_numpy_overrides().greater(self, other)
 
     def __index__(self):
         raise TypeError(
@@ -100,82 +166,82 @@ class Number(Primitive):
     def __invert__(self):
         return self._from_apply("invert", self)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __le__(self, other):
-        return Bool._from_apply("le", self, other)
+        return _delayed_numpy_overrides().less_equal(self, other)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __lt__(self, other):
-        return Bool._from_apply("lt", self, other)
+        return _delayed_numpy_overrides().less(self, other)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __mod__(self, other):
-        return _binop_result(self, other)._from_apply("mod", self, other)
+        return _delayed_numpy_overrides().mod(self, other)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __mul__(self, other):
-        return _binop_result(self, other)._from_apply("mul", self, other)
+        return _delayed_numpy_overrides().multiply(self, other)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __ne__(self, other):
-        return Bool._from_apply("ne", self, other)
+        return _delayed_numpy_overrides().not_equal(self, other)
 
     def __neg__(self):
-        return self._from_apply("neg", self)
+        return _delayed_numpy_overrides().negative(self)
 
     def __pos__(self):
         return self._from_apply("pos", self)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __pow__(self, other):
-        return _binop_result(self, other)._from_apply("pow", self, other)
+        return _delayed_numpy_overrides().power(self, other)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @allow_reflect
     def __radd__(self, other):
-        return _binop_result(self, other)._from_apply("add", other, self)
+        return _delayed_numpy_overrides().add(other, self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @allow_reflect
     def __rdiv__(self, other):
-        return Float._from_apply("div", other, self)
+        return _delayed_numpy_overrides().divide(other, self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @typecheck_promote(lambda: (Int, Float, Bool))
     def __rdivmod__(self, other):
         from ..containers import Tuple
 
         restype = _binop_result(self, other)
         return Tuple[restype, restype]._from_apply("divmod", other, self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @allow_reflect
     def __rfloordiv__(self, other):
-        return _binop_result(self, other)._from_apply("floordiv", other, self)
+        return _delayed_numpy_overrides().floor_divide(other, self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @allow_reflect
     def __rmod__(self, other):
-        return _binop_result(self, other)._from_apply("mod", other, self)
+        return _delayed_numpy_overrides().mod(other, self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @allow_reflect
     def __rmul__(self, other):
-        return _binop_result(self, other)._from_apply("mul", other, self)
+        return _delayed_numpy_overrides().multiply(other, self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @allow_reflect
     def __rpow__(self, other):
-        return _binop_result(self, other)._from_apply("pow", other, self)
+        return _delayed_numpy_overrides().power(other, self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @allow_reflect
     def __rsub__(self, other):
-        return _binop_result(self, other)._from_apply("sub", other, self)
+        return _delayed_numpy_overrides().subtract(other, self)
 
-    @typecheck_promote(lambda: (Int, Float))
+    @allow_reflect
     def __rtruediv__(self, other):
-        return Float._from_apply("div", other, self)
+        return _delayed_numpy_overrides().true_divide(other, self)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __sub__(self, other):
-        return _binop_result(self, other)._from_apply("sub", self, other)
+        return _delayed_numpy_overrides().subtract(self, other)
 
-    @typecheck_promote(lambda: (Int, Float), _reflect=True)
+    @allow_reflect
     def __truediv__(self, other):
-        return Float._from_apply("div", self, other)
+        return _delayed_numpy_overrides().true_divide(self, other)
 
 
 @serializable()
@@ -200,7 +266,7 @@ class Int(Number):
 
     _pytype = int
 
-    @typecheck_promote(lambda: Int, _reflect=True)
+    @typecheck_promote(lambda: (Int, Bool), _reflect=True)
     def __and__(self, other):
         return self._from_apply("and", self, other)
 
@@ -208,11 +274,11 @@ class Int(Number):
     def __lshift__(self, other):
         return self._from_apply("lshift", self, other)
 
-    @typecheck_promote(lambda: Int, _reflect=True)
+    @typecheck_promote(lambda: (Int, Bool), _reflect=True)
     def __or__(self, other):
         return self._from_apply("or", self, other)
 
-    @typecheck_promote(lambda: Int)
+    @typecheck_promote(lambda: (Int, Bool))
     def __rand__(self, other):
         return self._from_apply("and", other, self)
 
@@ -220,7 +286,7 @@ class Int(Number):
     def __rlshift__(self, other):
         return self._from_apply("lshift", other, self)
 
-    @typecheck_promote(lambda: Int)
+    @typecheck_promote(lambda: (Int, Bool))
     def __ror__(self, other):
         return self._from_apply("or", other, self)
 
@@ -232,11 +298,11 @@ class Int(Number):
     def __rshift__(self, other):
         return self._from_apply("rshift", self, other)
 
-    @typecheck_promote(lambda: Int)
+    @typecheck_promote(lambda: (Int, Bool))
     def __rxor__(self, other):
         return self._from_apply("xor", other, self)
 
-    @typecheck_promote(lambda: Int, _reflect=True)
+    @typecheck_promote(lambda: (Int, Bool), _reflect=True)
     def __xor__(self, other):
         return self._from_apply("xor", self, other)
 

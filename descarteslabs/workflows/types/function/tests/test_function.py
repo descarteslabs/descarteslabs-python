@@ -210,13 +210,13 @@ class TestFunction(object):
 
             return inner
 
-        func = Function[Int, {}, Function[Int, Int, {}, Float]](outer)
+        func = Function[Int, {}, Function[Int, Int, {}, Int]](outer)
 
         global_value = 1
         first_call_arg = 4
 
         proxy_inner = func(4)
-        assert isinstance(proxy_inner, Function[Int, Int, {}, Float])
+        assert isinstance(proxy_inner, Function[Int, Int, {}, Int])
         result_2 = proxy_inner(6, 4)
         result_3 = proxy_inner(10, 5)
         result = result_2 + result_3
@@ -226,7 +226,11 @@ class TestFunction(object):
 
         interpreted = interpreter.interpret(
             result.graft,
-            builtins={"add": operator.add, "div": operator.truediv, "global": m},
+            builtins={
+                "add": operator.add,
+                "true_divide": operator.truediv,
+                "global": m,
+            },
         )()
         assert interpreted == 5
         m.__radd__.assert_called_once_with(first_call_arg)
@@ -235,11 +239,12 @@ class TestFunction(object):
         def main(a, b, helper):
             return helper(a) / helper(b)
 
-        func = Function[Int, Int, Function[Int, {}, Int], {}, Float](main)
+        func = Function[Int, Int, Function[Int, {}, Int], {}, Int](main)
         result = func(3, 1, lambda x: x + 1)
 
         interpreted = interpreter.interpret(
-            result.graft, builtins={"add": operator.add, "div": operator.truediv}
+            result.graft,
+            builtins={"add": operator.add, "true_divide": operator.truediv},
         )()
         assert interpreted == 2
 
@@ -288,7 +293,7 @@ class TestFunction(object):
             proxy_result.graft,
             builtins={
                 "add": operator.add,
-                "sub": operator.sub,
+                "subtract": operator.sub,
                 "ext1": ext1,
                 "ext2": ext2,
             },
