@@ -8,6 +8,7 @@ from .client import (
     guid,
     isolate_keys,
     parametrize,
+    consistent_guid,
 )
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "guid",
     "isolate_keys",
     "parametrize",
+    "consistent_guid",
 ]

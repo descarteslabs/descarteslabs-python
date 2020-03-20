@@ -73,6 +73,7 @@ syntax is more lax.
 
 import six
 import itertools
+import contextlib
 
 from .. import syntax
 
@@ -479,3 +480,16 @@ def parametrize(graft, **params):
         return isolate_keys(subgraft)
     else:
         return subgraft
+
+
+@contextlib.contextmanager
+def consistent_guid(start=0):
+    "Context manager or decorator to temporarily reset the GUID, for use in testing to ensure consistent grafts"
+    global GUID_COUNTER
+    assert isinstance(start, int)
+    current_guid = GUID_COUNTER
+    try:
+        GUID_COUNTER = start
+        yield
+    finally:
+        GUID_COUNTER = current_guid
