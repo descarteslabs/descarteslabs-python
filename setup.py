@@ -98,7 +98,7 @@ def do_setup():
             "tests": [
                 "hypothesis[numpy]==4.24.5",
                 "mock",
-                "pytest==4.3.1",
+                "pytest==4.6.3",
                 "responses",
             ],
         },
