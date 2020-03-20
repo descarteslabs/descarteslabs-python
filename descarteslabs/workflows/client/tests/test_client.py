@@ -87,9 +87,7 @@ def test_metadata_header():
     wrapped(*args, **kwargs)
 
     kwargs_w_header = kwargs.copy()
-    kwargs_w_header["metadata"] = (
-        ("x-wf-channel", _channel.__channel__),
-    )
+    kwargs_w_header["metadata"] = (("x-wf-channel", _channel.__channel__),)
 
     f.assert_called_once_with(*args, **kwargs_w_header)
 
@@ -97,10 +95,10 @@ def test_metadata_header():
     f = mock.Mock()
 
     wrapped = wrap_stub(f, Retry())
-    wrapped(*args, metadata=(('x-wf-channel', 'override_value'),), **kwargs)
+    wrapped(*args, metadata=(("x-wf-channel", "override_value"),), **kwargs)
 
     kwargs_w_header = kwargs.copy()
-    kwargs_w_header["metadata"] = (('x-wf-channel', 'override_value'),)
+    kwargs_w_header["metadata"] = (("x-wf-channel", "override_value"),)
 
     f.assert_called_once_with(*args, **kwargs_w_header)
 
@@ -108,12 +106,12 @@ def test_metadata_header():
     f = mock.Mock()
 
     wrapped = wrap_stub(f, Retry())
-    wrapped(*args, metadata=(('key', 'val'),), **kwargs)
+    wrapped(*args, metadata=(("key", "val"),), **kwargs)
 
     kwargs_w_header = kwargs.copy()
     kwargs_w_header["metadata"] = (
         ("x-wf-channel", _channel.__channel__),
-        ('key', 'val'),
+        ("key", "val"),
     )
 
     f.assert_called_once_with(*args, **kwargs_w_header)
