@@ -234,6 +234,7 @@ def test_promote_to_list_of_same_arrays_errors(obj, error):
     "bins, range, bins_return_type",
     [
         [5, (0, 10), Array[Float, 1]],
+        [5, (0.1, 10.5), Array[Float, 1]],
         [[1, 2, 3], None, Array[Float, 1]],
         [[0.5, 1.0, 1.5], None, Array[Float, 1]],
     ],

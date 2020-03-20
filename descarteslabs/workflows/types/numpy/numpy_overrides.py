@@ -400,7 +400,7 @@ def transpose(arr, axes=None):
 @typecheck_promote(
     Array,
     bins=(List[Int], List[Float], Int),
-    range=(Tuple[Int, Int], NoneType),
+    range=(Tuple[Int, Int], Tuple[Float, Float], NoneType),
     weights=(Array, NoneType),
     density=None,
 )
