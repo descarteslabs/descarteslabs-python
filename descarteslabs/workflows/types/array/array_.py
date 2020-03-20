@@ -581,11 +581,15 @@ class Array(GenericProxytype):
     def _stats_return_type(self, axis):
         if axis is None:
             return_type = self.dtype
-        if isinstance(axis, tuple):
+        else:
+            if not isinstance(axis, tuple):
+                axis = (axis,)
+
             for a in axis:
                 assert isinstance(
                     a, (int, Int)
                 ), "Axis must be an integer, got {}".format(type(a))
+
             num_axes = len(axis)
             if self.ndim - num_axes < 0:
                 raise ValueError(
@@ -595,8 +599,6 @@ class Array(GenericProxytype):
                 return_type = self.dtype
             else:
                 return_type = type(self)._generictype[self.dtype, self.ndim - num_axes]
-        else:
-            return_type = type(self)._generictype[self.dtype, self.ndim - 1]
         return return_type
 
 
