@@ -167,7 +167,7 @@ class ufunc:
                     # TODO(gabe) not great to be relying on internal `_promote` here
             except (ProxyTypeError, TypeError):
                 raise ProxyTypeError(
-                    "Argument {} to function {} must be a Workflows Array, number, bool, or "
+                    "Argument {} to function {} must be a Workflows Array, Int, Float, Bool, or "
                     "a type promotable to one of those, not {}".format(
                         i + 1, self.__name__, type(arg)
                     )
@@ -178,22 +178,22 @@ class ufunc:
 
     def reduce(self):
         raise NotImplementedError(
-            "The `reduce` ufunc method is not supported by Workflows Arrays"
+            "The `reduce` ufunc method is not supported by Workflows types"
         )
 
     def reduceat(self):
         raise NotImplementedError(
-            "The `reduceat` ufunc method is not supported by Workflows Arrays"
+            "The `reduceat` ufunc method is not supported by Workflows types"
         )
 
     def accumulate(self):
         raise NotImplementedError(
-            "The `accumulate` ufunc method is not supported by Workflows Arrays"
+            "The `accumulate` ufunc method is not supported by Workflows types"
         )
 
     def outer(self):
         raise NotImplementedError(
-            "The `outer` ufunc method is not supported by Workflows Arrays"
+            "The `outer` ufunc method is not supported by Workflows types"
         )
 
 
