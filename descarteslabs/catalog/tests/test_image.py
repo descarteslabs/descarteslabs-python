@@ -132,8 +132,8 @@ class TestImage(ClientTestCase):
         assert (
             datetime.datetime.strptime(
                 "2019-08-20T08:08:16.123456Z", "%Y-%m-%dT%H:%M:%S.%fZ"
-            ).replace(tzinfo=utc)
-            == i.acquired
+            ).replace(tzinfo=utc) ==
+            i.acquired
         )
 
     def test_search_intersects(self):
@@ -675,8 +675,8 @@ class TestImage(ClientTestCase):
         assert (
             self.get_request_body(2)["data"]["attributes"]["image_upload_options"][
                 "upload_size"
-            ]
-            == 200
+            ] ==
+            200
         )
 
         upload.wait_for_completion(15)
@@ -732,7 +732,7 @@ class TestImage(ClientTestCase):
         )
 
         pytest.raises(
-            ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.uint8)
+            ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.int8)
         )
         pytest.raises(
             ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.int64)
