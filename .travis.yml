@@ -24,6 +24,9 @@ before_install:
 install:
 - pip wheel --no-deps --wheel-dir wheels -e .
 - pip install `ls wheels/*.whl`\[complete,tests\]
+# hack, until this pip bug is fixed: https://github.com/pypa/pip/issues/988
+# see: https://github.com/HypothesisWorks/hypothesis/issues/2113
+- pip install --upgrade hypothesis
 script:
 - pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
 notifications:
