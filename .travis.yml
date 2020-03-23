@@ -23,7 +23,8 @@ before_install:
 - pip install --upgrade pip==19.3.1 setuptools==45.1.0 wheel==0.33.6
 install:
 - pip wheel --no-deps --wheel-dir wheels -e .
-- pip install `ls wheels/*.whl`\[complete,tests\]
+- pip install --upgrade `ls wheels/*.whl`\[complete,tests\]
+- pip install --upgrade hypothesis
 script:
 - pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
 notifications:
