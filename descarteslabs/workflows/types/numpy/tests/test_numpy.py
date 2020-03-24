@@ -19,18 +19,18 @@ col_arr_masked = MaskedArray[Float, 4](data, mask)
 
 
 @pytest.mark.parametrize(
-    "arg, return_ndim",
+    "arg, return_ndim, return_type",
     [
-        [img_arr, 3],
-        [img_arr_masked, 3],
-        [col_arr, 4],
-        [col_arr_masked, 4],
-        [Int(1), -1],
-        [Float(2.2), -1],
-        [Bool(True), -1],
-        [1, -1],
-        [2.2, -1],
-        [True, -1],
+        [img_arr, 3, Array],
+        [img_arr_masked, 3, MaskedArray],
+        [col_arr, 4, Array],
+        [col_arr_masked, 4, MaskedArray],
+        [Int(1), -1, None],
+        [Float(2.2), -1, None],
+        [Bool(True), -1, None],
+        [1, -1, None],
+        [2.2, -1, None],
+        [True, -1, None],
     ],
 )
 @pytest.mark.parametrize(
@@ -81,16 +81,22 @@ col_arr_masked = MaskedArray[Float, 4](data, mask)
         "absolute",
     ],
 )
-def test_single_arg_methods(arg, return_ndim, operator):
+def test_single_arg_methods(arg, return_ndim, return_type, operator):
     method = getattr(wf_np, operator)
     result = method(arg)
 
     if return_ndim >= 0:
-        assert isinstance(
-            result, Array[Bool if method._is_bool else arg.dtype, return_ndim]
-        )
+        assert isinstance(result, return_type)
+        assert result.ndim == return_ndim
+        if method._return_type_override is not None:
+            assert result.dtype == method._return_type_override
     else:
-        assert isinstance(result, Bool if method._is_bool else type(proxify(arg)))
+        assert isinstance(
+            result,
+            method._return_type_override
+            if method._return_type_override is not None
+            else type(proxify(arg)),
+        )
 
 
 @pytest.mark.parametrize(
@@ -159,9 +165,15 @@ def test_double_arg_methods(args, return_ndim, return_type, operator):
     if return_ndim >= 0:
         assert isinstance(result, return_type)
         assert result.ndim == return_ndim
-        assert (result.dtype is Bool) == method._is_bool
+        if method._return_type_override is not None:
+            assert result.dtype == method._return_type_override
     else:
-        assert isinstance(result, Bool if method._is_bool else (Int, Float))
+        assert isinstance(
+            result,
+            method._return_type_override
+            if method._return_type_override is not None
+            else (Int, Float),
+        )
 
 
 @pytest.mark.parametrize(

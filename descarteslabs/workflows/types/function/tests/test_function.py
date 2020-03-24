@@ -210,13 +210,13 @@ class TestFunction(object):
 
             return inner
 
-        func = Function[Int, {}, Function[Int, Int, {}, Int]](outer)
+        func = Function[Int, {}, Function[Int, Int, {}, Float]](outer)
 
         global_value = 1
         first_call_arg = 4
 
         proxy_inner = func(4)
-        assert isinstance(proxy_inner, Function[Int, Int, {}, Int])
+        assert isinstance(proxy_inner, Function[Int, Int, {}, Float])
         result_2 = proxy_inner(6, 4)
         result_3 = proxy_inner(10, 5)
         result = result_2 + result_3
@@ -239,7 +239,7 @@ class TestFunction(object):
         def main(a, b, helper):
             return helper(a) / helper(b)
 
-        func = Function[Int, Int, Function[Int, {}, Int], {}, Int](main)
+        func = Function[Int, Int, Function[Int, {}, Int], {}, Float](main)
         result = func(3, 1, lambda x: x + 1)
 
         interpreted = interpreter.interpret(
