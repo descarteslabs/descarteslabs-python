@@ -1359,7 +1359,6 @@ class Tasks(Service):
     def _write_include_modules(self, include_modules, archive):
         for mod_name in include_modules:
             mod_file = self._find_module_file(mod_name)
-            raise ValueError("mod_file: {}".format(mod_file))
 
             # detect system packages from distribution or virtualenv locations.
             if re.match(".*(?:site|dist)-packages", mod_file) is not None:
