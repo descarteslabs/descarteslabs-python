@@ -431,6 +431,8 @@ class TasksPackagingTest(ClientTestCase):
                 os.remove(zf)
 
     def test_build_bundle_with_named_function_bad(self):
+        print("TEST_DATA_PATH: {}".format(TEST_DATA_PATH))
+        print("DATA_FILE_RELATIVE_PATH: {}".format(DATA_FILE_RELATIVE_PATH))
         with self.assertRaises(NameError):
             zf = self.client._build_bundle(
                 "func.func_foo", [self.DATA_FILE_PATH], [self.TEST_MODULE]
