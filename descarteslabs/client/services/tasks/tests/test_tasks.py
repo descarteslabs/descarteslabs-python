@@ -373,8 +373,8 @@ class TasksPackagingTest(ClientTestCase):
         def foo():
             pass
 
-        import os
-        print(os.environ['PYTHONPATH'])
+        import sys
+        print(sys.path)
         zf = self.client._build_bundle(
             foo, [self.DATA_FILE_PATH], self.TEST_MODULE_LIST
         )
