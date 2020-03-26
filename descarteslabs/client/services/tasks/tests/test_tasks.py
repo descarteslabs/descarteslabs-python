@@ -308,7 +308,7 @@ class TasksPackagingTest(ClientTestCase):
     def test_find_data_files_glob(self):
         print("os.path.dirname(__file__): {}".format(os.path.dirname(__file__)))
         print("__file__: {}".format(__file__))
-        print("listdir: {}".format(os.listdir(os.path.dirname(__file__))))
+        print("listdir: {}".format(os.listdir(os.path.join(os.path.dirname(__file__), "data/dl_test_package"))))
         pattern = os.path.join(self.TEST_DATA_PATH, "dl_test_package/*.json")
         data_files = self.client._find_data_files([pattern])
         self.assertEqual(
