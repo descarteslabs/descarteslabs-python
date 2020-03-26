@@ -179,7 +179,7 @@ all_values_to_try = [
     Any(0),
 ]
 
-base_types = [ImageCollection, Image, Int, Any]
+base_types = [ImageCollection, Image, Bool, Int, Any]
 
 
 @pytest.mark.parametrize(
@@ -199,22 +199,22 @@ base_types = [ImageCollection, Image, Int, Any]
         ["exp", (), ImageCollection],
         ["square", (), ImageCollection],
         ["__reversed__", (), ImageCollection],
-        ["__getitem__", [Any, Int, Slice], (Image, ImageCollection)],
+        ["__getitem__", [Any, Bool, Int, Slice], (Image, ImageCollection)],
         ["__lt__", base_types + [Float], ImageCollection],
         ["__le__", base_types + [Float], ImageCollection],
-        ["__eq__", base_types + [Float, Bool], ImageCollection],
-        ["__ne__", base_types + [Float, Bool], ImageCollection],
+        ["__eq__", base_types + [Float], ImageCollection],
+        ["__ne__", base_types + [Float], ImageCollection],
         ["__gt__", base_types + [Float], ImageCollection],
         ["__ge__", base_types + [Float], ImageCollection],
         ["__invert__", (), ImageCollection],
-        ["__and__", base_types + [Bool], ImageCollection],
-        ["__or__", base_types + [Bool], ImageCollection],
-        ["__xor__", base_types + [Bool], ImageCollection],
+        ["__and__", base_types, ImageCollection],
+        ["__or__", base_types, ImageCollection],
+        ["__xor__", base_types, ImageCollection],
         ["__lshift__", base_types, ImageCollection],
         ["__rshift__", base_types, ImageCollection],
-        ["__rand__", base_types + [Bool], ImageCollection],
-        ["__ror__", base_types + [Bool], ImageCollection],
-        ["__rxor__", base_types + [Bool], ImageCollection],
+        ["__rand__", base_types, ImageCollection],
+        ["__ror__", base_types, ImageCollection],
+        ["__rxor__", base_types, ImageCollection],
         ["__rlshift__", base_types, ImageCollection],
         ["__rrshift__", base_types, ImageCollection],
         ["__neg__", (), ImageCollection],

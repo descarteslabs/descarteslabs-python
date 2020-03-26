@@ -53,6 +53,10 @@ class TestConstruct(object):
         assert isinstance(i, Int)
         assert i.graft[i.graft["returns"]][0] == "Int.cast"
 
+        i = Int(Bool(True))
+        assert isinstance(i, Int)
+        assert i.graft[i.graft["returns"]][0] == "Int.cast"
+
     def test_explicit_cast_to_float(self):
         f = Float(Int(1))
         assert isinstance(f, Float)
@@ -128,13 +132,13 @@ class TestAllOperators(object):
             ["__truediv__", (Int, Float, Bool), (Int, Float)],
             # Int-specific methods
             ["__and__", [Int, Bool], Int],
-            ["__lshift__", [Int], Int],
+            ["__lshift__", [Int, Bool], Int],
             ["__or__", [Int, Bool], Int],
             ["__rand__", [Int, Bool], Int],
-            ["__rlshift__", [Int], Int],
+            ["__rlshift__", [Int, Bool], Int],
             ["__ror__", [Int, Bool], Int],
-            ["__rrshift__", [Int], Int],
-            ["__rshift__", [Int], Int],
+            ["__rrshift__", [Int, Bool], Int],
+            ["__rshift__", [Int, Bool], Int],
             ["__rxor__", [Int, Bool], Int],
             ["__xor__", [Int, Bool], Int],
         ],

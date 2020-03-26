@@ -131,7 +131,7 @@ all_values_to_try = [
     Any(0),
 ]
 
-base_types = [Image, ImageCollection, Int, Any]
+base_types = [Image, ImageCollection, Bool, Int, Any]
 returns_img_or_coll = {ImageCollection: ImageCollection, "default": Image}
 
 
@@ -153,19 +153,19 @@ returns_img_or_coll = {ImageCollection: ImageCollection, "default": Image}
         ["square", (), Image],
         ["__lt__", base_types + [Float], returns_img_or_coll],
         ["__le__", base_types + [Float], returns_img_or_coll],
-        ["__eq__", base_types + [Float, Bool], returns_img_or_coll],
-        ["__ne__", base_types + [Float, Bool], returns_img_or_coll],
+        ["__eq__", base_types + [Float], returns_img_or_coll],
+        ["__ne__", base_types + [Float], returns_img_or_coll],
         ["__gt__", base_types + [Float], returns_img_or_coll],
         ["__ge__", base_types + [Float], returns_img_or_coll],
         ["__invert__", (), Image],
-        ["__and__", base_types + [Bool], returns_img_or_coll],
-        ["__or__", base_types + [Bool], returns_img_or_coll],
-        ["__xor__", base_types + [Bool], returns_img_or_coll],
+        ["__and__", base_types, returns_img_or_coll],
+        ["__or__", base_types, returns_img_or_coll],
+        ["__xor__", base_types, returns_img_or_coll],
         ["__lshift__", base_types, returns_img_or_coll],
         ["__rshift__", base_types, returns_img_or_coll],
-        ["__rand__", base_types + [Bool], returns_img_or_coll],
-        ["__ror__", base_types + [Bool], returns_img_or_coll],
-        ["__rxor__", base_types + [Bool], returns_img_or_coll],
+        ["__rand__", base_types, returns_img_or_coll],
+        ["__ror__", base_types, returns_img_or_coll],
+        ["__rxor__", base_types, returns_img_or_coll],
         ["__rlshift__", base_types, returns_img_or_coll],
         ["__rrshift__", base_types, returns_img_or_coll],
         ["__neg__", (), Image],

@@ -32,7 +32,7 @@ class Number(NumPyMixin, Primitive):
     """
 
     def __init__(self, obj):
-        if isinstance(obj, Number) and not self._is_generic():
+        if isinstance(obj, Number) and not self._is_generic() or isinstance(obj, Bool):
             if isinstance(obj, type(self)):
                 self.graft = obj.graft
             else:
