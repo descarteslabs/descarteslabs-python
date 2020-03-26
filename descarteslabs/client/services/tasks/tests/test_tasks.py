@@ -188,8 +188,6 @@ class TasksTest(ClientTestCase):
 class TasksPackagingTest(ClientTestCase):
 
     TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
-    print("os.path.dirname(__file__): {}".format(os.path.dirname(__file__)))
-    print("__file__: {}".format(__file__))
     #TEST_DATA_PATH = '/home/travis/build/descarteslabs/descarteslabs-python/descarteslabs/client/services/tasks/tests/data'
     TEST_PACKAGE_NAME = "dl_test_package"
     DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
@@ -308,6 +306,8 @@ class TasksPackagingTest(ClientTestCase):
                     self.assertIn(b"main = foo", source)
 
     def test_find_data_files_glob(self):
+        print("os.path.dirname(__file__): {}".format(os.path.dirname(__file__)))
+        print("__file__: {}".format(__file__))
         pattern = os.path.join(self.TEST_DATA_PATH, "dl_test_package/*.json")
         data_files = self.client._find_data_files([pattern])
         self.assertEqual(
