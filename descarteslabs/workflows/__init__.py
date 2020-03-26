@@ -67,7 +67,7 @@ from .models import (
     Job,
     XYZ,
     XYZErrorListener,
-    compute,
+    compute as _compute,
     retrieve,
     use,
     publish as _publish,
@@ -80,10 +80,82 @@ from ._channel import __channel__, _set_channel
 from .client import Client, exceptions
 
 
-# NOTE(gabe): we define this top-level `publish` implementation, which tries to proxify
-# any plain Python objects before publishing them. Since this brings together two
+# NOTE(gabe): we define these top-level `compute` and `publish` implementations, which try to proxify
+# any plain Python objects and promote the geoctx before computing/publishing them. Since this brings together two
 # otherwise-separate submodules (`models` and `types`), it's cleaner to write it here
 # in __init__ than have circular dependencies between those submodules.
+def compute(
+    obj, geoctx=None, timeout=None, block=True, progress_bar=None, client=None, **params
+):
+    """
+    Compute a proxy object and wait for its result.
+
+    Parameters
+    ----------
+    obj: Proxytype, list, tuple
+        A proxy object to compute. Can also provide a Python list/tuple of proxy objects.
+    geoctx: `.scenes.geocontext.GeoContext`, `~.workflows.types.geospatial.GeoContext`, or None
+        The GeoContext parameter under which to run the computation.
+        Almost all computations will require a `~.workflows.types.geospatial.GeoContext`,
+        but for operations that only involve non-geospatial types,
+        this parameter is optional.
+    timeout: int, optional
+        The number of seconds to wait for the result, if ``block`` is True.
+        Raises ``TimeoutError`` if the timeout passes.
+    block: bool, default True
+        If True (default), block until the job is completed,
+        or ``timeout`` has passed.
+        If False, immediately returns a `Job` (which has already had `~Job.execute` called).
+    progress_bar: bool, default None
+        Whether to draw the progress bar. If ``None`` (default),
+        will display a progress bar in Jupyter Notebooks, but not elsewhere.
+        Ignored if ``block==False``.
+    client : `.workflows.client.Client`, optional
+        Allows you to use a specific client instance with non-default
+        auth and parameters
+    **params: Proxytype
+        Parameters under which to run the computation, such as ``geoctx``.
+
+    Returns
+    -------
+    result
+        Appropriate Python object representing the result,
+        either as a plain Python type, or object from
+        `descarteslabs.workflows.results`.
+
+    Example
+    -------
+    >>> import descarteslabs.workflows as wf
+    >>> num = wf.Int(1) + 1
+    >>> wf.compute(num) # doctest: +SKIP
+    2
+    >>> # same computation but do not block
+    >>> job = wf.compute(block=False) # doctest: +SKIP
+    >>> job # doctest: +SKIP
+    <descarteslabs.workflows.models.job.Job object at 0x...>
+    >>> job.result() # doctest: +SKIP
+    2
+    >>> # pass multiple proxy objects to compute at once
+    >>> wf.compute((num, num, num)) # doctest: +SKIP
+    (2, 2, 2)
+    """
+    if isinstance(obj, (tuple, list)):
+        obj = proxify(obj)
+
+    if geoctx is not None:
+        geoctx = GeoContext._promote(geoctx)
+
+    return _compute(
+        obj,
+        geoctx=geoctx,
+        timeout=timeout,
+        block=block,
+        progress_bar=progress_bar,
+        client=client,
+        **params
+    )
+
+
 def publish(obj, name="", description="", client=None):
     obj = proxify(obj)
     return _publish(obj, name, description, client)
@@ -154,7 +226,6 @@ __all__ = [
     "Workflow",
     "Job",
     "XYZ",
-    "compute",
     "XYZErrorListener",
     "retrieve",
     "use",
@@ -167,6 +238,7 @@ __all__ = [
     "Client",
     "exceptions",
     # __init__
+    "compute",
     "publish",
     # .interactive
     "map",

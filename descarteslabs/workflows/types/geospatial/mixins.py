@@ -93,7 +93,7 @@ class BandsMixin:
         else:
             return self._pick_bands_list(bands, allow_missing=allow_missing)
 
-    @typecheck_promote(List[Str], Bool)
+    @typecheck_promote(List[Str], allow_missing=Bool)
     def _pick_bands_list(self, bands, allow_missing=False):
         namespace = type(self).__name__
         return self._from_apply(

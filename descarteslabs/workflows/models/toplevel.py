@@ -3,12 +3,7 @@ from .job import Job
 
 
 def compute(
-    obj,
-    timeout=None,
-    block=True,
-    progress_bar=None,
-    client=None,
-    **params
+    obj, geoctx=None, timeout=None, block=True, progress_bar=None, client=None, **params
 ):
     """
     Compute a proxy object and wait for its result.
@@ -16,7 +11,12 @@ def compute(
     Parameters
     ----------
     obj: Proxytype
-        A proxy object to compute
+        A proxy object to compute.
+    geoctx: `~.workflows.types.geospatial.GeoContext`, or None
+        The GeoContext parameter under which to run the computation.
+        Almost all computations will require a `~.workflows.types.geospatial.GeoContext`,
+        but for operations that only involve non-geospatial types,
+        this parameter is optional.
     timeout: int, optional
         The number of seconds to wait for the result, if ``block`` is True.
         Raises ``TimeoutError`` if the timeout passes.
@@ -54,6 +54,9 @@ def compute(
     >>> job.result() # doctest: +SKIP
     2
     """
+    if geoctx is not None:
+        params["geoctx"] = geoctx
+
     job = Job.build(obj, params, client=client)
     job.execute()
     if block:
