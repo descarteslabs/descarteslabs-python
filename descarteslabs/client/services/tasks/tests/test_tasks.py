@@ -188,7 +188,6 @@ class TasksTest(ClientTestCase):
 class TasksPackagingTest(ClientTestCase):
 
     TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
-    #TEST_DATA_PATH = '/home/travis/build/descarteslabs/descarteslabs-python/descarteslabs/client/services/tasks/tests/data'
     TEST_PACKAGE_NAME = "dl_test_package"
     DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
     DATA_FILE_ZIP_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
@@ -306,9 +305,6 @@ class TasksPackagingTest(ClientTestCase):
                     self.assertIn(b"main = foo", source)
 
     def test_find_data_files_glob(self):
-        print("os.path.dirname(__file__): {}".format(os.path.dirname(__file__)))
-        print("__file__: {}".format(__file__))
-        print("listdir: {}".format(os.listdir(os.path.join(os.path.dirname(__file__), "data/dl_test_package"))))
         pattern = os.path.join(self.TEST_DATA_PATH, "dl_test_package/*.json")
         data_files = self.client._find_data_files([pattern])
         self.assertEqual(
@@ -435,8 +431,6 @@ class TasksPackagingTest(ClientTestCase):
                 os.remove(zf)
 
     def test_build_bundle_with_named_function_bad(self):
-        print("TEST_DATA_PATH: {}".format(self.TEST_DATA_PATH))
-        print("DATA_FILE_RELATIVE_PATH: {}".format(self.DATA_FILE_RELATIVE_PATH))
         with self.assertRaises(NameError):
             zf = self.client._build_bundle(
                 "func.func_foo", [self.DATA_FILE_PATH], [self.TEST_MODULE]
