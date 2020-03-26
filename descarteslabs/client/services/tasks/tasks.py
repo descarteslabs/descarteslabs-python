@@ -1131,6 +1131,7 @@ class Tasks(Service):
     def _sys_paths(self):
         if not hasattr(self, "_cached_sys_paths"):
             # use longest matching path entries.
+            sys.path.append("/home/travis/build/descarteslabs/descarteslabs-python/descarteslabs")
             self._cached_sys_paths = sorted(
                 six.moves.map(os.path.abspath, sys.path), key=len, reverse=True
             )
