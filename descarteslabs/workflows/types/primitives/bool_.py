@@ -36,12 +36,19 @@ class Bool(NumPyMixin, Primitive):
 
     def __bool__(self):
         raise TypeError(
-            "Conditionals and Python binary operators (like `and` and `or`) "
-            "are not supported on Proxytype {} objects. "
-            "Instead, use bitwise operators (like & and |). "
-            "Don't forget extra parenthesis around the expressions you're comparing, "
-            "since the precedence of bitwise operators "
-            "is lower than that of `and` and `or`.".format(type(self).__name__)
+            "Workflows objects cannot be used in conditionals.\n\n"
+            "Your code (or code you're calling) is trying to use a Workflows "
+            "{} object to make an immediate yes/no decision. This isn't possible, "
+            "because we don't know if the value is True or False without calling `compute`.\n\n"
+            "Depending on what you're trying to do, here are some ways to refactor your code:\n"
+            " - Use bitwise operators (like & and |)\n"
+            " - In place of `y in x` use `y.contains(x)` ('y' must be a proxy object so use "
+            "`wf.proxify(y)` if it's a Python list or dict)\n"
+            " - There is currently no direct Workflows equivalent to `if x` but you "
+            "can construct a `Dict` from `x -> y` and select values out of it with "
+            "'x' or use `wf.where` to achieve a similar result.".format(
+                type(self).__name__
+            )
         )
 
     def __invert__(self):

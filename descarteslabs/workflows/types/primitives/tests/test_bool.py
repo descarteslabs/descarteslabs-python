@@ -34,5 +34,5 @@ def test_invert():
 def test_helpful_error():
     b = Bool(True)
 
-    with pytest.raises(TypeError, match="Instead, use bitwise operators"):
+    with pytest.raises(TypeError, match="cannot be used in conditionals"):
         b and b
