@@ -374,15 +374,16 @@ class TasksPackagingTest(ClientTestCase):
             pass
 
         import sys
+
         print(sys.path)
 
-        new_module_path = shutil.copytree("data/dl_test_package", "/tmp/dl_test_package_non_system_module")
+        new_module_path = shutil.copytree(
+            "./data/dl_test_package", "/tmp/dl_test_package_non_system_module"
+        )
         new_module_list = [new_module_path]
         new_data_file_path = "/tmp/dl_test_package_non_system_module"
 
-        zf = self.client._build_bundle(
-            foo, new_data_file_path, new_module_file_list
-        )
+        zf = self.client._build_bundle(foo, new_data_file_path, new_module_file_list)
 
         try:
             with ZipFile(zf) as arc:
@@ -393,6 +394,7 @@ class TasksPackagingTest(ClientTestCase):
         finally:
             if os.path.exists(zf):
                 os.remove(zf)
+            shutil.rmtree("/tmp/dl_test_package_non_system_module")
 
     def test_build_bundle_with_globals(self):
         def foo():
