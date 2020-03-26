@@ -1,6 +1,13 @@
+import mock
+
 import json
-from ... import cereal, types
-from descarteslabs.common.graft import client
+from descarteslabs.common.graft import client as graft_client
+from ... import cereal, types, client
+
+
+class MockedClient(client.Client):
+    def _open_channel(self):
+        return mock.MagicMock()
 
 
 def json_normalize(x):
@@ -18,10 +25,10 @@ def assert_graft_is_scope_isolated_equvalent(isolated, orig):
 @cereal.serializable()
 class Foo(types.Proxytype):
     def __init__(self, x):
-        self.graft = client.apply_graft("foo", x=x)
+        self.graft = graft_client.apply_graft("foo", x=x)
 
 
 @cereal.serializable()
 class Bar(types.Proxytype):
     def __init__(self, x):
-        self.graft = client.apply_graft("bar", x=x)
+        self.graft = graft_client.apply_graft("bar", x=x)

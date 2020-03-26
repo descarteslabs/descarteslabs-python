@@ -38,8 +38,9 @@ class TestTypespecToUnmarshalStr(object):
             _typespec_to_unmarshal_str(typespec)
 
 
-@mock.patch.object(
-    Client, "_open_channel", new=lambda *args, **kwargs: mock.MagicMock()
+@mock.patch(
+    "descarteslabs.workflows.models.job.get_global_grpc_client",
+    new=lambda: utils.MockedClient(),
 )
 @mock.patch("descarteslabs.common.proto.job.job_pb2_grpc.JobAPIStub")
 class TestJob(object):

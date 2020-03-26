@@ -149,40 +149,39 @@ class Client:
                 default_retry=self._default_retry,
             ),
             "GetWorkflow": wrap_stub(
-                self._stubs["Workflow"].GetWorkflow, default_retry=self._default_retry,
+                self._stubs["Workflow"].GetWorkflow, default_retry=self._default_retry
             ),
             "ListWorkflows": wrap_stub(
-                self._stubs["Workflow"].ListWorkflows,
-                default_retry=self._default_retry,
+                self._stubs["Workflow"].ListWorkflows, default_retry=self._default_retry
             ),
             "UpdateWorkflow": wrap_stub(
                 self._stubs["Workflow"].UpdateWorkflow,
                 default_retry=self._default_retry,
             ),
             "CreateXYZ": wrap_stub(
-                self._stubs["XYZ"].CreateXYZ, default_retry=self._default_retry,
+                self._stubs["XYZ"].CreateXYZ, default_retry=self._default_retry
             ),
             "GetXYZ": wrap_stub(
-                self._stubs["XYZ"].GetXYZ, default_retry=self._default_retry,
+                self._stubs["XYZ"].GetXYZ, default_retry=self._default_retry
             ),
             "GetXYZSessionErrors": wrap_stub(
                 self._stubs["XYZ"].GetXYZSessionErrors,
                 default_retry=self._default_retry,
             ),
             "CreateJob": wrap_stub(
-                self._stubs["Job"].CreateJob, default_retry=self._default_retry,
+                self._stubs["Job"].CreateJob, default_retry=self._default_retry
             ),
             "WatchJob": wrap_stub(
-                self._stubs["Job"].WatchJob, default_retry=self._default_retry,
+                self._stubs["Job"].WatchJob, default_retry=self._default_retry
             ),
             "GetJob": wrap_stub(
-                self._stubs["Job"].GetJob, default_retry=self._default_retry,
+                self._stubs["Job"].GetJob, default_retry=self._default_retry
             ),
             "ListJobs": wrap_stub(
-                self._stubs["Job"].ListJobs, default_retry=self._default_retry,
+                self._stubs["Job"].ListJobs, default_retry=self._default_retry
             ),
             "CancelJob": wrap_stub(
-                self._stubs["Job"].CancelJob, default_retry=self._default_retry,
+                self._stubs["Job"].CancelJob, default_retry=self._default_retry
             ),
         }
 
@@ -214,7 +213,7 @@ class Client:
             timeout = self.DEFAULT_TIMEOUT
 
         return self.api["Check"](
-            health_pb2.HealthCheckRequest(), timeout=self.DEFAULT_TIMEOUT,
+            health_pb2.HealthCheckRequest(), timeout=self.DEFAULT_TIMEOUT
         )
 
     def close(self):
@@ -232,3 +231,13 @@ class Client:
 
     def __del__(self):
         self.close()
+
+
+global_grpc_client = None
+
+
+def get_global_grpc_client():
+    global global_grpc_client
+    if global_grpc_client is None:
+        global_grpc_client = Client()
+    return global_grpc_client

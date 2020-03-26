@@ -9,7 +9,7 @@ from descarteslabs.common.proto.workflow import (
 
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec
-from ..client import Client
+from ..client import get_global_grpc_client
 from .utils import pb_milliseconds_to_datetime
 
 
@@ -57,7 +57,7 @@ class Workflow(object):
             auth and parameters
         """
         if client is None:
-            client = Client()
+            client = get_global_grpc_client()
         self._object = proxy_object
         self._message = proto_message
         self._client = client
@@ -131,7 +131,7 @@ class Workflow(object):
         <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
         """
         if client is None:
-            client = Client()
+            client = get_global_grpc_client()
 
         message = client.api["GetWorkflow"](
             workflow_pb2.GetWorkflowRequest(id=workflow_id),

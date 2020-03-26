@@ -16,7 +16,7 @@ from descarteslabs.common.workflows.arrow_serialization import serialization_con
 
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec
-from ..client import Client, default_grpc_retry_predicate
+from ..client import get_global_grpc_client, default_grpc_retry_predicate
 from .exceptions import error_code_to_exception, TimeoutError
 from .utils import in_notebook, pb_milliseconds_to_datetime
 from .parameters import parameters_to_grafts
@@ -86,7 +86,7 @@ class Job(object):
     def __init__(self, message, client=None):
         self._message = message
         if client is None:
-            client = Client()
+            client = get_global_grpc_client()
         self._client = client
         self._object = None
 
@@ -120,7 +120,7 @@ class Job(object):
         >>> job.execute() # doctest: +SKIP
         """
         if client is None:
-            client = Client()
+            client = get_global_grpc_client()
 
         typespec = serialize_typespec(type(proxy_object))
         result_type = _typespec_to_unmarshal_str(typespec)
@@ -149,7 +149,7 @@ class Job(object):
         >>> job = Job.get('3754676080bbb2b857fbc04a3e48f6312732e1bc42e0bd7b') # doctest: +SKIP
         """
         if client is None:
-            client = Client()
+            client = get_global_grpc_client()
 
         message = client.api["GetJob"](
             job_pb2.GetJobRequest(id=id), timeout=client.DEFAULT_TIMEOUT

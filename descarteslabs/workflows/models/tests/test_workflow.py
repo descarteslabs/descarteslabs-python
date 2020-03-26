@@ -13,8 +13,9 @@ from ..utils import pb_milliseconds_to_datetime
 from . import utils
 
 
-@mock.patch.object(
-    Client, "_open_channel", new=lambda *args, **kwargs: mock.MagicMock()
+@mock.patch(
+    "descarteslabs.workflows.models.workflow.get_global_grpc_client",
+    new=lambda: utils.MockedClient(),
 )
 @mock.patch("descarteslabs.common.proto.workflow.workflow_pb2_grpc.WorkflowAPIStub")
 class TestWorkflow(object):

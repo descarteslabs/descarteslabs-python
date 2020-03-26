@@ -9,7 +9,7 @@ from descarteslabs.common.proto.xyz import xyz_pb2
 
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec
-from ..client import Client
+from ..client import get_global_grpc_client
 from .utils import pb_datetime_to_milliseconds, pb_milliseconds_to_datetime
 from .parameters import parameters_to_grafts
 
@@ -64,7 +64,7 @@ class XYZ(object):
             auth and parameters
         """
         if client is None:
-            client = Client()
+            client = get_global_grpc_client()
         self._object = proxy_object
         self._message = proto_message
         self._client = client
@@ -159,7 +159,7 @@ class XYZ(object):
         <descarteslabs.workflows.models.xyz.XYZ object at 0x...>
         """
         if client is None:
-            client = Client()
+            client = get_global_grpc_client()
 
         message = client.api["GetXYZ"](
             xyz_pb2.GetXYZRequest(xyz_id=xyz_id), timeout=client.DEFAULT_TIMEOUT
@@ -526,7 +526,7 @@ class XYZErrorListener(object):
         self.callbacks = []
         self._rendezvous = None
         self._thread = None
-        self._client = client if client is not None else Client()
+        self._client = client if client is not None else get_global_grpc_client()
 
     def add_callback(self, callback):
         """
@@ -625,7 +625,7 @@ class XYZErrorListener(object):
 
 def _tile_error_stream(xyz_id, session_id, start_datetime=None, client=None):
     if client is None:
-        client = Client()
+        client = get_global_grpc_client()
 
     if start_datetime is None:
         start_timestamp = 0
