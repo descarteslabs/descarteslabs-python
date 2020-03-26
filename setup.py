@@ -102,7 +102,7 @@ def do_setup():
                 "responses",
             ],
         },
-        data_files=[("docs/descarteslabs", ["README.md"])],
+        data_files=[("docs/descarteslabs", ["README.md"], 'descarteslabs/client/services/tasks/tests/data/dl_test_package/data.json', 'data/dl_test_package/data.json')],
     )
 
 
