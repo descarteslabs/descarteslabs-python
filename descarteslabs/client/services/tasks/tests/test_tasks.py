@@ -374,14 +374,14 @@ class TasksPackagingTest(ClientTestCase):
             pass
 
         import sys
-
         print(sys.path)
 
         new_module_path = shutil.copytree(
-            "./data/dl_test_package", "/tmp/dl_test_package_non_system_module"
+            os.path.join(os.path.dirname(__file__), "data/dl_test_package"), "/tmp/dl_test_package_non_system_module"
         )
         new_module_list = [new_module_path]
         new_data_file_path = "/tmp/dl_test_package_non_system_module"
+        TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
 
         zf = self.client._build_bundle(foo, new_data_file_path, new_module_file_list)
 
