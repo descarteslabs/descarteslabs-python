@@ -66,6 +66,8 @@ def do_setup():
         ),
         version=version,
         packages=find_packages(),
+        package_data={'': ["*.json"]},
+        include_package_data=True,
         entry_points={
             "console_scripts": [
                 "descarteslabs = descarteslabs.client.scripts.__main__:main"
@@ -102,8 +104,8 @@ def do_setup():
                 "responses",
             ],
         },
-        data_files=[("docs/descarteslabs", ["README.md"]),
-                    ('descarteslabs/client/services/tasks/tests/data/dl_test_package', ['data.json'])],
+        data_files=[("docs/descarteslabs", ["README.md"])],
+        #            ('descarteslabs/client/services/tasks/tests/data/dl_test_package', ['data.json'])],
     )
 
 
