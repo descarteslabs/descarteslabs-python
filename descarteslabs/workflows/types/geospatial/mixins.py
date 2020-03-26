@@ -5,7 +5,7 @@ from collections import abc
 
 from ..containers import Dict, List
 from ..core import typecheck_promote
-from ..primitives import Float, Int, Str
+from ..primitives import Float, Int, Str, Bool
 from ..proxify import proxify
 from ..function import Function
 
@@ -51,7 +51,7 @@ class BandsMixin:
                 )
         return self._from_apply("without_bandinfo", self, band, *bandinfo_keys)
 
-    def pick_bands(self, bands):
+    def pick_bands(self, bands, allow_missing=False):
         """
         New `Image`, containing only the given bands.
 
@@ -59,6 +59,11 @@ class BandsMixin:
         or a single space-separated string (like ``"red green blue"``).
 
         Bands on the new `Image` will be in the order given.
+
+        If ``allow_missing`` is False (default), raises an error if given band
+        names that don't exist in the `Image`. If ``allow_missing``
+        is True, any missing names are dropped, and if none of the names exist,
+        returns an empty `Image`.
 
         Example
         -------
@@ -79,14 +84,24 @@ class BandsMixin:
                     raise TypeError(
                         "Band names must all be strings, not {!r}".format(bands)
                     )
-            return self._from_apply("{}.pick_bands".format(namespace), self, *bands)
+            return self._from_apply(
+                "{}.pick_bands".format(namespace),
+                self,
+                *bands,
+                allow_missing=allow_missing
+            )
         else:
-            return self._pick_bands_list(bands)
+            return self._pick_bands_list(bands, allow_missing=allow_missing)
 
-    @typecheck_promote(List[Str])
-    def _pick_bands_list(self, bands):
+    @typecheck_promote(List[Str], Bool)
+    def _pick_bands_list(self, bands, allow_missing=False):
         namespace = type(self).__name__
-        return self._from_apply("{}.pick_bands_list".format(namespace), self, bands)
+        return self._from_apply(
+            "{}.pick_bands_list".format(namespace),
+            self,
+            bands,
+            allow_missing=allow_missing,
+        )
 
     def unpack_bands(self, bands):
         """

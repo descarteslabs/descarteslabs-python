@@ -330,7 +330,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         return super(ImageCollection, self).without_bandinfo(band, *bandinfo_keys)
 
-    def pick_bands(self, bands):
+    def pick_bands(self, bands, allow_missing=False):
         """
         New `ImageCollection`, containing Images with only the given bands.
 
@@ -341,6 +341,11 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
 
+        If ``allow_missing`` is False (default), raises an error if given band
+        names that don't exist in the `ImageCollection`. If ``allow_missing``
+        is True, any missing names are dropped, and if none of the names exist,
+        returns an empty `ImageCollection`.
+
         Example
         -------
         >>> from descarteslabs.workflows import ImageCollection
@@ -348,7 +353,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
         >>> rgb = col.pick_bands("red green blue")
         """
-        return super(ImageCollection, self).pick_bands(bands)
+        return super(ImageCollection, self).pick_bands(
+            bands, allow_missing=allow_missing
+        )
 
     def rename_bands(self, *new_positional_names, **new_names):
         """

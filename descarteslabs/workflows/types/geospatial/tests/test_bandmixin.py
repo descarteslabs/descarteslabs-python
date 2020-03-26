@@ -1,7 +1,7 @@
 import pytest
 import mock
 
-from ... import Proxytype, List, Dict, Tuple, Str, Int
+from ... import Proxytype, List, Dict, Tuple, Str, Int, Bool
 from .. import Image, ImageCollection
 
 
@@ -10,35 +10,46 @@ from .. import Image, ImageCollection
     "obj, namespace",
     [[Image.from_id(""), "Image"], [ImageCollection.from_id(""), "ImageCollection"]],
 )
-def test_pick_bands(_from_apply, obj, namespace):
+@pytest.mark.parametrize("allow_missing", [True, False])
+def test_pick_bands(_from_apply, obj, namespace, allow_missing):
     prefix = namespace + "."
 
-    obj.pick_bands(["red", "green", "blue"])
+    obj.pick_bands(["red", "green", "blue"], allow_missing=allow_missing)
     _from_apply.assert_called_once_with(
-        prefix + "pick_bands", obj, "red", "green", "blue"
+        prefix + "pick_bands", obj, "red", "green", "blue", allow_missing=allow_missing
     )
     _from_apply.reset_mock()
 
     proxy_str = Str("green")
-    obj.pick_bands(["red", proxy_str, "blue"])
+    obj.pick_bands(["red", proxy_str, "blue"], allow_missing=allow_missing)
     _from_apply.assert_called_once_with(
-        prefix + "pick_bands", obj, "red", proxy_str, "blue"
+        prefix + "pick_bands",
+        obj,
+        "red",
+        proxy_str,
+        "blue",
+        allow_missing=allow_missing,
     )
     _from_apply.reset_mock()
 
-    obj.pick_bands("red green blue")
+    obj.pick_bands("red green blue", allow_missing=allow_missing)
     _from_apply.assert_called_once_with(
-        prefix + "pick_bands", obj, "red", "green", "blue"
+        prefix + "pick_bands", obj, "red", "green", "blue", allow_missing=allow_missing
     )
     _from_apply.reset_mock()
 
-    obj.pick_bands("red")
-    _from_apply.assert_called_once_with(prefix + "pick_bands", obj, "red")
+    obj.pick_bands("red", allow_missing=allow_missing)
+    _from_apply.assert_called_once_with(
+        prefix + "pick_bands", obj, "red", allow_missing=allow_missing
+    )
     _from_apply.reset_mock()
 
     proxy_list = List[Str](["red", "nir"])
-    obj.pick_bands(proxy_list)
-    _from_apply.assert_called_once_with(prefix + "pick_bands_list", obj, proxy_list)
+    proxy_bool = Bool(allow_missing)
+    obj.pick_bands(proxy_list, proxy_bool)
+    _from_apply.assert_called_once_with(
+        prefix + "pick_bands_list", obj, proxy_list, allow_missing=proxy_bool
+    )
 
     with pytest.raises(TypeError, match="Band names must all be strings"):
         obj.pick_bands(["red", 2])
