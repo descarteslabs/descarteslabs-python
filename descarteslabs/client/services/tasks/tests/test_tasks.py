@@ -393,7 +393,7 @@ class TasksPackagingTest(ClientTestCase):
         zf = self.client._build_bundle(foo, [new_data_file_path], new_module_list)
 
         module_path = "{}/{}".format(DIST, "{}/package/module.py".format(NON_SYS_MODULE))
-        cython_module_path = "{}/{}".format(DIST, "{}/package/cython_module.pyx")
+        cython_module_path = "{}/{}".format(DIST, "{}/package/cython_module.pyx".format(NON_SYS_MODULE))
         data_path = "{}/{}".format(DATA, "{}/data.json".format(NON_SYS_MODULE))
 
         try:

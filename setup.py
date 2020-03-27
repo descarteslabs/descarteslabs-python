@@ -66,7 +66,8 @@ def do_setup():
         ),
         version=version,
         packages=find_packages(),
-        package_data={'descarteslabs': ["client/services/tasks/tests/data/dl_test_package/*.json",
+        package_data={'descarteslabs': ["client/services/tasks/tests/data/dl_test_package/package/*.pyx",
+                                        "client/services/tasks/tests/data/dl_test_package/*.json",
                                         "client/services/tasks/tests/data/*.txt"]},
         include_package_data=True,
         entry_points={
