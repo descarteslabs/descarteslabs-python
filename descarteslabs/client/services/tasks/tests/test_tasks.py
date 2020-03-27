@@ -384,6 +384,7 @@ class TasksPackagingTest(ClientTestCase):
 
         sys.path.insert(0, "/tmp")
         print("sys.path: {}".format(sys.path))
+        print("*****tmp**** {}".format(os.listdir("/tmp")))
 
         zf = self.client._build_bundle(foo, [new_data_file_path], new_module_list)
 

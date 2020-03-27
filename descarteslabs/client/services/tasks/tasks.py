@@ -1334,6 +1334,7 @@ class Tasks(Service):
     def _find_module_file(self, mod_name):
         """Search for module file in python path. Raise ImportError if not found"""
 
+        print("***mod_name*** {}".format(mod_name))
         try:
             mod = importlib.import_module(mod_name)
             mod_file = mod.__file__.replace(".pyc", ".py", 1)
