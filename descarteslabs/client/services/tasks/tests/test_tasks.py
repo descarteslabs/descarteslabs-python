@@ -202,6 +202,7 @@ class TasksPackagingTest(ClientTestCase):
     TEST_MODULE_ZIP_PATH_LIST = [TEST_MODULE_ZIP_PATH, TEST_MODULE_CYTHON_ZIP_PATH]
 
     NON_SYS_MODULE = "dl_non_system_module"
+    NON_SYS_MODULE_PATH = "/tmp"
     NON_SYS_MODULE_ZIP_PATH = "{}/package/module.py".format(NON_SYS_MODULE)
     NON_SYS_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(NON_SYS_MODULE)
     NON_SYS_DATA_FILE_ZIP_PATH = "{}/data.json".format(NON_SYS_MODULE)
@@ -209,7 +210,7 @@ class TasksPackagingTest(ClientTestCase):
     NON_SYS_TEST_MODULE = "{}.package.module".format(NON_SYS_MODULE)
     NON_SYS_TEST_MODULE_CYTHON = "{}.package.cython_module".format(NON_SYS_MODULE)
     NON_SYS_MODULE_LIST = [NON_SYS_TEST_MODULE, NON_SYS_TEST_MODULE_CYTHON]
-    NON_SYS_DATA_FILE_PATH = "/tmp/{}/data.json".format(NON_SYS_MODULE)
+    NON_SYS_DATA_FILE_PATH = "{}/{}/data.json".format(NON_SYS_MODULE_PATH, NON_SYS_MODULE)
 
     GLOBAL_STRING = "A global var"
     LOCAL_STRING = "A local var"
@@ -218,9 +219,20 @@ class TasksPackagingTest(ClientTestCase):
         super(TasksPackagingTest, self).setUp()
         self._sys_path = sys.path
         sys.path += [self.TEST_DATA_PATH]
+        sys.path.insert(0, "/tmp")
+        print("In setUp", sys.path)
+
+        shutil.copytree(
+            os.path.join(os.path.dirname(__file__), "data/dl_test_package"),
+            "{}/{}".format(self.NON_SYS_MODULE_PATH, self.NON_SYS_MODULE),
+        )
+
 
     def tearDown(self):
+        shutil.rmtree("{}/{}".format(self.NON_SYS_MODULE_PATH, self.NON_SYS_MODULE))
+        #sys.path = sys.path[1:]
         sys.path = self._sys_path
+        print("In tearDown", sys.path)
         super(TasksPackagingTest, self).tearDown()
 
     @staticmethod
@@ -384,19 +396,6 @@ class TasksPackagingTest(ClientTestCase):
         def foo():
             pass
 
-        shutil.copytree(
-            os.path.join(os.path.dirname(__file__), "data/dl_test_package"),
-            "/tmp/{}".format(self.NON_SYS_MODULE),
-        )
-        sys.path.insert(0, "/tmp")
-
-        # print("sys.path: {}".format(sys.path))
-        # print(
-        #    "*****tmp**** {}".format(
-        #        os.listdir("/tmp/{}/package".format(self.NON_SYS_MODULE))
-        #    )
-        # )
-
         zf = self.client._build_bundle(
             foo, [self.NON_SYS_DATA_FILE_PATH], self.NON_SYS_MODULE_LIST
         )
@@ -410,8 +409,6 @@ class TasksPackagingTest(ClientTestCase):
         finally:
             if os.path.exists(zf):
                 os.remove(zf)
-            shutil.rmtree("/tmp/{}".format(self.NON_SYS_MODULE))
-            sys.path = sys.path[1:]
 
     def test_build_bundle_with_globals(self):
         def foo():
