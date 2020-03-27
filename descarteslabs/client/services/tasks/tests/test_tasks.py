@@ -13,6 +13,7 @@
 # limitations under the License.
 from __future__ import unicode_literals
 
+import copy
 import io
 import json
 import os
@@ -217,9 +218,8 @@ class TasksPackagingTest(ClientTestCase):
 
     def setUp(self):
         super(TasksPackagingTest, self).setUp()
-        self._sys_path = sys.path
-        sys.path += [self.TEST_DATA_PATH]
-        sys.path.insert(0, "/tmp")
+        self._sys_path = copy.copy(sys.path)
+        sys.path = [self.NON_SYS_MODULE_PATH, self.TEST_DATA_PATH] + sys.path
         print("In setUp", sys.path)
 
         shutil.copytree(
