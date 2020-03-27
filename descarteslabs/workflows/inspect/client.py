@@ -1,9 +1,15 @@
 import os
+import random
 
 import pyarrow as pa
 import requests
+from urllib3.util.retry import Retry
 
-from descarteslabs.client.services.service import Service
+from descarteslabs.client.services.service.service import (
+    Service,
+    HttpStatusCode,
+    HttpRequestMethod,
+)
 
 from descarteslabs.common.workflows import unmarshal
 from descarteslabs.common.workflows.arrow_serialization import serialization_context
@@ -20,6 +26,20 @@ from descarteslabs.workflows import results  # noqa: F401 isort:skip
 
 
 class InspectClient(Service):
+    RETRY_CONFIG = Retry(
+        total=3,
+        connect=2,
+        read=2,
+        status=2,
+        backoff_factor=random.uniform(1, 3),
+        method_whitelist=frozenset([HttpRequestMethod.HEAD, HttpRequestMethod.GET]),
+        status_forcelist=[
+            HttpStatusCode.BadGateway,
+            HttpStatusCode.ServiceUnavailable,
+            HttpStatusCode.GatewayTimeout,
+        ],
+    )
+
     def __init__(self, channel=None, url=None, auth=None, retries=None):
         if channel is None:
             channel = _channel.__channel__
@@ -31,7 +51,9 @@ class InspectClient(Service):
                 "https://workflows.descarteslabs.com/{}".format(channel),
             )
 
-        super().__init__(url, auth=auth, retries=retries)
+        super().__init__(
+            url, auth=auth, retries=retries if retries is not None else self.RETRY_CONFIG
+        )
 
     def inspect(self, obj, timeout=30, **params):
         graft = obj.graft
