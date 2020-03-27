@@ -380,17 +380,17 @@ class TasksPackagingTest(ClientTestCase):
             pass
 
         new_module_path = shutil.copytree(
-            os.path.join(os.path.dirname(__file__), "data/dl_test_package"), "/tmp/{}".format(NON_SYS_MODULE)
+            os.path.join(os.path.dirname(__file__), "data/dl_test_package"), "/tmp/{}".format(self.NON_SYS_MODULE)
         )
-        new_test_module = "{}.package.module".format(NON_SYS_MODULE)
-        new_cython_test_module = "{}.package.cython_module".format(NON_SYS_MODULE)
+        new_test_module = "{}.package.module".format(self.NON_SYS_MODULE)
+        new_cython_test_module = "{}.package.cython_module".format(self.NON_SYS_MODULE)
 
         new_module_list = [new_test_module, new_cython_test_module]
-        new_data_file_path = "/tmp/{}/data.json".format(NON_SYS_MODULE)
+        new_data_file_path = "/tmp/{}/data.json".format(self.NON_SYS_MODULE)
 
         sys.path.insert(0, "/tmp")
         print("sys.path: {}".format(sys.path))
-        print("*****tmp**** {}".format(os.listdir("/tmp/{}/package".format(NON_SYS_MODULE))))
+        print("*****tmp**** {}".format(os.listdir("/tmp/{}/package".format(self.NON_SYS_MODULE))))
 
         zf = self.client._build_bundle(foo, [new_data_file_path], new_module_list)
 
