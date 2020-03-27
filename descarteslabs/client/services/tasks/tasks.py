@@ -1251,6 +1251,8 @@ class Tasks(Service):
             is_glob = self._IS_GLOB_PATTERN.search(pattern)
             matched_paths = glob.glob(pattern)
 
+            raise ValueError("***PATTERN***** {}".format(path))
+
             if not matched_paths:
                 if is_glob:
                     warn("Include data glob pattern had no matches: {}".format(pattern))
@@ -1260,7 +1262,6 @@ class Tasks(Service):
                 if os.path.exists(path):
                     sys_path = self._sys_path_prefix(path)
 
-                    raise ValueError("***PATH**** {}".format(path))
 
                     if os.path.isdir(path):
                         raise ValueError(
