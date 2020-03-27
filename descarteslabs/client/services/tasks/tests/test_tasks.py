@@ -382,7 +382,7 @@ class TasksPackagingTest(ClientTestCase):
         new_module_list = [new_module_path]
         new_data_file_path = "/tmp/dl_test_package_non_system_module"
 
-        sys.path.insert(0, "/tmp/dl_test_package_non_system_module")
+        sys.path.insert(0, "/tmp")
 
         zf = self.client._build_bundle(foo, new_data_file_path, new_module_list)
 

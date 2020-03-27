@@ -1246,6 +1246,7 @@ class Tasks(Service):
 
     def _find_data_files(self, include_data):
         data_files = []
+        print("****include_data**** {}".format(include_data))
 
         for pattern in include_data:
             is_glob = self._IS_GLOB_PATTERN.search(pattern)
