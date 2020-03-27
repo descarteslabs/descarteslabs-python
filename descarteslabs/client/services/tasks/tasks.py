@@ -1251,7 +1251,7 @@ class Tasks(Service):
             is_glob = self._IS_GLOB_PATTERN.search(pattern)
             matched_paths = glob.glob(pattern)
 
-            raise ValueError("***PATTERN***** {}".format(path))
+            raise ValueError("***PATTERN***** {}".format(pattern))
 
             if not matched_paths:
                 if is_glob:
