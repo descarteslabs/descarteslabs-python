@@ -206,6 +206,11 @@ class TasksPackagingTest(ClientTestCase):
     NON_SYS_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(NON_SYS_MODULE)
     NON_SYS_DATA_FILE_ZIP_PATH = "{}/data.json".format(NON_SYS_MODULE)
 
+    NON_SYS_TEST_MODULE = "{}.package.module".format(self.NON_SYS_MODULE)
+    NON_SYS_TEST_MODULE_CYTHON = "{}.package.cython_module".format(self.NON_SYS_MODULE)
+    NON_SYS_MODULE_LIST = [NON_SYS_TEST_MODULE, NON_SYS_TEST_MODULE_CYTHON]
+    NON_SYS_DATA_FILE_PATH = "/tmp/{}/data.json".format(self.NON_SYS_MODULE)
+
     GLOBAL_STRING = "A global var"
     LOCAL_STRING = "A local var"
 
@@ -379,24 +384,22 @@ class TasksPackagingTest(ClientTestCase):
         def foo():
             pass
 
-        new_module_path = shutil.copytree(
-            os.path.join(os.path.dirname(__file__), "data/dl_test_package"), "/tmp/{}".format(self.NON_SYS_MODULE)
+        shutil.copytree(
+            os.path.join(os.path.dirname(__file__), "data/dl_test_package"),
+            "/tmp/{}".format(self.NON_SYS_MODULE),
         )
-        new_test_module = "{}.package.module".format(self.NON_SYS_MODULE)
-        new_cython_test_module = "{}.package.cython_module".format(self.NON_SYS_MODULE)
-
-        new_module_list = [new_test_module, new_cython_test_module]
-        new_data_file_path = "/tmp/{}/data.json".format(self.NON_SYS_MODULE)
-
         sys.path.insert(0, "/tmp")
-        print("sys.path: {}".format(sys.path))
-        print("*****tmp**** {}".format(os.listdir("/tmp/{}/package".format(self.NON_SYS_MODULE))))
 
-        zf = self.client._build_bundle(foo, [new_data_file_path], new_module_list)
+        # print("sys.path: {}".format(sys.path))
+        # print(
+        #    "*****tmp**** {}".format(
+        #        os.listdir("/tmp/{}/package".format(self.NON_SYS_MODULE))
+        #    )
+        # )
 
-        #module_path = "{}/{}".format(DIST, "{}/package/module.py".format(NON_SYS_MODULE))
-        #cython_module_path = "{}/{}".format(DIST, "{}/package/cython_module.pyx".format(NON_SYS_MODULE))
-        #data_path = "{}/{}".format(DATA, "{}/data.json".format(NON_SYS_MODULE))
+        zf = self.client._build_bundle(
+            foo, [self.NON_SYS_DATA_FILE_PATH], self.NON_SYS_MODULE_LIST
+        )
 
         try:
             with ZipFile(zf) as arc:
@@ -407,7 +410,7 @@ class TasksPackagingTest(ClientTestCase):
         finally:
             if os.path.exists(zf):
                 os.remove(zf)
-            shutil.rmtree("/tmp/dl_test_package_non_system_module")
+            shutil.rmtree("/tmp/{}".format(self.NON_SYS_MODULE))
             sys.path = sys.path[1:]
 
     def test_build_bundle_with_globals(self):
