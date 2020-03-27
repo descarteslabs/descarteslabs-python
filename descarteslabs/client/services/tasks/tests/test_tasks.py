@@ -381,7 +381,7 @@ class TasksPackagingTest(ClientTestCase):
     def test_include_modules_relative_sys_path(self):
         with tempfile.NamedTemporaryFile(suffix=".zip") as f:
             with ZipFile(f, mode="w") as arc:
-                self.client._write_include_modules(self.TEST_MODULE_LIST, arc)
+                self.client._write_include_modules(self.NON_SYS_TEST_MODULE_LIST, arc)
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
