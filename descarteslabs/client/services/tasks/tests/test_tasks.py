@@ -200,6 +200,12 @@ class TasksPackagingTest(ClientTestCase):
     )
     TEST_MODULE_LIST = [TEST_MODULE, TEST_MODULE_CYTHON]
     TEST_MODULE_ZIP_PATH_LIST = [TEST_MODULE_ZIP_PATH, TEST_MODULE_CYTHON_ZIP_PATH]
+
+    NON_SYS_MODULE = "dl_non_system_module"
+    NON_SYS_MODULE_ZIP_PATH = "{}/package/module.py".format(NON_SYS_MODULE)
+    NON_SYS_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(NON_SYS_MODULE)
+    NON_SYS_DATA_FILE_ZIP_PATH = "{}/data.json".format(NON_SYS_MODULE)
+
     GLOBAL_STRING = "A global var"
     LOCAL_STRING = "A local var"
 
@@ -366,16 +372,12 @@ class TasksPackagingTest(ClientTestCase):
                     self.assertIn(path, arc.namelist())
 
     def test_build_bundle(self):
-        module_path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
-        cython_module_path = "{}/{}".format(DIST, self.TEST_MODULE_CYTHON_ZIP_PATH)
-        data_path = "{}/{}".format(DATA, self.DATA_FILE_ZIP_PATH)
+        module_path = "{}/{}".format(DIST, self.NON_SYS_MODULE_ZIP_PATH)
+        cython_module_path = "{}/{}".format(DIST, self.NON_SYS_CYTHON_ZIP_PATH)
+        data_path = "{}/{}".format(DATA, self.NON_SYS_DATA_FILE_ZIP_PATH)
 
         def foo():
             pass
-
-        import sys
-        print(sys.path)
-        NON_SYS_MODULE = "dl_test_package_non_system_module"
 
         new_module_path = shutil.copytree(
             os.path.join(os.path.dirname(__file__), "data/dl_test_package"), "/tmp/{}".format(NON_SYS_MODULE)
@@ -392,9 +394,9 @@ class TasksPackagingTest(ClientTestCase):
 
         zf = self.client._build_bundle(foo, [new_data_file_path], new_module_list)
 
-        module_path = "{}/{}".format(DIST, "{}/package/module.py".format(NON_SYS_MODULE))
-        cython_module_path = "{}/{}".format(DIST, "{}/package/cython_module.pyx".format(NON_SYS_MODULE))
-        data_path = "{}/{}".format(DATA, "{}/data.json".format(NON_SYS_MODULE))
+        #module_path = "{}/{}".format(DIST, "{}/package/module.py".format(NON_SYS_MODULE))
+        #cython_module_path = "{}/{}".format(DIST, "{}/package/cython_module.pyx".format(NON_SYS_MODULE))
+        #data_path = "{}/{}".format(DATA, "{}/data.json".format(NON_SYS_MODULE))
 
         try:
             with ZipFile(zf) as arc:
