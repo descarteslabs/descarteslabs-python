@@ -206,10 +206,10 @@ class TasksPackagingTest(ClientTestCase):
     NON_SYS_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(NON_SYS_MODULE)
     NON_SYS_DATA_FILE_ZIP_PATH = "{}/data.json".format(NON_SYS_MODULE)
 
-    NON_SYS_TEST_MODULE = "{}.package.module".format(self.NON_SYS_MODULE)
-    NON_SYS_TEST_MODULE_CYTHON = "{}.package.cython_module".format(self.NON_SYS_MODULE)
+    NON_SYS_TEST_MODULE = "{}.package.module".format(NON_SYS_MODULE)
+    NON_SYS_TEST_MODULE_CYTHON = "{}.package.cython_module".format(NON_SYS_MODULE)
     NON_SYS_MODULE_LIST = [NON_SYS_TEST_MODULE, NON_SYS_TEST_MODULE_CYTHON]
-    NON_SYS_DATA_FILE_PATH = "/tmp/{}/data.json".format(self.NON_SYS_MODULE)
+    NON_SYS_DATA_FILE_PATH = "/tmp/{}/data.json".format(NON_SYS_MODULE)
 
     GLOBAL_STRING = "A global var"
     LOCAL_STRING = "A local var"
