@@ -29,10 +29,3 @@ install:
 - pip install --upgrade hypothesis
 script:
 - pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
-notifications:
-  slack:
-    on_success: change
-    on_failure: always
-    on_pull_requests: false
-    rooms:
-      secure: BRwjZ+u816j6gtCtjE6Ez3aAyPZYXqmkR0CxHtD+hELH63hE0F9mgBGz0tdmOUo8eND9XzoDW1le05akJbAFlMW62xnCz07UyIacrmTXAiJKHG05XOF6lj7WZcJXBVSEKt1pQjjDQaAiRxmdwbxd1wDzNqxtUp/C/TekYtJAbyV47iJTqkw/AYh3U9xRw2JMcSA4k1DWh2XZoYmcTJwVGTXCB6U0ixN+E243eyBcrDHi5KnjwHTBeMMH0khuYoKY7K9szwuIphi7FPZc/nWgC4oMBfM9XDMBI8kq6j/nWTkbeexe3EjR+Y9S4CPelPHa/Ln+cCLsnUp1ANX3W5zhwH1dyS6G+bbRcefiWtr9fJD1VEA4hJtiI/56Dr6gzpf+27O1ySgRjGwHGAy9GT2THmNeYIAgk+E3sNL0KIisKxTf0tZAhA19jgVKwUqT6fKrrZeeH35zOK2DG9Z74xv3vNh9AQOIlHjF2OBLRo/tcP3KZQ/VEp1eyZbblcMMTxVcP/bfG58K9h5RiUPSbuMQJq7jI4njX0XvzD7wSUvLuNrc2nbn+JNjc6t9f0AI2YJg7uxKS/nPWthZ02CYl0nN/3zrlLOKfxEjdU/CBqYL8I9QflfbwzXgCKnfnDh/wHISy0Kl17C7lR4tekfJfD7CteRmguYIduuVUHVE00MdLEg=

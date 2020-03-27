@@ -1251,8 +1251,6 @@ class Tasks(Service):
             is_glob = self._IS_GLOB_PATTERN.search(pattern)
             matched_paths = glob.glob(pattern)
 
-            raise ValueError("***PATTERN***** {}".format(pattern))
-
             if not matched_paths:
                 if is_glob:
                     warn("Include data glob pattern had no matches: {}".format(pattern))
@@ -1334,6 +1332,7 @@ class Tasks(Service):
 
     def _find_module_file(self, mod_name):
         """Search for module file in python path. Raise ImportError if not found"""
+        raise ValueError("********mod_name {}".format(mod_name))
 
         try:
             mod = importlib.import_module(mod_name)
