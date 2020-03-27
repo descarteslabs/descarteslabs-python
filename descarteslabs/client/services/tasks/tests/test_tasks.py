@@ -382,7 +382,7 @@ class TasksPackagingTest(ClientTestCase):
         new_module_list = [new_module_path]
         new_data_file_path = "/tmp/dl_test_package_non_system_module"
 
-        sys.path = sys.path.append("/tmp/dl_test_package_non_system_module")
+        sys.path.insert(0, "/tmp/dl_test_package_non_system_module")
 
         zf = self.client._build_bundle(foo, new_data_file_path, new_module_list)
 
@@ -396,7 +396,7 @@ class TasksPackagingTest(ClientTestCase):
             if os.path.exists(zf):
                 os.remove(zf)
             shutil.rmtree("/tmp/dl_test_package_non_system_module")
-            sys.path = sys.path[:-1]
+            sys.path = sys.path[1:]
 
     def test_build_bundle_with_globals(self):
         def foo():
