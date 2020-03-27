@@ -211,7 +211,9 @@ class TasksPackagingTest(ClientTestCase):
     NON_SYS_TEST_MODULE = "{}.package.module".format(NON_SYS_MODULE)
     NON_SYS_TEST_MODULE_CYTHON = "{}.package.cython_module".format(NON_SYS_MODULE)
     NON_SYS_MODULE_LIST = [NON_SYS_TEST_MODULE, NON_SYS_TEST_MODULE_CYTHON]
-    NON_SYS_DATA_FILE_PATH = "{}/{}/data.json".format(NON_SYS_MODULE_PATH, NON_SYS_MODULE)
+    NON_SYS_DATA_FILE_PATH = "{}/{}/data.json".format(
+        NON_SYS_MODULE_PATH, NON_SYS_MODULE
+    )
 
     GLOBAL_STRING = "A global var"
     LOCAL_STRING = "A local var"
@@ -220,19 +222,17 @@ class TasksPackagingTest(ClientTestCase):
         super(TasksPackagingTest, self).setUp()
         self._sys_path = copy.copy(sys.path)
         sys.path = [self.NON_SYS_MODULE_PATH, self.TEST_DATA_PATH] + sys.path
-        print("In setUp", sys.path)
 
+        # copy dl_test_package into /tmp
         shutil.copytree(
             os.path.join(os.path.dirname(__file__), "data/dl_test_package"),
             "{}/{}".format(self.NON_SYS_MODULE_PATH, self.NON_SYS_MODULE),
         )
 
-
     def tearDown(self):
+        # remove dl_test_package from /tmp
         shutil.rmtree("{}/{}".format(self.NON_SYS_MODULE_PATH, self.NON_SYS_MODULE))
-        #sys.path = sys.path[1:]
         sys.path = self._sys_path
-        print("In tearDown", sys.path)
         super(TasksPackagingTest, self).tearDown()
 
     @staticmethod
@@ -364,7 +364,7 @@ class TasksPackagingTest(ClientTestCase):
     def test_include_modules(self):
         with tempfile.NamedTemporaryFile(suffix=".zip") as f:
             with ZipFile(f, mode="w") as arc:
-                self.client._write_include_modules(self.TEST_MODULE_LIST, arc)
+                self.client._write_include_modules(self.NON_SYS_TEST_MODULE_LIST, arc)
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
                 init_path = "{}/dl_test_package/package/__init__.py".format(DIST)
@@ -429,7 +429,9 @@ class TasksPackagingTest(ClientTestCase):
 
     def test_build_bundle_with_named_function(self):
         zf = self.client._build_bundle(
-            self.NON_SYS_TEST_MODULE + ".func_foo", [self.NON_SYS_DATA_FILE_PATH], [self.NON_SYS_TEST_MODULE]
+            self.NON_SYS_TEST_MODULE + ".func_foo",
+            [self.NON_SYS_DATA_FILE_PATH],
+            [self.NON_SYS_TEST_MODULE],
         )
 
         try:
@@ -456,13 +458,15 @@ class TasksPackagingTest(ClientTestCase):
     def test_build_bundle_with_named_function_bad(self):
         with self.assertRaises(NameError):
             zf = self.client._build_bundle(
-                "func.func_foo", [self.DATA_FILE_PATH], [self.TEST_MODULE]
+                    "func.func_foo",
+                [self.NON_SYS_DATA_FILE_PATH],
+                [self.NON_SYS_TEST_MODULE],
             )
 
         zf = self.client._build_bundle(
             "descarteslabs.client.services.tasks.tests.test_tasks.TasksPackagingTest.a_function",
-            [self.DATA_FILE_PATH],
-            [self.TEST_MODULE],
+            [self.NON_SYS_DATA_FILE_PATH],
+            [self.NON_SYS_TEST_MODULE],
         )
 
         try:
