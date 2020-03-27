@@ -380,7 +380,7 @@ class TasksPackagingTest(ClientTestCase):
             os.path.join(os.path.dirname(__file__), "data/dl_test_package"), "/tmp/dl_test_package_non_system_module"
         )
         new_module_list = [new_module_path]
-        new_data_file_path = "/tmp/dl_test_package_non_system_module"
+        new_data_file_path = "/tmp/dl_test_package_non_system_module/data.json"
 
         sys.path.insert(0, "/tmp")
         print("sys.path: {}".format(sys.path))
