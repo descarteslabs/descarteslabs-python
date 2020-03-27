@@ -1260,6 +1260,8 @@ class Tasks(Service):
                 if os.path.exists(path):
                     sys_path = self._sys_path_prefix(path)
 
+                    raise ValueError("***PATH**** {}".format(path))
+
                     if os.path.isdir(path):
                         raise ValueError(
                             "Cannot pass directories as included data: `{}`".format(
