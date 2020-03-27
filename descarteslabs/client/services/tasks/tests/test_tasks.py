@@ -379,7 +379,10 @@ class TasksPackagingTest(ClientTestCase):
         new_module_path = shutil.copytree(
             os.path.join(os.path.dirname(__file__), "data/dl_test_package"), "/tmp/dl_test_package_non_system_module"
         )
-        new_module_list = [new_module_path]
+        new_test_module = "dl_test_package_non_system_module.package.module"
+        new_cython_test_module = "dl_test_package_non_system_module.package.cython_module"
+
+        new_module_list = [new_test_module]
         new_data_file_path = "/tmp/dl_test_package_non_system_module/data.json"
 
         sys.path.insert(0, "/tmp")
