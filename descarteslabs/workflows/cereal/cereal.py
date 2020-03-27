@@ -7,6 +7,7 @@ from descarteslabs.common.proto.typespec.typespec_pb2 import (
     Map,
     CompositeType,
 )
+from descarteslabs.common.workflows import unmarshal
 
 
 PRIMITIVES = (int, float, bool, str)
@@ -127,3 +128,20 @@ def serializable(is_named_concrete_type=False):
         return cls
 
     return inner
+
+
+def typespec_to_unmarshal_str(typespec):
+    if typespec.has_type:
+        marshal_type = typespec.type
+    elif typespec.has_comp:
+        marshal_type = typespec.comp.type
+    else:
+        raise ValueError("Invalid typespec: has_type or has_comp must be set.")
+
+    if marshal_type not in unmarshal.registry:
+        raise TypeError(
+            "{!r} is not a computable type. Note that if this is a function-like type, "
+            "you should call it and compute the result, "
+            "not the function itself.".format(marshal_type)
+        )
+    return marshal_type

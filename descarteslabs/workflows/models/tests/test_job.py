@@ -17,7 +17,7 @@ from descarteslabs.workflows import _channel
 
 from ... import cereal, types
 from ..exceptions import JobInvalid
-from ..job import Job, _typespec_to_unmarshal_str
+from ..job import Job
 from ..utils import pb_milliseconds_to_datetime
 
 from . import utils
@@ -26,16 +26,16 @@ from . import utils
 class TestTypespecToUnmarshalStr(object):
     def test_nonparametric(self):
         typespec = cereal.serialize_typespec(types.Int)
-        assert _typespec_to_unmarshal_str(typespec) == "Int"
+        assert cereal.typespec_to_unmarshal_str(typespec) == "Int"
 
     def test_parametric(self):
         typespec = cereal.serialize_typespec(types.List[types.Int])
-        assert _typespec_to_unmarshal_str(typespec) == "List"
+        assert cereal.typespec_to_unmarshal_str(typespec) == "List"
 
     def test_non_marshallable(self):
         typespec = cereal.serialize_typespec(types.Function[{}, types.Int])
         with pytest.raises(TypeError, match="'Function' is not a computable type"):
-            _typespec_to_unmarshal_str(typespec)
+            cereal.typespec_to_unmarshal_str(typespec)
 
 
 @mock.patch(

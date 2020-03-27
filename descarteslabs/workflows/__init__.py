@@ -56,7 +56,6 @@ from .types import (
     nan,
     pi,
     parameter,
-    # numpy
     numpy,
 )
 
@@ -71,6 +70,11 @@ from .models import (
     retrieve,
     use,
     publish as _publish,
+)
+
+from .inspect import (
+    InspectClient,
+    get_global_inspect_client as _get_global_inspect_client,
 )
 
 from .interactive import map, Map, WorkflowsLayer, LayerController, LayerControllerList
@@ -240,6 +244,8 @@ __all__ = [
     # __init__
     "compute",
     "publish",
+    # .inspect
+    "InspectClient",
     # .interactive
     "map",
     "Map",
@@ -353,8 +359,53 @@ def _publish_mixin(self, name="", description="", client=None):
     return publish(self, name, description, client)
 
 
+def _inspect_mixin(self, geoctx=None, timeout=30, client=None, **params):
+    """
+    Quickly compute this proxy object using a low-latency, lower-reliability backend.
+
+    Inspect is meant for getting simple computations out of Workflows, primarily for interactive use.
+    It's quicker but less resilient, won't be retried if it fails, and has no progress updates.
+
+    If you have a larger computation (longer than ~30sec), or you want to be sure the computation will succeed,
+    use `~.compute` instead. `~.compute` creates a `.Job`, which runs asynchronously, will be retried if it fails,
+    and stores its results for later retrieval.
+
+    Parameters
+    ----------
+    geoctx: `.scenes.geocontext.GeoContext`, `~.workflows.types.geospatial.GeoContext`, or None
+        The GeoContext parameter under which to run the computation.
+        Almost all computations will require a `~.workflows.types.geospatial.GeoContext`,
+        but for operations that only involve non-geospatial types,
+        this parameter is optional.
+    timeout: int, optional, default 30
+        The number of seconds to wait for the result.
+        Raises `~descarteslabs.workflows.models.TimeoutError` if the timeout passes.
+    client: `.workflows.inspect.InspectClient`, optional
+        Allows you to use a specific InspectClient instance with non-default
+        auth and parameters
+    **params: Proxytype
+        Parameters under which to run the computation.
+
+    Returns
+    -------
+    result
+        Appropriate Python object representing the result,
+        either as a plain Python type, or object from
+        `descarteslabs.workflows.results`.
+    """
+    if geoctx is not None:
+        params["geoctx"] = GeoContext._promote(geoctx)
+
+    if client is None:
+        client = _get_global_inspect_client()
+
+    return client.inspect(self, timeout=timeout, **params)
+
+
 _compute_mixin.__name__ = "compute"
 _publish_mixin.__name__ = "publish"
+_inspect_mixin.__name__ = "inspect"
 
 Proxytype.compute = _compute_mixin
 Proxytype.publish = _publish_mixin
+Proxytype.inspect = _inspect_mixin

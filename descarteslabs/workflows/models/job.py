@@ -15,7 +15,7 @@ from descarteslabs.common.proto.types import types_pb2
 from descarteslabs.common.workflows.arrow_serialization import serialization_context
 
 from .. import _channel
-from ..cereal import deserialize_typespec, serialize_typespec
+from ..cereal import deserialize_typespec, serialize_typespec, typespec_to_unmarshal_str
 from ..client import get_global_grpc_client, default_grpc_retry_predicate
 from .exceptions import error_code_to_exception, TimeoutError
 from .utils import in_notebook, pb_milliseconds_to_datetime
@@ -28,23 +28,6 @@ from descarteslabs.workflows import results  # noqa: F401 isort:skip
 # ^ we must import to register its unmarshallers
 
 logger = logging.getLogger(__name__)
-
-
-def _typespec_to_unmarshal_str(typespec):
-    if typespec.has_type:
-        marshal_type = typespec.type
-    elif typespec.has_comp:
-        marshal_type = typespec.comp.type
-    else:
-        raise ValueError("Invalid typespec: has_type or has_comp must be set.")
-
-    if marshal_type not in unmarshal.registry:
-        raise TypeError(
-            "{!r} is not a computable type. Note that if this is a function-like type, "
-            "you should call it and compute the result, "
-            "not the function itself.".format(marshal_type)
-        )
-    return marshal_type
 
 
 def _write_to_io_or_widget(io, string):
@@ -123,7 +106,7 @@ class Job(object):
             client = get_global_grpc_client()
 
         typespec = serialize_typespec(type(proxy_object))
-        result_type = _typespec_to_unmarshal_str(typespec)
+        result_type = typespec_to_unmarshal_str(typespec)
         # ^ this also preemptively checks whether the result type is something we'll know how to unmarshal
         parameters = parameters_to_grafts(**parameters)
 
