@@ -429,7 +429,7 @@ class TasksPackagingTest(ClientTestCase):
 
     def test_build_bundle_with_named_function(self):
         zf = self.client._build_bundle(
-            self.TEST_MODULE + ".func_foo", [self.NON_SYS_DATA_FILE_PATH], [self.NON_SYS_TEST_MODULE]
+            self.NON_SYS_TEST_MODULE + ".func_foo", [self.NON_SYS_DATA_FILE_PATH], [self.NON_SYS_TEST_MODULE]
         )
 
         try:
