@@ -30,6 +30,13 @@ unmarshal.register("Array", unmarshal.identity)
 unmarshal.register("MaskedArray", unmarshal.identity)
 
 
+def dtype_from_string(s):
+    return np.dtype(s)
+
+
+unmarshal.register("DType", dtype_from_string)
+
+
 def datetime_from_string(s):
     return datetime.datetime.fromisoformat(s)
 

@@ -1,21 +1,16 @@
-import functools
-
 import numpy as np
 
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import ProxyTypeError
-from ..containers import List
-from ..primitives import Bool
-from .array_ import Array, WF_TO_DTYPE_KIND, DTYPE_KIND_TO_WF
+from ..primitives import Bool, Int, Float
+from .array_ import Array
 
 
 @serializable()
 class MaskedArray(Array):
     """
-    ``MaskedArray[DType, NDim]``: Proxy object representing a multidimensional, homogenous array of fixed-size items
+    Proxy MaskedArray representing a multidimensional, homogenous array of fixed-size items
     that may have missing or invalid entries.
-    The data-type must be a Proxytype (Int, Float, Bool etc.) and the number of dimensions must be a Python integer.
     MaskedArray follows the same syntax as NumPy masked arrays. It supports vectorized operations, broadcasting,
     and multidimensional indexing. There are some limitations including slicing with lists/arrays in multiple
     axes (``x[[1, 2, 3], [3, 2, 1]]``) and slicing with a multidimensional list/array of integers.
@@ -28,9 +23,9 @@ class MaskedArray(Array):
     Examples
     --------
     >>> import descarteslabs.workflows as wf
-    >>> arr = wf.MaskedArray[wf.Int, 1](data=[1, 2, 3, 4], mask=[True, False, False, True], fill_value=0)
+    >>> arr = wf.MaskedArray(data=[1, 2, 3, 4], mask=[True, False, False, True], fill_value=0)
     >>> arr
-    <descarteslabs.workflows.types.array.masked_array.MaskedArray[Int, 1] object at 0x...>
+    <descarteslabs.workflows.types.array.masked_array.MaskedArray object at 0x...>
     >>> arr.compute(geoctx) # doctest: +SKIP
     masked_array(data=[--, 2, 3, --],
                  mask=[ True, False, False,  True],
@@ -38,33 +33,12 @@ class MaskedArray(Array):
     """
 
     def __init__(self, data, mask=False, fill_value=None):
-        if self._type_params is None:
-            raise TypeError(
-                "Cannot instantiate a generic MaskedArray; "
-                "the dtype and dimensionality must be specified (like `MaskedArray[Float, 3]`)"
-            )
         if isinstance(data, np.ndarray):
-            if data.dtype.kind != WF_TO_DTYPE_KIND[self._type_params[0]]:
+            if data.dtype.kind not in ("b", "i", "f"):
                 raise TypeError(
                     "Invalid dtype {} for {}".format(data.dtype, type(self).__name__)
                 )
-            if data.ndim != self.ndim:
-                raise ValueError(
-                    "Cannot instantiate a {}-dimensional Workflows MaskedArray from a "
-                    "{}-dimensional NumPy data array".format(self.ndim, data.ndim)
-                )
-
             data = data.tolist()
-        else:
-            data_list_type = functools.reduce(
-                lambda accum, cur: List[accum], range(self.ndim), self.dtype
-            )
-            try:
-                data = data_list_type._promote(data)
-            except ProxyTypeError:
-                raise ValueError(
-                    "Cannot instantiate the data Array from {!r}".format(data)
-                )
 
         if isinstance(mask, (bool, np.bool_, Bool)):
             mask = Bool._promote(mask)
@@ -75,25 +49,7 @@ class MaskedArray(Array):
                         mask.dtype
                     )
                 )
-            if mask.ndim != self.ndim:
-                raise ValueError(
-                    "Cannot instantiate a {}-dimensional Workflows MaskedArray with a "
-                    "{}-dimensional NumPy mask array".format(self.ndim, mask.ndim)
-                )
-
             mask = mask.tolist()
-        else:
-            # TODO(Clark): Support mask broadcasting to data shape?  This could be done
-            # client-side or server-side.
-            mask_list_type = functools.reduce(
-                lambda accum, cur: List[accum], range(self._type_params[1]), Bool
-            )
-            try:
-                mask = mask_list_type._promote(mask)
-            except ProxyTypeError:
-                raise ValueError(
-                    "Cannot instantiate the mask Array from {!r}".format(mask)
-                )
 
         fill_value = _promote_fill_value(self, fill_value)
 
@@ -117,20 +73,7 @@ class MaskedArray(Array):
         mask = np.ma.getmask(arr)
         fill_value = getattr(arr, "fill_value", None)
 
-        if cls._type_params:
-            # don't infer dtype, ndim from `arr`, since our cls is already parametrized
-            return cls(data, mask, fill_value)
-        else:
-            # infer dtype, ndim from numpy array
-            try:
-                dtype = DTYPE_KIND_TO_WF[arr.dtype.kind]
-            except KeyError:
-                raise ProxyTypeError(
-                    "Creating a Workflows MaskedArray from a NumPy Array with dtype "
-                    "`{}` is not supported. Supported dtypes kinds are float, "
-                    "int, and bool.".format(arr.dtype)
-                )
-            return cls[dtype, arr.ndim](data, mask, fill_value)
+        return cls(data, mask, fill_value)
 
     def getdata(self):
         """The data array underlying this `MaskedArray`.
@@ -146,8 +89,7 @@ class MaskedArray(Array):
                 [0.3429, 0.3429, 0.3429, ..., 0.0952, 0.0952, 0.0952],
         ...
         """
-        return_type = Array[self.dtype, self.ndim]
-        return return_type._from_apply("maskedarray.getdata", self)
+        return Array._from_apply("maskedarray.getdata", self)
 
     def getmaskarray(self):
         """The mask array underlying this `MaskedArray`.
@@ -163,8 +105,7 @@ class MaskedArray(Array):
                 [False, False, False, ..., False, False, False],
         ...
         """
-        return_type = Array[Bool, self.ndim]
-        return return_type._from_apply("maskedarray.getmaskarray", self)
+        return Array._from_apply("maskedarray.getmaskarray", self)
 
     def filled(self, fill_value=None):
         """
@@ -193,9 +134,8 @@ class MaskedArray(Array):
                 [0.1, 0.1, 0.1, ..., 0.1, 0.1, 0.1],
         ...
         """
-        return_type = Array[self.dtype, self.ndim]
         fill_value = _promote_fill_value(self, fill_value)
-        return return_type._from_apply("maskedarray.filled", self, fill_value)
+        return Array._from_apply("maskedarray.filled", self, fill_value)
 
     def count(self, axis=None):
         """ Count unmasked pixels along a given axis.
@@ -224,14 +164,6 @@ def _promote_fill_value(self, fill_value):
     if fill_value is None:
         return None
     if isinstance(fill_value, Array):
-        if fill_value.dtype != self._type_params[0]:
-            raise ValueError(
-                "Cannot use fill value {!r}.  The dtype of the fill value array must "
-                "be the same as the dtype of the MaskedArray, but the dtype of the fill "
-                "value is {!r} and the dtype of the MaskedArray is {!r}.".format(
-                    fill_value, fill_value.dtype, self._type_params[0]
-                )
-            )
         return fill_value
 
     if isinstance(fill_value, np.generic):
@@ -245,14 +177,7 @@ def _promote_fill_value(self, fill_value):
 
         if cast_func is not None:
             fill_value = cast_func(fill_value)
+        return fill_value
 
-    try:
-        return self._type_params[0]._promote(fill_value)
-    except ProxyTypeError:
-        raise ValueError(
-            "Cannot use fill value {!r}. The type of the fill value must be the same "
-            "as the dtype of the MaskedArray, but the type of the fill value is {!r} "
-            "and the dtype of the MaskedArray is {!r}.".format(
-                fill_value, type(fill_value), self._type_params[0]
-            )
-        )
+    if isinstance(fill_value, (Int, Float, Bool)):
+        return fill_value

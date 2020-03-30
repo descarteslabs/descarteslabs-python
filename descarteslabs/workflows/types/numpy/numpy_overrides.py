@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..core import typecheck_promote, ProxyTypeError, Proxytype
+from ..core import typecheck_promote, ProxyTypeError
 from ..core.promote import _promote
 from ..primitives import Float, Int, Bool, NoneType
 from ..array import Array, MaskedArray
@@ -11,17 +11,13 @@ def _ufunc_result_type(obj, other=None, return_type_override=None):
     if other is None:
         if return_type_override is None:
             return type(obj)
-        return (
-            return_type_override
-            if not isinstance(obj, Array)
-            else type(obj)._generictype[return_type_override, obj.ndim]
-        )
+        return return_type_override if not isinstance(obj, Array) else type(obj)
 
     if return_type_override is not None:
         dtype = return_type_override
     else:
         obj_dtype, other_dtype = (
-            a.dtype if isinstance(a, Array) else type(a) for a in (obj, other)
+            Float if isinstance(a, Array) else type(a) for a in (obj, other)
         )
 
         # If either are Float, the result is a Float
@@ -35,19 +31,14 @@ def _ufunc_result_type(obj, other=None, return_type_override=None):
             dtype = Bool
 
     if isinstance(obj, Array) or isinstance(other, Array):
-        ndim = max(getattr(a, "ndim", -1) for a in (obj, other))
         if isinstance(obj, Array) and isinstance(other, Array):
-            result_generictype = type(obj)._generictype
-            other_generictype = type(other)._generictype
-            if issubclass(other_generictype, result_generictype):
-                result_generictype = other_generictype
+            result_type = type(obj)
+            other_type = type(other)
+            if issubclass(other_type, result_type):
+                result_type = other_type
         else:
-            result_generictype = (
-                type(obj)._generictype
-                if isinstance(obj, Array)
-                else type(other)._generictype
-            )
-        return result_generictype[dtype, ndim]
+            result_type = type(obj) if isinstance(obj, Array) else type(other)
+        return result_type
     else:
         return dtype
 
@@ -160,12 +151,7 @@ class ufunc:
                 if isinstance(arg, Array):
                     promoted.append(arg)
                 elif isinstance(arg, np.ndarray):
-                    numpy_promoter = (
-                        MaskedArray.from_numpy
-                        if isinstance(arg, np.ma.MaskedArray)
-                        else Array.from_numpy
-                    )
-                    promoted.append(numpy_promoter(arg))
+                    promoted.append(Array._promote(arg))
                 else:
                     promoted.append(_promote(arg, (Bool, Int, Float), i, self.__name__))
                     # TODO(gabe) not great to be relying on internal `_promote` here
@@ -315,101 +301,31 @@ def asarray(obj):
     if isinstance(obj, Array):
         return obj
     if isinstance(obj, (Int, Float, Bool)):
-        return Array[type(obj), 0](obj)
+        return Array(obj)
     if not isinstance(obj, np.ndarray):
         # Dumb hack to save writing list traversal ourselves: just try to make it into an ndarray
         obj = np.asarray(obj)
-    numpy_promoter = (
-        MaskedArray.from_numpy
-        if isinstance(obj, np.ma.MaskedArray)
-        else Array.from_numpy
-    )
-    return numpy_promoter(obj)
-
-
-def _promote_to_list_of_same_arrays(seq, func_name):
-    if isinstance(seq, List[Array]):
-        # All elements in List are the same type, so we don't have to check that dtype/ndim match
-        return seq
-    elif isinstance(seq, Proxytype):
-        raise TypeError(
-            "Cannot {} type {}. Must be a proxy List[Array], "
-            "or a Python iterable of Arrays.".format(func_name, type(seq).__name__)
-        )
-    else:
-        # Python iterable of array-like objects
-        try:
-            iterator = iter(seq)
-        except TypeError:
-            raise TypeError(
-                "{} expected an iterable of Array-like objects. "
-                "{!r} is not iterable.".format(func_name, seq)
-            )
-
-        promoted = []
-        return_type = None
-        for i, elem in enumerate(iterator):
-            try:
-                promoted_elem = asarray(elem)
-            except ProxyTypeError:
-                raise TypeError(
-                    "Element {} to {}: expected an Array-like object, "
-                    "but got {!r}".format(i, func_name, elem)
-                )
-
-            if return_type is not None:
-                if promoted_elem.ndim != return_type._type_params[1]:
-                    raise ValueError(
-                        "Cannot {} Arrays of different dimensionality. "
-                        "Element 0 is {}-dimensional, and element {} is {}-dimensional.".format(
-                            func_name,
-                            return_type._type_params[1],
-                            i,
-                            promoted_elem.ndim,
-                        )
-                    )
-                if not issubclass(promoted_elem.dtype, return_type._type_params[0]):
-                    raise TypeError(
-                        "Cannot {} Arrays with different dtypes."
-                        " Element 0 has dtype {}, and element {} has dtype {}.".format(
-                            func_name,
-                            return_type._type_params[0].__name__,
-                            i,
-                            promoted_elem.dtype.__name__,
-                        )
-                    )
-            else:
-                return_type = type(promoted_elem)
-
-            promoted.append(promoted_elem)
-        if len(promoted) == 0:
-            raise ValueError("need at least one Array to {}".format(func_name))
-
-        return List[return_type](seq)
+    return Array._promote(obj)
 
 
 @implements(np.concatenate)
-@typecheck_promote(None, axis=Int)
+@typecheck_promote((List[MaskedArray], List[Array]), axis=Int)
 @derived_from(np.concatenate)
 def concatenate(seq, axis=0):
-    seq = _promote_to_list_of_same_arrays(seq, "concatenate")
     return_type = seq._element_type
-    if not return_type._type_params[1] > 0:
-        raise ValueError("zero-dimensional arrays cannot be concatenated")
     return return_type._from_apply("concatenate", seq, axis=axis)
 
 
 @implements(np.transpose)
-@typecheck_promote(None, axes=(List[Int], NoneType))
+@typecheck_promote((MaskedArray, Array), axes=(List[Int], NoneType))
 @derived_from(np.transpose)
 def transpose(arr, axes=None):
-    arr = asarray(arr)
     return arr._from_apply("transpose", arr, axes=axes)
 
 
 @implements(np.histogram)
 @typecheck_promote(
-    None,
+    (MaskedArray, Array),
     bins=(List[Int], List[Float], Int),
     range=(Tuple[Int, Int], Tuple[Float, Float], NoneType),
     weights=(Array, NoneType),
@@ -425,23 +341,17 @@ def histogram(arr, bins=10, range=None, weights=None, density=None):
             "Histogram requires range to be specified if bins is given as an int."
         )
 
-    arr = asarray(arr)
-
-    hist_return_dtype = Float if density else Int
-    hist_return_type = Array[hist_return_dtype, 1]
-
-    return Tuple[hist_return_type, Array[Float, 1]]._from_apply(
+    return Tuple[Array, Array]._from_apply(
         "histogram", arr, bins=bins, range=range, weights=weights, density=density
     )
 
 
 @implements(np.reshape)
+@typecheck_promote((MaskedArray, Array), newshape=None)
 @derived_from(np.reshape)
 def reshape(arr, newshape):
-    arr = asarray(arr)
     newshape = _promote_newshape(newshape)
-    ndim = len(newshape)
-    return type(arr)._generictype[arr.dtype, ndim]._from_apply("reshape", arr, newshape)
+    return arr._from_apply("reshape", arr, newshape)
 
 
 def _promote_newshape(newshape):
@@ -457,15 +367,11 @@ def _promote_newshape(newshape):
 
 
 @implements(np.stack)
-@typecheck_promote(None, axis=Int)
+@typecheck_promote((List[MaskedArray], List[Array]), axis=Int)
 @derived_from(np.stack)
 def stack(seq, axis=0):
-    seq = _promote_to_list_of_same_arrays(seq, "stack")
     element_type = seq._element_type
-    return_type = element_type._generictype[
-        element_type._type_params[0], element_type._type_params[1] + 1
-    ]
-    return return_type._from_apply("stack", seq, axis=axis)
+    return element_type._from_apply("stack", seq, axis=axis)
 
 
 @implements(np.argmin)
@@ -475,7 +381,7 @@ def argmin(arr, axis=None):
     if isinstance(axis, NoneType):
         return_type = Int
     else:
-        return_type = type(arr)._generictype[Int, arr.ndim - 1]
+        return_type = type(arr)
     return return_type._from_apply("argmin", arr, axis=axis)
 
 
@@ -486,7 +392,7 @@ def argmax(arr, axis=None):
     if isinstance(axis, NoneType):
         return_type = Int
     else:
-        return_type = type(arr)._generictype[Int, arr.ndim - 1]
+        return_type = type(arr)
     return return_type._from_apply("argmax", arr, axis=axis)
 
 
@@ -497,7 +403,7 @@ def all(arr, axis=None):
     if axis is None:
         return_type = Bool
     elif isinstance(axis, int):
-        return_type = type(arr)._generictype[Bool, arr.ndim - 1]
+        return_type = type(arr)
     elif isinstance(axis, (list, tuple)):
         for idx, ax in enumerate(axis):
             if not isinstance(ax, int):
@@ -506,8 +412,7 @@ def all(arr, axis=None):
                         idx, type(ax)
                     )
                 )
-        new_ndim = arr.ndim - len(axis)
-        return_type = type(arr)._generictype[Bool, new_ndim]
+        return_type = type(arr)
     else:
         raise TypeError(
             "In all: Expected None, int, or tuple of ints for argument `axis`, but got type `{}`".format(
@@ -524,7 +429,7 @@ def any(arr, axis=None):
     if axis is None:
         return_type = Bool
     elif isinstance(axis, int):
-        return_type = type(arr)._generictype[Bool, arr.ndim - 1]
+        return_type = type(arr)
     elif isinstance(axis, (list, tuple)):
         for idx, ax in enumerate(axis):
             if not isinstance(ax, int):
@@ -533,8 +438,7 @@ def any(arr, axis=None):
                         idx, type(ax)
                     )
                 )
-        new_ndim = arr.ndim - len(axis)
-        return_type = type(arr)._generictype[Bool, new_ndim]
+        return_type = type(arr)
     else:
         raise TypeError(
             "In any: Expected None, int, or tuple of ints for argument `axis`, but got type `{}`".format(

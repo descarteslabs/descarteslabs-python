@@ -1,12 +1,12 @@
-import functools
 import numpy as np
 
 from ... import env
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import GenericProxytype, ProxyTypeError, allow_reflect
-from ..containers import Slice, Tuple, List, Dict
+from ..core import Proxytype, ProxyTypeError, allow_reflect
+from ..containers import Slice, Ellipsis as wf_Ellipsis, Tuple, List, Dict
 from ..primitives import Int, Float, Bool, NoneType
+from .dtype import DType
 from ..mixins import NumPyMixin
 
 
@@ -22,10 +22,9 @@ def _delayed_numpy_overrides():
 
 
 @serializable()
-class Array(NumPyMixin, GenericProxytype):
+class Array(NumPyMixin, Proxytype):
     """
-    ``Array[DType, NDim]``: Proxy object representing a multidimensional, homogenous array of fixed-size items.
-    The data-type must be a Proxytype (Int, Float, Bool etc.) and the number of dimensions must be a Python integer.
+    Proxy Array representing a multidimensional, homogenous array of fixed-size items.
 
     Can be instantiated from a NumPy ndarray (via `from_numpy`), or a Python iterable.
     Currently, Arrays can only be constructed from small local arrays (< 10MB).
@@ -42,9 +41,9 @@ class Array(NumPyMixin, GenericProxytype):
     --------
     >>> import descarteslabs.workflows as wf
     >>> # Create a 1-dimensional Array of Ints
-    >>> arr = wf.Array[wf.Int, 1]([1, 2, 3, 4, 5])
+    >>> arr = wf.Array([1, 2, 3, 4, 5])
     >>> arr
-    <descarteslabs.workflows.types.array.array_.Array[Int, 1] object at 0x...>
+    <descarteslabs.workflows.types.array.array_.Array object at 0x...>
     >>> arr.compute(geoctx) # doctest: +SKIP
     array([1, 2, 3, 4, 5])
 
@@ -52,98 +51,49 @@ class Array(NumPyMixin, GenericProxytype):
     >>> import descarteslabs.workflows as wf
     >>> ndarray = np.ones((3, 10, 10))
     >>> # Create an Array from the 3-dimensional numpy array
-    >>> arr = wf.Array.from_numpy(ndarray)
+    >>> arr = wf.Array(ndarray)
     >>> arr
-    <descarteslabs.workflows.types.array.array_.Array[Float, 3] object at 0x...>
+    <descarteslabs.workflows.types.array.array_.Array object at 0x...>
     """
 
     def __init__(self, arr):
-        if self._type_params is None:
-            raise TypeError(
-                "Cannot instantiate a generic Array; "
-                "the dtype and dimensionality must be specified (like `Array[Float, 3]`). "
-                "Alternatively, Arrays can be instantiated with `from_numpy` "
-                "(like `Array.from_numpy(my_array)`)."
-            )
-
         self._literal_value = arr
 
-        if isinstance(arr, np.ndarray):
-            if arr.dtype.kind != WF_TO_DTYPE_KIND[self.dtype]:
-                raise TypeError(
-                    "Invalid dtype {} for an {}".format(arr.dtype, type(self).__name__)
-                )
-            if arr.ndim != self.ndim:
-                raise ValueError(
-                    "Cannot instantiate a {}-dimensional Workflows Array from a "
-                    "{}-dimensional NumPy array".format(self.ndim, arr.ndim)
-                )
-
-            arr_list = arr.tolist()
-            self.graft = client.apply_graft("array.create", arr_list)
-
-        else:
-            list_type = functools.reduce(
-                lambda accum, cur: List[accum],
-                range(self._type_params[1]),
-                self._type_params[0],
-            )
+        if not isinstance(arr, np.ndarray):
             try:
-                arr = list_type._promote(arr)
-            except ProxyTypeError:
-                raise ValueError("Cannot instantiate an Array from {!r}".format(arr))
+                arr = np.asarray(arr)
+            except Exception:
+                raise ValueError("Cannot construct Array from {!r}".format(arr))
 
-            self.graft = client.apply_graft("array.create", arr)
-
-    @classmethod
-    def _validate_params(cls, type_params):
-        assert len(type_params) == 2, "Both Array dtype and ndim must be specified"
-        dtype, ndim = type_params
-        assert dtype in (
-            Int,
-            Float,
-            Bool,
-        ), "Array dtype must be Int, Float, or Bool, got {}".format(dtype)
-        assert isinstance(
-            ndim, int
-        ), "Array ndim must be a Python integer, got {}".format(ndim)
-        assert ndim >= 0, "Array ndim must be >= 0, not {}".format(ndim)
-
-    @classmethod
-    def from_numpy(cls, arr):
-        """
-        Construct a Workflows Array from a NumPy ndarray, inferring `dtype` and `ndim`
-
-        Parameters
-        ----------
-        arr: numpy.ndarray
-
-        Returns
-        -------
-        ~descarteslabs.workflows.Array
-        """
-        if cls._type_params:
-            # don't infer dtype, ndim from `arr`, since our cls is already parametrized
-            return cls(arr)
-
-        # infer dtype, ndim from numpy array
-        try:
-            dtype = DTYPE_KIND_TO_WF[arr.dtype.kind]
-        except KeyError:
-            raise ProxyTypeError(
-                "Creating a Workflows Array from a NumPy Array with dtype "
-                "`{}` is not supported. Supported dtypes kinds are float, "
-                "int, and bool.".format(arr.dtype)
+        if arr.dtype.kind not in ("b", "i", "f"):
+            raise TypeError(
+                "Invalid dtype {} for an {}".format(arr.dtype, type(self).__name__)
             )
-        return cls[dtype, arr.ndim](arr)
+
+        arr_list = arr.tolist()
+        self.graft = client.apply_graft("array.create", arr_list)
 
     @classmethod
     def _promote(cls, obj):
+        from .masked_array import MaskedArray
+
+        if isinstance(obj, cls):
+            return obj
+        if isinstance(obj, (Int, Float, Bool)):
+            return cls(obj)
+
         try:
-            return super(Array, cls)._promote(obj)
-        except TypeError:
-            # `_promote` contract expectes ProxyTypeError, not TypeError
-            raise ProxyTypeError("Cannot promote {} to {}".format(obj, cls))
+            return obj.cast(cls)
+        except Exception:
+            if not isinstance(obj, np.ndarray):
+                obj = np.asarray(obj)
+            numpy_promoter = (
+                MaskedArray.from_numpy if isinstance(obj, np.ma.MaskedArray) else Array
+            )
+            try:
+                return numpy_promoter(obj)
+            except Exception:
+                raise ProxyTypeError("Cannot promote {} to {}".format(obj, cls))
 
     @property
     def literal_value(self):
@@ -159,10 +109,11 @@ class Array(NumPyMixin, GenericProxytype):
         >>> import descarteslabs.workflows as wf
         >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
         >>> arr = img.ndarray
-        >>> arr.dtype
-        <class 'descarteslabs.workflows.types.primitives.number.Float'>
+        >>> arr.dtype.compute(geoctx) # doctest: +SKIP
+        dtype("float64")
         """
-        return self._type_params[0]
+
+        return DType._from_apply("array.dtype", self)
 
     @property
     def ndim(self):
@@ -173,10 +124,10 @@ class Array(NumPyMixin, GenericProxytype):
         >>> import descarteslabs.workflows as wf
         >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
         >>> arr = img.ndarray
-        >>> arr.ndim
+        >>> arr.ndim.compute(geoctx) # doctest: +SKIP
         3
         """
-        return self._type_params[1]
+        return Int._from_apply("array.ndim", self)
 
     @property
     def shape(self):
@@ -192,8 +143,7 @@ class Array(NumPyMixin, GenericProxytype):
         >>> arr.shape.compute(geoctx) # doctest: +SKIP
         (3, 512, 512)
         """
-        return_type = Tuple[(Int,) * self.ndim]
-        return return_type._from_apply("array.shape", self)
+        return List[Int]._from_apply("array.shape", self)
 
     def reshape(self, *newshape):
         """
@@ -206,18 +156,16 @@ class Array(NumPyMixin, GenericProxytype):
         return reshape(self, newshape)
 
     def __getitem__(self, idx):
-        idx, return_ndim = typecheck_getitem(idx, self.ndim)
+        idx = typecheck_getitem(idx)
 
-        if return_ndim == 0:
-            return_type = self.dtype
-        elif return_ndim > 0:
-            return_type = type(self)._generictype[self.dtype, return_ndim]
-        return return_type._from_apply("array.getitem", self, idx)
+        return type(self)._from_apply("array.getitem", self, idx)
 
     def to_imagery(self, properties=None, bandinfo=None):
         """
-        Turns a proxy Array into an `~.geospatial.Image` or `~.geospatial.ImageCollection`
-        depending on the dimenstionalty of the Array.
+        Turns a proxy Array into an `~.geospatial.ImageCollection`.
+
+        Note that this function always returns an `~.geospatial.ImageCollection`, even if the
+        Array is only 3D. If you are expecting an `~.geospatial.Image`, you can index into the result like `my_col[0]`.
 
         Parameters
         ----------
@@ -260,7 +208,7 @@ class Array(NumPyMixin, GenericProxytype):
           * bandinfo: 'red', 'green', 'blue'
           * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
         """
-        from ..geospatial import Image, ImageCollection
+        from ..geospatial import ImageCollection
 
         if not isinstance(properties, (type(None), dict, list, Dict, List)):
             raise TypeError(
@@ -274,18 +222,7 @@ class Array(NumPyMixin, GenericProxytype):
                 "Provided bandinfo must be a Dict, got {}".format(type(properties))
             )
 
-        if self.ndim == 3:
-            return_type = Image
-        elif self.ndim == 4:
-            return_type = ImageCollection
-        else:
-            raise ValueError(
-                "Cannot turn a {}-dimensional Array into an Image/ImageCollection, must be 3 or 4-dimensional.".format(
-                    self.ndim
-                )
-            )
-
-        return return_type._from_apply(
+        return ImageCollection._from_apply(
             "to_imagery", self, properties, bandinfo, env.geoctx
         )
 
@@ -520,53 +457,28 @@ class Array(NumPyMixin, GenericProxytype):
 
     def _stats_return_type(self, axis):
         if axis is None:
-            return_type = self.dtype
+            return_type = Float
         else:
-            if not isinstance(axis, tuple):
-                axis = (axis,)
-
-            for a in axis:
-                assert isinstance(
-                    a, (int, Int)
-                ), "Axis must be an integer, got {}".format(type(a))
-
-            num_axes = len(axis)
-            if self.ndim - num_axes < 0:
-                raise ValueError(
-                    "Too many axes for {}-dimensional array.".format(self.ndim)
-                )
-            elif self.ndim - num_axes == 0:
-                return_type = self.dtype
-            else:
-                return_type = type(self)._generictype[self.dtype, self.ndim - num_axes]
+            return_type = type(self)
         return return_type
 
 
-def typecheck_getitem(idx, ndim):
-    return_ndim = ndim
+def typecheck_getitem(idx):
     list_or_array_seen = False
     proxy_idx = []
 
     if not isinstance(idx, (tuple, Tuple)):
         idx = (idx,)
 
-    num_newindex = sum(1 for x in idx if isinstance(x, (NoneType._pytype, NoneType)))
-    num_idx = len(idx) - num_newindex
-    if num_idx > ndim:
-        raise ValueError("Too many indicies ({}) for a {}D Array".format(num_idx, ndim))
-
     for i, idx_elem in enumerate(idx):
         if isinstance(idx_elem, (int, Int)):
-            return_ndim -= 1
             proxy_idx.append(Int._promote(idx_elem))
         elif isinstance(idx_elem, (slice, Slice)):
             proxy_idx.append(Slice._promote(idx_elem))
         elif isinstance(idx_elem, type(Ellipsis)):
-            num_ellipsis = ndim - (num_idx - 1)
-            proxy_idx += [Slice(None, None, None)] * num_ellipsis
+            proxy_idx.append(wf_Ellipsis())
         elif isinstance(idx_elem, (NoneType._pytype, NoneType)):
             proxy_idx.append(NoneType._promote(idx_elem))
-
         elif isinstance(idx_elem, (list, List)):
             if list_or_array_seen:
                 raise ValueError(
@@ -604,45 +516,6 @@ def typecheck_getitem(idx, ndim):
                     "with lists or Arrays in multiple axes.".format(i)
                 )
             list_or_array_seen = True
-
-            if idx_elem.dtype not in (Int, Bool):
-                raise TypeError(
-                    "While slicing Array, position {}: "
-                    "cannot slice an Array with an Array of type {}. "
-                    "Must be Int or Bool.".format(i, idx_elem.dtype)
-                )
-            if idx_elem.dtype is Int:
-                if idx_elem.ndim != 1:
-                    raise ValueError(
-                        "While slicing Array, position {}: "
-                        "tried to slice with a {}D Int Array, must be 1D.\n"
-                        "Slicing an Array with a multidimensional Array of Ints "
-                        "is not supported.".format(i, idx_elem.ndim)
-                    )
-                # No change in ndim
-            else:
-                if idx_elem.ndim == return_ndim:
-                    # NOTE(gabe): we use `return_ndim`, not `ndim`, to capture any slicing that's
-                    # already occurred in the idx tuple before this bool array.
-                    # For example, in `arr3D[idx]`, `idx` must be 3D. In `arr3D[0, idx]`, `idx` must be 2D.
-                    # NOTE(gabe) also we don't have to worry about `return_ndim == 0`
-                    # (weird edge case that breaks stuff) thanks to the "Too many indicies for Array" check
-
-                    return_ndim = 1
-                    # "If obj.ndim == x.ndim, x[obj] returns a 1-dimensional array"
-                    # (otherwise, no change in ndim)
-                elif idx_elem.ndim != 1:
-                    raise ValueError(
-                        "While slicing Array, position {}: "
-                        "tried to slice with a {}D Bool Array, must be 1D{}.\n"
-                        "Slicing with an Array of Bools is only supported when it's 1D, "
-                        "or has the same dimensionality as the array once it's been "
-                        "sliced by any prior indexing.".format(
-                            i,
-                            idx_elem.ndim,
-                            " or {}D".format(return_ndim) if return_ndim > 1 else "",
-                        )
-                    )
             proxy_idx.append(idx_elem)
         else:
             raise TypeError(
@@ -663,4 +536,4 @@ def typecheck_getitem(idx, ndim):
             proxy_idx = Tuple[types](proxy_idx)
             # ^ NOTE(gabe): not try/excepting this because we've already promoted everything in `proxy_idx`
 
-    return proxy_idx, return_ndim + num_newindex
+    return proxy_idx

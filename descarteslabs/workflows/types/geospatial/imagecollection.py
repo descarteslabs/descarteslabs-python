@@ -18,7 +18,7 @@ from .mixins import BandsMixin
 
 ImageCollectionBase = Struct[
     {
-        "ndarray": MaskedArray[Float, 4],
+        "ndarray": MaskedArray,
         "properties": List[
             KnownDict[
                 {

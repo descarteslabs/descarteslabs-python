@@ -24,7 +24,7 @@ def _DelayedImageCollection():
 
 ImageBase = Struct[
     {
-        "ndarray": MaskedArray[Float, 3],
+        "ndarray": MaskedArray,
         "properties": KnownDict[
             {
                 "id": Str,
