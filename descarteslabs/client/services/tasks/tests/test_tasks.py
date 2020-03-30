@@ -189,10 +189,10 @@ class TasksTest(ClientTestCase):
 class TasksPackagingTest(ClientTestCase):
 
     TEST_DATA_PATH = "/tmp/data"
-    TEST_PACKAGE_NAME = "dl_non_system_module"
+    #TEST_PACKAGE_NAME = "dl_non_system_module"
     #TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
-    #TEST_PACKAGE_NAME = "dl_test_package"
-    DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "package/data.json")
+    TEST_PACKAGE_NAME = "dl_test_package"
+    DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
     DATA_FILE_ZIP_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
     DATA_FILE_PATH = os.path.join(TEST_DATA_PATH, DATA_FILE_RELATIVE_PATH)
     TEST_MODULE = "{}.package.module".format(TEST_PACKAGE_NAME)
@@ -226,7 +226,8 @@ class TasksPackagingTest(ClientTestCase):
 
         # copy dl_test_package into /tmp
         src = os.path.join(os.path.dirname(__file__), "data")
-        dest = "{}/{}".format(self.TEST_DATA_PATH, self.TEST_PACKAGE_NAME)
+        #dest = "{}/{}".format(self.TEST_DATA_PATH, self.TEST_PACKAGE_NAME)
+        dest = "/tmp"
         print("src:", src, "dest:", dest)
         shutil.copytree(src, dest)
 
