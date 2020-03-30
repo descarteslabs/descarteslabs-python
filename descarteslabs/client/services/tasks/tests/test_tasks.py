@@ -224,6 +224,14 @@ class TasksPackagingTest(ClientTestCase):
         self._sys_path = copy.copy(sys.path)
         sys.path = [self.TEST_DATA_PATH] + sys.path
 
+        print("DATA_FILE_PATH", self.DATA_FILE_PATH)
+        print("/tmp", os.listdir("/tmp"))
+        try:
+            print("/tmp/data", os.listdir("/tmp/data"))
+        except Exception:
+            pass
+
+
         # copy dl_test_package into /tmp
         src = os.path.join(os.path.dirname(__file__), "data")
         #dest = "{}/{}".format(self.TEST_DATA_PATH, self.TEST_PACKAGE_NAME)
@@ -391,12 +399,6 @@ class TasksPackagingTest(ClientTestCase):
                     self.assertIn(path, arc.namelist())
 
     def test_build_bundle(self):
-        print("DATA_FILE_PATH", self.DATA_FILE_PATH)
-        print("/tmp", os.listdir("/tmp"))
-        print("/tmp/data", os.listdir("/tmp/data"))
-        print("/tmp/data/dl_non_system_module", os.listdir("/tmp/data/dl_non_system_module"))
-        print("/tmp/data/dl_non_system_module/package", os.listdir("/tmp/data/dl_non_system_module/package"))
-
         module_path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
         cython_module_path = "{}/{}".format(DIST, self.TEST_MODULE_CYTHON_ZIP_PATH)
         data_path = "{}/{}".format(DATA, self.DATA_FILE_ZIP_PATH)
