@@ -88,7 +88,7 @@ def do_setup():
         ],
         extras_require={
             "complete": [
-                'blosc;platform_system!="Windows"',
+                'blosc==1.8.3;platform_system!="Windows"',
                 "matplotlib>=3.0.3",
                 "mercantile>=1.1.2",
                 "ipyleaflet>=0.12.2,<1",
