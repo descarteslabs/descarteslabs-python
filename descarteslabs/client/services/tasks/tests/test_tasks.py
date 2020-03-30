@@ -329,7 +329,7 @@ class TasksPackagingTest(ClientTestCase):
                     self.assertIn(b"main = foo", source)
 
     def test_find_data_files_glob(self):
-        pattern = os.path.join(self.TEST_DATA_PATH, "dl_test_package/*.json")
+        pattern = os.path.join(self.NON_SYS_MODULE_PATH, "{}/*.json".format(self.NON_SYS_MODULE))
         data_files = self.client._find_data_files([pattern])
         self.assertEqual(
             [(self.DATA_FILE_PATH, os.path.join(DATA, self.DATA_FILE_RELATIVE_PATH))],
