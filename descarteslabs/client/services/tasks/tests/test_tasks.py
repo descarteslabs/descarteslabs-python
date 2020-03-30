@@ -190,8 +190,8 @@ class TasksPackagingTest(ClientTestCase):
 
     TEST_DATA_PATH = "/tmp"
     TEST_PACKAGE_NAME = "dl_non_system_module"
-    TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
-    TEST_PACKAGE_NAME = "dl_test_package"
+    #TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
+    #TEST_PACKAGE_NAME = "dl_test_package"
     DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
     DATA_FILE_ZIP_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
     DATA_FILE_PATH = os.path.join(TEST_DATA_PATH, DATA_FILE_RELATIVE_PATH)
