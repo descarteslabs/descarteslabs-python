@@ -368,8 +368,8 @@ class TasksPackagingTest(ClientTestCase):
                 self.client._write_include_modules(self.NON_SYS_MODULE_LIST, arc)
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
-                init_path = "{}/{}/package/__init__.py".format(DIST, self.NON_SYS)
-                pkg_init_path = "{}/{}/__init__.py".format(DIST, self.NON_SYS)
+                init_path = "{}/{}/package/__init__.py".format(DIST, self.NON_SYS_MODULE)
+                pkg_init_path = "{}/{}/__init__.py".format(DIST, self.NON_SYS_MODULE)
                 self.assertIn(init_path, arc.namelist())
                 self.assertIn(pkg_init_path, arc.namelist())
                 for mod_zip_path in self.NON_SYS_ZIP_PATH_LIST:
