@@ -188,7 +188,7 @@ class TasksTest(ClientTestCase):
 
 class TasksPackagingTest(ClientTestCase):
 
-    TEST_DATA_PATH = "/tmp/test_data"
+    TEST_DATA_PATH = "/tmp/data"
     #TEST_PACKAGE_NAME = "dl_non_system_module"
     #TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
     TEST_PACKAGE_NAME = "dl_test_package"
@@ -231,7 +231,7 @@ class TasksPackagingTest(ClientTestCase):
         except Exception:
             pass
 
-        if "/tmp/data" in os.listdir("/tmp"):
+        if "data" in os.listdir("/tmp"):
             print("removing data")
             shutil.rmtree("/tmp/data")
 
@@ -239,7 +239,7 @@ class TasksPackagingTest(ClientTestCase):
         # copy dl_test_package into /tmp
         src = os.path.join(os.path.dirname(__file__), "data")
         #dest = "{}/{}".format(self.TEST_DATA_PATH, self.TEST_PACKAGE_NAME)
-        dest = "/tmp/test_data"
+        dest = "/tmp/data"
         print("src:", src, "dest:", dest)
         shutil.copytree(src, dest)
 
