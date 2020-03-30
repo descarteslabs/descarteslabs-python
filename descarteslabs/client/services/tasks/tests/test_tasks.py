@@ -188,7 +188,7 @@ class TasksTest(ClientTestCase):
 
 class TasksPackagingTest(ClientTestCase):
 
-    TEST_DATA_PATH = "/tmp"
+    TEST_DATA_PATH = "/tmp/dl_non_system_module/data"
     TEST_PACKAGE_NAME = "dl_non_system_module"
     #TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
     #TEST_PACKAGE_NAME = "dl_test_package"
@@ -225,7 +225,7 @@ class TasksPackagingTest(ClientTestCase):
         sys.path = [self.TEST_DATA_PATH] + sys.path
 
         # copy dl_test_package into /tmp
-        src = os.path.join(os.path.dirname(__file__), "data/dl_test_package")
+        src = os.path.join(os.path.dirname(__file__), "data")
         dest = "{}/{}".format(self.TEST_DATA_PATH, self.TEST_PACKAGE_NAME)
         print("src:", src, "dest:", dest)
         shutil.copytree(src, dest)
