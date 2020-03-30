@@ -188,33 +188,33 @@ class TasksTest(ClientTestCase):
 
 class TasksPackagingTest(ClientTestCase):
 
-    TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
-    TEST_PACKAGE_NAME = "dl_test_package"
-    DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
-    DATA_FILE_ZIP_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
-    DATA_FILE_PATH = os.path.join(TEST_DATA_PATH, DATA_FILE_RELATIVE_PATH)
-    TEST_MODULE = "{}.package.module".format(TEST_PACKAGE_NAME)
-    TEST_MODULE_ZIP_PATH = "{}/package/module.py".format(TEST_PACKAGE_NAME)
-    TEST_MODULE_CYTHON = "{}.package.cython_module".format(TEST_PACKAGE_NAME)
-    TEST_MODULE_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(
-        TEST_PACKAGE_NAME
-    )
-    TEST_MODULE_LIST = [TEST_MODULE, TEST_MODULE_CYTHON]
-    TEST_MODULE_ZIP_PATH_LIST = [TEST_MODULE_ZIP_PATH, TEST_MODULE_CYTHON_ZIP_PATH]
+    TEST_DATA_PATH = "/tmp"
+    TEST_PACKAGE_NAME = "dl_non_system_module"
+    #TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
+    #TEST_PACKAGE_NAME = "dl_test_package"
+    #DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
+    #DATA_FILE_ZIP_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
+    #DATA_FILE_PATH = os.path.join(TEST_DATA_PATH, DATA_FILE_RELATIVE_PATH)
+    #TEST_MODULE = "{}.package.module".format(TEST_PACKAGE_NAME)
+    #TEST_MODULE_ZIP_PATH = "{}/package/module.py".format(TEST_PACKAGE_NAME)
+    #TEST_MODULE_CYTHON = "{}.package.cython_module".format(TEST_PACKAGE_NAME)
+    #TEST_MODULE_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(
+    #    TEST_PACKAGE_NAME
+    #)
+    #TEST_MODULE_LIST = [TEST_MODULE, TEST_MODULE_CYTHON]
+    #TEST_MODULE_ZIP_PATH_LIST = [TEST_MODULE_ZIP_PATH, TEST_MODULE_CYTHON_ZIP_PATH]
 
-    NON_SYS_MODULE = "dl_non_system_module"
-    NON_SYS_MODULE_PATH = "/tmp"
-    NON_SYS_MODULE_ZIP_PATH = "{}/package/module.py".format(NON_SYS_MODULE)
-    NON_SYS_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(NON_SYS_MODULE)
-    NON_SYS_DATA_FILE_ZIP_PATH = "{}/data.json".format(NON_SYS_MODULE)
-    NON_SYS_ZIP_PATH_LIST = [NON_SYS_MODULE_ZIP_PATH, NON_SYS_CYTHON_ZIP_PATH]
+    #NON_SYS_MODULE_ZIP_PATH = "{}/package/module.py".format(NON_SYS_MODULE)
+    #NON_SYS_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(NON_SYS_MODULE)
+    #NON_SYS_DATA_FILE_ZIP_PATH = "{}/data.json".format(NON_SYS_MODULE)
+    #NON_SYS_ZIP_PATH_LIST = [NON_SYS_MODULE_ZIP_PATH, NON_SYS_CYTHON_ZIP_PATH]
 
-    NON_SYS_TEST_MODULE = "{}.package.module".format(NON_SYS_MODULE)
-    NON_SYS_TEST_MODULE_CYTHON = "{}.package.cython_module".format(NON_SYS_MODULE)
-    NON_SYS_MODULE_LIST = [NON_SYS_TEST_MODULE, NON_SYS_TEST_MODULE_CYTHON]
-    NON_SYS_DATA_FILE_PATH = "{}/{}/data.json".format(
-        NON_SYS_MODULE_PATH, NON_SYS_MODULE
-    )
+    #NON_SYS_TEST_MODULE = "{}.package.module".format(NON_SYS_MODULE)
+    #NON_SYS_TEST_MODULE_CYTHON = "{}.package.cython_module".format(NON_SYS_MODULE)
+    #NON_SYS_MODULE_LIST = [NON_SYS_TEST_MODULE, NON_SYS_TEST_MODULE_CYTHON]
+    #NON_SYS_DATA_FILE_PATH = "{}/{}/data.json".format(
+    #    NON_SYS_MODULE_PATH, NON_SYS_MODULE
+    #)
 
     GLOBAL_STRING = "A global var"
     LOCAL_STRING = "A local var"
@@ -222,17 +222,17 @@ class TasksPackagingTest(ClientTestCase):
     def setUp(self):
         super(TasksPackagingTest, self).setUp()
         self._sys_path = copy.copy(sys.path)
-        sys.path = [self.NON_SYS_MODULE_PATH, self.TEST_DATA_PATH] + sys.path
+        sys.path = [self.TEST_DATA_PATH] + sys.path
 
         # copy dl_test_package into /tmp
         shutil.copytree(
             os.path.join(os.path.dirname(__file__), "data/dl_test_package"),
-            "{}/{}".format(self.NON_SYS_MODULE_PATH, self.NON_SYS_MODULE),
+            "{}/{}".format(self.TEST_DATA_PATH, self.TEST_PACKAGE_NAME),
         )
 
     def tearDown(self):
         # remove dl_test_package from /tmp
-        shutil.rmtree("{}/{}".format(self.NON_SYS_MODULE_PATH, self.NON_SYS_MODULE))
+        shutil.rmtree("{}/{}".format(self.TEST_DATA_PATH, self.TEST_PACKAGE_NAME))
         sys.path = self._sys_path
         super(TasksPackagingTest, self).tearDown()
 
