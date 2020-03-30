@@ -190,19 +190,19 @@ class TasksPackagingTest(ClientTestCase):
 
     TEST_DATA_PATH = "/tmp"
     TEST_PACKAGE_NAME = "dl_non_system_module"
-    #TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
-    #TEST_PACKAGE_NAME = "dl_test_package"
-    #DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
-    #DATA_FILE_ZIP_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
-    #DATA_FILE_PATH = os.path.join(TEST_DATA_PATH, DATA_FILE_RELATIVE_PATH)
-    #TEST_MODULE = "{}.package.module".format(TEST_PACKAGE_NAME)
-    #TEST_MODULE_ZIP_PATH = "{}/package/module.py".format(TEST_PACKAGE_NAME)
-    #TEST_MODULE_CYTHON = "{}.package.cython_module".format(TEST_PACKAGE_NAME)
-    #TEST_MODULE_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(
-    #    TEST_PACKAGE_NAME
-    #)
-    #TEST_MODULE_LIST = [TEST_MODULE, TEST_MODULE_CYTHON]
-    #TEST_MODULE_ZIP_PATH_LIST = [TEST_MODULE_ZIP_PATH, TEST_MODULE_CYTHON_ZIP_PATH]
+    TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
+    TEST_PACKAGE_NAME = "dl_test_package"
+    DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
+    DATA_FILE_ZIP_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
+    DATA_FILE_PATH = os.path.join(TEST_DATA_PATH, DATA_FILE_RELATIVE_PATH)
+    TEST_MODULE = "{}.package.module".format(TEST_PACKAGE_NAME)
+    TEST_MODULE_ZIP_PATH = "{}/package/module.py".format(TEST_PACKAGE_NAME)
+    TEST_MODULE_CYTHON = "{}.package.cython_module".format(TEST_PACKAGE_NAME)
+    TEST_MODULE_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(
+        TEST_PACKAGE_NAME
+    )
+    TEST_MODULE_LIST = [TEST_MODULE, TEST_MODULE_CYTHON]
+    TEST_MODULE_ZIP_PATH_LIST = [TEST_MODULE_ZIP_PATH, TEST_MODULE_CYTHON_ZIP_PATH]
 
     #NON_SYS_MODULE_ZIP_PATH = "{}/package/module.py".format(NON_SYS_MODULE)
     #NON_SYS_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(NON_SYS_MODULE)
