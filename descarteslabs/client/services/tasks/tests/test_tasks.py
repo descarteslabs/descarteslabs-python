@@ -207,6 +207,7 @@ class TasksPackagingTest(ClientTestCase):
     NON_SYS_MODULE_ZIP_PATH = "{}/package/module.py".format(NON_SYS_MODULE)
     NON_SYS_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(NON_SYS_MODULE)
     NON_SYS_DATA_FILE_ZIP_PATH = "{}/data.json".format(NON_SYS_MODULE)
+    NON_SYS_ZIP_PATH_LIST = [NON_SYS_MODULE_ZIP_PATH, NON_SYS_CYTHON_ZIP_PATH]
 
     NON_SYS_TEST_MODULE = "{}.package.module".format(NON_SYS_MODULE)
     NON_SYS_TEST_MODULE_CYTHON = "{}.package.cython_module".format(NON_SYS_MODULE)
@@ -364,14 +365,14 @@ class TasksPackagingTest(ClientTestCase):
     def test_include_modules(self):
         with tempfile.NamedTemporaryFile(suffix=".zip") as f:
             with ZipFile(f, mode="w") as arc:
-                self.client._write_include_modules(self.NON_SYS_TEST_MODULE_LIST, arc)
+                self.client._write_include_modules(self.NON_SYS_MODULE_LIST, arc)
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
-                init_path = "{}/dl_test_package/package/__init__.py".format(DIST)
-                pkg_init_path = "{}/dl_test_package/__init__.py".format(DIST)
+                init_path = "{}/{}/package/__init__.py".format(DIST, self.NON_SYS)
+                pkg_init_path = "{}/{}/__init__.py".format(DIST, self.NON_SYS)
                 self.assertIn(init_path, arc.namelist())
                 self.assertIn(pkg_init_path, arc.namelist())
-                for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
+                for mod_zip_path in self.NON_SYS_ZIP_PATH_LIST:
                     path = "{}/{}".format(DIST, mod_zip_path)
                     self.assertIn(path, arc.namelist())
                     with arc.open(path) as fixture_data:
