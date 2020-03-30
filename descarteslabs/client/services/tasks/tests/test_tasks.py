@@ -231,6 +231,10 @@ class TasksPackagingTest(ClientTestCase):
         except Exception:
             pass
 
+        if "/tmp/data" in os.listdir("/tmp"):
+            print("removing data")
+            shutil.rmtree("/tmp/data")
+
 
         # copy dl_test_package into /tmp
         src = os.path.join(os.path.dirname(__file__), "data")
