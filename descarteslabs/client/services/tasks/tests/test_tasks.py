@@ -291,7 +291,7 @@ class TasksPackagingTest(ClientTestCase):
                 foo,
                 "task-image",
                 include_data=[self.DATA_FILE_PATH],
-                include_modules=[self.NON_SYS_TEST_MODULE],
+                include_modules=[self.TEST_MODULE],
             )
 
         body = responses.calls[0].request.body.decode(
@@ -329,7 +329,7 @@ class TasksPackagingTest(ClientTestCase):
                     self.assertIn(b"main = foo", source)
 
     def test_find_data_files_glob(self):
-        pattern = os.path.join(self.NON_SYS_MODULE_PATH, "{}/*.json".format(self.NON_SYS_MODULE))
+        pattern = os.path.join(self.TEST_DATA_PATH, "{}/*.json".format(self.TEST_PACKAGE_NAME))
         data_files = self.client._find_data_files([pattern])
         self.assertEqual(
             [(self.DATA_FILE_PATH, os.path.join(DATA, self.DATA_FILE_RELATIVE_PATH))],
@@ -365,40 +365,40 @@ class TasksPackagingTest(ClientTestCase):
     def test_include_modules(self):
         with tempfile.NamedTemporaryFile(suffix=".zip") as f:
             with ZipFile(f, mode="w") as arc:
-                self.client._write_include_modules(self.NON_SYS_MODULE_LIST, arc)
+                self.client._write_include_modules(self.TEST_MODULE_LIST, arc)
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
-                init_path = "{}/{}/package/__init__.py".format(DIST, self.NON_SYS_MODULE)
-                pkg_init_path = "{}/{}/__init__.py".format(DIST, self.NON_SYS_MODULE)
+                init_path = "{}/{}/package/__init__.py".format(DIST, self.TEST_PACKAGE_NAME)
+                pkg_init_path = "{}/{}/__init__.py".format(DIST, self.TEST_PACKAGE_NAME)
                 self.assertIn(init_path, arc.namelist())
                 self.assertIn(pkg_init_path, arc.namelist())
-                for mod_zip_path in self.NON_SYS_ZIP_PATH_LIST:
+                for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
                     path = "{}/{}".format(DIST, mod_zip_path)
                     self.assertIn(path, arc.namelist())
                     with arc.open(path) as fixture_data:
                         self.assertIn(b"def foo()", fixture_data.read())
 
-    @mock.patch.object(sys, "path", new=[os.path.relpath(NON_SYS_MODULE_PATH)])
+    @mock.patch.object(sys, "path", new=[os.path.relpath(TEST_DATA_PATH)])
     def test_include_modules_relative_sys_path(self):
         with tempfile.NamedTemporaryFile(suffix=".zip") as f:
             with ZipFile(f, mode="w") as arc:
-                self.client._write_include_modules(self.NON_SYS_MODULE_LIST, arc)
+                self.client._write_include_modules(self.TEST_MODULE_LIST, arc)
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
-                for mod_zip_path in self.NON_SYS_ZIP_PATH_LIST:
+                for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
                     path = "{}/{}".format(DIST, mod_zip_path)
                     self.assertIn(path, arc.namelist())
 
     def test_build_bundle(self):
-        module_path = "{}/{}".format(DIST, self.NON_SYS_MODULE_ZIP_PATH)
-        cython_module_path = "{}/{}".format(DIST, self.NON_SYS_CYTHON_ZIP_PATH)
-        data_path = "{}/{}".format(DATA, self.NON_SYS_DATA_FILE_ZIP_PATH)
+        module_path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
+        cython_module_path = "{}/{}".format(DIST, self.TEST_MODULE_CYTHON_ZIP_PATH)
+        data_path = "{}/{}".format(DATA, self.DATA_FILE_ZIP_PATH)
 
         def foo():
             pass
 
         zf = self.client._build_bundle(
-            foo, [self.NON_SYS_DATA_FILE_PATH], self.NON_SYS_MODULE_LIST
+            foo, [self.DATA_FILE_PATH], self.TEST_MODULE_LIST
         )
 
         try:
@@ -430,9 +430,9 @@ class TasksPackagingTest(ClientTestCase):
 
     def test_build_bundle_with_named_function(self):
         zf = self.client._build_bundle(
-            self.NON_SYS_TEST_MODULE + ".func_foo",
-            [self.NON_SYS_DATA_FILE_PATH],
-            [self.NON_SYS_TEST_MODULE],
+            self.TEST_MODULE + ".func_foo",
+            [self.DATA_FILE_PATH],
+            [self.TEST_MODULE],
         )
 
         try:
@@ -444,9 +444,9 @@ class TasksPackagingTest(ClientTestCase):
 
         # And a nested function
         zf = self.client._build_bundle(
-            self.NON_SYS_TEST_MODULE + ".outer_class.inner_class.func_bar",
-            [self.NON_SYS_DATA_FILE_PATH],
-            [self.NON_SYS_TEST_MODULE],
+            self.TEST_MODULE + ".outer_class.inner_class.func_bar",
+            [self.DATA_FILE_PATH],
+            [self.TEST_MODULE],
         )
 
         try:
@@ -460,14 +460,14 @@ class TasksPackagingTest(ClientTestCase):
         with self.assertRaises(NameError):
             zf = self.client._build_bundle(
                     "func.func_foo",
-                [self.NON_SYS_DATA_FILE_PATH],
-                [self.NON_SYS_TEST_MODULE],
+                [self.DATA_FILE_PATH],
+                [self.TEST_MODULE],
             )
 
         zf = self.client._build_bundle(
             "descarteslabs.client.services.tasks.tests.test_tasks.TasksPackagingTest.a_function",
-            [self.NON_SYS_DATA_FILE_PATH],
-            [self.NON_SYS_TEST_MODULE],
+            [self.DATA_FILE_PATH],
+            [self.TEST_MODULE],
         )
 
         try:
