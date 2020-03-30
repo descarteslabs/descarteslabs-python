@@ -188,7 +188,7 @@ class TasksTest(ClientTestCase):
 
 class TasksPackagingTest(ClientTestCase):
 
-    TEST_DATA_PATH = "/tmp/data"
+    TEST_DATA_PATH = "/tmp/test_data"
     #TEST_PACKAGE_NAME = "dl_non_system_module"
     #TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
     TEST_PACKAGE_NAME = "dl_test_package"
@@ -227,7 +227,7 @@ class TasksPackagingTest(ClientTestCase):
         print("DATA_FILE_PATH", self.DATA_FILE_PATH)
         print("/tmp", os.listdir("/tmp"))
         try:
-            print("/tmp/data", os.listdir("/tmp/data"))
+            print("/tmp/test_data", os.listdir("/tmp/test_data"))
         except Exception:
             pass
 
