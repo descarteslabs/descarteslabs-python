@@ -390,6 +390,12 @@ class TasksPackagingTest(ClientTestCase):
                     self.assertIn(path, arc.namelist())
 
     def test_build_bundle(self):
+        print("DATA_FILE_PATH", self.DATA_FILE_PATH)
+        print("/tmp", os.listdir("/tmp"))
+        print("/tmp/data", os.listdir("/tmp/data"))
+        print("/tmp/data/dl_non_system_module", os.listdir("/tmp/data/dl_non_system_module"))
+        print("/tmp/data/dl_non_system_module/package", os.listdir("/tmp/data/dl_non_system_module/package"))
+
         module_path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
         cython_module_path = "{}/{}".format(DIST, self.TEST_MODULE_CYTHON_ZIP_PATH)
         data_path = "{}/{}".format(DATA, self.DATA_FILE_ZIP_PATH)
