@@ -344,7 +344,7 @@ class TasksPackagingTest(ClientTestCase):
         )
 
     def test_find_data_files_directory(self):
-        self.assertRaises(ValueError, self.client._find_data_files, ["descarteslabs"])
+        self.assertRaises(ValueError, self.client._find_data_files, ["descarteslabs/"])
 
     def test_find_data_files_missing(self):
         self.assertRaises(
