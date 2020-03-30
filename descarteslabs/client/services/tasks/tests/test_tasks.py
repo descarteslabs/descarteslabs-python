@@ -225,10 +225,10 @@ class TasksPackagingTest(ClientTestCase):
         sys.path = [self.TEST_DATA_PATH] + sys.path
 
         # copy dl_test_package into /tmp
-        shutil.copytree(
-            os.path.join(os.path.dirname(__file__), "data/dl_test_package"),
-            "{}/{}".format(self.TEST_DATA_PATH, self.TEST_PACKAGE_NAME),
-        )
+        src = os.path.join(os.path.dirname(__file__), "data/dl_test_package")
+        dest = "{}/{}".format(self.TEST_DATA_PATH, self.TEST_PACKAGE_NAME)
+        print("src:", src, "dest:", dest)
+        shutil.copytree(src, dest)
 
     def tearDown(self):
         # remove dl_test_package from /tmp
