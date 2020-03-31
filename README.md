@@ -10,6 +10,20 @@ Changelog
 
 ## Pending
 
+### Workflows (channel `v0-13`) - Added
+- Array support for `argmin`, `argmax`, `any`, `all`
+- `pick_bands` supports an `allow_missing` kwarg to drop band names that may be missing from the data without an error.
+- `wf.compute` supports passing lists or tuples of items to compute at the same time. Passing multiple items to `wf.compute`, rather than calling `obj.compute` for each separately, is usually faster.
+- Casting from `Bool` to `Int`: `wf.Int(True)`
+- Experimental `.inspect()` method for small computations during interactive use.
+
+### Workflows - Changed
+- **[breaking]** Array no longer uses type parameters: now you construct an Array with `wf.Array([1, 2, 3])`, not `wf.Array[wf.Int, 1]([1, 2, 3])`. Remember, Array is an experimental API and will continue to make frequent breaking changes!
+- Workflows now reuses the same gRPC client by default---so repeated or parallel calls to `.compute`, etc. will be faster. Calling `.compute` within a thread pool will also be significantly more efficient.
+
+### Workflows - Fixed
+- `wf.numpy.histogram` correctly accepts a `List[Float]` as the `range` argument
+
 ## [1.1.2] - 2020-03-12
 
 1.1.2 fixes a bug which caused Workflows map layers to behave erratically when changing colormaps.
