@@ -212,18 +212,20 @@ class TasksPackagingTest(ClientTestCase):
 
         #if "data" in os.listdir("/tmp"):
         #    shutil.rmtree("/tmp/data")
+        print("before copy in setUp", os.listdir("/tmp"))
 
         # copy data directory into /tmp/data
-        shutil.copytree(os.path.join(os.path.dirname(__file__), "data"), self.TEST_DATA_PATH)
 
-        print(os.listdir("/tmp"))
-        print(sys.path)
+        tmp_dir = os.path.join(tempfile.gettempdir(), "data")
+        print("generated temp directory:", tmp_dir)
+        shutil.copytree(os.path.join(os.path.dirname(__file__), "data"), tmp_dir)
+
+        print("after copy in setUp", os.listdir("/tmp"))
 
     def tearDown(self):
         shutil.rmtree(self.TEST_DATA_PATH)
         print(os.listdir("/tmp"))
         sys.path = self._sys_path
-        print(sys.path)
         super(TasksPackagingTest, self).tearDown()
 
     @staticmethod
@@ -343,7 +345,7 @@ class TasksPackagingTest(ClientTestCase):
 
     def test_find_data_files_glob_missing(self):
         with warnings.catch_warnings(record=True) as w:
-            data_files = self.client._find_data_files(["descarteslabs/foobar/*.txt"])
+            data_files = self.client._find_data_files(["{}/foobar/*.txt".format(self.TEST_PACKAGE_NAME)])
             self.assertEqual([], data_files)
             self.assertEqual(1, len(w))
 
