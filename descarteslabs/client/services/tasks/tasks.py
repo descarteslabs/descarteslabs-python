@@ -1359,7 +1359,6 @@ class Tasks(Service):
     def _write_include_modules(self, include_modules, archive):
         for mod_name in include_modules:
             mod_file = self._find_module_file(mod_name)
-            print("in wim: mod_file: {}".format(mod_file))
 
             # detect system packages from distribution or virtualenv locations.
             if re.match(".*(?:site|dist)-packages", mod_file) is not None:
@@ -1374,11 +1373,9 @@ class Tasks(Service):
                     )
                 )
             sys_path = self._sys_path_prefix(mod_file)
-            print("in wim: sys_path: {}".format(sys_path))
 
             self._include_init_files(os.path.dirname(mod_file), archive, sys_path)
             archive_names = archive.namelist()
-            print("in wim: archive_names: {}".format(archive_names))
             # this is a package, get all decendants if they exist.
             if os.path.basename(mod_file) == "__init__.py":
                 for dirpath, dirnames, filenames in os.walk(os.path.dirname(mod_file)):
@@ -1396,7 +1393,6 @@ class Tasks(Service):
         relative_dir_path = os.path.relpath(dir_path, sys_path)
         archive_names = archive.namelist()
         # have we walked this path before?
-        print("in iif: {}".format(os.path.join(DIST, relative_dir_path, "__init__.py")))
         if os.path.join(DIST, relative_dir_path, "__init__.py") not in archive_names:
             partial_path = ""
             for path_part in relative_dir_path.split(os.sep):
