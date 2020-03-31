@@ -1248,7 +1248,6 @@ class Tasks(Service):
         data_files = []
 
         for pattern in include_data:
-            print("pattern: {}\n".format(pattern))
             is_glob = self._IS_GLOB_PATTERN.search(pattern)
             matched_paths = glob.glob(pattern)
 

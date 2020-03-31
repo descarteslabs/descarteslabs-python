@@ -196,7 +196,9 @@ class TasksPackagingTest(ClientTestCase):
     TEST_MODULE = "{}.package.module".format(TEST_PACKAGE_NAME)
     TEST_MODULE_ZIP_PATH = os.path.join(TEST_PACKAGE_NAME, "package", "module.py")
     TEST_MODULE_CYTHON = "{}.package.cython_module".format(TEST_PACKAGE_NAME)
-    TEST_MODULE_CYTHON_ZIP_PATH = os.path.join(TEST_PACKAGE_NAME, "package", "cython_module.pyx")
+    TEST_MODULE_CYTHON_ZIP_PATH = os.path.join(
+        TEST_PACKAGE_NAME, "package", "cython_module.pyx"
+    )
     TEST_MODULE_LIST = [TEST_MODULE, TEST_MODULE_CYTHON]
     TEST_MODULE_ZIP_PATH_LIST = [TEST_MODULE_ZIP_PATH, TEST_MODULE_CYTHON_ZIP_PATH]
 
@@ -208,22 +210,17 @@ class TasksPackagingTest(ClientTestCase):
         self._sys_path = copy.copy(sys.path)
         sys.path = [self.TEST_DATA_PATH] + sys.path
 
-        #if "data" in os.listdir("/tmp"):
-        #    shutil.rmtree("/tmp/data")
-        print("before copy in setUp", os.listdir(tempfile.gettempdir()))
-
-        # copy data directory into /tmp/data
-
-        tmp_dir = os.path.join(tempfile.gettempdir(), "data")
-        print("generated temp directory:", tmp_dir)
-        shutil.copytree(os.path.join(os.path.dirname(__file__), "data"), tmp_dir)
-
-        print("after copy in setUp", os.listdir(tempfile.gettempdir()))
+        # copy data directory into temporary directory
+        shutil.copytree(
+            os.path.join(os.path.dirname(__file__), "data"),
+            os.path.join(tempfile.gettempdir(), "data"),
+        )
 
     def tearDown(self):
+        # remove temporary data directory
         shutil.rmtree(self.TEST_DATA_PATH)
-        print(os.listdir(tempfile.gettempdir()))
         sys.path = self._sys_path
+
         super(TasksPackagingTest, self).tearDown()
 
     @staticmethod
@@ -319,7 +316,9 @@ class TasksPackagingTest(ClientTestCase):
                     self.assertIn(b"main = foo", source)
 
     def test_find_data_files_glob(self):
-        pattern = os.path.join(self.TEST_DATA_PATH, "{}/*.json".format(self.TEST_PACKAGE_NAME))
+        pattern = os.path.join(
+            self.TEST_DATA_PATH, "{}/*.json".format(self.TEST_PACKAGE_NAME)
+        )
         data_files = self.client._find_data_files([pattern])
         self.assertEqual(
             [(self.DATA_FILE_PATH, os.path.join(DATA, self.DATA_FILE_RELATIVE_PATH))],
@@ -334,16 +333,22 @@ class TasksPackagingTest(ClientTestCase):
         )
 
     def test_find_data_files_directory(self):
-        self.assertRaises(ValueError, self.client._find_data_files, [self.TEST_PACKAGE_NAME])
+        self.assertRaises(
+            ValueError, self.client._find_data_files, [self.TEST_PACKAGE_NAME]
+        )
 
     def test_find_data_files_missing(self):
         self.assertRaises(
-            ValueError, self.client._find_data_files, ["{}/foobar.txt".format(self.TEST_PACKAGE_NAME)]
+            ValueError,
+            self.client._find_data_files,
+            ["{}/foobar.txt".format(self.TEST_PACKAGE_NAME)],
         )
 
     def test_find_data_files_glob_missing(self):
         with warnings.catch_warnings(record=True) as w:
-            data_files = self.client._find_data_files(["{}/foobar/*.txt".format(self.TEST_PACKAGE_NAME)])
+            data_files = self.client._find_data_files(
+                ["{}/foobar/*.txt".format(self.TEST_PACKAGE_NAME)]
+            )
             self.assertEqual([], data_files)
             self.assertEqual(1, len(w))
 
@@ -358,12 +363,16 @@ class TasksPackagingTest(ClientTestCase):
                 self.client._write_include_modules(self.TEST_MODULE_LIST, arc)
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
-                init_path = "{}/{}/package/__init__.py".format(DIST, self.TEST_PACKAGE_NAME)
-                pkg_init_path = "{}/{}/__init__.py".format(DIST, self.TEST_PACKAGE_NAME)
+                init_path = os.path.join(
+                    DIST, self.TEST_PACKAGE_NAME, "package", "__init__.py"
+                )
+                pkg_init_path = os.path.join(
+                    DIST, self.TEST_PACKAGE_NAME, "__init__.py"
+                )
                 self.assertIn(init_path, arc.namelist())
                 self.assertIn(pkg_init_path, arc.namelist())
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
-                    path = "{}/{}".format(DIST, mod_zip_path)
+                    path = os.path.join(DIST, mod_zip_path)
                     self.assertIn(path, arc.namelist())
                     with arc.open(path) as fixture_data:
                         self.assertIn(b"def foo()", fixture_data.read())
@@ -376,13 +385,13 @@ class TasksPackagingTest(ClientTestCase):
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
-                    path = "{}/{}".format(DIST, mod_zip_path)
+                    path = os.path.join(DIST, mod_zip_path)
                     self.assertIn(path, arc.namelist())
 
     def test_build_bundle(self):
-        module_path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
-        cython_module_path = "{}/{}".format(DIST, self.TEST_MODULE_CYTHON_ZIP_PATH)
-        data_path = "{}/{}".format(DATA, self.DATA_FILE_ZIP_PATH)
+        module_path = os.path.join(DIST, self.TEST_MODULE_ZIP_PATH)
+        cython_module_path = os.path.join(DIST, self.TEST_MODULE_CYTHON_ZIP_PATH)
+        data_path = os.path.join(DATA, self.DATA_FILE_ZIP_PATH)
 
         def foo():
             pass
@@ -420,9 +429,7 @@ class TasksPackagingTest(ClientTestCase):
 
     def test_build_bundle_with_named_function(self):
         zf = self.client._build_bundle(
-            self.TEST_MODULE + ".func_foo",
-            [self.DATA_FILE_PATH],
-            [self.TEST_MODULE],
+            self.TEST_MODULE + ".func_foo", [self.DATA_FILE_PATH], [self.TEST_MODULE],
         )
 
         try:
@@ -449,9 +456,7 @@ class TasksPackagingTest(ClientTestCase):
     def test_build_bundle_with_named_function_bad(self):
         with self.assertRaises(NameError):
             zf = self.client._build_bundle(
-                    "func.func_foo",
-                [self.DATA_FILE_PATH],
-                [self.TEST_MODULE],
+                "func.func_foo", [self.DATA_FILE_PATH], [self.TEST_MODULE],
             )
 
         zf = self.client._build_bundle(
