@@ -1396,6 +1396,7 @@ class Tasks(Service):
         relative_dir_path = os.path.relpath(dir_path, sys_path)
         archive_names = archive.namelist()
         # have we walked this path before?
+        print("in iif: {}".format(os.path.join(DIST, relative_dir_path, "__init__.py")))
         if os.path.join(DIST, relative_dir_path, "__init__.py") not in archive_names:
             partial_path = ""
             for path_part in relative_dir_path.split(os.sep):
