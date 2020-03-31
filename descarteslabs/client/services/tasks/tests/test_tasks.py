@@ -370,11 +370,13 @@ class TasksPackagingTest(ClientTestCase):
                     DIST, self.TEST_PACKAGE_NAME, "__init__.py"
                 )
                 arc_namelist = [os.path.abspath(name) for name in arc.namelist()]
+                print("arc_namelist: {}\n".format(arc_namelist))
                 self.assertIn(os.path.abspath(init_path), arc_namelist)
                 self.assertIn(os.path.abspath(pkg_init_path), arc_namelist)
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
                     print("mod_zip_path: {}\n".format(mod_zip_path))
                     path = os.path.abspath(os.path.join(DIST, mod_zip_path))
+                    print("path: {}\n".format(path))
                     self.assertIn(path, arc_namelist)
                     with arc.open(path) as fixture_data:
                         self.assertIn(b"def foo()", fixture_data.read())
