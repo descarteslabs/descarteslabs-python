@@ -311,6 +311,7 @@ class TasksPackagingTest(ClientTestCase):
             with ZipFile(f, mode="r") as arc:
                 entrypoint_path = "{}/{}".format(DIST, ENTRYPOINT)
                 self.assertIn(entrypoint_path, arc.namelist())
+                print("entrypoint_path: {}".format(entrypoint_path))
                 with arc.open(entrypoint_path) as entrypoint:
                     source = entrypoint.read()
                     self.assertIn(b"main = foo", source)
