@@ -188,17 +188,15 @@ class TasksTest(ClientTestCase):
 
 class TasksPackagingTest(ClientTestCase):
 
-    TEST_DATA_PATH = "/tmp/data"
+    TEST_DATA_PATH = os.path.join(tempfile.gettempdir(), "data")
     TEST_PACKAGE_NAME = "dl_test_package"
     DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
-    DATA_FILE_ZIP_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
+    DATA_FILE_ZIP_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
     DATA_FILE_PATH = os.path.join(TEST_DATA_PATH, DATA_FILE_RELATIVE_PATH)
     TEST_MODULE = "{}.package.module".format(TEST_PACKAGE_NAME)
-    TEST_MODULE_ZIP_PATH = "{}/package/module.py".format(TEST_PACKAGE_NAME)
+    TEST_MODULE_ZIP_PATH = os.path.join(TEST_PACKAGE_NAME, "package", "module.py")
     TEST_MODULE_CYTHON = "{}.package.cython_module".format(TEST_PACKAGE_NAME)
-    TEST_MODULE_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(
-        TEST_PACKAGE_NAME
-    )
+    TEST_MODULE_CYTHON_ZIP_PATH = os.path.join(TEST_PACKAGE_NAME, "package", "cython_module.pyx")
     TEST_MODULE_LIST = [TEST_MODULE, TEST_MODULE_CYTHON]
     TEST_MODULE_ZIP_PATH_LIST = [TEST_MODULE_ZIP_PATH, TEST_MODULE_CYTHON_ZIP_PATH]
 
@@ -212,7 +210,7 @@ class TasksPackagingTest(ClientTestCase):
 
         #if "data" in os.listdir("/tmp"):
         #    shutil.rmtree("/tmp/data")
-        print("before copy in setUp", os.listdir("/tmp"))
+        print("before copy in setUp", os.listdir(tempfile.gettempdir()))
 
         # copy data directory into /tmp/data
 
@@ -220,11 +218,11 @@ class TasksPackagingTest(ClientTestCase):
         print("generated temp directory:", tmp_dir)
         shutil.copytree(os.path.join(os.path.dirname(__file__), "data"), tmp_dir)
 
-        print("after copy in setUp", os.listdir("/tmp"))
+        print("after copy in setUp", os.listdir(tempfile.gettempdir()))
 
     def tearDown(self):
         shutil.rmtree(self.TEST_DATA_PATH)
-        print(os.listdir("/tmp"))
+        print(os.listdir(tempfile.gettempdir()))
         sys.path = self._sys_path
         super(TasksPackagingTest, self).tearDown()
 
