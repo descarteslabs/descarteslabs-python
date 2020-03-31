@@ -370,11 +370,11 @@ class TasksPackagingTest(ClientTestCase):
                     DIST, self.TEST_PACKAGE_NAME, "__init__.py"
                 )
                 arc_namelist = [os.path.abspath(name) for name in arc.namelist()]
-                self.assertIn(init_path, arc_namelist)
-                self.assertIn(pkg_init_path, arc_namelist)
+                self.assertIn(os.path.abspath(init_path), arc_namelist)
+                self.assertIn(os.path.abspath(pkg_init_path), arc_namelist)
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
                     path = os.path.join(DIST, mod_zip_path)
-                    self.assertIn(path, arc_namelist)
+                    self.assertIn(os.path.abspath(path), arc_namelist)
                     with arc.open(path) as fixture_data:
                         self.assertIn(b"def foo()", fixture_data.read())
 
@@ -388,7 +388,7 @@ class TasksPackagingTest(ClientTestCase):
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
                     path = os.path.join(DIST, mod_zip_path)
                     arc_namelist = [os.path.abspath(name) for name in arc.namelist()]
-                    self.assertIn(path, arc_namelist)
+                    self.assertIn(os.path.abspath(path), arc_namelist)
 
     def test_build_bundle(self):
         module_path = os.path.join(DIST, self.TEST_MODULE_ZIP_PATH)
@@ -405,10 +405,10 @@ class TasksPackagingTest(ClientTestCase):
         try:
             with ZipFile(zf) as arc:
                 arc_namelist = [os.path.abspath(name) for name in arc.namelist()]
-                self.assertIn(module_path, arc_namelist)
-                self.assertIn(cython_module_path, arc_namelist)
-                self.assertIn(data_path, arc_namelist)
-                self.assertNotIn(REQUIREMENTS, arc_namelist)
+                self.assertIn(os.path.abspath(module_path), arc_namelist)
+                self.assertIn(os.path.abspath(cython_module_path), arc_namelist)
+                self.assertIn(os.path.abspath(data_path), arc_namelist)
+                self.assertNotIn(os.path.abspath(REQUIREMENTS), arc_namelist)
         finally:
             if os.path.exists(zf):
                 os.remove(zf)
