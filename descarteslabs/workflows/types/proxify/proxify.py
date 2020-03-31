@@ -8,7 +8,7 @@ def proxify(obj):
     from ..containers import Tuple, List
     from ..primitives import Int, Float, Bool, Str, NoneType, Any
     from ..datetimes import Datetime, Timedelta
-    from ..numpy.numpy_overrides import asarray
+    from ..array import Array
 
     if isinstance(obj, Proxytype):
         return obj
@@ -36,7 +36,7 @@ def proxify(obj):
     elif obj is None:
         return NoneType(obj)
     elif isinstance(obj, np.ndarray):
-        return asarray(obj)
+        return Array(obj)
     elif isinstance(obj, (datetime.datetime, datetime.date)):
         return Datetime._promote(obj)
     elif isinstance(obj, datetime.timedelta):

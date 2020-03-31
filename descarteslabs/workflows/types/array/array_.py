@@ -59,6 +59,9 @@ class Array(NumPyMixin, Proxytype):
     def __init__(self, arr):
         self._literal_value = arr
 
+        if isinstance(arr, (Int, Float, Bool)):
+            arr = arr.literal_value
+
         if not isinstance(arr, np.ndarray):
             try:
                 arr = np.asarray(arr)
@@ -80,7 +83,7 @@ class Array(NumPyMixin, Proxytype):
         if isinstance(obj, cls):
             return obj
         if isinstance(obj, (Int, Float, Bool)):
-            return cls(obj)
+            return Array(obj)
 
         try:
             return obj.cast(cls)

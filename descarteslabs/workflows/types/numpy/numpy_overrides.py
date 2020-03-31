@@ -296,18 +296,6 @@ def implements(numpy_func):
     return decorator
 
 
-def asarray(obj):
-    # TODO dtype!!
-    if isinstance(obj, Array):
-        return obj
-    if isinstance(obj, (Int, Float, Bool)):
-        return Array(obj)
-    if not isinstance(obj, np.ndarray):
-        # Dumb hack to save writing list traversal ourselves: just try to make it into an ndarray
-        obj = np.asarray(obj)
-    return Array._promote(obj)
-
-
 @implements(np.concatenate)
 @typecheck_promote((List[MaskedArray], List[Array]), axis=Int)
 @derived_from(np.concatenate)
