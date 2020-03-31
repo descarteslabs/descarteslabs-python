@@ -380,7 +380,7 @@ class TasksPackagingTest(ClientTestCase):
                     path = os.path.join(DIST, mod_zip_path)
                     print("path: {}\n".format(path))
                     self.assertIn(os.path.abspath(path), arc_namelist)
-                    with arc.open(os.path.abspath(path)) as fixture_data:
+                    with arc.open(path) as fixture_data:
                         self.assertIn(b"def foo()", fixture_data.read())
 
     @mock.patch.object(sys, "path", new=[os.path.relpath(TEST_DATA_PATH)])
