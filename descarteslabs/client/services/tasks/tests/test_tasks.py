@@ -216,6 +216,8 @@ class TasksPackagingTest(ClientTestCase):
             os.path.join(tempfile.gettempdir(), "data"),
         )
 
+        print("sys.path in setUp:", sys.path)
+
     def tearDown(self):
         # remove temporary data directory
         shutil.rmtree(self.TEST_DATA_PATH)
