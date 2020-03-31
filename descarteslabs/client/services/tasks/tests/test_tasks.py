@@ -377,10 +377,10 @@ class TasksPackagingTest(ClientTestCase):
                 self.assertIn(os.path.abspath(pkg_init_path), arc_namelist)
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
                     print("mod_zip_path: {}\n".format(mod_zip_path))
-                    path = os.path.abspath(os.path.join(DIST, mod_zip_path))
+                    path = os.path.join(DIST, mod_zip_path)
                     print("path: {}\n".format(path))
-                    self.assertIn(path, arc_namelist)
-                    with arc.open(path) as fixture_data:
+                    self.assertIn(os.path.abspath(path), arc_namelist)
+                    with arc.open(os.path.abspath(path)) as fixture_data:
                         self.assertIn(b"def foo()", fixture_data.read())
 
     @mock.patch.object(sys, "path", new=[os.path.relpath(TEST_DATA_PATH)])
