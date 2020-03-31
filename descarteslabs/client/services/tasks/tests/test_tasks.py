@@ -210,8 +210,8 @@ class TasksPackagingTest(ClientTestCase):
         self._sys_path = copy.copy(sys.path)
         sys.path = [self.TEST_DATA_PATH] + sys.path
 
-        if "data" in os.listdir("/tmp"):
-            shutil.rmtree("/tmp/data")
+        #if "data" in os.listdir("/tmp"):
+        #    shutil.rmtree("/tmp/data")
 
         # copy data directory into /tmp/data
         shutil.copytree(os.path.join(os.path.dirname(__file__), "data"), self.TEST_DATA_PATH)
@@ -222,8 +222,8 @@ class TasksPackagingTest(ClientTestCase):
     def tearDown(self):
         shutil.rmtree(self.TEST_DATA_PATH)
         print(os.listdir("/tmp"))
-        print(sys.path)
         sys.path = self._sys_path
+        print(sys.path)
         super(TasksPackagingTest, self).tearDown()
 
     @staticmethod
