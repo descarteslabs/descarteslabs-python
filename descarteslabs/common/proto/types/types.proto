@@ -27,4 +27,5 @@ enum ResultType {
     GeometryCollection = 20;
     Array = 21;
     MaskedArray = 22;
+    DType = 23;
 }
