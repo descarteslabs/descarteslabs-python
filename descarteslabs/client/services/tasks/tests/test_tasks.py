@@ -224,27 +224,19 @@ class TasksPackagingTest(ClientTestCase):
         self._sys_path = copy.copy(sys.path)
         sys.path = [self.TEST_DATA_PATH] + sys.path
 
-        print("DATA_FILE_PATH", self.DATA_FILE_PATH)
-        print("/tmp", os.listdir("/tmp"))
-        try:
-            print("/tmp/test_data", os.listdir("/tmp/test_data"))
-        except Exception:
-            pass
+        #if "data" in os.listdir("/tmp"):
+        #    shutil.rmtree("/tmp/data")
 
-        if "data" in os.listdir("/tmp"):
-            print("removing data")
-            shutil.rmtree("/tmp/data")
+        # copy data directory into /tmp/data
+        shutil.copytree(os.path.join(os.path.dirname(__file__), "data"), "/tmp/data")
 
-
-        # copy dl_test_package into /tmp
-        src = os.path.join(os.path.dirname(__file__), "data")
-        #dest = "{}/{}".format(self.TEST_DATA_PATH, self.TEST_PACKAGE_NAME)
-        dest = "/tmp/data"
-        print("src:", src, "dest:", dest)
-        shutil.copytree(src, dest)
+        print(os.listdir("/tmp"))
+        print(sys.path)
 
     def tearDown(self):
         shutil.rmtree("{}/{}".format(self.TEST_DATA_PATH, self.TEST_PACKAGE_NAME))
+        print(os.listdir("/tmp"))
+        print(sys.path)
         sys.path = self._sys_path
         super(TasksPackagingTest, self).tearDown()
 

@@ -1452,10 +1452,7 @@ class Tasks(Service):
         return "\n".join(requirements)
 
     def _sys_path_prefix(self, path):
-        print("****path****: {}".format(path))
         absolute_path = os.path.abspath(path)
-        print("****absolute_path**** {}".format(absolute_path))
-        print("****self._sys_paths**** {}".format([x for x in self._sys_paths()]))
         for sys_path in self._sys_paths():
             if absolute_path.startswith(sys_path):
                 return sys_path
