@@ -376,7 +376,7 @@ class TasksPackagingTest(ClientTestCase):
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
                     path = os.path.join(DIST, mod_zip_path)
                     self.assertIn(os.path.abspath(path), arc_namelist)
-                    with arc.open("{}/{}".format(DIST, mod_zip_path)) as fixture_data:
+                    with arc.open("{}/{}".format(DIST, mod_zip_path.replace('\\\\', '/'))) as fixture_data:
                         self.assertIn(b"def foo()", fixture_data.read())
 
     @mock.patch.object(sys, "path", new=[os.path.relpath(TEST_DATA_PATH)])
