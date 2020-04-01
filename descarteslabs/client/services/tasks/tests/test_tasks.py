@@ -376,10 +376,10 @@ class TasksPackagingTest(ClientTestCase):
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
                     path = os.path.join(DIST, mod_zip_path)
                     self.assertIn(os.path.abspath(path), arc_namelist)
-                    from pathlib import PosixPath
+                    from pathlib import PurePosixPath
                     print("mod_zip_path: {}".format(mod_zip_path))
                     print("replaced: {}\n".format(mod_zip_path.replace("\\", "/")))
-                    posix_path = PosixPath(mod_zip_path)
+                    posix_path = PurePosixPath(mod_zip_path)
                     print("posixpath:", posix_path)
                     with arc.open("{}/{}".format(DIST, posix_path)) as fixture_data:
                         self.assertIn(b"def foo()", fixture_data.read())
