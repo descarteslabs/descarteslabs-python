@@ -27,7 +27,6 @@ import tempfile
 import unittest
 import warnings
 from zipfile import ZipFile
-from pathlib import Path, PurePosixPath
 
 import responses
 
@@ -314,8 +313,8 @@ class TasksPackagingTest(ClientTestCase):
             with ZipFile(f, mode="r") as arc:
                 entrypoint_path = "{}/{}".format(DIST, ENTRYPOINT)
                 assert entrypoint_path in arc.namelist()
-                # open file in `arc` with a consistent posixpath (windows and linux compat)
-                with arc.open(str(PurePosixPath(Path(entrypoint_path)))) as entrypoint:
+                # open file in `arc` with a consistent posix path (windows and linux compat)
+                with arc.open(entrypoint_path.replace(os.sep, "/")) as entrypoint:
                     source = entrypoint.read()
                     assert b"main = foo" in source
 
@@ -372,10 +371,8 @@ class TasksPackagingTest(ClientTestCase):
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
                     path = os.path.join(DIST, mod_zip_path)
                     assert os.path.abspath(path) in arc_namelist
-                    # open file in `arc` with a consistent posixpath (windows and linux compat)
-                    with arc.open(
-                        str(DIST / PurePosixPath(Path(mod_zip_path)))
-                    ) as fixture_data:
+                    # open file in `arc` with a consistent posix path (windows and linux compat)
+                    with arc.open("{}/{}".format(DIST, mod_zip_path.replace(os.sep, "/"))) as fixture_data:
                         assert b"def foo()" in fixture_data.read()
 
     @mock.patch.object(sys, "path", new=[os.path.relpath(TEST_DATA_PATH)])
