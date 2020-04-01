@@ -216,7 +216,7 @@ class Scene(object):
 
         Raises
         ------
-        `NotFoundError`
+        NotFoundError
             If the ``scene_id`` cannot be found in the Descartes Labs catalog
         """
 
@@ -454,9 +454,9 @@ class Scene(object):
             If requested bands are unavailable.
             If band names are not given or are invalid.
             If the requested bands have incompatible dtypes.
-        `NotFoundError`
+        NotFoundError
             If a Scene's ID cannot be found in the Descartes Labs catalog
-        `BadRequestError`
+        BadRequestError
             If the Descartes Labs platform is given invalid parameters
         """
         if raster_client is None:
@@ -666,9 +666,9 @@ class Scene(object):
             If band names are not given or are invalid.
             If the requested bands have incompatible dtypes.
             If ``format`` is invalid, or the path has an invalid extension.
-        `NotFoundError`
+        NotFoundError
             If a Scene's ID cannot be found in the Descartes Labs catalog
-        `BadRequestError`
+        BadRequestError
             If the Descartes Labs platform is given invalid parameters
         """
         bands = self._bands_to_list(bands)

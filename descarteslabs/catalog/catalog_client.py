@@ -1,72 +1,16 @@
 # jsonapi_document
 
 
-import json
 import os
 
 from descarteslabs.client.auth import Auth
-from descarteslabs.client.exceptions import ClientError
 from descarteslabs.client.services.service.service import (
     JsonApiService,
-    JsonApiSession,
     HttpRequestMethod,
 )
 
 
 HttpRequestMethod = HttpRequestMethod
-
-
-class _RewriteErrorSession(JsonApiSession):
-    """Rewrite JSON ClientErrors that are returned to make them easier to read"""
-
-    def request(self, *args, **kwargs):
-        try:
-            return super(_RewriteErrorSession, self).request(*args, **kwargs)
-        except ClientError as client_error:
-            self._rewrite_error(client_error)
-            raise
-
-    def _rewrite_error(self, client_error):
-        KEY_ERRORS = "errors"
-        KEY_TITLE = "title"
-        KEY_STATUS = "status"
-        KEY_DETAIL = "detail"
-        KEY_SOURCE = "source"
-        KEY_POINTER = "pointer"
-        message = ""
-
-        for arg in client_error.args:
-            try:
-                errors = json.loads(arg)[KEY_ERRORS]
-
-                for error in errors:
-                    line = ""
-                    seperator = ""
-
-                    if KEY_TITLE in error:
-                        line += error[KEY_TITLE]
-                        seperator = ": "
-                    elif KEY_STATUS in error:
-                        line += error[KEY_STATUS]
-                        seperator = ": "
-
-                    if KEY_DETAIL in error:
-                        line += seperator + error[KEY_DETAIL].strip(".")
-                        seperator = ": "
-
-                    if KEY_SOURCE in error:
-                        source = error[KEY_SOURCE]
-                        if KEY_POINTER in source:
-                            source = source[KEY_POINTER].split("/")[-1]
-                        line += seperator + source
-
-                    if line:
-                        message += "\n    " + line
-            except Exception:
-                return
-
-        if message:
-            client_error.args = (message,)
 
 
 class CatalogClient(JsonApiService):
@@ -106,7 +50,7 @@ class CatalogClient(JsonApiService):
             )
 
         super(CatalogClient, self).__init__(
-            url, auth=auth, retries=retries, session_class=_RewriteErrorSession
+            url, auth=auth, retries=retries, rewrite_errors=True
         )
 
     @staticmethod

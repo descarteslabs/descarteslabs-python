@@ -6,7 +6,7 @@ Metadata (deprecated)
 
 
 Filtering
----------
+~~~~~~~~~
 
 .. py:attribute:: properties
 

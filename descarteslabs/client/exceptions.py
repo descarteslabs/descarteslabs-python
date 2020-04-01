@@ -49,6 +49,12 @@ class NotFoundError(ClientError):
     status = 404
 
 
+class ProxyAuthenticationRequiredError(ClientError):
+    """Client request needs proxy authentication."""
+
+    status = 407
+
+
 class ConflictError(ClientError):
     """Client request conflicts with existing state."""
 

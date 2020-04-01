@@ -12,6 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .service import Service, JsonApiService, ThirdPartyService, NotFoundError
+from .service import (
+    Service,
+    Session,
+    JsonApiService,
+    JsonApiSession,
+    ThirdPartyService,
+    NotFoundError,
+)
 
-__all__ = ["Service", "JsonApiService", "ThirdPartyService", "NotFoundError"]
+__all__ = [
+    "Service",
+    "Session",
+    "JsonApiService",
+    "JsonApiSession",
+    "ThirdPartyService",
+    "NotFoundError",
+]
