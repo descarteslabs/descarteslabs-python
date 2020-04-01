@@ -59,22 +59,22 @@ class Array(NumPyMixin, Proxytype):
     def __init__(self, arr):
         self._literal_value = arr
 
-        if isinstance(arr, (Int, Float, Bool)):
-            arr = arr.literal_value
+        if isinstance(arr, (Int, Float, Bool, int, float, bool)):
+            self.graft = client.apply_graft("array.create", arr)
+        else:
+            if not isinstance(arr, np.ndarray):
+                try:
+                    arr = np.asarray(arr)
+                except Exception:
+                    raise ValueError("Cannot construct Array from {!r}".format(arr))
 
-        if not isinstance(arr, np.ndarray):
-            try:
-                arr = np.asarray(arr)
-            except Exception:
-                raise ValueError("Cannot construct Array from {!r}".format(arr))
+            if arr.dtype.kind not in ("b", "i", "f"):
+                raise TypeError(
+                    "Invalid dtype {} for an {}".format(arr.dtype, type(self).__name__)
+                )
 
-        if arr.dtype.kind not in ("b", "i", "f"):
-            raise TypeError(
-                "Invalid dtype {} for an {}".format(arr.dtype, type(self).__name__)
-            )
-
-        arr_list = arr.tolist()
-        self.graft = client.apply_graft("array.create", arr_list)
+            arr_list = arr.tolist()
+            self.graft = client.apply_graft("array.create", arr_list)
 
     @classmethod
     def _promote(cls, obj):
