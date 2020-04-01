@@ -26,6 +26,7 @@ import tempfile
 import unittest
 import warnings
 from zipfile import ZipFile
+from pathlib import Path, PurePosixPath
 
 import responses
 
@@ -310,11 +311,11 @@ class TasksPackagingTest(ClientTestCase):
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
                 entrypoint_path = "{}/{}".format(DIST, ENTRYPOINT)
-                self.assertIn(entrypoint_path, arc.namelist())
-                print("entrypoint_path: {}".format(entrypoint_path))
-                with arc.open(entrypoint_path) as entrypoint:
+                assert entrypoint_path in arc.namelist()
+                # open file in `arc` with a consistent posixpath (windows and linux compat)
+                with arc.open(PurePosixPath(Path(entrypoint_path))) as entrypoint:
                     source = entrypoint.read()
-                    self.assertIn(b"main = foo", source)
+                    assert b"main = foo" in source
 
     def test_find_data_files_glob(self):
         pattern = os.path.join(
@@ -376,12 +377,8 @@ class TasksPackagingTest(ClientTestCase):
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
                     path = os.path.join(DIST, mod_zip_path)
                     self.assertIn(os.path.abspath(path), arc_namelist)
-                    from pathlib import Path, PurePosixPath
-                    print("mod_zip_path: {}".format(mod_zip_path))
-                    print("replaced: {}\n".format(mod_zip_path.replace("\\", "/")))
-                    posix_path = PurePosixPath(Path(mod_zip_path))
-                    print("posixpath:", posix_path)
-                    with arc.open("{}/{}".format(DIST, posix_path)) as fixture_data:
+                    # open file in `arc` with a consistent posixpath (windows and linux compat)
+                    with arc.open(DIST / PurePosixPath(Path(mod_zip_path))) as fixture_data:
                         self.assertIn(b"def foo()", fixture_data.read())
 
     @mock.patch.object(sys, "path", new=[os.path.relpath(TEST_DATA_PATH)])
