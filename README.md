@@ -10,6 +10,12 @@ Changelog
 
 ## Pending
 
+## [1.1.3] - 2020-04-02
+
+### Catalog client
+
+- Fixed a bug that prevented uploading ndarrays of type `uint8`
+
 ### Workflows (channel `v0-13`) - Added
 - Array support for `argmin`, `argmax`, `any`, `all`
 - `pick_bands` supports an `allow_missing` kwarg to drop band names that may be missing from the data without an error.
