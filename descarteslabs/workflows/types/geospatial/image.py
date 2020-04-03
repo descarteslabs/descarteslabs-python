@@ -1248,6 +1248,93 @@ class Image(ImageBase, BandsMixin):
             )
         return self._from_apply("Image.replace_empty_with", self, fill, mask, bandinfo)
 
+    @typecheck_promote(
+        Float,
+        Float,
+    )
+    def value_at(self, x, y):
+        """
+        Given coordinates x, y, returns the pixel values from an Image in a `Dict` by bandname.
+
+        Coordinates must be given in the same coordinate reference system as the `~.geospatial.GeoContext`
+        you call `.compute` with. For example, if your `~.geospatial.GeoContext` uses ``"EPSG:4326"``, you'd
+        give ``x`` and ``y`` in lon, lat degrees. If your `~.geospatial.GeoContext` uses UTM, you'd give ``x``
+        and ``y`` in UTM coordinates.
+
+        When using `.visualize` to view the Image on a map, ``x`` and ``y`` must always be given in web-mercator
+        (``"EPSG:3857"``) coordinates (with units of meters, not degrees).
+
+        If the `Image` is empty, returns an empty `Dict`.
+
+        Parameters
+        ----------
+        x: Float
+           The x coordinate, in the same CRS as the `~.geospatial.GeoContext`
+        y: Float
+            The y coordinate, in the same CRS as the `~.geospatial.GeoContext`
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> rgb = img.pick_bands("red green blue") # an Image with the red, green, and blue bands only
+        >>> rgb.value_at(459040.0, 3942400.0) # doctest: +SKIP
+        '{red': 0.39380000000000004
+        'green': 0.40950000000000003,
+        'blue': 0.44870000000000004}
+        """
+        return Dict[Str, Float]._from_apply("value_at", self, x, y)
+
+    @typecheck_promote(
+        Int,
+        Int,
+    )
+    def index_to_coords(self, row, col):
+        """
+         Convert pixel coordinates (row, col) in the `ImageCollection` into spatial coordinates (x, y).
+
+        Parameters
+        ----------
+        row: int
+           The row
+        col: int
+            The col
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> rgb = img.pick_bands("red green blue") # an Image with the red, green, and blue bands only
+        >>> rgb.index(0, 0).compute(ctx) # doctest: +SKIP
+        (459040.0, 3942400.0)
+        """
+        return Tuple[Float, Float]._from_apply("index_to_coords", self, row, col)
+
+    @typecheck_promote(
+        Float,
+        Float,
+    )
+    def coords_to_index(self, x, y):
+        """
+        Convert spatial coordinates (x, y) to pixel coordinates (row, col) in the `Image`.
+
+        Parameters
+        ----------
+        row: Float
+            The x coordinate, in the same CRS as the `~.geospatial.GeoContext`
+        col: Float
+             The y coordinate, in the same CRS as the `~.geospatial.GeoContext`
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> rgb = img.pick_bands("red green blue") # an Image with the red, green, and blue bands only
+        >>> rgb.index(0, 0).compute(ctx) # doctest: +SKIP
+        (459040.0, 3942400.0)
+        """
+        return Tuple[Int, Int]._from_apply("coords_to_index", self, x, y)
+
     def __neg__(self):
         return self._from_apply("neg", self)
 

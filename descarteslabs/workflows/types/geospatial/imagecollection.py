@@ -1826,6 +1826,94 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             "ImageCollection.replace_empty_with", self, fill, mask, bandinfo
         )
 
+    def value_at(self, x, y):
+        """
+        Given coordinates x, y, returns the pixel values from an ImageCollection in a `List[Dict]` by bandname.
+
+        Coordinates must be given in the same coordinate reference system as the `~.geospatial.GeoContext`
+        you call `.compute` with. For example, if your `~.geospatial.GeoContext` uses ``"EPSG:4326"``, you'd
+        give ``x`` and ``y`` in lon, lat degrees. If your `~.geospatial.GeoContext` uses UTM, you'd give ``x``
+        and ``y`` in UTM coordinates.
+
+        When using `.visualize` to view the Image on a map, ``x`` and ``y`` must always be given in web-mercator
+        (``"EPSG:3857"``) coordinates (with units of meters, not degrees).
+
+        If the `ImageCollection` is empty, returns an empty `List[Dict]`.
+
+        Parameters
+        ----------
+        x: float
+           The x coordinate, in the same CRS as the `~.geospatial.GeoContext`
+        y: float
+            The y coordinate, in the same CRS as the `~.geospatial.GeoContext`
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.compute(geoctx).ndarray # doctest: +SKIP
+        >>> rgb = col.pick_bands("red green blue") # an Image with the red, green, and blue bands only
+        >>> rgb.value_at(459040.0, 3942400.0).compute(ctx) # doctest: +SKIP
+        [{'red': 0.3569,
+        'green': 0.33890000000000003,
+        'blue': 0.37010000000000004},
+        {'red': 0.2373,
+        'green': 0.24480000000000002,
+        'blue': 0.2505}]
+        """
+        return List[Dict[Str, Float]]._from_apply("value_at", self, x, y)
+
+    @typecheck_promote(
+        Int,
+        Int,
+    )
+    def index_to_coords(self, row, col):
+        """
+        Convert pixel coordinates (row, col) in the `ImageCollection` into spatial coordinates (x, y).
+
+        Parameters
+        ----------
+        row: int
+           The row
+        col: int
+            The col
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.index_to_coords(0, 0).compute(ctx) # doctest: +SKIP
+        (459040.0, 3942400.0)
+        """
+        return Tuple[Float, Float]._from_apply("index_to_coords", self, row, col)
+
+    @typecheck_promote(
+        Float,
+        Float,
+    )
+    def coords_to_index(self, x, y):
+        """
+        Convert spatial coordinates (x, y) to pixel coordinates (row, col) in the `ImageCollection`.
+
+        Parameters
+        ----------
+        row: Float
+            The x coordinate, in the same CRS as the `~.geospatial.GeoContext`
+        col: Float
+             The y coordinate, in the same CRS as the `~.geospatial.GeoContext`
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.coords_to_index(459040.0, 3942400.0).compute(ctx) # doctest: +SKIP
+        (0, 0)
+        """
+        return Tuple[Int, Int]._from_apply("coords_to_index", self, x, y)
+
     def __neg__(self):
         return self._from_apply("neg", self)
 

@@ -8,7 +8,7 @@ from ...core.tests import utils
 from .... import env
 from ...core import ProxyTypeError, _resolve_lambdas
 from ...primitives import Str, Float, Int, Bool, NoneType, Any
-from ...containers import Dict
+from ...containers import Dict, Tuple
 
 from .. import Image, ImageCollection, Geometry, Feature, FeatureCollection
 
@@ -82,7 +82,9 @@ def test_all_methods():
     assert isinstance(img.clip_values(0.1, 0.5), Image)
     assert isinstance(img.clip_values([0.1, 0.4], [0.5, 0.8]), Image)
     assert isinstance(img.scale_values(0.1, 0.5), Image)
-    assert isinstance(img.replace_empty_with(0.1, bandinfo={"red": {}}), Image)
+    assert isinstance(img.value_at(0.1, 0.1), Dict[Str, Float])
+    assert isinstance(img.index_to_coords(0, 0), Tuple[Float, Float])
+    assert isinstance(img.coords_to_index(0.0, 0.0), Tuple[Int, Int])
     assert isinstance(img.mask(img2), Image)
     assert isinstance(img.mask(img2, replace=True), Image)
     assert isinstance(img.mask(geom), Image)

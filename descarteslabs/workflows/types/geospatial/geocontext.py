@@ -294,3 +294,17 @@ class GeoContext(GeoContextBase):
             return cls.from_scenes(obj)
         else:
             return super(GeoContext, cls)._promote(obj)
+
+    @typecheck_promote(Int, Int)
+    def index_to_coords(self, row, col):
+        """
+        Convert pixel coordinates (row, col) to spatial coordinates (x, y) in the GeoContext's CRS.
+        """
+        return Tuple[Float, Float]._from_apply("GeoContext.index_to_coords", self, row, col)
+
+    @typecheck_promote(Float, Float)
+    def coords_to_index(self, x, y):
+        """
+        Convert spatial coordinates (x, y) in the GeoContext's CRS to pixel coordinates (row, col).
+        """
+        return Tuple[Int, Int]._from_apply("GeoContext.coords_to_index", self, x, y)

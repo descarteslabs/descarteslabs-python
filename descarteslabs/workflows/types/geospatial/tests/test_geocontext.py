@@ -3,6 +3,8 @@ import shapely.geometry
 from descarteslabs import scenes
 
 from .. import GeoContext
+from descarteslabs.workflows.types.containers import Tuple
+from descarteslabs.workflows.types.primitives import Int, Float
 
 
 def test_from_scenes_wrong_type():
@@ -89,3 +91,30 @@ def test_readonly_attributes(attr):
     ctx = GeoContext.from_xyz_tile(3, 5, 4)
 
     assert isinstance(getattr(ctx, attr), type_params[attr])
+
+
+def test_index_to_coords():
+    aoi = scenes.AOI(
+        geometry=shapely.geometry.box(-60.0, 30.0, -50.0, 40.0),
+        resolution=1,
+        crs="EPSG:4326",
+        align_pixels=False,
+    )
+    ctx = GeoContext.from_scenes(aoi)
+
+    coords = ctx.index_to_coords(0, 0)
+    assert isinstance(coords, Tuple[Float, Float])
+
+
+def test_coords_to_index():
+    aoi = scenes.AOI(
+        geometry=shapely.geometry.box(-60.0, 30.0, -50.0, 40.0),
+        resolution=1,
+        crs="EPSG:4326",
+        align_pixels=False,
+    )
+    ctx = GeoContext.from_scenes(aoi)
+    ctx = GeoContext._promote(ctx)
+
+    index = ctx.coords_to_index(0.0, 1.0)
+    assert isinstance(index, Tuple[Int, Int])
