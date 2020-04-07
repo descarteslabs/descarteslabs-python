@@ -3,7 +3,7 @@ import numpy as np
 from ..core import typecheck_promote, ProxyTypeError
 from ..core.promote import _promote
 from ..primitives import Float, Int, Bool, NoneType
-from ..array import Array, MaskedArray
+from ..array import Array, MaskedArray, BaseArray
 from ..containers import List, Tuple
 
 
@@ -11,13 +11,13 @@ def _ufunc_result_type(obj, other=None, return_type_override=None):
     if other is None:
         if return_type_override is None:
             return type(obj)
-        return return_type_override if not isinstance(obj, Array) else type(obj)
+        return return_type_override if not isinstance(obj, BaseArray) else type(obj)
 
     if return_type_override is not None:
         dtype = return_type_override
     else:
         obj_dtype, other_dtype = (
-            Float if isinstance(a, Array) else type(a) for a in (obj, other)
+            Float if isinstance(a, BaseArray) else type(a) for a in (obj, other)
         )
 
         # If either are Float, the result is a Float
@@ -30,15 +30,10 @@ def _ufunc_result_type(obj, other=None, return_type_override=None):
         else:
             dtype = Bool
 
-    if isinstance(obj, Array) or isinstance(other, Array):
-        if isinstance(obj, Array) and isinstance(other, Array):
-            result_type = type(obj)
-            other_type = type(other)
-            if issubclass(other_type, result_type):
-                result_type = other_type
-        else:
-            result_type = type(obj) if isinstance(obj, Array) else type(other)
-        return result_type
+    if isinstance(obj, MaskedArray) or isinstance(other, MaskedArray):
+        return MaskedArray
+    elif isinstance(obj, Array) or isinstance(other, Array):
+        return Array
     else:
         return dtype
 
@@ -148,8 +143,10 @@ class ufunc:
         promoted = []
         for i, arg in enumerate(args):
             try:
-                if isinstance(arg, Array):
+                if isinstance(arg, BaseArray):
                     promoted.append(arg)
+                elif isinstance(arg, np.ma.core.MaskedArray):
+                    promoted.append(MaskedArray._promote(arg))
                 elif isinstance(arg, np.ndarray):
                     promoted.append(Array._promote(arg))
                 else:

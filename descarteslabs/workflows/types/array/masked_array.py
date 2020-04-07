@@ -3,11 +3,13 @@ import numpy as np
 from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..primitives import Bool, Int, Float
+from ..core import ProxyTypeError
 from .array_ import Array
+from .base_array import BaseArray
 
 
 @serializable()
-class MaskedArray(Array):
+class MaskedArray(BaseArray):
     """
     Proxy MaskedArray representing a multidimensional, homogenous array of fixed-size items
     that may have missing or invalid entries.
@@ -74,6 +76,25 @@ class MaskedArray(Array):
         fill_value = getattr(arr, "fill_value", None)
 
         return cls(data, mask, fill_value)
+
+    @classmethod
+    def _promote(cls, obj):
+        if isinstance(obj, cls):
+            return obj
+        elif isinstance(obj, (Int, Float, Bool)):
+            return MaskedArray(obj)
+
+        try:
+            return obj.cast(cls)
+        except Exception:
+            if not isinstance(obj, np.ndarray):
+                obj = np.asarray(obj)
+            try:
+                return MaskedArray.from_numpy(obj)
+            except Exception:
+                raise ProxyTypeError(
+                    "Cannot promote {} to MaskedArray".format(obj, cls)
+                )
 
     def getdata(self):
         """The data array underlying this `MaskedArray`.
