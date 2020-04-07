@@ -13,9 +13,11 @@
 # limitations under the License.
 from __future__ import unicode_literals
 
+import copy
 import io
 import json
 import os
+import pytest
 import re
 import runpy
 import shutil
@@ -25,6 +27,7 @@ import tempfile
 import unittest
 import warnings
 from zipfile import ZipFile
+from pathlib import Path, PurePosixPath
 
 import responses
 
@@ -87,8 +90,8 @@ class TasksTest(ClientTestCase):
         self.mock_response(responses.POST, {"id": "foo"})
         with warnings.catch_warnings(record=True) as w:
             group = self.client.new_group(f, "task-image")
-            self.assertEqual("foo", group.id)
-            self.assertEqual(1, len(w))
+            assert "foo" == group.id
+            assert 1 == len(w)
 
     @responses.activate
     @mock.patch.object(sys.modules["cloudpickle"], "__version__", None)
@@ -99,7 +102,7 @@ class TasksTest(ClientTestCase):
         self.mock_response(responses.POST, {}, status=201)
         with warnings.catch_warnings(record=True) as w:
             group = self.client.new_group(f, "task-image")
-            self.assertEqual(1, len(w))
+            assert 1 == len(w)
 
     @responses.activate
     def test_iter_groups(self):
@@ -110,7 +113,7 @@ class TasksTest(ClientTestCase):
             responses.GET, {"groups": [{"id": "bar"}], "continuation_token": None}
         )
         groups = self.client.iter_groups()
-        self.assertEqual(["foo", "bar"], [group.id for group in groups])
+        assert ["foo", "bar"] == [group.id for group in groups]
 
     @responses.activate
     def test_new_task(self):
@@ -118,7 +121,7 @@ class TasksTest(ClientTestCase):
         tasks = self.client.new_task(
             "group_id", arguments=("foo"), parameters={"bar": "baz"}
         )
-        self.assertEqual("foo", tasks.tasks[0].id)
+        assert "foo" == tasks.tasks[0].id
 
     @responses.activate
     def test_iter_task_results(self):
@@ -130,7 +133,7 @@ class TasksTest(ClientTestCase):
             responses.GET, {"results": [{"id": "bar"}], "continuation_token": None}
         )
         results = self.client.iter_task_results("group_id")
-        self.assertEqual(["foo", "bar"], [result.id for result in results])
+        assert ["foo", "bar"] == [result.id for result in results]
 
     @responses.activate
     @mock.patch.object(Tasks, "COMPLETION_POLL_INTERVAL_SECONDS", 0)
@@ -174,7 +177,7 @@ class TasksTest(ClientTestCase):
             },
         )
 
-        with self.assertRaises(GroupTerminalException):
+        with pytest.raises(GroupTerminalException):
             self.client.wait_for_completion("foo", show_progress=False)
 
     @responses.activate
@@ -182,34 +185,44 @@ class TasksTest(ClientTestCase):
         self.mock_response(responses.GET, {"id": "foo", "name": "bar"})
 
         f = self.client.get_function_by_id("foo")
-        self.assertIsInstance(f, CloudFunction)
+        assert isinstance(f, CloudFunction)
 
 
 class TasksPackagingTest(ClientTestCase):
 
-    TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
+    TEST_DATA_PATH = os.path.join(tempfile.gettempdir(), "data")
     TEST_PACKAGE_NAME = "dl_test_package"
     DATA_FILE_RELATIVE_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
-    DATA_FILE_ZIP_PATH = "{}/data.json".format(TEST_PACKAGE_NAME)
+    DATA_FILE_ZIP_PATH = os.path.join(TEST_PACKAGE_NAME, "data.json")
     DATA_FILE_PATH = os.path.join(TEST_DATA_PATH, DATA_FILE_RELATIVE_PATH)
     TEST_MODULE = "{}.package.module".format(TEST_PACKAGE_NAME)
-    TEST_MODULE_ZIP_PATH = "{}/package/module.py".format(TEST_PACKAGE_NAME)
+    TEST_MODULE_ZIP_PATH = os.path.join(TEST_PACKAGE_NAME, "package", "module.py")
     TEST_MODULE_CYTHON = "{}.package.cython_module".format(TEST_PACKAGE_NAME)
-    TEST_MODULE_CYTHON_ZIP_PATH = "{}/package/cython_module.pyx".format(
-        TEST_PACKAGE_NAME
+    TEST_MODULE_CYTHON_ZIP_PATH = os.path.join(
+        TEST_PACKAGE_NAME, "package", "cython_module.pyx"
     )
     TEST_MODULE_LIST = [TEST_MODULE, TEST_MODULE_CYTHON]
     TEST_MODULE_ZIP_PATH_LIST = [TEST_MODULE_ZIP_PATH, TEST_MODULE_CYTHON_ZIP_PATH]
+
     GLOBAL_STRING = "A global var"
     LOCAL_STRING = "A local var"
 
     def setUp(self):
         super(TasksPackagingTest, self).setUp()
-        self._sys_path = sys.path
-        sys.path += [self.TEST_DATA_PATH]
+        self._sys_path = copy.copy(sys.path)
+        sys.path = [self.TEST_DATA_PATH] + sys.path
+
+        # copy data directory into temporary directory
+        shutil.copytree(
+            os.path.join(os.path.dirname(__file__), "data"),
+            os.path.join(tempfile.gettempdir(), "data"),
+        )
 
     def tearDown(self):
+        # remove temporary data directory
+        shutil.rmtree(self.TEST_DATA_PATH)
         sys.path = self._sys_path
+
         super(TasksPackagingTest, self).tearDown()
 
     @staticmethod
@@ -241,7 +254,7 @@ class TasksPackagingTest(ClientTestCase):
             value = env["main"]()
 
             # And compare the return value
-            self.assertEqual(expected_return_value, value)
+            assert expected_return_value == value
         finally:
             # Restore environment
             sys.modules.update(sys_modules)
@@ -277,17 +290,18 @@ class TasksPackagingTest(ClientTestCase):
         bundle = responses.calls[1].request.body
         try:
             with ZipFile(bundle.name, mode="r") as zf:
-                self.assertGreater(len(zf.namelist()), 0)
+                assert len(zf.namelist()) > 0
         finally:
             os.remove(bundle.name)
 
-        self.assertEqual(call_args["function_type"], FunctionType.PY_BUNDLE)
+        assert call_args["function_type"] == FunctionType.PY_BUNDLE
 
     def test_write_main_function_exceptions(self):
-        self.assertRaises(ValueError, self.client._write_main_function, map, None)
-        self.assertRaises(
-            ValueError, self.client._write_main_function, lambda x: x, None
-        )
+        with pytest.raises(ValueError):
+            self.client._write_main_function(map, None)
+
+        with pytest.raises(ValueError):
+            self.client._write_main_function(lambda x: x, None)
 
     def test_write_main_function(self):
         def foo():
@@ -299,44 +313,48 @@ class TasksPackagingTest(ClientTestCase):
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
                 entrypoint_path = "{}/{}".format(DIST, ENTRYPOINT)
-                self.assertIn(entrypoint_path, arc.namelist())
-                with arc.open(entrypoint_path) as entrypoint:
+                assert entrypoint_path in arc.namelist()
+                # open file in `arc` with a consistent posixpath (windows and linux compat)
+                with arc.open(str(PurePosixPath(Path(entrypoint_path)))) as entrypoint:
                     source = entrypoint.read()
-                    self.assertIn(b"main = foo", source)
+                    assert b"main = foo" in source
 
     def test_find_data_files_glob(self):
-        pattern = os.path.join(self.TEST_DATA_PATH, "dl_test_package/*.json")
-        data_files = self.client._find_data_files([pattern])
-        self.assertEqual(
-            [(self.DATA_FILE_PATH, os.path.join(DATA, self.DATA_FILE_RELATIVE_PATH))],
-            data_files,
+        pattern = os.path.join(
+            self.TEST_DATA_PATH, "{}/*.json".format(self.TEST_PACKAGE_NAME)
         )
+        data_files = self.client._find_data_files([pattern])
+        assert [
+            (self.DATA_FILE_PATH, os.path.join(DATA, self.DATA_FILE_RELATIVE_PATH))
+        ] == data_files
 
     def test_find_data_files(self):
         data_files = self.client._find_data_files([self.DATA_FILE_PATH])
-        self.assertEqual(
-            [(self.DATA_FILE_PATH, os.path.join(DATA, self.DATA_FILE_RELATIVE_PATH))],
-            data_files,
-        )
+        assert [
+            (self.DATA_FILE_PATH, os.path.join(DATA, self.DATA_FILE_RELATIVE_PATH))
+        ] == data_files
 
     def test_find_data_files_directory(self):
-        self.assertRaises(ValueError, self.client._find_data_files, ["descarteslabs"])
+        with pytest.raises(ValueError):
+            self.client._find_data_files([self.TEST_PACKAGE_NAME])
 
     def test_find_data_files_missing(self):
-        self.assertRaises(
-            ValueError, self.client._find_data_files, ["descarteslabs/foobar.txt"]
-        )
+        with pytest.raises(ValueError):
+            self.client._find_data_files(
+                ["{}/foobar.txt".format(self.TEST_PACKAGE_NAME)]
+            )
 
     def test_find_data_files_glob_missing(self):
         with warnings.catch_warnings(record=True) as w:
-            data_files = self.client._find_data_files(["descarteslabs/foobar/*.txt"])
-            self.assertEqual([], data_files)
-            self.assertEqual(1, len(w))
+            data_files = self.client._find_data_files(
+                ["{}/foobar/*.txt".format(self.TEST_PACKAGE_NAME)]
+            )
+            assert [] == data_files
+            assert 1 == len(w)
 
     def test_include_modules_exceptions(self):
-        self.assertRaises(
-            ImportError, self.client._write_include_modules, ["doesnt.exist"], None
-        )
+        with pytest.raises(ImportError):
+            self.client._write_include_modules(["doesnt.exist"], None)
 
     def test_include_modules(self):
         with tempfile.NamedTemporaryFile(suffix=".zip") as f:
@@ -344,15 +362,23 @@ class TasksPackagingTest(ClientTestCase):
                 self.client._write_include_modules(self.TEST_MODULE_LIST, arc)
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
-                init_path = "{}/dl_test_package/package/__init__.py".format(DIST)
-                pkg_init_path = "{}/dl_test_package/__init__.py".format(DIST)
-                self.assertIn(init_path, arc.namelist())
-                self.assertIn(pkg_init_path, arc.namelist())
+                init_path = os.path.join(
+                    DIST, self.TEST_PACKAGE_NAME, "package", "__init__.py"
+                )
+                pkg_init_path = os.path.join(
+                    DIST, self.TEST_PACKAGE_NAME, "__init__.py"
+                )
+                arc_namelist = [os.path.abspath(name) for name in arc.namelist()]
+                assert os.path.abspath(init_path) in arc_namelist
+                assert os.path.abspath(pkg_init_path) in arc_namelist
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
-                    path = "{}/{}".format(DIST, mod_zip_path)
-                    self.assertIn(path, arc.namelist())
-                    with arc.open(path) as fixture_data:
-                        self.assertIn(b"def foo()", fixture_data.read())
+                    path = os.path.join(DIST, mod_zip_path)
+                    assert os.path.abspath(path) in arc_namelist
+                    # open file in `arc` with a consistent posixpath (windows and linux compat)
+                    with arc.open(
+                        str(DIST / PurePosixPath(Path(mod_zip_path)))
+                    ) as fixture_data:
+                        assert b"def foo()" in fixture_data.read()
 
     @mock.patch.object(sys, "path", new=[os.path.relpath(TEST_DATA_PATH)])
     def test_include_modules_relative_sys_path(self):
@@ -362,13 +388,14 @@ class TasksPackagingTest(ClientTestCase):
             f.seek(0)
             with ZipFile(f, mode="r") as arc:
                 for mod_zip_path in self.TEST_MODULE_ZIP_PATH_LIST:
-                    path = "{}/{}".format(DIST, mod_zip_path)
-                    self.assertIn(path, arc.namelist())
+                    path = os.path.join(DIST, mod_zip_path)
+                    arc_namelist = [os.path.abspath(name) for name in arc.namelist()]
+                    assert os.path.abspath(path) in arc_namelist
 
     def test_build_bundle(self):
-        module_path = "{}/{}".format(DIST, self.TEST_MODULE_ZIP_PATH)
-        cython_module_path = "{}/{}".format(DIST, self.TEST_MODULE_CYTHON_ZIP_PATH)
-        data_path = "{}/{}".format(DATA, self.DATA_FILE_ZIP_PATH)
+        module_path = os.path.join(DIST, self.TEST_MODULE_ZIP_PATH)
+        cython_module_path = os.path.join(DIST, self.TEST_MODULE_CYTHON_ZIP_PATH)
+        data_path = os.path.join(DATA, self.DATA_FILE_ZIP_PATH)
 
         def foo():
             pass
@@ -379,10 +406,11 @@ class TasksPackagingTest(ClientTestCase):
 
         try:
             with ZipFile(zf) as arc:
-                self.assertIn(module_path, arc.namelist())
-                self.assertIn(cython_module_path, arc.namelist())
-                self.assertIn(data_path, arc.namelist())
-                self.assertNotIn(REQUIREMENTS, arc.namelist())
+                arc_namelist = [os.path.abspath(name) for name in arc.namelist()]
+                assert os.path.abspath(module_path) in arc_namelist
+                assert os.path.abspath(cython_module_path) in arc_namelist
+                assert os.path.abspath(data_path) in arc_namelist
+                assert os.path.abspath(REQUIREMENTS) not in arc_namelist
         finally:
             if os.path.exists(zf):
                 os.remove(zf)
@@ -396,17 +424,17 @@ class TasksPackagingTest(ClientTestCase):
             def bar():
                 print(a_global)
 
-        with self.assertRaises(BoundGlobalError):
+        with pytest.raises(BoundGlobalError):
             self.client._build_bundle(foo, [self.DATA_FILE_PATH], self.TEST_MODULE_LIST)
 
-        with self.assertRaises(BoundGlobalError):
+        with pytest.raises(BoundGlobalError):
             self.client._build_bundle(
                 Foo.bar, [self.DATA_FILE_PATH], self.TEST_MODULE_LIST
             )
 
     def test_build_bundle_with_named_function(self):
         zf = self.client._build_bundle(
-            self.TEST_MODULE + ".func_foo", [self.DATA_FILE_PATH], [self.TEST_MODULE]
+            self.TEST_MODULE + ".func_foo", [self.DATA_FILE_PATH], [self.TEST_MODULE],
         )
 
         try:
@@ -431,9 +459,9 @@ class TasksPackagingTest(ClientTestCase):
                 os.remove(zf)
 
     def test_build_bundle_with_named_function_bad(self):
-        with self.assertRaises(NameError):
+        with pytest.raises(NameError):
             zf = self.client._build_bundle(
-                "func.func_foo", [self.DATA_FILE_PATH], [self.TEST_MODULE]
+                "func.func_foo", [self.DATA_FILE_PATH], [self.TEST_MODULE],
             )
 
         zf = self.client._build_bundle(
@@ -444,7 +472,7 @@ class TasksPackagingTest(ClientTestCase):
 
         try:
             with ZipFile(zf) as arc:
-                with self.assertRaises(ImportError):
+                with pytest.raises(ImportError):
                     self.call_function(arc, self.LOCAL_STRING + self.GLOBAL_STRING)
         finally:
             if os.path.exists(zf):
@@ -457,40 +485,43 @@ class TasksPackagingTest(ClientTestCase):
         zf = self.client._build_bundle(foo, None, None, ["foo", "bar"])
         try:
             with ZipFile(zf) as arc:
-                self.assertEqual(b"foo\nbar", arc.read(REQUIREMENTS))
+                assert b"foo\nbar" == arc.read(REQUIREMENTS)
         finally:
             os.remove(zf)
 
     def test_requirements_string(self):
-        self.assertEqual("requests", self.client._requirements_string(["requests"]))
-        self.assertEqual(
-            'foo>=1.2\nbar[foo]\nbaz;python_version<"2.7"',
-            self.client._requirements_string(
+        assert "requests" == self.client._requirements_string(["requests"])
+        assert (
+            'foo>=1.2\nbar[foo]\nbaz;python_version<"2.7"'
+            == self.client._requirements_string(
                 ["foo>=1.2", "bar[foo]", 'baz;python_version<"2.7"']
-            ),
+            )
         )
 
     def test_requirements_string_file(self):
         good_requirements = os.path.join(self.TEST_DATA_PATH, "good_requirements.txt")
-        self.assertEqual(
-            open(good_requirements).read(),
-            self.client._requirements_string(good_requirements),
+        assert open(good_requirements).read() == self.client._requirements_string(
+            good_requirements
         )
 
     def test_requirements_string_bad(self):
-        self.assertRaises(ValueError, self.client._requirements_string, ["foo\nbar"])
-        self.assertRaises(ValueError, self.client._requirements_string, ["foo", ""])
-        self.assertRaises(ValueError, self.client._requirements_string, ["foo >>> 1.0"])
+        with pytest.raises(ValueError):
+            self.client._requirements_string(["foo\nbar"])
+
+        with pytest.raises(ValueError):
+            self.client._requirements_string(["foo", ""])
+
+        with pytest.raises(ValueError):
+            self.client._requirements_string(["foo >>> 1.0"])
 
     def test_requirements_string_file_bad(self):
-        self.assertRaises(
-            ValueError, self.client._requirements_string, "non-existent.txt"
-        )
+        with pytest.raises(ValueError):
+            self.client._requirements_string("non-existent.txt")
+
         bad_requirements = os.path.join(self.TEST_DATA_PATH, "bad_requirements.txt")
-        self.assertTrue(os.path.exists(bad_requirements))
-        self.assertRaises(
-            ValueError, self.client._requirements_string, bad_requirements
-        )
+        assert os.path.exists(bad_requirements) == True
+        with pytest.raises(ValueError):
+            self.client._requirements_string(bad_requirements)
 
 
 class CloudFunctionTest(ClientTestCase):
@@ -502,24 +533,24 @@ class CloudFunctionTest(ClientTestCase):
     def test_call(self):
         self.mock_response(responses.POST, {"tasks": [{"id": "foo"}]})
         task = self.function("foo", bar="baz")
-        self.assertEqual(self.function.group_id, task.guid)
-        self.assertEqual("foo", task.tuid)
-        self.assertEqual(("foo",), task.args)
-        self.assertEqual({"bar": "baz"}, task.kwargs)
+        assert self.function.group_id == task.guid
+        assert "foo" == task.tuid
+        assert ("foo",) == task.args
+        assert {"bar": "baz"} == task.kwargs
 
     @responses.activate
     def test_map(self):
         self.mock_response(responses.POST, {"tasks": [{"id": "foo"}, {"id": "bar"}]})
         tasks = self.function.map(iter(["foo", "bar"]))
-        self.assertEqual(["foo", "bar"], [task.tuid for task in tasks])
-        self.assertEqual([("foo",), ("bar",)], [task.args for task in tasks])
+        assert ["foo", "bar"] == [task.tuid for task in tasks]
+        assert [("foo",), ("bar",)] == [task.args for task in tasks]
 
     @responses.activate
     def test_map_multi(self):
         self.mock_response(responses.POST, {"tasks": [{"id": "foo"}, {"id": "bar"}]})
         tasks = self.function.map(iter(["foo", "bar"]), iter(["baz"]))
-        self.assertEqual(["foo", "bar"], [task.tuid for task in tasks])
-        self.assertEqual([("foo", "baz"), ("bar", None)], [task.args for task in tasks])
+        assert ["foo", "bar"] == [task.tuid for task in tasks]
+        assert [("foo", "baz"), ("bar", None)] == [task.args for task in tasks]
 
 
 if __name__ == "__main__":
