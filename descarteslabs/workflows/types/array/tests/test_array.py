@@ -4,27 +4,74 @@ import pytest
 
 import numpy as np
 
-from ...primitives import Float, Str
+from ...core import ProxyTypeError
+from ...primitives import Float, Bool, Str, Int, Any
 from ...geospatial import ImageCollection
 from ...containers import List
-from .. import Array
+from .. import Array, DType
 
 
-def test_init():
-    arr = Array([1, 2, 3, 4])
+arr = Array([[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]])
+
+
+@pytest.mark.parametrize("val", [1, Int(1), [1, 2, 3, 4], np.ones((1, 2, 3))])
+def test_init(val):
+    arr = Array(val)
     assert isinstance(arr, Array)
 
-    arr = Array(np.ones((1, 2, 3)))
+
+@pytest.mark.parametrize(
+    "val",
+    [
+        1,
+        Int(1),
+        1.0,
+        Float(1.0),
+        True,
+        Bool(True),
+        [1, 2, 3, 4],
+        np.ones((1, 2, 3)),
+        Any([1, 2]),
+    ],
+)
+def test_promote(val):
+    arr = Array._promote(val)
     assert isinstance(arr, Array)
+
+
+@pytest.mark.parametrize(
+    "val", ["foo", Str("foo"), List[Int]([1, 2, 3]), np.array([1, 2], dtype=np.object)]
+)
+def test_promote_invalid(val):
+    with pytest.raises((TypeError, ProxyTypeError)):
+        Array._promote(val)
+
+
+def test_dtype():
+    assert isinstance(arr.dtype, DType)
+
+
+def test_ndim():
+    assert isinstance(arr.ndim, Int)
+
+
+def test_shape():
+    assert isinstance(arr.shape, List[Int])
+
+
+@pytest.mark.parametrize("shape", [(-1,), (1, 2)])
+def test_reshape(shape):
+    assert isinstance(arr.reshape(*shape), Array)
 
 
 @pytest.mark.parametrize(
     "idx",
     [
         None,
+        1,
+        slice(2),
         (0, 0, 0),
         (None, 0, 0, 0),
-        1,
         (1, None),
         [1, 2],
         Array([1, 2]),
@@ -33,11 +80,9 @@ def test_init():
         (Array([[[]]]), None),
         (0, Array([[]])),
         (0, Array([[]]), None),
-        slice(2),
     ],
 )
 def test_getitem(idx):
-    arr = Array([[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]])
     result = arr[idx]
     assert isinstance(result, Array)
 
@@ -69,34 +114,29 @@ def test_getitem(idx):
     ],
 )
 def test_getitem_error(idx, err_type, msg):
-    arr = Array([[[[]]]])
     with pytest.raises(err_type, match=msg):
         arr[idx]
 
 
 def test_to_imagery():
-    arr = Array([[10, 11, 12], [13, 14, 15]])
-
-    arr = Array([[[]]])
-    assert isinstance(arr.to_imagery({}, {}), ImageCollection)
+    assert isinstance(arr.to_imagery(), ImageCollection)
 
 
-@pytest.mark.parametrize(
-    "method",
-    [operator.lt, operator.le, operator.gt, operator.ge, operator.eq, operator.ne],
-)
-@pytest.mark.parametrize("other", [Array([[1, 2, 3], [4, 5, 6]]), 1, 0.5])
-def test_container_bool_methods(method, other):
-    arr = Array([[10, 11, 12], [13, 14, 15]])
-    result = method(arr, other)
-    r_result = method(other, arr)
-    assert isinstance(result, Array)
-    assert isinstance(r_result, Array)
+def test_to_imagery_error():
+    with pytest.raises(TypeError):
+        arr.to_imagery(properties="foo")
+        arr.to_imagery(bandinfo=[1, 2, 3])
 
 
 @pytest.mark.parametrize(
     "method",
     [
+        operator.lt,
+        operator.le,
+        operator.gt,
+        operator.ge,
+        operator.eq,
+        operator.ne,
         operator.add,
         operator.sub,
         operator.mul,
@@ -106,9 +146,8 @@ def test_container_bool_methods(method, other):
         operator.pow,
     ],
 )
-@pytest.mark.parametrize("other", [Array([[1, 2, 3], [4, 5, 6]]), 1, 0.5])
-def test_container_arithmetic(method, other):
-    arr = Array([[10.0, 11.0, 12.0], [13.0, 14.0, 15.0]])
+@pytest.mark.parametrize("other", [Array([[1, 2, 3], [4, 5, 6]]), Array(1), 1, 0.5])
+def test_container_methods(method, other):
     result = method(arr, other)
     r_result = method(other, arr)
     assert isinstance(result, Array)
@@ -119,8 +158,6 @@ def test_container_arithmetic(method, other):
     "axis, return_type", [(1, Array), ((1, 2), Array), (None, Float)]
 )
 def test_stats(axis, return_type):
-    arr = Array([[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]])
-
     assert isinstance(arr.min(axis=axis), return_type)
     assert isinstance(arr.max(axis=axis), return_type)
     assert isinstance(arr.mean(axis=axis), return_type)

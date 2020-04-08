@@ -43,6 +43,8 @@ class MaskedArray(BaseArray):
             data = data.tolist()
 
         if isinstance(mask, (bool, np.bool_, Bool)):
+            if isinstance(mask, np.bool_):
+                mask = mask is True
             mask = Bool._promote(mask)
         elif isinstance(mask, np.ndarray):
             if mask.dtype.kind != "b":
@@ -54,7 +56,6 @@ class MaskedArray(BaseArray):
             mask = mask.tolist()
 
         fill_value = _promote_fill_value(self, fill_value)
-
         self.graft = client.apply_graft("maskedarray.create", data, mask, fill_value)
 
     @classmethod
@@ -71,10 +72,17 @@ class MaskedArray(BaseArray):
         -------
         ~descarteslabs.workflows.MaskedArray
         """
-        data = np.ma.getdata(arr)
-        mask = np.ma.getmask(arr)
-        fill_value = getattr(arr, "fill_value", None)
+        try:
+            data = np.ma.getdata(arr)
+        except Exception:
+            data = arr
 
+        try:
+            mask = np.ma.getmask(arr)
+        except Exception:
+            mask = False
+
+        fill_value = getattr(arr, "fill_value", None)
         return cls(data, mask, fill_value)
 
     @classmethod
