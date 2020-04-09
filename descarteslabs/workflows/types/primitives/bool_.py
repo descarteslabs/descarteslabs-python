@@ -4,11 +4,11 @@ from .primitive import Primitive
 from ..mixins import NumPyMixin
 
 
-def _delayed_numpy_overrides():
+def _delayed_numpy_ufuncs():
     # avoid circular imports
-    from descarteslabs.workflows.types.numpy import numpy_overrides
+    from descarteslabs.workflows.types.numpy import numpy_ufuncs
 
-    return numpy_overrides
+    return numpy_ufuncs
 
 
 @serializable()
@@ -52,36 +52,36 @@ class Bool(NumPyMixin, Primitive):
         )
 
     def __invert__(self):
-        return _delayed_numpy_overrides().logical_not(self)
+        return _delayed_numpy_ufuncs().logical_not(self)
 
     @allow_reflect
     def __eq__(self, other):
-        return _delayed_numpy_overrides().equal(self, other)
+        return _delayed_numpy_ufuncs().equal(self, other)
 
     @allow_reflect
     def __ne__(self, other):
-        return _delayed_numpy_overrides().not_equal(self, other)
+        return _delayed_numpy_ufuncs().not_equal(self, other)
 
     @allow_reflect
     def __and__(self, other):
-        return _delayed_numpy_overrides().logical_and(self, other)
+        return _delayed_numpy_ufuncs().logical_and(self, other)
 
     @allow_reflect
     def __or__(self, other):
-        return _delayed_numpy_overrides().logical_or(self, other)
+        return _delayed_numpy_ufuncs().logical_or(self, other)
 
     @allow_reflect
     def __xor__(self, other):
-        return _delayed_numpy_overrides().logical_xor(self, other)
+        return _delayed_numpy_ufuncs().logical_xor(self, other)
 
     @allow_reflect
     def __rand__(self, other):
-        return _delayed_numpy_overrides().logical_and(other, self)
+        return _delayed_numpy_ufuncs().logical_and(other, self)
 
     @allow_reflect
     def __ror__(self, other):
-        return _delayed_numpy_overrides().logical_or(other, self)
+        return _delayed_numpy_ufuncs().logical_or(other, self)
 
     @allow_reflect
     def __rxor__(self, other):
-        return _delayed_numpy_overrides().logical_xor(other, self)
+        return _delayed_numpy_ufuncs().logical_xor(other, self)

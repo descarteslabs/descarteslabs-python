@@ -5,11 +5,11 @@ from .bool_ import Bool
 from .primitive import Primitive
 
 
-def _delayed_numpy_overrides():
+def _delayed_numpy_ufuncs():
     # avoid circular imports
-    from descarteslabs.workflows.types.numpy import numpy_overrides
+    from descarteslabs.workflows.types.numpy import numpy_ufuncs
 
-    return numpy_overrides
+    return numpy_ufuncs
 
 
 def _binop_result(a, b):
@@ -59,15 +59,15 @@ class Number(NumPyMixin, Primitive):
             return cls(obj)
 
     def __abs__(self):
-        return _delayed_numpy_overrides().absolute(self)
+        return _delayed_numpy_ufuncs().absolute(self)
 
     @allow_reflect
     def __add__(self, other):
-        return _delayed_numpy_overrides().add(self, other)
+        return _delayed_numpy_ufuncs().add(self, other)
 
     @allow_reflect
     def __div__(self, other):
-        return _delayed_numpy_overrides().divide(self, other)
+        return _delayed_numpy_ufuncs().divide(self, other)
 
     @typecheck_promote(lambda: (Int, Float, Bool), _reflect=True)
     def __divmod__(self, other):
@@ -78,11 +78,11 @@ class Number(NumPyMixin, Primitive):
 
     @allow_reflect
     def __eq__(self, other):
-        return _delayed_numpy_overrides().equal(self, other)
+        return _delayed_numpy_ufuncs().equal(self, other)
 
     @allow_reflect
     def __floordiv__(self, other):
-        return _delayed_numpy_overrides().floor_divide(self, other)
+        return _delayed_numpy_ufuncs().floor_divide(self, other)
 
     def __hex__(self):
         raise TypeError(
@@ -91,11 +91,11 @@ class Number(NumPyMixin, Primitive):
 
     @allow_reflect
     def __ge__(self, other):
-        return _delayed_numpy_overrides().greater_equal(self, other)
+        return _delayed_numpy_ufuncs().greater_equal(self, other)
 
     @allow_reflect
     def __gt__(self, other):
-        return _delayed_numpy_overrides().greater(self, other)
+        return _delayed_numpy_ufuncs().greater(self, other)
 
     def __index__(self):
         raise TypeError(
@@ -110,41 +110,41 @@ class Number(NumPyMixin, Primitive):
 
     @allow_reflect
     def __le__(self, other):
-        return _delayed_numpy_overrides().less_equal(self, other)
+        return _delayed_numpy_ufuncs().less_equal(self, other)
 
     @allow_reflect
     def __lt__(self, other):
-        return _delayed_numpy_overrides().less(self, other)
+        return _delayed_numpy_ufuncs().less(self, other)
 
     @allow_reflect
     def __mod__(self, other):
-        return _delayed_numpy_overrides().mod(self, other)
+        return _delayed_numpy_ufuncs().mod(self, other)
 
     @allow_reflect
     def __mul__(self, other):
-        return _delayed_numpy_overrides().multiply(self, other)
+        return _delayed_numpy_ufuncs().multiply(self, other)
 
     @allow_reflect
     def __ne__(self, other):
-        return _delayed_numpy_overrides().not_equal(self, other)
+        return _delayed_numpy_ufuncs().not_equal(self, other)
 
     def __neg__(self):
-        return _delayed_numpy_overrides().negative(self)
+        return _delayed_numpy_ufuncs().negative(self)
 
     def __pos__(self):
         return self._from_apply("pos", self)
 
     @allow_reflect
     def __pow__(self, other):
-        return _delayed_numpy_overrides().power(self, other)
+        return _delayed_numpy_ufuncs().power(self, other)
 
     @allow_reflect
     def __radd__(self, other):
-        return _delayed_numpy_overrides().add(other, self)
+        return _delayed_numpy_ufuncs().add(other, self)
 
     @allow_reflect
     def __rdiv__(self, other):
-        return _delayed_numpy_overrides().divide(other, self)
+        return _delayed_numpy_ufuncs().divide(other, self)
 
     @typecheck_promote(lambda: (Int, Float, Bool))
     def __rdivmod__(self, other):
@@ -155,35 +155,35 @@ class Number(NumPyMixin, Primitive):
 
     @allow_reflect
     def __rfloordiv__(self, other):
-        return _delayed_numpy_overrides().floor_divide(other, self)
+        return _delayed_numpy_ufuncs().floor_divide(other, self)
 
     @allow_reflect
     def __rmod__(self, other):
-        return _delayed_numpy_overrides().mod(other, self)
+        return _delayed_numpy_ufuncs().mod(other, self)
 
     @allow_reflect
     def __rmul__(self, other):
-        return _delayed_numpy_overrides().multiply(other, self)
+        return _delayed_numpy_ufuncs().multiply(other, self)
 
     @allow_reflect
     def __rpow__(self, other):
-        return _delayed_numpy_overrides().power(other, self)
+        return _delayed_numpy_ufuncs().power(other, self)
 
     @allow_reflect
     def __rsub__(self, other):
-        return _delayed_numpy_overrides().subtract(other, self)
+        return _delayed_numpy_ufuncs().subtract(other, self)
 
     @allow_reflect
     def __rtruediv__(self, other):
-        return _delayed_numpy_overrides().true_divide(other, self)
+        return _delayed_numpy_ufuncs().true_divide(other, self)
 
     @allow_reflect
     def __sub__(self, other):
-        return _delayed_numpy_overrides().subtract(self, other)
+        return _delayed_numpy_ufuncs().subtract(self, other)
 
     @allow_reflect
     def __truediv__(self, other):
-        return _delayed_numpy_overrides().true_divide(self, other)
+        return _delayed_numpy_ufuncs().true_divide(self, other)
 
 
 @serializable()

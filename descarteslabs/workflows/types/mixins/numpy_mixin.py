@@ -1,8 +1,15 @@
-def _delayed_numpy_overrides():
+def _delayed_numpy_functions():
     # avoid circular imports
-    from descarteslabs.workflows.types.numpy import numpy_overrides
+    from descarteslabs.workflows.types.numpy import numpy_functions
 
-    return numpy_overrides
+    return numpy_functions
+
+
+def _delayed_numpy_ufuncs():
+    # avoid circular imports
+    from descarteslabs.workflows.types.numpy import numpy_ufuncs
+
+    return numpy_ufuncs
 
 
 class NumPyMixin:
@@ -18,9 +25,9 @@ class NumPyMixin:
         args: arguments directly passed from the original call
         kwargs: kwargs directly passed from the original call
         """
-        numpy_overrides = _delayed_numpy_overrides()
+        numpy_functions = _delayed_numpy_functions()
 
-        if func not in numpy_overrides.HANDLED_FUNCTIONS:
+        if func not in numpy_functions.HANDLED_FUNCTIONS:
             raise NotImplementedError(
                 "Using `{0}` with a Workflows "
                 "{1} is not supported. If you want to use "
@@ -31,7 +38,7 @@ class NumPyMixin:
             )
 
         try:
-            return numpy_overrides.HANDLED_FUNCTIONS[func](*args, **kwargs)
+            return numpy_functions.HANDLED_FUNCTIONS[func](*args, **kwargs)
         except TypeError as e:
             e.args = (
                 "When attempting to call numpy.{} with a "
@@ -54,15 +61,15 @@ class NumPyMixin:
         inputs: Tuple of the input arguments to ufunc
         kwargs: Dict of optional input arguments to ufunc
         """
-        numpy_overrides = _delayed_numpy_overrides()
+        numpy_ufuncs = _delayed_numpy_ufuncs()
 
         if method == "__call__":
-            if ufunc.__name__ not in numpy_overrides.HANDLED_UFUNCS:
+            if ufunc.__name__ not in numpy_ufuncs.HANDLED_UFUNCS:
                 return NotImplementedError(
                     "{} is not supported by Workflows types.".format(ufunc.__name__)
                 )
             else:
-                return numpy_overrides.HANDLED_UFUNCS[ufunc.__name__](*inputs, **kwargs)
+                return numpy_ufuncs.HANDLED_UFUNCS[ufunc.__name__](*inputs, **kwargs)
         elif method == "reduce":
             raise NotImplementedError(
                 "The `reduce` ufunc method is not supported by Workflows types."

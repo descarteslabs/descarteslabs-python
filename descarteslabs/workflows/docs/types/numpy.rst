@@ -11,6 +11,8 @@ Use of these docstrings is subject to the `NumPy license <https://numpy.org/lice
 .. autosummary::
     absolute
     add
+    all
+    any
     arccos
     arccosh
     arcsin
@@ -18,6 +20,8 @@ Use of these docstrings is subject to the `NumPy license <https://numpy.org/lice
     arctan
     arctan2
     arctanh
+    argmax
+    argmin
     cbrt
     ceil
     concatenate
@@ -89,6 +93,8 @@ Use of these docstrings is subject to the `NumPy license <https://numpy.org/lice
 
 .. autofunction:: absolute
 .. autofunction:: add
+.. autofunction:: all
+.. autofunction:: any
 .. autofunction:: arccos
 .. autofunction:: arccosh
 .. autofunction:: arcsin
@@ -96,6 +102,8 @@ Use of these docstrings is subject to the `NumPy license <https://numpy.org/lice
 .. autofunction:: arctan
 .. autofunction:: arctan2
 .. autofunction:: arctanh
+.. autofunction:: argmax
+.. autofunction:: argmin
 .. autofunction:: cbrt
 .. autofunction:: ceil
 .. autofunction:: concatenate

@@ -1,10 +1,9 @@
 import numpy as np
 
-from ..core import typecheck_promote, ProxyTypeError
+from ..core import ProxyTypeError
 from ..core.promote import _promote
-from ..primitives import Float, Int, Bool, NoneType
+from ..primitives import Float, Int, Bool
 from ..array import Array, MaskedArray, BaseArray
-from ..containers import List, Tuple
 
 
 def _ufunc_result_type(obj, other=None, return_type_override=None):
@@ -98,7 +97,6 @@ def derived_from(original_method):
     return wrapper
 
 
-HANDLED_FUNCTIONS = {}
 HANDLED_UFUNCS = {}
 
 ##################
@@ -278,156 +276,3 @@ rint = ufunc(np.rint, return_type_override=Float)
 fabs = ufunc(np.fabs, return_type_override=Float)
 sign = ufunc(np.sign)
 absolute = ufunc(np.absolute)
-
-
-######################
-# non-ufunc operations
-######################
-
-
-def implements(numpy_func):
-    def decorator(wf_func):
-        HANDLED_FUNCTIONS[numpy_func] = wf_func
-        return wf_func
-
-    return decorator
-
-
-@implements(np.concatenate)
-@typecheck_promote((List[MaskedArray], List[Array]), axis=Int)
-@derived_from(np.concatenate)
-def concatenate(seq, axis=0):
-    return_type = seq._element_type
-    return return_type._from_apply("concatenate", seq, axis=axis)
-
-
-@implements(np.transpose)
-@typecheck_promote((MaskedArray, Array), axes=(List[Int], NoneType))
-@derived_from(np.transpose)
-def transpose(arr, axes=None):
-    return arr._from_apply("transpose", arr, axes=axes)
-
-
-@implements(np.histogram)
-@typecheck_promote(
-    (MaskedArray, Array),
-    bins=(List[Int], List[Float], Int),
-    range=(Tuple[Int, Int], Tuple[Float, Float], NoneType),
-    weights=(Array, NoneType),
-    density=None,
-)
-@derived_from(np.histogram)
-def histogram(arr, bins=10, range=None, weights=None, density=None):
-    if density is not None and not isinstance(density, bool):
-        raise TypeError("Histogram argument 'density' must be None or a bool.")
-
-    if isinstance(bins, Int) and isinstance(range, NoneType):
-        raise ValueError(
-            "Histogram requires range to be specified if bins is given as an int."
-        )
-
-    return Tuple[Array, Array]._from_apply(
-        "histogram", arr, bins=bins, range=range, weights=weights, density=density
-    )
-
-
-@implements(np.reshape)
-@typecheck_promote((MaskedArray, Array), newshape=None)
-@derived_from(np.reshape)
-def reshape(arr, newshape):
-    newshape = _promote_newshape(newshape)
-    return arr._from_apply("reshape", arr, newshape)
-
-
-def _promote_newshape(newshape):
-    if isinstance(newshape, (Tuple, tuple, list)):
-        type_params = (Int,) * len(newshape)
-        try:
-            return Tuple[type_params]._promote(newshape)
-        except ProxyTypeError:
-            pass
-    raise TypeError(
-        "'newshape' must be a list or tuple of ints, received {!r}".format(newshape)
-    )
-
-
-@implements(np.stack)
-@typecheck_promote((List[MaskedArray], List[Array]), axis=Int)
-@derived_from(np.stack)
-def stack(seq, axis=0):
-    element_type = seq._element_type
-    return element_type._from_apply("stack", seq, axis=axis)
-
-
-@implements(np.argmin)
-@typecheck_promote(Array, axis=(NoneType, Int))
-@derived_from(np.argmin)
-def argmin(arr, axis=None):
-    if isinstance(axis, NoneType):
-        return_type = Int
-    else:
-        return_type = type(arr)
-    return return_type._from_apply("argmin", arr, axis=axis)
-
-
-@implements(np.argmax)
-@typecheck_promote(Array, axis=(NoneType, Int))
-@derived_from(np.argmax)
-def argmax(arr, axis=None):
-    if isinstance(axis, NoneType):
-        return_type = Int
-    else:
-        return_type = type(arr)
-    return return_type._from_apply("argmax", arr, axis=axis)
-
-
-@implements(np.all)
-@typecheck_promote(Array, axis=None)
-@derived_from(np.all)
-def all(arr, axis=None):
-    if axis is None:
-        return_type = Bool
-    elif isinstance(axis, int):
-        return_type = type(arr)
-    elif isinstance(axis, (list, tuple)):
-        for idx, ax in enumerate(axis):
-            if not isinstance(ax, int):
-                raise TypeError(
-                    "In all: Element {} to `axis`: expected int but got type {!r}".format(
-                        idx, type(ax)
-                    )
-                )
-        return_type = type(arr)
-    else:
-        raise TypeError(
-            "In all: Expected None, int, or tuple of ints for argument `axis`, but got type `{}`".format(
-                type(axis)
-            )
-        )
-    return return_type._from_apply("all", arr, axis=axis)
-
-
-@implements(np.any)
-@typecheck_promote(Array, axis=None)
-@derived_from(np.any)
-def any(arr, axis=None):
-    if axis is None:
-        return_type = Bool
-    elif isinstance(axis, int):
-        return_type = type(arr)
-    elif isinstance(axis, (list, tuple)):
-        for idx, ax in enumerate(axis):
-            if not isinstance(ax, int):
-                raise TypeError(
-                    "In any: Element {} to `axis`: expected int but got type {!r}".format(
-                        idx, type(ax)
-                    )
-                )
-        return_type = type(arr)
-    else:
-        raise TypeError(
-            "In any: Expected None, int, or tuple of ints for argument `axis`, but got type `{}`".format(
-                type(axis)
-            )
-        )
-    return return_type._from_apply("any", arr, axis=axis)

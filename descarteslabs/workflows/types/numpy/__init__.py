@@ -1,4 +1,4 @@
-from .numpy_overrides import (
+from .numpy_ufuncs import (
     add,
     subtract,
     multiply,
@@ -77,6 +77,9 @@ from .numpy_overrides import (
     fabs,
     sign,
     absolute,
+)
+
+from .numpy_functions import (
     transpose,
     concatenate,
     histogram,
@@ -89,6 +92,7 @@ from .numpy_overrides import (
 )
 
 __all__ = [
+    # Ufuncs
     "add",
     "subtract",
     "multiply",
@@ -167,6 +171,7 @@ __all__ = [
     "fabs",
     "sign",
     "absolute",
+    # Non-ufunc
     "transpose",
     "concatenate",
     "histogram",
