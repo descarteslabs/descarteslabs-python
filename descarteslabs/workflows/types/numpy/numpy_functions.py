@@ -1,14 +1,24 @@
+import sys
 import numpy as np
 
+import typing
 from typing import Union
 from inspect import Parameter, Signature
-from descarteslabs.common.typing import get_args, get_origin
 
 from ..core import ProxyTypeError
 from ..primitives import Float, Int, Bool, Str, NoneType
 from ..array import Array, MaskedArray
 from ..containers import List, Tuple, Dict
 from .numpy_ufuncs import derived_from
+
+PY35 = sys.version_info[:2] == (3, 5)
+
+
+def is_union(type_):
+    if PY35:
+        return isinstance(type_, typing.UnionMeta)
+    else:
+        return getattr(type_, "__origin__", None) is Union
 
 
 HANDLED_FUNCTIONS = {}
@@ -48,8 +58,8 @@ def promote_to_signature(signature, *args, **kwargs):
             )
 
         if not isinstance(arg_type, tuple):
-            if get_origin(arg_type) is Union:
-                arg_types = get_args(arg_type)
+            if is_union(arg_type):
+                arg_types = getattr(arg_type, "__args__")
             else:
                 arg_types = (arg_type,)
 
@@ -119,9 +129,11 @@ def format_dispatch_error(name, signatures, failed, *args, **kwargs):
                     "({})".format(", ".join(a.__name__ for a in arg.annotation))
                     if isinstance(arg.annotation, tuple)
                     else "Union[{}]".format(
-                        ", ".join(t.__name__ for t in get_args(arg.annotation))
+                        ", ".join(
+                            t.__name__ for t in getattr(arg.annotation, "__args__")
+                        )
                     )
-                    if get_origin(arg.annotation) is Union
+                    if is_union(arg.annotation)
                     else arg.annotation.__name__,
                 )
                 for k, arg in sig.parameters.items()
