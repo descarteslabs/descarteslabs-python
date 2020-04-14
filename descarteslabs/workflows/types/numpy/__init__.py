@@ -79,17 +79,9 @@ from .numpy_ufuncs import (
     absolute,
 )
 
-from .numpy_functions import (
-    transpose,
-    concatenate,
-    histogram,
-    reshape,
-    stack,
-    argmin,
-    argmax,
-    all,
-    any,
-)
+from .numpy_functions import np_funcs
+
+globals().update(np_funcs)
 
 __all__ = [
     # Ufuncs
@@ -182,3 +174,5 @@ __all__ = [
     "all",
     "any",
 ]
+
+__all__ += list(np_funcs.keys())

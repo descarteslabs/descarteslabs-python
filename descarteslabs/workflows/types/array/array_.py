@@ -48,9 +48,10 @@ class Array(BaseArray):
     """
 
     def __init__(self, arr):
-        self._literal_value = arr
-
-        if isinstance(arr, (Int, Float, Bool, int, float, bool)):
+        if isinstance(arr, (int, float, bool)):
+            self._literal_value = arr
+            self.graft = client.apply_graft("array.create", arr)
+        elif isinstance(arr, (Int, Float, Bool)):
             self.graft = client.apply_graft("array.create", arr)
         else:
             if not isinstance(arr, np.ndarray):
@@ -62,6 +63,7 @@ class Array(BaseArray):
             if arr.dtype.kind not in ("b", "i", "f"):
                 raise TypeError("Invalid dtype {} for an Array".format(arr.dtype))
 
+            self._literal_value = arr
             arr_list = arr.tolist()
             self.graft = client.apply_graft("array.create", arr_list)
 
