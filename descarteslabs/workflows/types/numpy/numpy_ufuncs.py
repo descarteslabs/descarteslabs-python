@@ -1,5 +1,6 @@
 import numpy as np
 
+from .utils import copy_docstring_from_numpy
 from ..core import ProxyTypeError
 from ..core.promote import _promote
 from ..primitives import Float, Int, Bool
@@ -37,66 +38,6 @@ def _ufunc_result_type(obj, other=None, return_type_override=None):
         return dtype
 
 
-def derived_from(original_method):
-    """Decorator to attach original method's docstring to the wrapped method"""
-
-    def wrapper(method):
-        doc = original_method.__doc__.replace("*,", "\*,")  # noqa
-        doc = doc.replace(
-            ":ref:`ufunc docs <ufuncs.kwargs>`.",
-            "`ufunc docs <https://docs.scipy.org/doc/numpy/reference/ufuncs.html#ufuncs-kwargs>`_.",
-        )
-
-        # remove examples
-        doc = doc.split("\n\n    Examples\n")[0]
-
-        # remove references
-        doc = [a for a in doc.split("\n\n") if "References\n----------\n" not in a]
-
-        # remove "See Also" section
-        doc = [a for a in doc if "See Also\n" not in a]
-
-        l1 = "This docstring was copied from numpy.{}".format(original_method.__name__)
-        l2 = "Some inconsistencies with the Workflows version may exist"
-
-        if isinstance(original_method, np.ufunc):
-            # what the function does
-            info = doc[1]
-
-            # parameters (sometimes listed on separate lines, someimtes not)
-            parameters = [a for a in doc if "Parameters\n" in a][0].split("\n")
-            if parameters[4][0] == "x":
-                parameters = "\n".join(parameters[:6])
-            else:
-                parameters = "\n".join(parameters[:4])
-
-            # return value
-            returns = [a for a in doc if "Returns\n" in a][0]
-
-            # final docstring
-            doc = "\n\n".join([info, l1, l2, parameters, returns])
-        else:
-            # does the first line contain the function signature? (not always the case)
-            if doc[0][-1] == ")":
-                doc = (
-                    [doc[1]]
-                    + ["\n\n" + "    {}\n\n    {}\n\n".format(l1, l2)]
-                    + doc[2:]
-                )
-            else:
-                doc = (
-                    [doc[0]]
-                    + ["\n\n" + "    {}\n\n    {}\n\n".format(l1, l2)]
-                    + doc[1:]
-                )
-            doc = "\n\n".join(doc)
-
-        method.__doc__ = doc
-        return method
-
-    return wrapper
-
-
 HANDLED_UFUNCS = {}
 
 ##################
@@ -126,7 +67,7 @@ class ufunc:
         self._return_type_override = return_type_override
 
         if isinstance(ufunc, np.ufunc):
-            derived_from(ufunc)(self)
+            copy_docstring_from_numpy(self, ufunc)
 
         HANDLED_UFUNCS[ufunc.__name__] = self
 

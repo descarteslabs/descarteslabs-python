@@ -7,7 +7,7 @@ from ..core import ProxyTypeError
 from ..primitives import Float, Int, Bool, Str, NoneType
 from ..array import Array, MaskedArray
 from ..containers import List, Tuple, Dict
-from .numpy_ufuncs import derived_from
+from .utils import copy_docstring_from_numpy
 
 
 HANDLED_FUNCTIONS = {}
@@ -213,7 +213,7 @@ def np_func(numpy_func, signatures):
     """
     func = wf_func(numpy_func.__name__, signatures)
     HANDLED_FUNCTIONS[numpy_func] = func
-    derived_from(numpy_func)(func)
+    copy_docstring_from_numpy(func, numpy_func)
     return func
 
 
