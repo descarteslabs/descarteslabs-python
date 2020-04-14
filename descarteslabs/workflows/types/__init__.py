@@ -10,7 +10,7 @@ from .function import Function
 from .primitives import Primitive, Number, Int, Float, Bool, Str, NoneType, Any
 from .proxify import proxify
 from .containers import CollectionMixin, Tuple, List, Dict, Struct, range, zip
-from .array import Array, MaskedArray
+from .array import Array, MaskedArray, Scalar
 from .datetimes import Datetime, Timedelta
 from .geospatial import (
     concat,
@@ -66,6 +66,7 @@ __all__ = [
     "Int",
     "Float",
     "Bool",
+    "Scalar",
     "Str",
     "NoneType",
     "Any",

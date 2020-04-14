@@ -12,13 +12,6 @@ DTYPE_KIND_TO_WF = {"b": Bool, "i": Int, "f": Float}
 WF_TO_DTYPE_KIND = dict(zip(DTYPE_KIND_TO_WF.values(), DTYPE_KIND_TO_WF.keys()))
 
 
-def _delayed_numpy_ufuncs():
-    # avoid circular imports
-    from descarteslabs.workflows.types.numpy import numpy_ufuncs
-
-    return numpy_ufuncs
-
-
 @serializable()
 class Array(BaseArray):
     """
