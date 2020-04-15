@@ -94,7 +94,7 @@ def do_setup():
             "complete": [
                 'blosc==1.8.3;platform_system!="Windows"',
                 "matplotlib>=3.0.3",
-                "mercantile>=1.1.2",
+                "mercantile>=1.1.3",
                 "ipyleaflet>=0.12.2,<1",
                 "ipywidgets>=7.5.1,<8",
                 "traitlets>=4.3.3,<5",

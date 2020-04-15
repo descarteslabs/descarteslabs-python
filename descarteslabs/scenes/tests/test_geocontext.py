@@ -408,12 +408,7 @@ class TestDLTIle(unittest.TestCase):
 class TestXYZTile(unittest.TestCase):
     def test_bounds(self):
         tile = geocontext.XYZTile(1, 1, 2)
-        assert tile.bounds == (
-            -10018754.171394622,
-            -7.081154551613622e-10,
-            0.0,
-            10018754.171394626,
-        )
+        assert tile.bounds == (-10018754.171394622, 0.0, 0.0, 10018754.171394622)
 
     def test_geometry(self):
         tile = geocontext.XYZTile(1, 1, 2)
@@ -438,12 +433,7 @@ class TestXYZTile(unittest.TestCase):
     def test_raster_params(self):
         tile = geocontext.XYZTile(1, 1, 2)
         assert tile.raster_params == {
-            "bounds": (
-                -10018754.171394622,
-                -7.081154551613622e-10,
-                0.0,
-                10018754.171394626,
-            ),
+            "bounds": (-10018754.171394622, 0.0, 0.0, 10018754.171394622),
             "srs": "EPSG:3857",
             "bounds_srs": "EPSG:3857",
             "align_pixels": False,
