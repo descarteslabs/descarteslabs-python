@@ -1,9 +1,9 @@
 import pytest
 import numpy as np
 
-from descarteslabs.workflows.types.array import Array, MaskedArray
+from descarteslabs.workflows.types.array import Array, MaskedArray, Scalar
 from descarteslabs.workflows.types.containers import Tuple
-from descarteslabs.workflows.types.primitives import Int, Float, Bool
+from descarteslabs.workflows.types.primitives import Int, Float
 import descarteslabs.workflows.types.numpy as wf_np
 
 
@@ -74,7 +74,7 @@ def test_stack(base_arr, return_type, num_arr, axis):
 def test_argmin_argmax(func, arr, axis):
     result = func(arr, axis=axis)
     if axis is None:
-        assert isinstance(result, Int)
+        assert isinstance(result, Scalar)
     else:
         assert isinstance(result, Array)
 
@@ -86,7 +86,7 @@ def test_argmin_argmax(func, arr, axis):
 def test_all_any(func, arr, axis):
     result = func(arr, axis=axis)
     if axis is None:
-        assert isinstance(result, Bool)
+        assert isinstance(result, Scalar)
     elif isinstance(axis, (int, tuple, list)):
         assert isinstance(result, Array)
 

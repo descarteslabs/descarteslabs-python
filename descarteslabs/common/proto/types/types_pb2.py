@@ -7,128 +7,118 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
+
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-
-
 DESCRIPTOR = _descriptor.FileDescriptor(
-  name='descarteslabs/common/proto/types/types.proto',
-  package='descarteslabs.workflows',
-  syntax='proto3',
-  serialized_options=None,
-  serialized_pb=b'\n,descarteslabs/common/proto/types/types.proto\x12\x17\x64\x65scarteslabs.workflows*\xd4\x02\n\nResultType\x12\x0b\n\x07Unknown\x10\x00\x12\t\n\x05Image\x10\x01\x12\x13\n\x0fImageCollection\x10\x02\x12\x0b\n\x07\x46\x65\x61ture\x10\x03\x12\x15\n\x11\x46\x65\x61tureCollection\x10\x04\x12\n\n\x06String\x10\x05\x12\n\n\x06Number\x10\x06\x12\x08\n\x04List\x10\x07\x12\x0e\n\nDictionary\x10\x08\x12\x07\n\x03Int\x10\t\x12\t\n\x05\x46loat\x10\n\x12\x07\n\x03Str\x10\x0b\x12\t\n\x05Tuple\x10\x0c\x12\x08\n\x04\x44ict\x10\r\x12\x0c\n\x08\x44\x61tetime\x10\x0e\x12\r\n\tTimedelta\x10\x0f\x12\x08\n\x04\x42ool\x10\x10\x12\x0c\n\x08Geometry\x10\x11\x12\r\n\tKnownDict\x10\x12\x12\x0e\n\nGeoContext\x10\x13\x12\x16\n\x12GeometryCollection\x10\x14\x12\t\n\x05\x41rray\x10\x15\x12\x0f\n\x0bMaskedArray\x10\x16\x12\t\n\x05\x44Type\x10\x17\x62\x06proto3'
+    name="descarteslabs/common/proto/types/types.proto",
+    package="descarteslabs.workflows",
+    syntax="proto3",
+    serialized_options=None,
+    serialized_pb=b"\n,descarteslabs/common/proto/types/types.proto\x12\x17\x64\x65scarteslabs.workflows*\xe0\x02\n\nResultType\x12\x0b\n\x07Unknown\x10\x00\x12\t\n\x05Image\x10\x01\x12\x13\n\x0fImageCollection\x10\x02\x12\x0b\n\x07\x46\x65\x61ture\x10\x03\x12\x15\n\x11\x46\x65\x61tureCollection\x10\x04\x12\n\n\x06String\x10\x05\x12\n\n\x06Number\x10\x06\x12\x08\n\x04List\x10\x07\x12\x0e\n\nDictionary\x10\x08\x12\x07\n\x03Int\x10\t\x12\t\n\x05\x46loat\x10\n\x12\x07\n\x03Str\x10\x0b\x12\t\n\x05Tuple\x10\x0c\x12\x08\n\x04\x44ict\x10\r\x12\x0c\n\x08\x44\x61tetime\x10\x0e\x12\r\n\tTimedelta\x10\x0f\x12\x08\n\x04\x42ool\x10\x10\x12\x0c\n\x08Geometry\x10\x11\x12\r\n\tKnownDict\x10\x12\x12\x0e\n\nGeoContext\x10\x13\x12\x16\n\x12GeometryCollection\x10\x14\x12\t\n\x05\x41rray\x10\x15\x12\x0f\n\x0bMaskedArray\x10\x16\x12\t\n\x05\x44Type\x10\x17\x12\n\n\x06Scalar\x10\x18\x62\x06proto3",
 )
 
 _RESULTTYPE = _descriptor.EnumDescriptor(
-  name='ResultType',
-  full_name='descarteslabs.workflows.ResultType',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='Unknown', index=0, number=0,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Image', index=1, number=1,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='ImageCollection', index=2, number=2,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Feature', index=3, number=3,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='FeatureCollection', index=4, number=4,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='String', index=5, number=5,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Number', index=6, number=6,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='List', index=7, number=7,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Dictionary', index=8, number=8,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Int', index=9, number=9,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Float', index=10, number=10,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Str', index=11, number=11,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Tuple', index=12, number=12,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Dict', index=13, number=13,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Datetime', index=14, number=14,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Timedelta', index=15, number=15,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Bool', index=16, number=16,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Geometry', index=17, number=17,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='KnownDict', index=18, number=18,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='GeoContext', index=19, number=19,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='GeometryCollection', index=20, number=20,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Array', index=21, number=21,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='MaskedArray', index=22, number=22,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='DType', index=23, number=23,
-      serialized_options=None,
-      type=None),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=74,
-  serialized_end=414,
+    name="ResultType",
+    full_name="descarteslabs.workflows.ResultType",
+    filename=None,
+    file=DESCRIPTOR,
+    values=[
+        _descriptor.EnumValueDescriptor(
+            name="Unknown", index=0, number=0, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Image", index=1, number=1, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="ImageCollection",
+            index=2,
+            number=2,
+            serialized_options=None,
+            type=None,
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Feature", index=3, number=3, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="FeatureCollection",
+            index=4,
+            number=4,
+            serialized_options=None,
+            type=None,
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="String", index=5, number=5, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Number", index=6, number=6, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="List", index=7, number=7, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Dictionary", index=8, number=8, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Int", index=9, number=9, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Float", index=10, number=10, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Str", index=11, number=11, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Tuple", index=12, number=12, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Dict", index=13, number=13, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Datetime", index=14, number=14, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Timedelta", index=15, number=15, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Bool", index=16, number=16, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Geometry", index=17, number=17, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="KnownDict", index=18, number=18, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="GeoContext", index=19, number=19, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="GeometryCollection",
+            index=20,
+            number=20,
+            serialized_options=None,
+            type=None,
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Array", index=21, number=21, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="MaskedArray", index=22, number=22, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="DType", index=23, number=23, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="Scalar", index=24, number=24, serialized_options=None, type=None
+        ),
+    ],
+    containing_type=None,
+    serialized_options=None,
+    serialized_start=74,
+    serialized_end=426,
 )
 _sym_db.RegisterEnumDescriptor(_RESULTTYPE)
 
@@ -157,9 +147,10 @@ GeometryCollection = 20
 Array = 21
 MaskedArray = 22
 DType = 23
+Scalar = 24
 
 
-DESCRIPTOR.enum_types_by_name['ResultType'] = _RESULTTYPE
+DESCRIPTOR.enum_types_by_name["ResultType"] = _RESULTTYPE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 

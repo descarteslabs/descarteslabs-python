@@ -8,7 +8,7 @@ from ...core import ProxyTypeError
 from ...primitives import Float, Bool, Str, Int, Any
 from ...geospatial import ImageCollection
 from ...containers import List
-from .. import Array, DType
+from .. import Array, DType, Scalar
 
 
 arr = Array([[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]])
@@ -155,7 +155,7 @@ def test_container_methods(method, other):
 
 
 @pytest.mark.parametrize(
-    "axis, return_type", [(1, Array), ((1, 2), Array), (None, Float)]
+    "axis, return_type", [(1, Array), ((1, 2), Array), (None, Scalar)]
 )
 def test_stats(axis, return_type):
     assert isinstance(arr.min(axis=axis), return_type)

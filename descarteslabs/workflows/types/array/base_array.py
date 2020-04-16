@@ -1,9 +1,10 @@
 from ... import env
 from .dtype import DType
+from .scalar import Scalar
 from ..containers import Dict, Ellipsis as wf_Ellipsis, List, Slice, Tuple
 from ..core import allow_reflect, Proxytype, ProxyTypeError
 from ..mixins import NumPyMixin
-from ..primitives import Bool, Float, Int, NoneType
+from ..primitives import Bool, Int, NoneType
 
 
 def _delayed_numpy_ufuncs():
@@ -376,7 +377,7 @@ class BaseArray(NumPyMixin, Proxytype):
 
     def _stats_return_type(self, axis):
         if axis is None:
-            return_type = Float
+            return_type = Scalar
         else:
             return_type = type(self)
         return return_type

@@ -28,4 +28,5 @@ enum ResultType {
     Array = 21;
     MaskedArray = 22;
     DType = 23;
+    Scalar = 24;
 }

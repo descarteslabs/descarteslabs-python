@@ -4,7 +4,7 @@ from .utils import copy_docstring_from_numpy
 from ..core import ProxyTypeError
 from ..core.promote import _promote
 from ..primitives import Float, Int, Bool
-from ..array import Array, MaskedArray, BaseArray
+from ..array import Array, MaskedArray, BaseArray, Scalar
 
 
 def _ufunc_result_type(obj, other=None, return_type_override=None):
@@ -17,16 +17,16 @@ def _ufunc_result_type(obj, other=None, return_type_override=None):
         dtype = return_type_override
     else:
         obj_dtype, other_dtype = (
-            Float if isinstance(a, BaseArray) else type(a) for a in (obj, other)
+            Scalar if isinstance(a, BaseArray) else type(a) for a in (obj, other)
         )
 
-        # If either are Float, the result is a Float
-        if obj_dtype is Float or other_dtype is Float:
+        # dtype precedence (from highest to lowest): Scalar, Float, Int, Bool
+        if obj_dtype is Scalar or other_dtype is Scalar:
+            dtype = Scalar
+        elif obj_dtype is Float or other_dtype is Float:
             dtype = Float
-        # Neither are Float, so if either are Int, the result is an Int
         elif obj_dtype is Int or other_dtype is Int:
             dtype = Int
-        # Neither are Float, neither are Int, they must be Bool, so the result is Bool
         else:
             dtype = Bool
 
@@ -89,12 +89,14 @@ class ufunc:
                 elif isinstance(arg, np.ndarray):
                     promoted.append(Array._promote(arg))
                 else:
-                    promoted.append(_promote(arg, (Bool, Int, Float), i, self.__name__))
+                    promoted.append(
+                        _promote(arg, (Bool, Int, Float, Scalar), i, self.__name__)
+                    )
                     # TODO(gabe) not great to be relying on internal `_promote` here
             except (ProxyTypeError, TypeError):
                 raise ProxyTypeError(
-                    "Argument {} to function {} must be a Workflows Array, Int, Float, Bool, or "
-                    "a type promotable to one of those, not {}".format(
+                    "Argument {} to function {} must be a Workflows Array, Scalar, Int, Float,"
+                    "Bool, or a type promotable to one of those, not {}".format(
                         i + 1, self.__name__, type(arg)
                     )
                 )

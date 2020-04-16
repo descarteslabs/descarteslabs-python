@@ -5,7 +5,7 @@ import pytest
 from ...primitives import Float, Bool, Int, Str, Any
 from ...containers import List
 from ...geospatial import ImageCollection
-from .. import MaskedArray, Array, DType
+from .. import MaskedArray, Array, DType, Scalar
 
 import numpy as np
 
@@ -179,7 +179,7 @@ def test_container_methods(method, other):
 
 
 @pytest.mark.parametrize(
-    "axis, return_type", [(1, MaskedArray), ((1, 2), MaskedArray), (None, Float)]
+    "axis, return_type", [(1, MaskedArray), ((1, 2), MaskedArray), (None, Scalar)]
 )
 def test_stats(axis, return_type):
     assert isinstance(ma.min(axis=axis), return_type)
