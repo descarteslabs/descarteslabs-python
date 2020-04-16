@@ -2,7 +2,7 @@ import numpy as np
 
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import Proxytype
+from ..core import Proxytype, ProxyTypeError
 from ..primitives import Int, Float, Bool
 
 
@@ -25,3 +25,15 @@ class DType(Proxytype):
                 "NumPy dtype, Python type, or proxy type.".format(type_)
             )
         self.graft = client.apply_graft("dtype.create", val)
+
+    def _promote(cls, obj):
+        if isinstance(obj, cls):
+            return obj
+
+        try:
+            return obj.cast(cls)
+        except Exception:
+            try:
+                return DType(obj)
+            except Exception:
+                raise ProxyTypeError("Cannot promote {} to DType".format(obj))

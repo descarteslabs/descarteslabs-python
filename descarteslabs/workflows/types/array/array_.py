@@ -82,4 +82,4 @@ class Array(BaseArray):
             try:
                 return Array(obj)
             except Exception:
-                raise ProxyTypeError("Cannot promote {} to Array".format(obj, cls))
+                raise ProxyTypeError("Cannot promote {} to Array".format(obj))

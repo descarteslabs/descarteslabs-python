@@ -100,9 +100,7 @@ class MaskedArray(BaseArray):
             try:
                 return MaskedArray.from_numpy(obj)
             except Exception:
-                raise ProxyTypeError(
-                    "Cannot promote {} to MaskedArray".format(obj, cls)
-                )
+                raise ProxyTypeError("Cannot promote {} to MaskedArray".format(obj))
 
     def getdata(self):
         """The data array underlying this `MaskedArray`.
@@ -201,7 +199,7 @@ def _promote_fill_value(self, fill_value):
             cast_func = int
         elif isinstance(fill_value, np.float):
             cast_func = float
-        elif isinstance(fill_value, np.bool):
+        elif isinstance(fill_value, (np.bool, np.bool_)):
             cast_func = bool
 
         if cast_func is not None:
