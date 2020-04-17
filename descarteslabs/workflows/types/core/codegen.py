@@ -70,7 +70,7 @@ def promote_to_signature(signature, *args, **kwargs):
                     type_ = Dict[Str, type_]
                 try:
                     arg = type_._promote(b)
-                except ProxyTypeError:
+                except (ProxyTypeError, TypeError):
                     pass
                 else:
                     promoted.append(arg)
