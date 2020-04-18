@@ -26,6 +26,7 @@ class DType(Proxytype):
             )
         self.graft = client.apply_graft("dtype.create", val)
 
+    @classmethod
     def _promote(cls, obj):
         if isinstance(obj, cls):
             return obj

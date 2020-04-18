@@ -1,7 +1,10 @@
 import numpy as np
 
 from ..core.codegen import wf_func
-from .signatures import NUMPY_SIGNATURES as NP_SIGS
+from .signatures import (
+    NUMPY_SIGNATURES as NP_SIGS,
+    DISPLAY_SIGNATURE_OVERRIDES as SIG_OVERRIDES,
+)
 from .utils import copy_docstring_from_numpy
 
 
@@ -26,7 +29,12 @@ def np_func(numpy_func, signatures):
         A Signature or list of Signatures the function will accept.
         Used for dispatching and typechecking.
     """
-    func = wf_func(numpy_func.__name__, signatures)
+
+    func = wf_func(
+        numpy_func.__name__,
+        signatures,
+        merged_signature=SIG_OVERRIDES.get(numpy_func.__name__, None),
+    )
     HANDLED_FUNCTIONS[numpy_func] = func
     copy_docstring_from_numpy(func, numpy_func)
     return func

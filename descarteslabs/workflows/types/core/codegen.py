@@ -6,6 +6,10 @@ from ..primitives import Str
 from ..containers import Dict
 
 
+class BindError(Exception):
+    pass
+
+
 def is_union(type_):
     return getattr(type_, "__origin__", None) is Union
 
@@ -33,7 +37,7 @@ def promote_to_signature(signature, *args, **kwargs):
     try:
         bound_sig = signature.bind(*args, **kwargs)
     except TypeError:
-        raise ValueError(
+        raise BindError(
             "Unable to bind arguments {!r} and keyword arguments {!r} to the signature {!r}.".format(
                 args, kwargs, signature
             )
@@ -137,11 +141,18 @@ def format_dispatch_error(name, signatures, failed, *args, **kwargs):
     )
     called_with = ", ".join(x for x in [arg_types, kwarg_types] if len(x) > 0)
 
+    promotion_message = (
+        "Specifically, the promotion of {} failed.".format(
+            ", ".join(repr(p) for p in set(failed))
+        )
+        if len(failed) > 0
+        else ""
+    )
+
     return TypeError(
         "Cannot call function {} with types: ({}). "
-        "Must be one of:\n{}\n\n"
-        "Specifically, the promotion of {} failed.".format(
-            name, called_with, valid_types, ", ".join(repr(p) for p in set(failed))
+        "Must be one of:\n{}\n\n{}".format(
+            name, called_with, valid_types, promotion_message
         )
     )
 
@@ -212,7 +223,7 @@ def merge_signatures(signatures):
     return merged
 
 
-def wf_func(func_name, signatures, doc=None):
+def wf_func(func_name, signatures, merged_signature=None, doc=None):
     """
     Generate a function that can have multiple signatures.
 
@@ -228,6 +239,11 @@ def wf_func(func_name, signatures, doc=None):
     signatures: inspect.Signature
         A Signature or list of Signatures the function will accept.
         Used for dispatching and typechecking.
+    merged_signature: inspect.Signature
+        The merged signature used for displaying in docs and for
+        typechecking on the backend. If None, the signature is
+        automatically merged. Useful for functions with
+        signatures that cannot be automatically merged.
     doc: str, optional
         The function's docstring.
     """
@@ -244,6 +260,8 @@ def wf_func(func_name, signatures, doc=None):
                 )
             except ProxyTypeError as e:
                 failed.append(str(e))
+                pass
+            except BindError:
                 pass
             else:
                 signature = sig
@@ -265,8 +283,11 @@ def wf_func(func_name, signatures, doc=None):
         func.__doc__ = doc
 
     try:
-        func.merged_signature = merge_signatures(signatures)
-        func.__signature__ = stringify_signature(func.merged_signature)
+        if merged_signature is not None:
+            func.merged_signature = merged_signature
+        else:
+            func.merged_signature = merge_signatures(signatures)
+            func.__signature__ = stringify_signature(func.merged_signature)
     except AssertionError:
         raise ValueError("Signatures for {} could not be merged.".format(func_name))
 

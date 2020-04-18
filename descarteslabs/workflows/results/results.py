@@ -28,6 +28,7 @@ unmarshal.register("XYZTile", unmarshal.astype(dict))
 unmarshal.register("GeoContext", unmarshal.astype(dict))
 unmarshal.register("Array", unmarshal.identity)
 unmarshal.register("MaskedArray", unmarshal.identity)
+unmarshal.register("Scalar", unmarshal.identity)
 
 
 def dtype_from_string(s):

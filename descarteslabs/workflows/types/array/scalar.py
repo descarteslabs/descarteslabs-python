@@ -1,5 +1,10 @@
+import numpy as np
+
 from ..core import Proxytype, ProxyTypeError, allow_reflect
+from ..mixins import NumPyMixin
 from ...cereal import serializable
+
+from descarteslabs.common.graft import client
 
 
 def _delayed_numpy_ufuncs():
@@ -9,8 +14,11 @@ def _delayed_numpy_ufuncs():
     return numpy_ufuncs
 
 
+PY_TYPE = {np.int64: int, np.float64: float, np.bool: bool, np.bool_: bool}
+
+
 @serializable()
-class Scalar(Proxytype):
+class Scalar(Proxytype, NumPyMixin):
     """
     Proxy Scalar object
 
@@ -22,9 +30,13 @@ class Scalar(Proxytype):
     """
 
     def __init__(self, obj):
-        raise ProxyTypeError(
-            "Cannot instantiate a Scalar directly. Use the Int, Float, or Bool classes instead."
-        )
+        if isinstance(obj, type(self)):
+            self.graft = obj.graft
+        elif isinstance(obj, (np.int64, np.float64, np.bool, np.bool_)):
+            cast = PY_TYPE[type(obj)](obj)
+            self.graft = client.apply_graft("scalar.create", cast)
+        else:
+            raise ProxyTypeError("Cannot instantiate a Scalar from {}.".format(obj))
 
     def __neg__(self):
         return _delayed_numpy_ufuncs().negative(self)
