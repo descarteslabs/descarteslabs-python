@@ -1,5 +1,6 @@
 import datetime
 import json
+from urllib.parse import urlencode, parse_qs
 
 from six.moves import queue
 
@@ -157,32 +158,43 @@ class TestXYZ(object):
         xyz._message.channel = "v0-0"
 
         url_base = "{}/v0-0/xyz/baz/{{z}}/{{x}}/{{y}}.png".format(xyz.BASE_URL)
+        url_base_q = url_base + "?"
 
         assert xyz.url() == url_base
-        assert xyz.url(session_id="foo") == url_base + "?session_id=foo"
-        assert xyz.url(colormap="foo") == url_base + "?colormap=foo"
-        assert xyz.url(checkerboard=True) == url_base + "?checkerboard=true"
+        assert xyz.url(session_id="foo") == url_base_q + urlencode(
+            {"session_id": "foo"}
+        )
+        assert xyz.url(colormap="foo") == url_base_q + urlencode({"colormap": "foo"})
+        assert xyz.url(checkerboard=True) == url_base_q + urlencode(
+            {"checkerboard": "true"}
+        )
         assert xyz.url(checkerboard=False) == url_base
         # 1-band scales are normalized
-        assert xyz.url(scales=[0, 1]) == url_base + "?scales=[[0.0, 1.0]]"
+        assert xyz.url(scales=[0, 1]) == url_base_q + urlencode(
+            {"scales": "[[0.0, 1.0]]"}
+        )
         # If all none scales, not included
         assert xyz.url(scales=[None, None]) == url_base
 
         # Primitives are inserted directly and JSON-encoded
-        assert xyz.url(foo=1) == url_base + "?foo=1"
-        assert xyz.url(bar=True) == url_base + "?bar=true"
-        assert xyz.url(baz="quz") == url_base + '?baz="quz"'
+        assert xyz.url(foo=1) == url_base_q + urlencode({"foo": "1"})
+        assert xyz.url(bar=True) == url_base_q + urlencode({"bar": "true"})
+        assert xyz.url(baz="quz") == url_base_q + urlencode({"baz": '"quz"'})
         # Grafts are JSON-encoded (along with embedded JSON in grafts)
-        assert xyz.url(foo=obj) == url_base + "?foo={}".format(json.dumps(obj.graft))
+        assert xyz.url(foo=obj) == url_base_q + urlencode(
+            {"foo": json.dumps(obj.graft)}
+        )
 
         # test everything gets added together correctly
         base, params = xyz.url(session_id="foo", arg="bar", foo=2.2, obj=obj).split("?")
         assert base == url_base
-        assert set(params.split("&")) == {
-            "session_id=foo",
-            'arg="bar"',
-            "foo=2.2",
-            "obj={}".format(json.dumps(obj.graft)),
+        query = parse_qs(params, strict_parsing=True, keep_blank_values=True)
+        assert query == {
+            # `parse_qs` returns all values wrapped in lists
+            "session_id": ["foo"],
+            "arg": ['"bar"'],
+            "foo": ["2.2"],
+            "obj": [json.dumps(obj.graft)],
         }
 
     def test_validate_scales(self, stub):

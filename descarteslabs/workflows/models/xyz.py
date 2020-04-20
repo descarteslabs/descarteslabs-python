@@ -1,5 +1,6 @@
 import json
 import threading
+import urllib
 
 import six
 
@@ -229,6 +230,8 @@ class XYZ(object):
         Returns
         -------
         url: str
+            Tile URL containing ``{z}``, ``{x}``, and ``{y}`` as Python format string parameters,
+            and query arguments URL-quoted.
 
         Raises
         ------
@@ -283,13 +286,7 @@ class XYZ(object):
             )
 
         if query_args:
-            url = (
-                url
-                + "?"
-                + "&".join(
-                    arg + "=" + value for arg, value in six.iteritems(query_args)
-                )
-            )
+            url = url + "?" + urllib.parse.urlencode(query_args)
         return url
 
     @staticmethod
