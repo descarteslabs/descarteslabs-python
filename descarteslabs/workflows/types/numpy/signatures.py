@@ -1,7 +1,7 @@
 from typing import Union
 from inspect import Parameter, Signature
 
-from ..primitives import Float, Int, Bool, NoneType
+from ..primitives import Str, Float, Int, Bool, NoneType
 from ..array import Array, MaskedArray, Scalar, DType
 from ..containers import List, Tuple
 
@@ -324,6 +324,141 @@ NUMPY_SIGNATURES = {
             MaskedArray,
         ),
     ],
+    "diag": Sig([Param("v", Union[Array, MaskedArray])], Array),
+    "diagonal": [
+        Sig(
+            [
+                Param("a", Array),
+                Param("offset", Int, 0),
+                Param("axis1", Int, 0),
+                Param("axis2", Int, 1),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("offset", Int, 0),
+                Param("axis1", Int, 0),
+                Param("axis2", Int, 1),
+            ],
+            MaskedArray,
+        ),
+    ],
+    "diff": [
+        Sig([Param("a", Array), Param("n", Int, 1), Param("axis", Int, -1)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("n", Int, 1), Param("axis", Int, -1)],
+            MaskedArray,
+        ),
+    ],
+    "digitize": [
+        Sig(
+            [
+                Param("x", Union[Array, MaskedArray]),
+                Param("bins", Union[Array, MaskedArray]),
+                Param("right", Bool, False),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("x", Scalar),
+                Param("bins", Union[Array, MaskedArray]),
+                Param("right", Bool, False),
+            ],
+            Scalar,
+        ),
+    ],
+    "dot": Sig(
+        [Param("a", Union[Array, MaskedArray]), Param("b", Union[Array, MaskedArray])],
+        Scalar,
+    ),
+    "dstack": [
+        Sig([Param("arrays", List[Array])], Array),
+        Sig([Param("arrays", List[MaskedArray])], MaskedArray),
+    ],
+    "ediff1d": [
+        Sig(
+            [
+                Param("ary", Union[Array, Scalar]),
+                Param("to_end", Union[Array, Scalar, NoneType], None),
+                Param("to_begin", Union[Array, Scalar, NoneType], None),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("ary", Union[Array, Scalar]),
+                Param("to_end", Union[Array, Scalar, NoneType], None),
+                Param("to_begin", MaskedArray, None),
+            ],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("ary", Union[Array, Scalar]),
+                Param("to_end", MaskedArray, None),
+                Param("to_begin", Union[Array, Scalar, NoneType], None),
+            ],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("ary", Union[Array, Scalar]),
+                Param("to_end", MaskedArray, None),
+                Param("to_begin", MaskedArray, None),
+            ],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("ary", MaskedArray),
+                Param("to_end", Union[Array, MaskedArray, Scalar, NoneType], None),
+                Param("to_begin", Union[Array, MaskedArray, Scalar, NoneType], None),
+            ],
+            MaskedArray,
+        ),
+    ],
+    "einsum": Sig(
+        [
+            Param("subscripts", Str),
+            Param("operands", Union[Array, List[Array]]),
+            Param("dtype", Union[DType, NoneType], None),
+        ],
+        Array,
+    ),
+    "eye": Sig(
+        [
+            Param("N", Int),
+            Param("M", Union[Int, NoneType], None),
+            Param("k", Int, 0),
+            Param("dtype", DType, DType(float)),
+        ],
+        Array,
+    ),
+    "fix": [
+        Sig([Param("x", Array)], Array),
+        Sig([Param("x", MaskedArray)], MaskedArray),
+        Sig([Param("x", Scalar)], Scalar),
+    ],
+    "flatnonzero": Sig([Param("a", Union[Array, MaskedArray, Scalar])], Array),
+    "full": Sig(
+        [
+            Param("shape", Union[Int, List[Int]]),
+            Param("fill_value", Union[Array, MaskedArray, Scalar, Int, Float, Bool]),
+            Param("dtype", Union[DType, NoneType], None),
+        ],
+        Array,
+    ),
+    "full_like": Sig(
+        [
+            Param("a", Union[Array, MaskedArray, Scalar]),
+            Param("fill_value", Union[Array, MaskedArray, Scalar, Int, Float, Bool]),
+            Param("dtype", Union[DType, NoneType], None),
+        ],
+        Array,
+    ),
     "histogram": Sig(
         [
             Param("a", Array),
@@ -334,6 +469,10 @@ NUMPY_SIGNATURES = {
         ],
         Tuple[Array, Array],
     ),
+    "hstack": [
+        Sig([Param("arrays", List[Array])], Array),
+        Sig([Param("arrays", List[MaskedArray])], MaskedArray),
+    ],
     "max": [
         Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
         Sig(
@@ -435,6 +574,14 @@ NUMPY_SIGNATURES = {
             MaskedArray,
         ),
     ],
+    "vstack": [
+        Sig([Param("arrays", List[Array])], Array),
+        Sig([Param("arrays", List[MaskedArray])], MaskedArray),
+    ],
+    "zeros": Sig(
+        [Param("shape", Union[Int, List[Int]]), Param("dtype", DType, DType(float))],
+        Array,
+    ),
 }
 
 
@@ -460,3 +607,9 @@ DISPLAY_SIGNATURE_OVERRIDES = {
         Union[Array, MaskedArray, List[Array], List[MaskedArray]],
     ),
 }
+
+
+SKIP_NP_TESTING = ["arange", "eye", "full", "zeros"]
+# ^ Skip testing the NumPy versions of certain functions that don't
+# work because of validation NumPy does that requires operations
+# that proxy types don't support (conditionals)
