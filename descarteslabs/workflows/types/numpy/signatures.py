@@ -3,12 +3,13 @@ from inspect import Parameter, Signature
 
 from ..primitives import Str, Float, Int, Bool, NoneType
 from ..array import Array, MaskedArray, Scalar, DType
-from ..containers import List, Tuple
+from ..containers import List, Tuple, Slice
 
 
 EMPTY = Parameter.empty
 VAR_P = Parameter.VAR_POSITIONAL
 VAR_KW = Parameter.VAR_KEYWORD
+KW_ONLY = Parameter.KEYWORD_ONLY
 
 Param = lambda name, annotation=None, default=EMPTY, kind=Parameter.POSITIONAL_OR_KEYWORD: Parameter(  # noqa: E731
     name, kind=kind, default=default, annotation=annotation
@@ -459,6 +460,26 @@ NUMPY_SIGNATURES = {
         ],
         Array,
     ),
+    "gradient": [
+        Sig(
+            [
+                Param("f", Array),
+                Param("varargs", Union[Int, List[Int], Array], kind=VAR_P),
+                Param("edge_order", Int, 1, kind=KW_ONLY),
+                Param("axis", Union[Int, NoneType], None, kind=KW_ONLY),
+            ],
+            List[Array],
+        ),
+        Sig(
+            [
+                Param("f", MaskedArray),
+                Param("varargs", Union[Int, List[Int], Array], kind=VAR_P),
+                Param("edge_order", Int, 1, kind=KW_ONLY),
+                Param("axis", Union[Int, NoneType], None, kind=KW_ONLY),
+            ],
+            List[MaskedArray],
+        ),
+    ],
     "histogram": Sig(
         [
             Param("a", Array),
@@ -472,6 +493,137 @@ NUMPY_SIGNATURES = {
     "hstack": [
         Sig([Param("arrays", List[Array])], Array),
         Sig([Param("arrays", List[MaskedArray])], MaskedArray),
+    ],
+    "imag": [
+        Sig([Param("val", Union[Array, Scalar])], Array),
+        Sig([Param("val", MaskedArray)], MaskedArray),
+    ],
+    "indices": Sig(
+        [
+            Param("dimensions", Union[List[Int], List[Float], List[Bool]]),
+            Param("dtype", DType, DType(int)),
+        ],
+        Array,
+    ),
+    "insert": [
+        Sig(
+            [
+                Param("arr", Array),
+                Param("obj", Union[Int, List[Int], Slice]),
+                Param("values", Union[Array, MaskedArray, Scalar]),
+                Param("axis", Int),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("arr", MaskedArray),
+                Param("obj", Union[Int, List[Int], Slice]),
+                Param("values", Union[Array, MaskedArray, Scalar]),
+                Param("axis", Int),
+            ],
+            MaskedArray,
+        ),
+    ],
+    "isclose": [
+        Sig(
+            [
+                Param("a", Array),
+                Param("b", Union[Array, Scalar]),
+                Param("rtol", Union[Int, Float], 1e-05),
+                Param("atol", Union[Int, Float], 1e-08),
+                Param("equal_nan", Bool, False),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("a", Array),
+                Param("b", MaskedArray),
+                Param("rtol", Union[Int, Float], 1e-05),
+                Param("atol", Union[Int, Float], 1e-08),
+                Param("equal_nan", Bool, False),
+            ],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("b", Union[Array, MaskedArray, Scalar]),
+                Param("rtol", Union[Int, Float], 1e-05),
+                Param("atol", Union[Int, Float], 1e-08),
+                Param("equal_nan", Bool, False),
+            ],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", Scalar),
+                Param("b", Array),
+                Param("rtol", Union[Int, Float], 1e-05),
+                Param("atol", Union[Int, Float], 1e-08),
+                Param("equal_nan", Bool, False),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("a", Scalar),
+                Param("b", Scalar),
+                Param("rtol", Union[Int, Float], 1e-05),
+                Param("atol", Union[Int, Float], 1e-08),
+                Param("equal_nan", Bool, False),
+            ],
+            Scalar,
+        ),
+    ],
+    "isin": [
+        Sig(
+            [
+                Param("element", Union[Array, MaskedArray]),
+                Param("test_elements", Union[Array, MaskedArray, Scalar]),
+                Param("assume_unique", Bool, False),
+                Param("invert", Bool, False),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("element", Scalar),
+                Param("test_elements", Union[Array, MaskedArray]),
+                Param("assume_unique", Bool, False),
+                Param("invert", Bool, False),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("element", Scalar),
+                Param("test_elements", Scalar),
+                Param("assume_unique", Bool, False),
+                Param("invert", Bool, False),
+            ],
+            Scalar,
+        ),
+    ],
+    "isreal": [
+        Sig([Param("x", Array)], Array),
+        Sig([Param("x", MaskedArray)], MaskedArray),
+        Sig([Param("x", Scalar)], Scalar),
+    ],
+    "linspace": [
+        Sig(
+            [
+                Param("start", Union[Int, Float]),
+                Param("stop", Union[Int, Float]),
+                Param("num", Int, 50),
+                Param("endpoint", Bool, True),
+                Param("retstep", Bool, False),
+                Param("dtype", Union[DType, NoneType], None),
+                Param("axis", Int, 0),
+            ],
+            Array,
+        )
     ],
     "max": [
         Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
@@ -501,6 +653,14 @@ NUMPY_SIGNATURES = {
             Scalar,  # TODO: Float
         ),
     ],
+    "meshgrid": Sig(
+        [
+            Param("xi", Union[Array, MaskedArray, Scalar], kind=VAR_P),
+            Param("indexing", Str, "xy", kind=KW_ONLY),
+            Param("sparse", Bool, False, kind=KW_ONLY),
+        ],
+        List[Array],
+    ),
     "min": [
         Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
         Sig(
@@ -515,6 +675,221 @@ NUMPY_SIGNATURES = {
             Scalar,
         ),
     ],
+    "moveaxis": [
+        Sig(
+            [
+                Param("a", Array),
+                Param("source", Union[Int, List[Int]]),
+                Param("destination", Union[Int, List[Int]]),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("source", Union[Int, List[Int]]),
+                Param("destination", Union[Int, List[Int]]),
+            ],
+            MaskedArray,
+        ),
+    ],
+    "nanargmax": [
+        Sig([Param("a", Union[Array, MaskedArray]), Param("axis", Int, None)], Array),
+        Sig(
+            [Param("a", Union[Array, MaskedArray]), Param("axis", NoneType, None)],
+            Scalar,  # TODO: Int
+        ),
+    ],
+    "nanargmin": [
+        Sig([Param("a", Union[Array, MaskedArray]), Param("axis", Int, None)], Array),
+        Sig(
+            [Param("a", Union[Array, MaskedArray]), Param("axis", NoneType, None)],
+            Scalar,  # TODO: Int
+        ),
+    ],
+    "nancumprod": [
+        Sig(
+            [
+                Param("a", Union[Array, Scalar]),
+                Param("axis", Union[Int, NoneType], None),
+                Param("dtype", Union[DType, NoneType], None),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("axis", Union[Int, NoneType], None),
+                Param("dtype", Union[DType, NoneType], None),
+            ],
+            MaskedArray,
+        ),
+    ],
+    "nancumsum": [
+        Sig(
+            [
+                Param("a", Union[Array, Scalar]),
+                Param("axis", Union[Int, NoneType], None),
+                Param("dtype", Union[DType, NoneType], None),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("axis", Union[Int, NoneType], None),
+                Param("dtype", Union[DType, NoneType], None),
+            ],
+            MaskedArray,
+        ),
+    ],
+    "nanmax": [
+        Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("axis", Union[Int, List[Int]], None)],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", Union[Array, MaskedArray, Scalar]),
+                Param("axis", NoneType, None),
+            ],
+            Scalar,
+        ),
+    ],
+    "nanmean": [
+        Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("axis", Union[Int, List[Int]], None)],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", Union[Array, MaskedArray, Scalar]),
+                Param("axis", NoneType, None),
+            ],
+            Scalar,  # TODO: Float
+        ),
+    ],
+    "nanmin": [
+        Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("axis", Union[Int, List[Int]], None)],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", Union[Array, MaskedArray, Scalar]),
+                Param("axis", NoneType, None),
+            ],
+            Scalar,
+        ),
+    ],
+    "nanprod": [
+        Sig([Param("a", Scalar), Param("axis", NoneType, None)], Scalar),
+        Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("axis", Union[Int, List[Int]], None)],
+            MaskedArray,
+        ),
+    ],
+    "nanstd": [
+        Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("axis", Union[Int, List[Int]], None)],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", Union[Array, MaskedArray, Scalar]),
+                Param("axis", NoneType, None),
+            ],
+            Scalar,  # TODO: Float
+        ),
+    ],
+    "nansum": [
+        Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("axis", Union[Int, List[Int]], None)],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", Union[Array, MaskedArray, Scalar]),
+                Param("axis", NoneType, None),
+            ],
+            Scalar,
+        ),
+    ],
+    "nanvar": [
+        Sig(
+            [
+                Param("a", Union[Array, MaskedArray]),
+                Param("axis", NoneType, None),
+                Param("ddof", Int, 0),
+            ],
+            Scalar,
+        ),  # TODO: Float
+        Sig(
+            [
+                Param("a", Union[Array, MaskedArray]),
+                Param("axis", Union[Int, List[Int]], None),
+                Param("ddof", Int, 0),
+            ],
+            Array,
+        ),
+    ],
+    "nan_to_num": [
+        Sig([Param("x", Array)], Array),
+        Sig([Param("x", MaskedArray)], MaskedArray),
+        Sig([Param("x", Scalar)], Scalar),
+    ],
+    "nonzero": Sig([Param("a", Union[Array, MaskedArray, Scalar])], List[Array]),
+    "ones": Sig(
+        [Param("shape", Union[Int, List[Int]]), Param("dtype", DType, DType(float))],
+        Array,
+    ),
+    "ones_like": Sig(
+        [
+            Param("a", Union[Array, MaskedArray, Scalar]),
+            Param("dtype", Union[DType, NoneType], None),
+        ],
+        Array,
+    ),
+    "outer": Sig(
+        [
+            Param("a", Union[Array, MaskedArray, Scalar]),
+            Param("b", Union[Array, MaskedArray, Scalar]),
+        ],
+        Array,
+    ),
+    "pad": [
+        Sig(
+            [
+                Param("array", Union[Array, Scalar]),
+                Param("pad_width", Union[Int, List[Int]]),
+                Param("mode", Str, "constant"),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("array", MaskedArray),
+                Param("pad_width", Union[Int, List[Int]]),
+                Param("mode", Str, "constant"),
+            ],
+            MaskedArray,
+        ),
+    ],
+    "percentile": Sig(
+        [
+            Param("a", Union[Array, MaskedArray]),
+            Param("q", Union[Array, MaskedArray]),
+            Param("axis", Union[Int, List[Int], NoneType], None),
+            Param("interpolation", Str, "linear"),
+        ],
+        Array,
+    ),
     "ptp": [
         Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
         Sig(
@@ -574,6 +949,24 @@ NUMPY_SIGNATURES = {
             MaskedArray,
         ),
     ],
+    "var": [
+        Sig(
+            [
+                Param("a", Union[Array, MaskedArray]),
+                Param("axis", NoneType, None),
+                Param("ddof", Int, 0),
+            ],
+            Scalar,
+        ),  # TODO: Float
+        Sig(
+            [
+                Param("a", Union[Array, MaskedArray]),
+                Param("axis", Union[Int, List[Int]], None),
+                Param("ddof", Int, 0),
+            ],
+            Array,
+        ),
+    ],
     "vstack": [
         Sig([Param("arrays", List[Array])], Array),
         Sig([Param("arrays", List[MaskedArray])], MaskedArray),
@@ -609,7 +1002,7 @@ DISPLAY_SIGNATURE_OVERRIDES = {
 }
 
 
-SKIP_NP_TESTING = ["arange", "eye", "full", "zeros"]
+SKIP_NP_TESTING = ["arange", "eye", "full", "indices", "ones", "zeros"]
 # ^ Skip testing the NumPy versions of certain functions that don't
 # work because of validation NumPy does that requires operations
 # that proxy types don't support (conditionals)
