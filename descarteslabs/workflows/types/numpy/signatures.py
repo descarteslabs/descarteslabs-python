@@ -611,6 +611,9 @@ NUMPY_SIGNATURES = {
         Sig([Param("x", MaskedArray)], MaskedArray),
         Sig([Param("x", Scalar)], Scalar),
     ],
+    # Note (Shannon): linspace has a kwarg `retstep` which toggles the output
+    # type (Array, Tuple[Array, Int]) based on the value. For now we aren't going to
+    # support it.
     "linspace": [
         Sig(
             [
@@ -618,7 +621,6 @@ NUMPY_SIGNATURES = {
                 Param("stop", Union[Int, Float]),
                 Param("num", Int, 50),
                 Param("endpoint", Bool, True),
-                Param("retstep", Bool, False),
                 Param("dtype", Union[DType, NoneType], None),
                 Param("axis", Int, 0),
             ],
@@ -978,6 +980,155 @@ NUMPY_SIGNATURES = {
 }
 
 
+NUMPY_LINALG = {
+    "cholesky": Sig([Param("a", Array)], Array),
+    "inv": Sig([Param("a", Array)], Array),
+    "lstsq": Sig(
+        [Param("a", Array), Param("b", Array)], Tuple[Array, Array, Array, Array]
+    ),
+    "norm": [
+        Sig(
+            [
+                Param("x", Array),
+                Param("ord", Union[Int, NoneType], None),
+                Param("axis", Int, None),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("x", Array),
+                Param("ord", Union[Int, NoneType], None),
+                Param("axis", NoneType, None),
+            ],
+            Scalar,
+        ),
+    ],
+    "qr": Sig([Param("a", Array), Param("mode", Str, "reduced")], Tuple[Array, Array]),
+    "solve": Sig([Param("a", Array), Param("b", Array)], Array),
+    "svd": Sig([Param("a", Array)], Tuple[Array, Array, Array]),
+}
+
+
+NUMPY_MA = {
+    "average": [
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("axis", Union[Int, List[Int]], None),
+                Param("weights", Union[Array, MaskedArray, Scalar], None),
+            ],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("axis", NoneType, None),
+                Param("weights", Union[Array, MaskedArray, Scalar], None),
+            ],
+            Scalar,  # TODO: Float
+        ),
+    ],
+    "filled": Sig(
+        [
+            Param("a", MaskedArray),
+            Param(
+                "fill_value",
+                Union[Array, MaskedArray, Scalar, Int, Float, Bool, NoneType],
+                None,
+            ),
+        ],
+        Array,
+    ),
+    "fix_invalid": Sig(
+        [
+            Param("a", Union[Array, MaskedArray]),
+            Param("fill_value", Union[Array, MaskedArray, Scalar, Int, Float, Bool]),
+        ],
+        MaskedArray,
+    ),
+    # TODO (Shannon): Figure out why NumPy doesn't dispatch these
+    #    "getdata": Sig([Param("a", MaskedArray)], Array),
+    #    "getmaskarray": Sig([Param("a", MaskedArray)], Array),
+    "masked_equal": Sig(
+        [
+            Param("x", Union[Array, MaskedArray]),
+            Param("value", Union[Scalar, Int, Float, Bool]),
+        ],
+        MaskedArray,
+    ),
+    "masked_greater": Sig(
+        [
+            Param("x", Union[Array, MaskedArray]),
+            Param("value", Union[Scalar, Int, Float, Bool]),
+        ],
+        MaskedArray,
+    ),
+    "masked_greater_equal": Sig(
+        [
+            Param("x", Union[Array, MaskedArray]),
+            Param("value", Union[Scalar, Int, Float, Bool]),
+        ],
+        MaskedArray,
+    ),
+    "masked_inside": Sig(
+        [
+            Param("x", Union[Array, MaskedArray]),
+            Param("v1", Union[Scalar, Int, Float, Bool]),
+            Param("v2", Union[Scalar, Int, Float, Bool]),
+        ],
+        MaskedArray,
+    ),
+    "masked_invalid": Sig([Param("a", Union[Array, MaskedArray])], MaskedArray),
+    "masked_less": Sig(
+        [
+            Param("x", Union[Array, MaskedArray]),
+            Param("value", Union[Scalar, Int, Float, Bool]),
+        ],
+        MaskedArray,
+    ),
+    "masked_less_equal": Sig(
+        [
+            Param("x", Union[Array, MaskedArray]),
+            Param("value", Union[Scalar, Int, Float, Bool]),
+        ],
+        MaskedArray,
+    ),
+    "masked_not_equal": Sig(
+        [
+            Param("x", Union[Array, MaskedArray]),
+            Param("value", Union[Scalar, Int, Float, Bool]),
+        ],
+        MaskedArray,
+    ),
+    "masked_outside": Sig(
+        [
+            Param("x", Union[Array, MaskedArray]),
+            Param("v1", Union[Scalar, Int, Float, Bool]),
+            Param("v2", Union[Scalar, Int, Float, Bool]),
+        ],
+        MaskedArray,
+    ),
+    "masked_values": Sig(
+        [
+            Param("x", Union[Array, MaskedArray]),
+            Param("value", Union[Scalar, Int, Float, Bool]),
+            Param("rtol", Union[Int, Float], 1e-05),
+            Param("atol", Union[Int, Float], 1e-08),
+            Param("shrink", Bool, True),
+        ],
+        MaskedArray,
+    ),
+    "masked_where": Sig(
+        [
+            Param("condition", Union[Array, MaskedArray, Scalar, Int, Float, Bool]),
+            Param("a", Union[Array, MaskedArray]),
+        ],
+        MaskedArray,
+    ),
+}
+
+
 DISPLAY_SIGNATURE_OVERRIDES = {
     "arange": Sig(
         [
@@ -1003,6 +1154,21 @@ DISPLAY_SIGNATURE_OVERRIDES = {
 
 
 SKIP_NP_TESTING = ["arange", "eye", "full", "indices", "ones", "zeros"]
+SKIP_NP_MA_TESTING = [
+    "average",
+    "fix_invalid",
+    "masked_equal",
+    "masked_greater",
+    "masked_greater_equal",
+    "masked_inside",
+    "masked_invalid",
+    "masked_less",
+    "masked_less_equal",
+    "masked_not_equal",
+    "masked_outside",
+    "masked_values",
+    "masked_where",
+]
 # ^ Skip testing the NumPy versions of certain functions that don't
 # work because of validation NumPy does that requires operations
 # that proxy types don't support (conditionals)

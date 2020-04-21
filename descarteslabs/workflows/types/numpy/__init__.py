@@ -1,3 +1,5 @@
+from . import linalg
+from . import ma
 from .numpy_ufuncs import (
     add,
     subtract,
@@ -163,16 +165,9 @@ __all__ = [
     "fabs",
     "sign",
     "absolute",
-    # Non-ufunc
-    "transpose",
-    "concatenate",
-    "histogram",
-    "reshape",
-    "stack",
-    "argmin",
-    "argmax",
-    "all",
-    "any",
+    # sub-packages
+    "linalg",
+    "ma",
 ]
 
 __all__ += list(np_funcs.keys())
