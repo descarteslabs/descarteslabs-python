@@ -892,6 +892,14 @@ NUMPY_SIGNATURES = {
         ],
         Array,
     ),
+    "prod": [
+        Sig([Param("a", Scalar), Param("axis", NoneType, None)], Scalar),
+        Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("axis", Union[Int, List[Int]], None)],
+            MaskedArray,
+        ),
+    ],
     "ptp": [
         Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
         Sig(
@@ -906,6 +914,90 @@ NUMPY_SIGNATURES = {
             Scalar,
         ),
     ],
+    "ravel": [
+        Sig([Param("a", Scalar)], Scalar),
+        Sig([Param("a", Array)], Array),
+        Sig([Param("a", MaskedArray)], MaskedArray),
+    ],
+    "real": [
+        Sig([Param("val", Scalar)], Scalar),
+        Sig([Param("val", Array)], Array),
+        Sig([Param("val", MaskedArray)], MaskedArray),
+    ],
+    "repeat": [
+        Sig(
+            [Param("a", Array), Param("repeats", Int), Param("axis", Int, None)], Array
+        ),
+        Sig(
+            [Param("a", MaskedArray), Param("repeats", Int), Param("axis", Int, None)],
+            MaskedArray,
+        ),
+    ],
+    # TODO (stephanie): We test these functions by passing a tuple of operations to
+    #   `compute` and because dtype has unmarshalling steps, this is a recursive
+    #   unmarshalling problem. Add `result_type` in when we can recursively unmarshall.
+    #  "result_type": [
+    #    Sig(
+    #        [
+    #            Param(
+    #                "arrays_and_dtypes",
+    #                Union[DType, Scalar, Array, MaskedArray],
+    #                kind=Parameter.VAR_POSITIONAL,
+    #            )
+    #        ],
+    #        DType,
+    #    )
+    #  ],
+    "roll": [
+        Sig(
+            [Param("a", Scalar), Param("shift", Int), Param("axis", NoneType, None)],
+            Scalar,
+        ),
+        Sig(
+            [
+                Param("a", Array),
+                Param("shift", Int),
+                Param("axis", Union[Int, NoneType], None),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("a", Array),
+                Param("shift", List[Int]),
+                Param("axis", List[Int], None),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("shift", Int),
+                Param("axis", Union[Int, NoneType], None),
+            ],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("shift", List[Int]),
+                Param("axis", List[Int], None),
+            ],
+            MaskedArray,
+        ),
+    ],
+    "rollaxis": [
+        Sig([Param("a", Array), Param("axis", Int), Param("start", Int, 0)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("axis", Int), Param("start", Int, 0)],
+            MaskedArray,
+        ),
+    ],
+    "round": [
+        Sig([Param("a", Scalar), Param("decimals", Int, 0)], Scalar),
+        Sig([Param("a", Array), Param("decimals", Int, 0)], Array),
+        Sig([Param("a", MaskedArray), Param("decimals", Int, 0)], MaskedArray),
+    ],
     "reshape": [
         Sig([Param("a", Array), Param("newshape", List[Int])], Array),
         Sig([Param("a", MaskedArray), Param("newshape", List[Int])], MaskedArray),
@@ -913,6 +1005,14 @@ NUMPY_SIGNATURES = {
     "stack": [
         Sig([Param("arrays", List[Array]), Param("axis", Int, 0)], Array),
         Sig([Param("arrays", List[MaskedArray]), Param("axis", Int, 0)], MaskedArray),
+    ],
+    "squeeze": [
+        Sig([Param("a", Scalar), Param("axis", NoneType, None)], Scalar),
+        Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("axis", Union[Int, List[Int]], None)],
+            MaskedArray,
+        ),
     ],
     "std": [
         Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
@@ -942,6 +1042,77 @@ NUMPY_SIGNATURES = {
             Scalar,
         ),
     ],
+    "take": [
+        Sig(
+            [
+                Param("a", Array),
+                Param("indices", Union[Int, List[Int], Array]),
+                Param("axis", Int, None),
+            ],
+            Array,
+        ),
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("indices", Union[Int, List[Int], Array]),
+                Param("axis", Int, None),
+            ],
+            MaskedArray,
+        ),
+    ],
+    "tensordot": [
+        Sig([Param("a", Array), Param("b", Array), Param("axes", Int, 2)], Array),
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("b", Union[Array, MaskedArray]),
+                Param("axes", Int, 2),
+            ],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", Union[Array, MaskedArray]),
+                Param("b", MaskedArray),
+                Param("axes", Int, 2),
+            ],
+            MaskedArray,
+        ),
+    ],
+    "tile": [
+        Sig([Param("A", Array), Param("reps", Union[List[Int], Int])], Array),
+        Sig(
+            [Param("A", MaskedArray), Param("reps", Union[List[Int], Int])], MaskedArray
+        ),
+        Sig([Param("A", Union[Array, MaskedArray]), Param("reps", Array)], Array),
+        Sig(
+            [Param("A", Union[Array, MaskedArray]), Param("reps", MaskedArray)],
+            MaskedArray,
+        ),
+    ],
+    # NOTE (stephanie): trace can return Scalars from either of the following
+    #   signatures but because the signatures are identical apart from the return
+    #   types, hypothesis will error. let's always return Array
+    "trace": [
+        Sig(
+            [
+                Param("a", MaskedArray),
+                Param("offset", Int, 0),
+                Param("axis1", Int, 0),
+                Param("axis2", Int, 1),
+            ],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", Array),
+                Param("offset", Int, 0),
+                Param("axis1", Int, 0),
+                Param("axis2", Int, 1),
+            ],
+            Array,
+        ),
+    ],
     "transpose": [
         Sig(
             [Param("a", Array), Param("axes", Union[List[Int], NoneType], None)], Array
@@ -949,6 +1120,27 @@ NUMPY_SIGNATURES = {
         Sig(
             [Param("a", MaskedArray), Param("axes", Union[List[Int], NoneType], None)],
             MaskedArray,
+        ),
+    ],
+    "tril": [
+        Sig([Param("m", Array), Param("k", Int, 0)], Array),
+        Sig([Param("m", MaskedArray), Param("k", Int, 0)], MaskedArray),
+    ],
+    "triu": [
+        Sig([Param("m", Array), Param("k", Int, 0)], Array),
+        Sig([Param("m", MaskedArray), Param("k", Int, 0)], MaskedArray),
+    ],
+    "unique": [
+        # NOTE (stephanie): unique supports three kwargs `return_index`,
+        #   `return_inverse`, and `return_couts` that change the return type to
+        #   Tuple, we won't support these for now.
+        Sig([Param("ar", Union[Array, MaskedArray])], Array,),
+    ],
+    "unravel_index": [
+        Sig([Param("indices", Scalar), Param("shape", List[Int])], List[Scalar]),
+        Sig(
+            [Param("indices", Union[Array, MaskedArray]), Param("shape", List[Int])],
+            List[Array],
         ),
     ],
     "var": [
@@ -969,14 +1161,39 @@ NUMPY_SIGNATURES = {
             Array,
         ),
     ],
+    "vdot": [
+        Sig(
+            [
+                Param("a", Union[Scalar, Array, MaskedArray]),
+                Param("b", Union[Scalar, Array, MaskedArray]),
+            ],
+            Array,
+        ),
+    ],
     "vstack": [
         Sig([Param("arrays", List[Array])], Array),
         Sig([Param("arrays", List[MaskedArray])], MaskedArray),
+    ],
+    # TODO (stephanie/shannon): if condition is a Scalar or Bool and x and y are
+    #   Scalar, pyarrow will throw an error, need to investigate this further
+    "where": [
+        Sig(
+            [
+                Param("condition", Union[Array]),
+                Param("x", Union[Scalar, Array, MaskedArray]),
+                Param("y", Union[Scalar, Array, MaskedArray]),
+            ],
+            Array,
+        ),
     ],
     "zeros": Sig(
         [Param("shape", Union[Int, List[Int]]), Param("dtype", DType, DType(float))],
         Array,
     ),
+    "zeros_like": [
+        Sig([Param("a", Scalar)], Scalar),
+        Sig([Param("a", Union[Array, MaskedArray])], Array),
+    ],
 }
 
 
