@@ -31,8 +31,12 @@ def np_func(numpy_func, name, signatures):
         A Signature or list of Signatures the function will accept.
         Used for dispatching and typechecking.
     """
-
-    func = wf_func(name, signatures, merged_signature=SIG_OVERRIDES.get(name, None))
+    func = wf_func(
+        name,
+        signatures,
+        merged_signature=SIG_OVERRIDES.get(name, None),
+        namespace="numpy",
+    )
     HANDLED_FUNCTIONS[numpy_func] = func
     copy_docstring_from_numpy(func, numpy_func)
     return func
