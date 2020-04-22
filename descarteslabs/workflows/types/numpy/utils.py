@@ -1,3 +1,4 @@
+import re
 import numpy as np
 
 
@@ -17,22 +18,33 @@ def copy_docstring_from_numpy(wf_func, np_func):
         The numpy method whose docstring will be copied. (ie. np.add)
     """
 
-    doc = np_func.__doc__.replace("*,", "\*,")  # noqa
+    doc = np_func.__doc__.replace("[1]_", "")
     doc = doc.replace(
         ":ref:`ufunc docs <ufuncs.kwargs>`.",
         "`ufunc docs <https://docs.scipy.org/doc/numpy/reference/ufuncs.html#ufuncs-kwargs>`_.",
     )
+    doc = doc.replace(
+        ":ref:`routines.linalg-broadcasting`",
+        "`Linear algebra on several matrices at once <https://docs.scipy.org/"
+        "doc/numpy/reference/routines.linalg.html#routines-linalg-broadcasting>`_.",
+    )
 
-    # remove examples
+    # replace asterisks used in bulleted lists
+    re.sub(r" \* ([\w\d',]+\s[\w\d]+)", r" - \1", doc)
+
+    # remove "Examples"
     doc = doc.split("\n\n    Examples\n")[0]
 
-    # remove references
-    doc = [a for a in doc.split("\n\n") if "References\n----------\n" not in a]
+    # remove "References"
+    doc = [a for a in doc.split("\n\n") if "References\n" not in a]
 
     # remove "See Also" section
     doc = [a for a in doc if "See Also\n" not in a]
 
-    l1 = "This docstring was copied from numpy.{}".format(np_func.__name__)
+    # remove "Raises" section
+    doc = [a for a in doc if "Raises\n" not in a]
+
+    l1 = "This docstring was copied from ``numpy.{}``".format(np_func.__name__)
     l2 = "Some inconsistencies with the Workflows version may exist"
 
     if isinstance(np_func, np.ufunc):
