@@ -30,6 +30,7 @@ Top Level Functions
     argmin
     argwhere
     around
+    array
     atleast_1d
     atleast_2d
     atleast_3d
@@ -202,6 +203,7 @@ Masked Arrays
     ma.average
     ma.filled
     ma.fix_invalid
+    ma.masked_array
     ma.masked_equal
     ma.masked_greater
     ma.masked_greater_equal
@@ -232,6 +234,7 @@ Masked Arrays
 .. autofunction:: argmin
 .. autofunction:: argwhere
 .. autofunction:: around
+.. autofunction:: array
 .. autofunction:: atleast_1d
 .. autofunction:: atleast_2d
 .. autofunction:: atleast_3d
@@ -400,6 +403,7 @@ Masked Arrays
 .. autofunction:: average
 .. autofunction:: filled
 .. autofunction:: fix_invalid
+.. autofunction:: masked_array
 .. autofunction:: masked_equal
 .. autofunction:: masked_greater
 .. autofunction:: masked_greater_equal

@@ -1,5 +1,7 @@
 from . import linalg
 from . import ma
+from ..array import Array
+
 from .numpy_ufuncs import (
     add,
     subtract,
@@ -85,7 +87,11 @@ from .numpy_functions import np_funcs
 
 globals().update(np_funcs)
 
+array = Array
+
 __all__ = [
+    # Array constructor
+    "array",
     # Ufuncs
     "add",
     "subtract",
