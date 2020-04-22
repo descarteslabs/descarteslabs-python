@@ -104,7 +104,7 @@ class ufunc:
         return_type = _ufunc_result_type(
             *promoted, return_type_override=self._return_type_override
         )
-        return return_type._from_apply("numpy." + self.__name__, *promoted)
+        return return_type._from_apply(self.__name__, *promoted)
 
     def reduce(self):
         raise NotImplementedError(

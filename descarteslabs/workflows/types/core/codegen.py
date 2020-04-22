@@ -223,7 +223,7 @@ def merge_signatures(signatures):
     return merged
 
 
-def wf_func(func_name, signatures, merged_signature=None, doc=None, namespace=""):
+def wf_func(func_name, signatures, merged_signature=None, doc=None):
     """
     Generate a function that can have multiple signatures.
 
@@ -246,8 +246,6 @@ def wf_func(func_name, signatures, merged_signature=None, doc=None, namespace=""
         signatures that cannot be automatically merged.
     doc: str, optional
         The function's docstring.
-    namespace: str, optional
-        The namespace of the function on the backend.
     """
     if not isinstance(signatures, list):
         signatures = [signatures]
@@ -278,12 +276,7 @@ def wf_func(func_name, signatures, merged_signature=None, doc=None, namespace=""
                 "No return type specified in signature: {}".format(signature)
             )
 
-        if namespace != "":
-            name = namespace + "." + func_name
-        else:
-            name = func_name
-
-        return return_type._from_apply(name, *promoted_args, **promoted_kwargs)
+        return return_type._from_apply(func_name, *promoted_args, **promoted_kwargs)
 
     func.__name__ = func_name
     if doc is not None:
