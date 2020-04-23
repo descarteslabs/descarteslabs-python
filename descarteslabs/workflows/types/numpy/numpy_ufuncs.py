@@ -1,8 +1,12 @@
+import sys
 import numpy as np
+from inspect import Signature, Parameter
+from typing import Union
 
 from .utils import copy_docstring_from_numpy
 from ..core import ProxyTypeError
 from ..core.promote import _promote
+from ..core.codegen import stringify_signature
 from ..primitives import Float, Int, Bool
 from ..array import Array, MaskedArray, BaseArray, Scalar
 
@@ -40,41 +44,21 @@ def _ufunc_result_type(obj, other=None, return_type_override=None):
 
 HANDLED_UFUNCS = {}
 
-##################
-# ufunc operations
-##################
+
+def raise_(e):
+    raise e
 
 
-class ufunc:
-    _forward_attrs = {
-        "nin",
-        "nargs",
-        "nout",
-        "ntypes",
-        "identity",
-        "signature",
-        "types",
-    }
+def ufunc(np_ufunc, return_type_override=None):
+    if not isinstance(np_ufunc, np.ufunc):
+        raise TypeError(
+            "Must be an instance of `np.ufunc`, got {}".format(type(np_ufunc))
+        )
 
-    def __init__(self, ufunc, return_type_override=None):
-        if not isinstance(ufunc, np.ufunc):
+    def wf_ufunc(*args):
+        if len(args) != np_ufunc.nin:
             raise TypeError(
-                "Must be an instance of `np.ufunc`, got {}".format(type(ufunc))
-            )
-
-        self._ufunc = ufunc
-        self.__name__ = ufunc.__name__
-        self._return_type_override = return_type_override
-
-        if isinstance(ufunc, np.ufunc):
-            copy_docstring_from_numpy(self, ufunc)
-
-        HANDLED_UFUNCS[ufunc.__name__] = self
-
-    def __call__(self, *args, **kwargs):
-        if len(args) != self._ufunc.nin:
-            raise TypeError(
-                "Invalid number of arguments to function `{}`".format(self.__name__)
+                "Invalid number of arguments to function `{}`".format(np_ufunc.__name__)
             )
 
         # Since typecheck_promote doesn't support variadic arguments, manually
@@ -90,41 +74,104 @@ class ufunc:
                     promoted.append(Array._promote(arg))
                 else:
                     promoted.append(
-                        _promote(arg, (Bool, Int, Float, Scalar), i, self.__name__)
+                        _promote(arg, (Bool, Int, Float, Scalar), i, np_ufunc.__name__)
                     )
                     # TODO(gabe) not great to be relying on internal `_promote` here
             except (ProxyTypeError, TypeError):
                 raise ProxyTypeError(
                     "Argument {} to function {} must be a Workflows Array, Scalar, Int, Float,"
                     "Bool, or a type promotable to one of those, not {}".format(
-                        i + 1, self.__name__, type(arg)
+                        i + 1, np_ufunc.__name__, type(arg)
                     )
                 )
 
         return_type = _ufunc_result_type(
-            *promoted, return_type_override=self._return_type_override
+            *promoted, return_type_override=return_type_override
         )
-        return return_type._from_apply("numpy." + self.__name__, *promoted)
 
-    def reduce(self):
-        raise NotImplementedError(
+        return return_type._from_apply("numpy." + np_ufunc.__name__, *promoted)
+
+    HANDLED_UFUNCS[np_ufunc.__name__] = wf_ufunc
+
+    copy_docstring_from_numpy(wf_ufunc, np_ufunc)
+
+    # create an inspect.Signature object
+    return_annotation = (
+        return_type_override
+        if return_type_override is not None
+        else Union[Array, MaskedArray, Scalar, Int, Float, Bool]
+    )
+
+    if np_ufunc.nin == 2:
+        signature = Signature(
+            [
+                Parameter(
+                    "x1",
+                    Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=Union[Array, MaskedArray, Scalar, Int, Float, Bool],
+                ),
+                Parameter(
+                    "x2",
+                    Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=Union[Array, MaskedArray, Scalar, Int, Float, Bool],
+                ),
+            ],
+            return_annotation=return_annotation,
+        )
+    else:
+        signature = Signature(
+            [
+                Parameter(
+                    "x",
+                    Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=Union[Array, MaskedArray, Scalar, Int, Float, Bool],
+                )
+            ],
+            return_annotation=return_annotation,
+        )
+
+    # set __annotations__
+    if "sphinx" not in sys.modules:
+        wf_ufunc.__annotations__ = {
+            name: param.annotation for name, param in signature.parameters.items()
+        }
+        wf_ufunc.__annotations__["return"] = signature.return_annotation
+
+    # set __signature__ to the stringified version
+    wf_ufunc.__signature__ = stringify_signature(signature)
+
+    # forward attributes
+    wf_ufunc.nin = np_ufunc.nin
+    wf_ufunc.nargs = np_ufunc.nargs
+    wf_ufunc.nout = np_ufunc.nout
+    wf_ufunc.ntypes = np_ufunc.ntypes
+    wf_ufunc.identity = np_ufunc.identity
+    wf_ufunc.signature = np_ufunc.signature
+    wf_ufunc.types = np_ufunc.types
+
+    # NOTE: we currently don't support other attributes of ufuncs (besides `__call__`)
+    wf_ufunc.reduce = lambda *args: raise_(
+        NotImplementedError(
             "The `reduce` ufunc method is not supported by Workflows types"
         )
-
-    def reduceat(self):
-        raise NotImplementedError(
+    )
+    wf_ufunc.reduceat = lambda *args: raise_(
+        NotImplementedError(
             "The `reduceat` ufunc method is not supported by Workflows types"
         )
-
-    def accumulate(self):
-        raise NotImplementedError(
+    )
+    wf_ufunc.accumulate = lambda *args: raise_(
+        NotImplementedError(
             "The `accumulate` ufunc method is not supported by Workflows types"
         )
-
-    def outer(self):
-        raise NotImplementedError(
+    )
+    wf_ufunc.outer = lambda *args: raise_(
+        NotImplementedError(
             "The `outer` ufunc method is not supported by Workflows types"
         )
+    )
+
+    return wf_ufunc
 
 
 # math operations

@@ -29,8 +29,8 @@ def copy_docstring_from_numpy(wf_func, np_func):
         "doc/numpy/reference/routines.linalg.html#routines-linalg-broadcasting>`_.",
     )
 
-    # replace asterisks used in bulleted lists
-    re.sub(r" \* ([\w\d',]+\s[\w\d]+)", r" - \1", doc)
+    # replace asterisks used in bulleted lists with a dash
+    doc = re.sub(r" \* ([\w',]+\s[\w]+)", r" - \1", doc)
 
     # remove "Examples"
     doc = doc.split("\n\n    Examples\n")[0]
@@ -51,9 +51,8 @@ def copy_docstring_from_numpy(wf_func, np_func):
         # what the function does
         info = doc[1]
 
-        # parameters (sometimes listed on separate lines, someimtes not)
+        # parameters (sometimes listed on separate lines, sometimes not)
         parameters = [a for a in doc if "Parameters\n" in a][0].split("\n")
-        # print([a for a in doc if "Parameters\n" in a])
         if parameters[4][0] == "x":
             parameters = "\n".join(parameters[:6])
         else:
