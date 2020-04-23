@@ -10,7 +10,7 @@
 Workflows
 -------------
 
-The tables below list the types and functions available through the Workflows API. For information on how these objects work together, checkout out the :ref:`Workflows Guide <workflows_guide>`.
+The tables below list the types and functions available through the Workflows API. For information on how these objects work together, check out out the :ref:`Workflows Guide <workflows_guide>`.
 
 .. include:: /descarteslabs/workflows/docs/request.rst
 
@@ -36,13 +36,24 @@ The tables below list the types and functions available through the Workflows AP
 
 :workflow_api_nontoc_heading:`Array`
 
-For NumPy functionality that can be used with `.Array`, see :ref:`numpy-functions`.
-
 .. autosummary::
   :nosignatures:
 
   ~descarteslabs.workflows.types.array.Array
   ~descarteslabs.workflows.types.array.MaskedArray
+
+:workflow_api_nontoc_heading:`NumPy Functions`
+
+Workflows exposes a large chunk of the NumPy API. Either use the ``workflows.numpy`` submodule (preferred), or pass Workflows `.Array` or `.MaskedArray` objects into NumPy functions directly.
+
+See :ref:`numpy-functions` for a full list of available functions.
+
+.. toctree::
+  :hidden:
+  :glob:
+
+  docs/types/numpy
+
 
 :workflow_api_nontoc_heading:`Primitives`
 
@@ -201,16 +212,3 @@ For NumPy functionality that can be used with `.Array`, see :ref:`numpy-function
   docs/exceptions
   docs/client
   /descarteslabs/common/retry/readme
-
-
-:workflow_api_nontoc_heading:`Numpy Functions`
-
-Workflows exposes a large chunk of the NumPy API. Either use the ``workflows.numpy`` submodule (preferred), or pass Workflows `.Array` or `.MaskedArray` objects into NumPy functions directly.
-
-See :ref:`numpy-functions` for a full list of available functions.
-
-.. toctree::
-  :hidden:
-  :glob:
-
-  docs/types/numpy

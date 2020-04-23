@@ -1,8 +1,21 @@
 .. _numpy-functions:
 
-Numpy Functions
+NumPy Functions
 ---------------
-Workflows provides equivalents to some NumPy functions through the ``workflows.numpy`` module, for use on the Workflows :class:`Array <descarteslabs.workflows.types.array.Array>` type. Supported functions are listed here. For more information, see the :ref:`Workflows guide <workflows-numpy-guide>`.
+Workflows provides equivalents to many NumPy functions through the ``workflows.numpy`` module, for use on the Workflows :class:`Array <descarteslabs.workflows.types.array.Array>` type. Supported functions are listed here. For more information, see the :ref:`Workflows guide <workflows-numpy-guide>`.
+
+Generally, you should use these functions from the Workflows submodule, like::
+
+    import descarteslabs.workflows as wf
+    from descarteslabs.workflows import numpy as wnp
+
+    wf_array = wf.Image.from_id("foo:bar").ndarray
+    arr_t = wnp.transpose(wf_array, [1, 2, 0])
+
+But for convenience, you can also use NumPy versions of these functions directly on Workflows :class:`Array <descarteslabs.workflows.types.array.Array>`::
+
+    import numpy as np
+    same_arr_t = np.transpose(wf_array, [1, 2, 0])
 
 Use of these docstrings is subject to the `NumPy license <https://numpy.org/license.html>`_.
 
