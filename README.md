@@ -10,6 +10,14 @@ Changelog
 
 ## Pending
 
+### Workflows (channel `v0-14`) - Added
+- **191 functions from NumPy are available for Workflows `Array`s**, including parts of the `numpy.linalg` and `numpy.ma` submodules. See the full list [on the docs](https://docs.descarteslabs.com/descarteslabs/workflows/docs/types/numpy.html).
+- `index_to_coords` and `coords_to_index` methods on `Image`/`ImageCollection`/`GeoContext` for converting between geospatial and array coordinates
+- `value_at` function on `Image` and `ImageCollection` for extracting single pixel values at spatial coordinates.
+
+### Workflows - Fixed
+- Using datetimes as parameters to `visualize` behaves correctly.
+
 ## [1.1.3] - 2020-04-02
 
 ### Catalog client
