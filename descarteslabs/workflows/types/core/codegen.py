@@ -1,4 +1,5 @@
-from typing import Union, Optional
+import sys
+from typing import Union
 from inspect import Parameter, Signature
 
 from .core import ProxyTypeError
@@ -158,16 +159,28 @@ def format_dispatch_error(name, signatures, failed, *args, **kwargs):
 
 
 def stringify_type(type_):
+    """
+    Concisely stringify a type for a display-only type annotation.
+
+    * Stringifies plain types as their unqualified ``__name__``.
+    * Turns Union[X, None] into Optional[X].
+    * Stringifies Unions and Optionals as the literal string ``"Union[...]"``,
+      to prevent ugly `ForwardRef('X')`s from showing up in ipython interactive help.
+    """
     args = getattr(type_, "__args__") if is_union(type_) else (type_,)
     str_types = set(t.__name__ if not isinstance(t, str) else t for t in args)
     # ^ We use the name here because it prints nicely
 
     if len(str_types) == 2 and "NoneType" in str_types:
         str_types.remove("NoneType")
-        str_types = Optional[str_types.pop()]
+        str_types = "Optional[{}]".format(str_types.pop())
     else:
         str_types = tuple(str_types)
-        str_types = Union[str_types] if len(str_types) > 1 else str_types[0]
+        str_types = (
+            "Union[{}]".format(", ".join(str_types))
+            if len(str_types) > 1
+            else str_types[0]
+        )
 
     return str_types
 
@@ -289,13 +302,30 @@ def wf_func(func_name, signatures, merged_signature=None, doc=None, namespace=""
     if doc is not None:
         func.__doc__ = doc
 
-    try:
-        if merged_signature is not None:
-            func.merged_signature = merged_signature
-        else:
-            func.merged_signature = merge_signatures(signatures)
-            func.__signature__ = stringify_signature(func.merged_signature)
-    except AssertionError:
-        raise ValueError("Signatures for {} could not be merged.".format(func_name))
+    # use 1 merged signature---"for display only"
+    if merged_signature is None:
+        try:
+            merged_signature = merge_signatures(signatures)
+        except AssertionError as e:
+            raise ValueError(
+                "Signatures for {} could not be merged: {}.".format(func_name, e)
+            )
+
+    func.merged_signature = merged_signature
+    # set a stringified version as `__signature__` so documentation tools (`help`, ipython, jupyter) can show it
+    # in a more readable form, without fully-qualified names.
+    func.__signature__ = stringify_signature(merged_signature)
+
+    # and set `__annotations__` to the un-stringified types for type-aware tools (IDEs, jupyter, mypy) to use.
+    if "sphinx" not in sys.modules:
+        # BUT sphinx undoes all our stringification work, resulting in hard-to-read documentation.
+        # and sphinx fights dirty. so we fight dirty back.
+        # https://github.com/sphinx-doc/sphinx/blob/af62fa61e6cbd88d0798963211e73e5ba0d55e6d/sphinx/util/inspect.py#L356-L360
+        func.__annotations__ = {
+            name: param.annotation
+            for name, param in merged_signature.parameters.items()
+        }
+        if merged_signature.return_annotation is not Signature.empty:
+            func.__annotations__["return"] = merged_signature.return_annotation
 
     return func
