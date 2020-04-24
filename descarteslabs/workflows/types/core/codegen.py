@@ -306,10 +306,8 @@ def wf_func(func_name, signatures, merged_signature=None, doc=None, namespace=""
     if merged_signature is None:
         try:
             merged_signature = merge_signatures(signatures)
-        except AssertionError as e:
-            raise ValueError(
-                "Signatures for {} could not be merged: {}.".format(func_name, e)
-            )
+        except AssertionError:
+            raise ValueError("Signatures for {} could not be merged.".format(func_name))
 
     func.merged_signature = merged_signature
     # set a stringified version as `__signature__` so documentation tools (`help`, ipython, jupyter) can show it
