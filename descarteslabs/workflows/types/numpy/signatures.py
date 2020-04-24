@@ -424,8 +424,10 @@ NUMPY_SIGNATURES = {
     "einsum": Sig(
         [
             Param("subscripts", Str),
-            Param("operands", Union[Array, List[Array]]),
-            Param("dtype", Union[DType, NoneType], None),
+            Param("operands", Array, kind=VAR_P),
+            Param("dtype", Union[DType, NoneType], None, KW_ONLY),
+            Param("casting", Str, "safe", KW_ONLY),
+            Param("optimize", Union[Bool, Str], False, KW_ONLY),
         ],
         Array,
     ),
@@ -1134,7 +1136,7 @@ NUMPY_SIGNATURES = {
         # NOTE (stephanie): unique supports three kwargs `return_index`,
         #   `return_inverse`, and `return_couts` that change the return type to
         #   Tuple, we won't support these for now.
-        Sig([Param("ar", Union[Array, MaskedArray])], Array,),
+        Sig([Param("ar", Union[Array, MaskedArray])], Array)
     ],
     "unravel_index": [
         Sig([Param("indices", Scalar), Param("shape", List[Int])], List[Scalar]),
@@ -1168,7 +1170,7 @@ NUMPY_SIGNATURES = {
                 Param("b", Union[Scalar, Array, MaskedArray]),
             ],
             Array,
-        ),
+        )
     ],
     "vstack": [
         Sig([Param("arrays", List[Array])], Array),
@@ -1184,7 +1186,7 @@ NUMPY_SIGNATURES = {
                 Param("y", Union[Scalar, Array, MaskedArray]),
             ],
             Array,
-        ),
+        )
     ],
     "zeros": Sig(
         [Param("shape", Union[Int, List[Int]]), Param("dtype", DType, DType(float))],
