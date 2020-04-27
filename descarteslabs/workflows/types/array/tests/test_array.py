@@ -59,6 +59,10 @@ def test_shape():
     assert isinstance(arr.shape, List[Int])
 
 
+def test_size():
+    assert isinstance(arr.size, Int)
+
+
 @pytest.mark.parametrize("shape", [(-1,), (1, 2)])
 def test_reshape(shape):
     assert isinstance(arr.reshape(*shape), Array)

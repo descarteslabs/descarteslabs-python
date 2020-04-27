@@ -17,7 +17,8 @@ def _delayed_numpy():
 class BaseArray(NumPyMixin, Proxytype):
     @property
     def dtype(self):
-        """The type of the data contained in the Array.
+        """
+        The type of the data contained in the Array.
 
         Example
         -------
@@ -32,7 +33,8 @@ class BaseArray(NumPyMixin, Proxytype):
 
     @property
     def ndim(self):
-        """The number of dimensions of the Array.
+        """
+        The number of dimensions of the Array.
 
         Example
         -------
@@ -46,7 +48,9 @@ class BaseArray(NumPyMixin, Proxytype):
 
     @property
     def shape(self):
-        """The shape of the Array. If the shape of the Array is unknown along a dimension, it will be -1.
+        """
+        The shape of the Array. If the shape of the Array is unknown along a
+        dimension, it will be -1.
 
         Example
         -------
@@ -59,6 +63,24 @@ class BaseArray(NumPyMixin, Proxytype):
         (3, 512, 512)
         """
         return List[Int]._from_apply("array.shape", self)
+
+    @property
+    def size(self):
+        """
+        The number of elements in the Array. If the shape of the Array is unknown
+        along a dimension, the resulting size is also unknown. In this case `size`
+        will return -1.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> rgb = img.pick_bands("red green blue")
+        >>> arr = rgb.ndarray
+        >>> arr.size.compute() # doctest: +SKIP
+        786432
+        """
+        return Int._from_apply("array.size", self)
 
     @property
     def literal_value(self):
