@@ -371,10 +371,18 @@ NUMPY_SIGNATURES = {
             Scalar,
         ),
     ],
-    "dot": Sig(
-        [Param("a", Union[Array, MaskedArray]), Param("b", Union[Array, MaskedArray])],
-        Scalar,
-    ),
+    "dot": [
+        Sig([Param("a", Scalar), Param("b", Scalar)], Scalar),
+        Sig([Param("a", Array), Param("b", Array)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("b", Union[Array, MaskedArray])],
+            MaskedArray,
+        ),
+        Sig(
+            [Param("a", Union[Array, MaskedArray]), Param("b", MaskedArray)],
+            MaskedArray,
+        ),
+    ],
     "dstack": [
         Sig([Param("arrays", List[Array])], Array),
         Sig([Param("arrays", List[MaskedArray])], MaskedArray),
