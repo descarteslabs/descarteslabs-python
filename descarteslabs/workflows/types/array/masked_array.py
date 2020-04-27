@@ -89,8 +89,6 @@ class MaskedArray(BaseArray):
     def _promote(cls, obj):
         if isinstance(obj, cls):
             return obj
-        elif isinstance(obj, (Int, Float, Bool)):
-            return MaskedArray(obj)
 
         try:
             return obj.cast(cls)

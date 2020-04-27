@@ -2,7 +2,7 @@ import operator
 
 import pytest
 
-from ...primitives import Float, Bool, Int, Str, Any
+from ...primitives import Int, Str, Any
 from ...containers import List
 from ...geospatial import ImageCollection
 from .. import MaskedArray, Array, DType, Scalar
@@ -46,12 +46,6 @@ def test_from_numpy():
 @pytest.mark.parametrize(
     "val",
     [
-        1,
-        Int(1),
-        1.0,
-        Float(1.0),
-        True,
-        Bool(True),
         [1, 2, 3],
         np.array([1, 2, 3]),
         np.ma.masked_array([1, 2, 3], [True, True, False]),
