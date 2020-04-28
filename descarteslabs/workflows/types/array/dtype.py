@@ -17,12 +17,31 @@ class DType(Proxytype):
     def __init__(self, type_):
         if isinstance(type_, np.dtype):
             val = type_.char
-        elif type_ in (int, Int, float, Float, bool, Bool):
+        elif type_ in (
+            int,
+            np.int,
+            np.int_,
+            np.int8,
+            np.int16,
+            np.int32,
+            np.int64,
+            Int,
+            float,
+            np.float,
+            np.float_,
+            np.float32,
+            np.float64,
+            Float,
+            bool,
+            np.bool,
+            np.bool_,
+            Bool,
+        ):
             val = type_.__name__.lower()
         else:
             raise ValueError(
                 "Cannot construct a DType object from {}. Must be a "
-                "NumPy dtype, Python type, or proxy type.".format(type_)
+                "NumPy dtype, NumPy type, Python type, or proxy type.".format(type_)
             )
         self.graft = client.apply_graft("dtype.create", val)
 
