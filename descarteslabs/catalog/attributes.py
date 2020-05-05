@@ -628,7 +628,7 @@ class ModelAttribute(Attribute):
             The value will be deserialized to a `ModelAttribute`.
         """
         if validate:
-            self._raise_if_immutable_or_readonly("delete", obj)
+            self._raise_if_immutable_or_readonly("set", obj)
 
         value = self.deserialize(value, validate=validate)
         previous_value = obj._attributes.get(self._attribute_name, None)
@@ -1346,7 +1346,7 @@ class ListAttribute(ModelAttribute, MutableSequence):
         return self._items.copy()
 
     def sort(self, key=None, reverse=False):
-        self._raise_if_immutable_or_readonly("insert")
+        self._raise_if_immutable_or_readonly("sort")
 
         """Stable sort *IN PLACE*."""
         new_items = list(self._items)

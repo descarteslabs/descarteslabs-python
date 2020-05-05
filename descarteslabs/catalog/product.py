@@ -10,7 +10,13 @@ from .catalog_base import (
     check_deleted,
     _new_abstract_class,
 )
-from .attributes import Resolution, Timestamp, BooleanAttribute, TypedAttribute
+from .attributes import (
+    Resolution,
+    Timestamp,
+    BooleanAttribute,
+    TypedAttribute,
+    ListAttribute,
+)
 
 try:
     import collections.abc as abc
@@ -148,6 +154,15 @@ class Product(CatalogObject):
         in meters.
 
         *Filterable, sortable*.
+        """,
+    )
+    default_display_bands = ListAttribute(
+        TypedAttribute(str),
+        doc="""list(str) or iterable: Which bands to use for RGBA display.
+
+        This field defines the default bands that are used for display purposes.  There are
+        four supported formats: ``["greyscale-or-class"]``, ``["greyscale-or-class", "alpha"]``,
+        ``["red", "green", "blue"]``, and ``["red", "green", "blue", "alpha"]``.
         """,
     )
 
