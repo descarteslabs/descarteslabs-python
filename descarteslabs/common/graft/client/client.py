@@ -7,6 +7,10 @@ Workflows implementation of Proxytypes, which provides a lazy,
 strongly-typed proxy object interface, using graft to represent
 the state of its objects.
 
+Warning: the graft client is only guaranteed to be thread-safe for the CPython
+interpreter! In other interpreter implementations, where `itertools.count` is
+non-atomic, multithreaded use of the graft client could produce invalid grafts.
+
 Subtleties of this Python client
 ================================
 
@@ -80,15 +84,19 @@ from .. import syntax
 
 NO_INITIAL = "_no_initial_"
 PARAM = "__param__"
-GUID_COUNTER = 0
+
+GUID_COUNTER = itertools.count()
+# use `itertools.count()` as a lock-free threadsafe counter,
+# which only works due to a CPython implementation detail
+# (because `count` is implemented in C, holding the GIL for the entirety of its execution)
+# https://mail.python.org/pipermail//python-ideas/2016-August/041871.html
+# https://stackoverflow.com/a/27062830/10519953
 
 RESERVED_WORDS = ("parmeters", "returns")
 
 
 def guid():
-    global GUID_COUNTER
-    GUID_COUNTER += 1
-    return str(GUID_COUNTER)
+    return str(next(GUID_COUNTER))
 
 
 def is_delayed(x):
@@ -484,12 +492,15 @@ def parametrize(graft, **params):
 
 @contextlib.contextmanager
 def consistent_guid(start=0):
-    "Context manager or decorator to temporarily reset the GUID, for use in testing to ensure consistent grafts"
+    """
+    Context manager or decorator to temporarily reset the GUID, for use in testing to ensure consistent grafts
+
+    Not thread-safe.
+    """
     global GUID_COUNTER
-    assert isinstance(start, int)
-    current_guid = GUID_COUNTER
+    original_counter = GUID_COUNTER
     try:
-        GUID_COUNTER = start
+        GUID_COUNTER = itertools.count(start)
         yield
     finally:
-        GUID_COUNTER = current_guid
+        GUID_COUNTER = original_counter
