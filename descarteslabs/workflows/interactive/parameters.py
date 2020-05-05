@@ -501,6 +501,7 @@ class ParameterSet(traitlets.HasTraits):
                         self._links[name] = ipywidgets.link(
                             (value, "value"), (self, name)
                         )
+                        self._notify_trait(name, getattr(self, name), value.value)
                 else:
                     self.set_trait(name, value)
 
