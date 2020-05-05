@@ -495,7 +495,7 @@ class Map(ipyleaflet.Map):
 
         width_m = maxx_m - minx_m
         height_m = maxy_m - miny_m
-        resolution = resolution_from_zoom(self.zoom)
+        resolution = resolution_from_zoom(int(self.zoom))
 
         width = round(width_m / resolution)
         height = round(height_m / resolution)
