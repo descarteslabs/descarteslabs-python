@@ -7,13 +7,57 @@ import ipywidgets as widgets
 import traitlets
 
 from .clearable import ClearableOutput
+from .inspector import PixelInspector
 from .layer import WorkflowsLayer
-from .lonlat import PositionController
+from .lonlat import LonLatInput
 from .utils import tuple_move
 
 EARTH_EQUATORIAL_RADIUS_WGS84_M = 6378137.0
 
 app_layout = widgets.Layout(height="100%", padding="0 0 8px 0")
+
+
+class MapController(widgets.HBox):
+    "Widget for controlling the center/zoom of a `Map` and toggling the pixel inspector."
+
+    def __init__(self, map):
+        lonlat = LonLatInput(
+            model=map.center,
+            layout=widgets.Layout(width="initial"),
+            style={"description_width": "initial"},
+        )
+        widgets.link((map, "center"), (lonlat, "model"))
+
+        zoom_label = widgets.Label(
+            value="Zoom:", layout=widgets.Layout(width="initial")
+        )
+        zoom = widgets.BoundedIntText(
+            value=map.zoom,
+            layout=widgets.Layout(width="3em"),
+            min=map.min_zoom,
+            max=map.max_zoom,
+            step=1,
+        )
+        widgets.link((map, "zoom"), (zoom, "value"))
+        widgets.link((map, "min_zoom"), (zoom, "min"))
+        widgets.link((map, "max_zoom"), (zoom, "max"))
+
+        inspect = widgets.ToggleButton(
+            value=map.inspecting_pixels,
+            description="Pixel inspector",
+            tooltip="Calculate pixel values on click",
+            icon="crosshairs",
+            layout=widgets.Layout(width="initial", overflow="visible"),
+        )
+        widgets.link((map, "inspecting_pixels"), (inspect, "value"))
+
+        super(MapController, self).__init__(
+            children=(lonlat, zoom_label, zoom, inspect)
+        )
+
+        self.layout.overflow = "hidden"
+        self.layout.flex = "0 0 auto"
+        self.layout.padding = "2px 0"
 
 
 class MapApp(widgets.VBox):
@@ -88,6 +132,7 @@ class MapApp(widgets.VBox):
         # from subclass
         "output_log",
         "error_log",
+        "inspecting_pixels",
         # methods
         "move_layer",
         "move_layer_up",
@@ -109,7 +154,7 @@ class MapApp(widgets.VBox):
         help="Show generic controls for other ipyleaflet layer types",
     )
 
-    def __init__(self, map=None, layer_controller_list=None, position_controller=None):
+    def __init__(self, map=None, layer_controller_list=None, map_controller=None):
         if map is None:
             map = Map()
             map.add_control(ipyleaflet.FullScreenControl())
@@ -119,8 +164,8 @@ class MapApp(widgets.VBox):
             from .layer_controller import LayerControllerList
 
             layer_controller_list = LayerControllerList(map)
-        if position_controller is None:
-            position_controller = PositionController(map)
+        if map_controller is None:
+            map_controller = MapController(map)
 
         self.map = map
         self.controller_list = layer_controller_list
@@ -132,7 +177,7 @@ class MapApp(widgets.VBox):
             (self, "control_other_layers"),
             (layer_controller_list, "control_other_layers"),
         )
-        self.position_controller = position_controller
+        self.map_controller = map_controller
 
         def on_clear():
             for layer in self.map.layers:
@@ -162,7 +207,7 @@ class MapApp(widgets.VBox):
                 self.errors,
                 map.output_log,
                 self.autoscale_outputs,
-                position_controller,
+                map_controller,
                 layer_controller_list,
             ],
             layout=app_layout,
@@ -316,6 +361,10 @@ class Map(ipyleaflet.Map):
         widgets.VBox,
         args=(),
         help="Widget containing all layers' autoscale output widgets",
+    )
+    inspecting_pixels = traitlets.Bool(
+        False,
+        help="Whether the pixel inspector is active, and clicking on the map displays pixel values",
     )
 
     def move_layer(self, layer, new_index):
@@ -599,3 +648,16 @@ class Map(ipyleaflet.Map):
             shape=shape,
             align_pixels=False,
         )
+
+    @traitlets.observe("inspecting_pixels", type="change")
+    def _update_inspecting_pixels(self, change):
+        current_inspector = getattr(self, "_inspector", None)
+
+        if change["new"] is True:
+            if current_inspector:
+                return
+            self._inspector = PixelInspector(self)
+        else:
+            if current_inspector:
+                current_inspector.unlink()
+                self._inspector = None

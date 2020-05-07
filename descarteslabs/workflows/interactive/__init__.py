@@ -6,6 +6,7 @@ try:
     from .layer_controller import LayerController, LayerControllerList
     from .map_ import MapApp, Map
     from .parameters import ParameterSet, ProxytypeInstance
+    from .inspector import PixelInspector
 
     map = MapApp()
     """
@@ -48,6 +49,7 @@ except Exception as e:
     Map = map
     ParameterSet = map
     ProxytypeInstance = map
+    PixelInspector = map
 
 
 __all__ = [
@@ -59,4 +61,5 @@ __all__ = [
     "map",
     "ParameterSet",
     "ProxytypeInstance",
+    "PixelInspector",
 ]

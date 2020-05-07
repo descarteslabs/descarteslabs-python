@@ -137,6 +137,7 @@ See :ref:`numpy-functions` for a full list of available functions.
   ~descarteslabs.workflows.interactive.LayerController
   ~descarteslabs.workflows.interactive.LayerControllerList
   ~descarteslabs.workflows.interactive.ParameterSet
+  ~descarteslabs.workflows.interactive.PixelInspector
 
 :workflow_api_nontoc_heading:`Parameter`
 

@@ -35,35 +35,3 @@ class LonLatInput(widgets.Text):
             *(reversed(new) if self.model_is_latlon else new)
         )
         self.value = string
-
-
-class PositionController(widgets.HBox):
-    "Widget for controlling the center and zoom of a `Map`."
-
-    def __init__(self, map):
-        lonlat = LonLatInput(
-            model=map.center,
-            layout=widgets.Layout(width="initial"),
-            style={"description_width": "initial"},
-        )
-        widgets.link((map, "center"), (lonlat, "model"))
-
-        zoom_label = widgets.Label(
-            value="Zoom:", layout=widgets.Layout(width="initial")
-        )
-        zoom = widgets.BoundedIntText(
-            value=map.zoom,
-            layout=widgets.Layout(width="3em"),
-            min=map.min_zoom,
-            max=map.max_zoom,
-            step=1,
-        )
-        widgets.link((map, "zoom"), (zoom, "value"))
-        widgets.link((map, "min_zoom"), (zoom, "min"))
-        widgets.link((map, "max_zoom"), (zoom, "max"))
-
-        super(PositionController, self).__init__(children=(lonlat, zoom_label, zoom))
-
-        self.layout.overflow = "hidden"
-        self.layout.flex = "0 0 auto"
-        self.layout.padding = "2px 0"
