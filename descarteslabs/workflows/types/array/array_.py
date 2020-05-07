@@ -4,6 +4,7 @@ from descarteslabs.common.graft import client
 
 from ...cereal import serializable
 from ..core import ProxyTypeError
+from ..containers import List
 from ..primitives import Int, Float, Bool
 from .base_array import BaseArray
 
@@ -51,7 +52,7 @@ class Array(BaseArray):
         if isinstance(arr, (int, float, bool)):
             self._literal_value = arr
             self.graft = client.apply_graft("array.create", arr)
-        elif isinstance(arr, (Int, Float, Bool)):
+        elif isinstance(arr, (Int, Float, Bool, List)):
             self.graft = client.apply_graft("array.create", arr)
         else:
             if not isinstance(arr, np.ndarray):
@@ -71,7 +72,7 @@ class Array(BaseArray):
     def _promote(cls, obj):
         if isinstance(obj, cls):
             return obj
-        if isinstance(obj, (Int, Float, Bool)):
+        if isinstance(obj, (Int, Float, Bool, List)):
             return Array(obj)
 
         try:

@@ -14,7 +14,9 @@ from .. import Array, DType, Scalar
 arr = Array([[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]])
 
 
-@pytest.mark.parametrize("val", [1, Int(1), [1, 2, 3, 4], np.ones((1, 2, 3))])
+@pytest.mark.parametrize(
+    "val", [1, Int(1), [1, 2, 3, 4], np.ones((1, 2, 3)), List[Int]([1, 2, 3])]
+)
 def test_init(val):
     arr = Array(val)
     assert isinstance(arr, Array)
@@ -30,6 +32,7 @@ def test_init(val):
         True,
         Bool(True),
         [1, 2, 3, 4],
+        List[Int]([1, 2, 3]),
         np.ones((1, 2, 3)),
         Any([1, 2]),
     ],
@@ -39,9 +42,7 @@ def test_promote(val):
     assert isinstance(arr, Array)
 
 
-@pytest.mark.parametrize(
-    "val", ["foo", Str("foo"), List[Int]([1, 2, 3]), np.array([1, 2], dtype=np.object)]
-)
+@pytest.mark.parametrize("val", ["foo", Str("foo"), np.array([1, 2], dtype=np.object)])
 def test_promote_invalid(val):
     with pytest.raises((TypeError, ProxyTypeError)):
         Array._promote(val)
