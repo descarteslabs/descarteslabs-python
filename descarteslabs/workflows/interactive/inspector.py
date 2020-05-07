@@ -289,6 +289,8 @@ class InspectorRowGenerator(traitlets.HasTraits):
                 value_list = self._cache[cache_key]
             except KeyError:
                 value_list = None
+        else:
+            value_list = None
 
         if value_list:
             self.set_values(value_list)
