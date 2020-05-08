@@ -14,6 +14,7 @@ from descarteslabs.common.retry.retry import _wraps
 from descarteslabs.workflows import _channel
 
 from .exceptions import from_grpc_error
+from .auth import TokenProviderMetadataPlugin
 
 _RETRYABLE_STATUS_CODES = {
     grpc.StatusCode.UNAVAILABLE,
@@ -186,11 +187,17 @@ class Client:
         }
 
     def _get_credentials(self):
-        token_call_credentials = grpc.access_token_call_credentials(self.auth.token)
+        token_provider_plugin = TokenProviderMetadataPlugin(
+            # NOTE: This property accessor will fetch a new token if need be.
+            lambda: self.auth.token
+        )
+        dl_auth_call_credentials = grpc.metadata_call_credentials(
+            token_provider_plugin, "DL auth plugin"
+        )
         ssl_channel_credentials = grpc.ssl_channel_credentials(self.certificate)
 
         composite_credentials = grpc.composite_channel_credentials(
-            ssl_channel_credentials, token_call_credentials
+            ssl_channel_credentials, dl_auth_call_credentials
         )
 
         return composite_credentials
