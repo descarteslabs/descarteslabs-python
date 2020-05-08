@@ -1,3 +1,5 @@
+import numpy as np
+
 from ...cereal import serializable
 from ..core import ProxyTypeError, typecheck_promote, allow_reflect
 from ..mixins import NumPyMixin
@@ -40,6 +42,8 @@ class Number(NumPyMixin, Primitive):
                     "{}.cast".format(self.__class__.__name__), obj
                 ).graft
         else:
+            if isinstance(obj, np.generic):
+                obj = obj.tolist()
             super(Number, self).__init__(obj)
 
     @classmethod

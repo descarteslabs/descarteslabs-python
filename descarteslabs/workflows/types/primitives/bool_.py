@@ -1,3 +1,5 @@
+import numpy as np
+
 from ...cereal import serializable
 from ..core import allow_reflect
 from .primitive import Primitive
@@ -33,6 +35,11 @@ class Bool(NumPyMixin, Primitive):
     """
 
     _pytype = bool
+
+    def __init__(self, obj):
+        if isinstance(obj, np.bool_):
+            obj = obj.tolist()
+        super().__init__(obj)
 
     def __bool__(self):
         raise TypeError(

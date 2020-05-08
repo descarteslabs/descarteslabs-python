@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 from ..bool_ import Bool
 from ..number import Int, Float
@@ -8,6 +9,17 @@ from ...core.tests.utils import operator_test
 
 
 all_values_to_try = [Bool(False), Int(1), Str("True")]
+
+
+def test_init():
+    b1 = Bool(True)
+    assert b1.graft[b1.graft["returns"]] is True
+    b2 = Bool(False)
+    assert b2.graft[b2.graft["returns"]] is False
+    b3 = Bool(np.bool_(True))
+    assert b3.graft[b3.graft["returns"]] is True
+    b4 = Bool(np.bool_(False))
+    assert b4.graft[b4.graft["returns"]] is False
 
 
 @pytest.mark.parametrize(

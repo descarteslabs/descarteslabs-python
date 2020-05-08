@@ -1,6 +1,7 @@
 import operator
 
 import pytest
+import numpy as np
 
 from ...core import ProxyTypeError
 from ...containers import Tuple, List
@@ -61,6 +62,38 @@ class TestConstruct(object):
         f = Float(Int(1))
         assert isinstance(f, Float)
         assert f.graft[f.graft["returns"]][0] == "Float.cast"
+
+
+class TestNumPyScalars(object):
+    @pytest.mark.parametrize(
+        "val",
+        [
+            np.uint8(1),
+            np.uint16(1),
+            np.uint32(1),
+            np.uint64(1),
+            np.int8(1),
+            np.int16(1),
+            np.int32(1),
+            np.int64(1),
+        ],
+    )
+    def test_int(self, val):
+        i = Int(val)
+        assert isinstance(i.graft[i.graft["returns"]], int)
+
+    @pytest.mark.parametrize("val", [np.float16(1), np.float32(1), np.float64(1)])
+    def test_float(self, val):
+        i = Float(val)
+        assert isinstance(i.graft[i.graft["returns"]], float)
+
+    def test_failure(self):
+        with pytest.raises(TypeError):
+            Float(np.int32(1))
+        with pytest.raises(TypeError):
+            Int(np.float64(1))
+        with pytest.raises(TypeError):
+            Int(np.datetime64("2020-01-01"))
 
 
 @pytest.mark.parametrize(
