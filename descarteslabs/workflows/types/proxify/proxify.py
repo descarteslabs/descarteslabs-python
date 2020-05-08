@@ -3,6 +3,8 @@ import datetime
 
 
 def proxify(obj):
+    from descarteslabs import scenes
+    from ..geospatial import GeoContext
     from ..core import Proxytype, ProxyTypeError
     from ..function import Function
     from ..containers import Tuple, List
@@ -45,6 +47,8 @@ def proxify(obj):
         return Datetime._promote(obj)
     elif isinstance(obj, datetime.timedelta):
         return Timedelta._promote(obj)
+    elif isinstance(obj, scenes.GeoContext):
+        return GeoContext.from_scenes(obj)
     else:
         try:
             return Any._promote(obj)
