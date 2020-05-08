@@ -49,6 +49,8 @@ class Array(BaseArray):
     """
 
     def __init__(self, arr):
+        if isinstance(arr, np.generic):
+            arr = arr.tolist()
         if isinstance(arr, (int, float, bool)):
             self._literal_value = arr
             self.graft = client.apply_graft("array.create", arr)
@@ -72,15 +74,10 @@ class Array(BaseArray):
     def _promote(cls, obj):
         if isinstance(obj, cls):
             return obj
-        if isinstance(obj, (Int, Float, Bool, List)):
-            return Array(obj)
-
         try:
             return obj.cast(cls)
         except Exception:
-            if not isinstance(obj, np.ndarray):
-                obj = np.asarray(obj)
             try:
                 return Array(obj)
-            except Exception:
-                raise ProxyTypeError("Cannot promote {} to Array".format(obj))
+            except Exception as e:
+                raise ProxyTypeError("Cannot promote {} to Array: {}".format(obj, e))

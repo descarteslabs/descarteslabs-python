@@ -199,7 +199,7 @@ def test_getmaskarray():
     assert isinstance(arr, Array)
 
 
-def test_filled():
-    fill_value = 5
+@pytest.mark.parametrize("fill_value", [5, 5.0, True, np.int32(5), np.float64(5), None])
+def test_filled(fill_value):
     arr = ma.filled(fill_value)
     assert isinstance(arr, Array)

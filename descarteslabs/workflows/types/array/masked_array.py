@@ -2,9 +2,10 @@ import numpy as np
 
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..primitives import Bool, Int, Float
-from ..core import ProxyTypeError
+from ..primitives import Bool, Int, Float, NoneType
+from ..core import ProxyTypeError, typecheck_promote
 from .array_ import Array
+from .scalar import Scalar
 from .base_array import BaseArray
 
 
@@ -34,35 +35,28 @@ class MaskedArray(BaseArray):
            fill_value=0)
     """
 
+    @typecheck_promote(
+        Array,
+        mask=(Bool, Array),
+        fill_value=(Bool, Int, Float, Scalar, Array, NoneType),
+    )
     def __init__(self, data, mask=False, fill_value=None):
-        if isinstance(data, np.ndarray):
-            if data.dtype.kind not in ("b", "i", "f"):
-                raise TypeError(
-                    "Invalid dtype {} for {}".format(data.dtype, type(self).__name__)
-                )
-            data = data.tolist()
+        mask_literal_value = mask.literal_value
+        if (
+            isinstance(mask_literal_value, np.ndarray)
+            and mask_literal_value.dtype.kind != "b"
+        ):
+            raise TypeError(
+                "Invalid dtype {} for a mask array, "
+                "should be boolean".format(mask_literal_value.dtype)
+            )
 
-        if isinstance(mask, (bool, np.bool_, Bool)):
-            if isinstance(mask, np.bool_):
-                mask = mask is True
-            mask = Bool._promote(mask)
-        elif isinstance(mask, np.ndarray):
-            if mask.dtype.kind != "b":
-                raise TypeError(
-                    "Invalid dtype {} for a mask array, should be boolean".format(
-                        mask.dtype
-                    )
-                )
-            mask = mask.tolist()
-
-        fill_value = _promote_fill_value(self, fill_value)
         self.graft = client.apply_graft("maskedarray.create", data, mask, fill_value)
 
     @classmethod
     def from_numpy(cls, arr):
         """
-        Construct a Workflows MaskedArray from a NumPy MaskedArray, inferring `dtype`
-        and `ndim`.
+        Construct a Workflows MaskedArray from a NumPy MaskedArray.
 
         Parameters
         ----------
@@ -132,6 +126,7 @@ class MaskedArray(BaseArray):
         """
         return Array._from_apply("maskedarray.getmaskarray", self)
 
+    @typecheck_promote(fill_value=(Bool, Int, Float, Scalar, Array, NoneType))
     def filled(self, fill_value=None):
         """
         Returns an Array with all masked data replaced by the given fill value.
@@ -159,7 +154,6 @@ class MaskedArray(BaseArray):
                 [0.1, 0.1, 0.1, ..., 0.1, 0.1, 0.1],
         ...
         """
-        fill_value = _promote_fill_value(self, fill_value)
         return Array._from_apply("maskedarray.filled", self, fill_value)
 
     def count(self, axis=None):
@@ -183,26 +177,3 @@ class MaskedArray(BaseArray):
         fill_value=1e+20)
         """
         return self._stats_return_type(axis)._from_apply("count", self, axis)
-
-
-def _promote_fill_value(self, fill_value):
-    if fill_value is None:
-        return None
-    if isinstance(fill_value, Array):
-        return fill_value
-
-    if isinstance(fill_value, np.generic):
-        cast_func = None
-        if isinstance(fill_value, np.integer):
-            cast_func = int
-        elif isinstance(fill_value, np.float):
-            cast_func = float
-        elif isinstance(fill_value, (np.bool, np.bool_)):
-            cast_func = bool
-
-        if cast_func is not None:
-            fill_value = cast_func(fill_value)
-        return fill_value
-
-    if isinstance(fill_value, (Int, Float, Bool)):
-        return fill_value
