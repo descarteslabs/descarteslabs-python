@@ -616,6 +616,16 @@ NUMPY_SIGNATURES = {
             Scalar,
         ),
     ],
+    "isposinf": [
+        Sig([Param("x", Union[Scalar, Int, Float, Bool])], Bool),
+        Sig([Param("x", Array)], Array),
+        Sig([Param("x", MaskedArray)], MaskedArray),
+    ],
+    "isneginf": [
+        Sig([Param("x", Union[Scalar, Int, Float, Bool])], Bool),
+        Sig([Param("x", Array)], Array),
+        Sig([Param("x", MaskedArray)], MaskedArray),
+    ],
     "isreal": [
         Sig([Param("x", Array)], Array),
         Sig([Param("x", MaskedArray)], MaskedArray),

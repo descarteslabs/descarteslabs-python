@@ -49,6 +49,10 @@ Top Level Functions
     atleast_3d
     average
     bincount
+    bitwise_and
+    bitwise_or
+    bitwise_xor
+    bitwise_not
     broadcast_arrays
     broadcast_to
     cbrt
@@ -98,6 +102,7 @@ Top Level Functions
     greater_equal
     histogram
     hstack
+    hypot
     imag
     indices
     insert
@@ -106,7 +111,10 @@ Top Level Functions
     isin
     isinf
     isnan
+    isneginf
+    isposinf
     isreal
+    ldexp
     less
     less_equal
     linspace
@@ -253,6 +261,10 @@ Masked Arrays
 .. autofunction:: atleast_3d
 .. autofunction:: average
 .. autofunction:: bincount
+.. autofunction:: bitwise_and
+.. autofunction:: bitwise_or
+.. autofunction:: bitwise_xor
+.. autofunction:: bitwise_not
 .. autofunction:: broadcast_arrays
 .. autofunction:: broadcast_to
 .. autofunction:: cbrt
@@ -302,6 +314,7 @@ Masked Arrays
 .. autofunction:: greater_equal
 .. autofunction:: histogram
 .. autofunction:: hstack
+.. autofunction:: hypot
 .. autofunction:: imag
 .. autofunction:: indices
 .. autofunction:: insert
@@ -310,7 +323,10 @@ Masked Arrays
 .. autofunction:: isin
 .. autofunction:: isinf
 .. autofunction:: isnan
+.. autofunction:: isneginf
+.. autofunction:: isposinf
 .. autofunction:: isreal
+.. autofunction:: ldexp
 .. autofunction:: less
 .. autofunction:: less_equal
 .. autofunction:: linspace

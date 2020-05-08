@@ -209,7 +209,7 @@ arcsin = ufunc(np.arcsin, return_type_override=Float)
 arccos = ufunc(np.arccos, return_type_override=Float)
 arctan = ufunc(np.arctan, return_type_override=Float)
 arctan2 = ufunc(np.arctan2, return_type_override=Float)
-# hypot = ufunc(np.hypot)
+hypot = ufunc(np.hypot)
 sinh = ufunc(np.sinh, return_type_override=Float)
 cosh = ufunc(np.cosh, return_type_override=Float)
 tanh = ufunc(np.tanh, return_type_override=Float)
@@ -220,11 +220,10 @@ deg2rad = ufunc(np.deg2rad, return_type_override=Float)
 rad2deg = ufunc(np.rad2deg, return_type_override=Float)
 
 # bit-twiddling functions
-# bitwise_and = ufunc(np.bitwise_and)
-# bitwise_or = ufunc(np.bitwise_or)
-# bitwise_xor = ufunc(np.bitwise_xor)
-# bitwise_not = ufunc(np.bitwise_not)
-# TODO: invert
+bitwise_and = ufunc(np.bitwise_and)
+bitwise_or = ufunc(np.bitwise_or)
+bitwise_xor = ufunc(np.bitwise_xor)
+bitwise_not = invert = ufunc(np.bitwise_not)
 
 # comparision functions
 greater = ufunc(np.greater, return_type_override=Bool)
@@ -233,8 +232,6 @@ less = ufunc(np.less, return_type_override=Bool)
 less_equal = ufunc(np.less_equal, return_type_override=Bool)
 not_equal = ufunc(np.not_equal, return_type_override=Bool)
 equal = ufunc(np.equal, return_type_override=Bool)
-# isneginf = partial(equal, -np.inf)
-# isposinf = partial(equal, np.inf)
 logical_and = ufunc(np.logical_and, return_type_override=Bool)
 logical_or = ufunc(np.logical_or, return_type_override=Bool)
 logical_xor = ufunc(np.logical_xor, return_type_override=Bool)
@@ -252,13 +249,17 @@ signbit = ufunc(np.signbit, return_type_override=Bool)
 copysign = ufunc(np.copysign, return_type_override=Float)
 nextafter = ufunc(np.nextafter, return_type_override=Float)
 spacing = ufunc(np.spacing, return_type_override=Float)
-# modf = ufunc(np.modf) # has multiple outputs
-# ldexp = ufunc(np.ldexp)
-# frexp = ufunc(np.frexp) # has multiple outputs
+ldexp = ufunc(np.ldexp)
 fmod = ufunc(np.fmod)
 floor = ufunc(np.floor)
 ceil = ufunc(np.ceil)
 trunc = ufunc(np.trunc)
+
+# NOTE (stephanie): modf and frexp have multiple outputs, the dask version also
+#   only accepts arrays and masked arrays (as opposed to all other ufuncs that
+#   also accept scalar values)
+# modf = ufunc(np.modf)
+# frexp = ufunc(np.frexp)
 
 degrees = ufunc(np.degrees, return_type_override=Float)
 radians = ufunc(np.radians, return_type_override=Float)
