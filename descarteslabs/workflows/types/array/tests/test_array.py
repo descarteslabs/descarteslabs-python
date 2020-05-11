@@ -64,6 +64,10 @@ def test_size():
     assert isinstance(arr.size, Int)
 
 
+def test_flatten():
+    assert isinstance(arr.flatten(), Array)
+
+
 @pytest.mark.parametrize("shape", [(-1,), (1, 2)])
 def test_reshape(shape):
     assert isinstance(arr.reshape(*shape), Array)

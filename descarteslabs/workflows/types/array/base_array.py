@@ -87,6 +87,19 @@ class BaseArray(NumPyMixin, Proxytype):
         "Python literal value this proxy object was constructed with, or None if not constructed from a literal value."
         return getattr(self, "_literal_value", None)
 
+    def flatten(self):
+        """
+        Return a contiguous flattened version of `Array`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> arr = wf.Array([[1, 2, 3], [4, 5, 6]])
+        >>> arr.flatten().compute() # doctest: +SKIP
+        array([1, 2, 3, 4, 5, 6])
+        """
+        return self._from_apply("array.flatten", self)
+
     def reshape(self, *newshape):
         """
         Returns an `Array` containing the same data with a new shape.
