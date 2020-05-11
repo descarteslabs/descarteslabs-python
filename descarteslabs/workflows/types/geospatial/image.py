@@ -237,6 +237,21 @@ class Image(ImageBase, BandsMixin):
         "Create a proxy image from a `~descarteslabs.scenes.scene.Scene` object"
         return cls.from_id(scene.properties["id"])
 
+    @property
+    def nbands(self):
+        """The number of bands in the `Image`.
+
+        If the `Image` is empty, returns 0.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image
+        >>> img = Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
+        >>> img.nbands.compute(geoctx) # doctest: +SKIP
+        25
+        """
+        return Int._from_apply("nbands", self)
+
     def with_properties(self, **properties):
         """
         New `Image`, with the given ``**properties`` fields added to the Image's `properties`.
@@ -1248,10 +1263,7 @@ class Image(ImageBase, BandsMixin):
             )
         return self._from_apply("Image.replace_empty_with", self, fill, mask, bandinfo)
 
-    @typecheck_promote(
-        Float,
-        Float,
-    )
+    @typecheck_promote(Float, Float)
     def value_at(self, x, y):
         """
         Given coordinates x, y, returns the pixel values from an Image in a `Dict` by bandname.
@@ -1285,10 +1297,7 @@ class Image(ImageBase, BandsMixin):
         """
         return Dict[Str, Float]._from_apply("value_at", self, x, y)
 
-    @typecheck_promote(
-        Int,
-        Int,
-    )
+    @typecheck_promote(Int, Int)
     def index_to_coords(self, row, col):
         """
          Convert pixel coordinates (row, col) in the `ImageCollection` into spatial coordinates (x, y).
@@ -1310,10 +1319,7 @@ class Image(ImageBase, BandsMixin):
         """
         return Tuple[Float, Float]._from_apply("index_to_coords", self, row, col)
 
-    @typecheck_promote(
-        Float,
-        Float,
-    )
+    @typecheck_promote(Float, Float)
     def coords_to_index(self, x, y):
         """
         Convert spatial coordinates (x, y) to pixel coordinates (row, col) in the `Image`.

@@ -271,6 +271,22 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             ruster=env._ruster,
         )
 
+    @property
+    def nbands(self):
+        """The number of bands in the `ImageCollection`.
+
+        If the `ImageCollection` is empty, returns 0.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import ImageCollection
+        >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
+        >>> col.nbands.compute(geoctx) # doctest: +SKIP
+        27
+        """
+        return Int._from_apply("nbands", self)
+
     def with_bandinfo(self, band, **bandinfo):
         """
         New `ImageCollection`, with the given ``**bandinfo`` fields added to the specified band's `bandinfo`.
@@ -1864,10 +1880,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         return List[Dict[Str, Float]]._from_apply("value_at", self, x, y)
 
-    @typecheck_promote(
-        Int,
-        Int,
-    )
+    @typecheck_promote(Int, Int)
     def index_to_coords(self, row, col):
         """
         Convert pixel coordinates (row, col) in the `ImageCollection` into spatial coordinates (x, y).
@@ -1889,10 +1902,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         return Tuple[Float, Float]._from_apply("index_to_coords", self, row, col)
 
-    @typecheck_promote(
-        Float,
-        Float,
-    )
+    @typecheck_promote(Float, Float)
     def coords_to_index(self, x, y):
         """
         Convert spatial coordinates (x, y) to pixel coordinates (row, col) in the `ImageCollection`.
