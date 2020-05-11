@@ -20,7 +20,7 @@ def test_format_to_mimetype_no_options(format, expected):
 
 def test_format_to_mimetype_with_options():
     mimetype = format_to_mimetype(
-        "pyarrow", OrderedDict({"compression": "lz4", "other_param": 1})
+        "pyarrow", OrderedDict([("compression", "lz4"), ("other_param", 1)])
     )
     # TODO: Remove OrderedDict from this test once we drop support for py3.5
     assert mimetype == "application/vnd.pyarrow; compression=lz4; other_param=1"
