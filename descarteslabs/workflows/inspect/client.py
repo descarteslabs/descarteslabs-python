@@ -1,5 +1,6 @@
 import os
 import random
+import json
 
 import pyarrow as pa
 import requests
@@ -19,6 +20,8 @@ from .. import _channel
 
 from ..models.exceptions import TimeoutError
 from ..models.parameters import parameters_to_grafts
+
+from .mimetype import format_to_mimetype
 
 from descarteslabs.workflows import results  # noqa: F401 isort:skip
 
@@ -52,10 +55,12 @@ class InspectClient(Service):
             )
 
         super().__init__(
-            url, auth=auth, retries=retries if retries is not None else self.RETRY_CONFIG
+            url,
+            auth=auth,
+            retries=retries if retries is not None else self.RETRY_CONFIG,
         )
 
-    def inspect(self, obj, timeout=30, **params):
+    def inspect(self, obj, timeout=30, format="pyarrow", format_options=None, **params):
         graft = obj.graft
         params_dict = parameters_to_grafts(**params)
 
@@ -64,24 +69,33 @@ class InspectClient(Service):
         result_type = typespec_to_unmarshal_str(typespec)
         # ^ this also preemptively checks whether the result type is something we'll know how to unmarshal
 
+        mimetype = format_to_mimetype(format, format_options=format_options)
+
         # TODO stream=True, use resp.raw and stream through pyarrow?
         try:
             resp = self.session.post(
                 "/inspect",
                 json={"graft": graft, "parameters": params_dict},
                 timeout=timeout,
+                headers={"Accept": mimetype},
             )
         except requests.exceptions.Timeout as e:
             raise TimeoutError(e) from None
 
-        buffer = pa.decompress(
-            resp.content,
-            codec=resp.headers["X-Arrow-Codec"],
-            decompressed_size=int(resp.headers["X-Decompressed-Size"]),
-        )
+        if resp.headers["content-type"] == "application/vnd.pyarrow":
+            buffer = pa.decompress(
+                resp.content,
+                codec=resp.headers["X-Arrow-Codec"],
+                decompressed_size=int(resp.headers["X-Decompressed-Size"]),
+            )
 
-        marshalled = pa.deserialize(buffer, context=serialization_context)
-        return unmarshal.unmarshal(result_type, marshalled)
+            marshalled = pa.deserialize(buffer, context=serialization_context)
+            return unmarshal.unmarshal(result_type, marshalled)
+        elif resp.headers["content-type"] == "application/json":
+            return json.loads(resp.content)
+        else:
+            # return the raw data
+            return resp.content
 
 
 global_inspect_client = None

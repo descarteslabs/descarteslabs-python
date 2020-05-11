@@ -1,1 +1,3 @@
-from .context import serialization_context  # noqa
+from .context import serialization_context
+
+__all__ = ["serialization_context"]
