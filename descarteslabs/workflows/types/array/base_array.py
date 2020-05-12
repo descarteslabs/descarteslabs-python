@@ -283,6 +283,33 @@ class BaseArray(NumPyMixin, Proxytype):
     def __rpow__(self, other):
         return _delayed_numpy().power(other, self)
 
+    @allow_reflect
+    def __and__(self, other):
+        return _delayed_numpy().bitwise_and(self, other)
+
+    @allow_reflect
+    def __or__(self, other):
+        return _delayed_numpy().bitwise_or(self, other)
+
+    @allow_reflect
+    def __rand__(self, other):
+        return _delayed_numpy().bitwise_and(other, self)
+
+    @allow_reflect
+    def __ror__(self, other):
+        return _delayed_numpy().bitwise_or(other, self)
+
+    @allow_reflect
+    def __rxor__(self, other):
+        return _delayed_numpy().bitwise_xor(other, self)
+
+    @allow_reflect
+    def __xor__(self, other):
+        return _delayed_numpy().bitwise_xor(self, other)
+
+    def __invert__(self):
+        return _delayed_numpy().bitwise_not(self)
+
     def min(self, axis=None):
         """ Minimum along a given axis.
 
