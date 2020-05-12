@@ -7,10 +7,13 @@ from ..job import Job
 
 def test_init():
     message = job_pb2.Job(
-        id="foo", error=job_pb2.JobError(code=errors_pb2.ERROR_DEADLINE, message="bar")
+        id="foo",
+        state=job_pb2.Job.State(
+            error=job_pb2.Job.Error(code=errors_pb2.ERROR_DEADLINE, message="bar")
+        ),
     )
 
-    job = Job(message)
+    job = Job._from_proto(message)
 
     e = JobComputeError(job)
     assert e.code == job.error.code

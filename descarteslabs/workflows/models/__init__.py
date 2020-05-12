@@ -1,4 +1,4 @@
-from .exceptions import JobComputeError, TimeoutError
+from .exceptions import JobComputeError, JobTimeoutError
 from .workflow import Workflow
 from .job import Job
 from .xyz import XYZ, XYZErrorListener
@@ -7,7 +7,7 @@ from .toplevel import compute, publish, retrieve, use
 __all__ = [
     # .exceptions
     "JobComputeError",
-    "TimeoutError",
+    "JobTimeoutError",
     # .workflow
     "Workflow",
     # .job

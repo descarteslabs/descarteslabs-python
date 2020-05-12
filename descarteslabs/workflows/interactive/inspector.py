@@ -8,7 +8,7 @@ import ipywidgets
 import traitlets
 import cachetools
 
-from ..models import TimeoutError
+from ..models import JobTimeoutError
 from ..types import GeoContext
 from .layer import WorkflowsLayer
 
@@ -313,7 +313,7 @@ class InspectorRowGenerator(traitlets.HasTraits):
 
         try:
             value_list = proxy_value_list.inspect(ctx, **params)
-        except TimeoutError:
+        except JobTimeoutError:
             value_list = ["⏱"]
         except Exception:
             value_list = ["💥"]

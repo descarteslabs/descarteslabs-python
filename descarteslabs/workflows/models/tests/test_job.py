@@ -16,8 +16,9 @@ from descarteslabs.common.graft import client as graft_client
 from descarteslabs.workflows import _channel
 
 from ... import cereal, types
-from ..exceptions import JobInvalid
+from ..exceptions import JobInvalid, JobComputeError, JobTerminated, JobTimeoutError
 from ..job import Job
+from ..parameters import parameters_to_grafts
 from ..utils import pb_milliseconds_to_datetime
 
 from . import utils
@@ -44,10 +45,73 @@ class TestTypespecToUnmarshalStr(object):
 )
 @mock.patch("descarteslabs.common.proto.job.job_pb2_grpc.JobAPIStub")
 class TestJob(object):
+    def test_create(self, stub):
+        obj = types.Int(1)
+        parameters = {"foo": types.Str("bar")}
+
+        typespec = cereal.serialize_typespec(type(obj))
+        create_job_request_message = job_pb2.CreateJobRequest(
+            parameters=json.dumps(parameters_to_grafts(**parameters)),
+            serialized_graft=json.dumps(obj.graft),
+            typespec=typespec,
+            type=types_pb2.ResultType.Value(cereal.typespec_to_unmarshal_str(typespec)),
+            no_cache=False,
+            channel=_channel.__channel__,
+        )
+
+        message = job_pb2.Job(
+            id="foo",
+            parameters=create_job_request_message.parameters,
+            serialized_graft=create_job_request_message.serialized_graft,
+            typespec=create_job_request_message.typespec,
+            type=create_job_request_message.type,
+            no_cache=create_job_request_message.no_cache,
+            channel=create_job_request_message.channel,
+        )
+        stub.return_value.CreateJob.return_value = message
+
+        job = Job(obj, parameters)
+
+        stub.return_value.CreateJob.assert_called_once_with(
+            create_job_request_message,
+            timeout=Client.DEFAULT_TIMEOUT,
+            metadata=(("x-wf-channel", create_job_request_message.channel),),
+        )
+
+        assert job._message is message
+
+    @pytest.mark.parametrize("client", [utils.MockedClient(), None])
+    def test_create_client(self, stub, client):
+        obj = types.Int(1)
+        parameters = {"foo": types.Str("bar")}
+
+        job = Job(obj, parameters, client=client)
+
+        if client is not None:
+            assert job._client is client
+        else:
+            assert isinstance(job._client, Client)
+
+    @pytest.mark.parametrize("cache", [False, True])
+    def test_create_cache(self, stub, cache):
+        id_ = "foo"
+        obj = types.Int(1)
+        parameters = {"foo": types.Str("bar")}
+
+        stub.return_value.CreateJob.side_effect = lambda req, **kwargs: job_pb2.Job(
+            id=id_, no_cache=req.no_cache
+        )
+
+        job = Job(obj, parameters, cache=cache)
+
+        stub.return_value.CreateJob.assert_called_once()
+        assert stub.return_value.CreateJob.call_args.args[0].no_cache == (not cache)
+        assert job.cache_enabled == cache
+
     @pytest.mark.parametrize("client", [mock.Mock(), None])
-    def test_instantiate(self, stub, client):
+    def test_from_proto(self, stub, client):
         message = job_pb2.Job(id="foo")
-        job = Job(message, client=client)
+        job = Job._from_proto(message, client=client)
 
         assert job._message == message
         if client is not None:
@@ -74,66 +138,13 @@ class TestJob(object):
         else:
             assert isinstance(job._client, Client)
 
-    @pytest.mark.parametrize("client", [mock.Mock(), None])
-    def test_build(self, stub, client):
-        obj = types.Int(1)
-        parameters = {"foo": types.Str("bar")}
-
-        job = Job.build(obj, parameters, client=client)
-        message = job._message
-
-        assert message.workflow_id == ""
-        assert message.channel == _channel.__channel__
-
-        assert json.loads(message.parameters) == utils.json_normalize(
-            {"foo": graft_client.value_graft(parameters["foo"])}
-        )
-        assert json.loads(message.serialized_graft) == utils.json_normalize(obj.graft)
-        assert message.typespec == cereal.serialize_typespec(type(obj))
-        assert message.type == types_pb2.Int
-
-        if client is not None:
-            assert job._client == client
-        else:
-            assert isinstance(job._client, Client)
-
-    def test_execute(self, stub):
-        obj = types.Int(1)
-        parameters = {"foo": types.Str("bar")}
-
-        job = Job.build(obj, parameters)
-
-        new_message = job_pb2.Job(
-            id="foo",
-            parameters=job._message.parameters,
-            serialized_graft=job._message.serialized_graft,
-            typespec=job._message.typespec,
-            type=job._message.type,
-            channel=_channel.__channel__,
-        )
-        stub.return_value.CreateJob.return_value = new_message
-
-        job.execute()
-        job.execute()  # if it has an id short circuit execution, create should only be called once
-
-        stub.return_value.CreateJob.assert_called_once_with(
-            job_pb2.CreateJobRequest(
-                parameters=job._message.parameters,
-                serialized_graft=job._message.serialized_graft,
-                typespec=job._message.typespec,
-                type=job._message.type,
-                channel=_channel.__channel__,
-            ),
-            timeout=Client.DEFAULT_TIMEOUT,
-            metadata=(("x-wf-channel", _channel.__channel__),),
-        )
-        assert job._message is new_message
-
     def test_refresh(self, stub):
         message = job_pb2.Job(id="foo")
-        refresh_message = job_pb2.Job(id="foo", status=job_pb2.STATUS_UNKNOWN)
+        refresh_message = job_pb2.Job(
+            id="foo", state=job_pb2.Job.State(stage=job_pb2.Job.Stage.QUEUED)
+        )
 
-        job = Job(message)
+        job = Job._from_proto(message)
 
         stub.return_value.GetJob.return_value = refresh_message
         job.refresh()
@@ -146,45 +157,56 @@ class TestJob(object):
 
     # def test_cancel(self, stub):
     #     message = job_pb2.Job(id="foo")
-    #     cancel_message = job_pb2.Job(
-    #         id="foo", status=job_pb2.STATUS_FAILURE, terminated=True
-    #     )
-
-    #     job = Job(message)
+    #     job = Job._from_proto(message)
+    #     cancel_message = job_pb2.Job.State(stage=job_pb2.Job.Stage.CANCELLED)
     #     stub.return_value.CancelJob.return_value = cancel_message
     #     job.cancel()
     #     stub.return_value.CancelJob.assert_called_with(
     #         job_pb2.CancelJobRequest(id=job.id), timeout=Client.DEFAULT_TIMEOUT
     #     )
-    #     assert job._message == cancel_message
+    #     assert job._message.state == cancel_message
 
     def test_watch(self, stub):
         id_ = "foo"
         message = job_pb2.Job(id=id_)
-        job = Job(message)
+        job = Job._from_proto(message)
 
         stub.return_value.WatchJob.return_value = [
-            job_pb2.Job(
-                id=id_, stage=job_pb2.STAGE_PENDING, status=job_pb2.STATUS_UNKNOWN
-            ),
-            job_pb2.Job(
-                id=id_, stage=job_pb2.STAGE_RUNNING, status=job_pb2.STATUS_UNKNOWN
-            ),
-            job_pb2.Job(
-                id=id_, stage=job_pb2.STAGE_DONE, status=job_pb2.STATUS_SUCCESS
-            ),
+            job_pb2.Job.State(stage=job_pb2.Job.Stage.QUEUED),
+            job_pb2.Job.State(stage=job_pb2.Job.Stage.RUNNING),
+            job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED),
         ]
 
-        state_messages = [state._message for state in job.watch()]
+        state_messages = []
+        for job_ in job.watch():
+            state = job_pb2.Job.State()
+            state.CopyFrom(job_._message.state)
+            state_messages.append(state)
 
         assert state_messages == stub.return_value.WatchJob.return_value
 
     def test_properties(self, stub):
+        id_ = "foo"
         obj = types.Int(1)
         parameters = {"foo": types.Str("bar")}
 
-        job = Job.build(obj, parameters)
-        job_from_msg = Job(job._message, client=job._client)
+        job_state = job_pb2.Job.State(stage=job_pb2.Job.Stage.QUEUED)
+
+        def create_side_effect(req, **kwargs):
+            return job_pb2.Job(
+                id=id_,
+                parameters=req.parameters,
+                serialized_graft=req.serialized_graft,
+                typespec=req.typespec,
+                type=req.type,
+                channel=req.channel,
+                state=job_state,
+            )
+
+        stub.return_value.CreateJob.side_effect = create_side_effect
+
+        job = Job(obj, parameters)
+        job_from_msg = Job._from_proto(job._message, client=job._client)
 
         assert job.object is obj
         utils.assert_graft_is_scope_isolated_equvalent(
@@ -194,119 +216,110 @@ class TestJob(object):
         assert job.result_type == "Int"
         assert job.parameters == {"foo": graft_client.value_graft(parameters["foo"])}
 
-        assert job.id is None
+        assert job.id == id_
         assert job.channel == _channel.__channel__
-        assert job.status == "STATUS_UNKNOWN"
-        assert job.stage == "STAGE_UNKNOWN"
+        assert job.stage == "QUEUED"
         assert job.created_datetime is None
         assert job.updated_datetime is None
         assert job.runtime is None
         assert job.error is None
         assert job.done is False
 
-        job._message.id = "foo"
-        job._message.status = job_pb2.STATUS_SUCCESS
-        job._message.stage = job_pb2.STAGE_DONE
-        job._message.created_timestamp = 1
-        job._message.updated_timestamp = 2
+        job._message.state.stage = job_pb2.Job.Stage.SUCCEEDED
+        job._message.timestamp = 1
+        job._message.state.timestamp = 2
 
-        assert job.id == "foo"
-        assert job.status == "STATUS_SUCCESS"
-        assert job.stage == "STAGE_DONE"
+        assert job.stage == "SUCCEEDED"
         assert job.created_datetime == pb_milliseconds_to_datetime(1)
         assert job.updated_datetime == pb_milliseconds_to_datetime(2)
         assert job.runtime == job.updated_datetime - job.created_datetime
         assert job.error is None
         assert job.done is True
 
-        job._message.status = job_pb2.STATUS_FAILURE
-        job._message.error.code = errors_pb2.ERROR_INVALID
-        job._message.error.message = "test"
+        job._message.state.stage = job_pb2.Job.Stage.FAILED
+        job._message.state.error.code = errors_pb2.ERROR_INVALID
+        job._message.state.error.message = "test"
 
-        assert job.status == "STATUS_FAILURE"
-        assert job.stage == "STAGE_DONE"
+        assert job.stage == "FAILED"
         assert isinstance(job.error, JobInvalid)
         assert job.done is True
 
     def test_wait_for_result_success(self, stub):
         id_ = "foo"
         message = job_pb2.Job(id=id_)
-        j = Job(message)
+        j = Job._from_proto(message)
         j._load_result = mock.Mock()
-        status = job_pb2.STATUS_SUCCESS
+        job_state = job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED)
 
-        stub.return_value.GetJob.return_value = job_pb2.Job(id=id_, status=status)
+        stub.return_value.WatchJob.return_value = [job_state]
 
         j._wait_for_result()
         j._load_result.assert_called_once_with()
-        assert j._message.status == status
+        assert j._message.state.stage == job_state.stage
 
     def test_wait_for_result_failure(self, stub):
         id_ = "foo"
         message = job_pb2.Job(id=id_)
-        j = Job(message)
+        j = Job._from_proto(message)
 
-        status = job_pb2.STATUS_FAILURE
+        job_state = job_pb2.Job.State(
+            stage=job_pb2.Job.Stage.FAILED,
+            error=job_pb2.Job.Error(code=errors_pb2.ERROR_UNKNOWN),
+        )
 
-        stub.return_value.GetJob.return_value = job_pb2.Job(id=id_, status=status)
+        stub.return_value.WatchJob.return_value = [job_state]
 
-        with pytest.raises(Exception):
-            # TODO(justin) fix exception type
+        with pytest.raises(JobComputeError):
             j._wait_for_result()
-        assert j._message.status == status
+        assert j._message.state.stage == job_state.stage
 
     def test_wait_for_result_terminated(self, stub):
         id_ = "foo"
         message = job_pb2.Job(id=id_)
-        j = Job(message)
+        j = Job._from_proto(message)
 
-        status = job_pb2.STATUS_FAILURE
-
-        stub.return_value.GetJob.return_value = job_pb2.Job(
-            id=id_,
-            status=status,
-            stage=job_pb2.STAGE_DONE,
-            error=job_pb2.JobError(code=errors_pb2.ERROR_TERMINATED),
+        job_state = job_pb2.Job.State(
+            stage=job_pb2.Job.Stage.FAILED,
+            error=job_pb2.Job.Error(code=errors_pb2.ERROR_TERMINATED),
         )
 
-        with pytest.raises(Exception):
-            # TODO(justin) fix exception type
+        stub.return_value.WatchJob.return_value = [job_state]
+
+        with pytest.raises(JobTerminated):
             j._wait_for_result()
-        assert j._message.status == status
+        assert j._message.state.stage == job_state.stage
 
     def test_wait_for_result_timeout(self, stub):
         id_ = "foo"
-        status = job_pb2.STATUS_UNKNOWN
+        message = job_pb2.Job(id=id_)
+        j = Job._from_proto(message)
 
-        message = job_pb2.Job(id=id_, status=status, stage=job_pb2.STAGE_PENDING)
-        j = Job(message)
+        job_state = job_pb2.Job.State(stage=job_pb2.Job.Stage.QUEUED)
+        stub.return_value.WatchJob.return_value = [job_state]
 
-        stub.return_value.GetJob.return_value = message
-
-        with pytest.raises(Exception):
-            # TODO(justin) fix exception type
+        with pytest.raises(JobTimeoutError):
             j._wait_for_result(1e-4)
-        assert j._message.status == status
-        stub.return_value.GetJob.assert_called()
+        assert j._message.state.stage == job_state.stage
+        stub.return_value.WatchJob.assert_called()
 
     def test_load_result_error(self, stub):
         message = job_pb2.Job(
             id="foo",
-            status=job_pb2.STATUS_FAILURE,
-            error=job_pb2.JobError(code=errors_pb2.ERROR_INVALID),
+            state=job_pb2.Job.State(
+                stage=job_pb2.Job.Stage.FAILED,
+                error=job_pb2.Job.Error(code=errors_pb2.ERROR_INVALID),
+            ),
         )
 
-        job = Job(message)
+        job = Job._from_proto(message)
         with pytest.raises(JobInvalid):
             job._load_result()
 
     @responses.activate
     def test_download_result(self, stub):
-        job = Job(
+        job = Job._from_proto(
             job_pb2.Job(
-                id="foo",
-                status=job_pb2.STATUS_SUCCESS,
-                error=job_pb2.JobError(code=errors_pb2.ERROR_NONE),
+                id="foo", state=job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED),
             )
         )
 
@@ -329,8 +342,12 @@ class TestJob(object):
 
     def test_unmarshal_primitive(self, stub):
         marshalled = (1, 2, True, None)
-        job = Job(
-            job_pb2.Job(id="foo", status=job_pb2.STATUS_SUCCESS, type=types_pb2.List)
+        job = Job._from_proto(
+            job_pb2.Job(
+                id="foo",
+                state=job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED),
+                type=types_pb2.List,
+            )
         )
 
         result = job._unmarshal(marshalled)
@@ -350,8 +367,12 @@ class TestJob(object):
                 "bounds": (-98, 40, -90, 44),
             },
         }
-        job = Job(
-            job_pb2.Job(id="foo", status=job_pb2.STATUS_SUCCESS, type=types_pb2.Image)
+        job = Job._from_proto(
+            job_pb2.Job(
+                id="foo",
+                state=job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED),
+                type=types_pb2.Image,
+            )
         )
 
         result = job._unmarshal(marshalled)

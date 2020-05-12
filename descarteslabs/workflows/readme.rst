@@ -185,7 +185,8 @@ See :ref:`numpy-functions` for a full list of available functions.
   ~descarteslabs.workflows.models.exceptions.JobDeadlineExceeded
   ~descarteslabs.workflows.models.exceptions.JobTerminated
   ~descarteslabs.workflows.models.exceptions.JobInterrupt
-  ~descarteslabs.workflows.models.exceptions.TimeoutError
+  ~descarteslabs.workflows.models.exceptions.JobTimeoutError
+  ~descarteslabs.workflows.models.exceptions.JobCancelled
 
 :workflow_api_nontoc_heading:`gRPC Client`
 

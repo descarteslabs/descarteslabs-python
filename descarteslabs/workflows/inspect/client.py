@@ -18,7 +18,7 @@ from descarteslabs.common.workflows.arrow_serialization import serialization_con
 from ..cereal import serialize_typespec, typespec_to_unmarshal_str
 from .. import _channel
 
-from ..models.exceptions import TimeoutError
+from ..models.exceptions import JobTimeoutError
 from ..models.parameters import parameters_to_grafts
 
 from .mimetype import format_to_mimetype
@@ -80,7 +80,7 @@ class InspectClient(Service):
                 headers={"Accept": mimetype},
             )
         except requests.exceptions.Timeout as e:
-            raise TimeoutError(e) from None
+            raise JobTimeoutError(e) from None
 
         if resp.headers["content-type"] == "application/vnd.pyarrow":
             buffer = pa.decompress(

@@ -6,8 +6,8 @@ class JobComputeError(Exception):
 
     def __init__(self, job):
         self._id = job.id
-        self._code = errors_pb2.ErrorCode.Name(job._message.error.code)
-        self._message = job._message.error.message
+        self._code = errors_pb2.ErrorCode.Name(job._message.state.error.code)
+        self._message = job._message.state.error.message
 
         super(JobComputeError, self).__init__(
             'Job("{}") failed with: code={}, message="{}"'.format(
@@ -63,8 +63,13 @@ class JobInterrupt(JobComputeError):
     pass
 
 
-class TimeoutError(Exception):
+class JobTimeoutError(Exception):
     "Raised when a computation took longer to complete than a specified timeout."
+    pass
+
+
+class JobCancelled(Exception):
+    "Raised when a job is cancelled."
     pass
 
 

@@ -61,7 +61,7 @@ from .types import (
 
 from .models import (
     JobComputeError,
-    TimeoutError,
+    JobTimeoutError,
     Workflow,
     Job,
     XYZ,
@@ -105,7 +105,7 @@ def compute(
         this parameter is optional.
     timeout: int, optional
         The number of seconds to wait for the result, if ``block`` is True.
-        Raises ``TimeoutError`` if the timeout passes.
+        Raises ``JobTimeoutError`` if the timeout passes.
     block: bool, default True
         If True (default), block until the job is completed,
         or ``timeout`` has passed.
@@ -226,7 +226,7 @@ __all__ = [
     "pi",
     # .models
     "JobComputeError",
-    "TimeoutError",
+    "JobTimeoutError",
     "Workflow",
     "Job",
     "XYZ",
@@ -291,7 +291,7 @@ def _compute_mixin(
         this parameter is optional.
     timeout: int, optional
         The number of seconds to wait for the result, if ``block`` is True.
-        Raises `~descarteslabs.workflows.models.TimeoutError` if the timeout passes.
+        Raises `~descarteslabs.workflows.models.JobTimeoutError` if the timeout passes.
     block: bool, default True
         If True (default), block until the job is completed,
         or ``timeout`` has passed.
@@ -379,7 +379,7 @@ def _inspect_mixin(self, geoctx=None, timeout=30, client=None, **params):
         this parameter is optional.
     timeout: int, optional, default 30
         The number of seconds to wait for the result.
-        Raises `~descarteslabs.workflows.models.TimeoutError` if the timeout passes.
+        Raises `~descarteslabs.workflows.models.JobTimeoutError` if the timeout passes.
     client: `.workflows.inspect.InspectClient`, optional
         Allows you to use a specific InspectClient instance with non-default
         auth and parameters

@@ -17,7 +17,7 @@ from descarteslabs.common.workflows.arrow_serialization import serialization_con
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec, typespec_to_unmarshal_str
 from ..client import get_global_grpc_client, default_grpc_retry_predicate
-from .exceptions import error_code_to_exception, TimeoutError
+from .exceptions import error_code_to_exception, JobTimeoutError, JobCancelled
 from .utils import in_notebook, pb_milliseconds_to_datetime
 from .parameters import parameters_to_grafts
 
@@ -66,18 +66,10 @@ class Job(object):
     BUCKET_PREFIX = "https://storage.googleapis.com/dl-compute-dev-results/{}"
     WAIT_INTERVAL = 0.1
 
-    def __init__(self, message, client=None):
-        self._message = message
-        if client is None:
-            client = get_global_grpc_client()
-        self._client = client
-        self._object = None
-
-    @classmethod
-    def build(cls, proxy_object, parameters, client=None):
+    def __init__(self, proxy_object, parameters, client=None, cache=True):
         """
-        Build a new `Job` for computing a proxy object under certain parameters.
-        Does not actually trigger computation; call `Job.execute` on the result to do so.
+        Creates a new `Job` to compute the provided proxy object with the given
+        parameters.
 
         Parameters
         ----------
@@ -88,19 +80,21 @@ class Job(object):
         client : `.workflows.client.Client`, optional
             Allows you to use a specific client instance with non-default
             auth and parameters
+        cache : bool, default True
+            Whether to use the cache for this job.
 
         Returns
         -------
         Job
-            The job waiting to be executed.
+            The job that's executing.
 
         Example
         -------
         >>> from descarteslabs.workflows import Job, Int, parameter
         >>> my_int = Int(1) + parameter("other_int", Int)
-        >>> job = Job.build(my_int, {"other_int": 10})
-        >>> # the job does not execute until `.execute` is called
-        >>> job.execute() # doctest: +SKIP
+        >>> job = Job(my_int, {"other_int": 10}) # doctest: +SKIP
+        >>> job.stage # doctest: +SKIP
+        QUEUED
         """
         if client is None:
             client = get_global_grpc_client()
@@ -110,21 +104,34 @@ class Job(object):
         # ^ this also preemptively checks whether the result type is something we'll know how to unmarshal
         parameters = parameters_to_grafts(**parameters)
 
-        message = job_pb2.Job(
-            parameters=json.dumps(parameters),
-            serialized_graft=json.dumps(proxy_object.graft),
-            typespec=typespec,
-            type=types_pb2.ResultType.Value(result_type),
-            channel=_channel.__channel__,
+        message = client.api["CreateJob"](
+            job_pb2.CreateJobRequest(
+                parameters=json.dumps(parameters),
+                serialized_graft=json.dumps(proxy_object.graft),
+                typespec=typespec,
+                type=types_pb2.ResultType.Value(result_type),
+                no_cache=not cache,
+                channel=_channel.__channel__,
+            ),
+            timeout=client.DEFAULT_TIMEOUT,
         )
 
-        instance = cls(message, client)
-        instance._object = proxy_object
-        return instance
+        self._message = message
+        self._client = client
+        self._object = proxy_object
 
     @classmethod
     def get(cls, id, client=None):
-        """Get a currently-running `Job` by its ID.
+        """
+        Get a currently-running `Job` by its ID.
+
+        Parameters
+        ----------
+        id: string
+            The ID of a running job.
+        client : `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters
 
         Example
         -------
@@ -137,52 +144,46 @@ class Job(object):
         message = client.api["GetJob"](
             job_pb2.GetJobRequest(id=id), timeout=client.DEFAULT_TIMEOUT
         )
-        return cls(message, client)
+        return cls._from_proto(message, client)
 
-    def execute(self):
+    @classmethod
+    def _from_proto(cls, proto_message, client=None):
         """
-        Asynchronously submit a job for execution.
+        Low-level constructor for creating a Job from a Protobuf message.
 
-        After submission, ``self.id`` will be the ID of the running job.
+        Do not use this method directly; use `Job.__init__` or `Job.get` instead.
 
-        This method is idempotent: calling it multiple times on the same `Job` object
-        will only trigger execution once.
-
-        Example
-        -------
-        >>> from descarteslabs.workflows import Job, Int
-        >>> job = Job.build(Int(1), {})
-        >>> job.execute() # doctest: +SKIP
+        Parameters
+        ----------
+        proto_message: job_pb2.Job message
+            Job Protobuf message
+        client : `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters
         """
-        if self.id is not None:
-            return
+        obj = cls.__new__(cls)
+        obj._message = proto_message
 
-        message = self._client.api["CreateJob"](
-            job_pb2.CreateJobRequest(
-                parameters=self._message.parameters,
-                serialized_graft=self._message.serialized_graft,
-                typespec=self._message.typespec,
-                type=self._message.type,
-                channel=self._message.channel,
-            ),
-            timeout=self._client.DEFAULT_TIMEOUT,
-        )
-        self._message = message
+        if client is None:
+            client = get_global_grpc_client()
+
+        obj._client = client
+        obj._object = None
+        return obj
 
     def refresh(self):
         """
-        Refresh the attributes and status of the job.
+        Refresh the attributes and state of the job.
 
         Example
         -------
         >>> from descarteslabs.workflows import Job, Int
-        >>> job = Job.build(Int(1), {})
-        >>> job.execute() # doctest: +SKIP
+        >>> job = Job(Int(1), {}) # doctest: +SKIP
         >>> job.stage # doctest: +SKIP
-        STAGE_UNKNOWN
+        QUEUED
         >>> job.refresh() # doctest: +SKIP
         >>> job.stage # doctest: +SKIP
-        STAGE_DONE
+        SUCCEEDED
         """
         message = self._client.api["GetJob"](
             job_pb2.GetJobRequest(id=self.id), timeout=self._client.DEFAULT_TIMEOUT
@@ -198,31 +199,30 @@ class Job(object):
     #     -------
     #     >>> from descarteslabs.workflows import Job, Int, parameter
     #     >>> my_int = Int(1) + parameter("other_int", Int)
-    #     >>> job = Job.build(my_int, {"other_int": 10})
-    #     >>> job.execute() # doctest: +SKIP
+    #     >>> job = Job(my_int, {"other_int": 10}) # doctest: +SKIP
     #     >>> job.cancel() # doctest: +SKIP
     #     """
     #     message = self._client.api["CancelJob"](
     #         job_pb2.CancelJobRequest(id=self.id), timeout=self._client.DEFAULT_TIMEOUT
     #     )
-    #     self._message = message
+    #     self._message.state.CopyFrom(message)
 
     def watch(self):
-        """Generator that yields ``self`` each time an update to the Job occurs.
+        """
+        Generator that yields ``self`` each time an update to the Job occurs.
 
         Example
         -------
         >>> from descarteslabs.workflows import Job, Int
-        >>> job = Job.build(Int(1), {})
-        >>> job.execute() # doctest: +SKIP
+        >>> job = Job(Int(1), {}) # doctest: +SKIP
         >>> for job in job.watch(): # doctest: +SKIP
         ...     print(job.stage)
-        STAGE_UNKNOWN
-        STAGE_PREPARING
-        STAGE_PREPARING
-        STAGE_RUNNING
-        STAGE_SAVING
-        STAGE_DONE
+        QUEUED
+        PREPARING
+        RUNNING
+        RUNNING
+        SAVING
+        SUCCEEDED
         """
         # Note(Winston): If we need to support long-running connections,
         # this is where we would infinitely loop on `grpc.StatusCode.DEADLINE_EXCEEDED` exceptions.
@@ -232,8 +232,8 @@ class Job(object):
             job_pb2.WatchJobRequest(id=self.id), timeout=self._client.STREAM_TIMEOUT
         )
 
-        for message in stream:
-            self._message = message
+        for state in stream:
+            self._message.state.CopyFrom(state)
             yield self
 
     def result(self, timeout=None, progress_bar=None):
@@ -259,8 +259,7 @@ class Job(object):
         Example
         -------
         >>> from descarteslabs.workflows import Job, Int
-        >>> job = Job.build(Int(1), {})
-        >>> job.execute() # doctest: +SKIP
+        >>> job = Job(Int(1), {}) # doctest: +SKIP
         >>> job.result() # doctest: +SKIP
         1
         """
@@ -274,11 +273,7 @@ class Job(object):
     def object(self):
         "Proxytype: The proxy object this Job computes."
         if self._object is None:
-            typespec = self._message.typespec
-            proxytype = deserialize_typespec(typespec)
-            graft = json.loads(self._message.serialized_graft)
-            isolated = graft_client.isolate_keys(graft)
-            self._object = proxytype._from_graft(isolated)
+            self._object = _proxy_object_from_message(self._message)
         return self._object
 
     @property
@@ -305,29 +300,34 @@ class Job(object):
         return self._message.channel
 
     @property
-    def status(self):
-        "The current status of the Job (success, failure, unknown)."
-        return job_pb2.JobStatus.Name(self._message.status)
-
-    @property
     def stage(self):
         "The current stage of the Job (preparing, running, saving, done)."
-        return job_pb2.JobStage.Name(self._message.stage)
+        return job_pb2.Job.Stage.Name(self._message.state.stage)
 
     @property
     def done(self):
         "bool: Whether the Job has completed or not."
-        return self._message.status in [job_pb2.STATUS_FAILURE, job_pb2.STATUS_SUCCESS]
+        return _is_job_done(self._message.state.stage)
+
+    # @property
+    # def cancelled(self):
+    #     """Whether the job has been cancelled."""
+    #     return self._message.state.stage == job_pb2.Job.Stage.CANCELLED
+
+    @property
+    def cache_enabled(self):
+        """Whether caching is enabled for thie job."""
+        return not self._message.no_cache
 
     @property
     def created_datetime(self):
         "datetime: The time the Job was created."
-        return pb_milliseconds_to_datetime(self._message.created_timestamp)
+        return pb_milliseconds_to_datetime(self._message.timestamp)
 
     @property
     def updated_datetime(self):
         "datetime: The time of the most recent Job update."
-        return pb_milliseconds_to_datetime(self._message.updated_timestamp)
+        return pb_milliseconds_to_datetime(self._message.state.timestamp)
 
     @property
     def runtime(self):
@@ -346,17 +346,19 @@ class Job(object):
     @property
     def error(self):
         "The error of the Job, or None if it finished successfully."
-        error_code = self._message.error.code
+        error_code = self._message.state.error.code
         exc = error_code_to_exception(error_code)
         return exc(self) if exc is not None else None
 
     def _load_result(self):
-        if self._message.status == job_pb2.STATUS_SUCCESS:
+        if self._message.state.stage == job_pb2.Job.Stage.SUCCEEDED:
             return self._unmarshal(self._download_result())
-        elif self._message.status == job_pb2.STATUS_FAILURE:
+        elif self._message.state.stage == job_pb2.Job.Stage.FAILED:
             raise self.error
+        elif self._message.state.stage == job_pb2.Job.Stage.CANCELLED:
+            raise JobCancelled("Job {} was cancelled.".format(self.id))
         else:
-            raise AttributeError("job {} {}".format(self.id, self.status))
+            raise AttributeError("job {} {}".format(self.id, self.stage))
 
     def _download_result(self):
         response = requests.get(self.BUCKET_PREFIX.format(self.id))
@@ -381,9 +383,6 @@ class Job(object):
 
         stream = self.watch()
 
-        # we refresh after starting the watch to avoid race condition
-        self.refresh()
-
         show_progress = progress_bar is not False
         if show_progress:
             progress_bar_io = sys.stdout if progress_bar is True else progress_bar
@@ -405,7 +404,7 @@ class Job(object):
             if self.done:
                 return self._load_result()
             else:
-                raise TimeoutError(
+                raise JobTimeoutError(
                     "timeout while waiting on result for Job('{}')".format(self.id)
                 )
 
@@ -419,39 +418,49 @@ class Job(object):
             The output widget/stream to write a job's progress bar to.
         """
         _draw_progress_bar(
-            finished=self._message.progress.finished,
+            finished=self._message.state.tasks_progress.finished,
             total=sum(
                 (
-                    self._message.progress.waiting,
-                    self._message.progress.ready,
-                    self._message.progress.running,
-                    self._message.progress.finished,
+                    self._message.state.tasks_progress.waiting,
+                    self._message.state.tasks_progress.ready,
+                    self._message.state.tasks_progress.running,
+                    self._message.state.tasks_progress.finished,
                 )
             ),
             stage=self.stage,
-            status=self.status,
             output=output,
         )
 
 
-def _draw_progress_bar(finished, total, stage, status, output, width=6):
+def _draw_progress_bar(finished, total, stage, output, width=6):
     if total == 0:
         percent = 0
     else:
         percent = finished / total
 
-    if job_pb2.JobStage.Value(stage) == job_pb2.STAGE_DONE:
+    if _is_job_done(stage):
         bar = "#" * int(width)
     else:
         bar = "#" * int(width * percent)
 
-    progress_output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage} | Status: {status}".format(
-        bar=bar,
-        width=width,
-        finished=finished,
-        total=total,
-        stage=stage.replace("STAGE_", ""),
-        status=status.replace("STATUS_", ""),
+    progress_output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
+        bar=bar, width=width, finished=finished, total=total, stage=stage,
     )
 
     _write_to_io_or_widget(output, "{:<79}".format(progress_output))
+
+
+def _proxy_object_from_message(message):
+    typespec = message.typespec
+    proxytype = deserialize_typespec(typespec)
+    graft = json.loads(message.serialized_graft)
+    isolated = graft_client.isolate_keys(graft)
+    return proxytype._from_graft(isolated)
+
+
+def _is_job_done(stage):
+    return stage in (
+        job_pb2.Job.Stage.SUCCEEDED,
+        job_pb2.Job.Stage.FAILED,
+        job_pb2.Job.Stage.CANCELLED,
+    )

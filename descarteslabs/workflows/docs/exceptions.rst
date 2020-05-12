@@ -8,7 +8,7 @@ Exceptions
   :inherited-members:
   :undoc-members:
 
-.. autoclass:: descarteslabs.workflows.models.exceptions.TimeoutError
+.. autoclass:: descarteslabs.workflows.models.exceptions.JobTimeoutError
   :members:
   :autosummary:
   :inherited-members:

@@ -37,7 +37,7 @@ class JobAPIStub(object):
     self.WatchJob = channel.unary_stream(
         '/descarteslabs.workflows.JobAPI/WatchJob',
         request_serializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.WatchJobRequest.SerializeToString,
-        response_deserializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.Job.FromString,
+        response_deserializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.Job.State.FromString,
         )
 
 
@@ -106,7 +106,7 @@ def add_JobAPIServicer_to_server(servicer, server):
       'WatchJob': grpc.unary_stream_rpc_method_handler(
           servicer.WatchJob,
           request_deserializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.WatchJobRequest.FromString,
-          response_serializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.Job.SerializeToString,
+          response_serializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.Job.State.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

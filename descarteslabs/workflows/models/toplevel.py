@@ -3,7 +3,14 @@ from .job import Job
 
 
 def compute(
-    obj, geoctx=None, timeout=None, block=True, progress_bar=None, client=None, **params
+    obj,
+    geoctx=None,
+    timeout=None,
+    block=True,
+    progress_bar=None,
+    client=None,
+    cache=True,
+    **params
 ):
     """
     Compute a proxy object and wait for its result.
@@ -19,7 +26,7 @@ def compute(
         this parameter is optional.
     timeout: int, optional
         The number of seconds to wait for the result, if ``block`` is True.
-        Raises ``TimeoutError`` if the timeout passes.
+        Raises ``JobTimeoutError`` if the timeout passes.
     block: bool, default True
         If True (default), block until the job is completed,
         or ``timeout`` has passed.
@@ -31,6 +38,8 @@ def compute(
     client : `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
+    cache : bool, default True
+        Whether to use the cache for this job.
     **params: Proxytype
         Parameters under which to run the computation, such as ``geoctx``.
 
@@ -57,8 +66,7 @@ def compute(
     if geoctx is not None:
         params["geoctx"] = geoctx
 
-    job = Job.build(obj, params, client=client)
-    job.execute()
+    job = Job(obj, params, client=client, cache=cache)
     if block:
         return job.result(timeout=timeout, progress_bar=progress_bar)
     else:
