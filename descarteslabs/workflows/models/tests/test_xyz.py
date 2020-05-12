@@ -71,7 +71,13 @@ class TestXYZ(object):
         xyz.save()
         assert xyz._message is new_message
         stub.return_value.CreateXYZ.assert_called_once_with(
-            xyz_pb2.CreateXYZRequest(xyz=old_message),
+            xyz_pb2.CreateXYZRequest(
+                name=old_message.name,
+                description=old_message.description,
+                serialized_graft=old_message.serialized_graft,
+                typespec=old_message.typespec,
+                channel=_channel.__channel__,
+            ),
             timeout=Client.DEFAULT_TIMEOUT,
             metadata=(("x-wf-channel", _channel.__channel__),),
         )

@@ -184,7 +184,13 @@ class XYZ(object):
         '24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6'
         """
         message = self._client.api["CreateXYZ"](
-            xyz_pb2.CreateXYZRequest(xyz=self._message),
+            xyz_pb2.CreateXYZRequest(
+                name=self._message.name,
+                description=self._message.description,
+                serialized_graft=self._message.serialized_graft,
+                typespec=self._message.typespec,
+                channel=self._message.channel,
+            ),
             timeout=self._client.DEFAULT_TIMEOUT,
         )
         self._message = message
