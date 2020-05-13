@@ -907,7 +907,6 @@ NUMPY_SIGNATURES = {
         [
             Param("a", Union[Array, MaskedArray]),
             Param("q", Union[Array, MaskedArray]),
-            Param("axis", Union[Int, List[Int], NoneType], None),
             Param("interpolation", Str, "linear"),
         ],
         Array,
