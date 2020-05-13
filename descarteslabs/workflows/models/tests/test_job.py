@@ -105,7 +105,7 @@ class TestJob(object):
         job = Job(obj, parameters, cache=cache)
 
         stub.return_value.CreateJob.assert_called_once()
-        assert stub.return_value.CreateJob.call_args.args[0].no_cache == (not cache)
+        assert stub.return_value.CreateJob.call_args[0][0].no_cache == (not cache)
         assert job.cache_enabled == cache
 
     @pytest.mark.parametrize("client", [mock.Mock(), None])
