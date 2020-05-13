@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n0descarteslabs/common/proto/formats/formats.proto\x12\x17\x64\x65scarteslabs.workflows\x1a google/protobuf/descriptor.proto\"\xf9\x04\n\x06\x46ormat\x12W\n\x07pyarrow\x18\x01 \x01(\x0b\x32 .descarteslabs.workflows.PyArrowB\x1b\xd2\xc9\x01\x17\x61pplication/vnd.pyarrowR\x07pyarrow\x12G\n\x04json\x18\x02 \x01(\x0b\x32\x1d.descarteslabs.workflows.JSONB\x14\xd2\xc9\x01\x10\x61pplication/jsonR\x04json\x12T\n\x07geojson\x18\x03 \x01(\x0b\x32 .descarteslabs.workflows.GeoJSONB\x18\xd2\xc9\x01\x14\x61pplication/geo+jsonR\x07geojson\x12<\n\x03\x63sv\x18\x04 \x01(\x0b\x32\x1c.descarteslabs.workflows.CSVB\x0c\xd2\xc9\x01\x08text/csvR\x03\x63sv\x12=\n\x03png\x18\x05 \x01(\x0b\x32\x1c.descarteslabs.workflows.PNGB\r\xd2\xc9\x01\timage/pngR\x03png\x12J\n\x07geotiff\x18\x06 \x01(\x0b\x32 .descarteslabs.workflows.GeoTIFFB\x0e\xd2\xc9\x01\nimage/tiffR\x07geotiff\x12\x1f\n\x0bhas_pyarrow\x18\x14 \x01(\x08R\nhasPyarrow\x12\x19\n\x08has_json\x18\x15 \x01(\x08R\x07hasJson\x12\x1f\n\x0bhas_geojson\x18\x16 \x01(\x08R\nhasGeojson\x12\x17\n\x07has_csv\x18\x17 \x01(\x08R\x06hasCsv\x12\x17\n\x07has_png\x18\x18 \x01(\x08R\x06hasPng\x12\x1f\n\x0bhas_geotiff\x18\x19 \x01(\x08R\nhasGeotiff\"}\n\x07PyArrow\x12N\n\x0b\x63ompression\x18\x01 \x01(\x0e\x32,.descarteslabs.workflows.PyArrow.CompressionR\x0b\x63ompression\"\"\n\x0b\x43ompression\x12\x07\n\x03lz4\x10\x00\x12\n\n\x06\x62rotli\x10\x01\"\x06\n\x04JSON\"\t\n\x07GeoJSON\"\x05\n\x03\x43SV\"\x05\n\x03PNG\"\xd5\x01\n\x07GeoTIFF\x12#\n\rnot_overviews\x18\x01 \x01(\x08R\x0cnotOverviews\x12\x1b\n\tnot_tiled\x18\x02 \x01(\x08R\x08notTiled\x12N\n\x0b\x63ompression\x18\x03 \x01(\x0e\x32,.descarteslabs.workflows.GeoTIFF.CompressionR\x0b\x63ompression\"8\n\x0b\x43ompression\x12\x07\n\x03LZW\x10\x00\x12\x08\n\x04None\x10\x01\x12\x08\n\x04JPEG\x10\x02\x12\x0c\n\x08JPEG2000\x10\x03::\n\x08mimetype\x12\x1d.google.protobuf.FieldOptions\x18\x9a\x19 \x01(\tR\x08mimetypeb\x06proto3'
+  serialized_pb=b'\n0descarteslabs/common/proto/formats/formats.proto\x12\x17\x64\x65scarteslabs.workflows\x1a google/protobuf/descriptor.proto\"\xef\x05\n\x06\x46ormat\x12W\n\x07pyarrow\x18\x01 \x01(\x0b\x32 .descarteslabs.workflows.PyArrowB\x1b\xd2\xc9\x01\x17\x61pplication/vnd.pyarrowR\x07pyarrow\x12G\n\x04json\x18\x02 \x01(\x0b\x32\x1d.descarteslabs.workflows.JSONB\x14\xd2\xc9\x01\x10\x61pplication/jsonR\x04json\x12T\n\x07geojson\x18\x03 \x01(\x0b\x32 .descarteslabs.workflows.GeoJSONB\x18\xd2\xc9\x01\x14\x61pplication/geo+jsonR\x07geojson\x12<\n\x03\x63sv\x18\x04 \x01(\x0b\x32\x1c.descarteslabs.workflows.CSVB\x0c\xd2\xc9\x01\x08text/csvR\x03\x63sv\x12=\n\x03png\x18\x05 \x01(\x0b\x32\x1c.descarteslabs.workflows.PNGB\r\xd2\xc9\x01\timage/pngR\x03png\x12J\n\x07geotiff\x18\x06 \x01(\x0b\x32 .descarteslabs.workflows.GeoTIFFB\x0e\xd2\xc9\x01\nimage/tiffR\x07geotiff\x12S\n\x07msgpack\x18\x07 \x01(\x0b\x32 .descarteslabs.workflows.MsgPackB\x17\xd2\xc9\x01\x13\x61pplication/msgpackR\x07msgpack\x12\x1f\n\x0bhas_pyarrow\x18\x14 \x01(\x08R\nhasPyarrow\x12\x19\n\x08has_json\x18\x15 \x01(\x08R\x07hasJson\x12\x1f\n\x0bhas_geojson\x18\x16 \x01(\x08R\nhasGeojson\x12\x17\n\x07has_csv\x18\x17 \x01(\x08R\x06hasCsv\x12\x17\n\x07has_png\x18\x18 \x01(\x08R\x06hasPng\x12\x1f\n\x0bhas_geotiff\x18\x19 \x01(\x08R\nhasGeotiff\x12\x1f\n\x0bhas_msgpack\x18\x1a \x01(\x08R\nhasMsgpack\"}\n\x07PyArrow\x12N\n\x0b\x63ompression\x18\x01 \x01(\x0e\x32,.descarteslabs.workflows.PyArrow.CompressionR\x0b\x63ompression\"\"\n\x0b\x43ompression\x12\x07\n\x03lz4\x10\x00\x12\n\n\x06\x62rotli\x10\x01\"\x06\n\x04JSON\"\t\n\x07GeoJSON\"\x05\n\x03\x43SV\"\x05\n\x03PNG\"\xd5\x01\n\x07GeoTIFF\x12#\n\rnot_overviews\x18\x01 \x01(\x08R\x0cnotOverviews\x12\x1b\n\tnot_tiled\x18\x02 \x01(\x08R\x08notTiled\x12N\n\x0b\x63ompression\x18\x03 \x01(\x0e\x32,.descarteslabs.workflows.GeoTIFF.CompressionR\x0b\x63ompression\"8\n\x0b\x43ompression\x12\x07\n\x03LZW\x10\x00\x12\x08\n\x04None\x10\x01\x12\x08\n\x04JPEG\x10\x02\x12\x0c\n\x08JPEG2000\x10\x03\"\t\n\x07MsgPack::\n\x08mimetype\x12\x1d.google.protobuf.FieldOptions\x18\x9a\x19 \x01(\tR\x08mimetypeb\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_descriptor__pb2.DESCRIPTOR,])
 
@@ -50,8 +50,8 @@ _PYARROW_COMPRESSION = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=838,
-  serialized_end=872,
+  serialized_start=956,
+  serialized_end=990,
 )
 _sym_db.RegisterEnumDescriptor(_PYARROW_COMPRESSION)
 
@@ -80,8 +80,8 @@ _GEOTIFF_COMPRESSION = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1065,
-  serialized_end=1121,
+  serialized_start=1183,
+  serialized_end=1239,
 )
 _sym_db.RegisterEnumDescriptor(_GEOTIFF_COMPRESSION)
 
@@ -136,47 +136,61 @@ _FORMAT = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=b'\322\311\001\nimage/tiff', json_name='geotiff', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='has_pyarrow', full_name='descarteslabs.workflows.Format.has_pyarrow', index=6,
+      name='msgpack', full_name='descarteslabs.workflows.Format.msgpack', index=6,
+      number=7, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=b'\322\311\001\023application/msgpack', json_name='msgpack', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='has_pyarrow', full_name='descarteslabs.workflows.Format.has_pyarrow', index=7,
       number=20, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='hasPyarrow', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='has_json', full_name='descarteslabs.workflows.Format.has_json', index=7,
+      name='has_json', full_name='descarteslabs.workflows.Format.has_json', index=8,
       number=21, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='hasJson', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='has_geojson', full_name='descarteslabs.workflows.Format.has_geojson', index=8,
+      name='has_geojson', full_name='descarteslabs.workflows.Format.has_geojson', index=9,
       number=22, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='hasGeojson', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='has_csv', full_name='descarteslabs.workflows.Format.has_csv', index=9,
+      name='has_csv', full_name='descarteslabs.workflows.Format.has_csv', index=10,
       number=23, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='hasCsv', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='has_png', full_name='descarteslabs.workflows.Format.has_png', index=10,
+      name='has_png', full_name='descarteslabs.workflows.Format.has_png', index=11,
       number=24, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='hasPng', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='has_geotiff', full_name='descarteslabs.workflows.Format.has_geotiff', index=11,
+      name='has_geotiff', full_name='descarteslabs.workflows.Format.has_geotiff', index=12,
       number=25, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='hasGeotiff', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='has_msgpack', full_name='descarteslabs.workflows.Format.has_msgpack', index=13,
+      number=26, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='hasMsgpack', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -190,7 +204,7 @@ _FORMAT = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=112,
-  serialized_end=745,
+  serialized_end=863,
 )
 
 
@@ -221,8 +235,8 @@ _PYARROW = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=747,
-  serialized_end=872,
+  serialized_start=865,
+  serialized_end=990,
 )
 
 
@@ -245,8 +259,8 @@ _JSON = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=874,
-  serialized_end=880,
+  serialized_start=992,
+  serialized_end=998,
 )
 
 
@@ -269,8 +283,8 @@ _GEOJSON = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=882,
-  serialized_end=891,
+  serialized_start=1000,
+  serialized_end=1009,
 )
 
 
@@ -293,8 +307,8 @@ _CSV = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=893,
-  serialized_end=898,
+  serialized_start=1011,
+  serialized_end=1016,
 )
 
 
@@ -317,8 +331,8 @@ _PNG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=900,
-  serialized_end=905,
+  serialized_start=1018,
+  serialized_end=1023,
 )
 
 
@@ -363,8 +377,32 @@ _GEOTIFF = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=908,
-  serialized_end=1121,
+  serialized_start=1026,
+  serialized_end=1239,
+)
+
+
+_MSGPACK = _descriptor.Descriptor(
+  name='MsgPack',
+  full_name='descarteslabs.workflows.MsgPack',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1241,
+  serialized_end=1250,
 )
 
 _FORMAT.fields_by_name['pyarrow'].message_type = _PYARROW
@@ -373,6 +411,7 @@ _FORMAT.fields_by_name['geojson'].message_type = _GEOJSON
 _FORMAT.fields_by_name['csv'].message_type = _CSV
 _FORMAT.fields_by_name['png'].message_type = _PNG
 _FORMAT.fields_by_name['geotiff'].message_type = _GEOTIFF
+_FORMAT.fields_by_name['msgpack'].message_type = _MSGPACK
 _PYARROW.fields_by_name['compression'].enum_type = _PYARROW_COMPRESSION
 _PYARROW_COMPRESSION.containing_type = _PYARROW
 _GEOTIFF.fields_by_name['compression'].enum_type = _GEOTIFF_COMPRESSION
@@ -384,6 +423,7 @@ DESCRIPTOR.message_types_by_name['GeoJSON'] = _GEOJSON
 DESCRIPTOR.message_types_by_name['CSV'] = _CSV
 DESCRIPTOR.message_types_by_name['PNG'] = _PNG
 DESCRIPTOR.message_types_by_name['GeoTIFF'] = _GEOTIFF
+DESCRIPTOR.message_types_by_name['MsgPack'] = _MSGPACK
 DESCRIPTOR.extensions_by_name['mimetype'] = mimetype
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -436,6 +476,13 @@ GeoTIFF = _reflection.GeneratedProtocolMessageType('GeoTIFF', (_message.Message,
   })
 _sym_db.RegisterMessage(GeoTIFF)
 
+MsgPack = _reflection.GeneratedProtocolMessageType('MsgPack', (_message.Message,), {
+  'DESCRIPTOR' : _MSGPACK,
+  '__module__' : 'descarteslabs.common.proto.formats.formats_pb2'
+  # @@protoc_insertion_point(class_scope:descarteslabs.workflows.MsgPack)
+  })
+_sym_db.RegisterMessage(MsgPack)
+
 google_dot_protobuf_dot_descriptor__pb2.FieldOptions.RegisterExtension(mimetype)
 
 _FORMAT.fields_by_name['pyarrow']._options = None
@@ -444,4 +491,5 @@ _FORMAT.fields_by_name['geojson']._options = None
 _FORMAT.fields_by_name['csv']._options = None
 _FORMAT.fields_by_name['png']._options = None
 _FORMAT.fields_by_name['geotiff']._options = None
+_FORMAT.fields_by_name['msgpack']._options = None
 # @@protoc_insertion_point(module_scope)

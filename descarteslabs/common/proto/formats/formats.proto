@@ -26,6 +26,7 @@ message Format {
   CSV csv = 4 [(mimetype) = "text/csv"];
   PNG png = 5 [(mimetype) = "image/png"];
   GeoTIFF geotiff = 6 [(mimetype) = "image/tiff"];
+  MsgPack msgpack = 7 [(mimetype) = "application/msgpack"];
 
   bool has_pyarrow = 20;
   bool has_json = 21;
@@ -33,6 +34,7 @@ message Format {
   bool has_csv = 23;
   bool has_png = 24;
   bool has_geotiff = 25;
+  bool has_msgpack = 26;
 }
 
 message PyArrow {
@@ -62,3 +64,5 @@ message GeoTIFF {
   }
   Compression compression = 3;
 }
+
+message MsgPack {}
