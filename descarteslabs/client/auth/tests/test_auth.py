@@ -70,13 +70,12 @@ class TestAuth(unittest.TestCase):
         warnings.resetwarnings()
 
     def test_auth_client_refresh_match(self):
-        with warnings.catch_warnings(record=True) as w:
+        with warnings.catch_warnings(record=True):
             auth = Auth(
                 client_id="client_id",
                 client_secret="secret",
                 refresh_token="mismatched_refresh_token",
             )
-            assert 1 == len(w)
             assert "mismatched_refresh_token" == auth.refresh_token
             assert "mismatched_refresh_token" == auth.client_secret
 

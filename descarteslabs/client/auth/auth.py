@@ -109,8 +109,10 @@ class Auth:
             try:
                 with open(self.token_info_path) as fp:
                     token_info = json.load(fp)
-            except (IOError, ValueError):
-                pass
+            except (IOError, ValueError) as e:
+                warnings.warn("unable to read token_info from {} with error {}.".format(
+                    self.token_info_path, str(e))
+                )
 
         self.client_id = next(
             (
@@ -356,8 +358,11 @@ class Auth:
             try:
                 with open(self.token_info_path) as fp:
                     token_info = json.load(fp)
-            except (IOError, ValueError):
-                pass
+            except (IOError, ValueError) as e:
+                warnings.warn("unable to read token_info from {} with error {}.".format(
+                    self.token_info_path, str(e))
+                )
+                return
 
         token_info["jwt_token"] = self._token
 
