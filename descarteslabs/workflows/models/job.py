@@ -301,7 +301,10 @@ class Job(object):
 
     @property
     def stage(self):
-        "The current stage of the Job (preparing, running, saving, done)."
+        """
+        The current stage of the Job (queued, preparing, running, saving, succeeded,
+        failed).
+        """
         return job_pb2.Job.Stage.Name(self._message.state.stage)
 
     @property
@@ -316,7 +319,7 @@ class Job(object):
 
     @property
     def cache_enabled(self):
-        """Whether caching is enabled for thie job."""
+        """Whether caching is enabled for this job."""
         return not self._message.no_cache
 
     @property
@@ -421,10 +424,10 @@ class Job(object):
             finished=self._message.state.tasks_progress.finished,
             total=sum(
                 (
-                    self._message.state.tasks_progress.waiting,
-                    self._message.state.tasks_progress.ready,
-                    self._message.state.tasks_progress.running,
-                    self._message.state.tasks_progress.finished,
+                    self._message.state.tasks_progress.waiting.value,
+                    self._message.state.tasks_progress.ready.value,
+                    self._message.state.tasks_progress.running.value,
+                    self._message.state.tasks_progress.finished.value,
                 )
             ),
             stage=self.stage,

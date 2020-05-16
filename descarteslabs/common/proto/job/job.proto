@@ -3,6 +3,8 @@ syntax = "proto3";
 
 package descarteslabs.workflows;
 
+import "google/protobuf/wrappers.proto";
+
 import "descarteslabs/common/proto/types/types.proto";
 import "descarteslabs/common/proto/typespec/typespec.proto";
 // backwards compatible fix for ErrorCode
@@ -28,20 +30,21 @@ message Job {
   string org = 9;
 
   enum Stage {
-    QUEUED = 0;
-    PREPARING = 1;
-    RUNNING = 2;
-    SAVING = 3;
-    FAILED = 4;
-    SUCCEEDED = 5;
-    CANCELLED = 6;
+    UNSPECIFIED = 0;
+    QUEUED = 1;
+    PREPARING = 2;
+    RUNNING = 3;
+    SAVING = 4;
+    FAILED = 5;
+    SUCCEEDED = 6;
+    CANCELLED = 7;
   }
 
   message TasksProgress {
-    uint32 waiting = 1;
-    uint32 ready = 2;
-    uint32 running = 3;
-    uint32 finished = 4;
+    google.protobuf.UInt32Value waiting = 1;
+    google.protobuf.UInt32Value ready = 2;
+    google.protobuf.UInt32Value running = 3;
+    google.protobuf.UInt32Value finished = 4;
   }
 
   message Error {
