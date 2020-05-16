@@ -421,7 +421,7 @@ class Job(object):
             The output widget/stream to write a job's progress bar to.
         """
         _draw_progress_bar(
-            finished=self._message.state.tasks_progress.finished,
+            finished=self._message.state.tasks_progress.finished.value,
             total=sum(
                 (
                     self._message.state.tasks_progress.waiting.value,
