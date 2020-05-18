@@ -1,5 +1,6 @@
 import json
 
+import freezegun
 import pytest
 import mock
 import pyarrow as pa
@@ -295,12 +296,21 @@ class TestJob(object):
         j = Job._from_proto(message)
 
         job_state = job_pb2.Job.State(stage=job_pb2.Job.Stage.QUEUED)
-        stub.return_value.WatchJob.return_value = [job_state]
 
-        with pytest.raises(JobTimeoutError):
+        with pytest.raises(JobTimeoutError), freezegun.freeze_time(
+            "2020-01-01"
+        ) as freezer:
+
+            def side_effect(*args, **kwargs):
+                freezer.tick()  # ticks by 1 second
+                return [job_state]
+
+            stub.return_value.WatchJob.side_effect = side_effect
+
             j._wait_for_result(1e-4)
-        assert j._message.state.stage == job_state.stage
+
         stub.return_value.WatchJob.assert_called()
+        assert j._message.state.stage == job_state.stage
 
     def test_load_result_error(self, stub):
         message = job_pb2.Job(
