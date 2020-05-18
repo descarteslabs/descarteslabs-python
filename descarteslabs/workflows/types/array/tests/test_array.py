@@ -64,6 +64,13 @@ def test_size():
     assert isinstance(arr.size, Int)
 
 
+def test_astype():
+    assert isinstance(arr.astype("int"), Array)
+    assert isinstance(arr.astype(int), Array)
+    assert isinstance(arr.astype(Int), Array)
+    assert isinstance(arr.astype(DType(int)), Array)
+
+
 def test_flatten():
     assert isinstance(arr.flatten(), Array)
 

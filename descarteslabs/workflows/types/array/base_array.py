@@ -2,9 +2,9 @@ from ... import env
 from .dtype import DType
 from .scalar import Scalar
 from ..containers import Dict, Ellipsis as wf_Ellipsis, List, Slice, Tuple
-from ..core import allow_reflect, Proxytype, ProxyTypeError
+from ..core import typecheck_promote, allow_reflect, Proxytype, ProxyTypeError
 from ..mixins import NumPyMixin
-from ..primitives import Bool, Int, NoneType
+from ..primitives import Bool, Int, Str, NoneType
 
 
 def _delayed_numpy():
@@ -86,6 +86,23 @@ class BaseArray(NumPyMixin, Proxytype):
     def literal_value(self):
         "Python literal value this proxy object was constructed with, or None if not constructed from a literal value."
         return getattr(self, "_literal_value", None)
+
+    @typecheck_promote((Str, DType))
+    def astype(self, dtype):
+        """
+        Return ``Array`` cast to a specific type.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> arr = wf.Array([True, False, True])
+        >>> int_arr = arr.astype("int")
+        >>> int_arr.dtype.compute() #doctest: +SKIP
+        dtype('int64')
+        >>> int_arr.compute() # doctest: +SKIP
+        array([1, 0, 1])
+        """
+        return self._from_apply("array.astype", self, dtype)
 
     def flatten(self):
         """

@@ -81,6 +81,11 @@ def test_size():
     assert isinstance(ma.size, Int)
 
 
+def test_astype():
+    assert isinstance(ma.astype("int"), MaskedArray)
+    assert isinstance(ma.astype(DType(int)), MaskedArray)
+
+
 def test_flatten():
     assert isinstance(ma.flatten(), MaskedArray)
 
