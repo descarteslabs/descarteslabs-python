@@ -177,3 +177,16 @@ class MaskedArray(BaseArray):
         fill_value=1e+20)
         """
         return self._stats_return_type(axis)._from_apply("count", self, axis)
+
+    def compressed(self):
+        """ Returns all the non-masked data as a 1D `Array`.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> ma = wf.MaskedArray([[1, 2], [3, 4]], mask=[[True, False], [False, True]])
+        >>> compressed = ma.compressed()
+        >>> compressed.compute() # doctest: +SKIP
+        array([2, 3])
+        """
+        return Array._from_apply("maskedarray.compressed", self)

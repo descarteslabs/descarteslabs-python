@@ -212,3 +212,8 @@ def test_getmaskarray():
 def test_filled(fill_value):
     arr = ma.filled(fill_value)
     assert isinstance(arr, Array)
+
+
+def test_compressed():
+    arr = ma.compressed()
+    assert isinstance(arr, Array)
