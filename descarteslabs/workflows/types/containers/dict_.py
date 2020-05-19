@@ -131,7 +131,27 @@ class Dict(GenericProxytype):
             raise ProxyTypeError(
                 "Dict keys are of type {}, but indexed with {}".format(kt, item)
             )
-        return vt._from_apply("getitem", self, item)
+        return vt._from_apply("get", self, item)
+
+    def get(self, item, default=None):
+        kt, vt = self._type_params
+        try:
+            item = kt._promote(item)
+        except ProxyTypeError:
+            raise ProxyTypeError(
+                "Dict keys are of type {}, but indexed with {}".format(kt, item)
+            )
+
+        try:
+            default = vt._promote(default)
+        except ProxyTypeError:
+            raise ProxyTypeError(
+                "The ``default`` must be the same type as the Dict values."
+                " Expected something of type {} but got type {}.".format(
+                    vt.__name__, type(default)
+                )
+            )
+        return vt._from_apply("get", self, item, default=default)
 
     def __iter__(self):
         raise TypeError(

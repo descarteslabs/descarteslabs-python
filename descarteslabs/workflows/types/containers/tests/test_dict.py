@@ -142,7 +142,7 @@ def test_getitem_roundtrip():
     for key, truth in six.iteritems(src):
         value = interpreter.interpret(
             dct[key].graft,
-            builtins={"getitem": operator.getitem, "dict.create": dict_builtin},
+            builtins={"get": operator.getitem, "dict.create": dict_builtin},
         )()
         assert value == truth
 
