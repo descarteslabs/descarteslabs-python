@@ -13,6 +13,10 @@ from descarteslabs.common.graft import client as graft_client
 from descarteslabs.common.proto.job import job_pb2
 from descarteslabs.common.proto.types import types_pb2
 from descarteslabs.common.workflows.arrow_serialization import serialization_context
+from descarteslabs.common.workflows.formats import (
+    user_format_to_proto,
+    format_proto_to_user_facing_format,
+)
 
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec, typespec_to_unmarshal_str
@@ -66,7 +70,9 @@ class Job(object):
     BUCKET_PREFIX = "https://storage.googleapis.com/dl-compute-dev-results/{}"
     WAIT_INTERVAL = 0.1
 
-    def __init__(self, proxy_object, parameters, client=None, cache=True):
+    def __init__(
+        self, proxy_object, parameters, format="pyarrow", client=None, cache=True
+    ):
         """
         Creates a new `Job` to compute the provided proxy object with the given
         parameters.
@@ -77,6 +83,8 @@ class Job(object):
             Proxy object to compute
         parameters: dict[str, Proxytype]
             Python dictionary of parameter names and values
+        format: str or dict, default "pyarrow"
+            The serialization format for the result.
         client : `.workflows.client.Client`, optional
             Allows you to use a specific client instance with non-default
             auth and parameters
@@ -102,6 +110,11 @@ class Job(object):
         typespec = serialize_typespec(type(proxy_object))
         result_type = typespec_to_unmarshal_str(typespec)
         # ^ this also preemptively checks whether the result type is something we'll know how to unmarshal
+
+        if isinstance(format, str):
+            format = {"type": format}
+        format_proto = user_format_to_proto(format)
+
         parameters = parameters_to_grafts(**parameters)
 
         message = client.api["CreateJob"](
@@ -110,6 +123,7 @@ class Job(object):
                 serialized_graft=json.dumps(proxy_object.graft),
                 typespec=typespec,
                 type=types_pb2.ResultType.Value(result_type),
+                format=format_proto,
                 no_cache=not cache,
                 channel=_channel.__channel__,
             ),
@@ -347,6 +361,11 @@ class Job(object):
         return json.loads(self._message.parameters)
 
     @property
+    def format(self):
+        "The serialization format of the Job, as a dictionary."
+        return format_proto_to_user_facing_format(self._message.format)
+
+    @property
     def error(self):
         "The error of the Job, or None if it finished successfully."
         error_code = self._message.state.error.code
@@ -355,7 +374,7 @@ class Job(object):
 
     def _load_result(self):
         if self._message.state.stage == job_pb2.Job.Stage.SUCCEEDED:
-            return self._unmarshal(self._download_result())
+            return self._download_result()
         elif self._message.state.stage == job_pb2.Job.Stage.FAILED:
             raise self.error
         elif self._message.state.stage == job_pb2.Job.Stage.CANCELLED:
@@ -367,15 +386,23 @@ class Job(object):
         response = requests.get(self.BUCKET_PREFIX.format(self.id))
         response.raise_for_status()
 
-        buffer = pa.decompress(
-            response.content,
-            codec=response.headers["x-goog-meta-codec"],
-            decompressed_size=int(response.headers["x-goog-meta-decompressed_size"]),
-        )
-        return pa.deserialize(buffer, context=serialization_context)
+        content_type = response.headers["x-goog-stored-content-encoding"]
 
-    def _unmarshal(self, marshalled):
-        return unmarshal.unmarshal(self.result_type, marshalled)
+        if content_type == "application/vnd.pyarrow":
+            buffer = pa.decompress(
+                response.content,
+                codec=response.headers["x-goog-meta-X-Arrow-Codec"],
+                decompressed_size=int(
+                    response.headers["x-goog-meta-X-Decompressed-Size"]
+                ),
+            )
+            marshalled = pa.deserialize(buffer, context=serialization_context)
+            return unmarshal.unmarshal(self.result_type, marshalled)
+        elif content_type == "application/json":
+            return json.loads(response.content)
+        else:
+            # return the raw data
+            return response.content
 
     def _wait_for_result(self, timeout=None, progress_bar=False):
         if timeout is None:
@@ -447,7 +474,7 @@ def _draw_progress_bar(finished, total, stage, output, width=6):
         bar = "#" * int(width * percent)
 
     progress_output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
-        bar=bar, width=width, finished=finished, total=total, stage=stage,
+        bar=bar, width=width, finished=finished, total=total, stage=stage
     )
 
     _write_to_io_or_widget(output, "{:<79}".format(progress_output))

@@ -73,6 +73,11 @@ class JobCancelled(Exception):
     pass
 
 
+class JobSerialization(JobComputeError):
+    "Raised when job result serialization fails."
+    pass
+
+
 ERRORS = {
     errors_pb2.ERROR_NONE: None,
     errors_pb2.ERROR_UNKNOWN: JobComputeError,
@@ -83,6 +88,7 @@ ERRORS = {
     errors_pb2.ERROR_TERMINATED: JobTerminated,
     errors_pb2.ERROR_AUTH: JobAuth,
     errors_pb2.ERROR_TYPING: JobInvalidTyping,
+    errors_pb2.ERROR_SERIALIZATION: JobSerialization,
 }
 
 

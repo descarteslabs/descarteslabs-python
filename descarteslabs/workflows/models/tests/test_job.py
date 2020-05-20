@@ -12,6 +12,7 @@ from descarteslabs.common.proto.errors import errors_pb2
 from descarteslabs.common.proto.job import job_pb2
 from descarteslabs.common.proto.types import types_pb2
 from descarteslabs.common.workflows.arrow_serialization import serialization_context
+from descarteslabs.common.workflows.formats import user_format_to_proto
 from descarteslabs.common.graft import client as graft_client
 
 from descarteslabs.workflows import _channel
@@ -51,11 +52,15 @@ class TestJob(object):
         parameters = {"foo": types.Str("bar")}
 
         typespec = cereal.serialize_typespec(type(obj))
+        format_proto = user_format_to_proto(
+            {"type": "pyarrow", "compression": "brotli"}
+        )
         create_job_request_message = job_pb2.CreateJobRequest(
             parameters=json.dumps(parameters_to_grafts(**parameters)),
             serialized_graft=json.dumps(obj.graft),
             typespec=typespec,
             type=types_pb2.ResultType.Value(cereal.typespec_to_unmarshal_str(typespec)),
+            format=format_proto,
             no_cache=False,
             channel=_channel.__channel__,
         )
@@ -66,12 +71,13 @@ class TestJob(object):
             serialized_graft=create_job_request_message.serialized_graft,
             typespec=create_job_request_message.typespec,
             type=create_job_request_message.type,
+            format=create_job_request_message.format,
             no_cache=create_job_request_message.no_cache,
             channel=create_job_request_message.channel,
         )
         stub.return_value.CreateJob.return_value = message
 
-        job = Job(obj, parameters)
+        job = Job(obj, parameters, format={"type": "pyarrow", "compression": "brotli"})
 
         stub.return_value.CreateJob.assert_called_once_with(
             create_job_request_message,
@@ -329,11 +335,13 @@ class TestJob(object):
     def test_download_result(self, stub):
         job = Job._from_proto(
             job_pb2.Job(
-                id="foo", state=job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED),
+                id="foo",
+                state=job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED),
+                type=9,
             )
         )
 
-        result = {}
+        result = 2
         buffer = pa.serialize(result, context=serialization_context).to_buffer()
         codec = "lz4"
 
@@ -342,56 +350,11 @@ class TestJob(object):
             Job.BUCKET_PREFIX.format(job.id),
             body=pa.compress(buffer, codec=codec, asbytes=True),
             headers={
-                "x-goog-meta-codec": codec,
-                "x-goog-meta-decompressed_size": str(len(buffer)),
+                "x-goog-stored-content-encoding": "application/vnd.pyarrow",
+                "x-goog-meta-X-Arrow-Codec": codec,
+                "x-goog-meta-X-Decompressed-Size": str(len(buffer)),
             },
             status=200,
         )
 
         assert job._download_result() == result
-
-    def test_unmarshal_primitive(self, stub):
-        marshalled = (1, 2, True, None)
-        job = Job._from_proto(
-            job_pb2.Job(
-                id="foo",
-                state=job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED),
-                type=types_pb2.List,
-            )
-        )
-
-        result = job._unmarshal(marshalled)
-        assert result == list(marshalled)
-
-    def test_unmarshal_image(self, stub):
-        marshalled = {
-            "ndarray": {"red": []},
-            "properties": {
-                "foo": "bar",
-                "geometry": {"type": "Point", "coordinates": [0, 0]},
-            },
-            "bandinfo": {"red": {}},
-            "geocontext": {
-                "geometry": None,
-                "crs": "EPSG:4326",
-                "bounds": (-98, 40, -90, 44),
-            },
-        }
-        job = Job._from_proto(
-            job_pb2.Job(
-                id="foo",
-                state=job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED),
-                type=types_pb2.Image,
-            )
-        )
-
-        result = job._unmarshal(marshalled)
-        # NOTE(gabe): we check the class name, versus `isinstance(result, results.ImageResult)`,
-        # because importing results in this test would register its unmarshallers,
-        # and part of what we're testing for is that the unmarshallers are getting registered correctly.
-        assert result.__class__.__name__ == "ImageResult"
-
-        assert result.ndarray == marshalled["ndarray"]
-        assert result.properties == marshalled["properties"]
-        assert result.bandinfo == marshalled["bandinfo"]
-        assert result.geocontext == marshalled["geocontext"]

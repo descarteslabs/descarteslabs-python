@@ -5,6 +5,7 @@ from .job import Job
 def compute(
     obj,
     geoctx=None,
+    format="pyarrow",
     timeout=None,
     block=True,
     progress_bar=None,
@@ -24,6 +25,8 @@ def compute(
         Almost all computations will require a `~.workflows.types.geospatial.GeoContext`,
         but for operations that only involve non-geospatial types,
         this parameter is optional.
+    format: str or dict, default "pyarrow"
+        The serialization format for the result.
     timeout: int, optional
         The number of seconds to wait for the result, if ``block`` is True.
         Raises ``JobTimeoutError`` if the timeout passes.
@@ -66,7 +69,7 @@ def compute(
     if geoctx is not None:
         params["geoctx"] = geoctx
 
-    job = Job(obj, params, client=client, cache=cache)
+    job = Job(obj, params, format=format, client=client, cache=cache)
     if block:
         return job.result(timeout=timeout, progress_bar=progress_bar)
     else:
