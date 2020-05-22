@@ -275,7 +275,6 @@ def _compute_mixin(
     timeout=None,
     block=True,
     progress_bar=None,
-    channel=None,
     client=None,
     **params
 ):
@@ -300,16 +299,6 @@ def _compute_mixin(
         Whether to draw the progress bar. If ``None`` (default),
         will display a progress bar in Jupyter Notebooks, but not elsewhere.
         Ignored if ``block==False``.
-    channel: str or None, optional
-        Channel name to submit the `.Job` to.
-        If None, uses the default channel for this client
-        (``descarteslabs.workflows.__channel__``).
-
-        Channels are different versions of the backend,
-        to allow for feature changes without breaking existing code.
-        Not all clients are compatible with all channels.
-        This client is only guaranteed to work with its default channel,
-        whose name can be found under ``descarteslabs.workflows.__channel__``.
     client : `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
@@ -331,7 +320,6 @@ def _compute_mixin(
         timeout=timeout,
         block=block,
         progress_bar=progress_bar,
-        channel=channel,
         client=client,
         **params
     )
