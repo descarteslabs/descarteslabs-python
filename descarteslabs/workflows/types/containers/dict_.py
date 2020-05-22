@@ -108,9 +108,9 @@ class Dict(GenericProxytype):
                     # of tuples
 
             if is_str_dict:
-                self.graft = client.apply_graft("dict.create", **promoted)
+                self.graft = client.apply_graft("wf.dict.create", **promoted)
             else:
-                self.graft = client.apply_graft("dict.create", *promoted)
+                self.graft = client.apply_graft("wf.dict.create", *promoted)
 
     @classmethod
     def _validate_params(cls, type_params):
@@ -131,7 +131,7 @@ class Dict(GenericProxytype):
             raise ProxyTypeError(
                 "Dict keys are of type {}, but indexed with {}".format(kt, item)
             )
-        return vt._from_apply("get", self, item)
+        return vt._from_apply("wf.get", self, item)
 
     def get(self, item, default=None):
         kt, vt = self._type_params
@@ -151,7 +151,7 @@ class Dict(GenericProxytype):
                     vt.__name__, type(default)
                 )
             )
-        return vt._from_apply("get", self, item, default=default)
+        return vt._from_apply("wf.get", self, item, default=default)
 
     def __iter__(self):
         raise TypeError(
@@ -175,7 +175,7 @@ class Dict(GenericProxytype):
         >>> my_dict.compute() # doctest: +SKIP
         {'foo': 1, 'bar': 2, 'baz': 3}
         """
-        return cls._from_apply("dict.from_pairs", pairs)
+        return cls._from_apply("wf.dict.from_pairs", pairs)
 
     def keys(self):
         """Get a list of all the dictionary keys.
@@ -191,7 +191,7 @@ class Dict(GenericProxytype):
         >>> my_dict.keys().compute() # doctest: +SKIP
         ['foo', 'bar', 'baz']
         """
-        return List[self._type_params[0]]._from_apply("dict.keys", self)
+        return List[self._type_params[0]]._from_apply("wf.dict.keys", self)
 
     def values(self):
         """Get a list of all the dictionary values.
@@ -207,7 +207,7 @@ class Dict(GenericProxytype):
         >>> my_dict.values().compute() # doctest: +SKIP
         [1, 2, 3]
         """
-        return List[self._type_params[1]]._from_apply("dict.values", self)
+        return List[self._type_params[1]]._from_apply("wf.dict.values", self)
 
     def items(self):
         """Get a list of tuples of key-value pairs in the dictionary.
@@ -224,5 +224,5 @@ class Dict(GenericProxytype):
         [('foo', 1), ('bar', 2), ('baz', 3)]
         """
         return List[Tuple[self._type_params[0], self._type_params[1]]]._from_apply(
-            "dict.items", self
+            "wf.dict.items", self
         )

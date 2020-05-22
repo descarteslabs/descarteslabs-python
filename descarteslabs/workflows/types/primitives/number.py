@@ -39,7 +39,7 @@ class Number(NumPyMixin, Primitive):
                 self.graft = obj.graft
             else:
                 self.graft = self._from_apply(
-                    "{}.cast".format(self.__class__.__name__), obj
+                    "wf.{}.cast".format(self.__class__.__name__), obj
                 ).graft
         else:
             if isinstance(obj, np.generic):
@@ -78,7 +78,7 @@ class Number(NumPyMixin, Primitive):
         from ..containers import Tuple
 
         restype = _binop_result(self, other)
-        return Tuple[restype, restype]._from_apply("divmod", self, other)
+        return Tuple[restype, restype]._from_apply("wf.divmod", self, other)
 
     @allow_reflect
     def __eq__(self, other):
@@ -110,7 +110,7 @@ class Number(NumPyMixin, Primitive):
         )
 
     def __invert__(self):
-        return self._from_apply("invert", self)
+        return self._from_apply("wf.invert", self)
 
     @allow_reflect
     def __le__(self, other):
@@ -136,7 +136,7 @@ class Number(NumPyMixin, Primitive):
         return _delayed_numpy_ufuncs().negative(self)
 
     def __pos__(self):
-        return self._from_apply("pos", self)
+        return self._from_apply("wf.pos", self)
 
     @allow_reflect
     def __pow__(self, other):
@@ -155,7 +155,7 @@ class Number(NumPyMixin, Primitive):
         from ..containers import Tuple
 
         restype = _binop_result(self, other)
-        return Tuple[restype, restype]._from_apply("divmod", other, self)
+        return Tuple[restype, restype]._from_apply("wf.divmod", other, self)
 
     @allow_reflect
     def __rfloordiv__(self, other):
@@ -214,43 +214,43 @@ class Int(Number):
 
     @typecheck_promote(lambda: (Int, Bool), _reflect=True)
     def __and__(self, other):
-        return self._from_apply("and", self, other)
+        return self._from_apply("wf.and", self, other)
 
     @typecheck_promote(lambda: Int, _reflect=True)
     def __lshift__(self, other):
-        return self._from_apply("lshift", self, other)
+        return self._from_apply("wf.lshift", self, other)
 
     @typecheck_promote(lambda: (Int, Bool), _reflect=True)
     def __or__(self, other):
-        return self._from_apply("or", self, other)
+        return self._from_apply("wf.or", self, other)
 
     @typecheck_promote(lambda: (Int, Bool))
     def __rand__(self, other):
-        return self._from_apply("and", other, self)
+        return self._from_apply("wf.and", other, self)
 
     @typecheck_promote(lambda: Int)
     def __rlshift__(self, other):
-        return self._from_apply("lshift", other, self)
+        return self._from_apply("wf.lshift", other, self)
 
     @typecheck_promote(lambda: (Int, Bool))
     def __ror__(self, other):
-        return self._from_apply("or", other, self)
+        return self._from_apply("wf.or", other, self)
 
     @typecheck_promote(lambda: Int)
     def __rrshift__(self, other):
-        return self._from_apply("rshift", other, self)
+        return self._from_apply("wf.rshift", other, self)
 
     @typecheck_promote(lambda: Int)
     def __rshift__(self, other):
-        return self._from_apply("rshift", self, other)
+        return self._from_apply("wf.rshift", self, other)
 
     @typecheck_promote(lambda: (Int, Bool))
     def __rxor__(self, other):
-        return self._from_apply("xor", other, self)
+        return self._from_apply("wf.xor", other, self)
 
     @typecheck_promote(lambda: (Int, Bool), _reflect=True)
     def __xor__(self, other):
-        return self._from_apply("xor", self, other)
+        return self._from_apply("wf.xor", self, other)
 
 
 @serializable()

@@ -118,7 +118,7 @@ class GeoContext(GeoContextBase):
     ...
     """
 
-    _constructor = "GeoContext.create"
+    _constructor = "wf.GeoContext.create"
     _optional = {
         "geometry",
         "resolution",
@@ -232,7 +232,7 @@ class GeoContext(GeoContextBase):
         -------
         ~descarteslabs.workflows.GeoContext
         """
-        return cls._from_apply("GeoContext.from_dltile_key", key)
+        return cls._from_apply("wf.GeoContext.from_dltile_key", key)
 
     @classmethod
     @typecheck_promote(Int, Int, Int)
@@ -250,7 +250,7 @@ class GeoContext(GeoContextBase):
         -------
         ~descarteslabs.workflows.GeoContext
         """
-        return cls._from_apply("GeoContext.from_xyz_tile", x, y, z)
+        return cls._from_apply("wf.GeoContext.from_xyz_tile", x, y, z)
 
     @classmethod
     def from_scenes(cls, ctx):
@@ -300,11 +300,13 @@ class GeoContext(GeoContextBase):
         """
         Convert pixel coordinates (row, col) to spatial coordinates (x, y) in the GeoContext's CRS.
         """
-        return Tuple[Float, Float]._from_apply("GeoContext.index_to_coords", self, row, col)
+        return Tuple[Float, Float]._from_apply(
+            "wf.GeoContext.index_to_coords", self, row, col
+        )
 
     @typecheck_promote(Float, Float)
     def coords_to_index(self, x, y):
         """
         Convert spatial coordinates (x, y) in the GeoContext's CRS to pixel coordinates (row, col).
         """
-        return Tuple[Int, Int]._from_apply("GeoContext.coords_to_index", self, x, y)
+        return Tuple[Int, Int]._from_apply("wf.GeoContext.coords_to_index", self, x, y)

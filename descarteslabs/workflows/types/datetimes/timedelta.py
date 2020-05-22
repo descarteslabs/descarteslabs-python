@@ -49,7 +49,7 @@ class Timedelta(TimedeltaStruct):
         weeks=0,
     ):
         self.graft = client.apply_graft(
-            "timedelta.from_components",
+            "wf.timedelta.from_components",
             days=days,
             seconds=seconds,
             microseconds=microseconds,
@@ -73,63 +73,63 @@ class Timedelta(TimedeltaStruct):
             return super(cls, cls)._promote(obj)
 
     def __abs__(self):
-        return self._from_apply("abs", self)
+        return self._from_apply("wf.abs", self)
 
     def __add__(self, other):
         from .datetime_ import Datetime, _binary_op_casts_to
 
         @typecheck_promote(lambda: (Timedelta, Datetime))
         def add(other):
-            return _binary_op_casts_to(self, other)._from_apply("add", self, other)
+            return _binary_op_casts_to(self, other)._from_apply("wf.add", self, other)
 
         return add(other)
 
     @typecheck_promote(lambda: Timedelta)
     def __eq__(self, other):
-        return Bool._from_apply("eq", self, other)
+        return Bool._from_apply("wf.eq", self, other)
 
     @typecheck_promote(lambda: Timedelta)
     def __ge__(self, other):
-        return Bool._from_apply("ge", self, other)
+        return Bool._from_apply("wf.ge", self, other)
 
     @typecheck_promote(lambda: Timedelta)
     def __gt__(self, other):
-        return Bool._from_apply("gt", self, other)
+        return Bool._from_apply("wf.gt", self, other)
 
     @typecheck_promote(lambda: Timedelta)
     def __le__(self, other):
-        return Bool._from_apply("le", self, other)
+        return Bool._from_apply("wf.le", self, other)
 
     @typecheck_promote(lambda: Timedelta)
     def __lt__(self, other):
-        return Bool._from_apply("lt", self, other)
+        return Bool._from_apply("wf.lt", self, other)
 
     @typecheck_promote(lambda: Timedelta)
     def __ne__(self, other):
-        return Bool._from_apply("ne", self, other)
+        return Bool._from_apply("wf.ne", self, other)
 
     def __neg__(self):
-        return self._from_apply("neg", self)
+        return self._from_apply("wf.neg", self)
 
     def __pos__(self):
-        return self._from_apply("pos", self)
+        return self._from_apply("wf.pos", self)
 
     def __radd__(self, other):
         from .datetime_ import Datetime, _binary_op_casts_to
 
         @typecheck_promote((Timedelta, Datetime))
         def radd(other):
-            return _binary_op_casts_to(self, other)._from_apply("add", other, self)
+            return _binary_op_casts_to(self, other)._from_apply("wf.add", other, self)
 
         return radd(other)
 
     @typecheck_promote(lambda: Timedelta)
     def __rsub__(self, other):
-        return self._from_apply("sub", other, self)
+        return self._from_apply("wf.sub", other, self)
 
     @typecheck_promote(lambda: Timedelta)
     def __sub__(self, other):
-        return self._from_apply("sub", self, other)
+        return self._from_apply("wf.sub", self, other)
 
     def total_seconds(self):
         """The total number of seconds contained in the duration.
@@ -141,4 +141,4 @@ class Timedelta(TimedeltaStruct):
         >>> my_timedelta.total_seconds().compute() # doctest: +SKIP
         1800.0
         """
-        return Float._from_apply("timedelta.total_seconds", self)
+        return Float._from_apply("wf.timedelta.total_seconds", self)

@@ -2,7 +2,7 @@ from ..identifier import identifier
 from ..primitives import Float
 
 
-e = identifier("constants.e", Float)
+e = identifier("wf.constants.e", Float)
 """e = 2.71828182845904523536028747135266249775724709369995...
 
     Example
@@ -15,7 +15,7 @@ e = identifier("constants.e", Float)
 """
 
 
-inf = identifier("constants.inf", Float)
+inf = identifier("wf.constants.inf", Float)
 """Floating point representation of positive infinity.
 
     Example
@@ -28,7 +28,7 @@ inf = identifier("constants.inf", Float)
 """
 
 
-nan = identifier("constants.nan", Float)
+nan = identifier("wf.constants.nan", Float)
 """Floating point representation of Not a Number.
 
     Example
@@ -41,7 +41,7 @@ nan = identifier("constants.nan", Float)
 """
 
 
-pi = identifier("constants.pi", Float)
+pi = identifier("wf.constants.pi", Float)
 """pi = 3.1415926535897932384626433...
 
     Example

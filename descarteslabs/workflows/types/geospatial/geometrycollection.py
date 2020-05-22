@@ -34,7 +34,7 @@ class GeometryCollection(GeometryCollectionStruct, GeometryMixin, CollectionMixi
     {'type': 'GeometryCollection', 'geometries': [{'type': 'Point', 'coordinates': [1, 2]}]}
     """
 
-    _constructor = "GeometryCollection.create"
+    _constructor = "wf.GeometryCollection.create"
     _element_type = Geometry
 
     def __init__(self, geometries, type="GeometryCollection"):
@@ -105,7 +105,7 @@ class GeometryCollection(GeometryCollectionStruct, GeometryMixin, CollectionMixi
         >>> gc.buffer(2)
         <descarteslabs.workflows.types.geospatial.geometry.Geometry object at 0x...>
         """
-        return Geometry._from_apply("buffer", self, distance)
+        return Geometry._from_apply("wf.buffer", self, distance)
 
     def length(self):
         """Length is equivalent to the Python ``len`` operator.
@@ -122,7 +122,7 @@ class GeometryCollection(GeometryCollectionStruct, GeometryMixin, CollectionMixi
         >>> my_list.length().compute() # doctest: +SKIP
         3
         """
-        return Int._from_apply("length", self)
+        return Int._from_apply("wf.length", self)
 
     def __reversed__(self):
-        return self._from_apply("reversed", self)
+        return self._from_apply("wf.reversed", self)

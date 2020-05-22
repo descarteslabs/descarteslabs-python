@@ -197,7 +197,7 @@ class TestFunction(object):
 
         result = func(7, 1, 4)
         interpreted = interpreter.interpret(
-            result.graft, builtins={"add": operator.add, "div": operator.truediv}
+            result.graft, builtins={"wf.add": operator.add, "wf.div": operator.truediv}
         )()
         assert interpreted == 2
 
@@ -227,8 +227,8 @@ class TestFunction(object):
         interpreted = interpreter.interpret(
             result.graft,
             builtins={
-                "numpy.add": operator.add,
-                "numpy.true_divide": operator.truediv,
+                "wf.numpy.add": operator.add,
+                "wf.numpy.true_divide": operator.truediv,
                 "global": m,
             },
         )()
@@ -244,7 +244,10 @@ class TestFunction(object):
 
         interpreted = interpreter.interpret(
             result.graft,
-            builtins={"numpy.add": operator.add, "numpy.true_divide": operator.truediv},
+            builtins={
+                "wf.numpy.add": operator.add,
+                "wf.numpy.true_divide": operator.truediv,
+            },
         )()
         assert interpreted == 2
 
@@ -292,8 +295,8 @@ class TestFunction(object):
         interpreted = interpreter.interpret(
             proxy_result.graft,
             builtins={
-                "numpy.add": operator.add,
-                "numpy.subtract": operator.sub,
+                "wf.numpy.add": operator.add,
+                "wf.numpy.subtract": operator.sub,
                 "ext1": ext1,
                 "ext2": ext2,
             },

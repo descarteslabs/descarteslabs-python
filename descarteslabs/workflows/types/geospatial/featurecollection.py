@@ -46,7 +46,7 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
        'properties': {'foo': 'bar'}}]}
     """
 
-    _constructor = "FeatureCollection.create"
+    _constructor = "wf.FeatureCollection.create"
     _element_type = Feature
 
     @typecheck_promote(List[Feature])
@@ -73,7 +73,7 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
         ~descarteslabs.workflows.FeatureCollection
         """
         return cls._from_apply(
-            "FeatureCollection.from_vector",
+            "wf.FeatureCollection.from_vector",
             id,
             geocontext=env.geoctx,
             __token__=env._token,
@@ -166,7 +166,7 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
         from .image import Image
 
         return Image._from_apply(
-            "rasterize",
+            "wf.rasterize",
             self,
             value,
             env.geoctx,
@@ -191,6 +191,6 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
         sorted: ~.geospatial.FeatureCollection
         """
         key = self._make_sort_key(key)
-        return self._from_apply("sorted", self, key, reverse=reverse)
+        return self._from_apply("wf.sorted", self, key, reverse=reverse)
         # NOTE(gabe): `key` is a required arg for the "sorted" function when given an FeatureCollection,
         # hence why we don't give it as a kwarg like we do for Collection.sorted

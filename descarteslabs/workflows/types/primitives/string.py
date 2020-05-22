@@ -50,50 +50,50 @@ class Str(Primitive):
 
     @typecheck_promote(lambda: Str)
     def __lt__(self, other):
-        return Bool._from_apply("lt", self, other)
+        return Bool._from_apply("wf.lt", self, other)
 
     @typecheck_promote(lambda: Str)
     def __le__(self, other):
-        return Bool._from_apply("le", self, other)
+        return Bool._from_apply("wf.le", self, other)
 
     @typecheck_promote(lambda: Str)
     def __eq__(self, other):
-        return Bool._from_apply("eq", self, other)
+        return Bool._from_apply("wf.eq", self, other)
 
     @typecheck_promote(lambda: Str)
     def __ne__(self, other):
-        return Bool._from_apply("ne", self, other)
+        return Bool._from_apply("wf.ne", self, other)
 
     @typecheck_promote(lambda: Str)
     def __gt__(self, other):
-        return Bool._from_apply("gt", self, other)
+        return Bool._from_apply("wf.gt", self, other)
 
     @typecheck_promote(lambda: Str)
     def __ge__(self, other):
-        return Bool._from_apply("ge", self, other)
+        return Bool._from_apply("wf.ge", self, other)
 
     @typecheck_promote(lambda: Str)
     def __add__(self, other):
-        return self._from_apply("add", self, other)
+        return self._from_apply("wf.add", self, other)
 
     @typecheck_promote(lambda: Str)
     def __radd__(self, other):
-        return self._from_apply("add", other, self)
+        return self._from_apply("wf.add", other, self)
 
     @typecheck_promote(Int)
     def __mul__(self, other):
-        return self._from_apply("mul", self, other)
+        return self._from_apply("wf.mul", self, other)
 
     @typecheck_promote(Int)
     def __rmul__(self, other):
-        return self._from_apply("mul", other, self)
+        return self._from_apply("wf.mul", other, self)
 
     def __reversed__(self):
-        return self._from_apply("reversed", self)
+        return self._from_apply("wf.reversed", self)
 
     @typecheck_promote((Int, SliceType))
     def __getitem__(self, idx):
-        return self._from_apply("getitem", self, idx)
+        return self._from_apply("wf.getitem", self, idx)
 
     def length(self):
         """The length of the string (returns `Int`)
@@ -104,7 +104,7 @@ class Str(Primitive):
         >>> Str("hello").length().compute() # doctest: +SKIP
         5
         """
-        return Int._from_apply("length", self)
+        return Int._from_apply("wf.length", self)
 
     @typecheck_promote(lambda: Str)
     def contains(self, other):
@@ -116,7 +116,7 @@ class Str(Primitive):
         >>> Str("hello").contains("o").compute() # doctest: +SKIP
         True
         """
-        return Bool._from_apply("contains", self, other)
+        return Bool._from_apply("wf.contains", self, other)
 
     def capitalize(self):
         """
@@ -131,7 +131,7 @@ class Str(Primitive):
         >>> Str("hello").capitalize().compute() # doctest: +SKIP
         'Hello'
         """
-        return self._from_apply("Str.capitalize", self)
+        return self._from_apply("wf.Str.capitalize", self)
 
     @typecheck_promote(Int, fillchar=lambda: Str)
     def center(self, width, fillchar=" "):
@@ -146,7 +146,7 @@ class Str(Primitive):
         >>> Str("hello").center(9).compute() # doctest: +SKIP
         '  hello  '
         """
-        return self._from_apply("Str.center", self, width, fillchar=fillchar)
+        return self._from_apply("wf.Str.center", self, width, fillchar=fillchar)
 
     @typecheck_promote(lambda: Str)
     def count(self, sub):
@@ -159,7 +159,7 @@ class Str(Primitive):
         >>> Str("hello").count("l").compute() # doctest: +SKIP
         2
         """
-        return Int._from_apply("Str.count", self, sub)
+        return Int._from_apply("wf.Str.count", self, sub)
 
     @typecheck_promote(lambda: Str)
     def endswith(self, suffix):
@@ -172,7 +172,7 @@ class Str(Primitive):
         >>> Str("hello").endswith("o").compute() # doctest: +SKIP
         True
         """
-        return Bool._from_apply("Str.endswith", self, suffix)
+        return Bool._from_apply("wf.Str.endswith", self, suffix)
 
     @typecheck_promote(tabsize=Int)
     def expandtabs(self, tabsize=8):
@@ -187,7 +187,7 @@ class Str(Primitive):
         >>> Str("hello\t").expandtabs().compute() # doctest: +SKIP
         'hello   '
         """
-        return self._from_apply("Str.expandtabs", self, tabsize=tabsize)
+        return self._from_apply("wf.Str.expandtabs", self, tabsize=tabsize)
 
     @typecheck_promote(lambda: Str)
     def find(self, sub):
@@ -202,7 +202,7 @@ class Str(Primitive):
         >>> Str("hello").find("l").compute() # doctest: +SKIP
         2
         """
-        return Int._from_apply("Str.find", self, sub)
+        return Int._from_apply("wf.Str.find", self, sub)
 
     def format(self, *args, **kwargs):
         """
@@ -215,7 +215,7 @@ class Str(Primitive):
         >>> Str("hello {}").format("world").compute() # doctest: +SKIP
         'hello world'
         """
-        return self._from_apply("Str.format", self, *args, **kwargs)
+        return self._from_apply("wf.Str.format", self, *args, **kwargs)
 
     def isalnum(self):
         """
@@ -230,7 +230,7 @@ class Str(Primitive):
         >>> Str("hello").isalnum().compute() # doctest: +SKIP
         True
         """
-        return Bool._from_apply("Str.isalnum", self)
+        return Bool._from_apply("wf.Str.isalnum", self)
 
     def isalpha(self):
         """
@@ -245,7 +245,7 @@ class Str(Primitive):
         >>> Str("hello").isalpha().compute() # doctest: +SKIP
         True
         """
-        return Bool._from_apply("Str.isalpha", self)
+        return Bool._from_apply("wf.Str.isalpha", self)
 
     def isdigit(self):
         """
@@ -260,7 +260,7 @@ class Str(Primitive):
         >>> Str("3").isdigit().compute() # doctest: +SKIP
         True
         """
-        return Bool._from_apply("Str.isdigit", self)
+        return Bool._from_apply("wf.Str.isdigit", self)
 
     def islower(self):
         """
@@ -275,7 +275,7 @@ class Str(Primitive):
         >>> Str("hello").islower().compute() # doctest: +SKIP
         True
         """
-        return Bool._from_apply("Str.islower", self)
+        return Bool._from_apply("wf.Str.islower", self)
 
     def isspace(self):
         """
@@ -290,7 +290,7 @@ class Str(Primitive):
         >>> Str(" ").isspace().compute() # doctest: +SKIP
         True
         """
-        return Bool._from_apply("Str.isspace", self)
+        return Bool._from_apply("wf.Str.isspace", self)
 
     def istitle(self):
         """
@@ -305,7 +305,7 @@ class Str(Primitive):
         >>> Str("Hello World").istitle().compute() # doctest: +SKIP
         True
         """
-        return Bool._from_apply("Str.istitle", self)
+        return Bool._from_apply("wf.Str.istitle", self)
 
     def isupper(self):
         """
@@ -320,7 +320,7 @@ class Str(Primitive):
         >>> Str("HELLO").isupper().compute() # doctest: +SKIP
         True
         """
-        return Bool._from_apply("Str.isupper", self)
+        return Bool._from_apply("wf.Str.isupper", self)
 
     @typecheck_promote(lambda: ListType(Str))
     def join(self, strings):
@@ -336,7 +336,7 @@ class Str(Primitive):
         >>> Str(".").join(['ab', 'pq']).compute() # doctest: +SKIP
         'ab.pq'
         """
-        return self._from_apply("Str.join", self, strings)
+        return self._from_apply("wf.Str.join", self, strings)
 
     @typecheck_promote(Int, fillchar=lambda: Str)
     def ljust(self, width, fillchar=" "):
@@ -351,7 +351,7 @@ class Str(Primitive):
         >>> Str("hello").ljust(6).compute() # doctest: +SKIP
         'hello '
         """
-        return self._from_apply("Str.ljust", self, width, fillchar=fillchar)
+        return self._from_apply("wf.Str.ljust", self, width, fillchar=fillchar)
 
     def lower(self):
         """
@@ -363,7 +363,7 @@ class Str(Primitive):
         >>> Str("HELLO").lower().compute() # doctest: +SKIP
         'hello'
         """
-        return self._from_apply("Str.lower", self)
+        return self._from_apply("wf.Str.lower", self)
 
     @typecheck_promote(chars=lambda: (Str, NoneType))
     def lstrip(self, chars=None):
@@ -378,7 +378,7 @@ class Str(Primitive):
         >>> Str("  hello ").lstrip().compute() # doctest: +SKIP
         'hello '
         """
-        return self._from_apply("Str.lstrip", self, chars)
+        return self._from_apply("wf.Str.lstrip", self, chars)
 
     @typecheck_promote(lambda: Str)
     def partition(self, sep):
@@ -400,7 +400,7 @@ class Str(Primitive):
         """
         from ..containers import Tuple
 
-        return Tuple[Str, Str, Str]._from_apply("Str.partition", self, sep)
+        return Tuple[Str, Str, Str]._from_apply("wf.Str.partition", self, sep)
 
     @typecheck_promote(lambda: Str, lambda: Str, count=Int)
     def replace(self, old, new, count=-1):
@@ -420,7 +420,7 @@ class Str(Primitive):
         >>> Str("hello").replace("e", "a").compute() # doctest: +SKIP
         'hallo'
         """
-        return self._from_apply("Str.replace", self, old, new, count=count)
+        return self._from_apply("wf.Str.replace", self, old, new, count=count)
 
     @typecheck_promote(lambda: Str)
     def rfind(self, sub):
@@ -435,7 +435,7 @@ class Str(Primitive):
         >>> Str("hello").rfind("l").compute() # doctest: +SKIP
         3
         """
-        return Int._from_apply("Str.rfind", self, sub)
+        return Int._from_apply("wf.Str.rfind", self, sub)
 
     @typecheck_promote(Int, fillchar=lambda: Str)
     def rjust(self, width, fillchar=" "):
@@ -450,7 +450,7 @@ class Str(Primitive):
         >>> Str("hello").rjust(9).compute() # doctest: +SKIP
         '    hello'
         """
-        return self._from_apply("Str.rjust", self, width, fillchar=fillchar)
+        return self._from_apply("wf.Str.rjust", self, width, fillchar=fillchar)
 
     @typecheck_promote(lambda: Str)
     def rpartition(self, sep):
@@ -472,7 +472,7 @@ class Str(Primitive):
         """
         from ..containers import Tuple
 
-        return Tuple[Str, Str, Str]._from_apply("Str.rpartition", self, sep)
+        return Tuple[Str, Str, Str]._from_apply("wf.Str.rpartition", self, sep)
 
     @typecheck_promote(sep=lambda: (Str, NoneType), maxsplit=Int)
     def rsplit(self, sep=None, maxsplit=-1):
@@ -497,7 +497,7 @@ class Str(Primitive):
         """
         from ..containers import List
 
-        return List[Str]._from_apply("Str.rsplit", self, sep=sep, maxsplit=maxsplit)
+        return List[Str]._from_apply("wf.Str.rsplit", self, sep=sep, maxsplit=maxsplit)
 
     @typecheck_promote(chars=lambda: (Str, NoneType))
     def rstrip(self, chars=None):
@@ -512,7 +512,7 @@ class Str(Primitive):
         >>> Str(" hello  ").rstrip().compute() # doctest: +SKIP
         ' hello'
         """
-        return self._from_apply("Str.rstrip", self, chars=chars)
+        return self._from_apply("wf.Str.rstrip", self, chars=chars)
 
     @typecheck_promote(sep=lambda: (Str, NoneType), maxsplit=Int)
     def split(self, sep=None, maxsplit=-1):
@@ -535,7 +535,7 @@ class Str(Primitive):
         """
         from ..containers import List
 
-        return List[Str]._from_apply("Str.split", self, sep=sep, maxsplit=maxsplit)
+        return List[Str]._from_apply("wf.Str.split", self, sep=sep, maxsplit=maxsplit)
 
     def splitlines(self):
         """
@@ -551,7 +551,7 @@ class Str(Primitive):
         """
         from ..containers import List
 
-        return List[Str]._from_apply("Str.splitlines", self)
+        return List[Str]._from_apply("wf.Str.splitlines", self)
 
     @typecheck_promote(lambda: Str)
     def startswith(self, prefix):
@@ -564,7 +564,7 @@ class Str(Primitive):
         >>> Str("hello").startswith("h").compute() # doctest: +SKIP
         True
         """
-        return Bool._from_apply("Str.startswith", self, prefix)
+        return Bool._from_apply("wf.Str.startswith", self, prefix)
 
     @typecheck_promote(chars=lambda: (Str, NoneType))
     def strip(self, chars=None):
@@ -579,7 +579,7 @@ class Str(Primitive):
         >>> Str("  hello  ").strip().compute() # doctest: +SKIP
         'hello'
         """
-        return self._from_apply("Str.strip", self, chars=chars)
+        return self._from_apply("wf.Str.strip", self, chars=chars)
 
     def swapcase(self):
         """
@@ -591,7 +591,7 @@ class Str(Primitive):
         >>> Str("hello").swapcase().compute() # doctest: +SKIP
         'HELLO'
         """
-        return self._from_apply("Str.swapcase", self)
+        return self._from_apply("wf.Str.swapcase", self)
 
     def title(self):
         """
@@ -606,7 +606,7 @@ class Str(Primitive):
         >>> Str("hello world").title().compute() # doctest: +SKIP
         'Hello World'
         """
-        return self._from_apply("Str.title", self)
+        return self._from_apply("wf.Str.title", self)
 
     def upper(self):
         """
@@ -618,7 +618,7 @@ class Str(Primitive):
         >>> Str("hello").upper().compute() # doctest: +SKIP
         'HELLO'
         """
-        return self._from_apply("Str.upper", self)
+        return self._from_apply("wf.Str.upper", self)
 
     @typecheck_promote(Int)
     def zfill(self, width):
@@ -633,4 +633,4 @@ class Str(Primitive):
         >>> Str("hello").zfill(9).compute() # doctest: +SKIP
         '0000hello'
         """
-        return self._from_apply("Str.zfill", self, width)
+        return self._from_apply("wf.Str.zfill", self, width)

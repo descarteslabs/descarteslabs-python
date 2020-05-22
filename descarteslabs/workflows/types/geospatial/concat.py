@@ -50,4 +50,4 @@ def concat(*imgs):
                     ", ".join(type(i).__name__ for i in imgs)
                 )
             )
-    return ImageCollection._from_apply("concat", *imgs)
+    return ImageCollection._from_apply("wf.concat", *imgs)

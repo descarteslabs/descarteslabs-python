@@ -51,7 +51,7 @@ class MaskedArray(BaseArray):
                 "should be boolean".format(mask_literal_value.dtype)
             )
 
-        self.graft = client.apply_graft("maskedarray.create", data, mask, fill_value)
+        self.graft = client.apply_graft("wf.maskedarray.create", data, mask, fill_value)
 
     @classmethod
     def from_numpy(cls, arr):
@@ -108,7 +108,7 @@ class MaskedArray(BaseArray):
                 [0.3429, 0.3429, 0.3429, ..., 0.0952, 0.0952, 0.0952],
         ...
         """
-        return Array._from_apply("maskedarray.getdata", self)
+        return Array._from_apply("wf.maskedarray.getdata", self)
 
     def getmaskarray(self):
         """The mask array underlying this `MaskedArray`.
@@ -124,7 +124,7 @@ class MaskedArray(BaseArray):
                 [False, False, False, ..., False, False, False],
         ...
         """
-        return Array._from_apply("maskedarray.getmaskarray", self)
+        return Array._from_apply("wf.maskedarray.getmaskarray", self)
 
     @typecheck_promote(fill_value=(Bool, Int, Float, Scalar, Array, NoneType))
     def filled(self, fill_value=None):
@@ -154,7 +154,7 @@ class MaskedArray(BaseArray):
                 [0.1, 0.1, 0.1, ..., 0.1, 0.1, 0.1],
         ...
         """
-        return Array._from_apply("maskedarray.filled", self, fill_value)
+        return Array._from_apply("wf.maskedarray.filled", self, fill_value)
 
     def count(self, axis=None):
         """ Count unmasked pixels along a given axis.
@@ -176,7 +176,7 @@ class MaskedArray(BaseArray):
         mask=False,
         fill_value=1e+20)
         """
-        return self._stats_return_type(axis)._from_apply("count", self, axis)
+        return self._stats_return_type(axis)._from_apply("wf.count", self, axis)
 
     def compressed(self):
         """ Returns all the non-masked data as a 1D `Array`.
@@ -189,4 +189,4 @@ class MaskedArray(BaseArray):
         >>> compressed.compute() # doctest: +SKIP
         array([2, 3])
         """
-        return Array._from_apply("maskedarray.compressed", self)
+        return Array._from_apply("wf.maskedarray.compressed", self)

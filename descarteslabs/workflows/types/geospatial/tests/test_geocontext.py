@@ -22,10 +22,10 @@ def test_from_scenes_aoi():
         align_pixels=False,
     )
     ctx = GeoContext.from_scenes(aoi)
-    assert ctx.graft[ctx.graft["returns"]][0] == "GeoContext.create"
+    assert ctx.graft[ctx.graft["returns"]][0] == "wf.GeoContext.create"
 
     promoted = GeoContext._promote(aoi)
-    assert promoted.graft[promoted.graft["returns"]][0] == "GeoContext.create"
+    assert promoted.graft[promoted.graft["returns"]][0] == "wf.GeoContext.create"
 
 
 def test_from_scenes_tile():
@@ -60,19 +60,21 @@ def test_from_scenes_tile():
 
     tile = scenes.DLTile(tile_dict)
     ctx = GeoContext.from_scenes(tile)
-    assert ctx.graft[ctx.graft["returns"]][0] == "GeoContext.from_dltile_key"
+    assert ctx.graft[ctx.graft["returns"]][0] == "wf.GeoContext.from_dltile_key"
 
     promoted = GeoContext._promote(tile)
-    assert promoted.graft[promoted.graft["returns"]][0] == "GeoContext.from_dltile_key"
+    assert (
+        promoted.graft[promoted.graft["returns"]][0] == "wf.GeoContext.from_dltile_key"
+    )
 
 
 def test_from_scenes_xyztile():
     tile = scenes.XYZTile(3, 5, 4)
     ctx = GeoContext.from_scenes(tile)
-    assert ctx.graft[ctx.graft["returns"]][0] == "GeoContext.from_xyz_tile"
+    assert ctx.graft[ctx.graft["returns"]][0] == "wf.GeoContext.from_xyz_tile"
 
     promoted = GeoContext._promote(tile)
-    assert promoted.graft[promoted.graft["returns"]][0] == "GeoContext.from_xyz_tile"
+    assert promoted.graft[promoted.graft["returns"]][0] == "wf.GeoContext.from_xyz_tile"
 
 
 def test_promote_dltile_from_key():

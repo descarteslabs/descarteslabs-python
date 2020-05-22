@@ -19,7 +19,7 @@ def test_init():
     lst = List[Int]([1, 2, 3])
     assert client.is_delayed(lst)
     assert interpreter.interpret(
-        lst.graft, builtins={"list": lambda *args: list(args)}
+        lst.graft, builtins={"wf.list": lambda *args: list(args)}
     )() == [1, 2, 3]
 
 
@@ -42,7 +42,7 @@ def test_init_copy():
 
     assert lst2.graft != lst1.graft
     assert interpreter.interpret(
-        lst2.graft, builtins={"list": lambda *args: list(args), "list.copy": list}
+        lst2.graft, builtins={"wf.list": lambda *args: list(args), "wf.list.copy": list}
     )() == [1, 2, 3]
 
 
@@ -80,7 +80,10 @@ def test_getitem_roundtrip():
     for i, truth in enumerate(src):
         value = interpreter.interpret(
             tup[i].graft,
-            builtins={"list": lambda *args: list(args), "getitem": operator.getitem},
+            builtins={
+                "wf.list": lambda *args: list(args),
+                "wf.getitem": operator.getitem,
+            },
         )()
         assert value == truth
 

@@ -38,7 +38,7 @@ class Slice(Proxytype):
                 start.literal_value, stop.literal_value, step.literal_value
             )
         self.graft = client.apply_graft(
-            "Slice.create", start=start, stop=stop, step=step
+            "wf.Slice.create", start=start, stop=stop, step=step
         )
 
     @classmethod

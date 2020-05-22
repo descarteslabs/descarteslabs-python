@@ -6,41 +6,31 @@ from .. import Image, ImageCollection
 
 
 @mock.patch.object(Proxytype, "_from_apply", wraps=Proxytype._from_apply)
-@pytest.mark.parametrize(
-    "obj, namespace",
-    [[Image.from_id(""), "Image"], [ImageCollection.from_id(""), "ImageCollection"]],
-)
+@pytest.mark.parametrize("obj", [Image.from_id(""), ImageCollection.from_id("")])
 @pytest.mark.parametrize("allow_missing", [True, False])
-def test_pick_bands(_from_apply, obj, namespace, allow_missing):
-    prefix = namespace + "."
-
+def test_pick_bands(_from_apply, obj, allow_missing):
     obj.pick_bands(["red", "green", "blue"], allow_missing=allow_missing)
     _from_apply.assert_called_once_with(
-        prefix + "pick_bands", obj, "red", "green", "blue", allow_missing=allow_missing
+        "wf.pick_bands", obj, "red", "green", "blue", allow_missing=allow_missing
     )
     _from_apply.reset_mock()
 
     proxy_str = Str("green")
     obj.pick_bands(["red", proxy_str, "blue"], allow_missing=allow_missing)
     _from_apply.assert_called_once_with(
-        prefix + "pick_bands",
-        obj,
-        "red",
-        proxy_str,
-        "blue",
-        allow_missing=allow_missing,
+        "wf.pick_bands", obj, "red", proxy_str, "blue", allow_missing=allow_missing
     )
     _from_apply.reset_mock()
 
     obj.pick_bands("red green blue", allow_missing=allow_missing)
     _from_apply.assert_called_once_with(
-        prefix + "pick_bands", obj, "red", "green", "blue", allow_missing=allow_missing
+        "wf.pick_bands", obj, "red", "green", "blue", allow_missing=allow_missing
     )
     _from_apply.reset_mock()
 
     obj.pick_bands("red", allow_missing=allow_missing)
     _from_apply.assert_called_once_with(
-        prefix + "pick_bands", obj, "red", allow_missing=allow_missing
+        "wf.pick_bands", obj, "red", allow_missing=allow_missing
     )
     _from_apply.reset_mock()
 
@@ -48,7 +38,7 @@ def test_pick_bands(_from_apply, obj, namespace, allow_missing):
     proxy_bool = Bool(allow_missing)
     obj.pick_bands(proxy_list, proxy_bool)
     _from_apply.assert_called_once_with(
-        prefix + "pick_bands_list", obj, proxy_list, allow_missing=proxy_bool
+        "wf.pick_bands_list", obj, proxy_list, allow_missing=proxy_bool
     )
 
     with pytest.raises(TypeError, match="Band names must all be strings"):

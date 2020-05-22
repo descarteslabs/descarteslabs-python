@@ -223,7 +223,7 @@ class Image(ImageBase, BandsMixin):
                 )
             )
         return cls._from_apply(
-            "Image.load",
+            "wf.Image.load",
             image_id,
             geocontext=env.geoctx,
             token=env._token,
@@ -250,7 +250,7 @@ class Image(ImageBase, BandsMixin):
         >>> img.nbands.compute(geoctx) # doctest: +SKIP
         25
         """
-        return Int._from_apply("nbands", self)
+        return Int._from_apply("wf.nbands", self)
 
     def with_properties(self, **properties):
         """
@@ -284,7 +284,7 @@ class Image(ImageBase, BandsMixin):
                     )
                 )
 
-        return self._from_apply("with_properties", self, **properties_promoted)
+        return self._from_apply("wf.with_properties", self, **properties_promoted)
 
     # @typecheck_promote(VarArgs[Str])
     # Once we support checking variadic positional args in typecheck_promote, we can use
@@ -321,7 +321,7 @@ class Image(ImageBase, BandsMixin):
                         type(property_key).__name__
                     )
                 )
-        return self._from_apply("without_properties", self, *property_keys)
+        return self._from_apply("wf.without_properties", self, *property_keys)
 
     def with_bandinfo(self, band, **bandinfo):
         """
@@ -399,7 +399,7 @@ class Image(ImageBase, BandsMixin):
         >>> rg.bandinfo.keys() # doctest: +SKIP
         ['red', 'green']
         """
-        return self._from_apply("Image.concat_bands", self, other_image)
+        return self._from_apply("wf.Image.concat_bands", self, other_image)
 
     # @typecheck_promote(lambda: Tuple[ImageCollection])
     # Once we support checking variadic positional args in typecheck_promote, we can use typecheck_promote instead
@@ -468,7 +468,7 @@ class Image(ImageBase, BandsMixin):
         """  # noqa
         if isinstance(mask, (Geometry, Feature, FeatureCollection)):
             mask = mask.rasterize().getmask()
-        return self._from_apply("mask", self, mask, replace=replace)
+        return self._from_apply("wf.mask", self, mask, replace=replace)
 
     def getmask(self):
         """
@@ -488,7 +488,7 @@ class Image(ImageBase, BandsMixin):
         >>> mask.bandinfo # doctest: +SKIP
         {'mask': {}}
         """
-        return self._from_apply("getmask", self)
+        return self._from_apply("wf.getmask", self)
 
     @typecheck_promote((Str, NoneType))
     def colormap(self, named_colormap="viridis", vmin=None, vmax=None):
@@ -528,7 +528,7 @@ class Image(ImageBase, BandsMixin):
             raise ValueError(
                 "Unknown colormap type: {}".format(named_colormap.literal_value)
             )
-        return self._from_apply("colormap", self, named_colormap, vmin, vmax)
+        return self._from_apply("wf.colormap", self, named_colormap, vmin, vmax)
 
     _STATS_RETURN_TYPES = {
         None: Float,
@@ -593,7 +593,7 @@ class Image(ImageBase, BandsMixin):
         """
         return_type = self._stats_return_type(axis)
         axis = list(axis) if isinstance(axis, tuple) else axis
-        return return_type._from_apply("min", self, axis)
+        return return_type._from_apply("wf.min", self, axis)
 
     def max(self, axis=None):
         """
@@ -632,7 +632,7 @@ class Image(ImageBase, BandsMixin):
         """
         return_type = self._stats_return_type(axis)
         axis = list(axis) if isinstance(axis, tuple) else axis
-        return return_type._from_apply("max", self, axis)
+        return return_type._from_apply("wf.max", self, axis)
 
     def mean(self, axis=None):
         """
@@ -671,7 +671,7 @@ class Image(ImageBase, BandsMixin):
         """
         return_type = self._stats_return_type(axis)
         axis = list(axis) if isinstance(axis, tuple) else axis
-        return return_type._from_apply("mean", self, axis)
+        return return_type._from_apply("wf.mean", self, axis)
 
     def median(self, axis=None):
         """
@@ -710,7 +710,7 @@ class Image(ImageBase, BandsMixin):
         """
         return_type = self._stats_return_type(axis)
         axis = list(axis) if isinstance(axis, tuple) else axis
-        return return_type._from_apply("median", self, axis)
+        return return_type._from_apply("wf.median", self, axis)
 
     def sum(self, axis=None):
         """
@@ -749,7 +749,7 @@ class Image(ImageBase, BandsMixin):
         """
         return_type = self._stats_return_type(axis)
         axis = list(axis) if isinstance(axis, tuple) else axis
-        return return_type._from_apply("sum", self, axis)
+        return return_type._from_apply("wf.sum", self, axis)
 
     def std(self, axis=None):
         """
@@ -789,7 +789,7 @@ class Image(ImageBase, BandsMixin):
         """
         return_type = self._stats_return_type(axis)
         axis = list(axis) if isinstance(axis, tuple) else axis
-        return return_type._from_apply("std", self, axis)
+        return return_type._from_apply("wf.std", self, axis)
 
     def count(self, axis=None):
         """
@@ -829,81 +829,81 @@ class Image(ImageBase, BandsMixin):
         """
         return_type = self._stats_return_type(axis)
         axis = list(axis) if isinstance(axis, tuple) else axis
-        return return_type._from_apply("count", self, axis)
+        return return_type._from_apply("wf.count", self, axis)
 
     # Binary comparators
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __lt__(self, other):
-        return _result_type(other)._from_apply("lt", self, other)
+        return _result_type(other)._from_apply("wf.lt", self, other)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __le__(self, other):
-        return _result_type(other)._from_apply("le", self, other)
+        return _result_type(other)._from_apply("wf.le", self, other)
 
     @typecheck_promote(
         (lambda: Image, lambda: _DelayedImageCollection(), Int, Float, Bool)
     )
     def __eq__(self, other):
-        return _result_type(other)._from_apply("eq", self, other)
+        return _result_type(other)._from_apply("wf.eq", self, other)
 
     @typecheck_promote(
         (lambda: Image, lambda: _DelayedImageCollection(), Int, Float, Bool)
     )
     def __ne__(self, other):
-        return _result_type(other)._from_apply("ne", self, other)
+        return _result_type(other)._from_apply("wf.ne", self, other)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __gt__(self, other):
-        return _result_type(other)._from_apply("gt", self, other)
+        return _result_type(other)._from_apply("wf.gt", self, other)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __ge__(self, other):
-        return _result_type(other)._from_apply("ge", self, other)
+        return _result_type(other)._from_apply("wf.ge", self, other)
 
     # Bitwise operators
     def __invert__(self):
-        return self._from_apply("invert", self)
+        return self._from_apply("wf.invert", self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Bool))
     def __and__(self, other):
-        return _result_type(other)._from_apply("and", self, other)
+        return _result_type(other)._from_apply("wf.and", self, other)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Bool))
     def __or__(self, other):
-        return _result_type(other)._from_apply("or", self, other)
+        return _result_type(other)._from_apply("wf.or", self, other)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Bool))
     def __xor__(self, other):
-        return _result_type(other)._from_apply("xor", self, other)
+        return _result_type(other)._from_apply("wf.xor", self, other)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int))
     def __lshift__(self, other):
-        return _result_type(other)._from_apply("lshift", self, other)
+        return _result_type(other)._from_apply("wf.lshift", self, other)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int))
     def __rshift__(self, other):
-        return _result_type(other)._from_apply("rshift", self, other)
+        return _result_type(other)._from_apply("wf.rshift", self, other)
 
     # Reflected bitwise operators
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Bool))
     def __rand__(self, other):
-        return _result_type(other)._from_apply("and", other, self)
+        return _result_type(other)._from_apply("wf.and", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Bool))
     def __ror__(self, other):
-        return _result_type(other)._from_apply("or", other, self)
+        return _result_type(other)._from_apply("wf.or", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Bool))
     def __rxor__(self, other):
-        return _result_type(other)._from_apply("xor", other, self)
+        return _result_type(other)._from_apply("wf.xor", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int))
     def __rlshift__(self, other):
-        return _result_type(other)._from_apply("lshift", other, self)
+        return _result_type(other)._from_apply("wf.lshift", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int))
     def __rrshift__(self, other):
-        return _result_type(other)._from_apply("rshift", other, self)
+        return _result_type(other)._from_apply("wf.rshift", other, self)
 
     # Arithmetic operators
     def log(img):
@@ -1180,7 +1180,7 @@ class Image(ImageBase, BandsMixin):
             raise ValueError(
                 "min and max cannot both be None. At least one must be specified."
             )
-        return self._from_apply("clip_values", self, min, max)
+        return self._from_apply("wf.clip_values", self, min, max)
 
     def scale_values(self, range_min, range_max, domain_min=None, domain_max=None):
         """
@@ -1214,7 +1214,7 @@ class Image(ImageBase, BandsMixin):
         ...
         """
         return self._from_apply(
-            "scale_values", self, range_min, range_max, domain_min, domain_max
+            "wf.scale_values", self, range_min, range_max, domain_min, domain_max
         )
 
     @typecheck_promote(
@@ -1261,7 +1261,9 @@ class Image(ImageBase, BandsMixin):
             raise ValueError(
                 "To replace empty Image with an int or float, bandinfo must be provided."
             )
-        return self._from_apply("Image.replace_empty_with", self, fill, mask, bandinfo)
+        return self._from_apply(
+            "wf.Image.replace_empty_with", self, fill, mask, bandinfo
+        )
 
     @typecheck_promote(Float, Float)
     def value_at(self, x, y):
@@ -1295,7 +1297,7 @@ class Image(ImageBase, BandsMixin):
         'green': 0.40950000000000003,
         'blue': 0.44870000000000004}
         """
-        return Dict[Str, Float]._from_apply("value_at", self, x, y)
+        return Dict[Str, Float]._from_apply("wf.value_at", self, x, y)
 
     @typecheck_promote(Int, Int)
     def index_to_coords(self, row, col):
@@ -1317,7 +1319,7 @@ class Image(ImageBase, BandsMixin):
         >>> rgb.index(0, 0).compute(ctx) # doctest: +SKIP
         (459040.0, 3942400.0)
         """
-        return Tuple[Float, Float]._from_apply("index_to_coords", self, row, col)
+        return Tuple[Float, Float]._from_apply("wf.index_to_coords", self, row, col)
 
     @typecheck_promote(Float, Float)
     def coords_to_index(self, x, y):
@@ -1339,97 +1341,97 @@ class Image(ImageBase, BandsMixin):
         >>> rgb.index(0, 0).compute(ctx) # doctest: +SKIP
         (459040.0, 3942400.0)
         """
-        return Tuple[Int, Int]._from_apply("coords_to_index", self, x, y)
+        return Tuple[Int, Int]._from_apply("wf.coords_to_index", self, x, y)
 
     def __neg__(self):
-        return self._from_apply("neg", self)
+        return self._from_apply("wf.neg", self)
 
     def __pos__(self):
-        return self._from_apply("pos", self)
+        return self._from_apply("wf.pos", self)
 
     def __abs__(self):
-        return self._from_apply("abs", self)
+        return self._from_apply("wf.abs", self)
 
     @typecheck_promote(
         (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
     )
     def __add__(self, other):
-        return _result_type(other)._from_apply("add", self, other)
+        return _result_type(other)._from_apply("wf.add", self, other)
 
     @typecheck_promote(
         (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
     )
     def __sub__(self, other):
-        return _result_type(other)._from_apply("sub", self, other)
+        return _result_type(other)._from_apply("wf.sub", self, other)
 
     @typecheck_promote(
         (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
     )
     def __mul__(self, other):
-        return _result_type(other)._from_apply("mul", self, other)
+        return _result_type(other)._from_apply("wf.mul", self, other)
 
     @typecheck_promote(
         (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
     )
     def __div__(self, other):
-        return _result_type(other)._from_apply("div", self, other)
+        return _result_type(other)._from_apply("wf.div", self, other)
 
     @typecheck_promote(
         (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
     )
     def __truediv__(self, other):
-        return _result_type(other)._from_apply("div", self, other)
+        return _result_type(other)._from_apply("wf.div", self, other)
 
     @typecheck_promote(
         (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
     )
     def __floordiv__(self, other):
-        return _result_type(other)._from_apply("floordiv", self, other)
+        return _result_type(other)._from_apply("wf.floordiv", self, other)
 
     @typecheck_promote(
         (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
     )
     def __mod__(self, other):
-        return _result_type(other)._from_apply("mod", self, other)
+        return _result_type(other)._from_apply("wf.mod", self, other)
 
     @typecheck_promote(
         (lambda: Image, lambda: _DelayedImageCollection(), Int, Float), _reflect=True
     )
     def __pow__(self, other):
-        return _result_type(other)._from_apply("pow", self, other)
+        return _result_type(other)._from_apply("wf.pow", self, other)
 
     # Reflected arithmetic operators
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __radd__(self, other):
-        return _result_type(other)._from_apply("add", other, self)
+        return _result_type(other)._from_apply("wf.add", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rsub__(self, other):
-        return _result_type(other)._from_apply("sub", other, self)
+        return _result_type(other)._from_apply("wf.sub", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rmul__(self, other):
-        return _result_type(other)._from_apply("mul", other, self)
+        return _result_type(other)._from_apply("wf.mul", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rdiv__(self, other):
-        return _result_type(other)._from_apply("div", other, self)
+        return _result_type(other)._from_apply("wf.div", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rtruediv__(self, other):
-        return _result_type(other)._from_apply("truediv", other, self)
+        return _result_type(other)._from_apply("wf.truediv", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rfloordiv__(self, other):
-        return _result_type(other)._from_apply("floordiv", other, self)
+        return _result_type(other)._from_apply("wf.floordiv", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rmod__(self, other):
-        return _result_type(other)._from_apply("mod", other, self)
+        return _result_type(other)._from_apply("wf.mod", other, self)
 
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __rpow__(self, other):
-        return _result_type(other)._from_apply("pow", other, self)
+        return _result_type(other)._from_apply("wf.pow", other, self)
 
     def tile_layer(
         self, name=None, scales=None, colormap=None, checkerboard=True, **parameters

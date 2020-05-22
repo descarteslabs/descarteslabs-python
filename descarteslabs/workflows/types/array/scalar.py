@@ -34,7 +34,7 @@ class Scalar(Proxytype, NumPyMixin):
             self.graft = obj.graft
         elif isinstance(obj, (np.int64, np.float64, np.bool, np.bool_)):
             cast = PY_TYPE[type(obj)](obj)
-            self.graft = client.apply_graft("scalar.create", cast)
+            self.graft = client.apply_graft("wf.scalar.create", cast)
         else:
             raise ProxyTypeError("Cannot instantiate a Scalar from {}.".format(obj))
 
@@ -42,7 +42,7 @@ class Scalar(Proxytype, NumPyMixin):
         return _delayed_numpy_ufuncs().negative(self)
 
     def __pos__(self):
-        return self._from_apply("pos", self)
+        return self._from_apply("wf.pos", self)
 
     def __abs__(self):
         return _delayed_numpy_ufuncs().absolute(self)

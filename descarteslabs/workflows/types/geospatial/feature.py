@@ -36,7 +36,7 @@ class Feature(FeatureStruct, GeometryMixin):
      'properties': {'foo': 'bar'}}
     """
 
-    _constructor = "Feature.create"
+    _constructor = "wf.Feature.create"
 
     def __init__(self, geometry, properties):
         return super(Feature, self).__init__(geometry=geometry, properties=properties)
@@ -123,5 +123,5 @@ class Feature(FeatureStruct, GeometryMixin):
         from .image import Image
 
         return Image._from_apply(
-            "rasterize", self, value, env.geoctx, default_value=default_value
+            "wf.rasterize", self, value, env.geoctx, default_value=default_value
         )

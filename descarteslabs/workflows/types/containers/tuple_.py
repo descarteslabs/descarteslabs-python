@@ -99,7 +99,7 @@ class Tuple(GenericProxytype):
                 )
 
         iterable = tuple(checker_promoter(i, x) for i, x in enumerate(iterable))
-        self.graft = client.apply_graft("tuple", *iterable)
+        self.graft = client.apply_graft("wf.tuple", *iterable)
 
     @classmethod
     def _validate_params(cls, type_params):
@@ -122,7 +122,7 @@ class Tuple(GenericProxytype):
             item_type = (
                 Any if type_slice is None else Tuple[self._type_params[type_slice]]
             )
-        return item_type._from_apply("getitem", self, item)
+        return item_type._from_apply("wf.getitem", self, item)
 
     def __len__(self):
         try:
@@ -147,7 +147,7 @@ class Tuple(GenericProxytype):
         >>> my_tuple.length().compute() # doctest: +SKIP
         3
         """
-        return Int._from_apply("length", self)
+        return Int._from_apply("wf.length", self)
 
     def __iter__(self):
         for i in range(len(self)):
@@ -163,7 +163,7 @@ class Tuple(GenericProxytype):
                     elemtype.__name__, type(self).__name__
                 ),
             )
-        return Bool._from_apply("lt", self, other)
+        return Bool._from_apply("wf.lt", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __le__(self, other):
@@ -175,7 +175,7 @@ class Tuple(GenericProxytype):
                     elemtype.__name__, type(self).__name__
                 ),
             )
-        return Bool._from_apply("le", self, other)
+        return Bool._from_apply("wf.le", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __gt__(self, other):
@@ -187,7 +187,7 @@ class Tuple(GenericProxytype):
                     elemtype.__name__, type(self).__name__
                 ),
             )
-        return Bool._from_apply("gt", self, other)
+        return Bool._from_apply("wf.gt", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __ge__(self, other):
@@ -199,7 +199,7 @@ class Tuple(GenericProxytype):
                     elemtype.__name__, type(self).__name__
                 ),
             )
-        return Bool._from_apply("ge", self, other)
+        return Bool._from_apply("wf.ge", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __eq__(self, other):
@@ -211,7 +211,7 @@ class Tuple(GenericProxytype):
                     elemtype.__name__, type(self).__name__
                 ),
             )
-        return Bool._from_apply("eq", self, other)
+        return Bool._from_apply("wf.eq", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __ne__(self, other):
@@ -223,7 +223,7 @@ class Tuple(GenericProxytype):
                     elemtype.__name__, type(self).__name__
                 ),
             )
-        return Bool._from_apply("ne", self, other)
+        return Bool._from_apply("wf.ne", self, other)
 
     def __add__(self, other):
         if isinstance(other, Tuple):
@@ -237,7 +237,7 @@ class Tuple(GenericProxytype):
         else:
             return NotImplemented
 
-        return concat_type._from_apply("add", self, other)
+        return concat_type._from_apply("wf.add", self, other)
 
     def __radd__(self, other):
         if isinstance(other, Tuple):
@@ -251,4 +251,4 @@ class Tuple(GenericProxytype):
         else:
             return NotImplemented
 
-        return concat_type._from_apply("add", other, self)
+        return concat_type._from_apply("wf.add", other, self)

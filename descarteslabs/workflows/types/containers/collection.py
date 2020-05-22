@@ -73,7 +73,7 @@ class CollectionMixin:
             else _DelayedList()[result_type]
         )
 
-        return container_type._from_apply("map", self, delayed_func)
+        return container_type._from_apply("wf.map", self, delayed_func)
 
     def filter(self, func):
         """Filter elements from an iterable proxytype.
@@ -98,7 +98,7 @@ class CollectionMixin:
         """
         delayed_func = Function._delay(func, Bool, self._element_type)
 
-        return self._from_apply("filter", self, delayed_func)
+        return self._from_apply("wf.filter", self, delayed_func)
 
     def reduce(self, func, initial=REDUCE_INITIAL_DEFAULT):
         """Reduce a collection of elements to a single element.
@@ -139,10 +139,10 @@ class CollectionMixin:
         )
 
         if initial is REDUCE_INITIAL_DEFAULT:
-            return initial_type._from_apply("reduce", self, delayed_func)
+            return initial_type._from_apply("wf.reduce", self, delayed_func)
         else:
             return initial_type._from_apply(
-                "reduce", self, delayed_func, initial=initial
+                "wf.reduce", self, delayed_func, initial=initial
             )
 
     def length(self):
@@ -160,7 +160,7 @@ class CollectionMixin:
         >>> my_list.length().compute() # doctest: +SKIP
         3
         """
-        return Int._from_apply("length", self)
+        return Int._from_apply("wf.length", self)
 
     @typecheck_promote(lambda self: self._element_type)
     def contains(self, other):
@@ -183,7 +183,7 @@ class CollectionMixin:
         >>> my_list.contains(2).compute() # doctest: +SKIP
         True
         """
-        return Bool._from_apply("contains", self, other)
+        return Bool._from_apply("wf.contains", self, other)
 
     @typecheck_promote(key=None, reverse=Bool)
     def sorted(self, key=None, reverse=False):
@@ -206,7 +206,7 @@ class CollectionMixin:
         [1, 2, 3, 4]
         """
         key = self._make_sort_key(key)
-        return self._from_apply("sorted", self, key=key, reverse=reverse)
+        return self._from_apply("wf.sorted", self, key=key, reverse=reverse)
 
     def _make_sort_key(self, key):
         "Delay a Python sort key function, or None, and ensure it produces an orderable type"
@@ -238,4 +238,4 @@ class CollectionMixin:
         return key
 
     def __reversed__(self):
-        return self._from_apply("reversed", self)
+        return self._from_apply("wf.reversed", self)

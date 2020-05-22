@@ -33,7 +33,7 @@ def test_init_fromdict(mock_apply):
     dct = Dict[Int, Float]({1: 1.1, 2: 2.2})
     apply_args, apply_kwargs = mock_apply.call_args
 
-    assert apply_args[0] == "dict.create"
+    assert apply_args[0] == "wf.dict.create"
     assert len(apply_kwargs) == 0
     for (key_item, value_item) in iter_argpairs(apply_args[1:]):
         assert isinstance(key_item, Int)
@@ -41,7 +41,7 @@ def test_init_fromdict(mock_apply):
 
     assert client.is_delayed(dct)
     assert interpreter.interpret(
-        dct.graft, builtins={"dict.create": dict_builtin}
+        dct.graft, builtins={"wf.dict.create": dict_builtin}
     )() == {1: 1.1, 2: 2.2}
 
 
@@ -50,14 +50,14 @@ def test_init_fromkwargs(mock_apply):
     dct = Dict[Str, Int](a=1, b=2, c=3)
     apply_args, apply_kwargs = mock_apply.call_args
 
-    assert apply_args == ("dict.create",)
+    assert apply_args == ("wf.dict.create",)
     assert six.viewkeys(apply_kwargs) == {"a", "b", "c"}
     for value in six.itervalues(apply_kwargs):
         assert isinstance(value, Int)
 
     assert client.is_delayed(dct)
     assert interpreter.interpret(
-        dct.graft, builtins={"dict.create": dict_builtin}
+        dct.graft, builtins={"wf.dict.create": dict_builtin}
     )() == dict(a=1, b=2, c=3)
 
 
@@ -66,7 +66,7 @@ def test_init_fromdict_andkwargs(mock_apply):
     dct = Dict[Str, Int]({"a": 0, "z": 100}, a=1, b=2, c=3)
     apply_args, apply_kwargs = mock_apply.call_args
 
-    assert apply_args == ("dict.create",)
+    assert apply_args == ("wf.dict.create",)
     assert six.viewkeys(apply_kwargs) == {"a", "z", "b", "c"}
     for value in six.itervalues(apply_kwargs):
         assert isinstance(value, Int)
@@ -74,7 +74,7 @@ def test_init_fromdict_andkwargs(mock_apply):
     assert client.is_delayed(dct)
 
     assert interpreter.interpret(
-        dct.graft, builtins={"dict.create": dict_builtin}
+        dct.graft, builtins={"wf.dict.create": dict_builtin}
     )() == {"a": 1, "z": 100, "b": 2, "c": 3}
 
 
@@ -142,7 +142,7 @@ def test_getitem_roundtrip():
     for key, truth in six.iteritems(src):
         value = interpreter.interpret(
             dct[key].graft,
-            builtins={"get": operator.getitem, "dict.create": dict_builtin},
+            builtins={"wf.get": operator.getitem, "wf.dict.create": dict_builtin},
         )()
         assert value == truth
 

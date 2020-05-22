@@ -53,7 +53,7 @@ class List(GenericProxytype, CollectionMixin):
             )
 
         if isinstance(iterable, type(self)):
-            self.graft = client.apply_graft("list.copy", iterable)
+            self.graft = client.apply_graft("wf.list.copy", iterable)
         elif isinstance(iterable, List):
             raise ProxyTypeError(
                 "Cannot convert {} to {}, since they have different value types".format(
@@ -76,7 +76,7 @@ class List(GenericProxytype, CollectionMixin):
                     )
 
             iterable = tuple(checker_promoter(i, x) for i, x in enumerate(iterable))
-            self.graft = client.apply_graft("list", *iterable)
+            self.graft = client.apply_graft("wf.list", *iterable)
 
     @classmethod
     def _validate_params(cls, type_params):
@@ -89,7 +89,7 @@ class List(GenericProxytype, CollectionMixin):
     def __getitem__(self, item):
         # TODO(gabe): cache
         return_type = self._type_params[0] if isinstance(item, Int) else type(self)
-        return return_type._from_apply("getitem", self, item)
+        return return_type._from_apply("wf.getitem", self, item)
 
     def __iter__(self):
         raise TypeError(
@@ -107,7 +107,7 @@ class List(GenericProxytype, CollectionMixin):
             self._type_params[0],
             "Operator `<` invalid for {}".format(type(self).__name__),
         )
-        return Bool._from_apply("lt", self, other)
+        return Bool._from_apply("wf.lt", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __le__(self, other):
@@ -116,7 +116,7 @@ class List(GenericProxytype, CollectionMixin):
             self._type_params[0],
             "Operator `<=` invalid for {}".format(type(self).__name__),
         )
-        return Bool._from_apply("le", self, other)
+        return Bool._from_apply("wf.le", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __gt__(self, other):
@@ -125,7 +125,7 @@ class List(GenericProxytype, CollectionMixin):
             self._type_params[0],
             "Operator `>` invalid for {}".format(type(self).__name__),
         )
-        return Bool._from_apply("gt", self, other)
+        return Bool._from_apply("wf.gt", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __ge__(self, other):
@@ -134,7 +134,7 @@ class List(GenericProxytype, CollectionMixin):
             self._type_params[0],
             "Operator `>=` invalid for {}".format(type(self).__name__),
         )
-        return Bool._from_apply("ge", self, other)
+        return Bool._from_apply("wf.ge", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __eq__(self, other):
@@ -143,7 +143,7 @@ class List(GenericProxytype, CollectionMixin):
             self._type_params[0],
             "Operator `==` invalid for {}".format(type(self).__name__),
         )
-        return Bool._from_apply("eq", self, other)
+        return Bool._from_apply("wf.eq", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __ne__(self, other):
@@ -152,20 +152,20 @@ class List(GenericProxytype, CollectionMixin):
             self._type_params[0],
             "Operator `!=` invalid for {}".format(type(self).__name__),
         )
-        return Bool._from_apply("ne", self, other)
+        return Bool._from_apply("wf.ne", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __add__(self, other):
-        return self._from_apply("add", self, other)
+        return self._from_apply("wf.add", self, other)
 
     @typecheck_promote(lambda self: type(self))
     def __radd__(self, other):
-        return self._from_apply("add", other, self)
+        return self._from_apply("wf.add", other, self)
 
     @typecheck_promote(Int)
     def __mul__(self, times):
-        return self._from_apply("mul", self, times)
+        return self._from_apply("wf.mul", self, times)
 
     @typecheck_promote(Int)
     def __rmul__(self, times):
-        return self._from_apply("mul", times, self)
+        return self._from_apply("wf.mul", times, self)

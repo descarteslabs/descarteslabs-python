@@ -60,7 +60,7 @@ class Datetime(DatetimeStruct):
         "second": "0 <= second < 60",
         "microsecond": "0 <= microsecond < 1000000",
     }
-    _constructor = "datetime.from_components"
+    _constructor = "wf.datetime.from_components"
 
     def __init__(self, year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
         "Construct a `Datetime` from components. All parts are optional besides ``year``."
@@ -112,7 +112,7 @@ class Datetime(DatetimeStruct):
         >>> my_datetime.compute() # doctest: +SKIP
         datetime.datetime(1970, 1, 1, 0, 16, 40)
         """
-        return cls._from_apply("datetime.from_timestamp", seconds)
+        return cls._from_apply("wf.datetime.from_timestamp", seconds)
 
     @classmethod
     @typecheck_promote(Str)
@@ -136,19 +136,19 @@ class Datetime(DatetimeStruct):
         >>> my_datetime.compute() # doctest: +SKIP
         datetime.datetime(2017, 12, 31, 0, 0, tzinfo=datetime.timezone.utc)
         """
-        return cls._from_apply("datetime.from_string", string)
+        return cls._from_apply("wf.datetime.from_string", string)
 
     @typecheck_promote(Timedelta)
     def __add__(self, other):
-        return self._from_apply("add", self, other)
+        return self._from_apply("wf.add", self, other)
 
     @typecheck_promote(Timedelta)
     def __radd__(self, other):
-        return self._from_apply("add", other, self)
+        return self._from_apply("wf.add", other, self)
 
     @typecheck_promote(lambda: (Timedelta, Datetime))
     def __sub__(self, other):
-        return _binary_op_casts_to(self, other)._from_apply("sub", self, other)
+        return _binary_op_casts_to(self, other)._from_apply("wf.sub", self, other)
 
     @typecheck_promote(Timedelta)
     def __mod__(self, other):
@@ -161,7 +161,7 @@ class Datetime(DatetimeStruct):
         >>> td.compute()  # doctest: +SKIP
         datetime.timedelta(0, 37, 684181)
         """
-        return Timedelta._from_apply("mod", self, other)
+        return Timedelta._from_apply("wf.mod", self, other)
 
     @typecheck_promote(Timedelta)
     def __floordiv__(self, other):
@@ -174,35 +174,35 @@ class Datetime(DatetimeStruct):
         >>> dt_quotient.compute()  # doctest: +SKIP
         datetime.datetime(2016, 4, 15, 18, 16)
         """
-        return self._from_apply("floordiv", self, other)
+        return self._from_apply("wf.floordiv", self, other)
 
     @typecheck_promote(Timedelta)
     def __divmod__(self, other):
-        return Tuple[type(self), Timedelta]._from_apply("divmod", self, other)
+        return Tuple[type(self), Timedelta]._from_apply("wf.divmod", self, other)
 
     @typecheck_promote(lambda: Datetime)
     def __eq__(self, other):
-        return Bool._from_apply("eq", self, other)
+        return Bool._from_apply("wf.eq", self, other)
 
     @typecheck_promote(lambda: Datetime)
     def __ge__(self, other):
-        return Bool._from_apply("ge", self, other)
+        return Bool._from_apply("wf.ge", self, other)
 
     @typecheck_promote(lambda: Datetime)
     def __gt__(self, other):
-        return Bool._from_apply("gt", self, other)
+        return Bool._from_apply("wf.gt", self, other)
 
     @typecheck_promote(lambda: Datetime)
     def __le__(self, other):
-        return Bool._from_apply("le", self, other)
+        return Bool._from_apply("wf.le", self, other)
 
     @typecheck_promote(lambda: Datetime)
     def __lt__(self, other):
-        return Bool._from_apply("lt", self, other)
+        return Bool._from_apply("wf.lt", self, other)
 
     @typecheck_promote(lambda: Datetime)
     def __ne__(self, other):
-        return Bool._from_apply("ne", self, other)
+        return Bool._from_apply("wf.ne", self, other)
 
     @typecheck_promote(lambda: Datetime, lambda: Datetime, inclusive=Bool)
     def is_between(self, start, end, inclusive=True):
@@ -236,5 +236,5 @@ class Datetime(DatetimeStruct):
         False
         """
         return Bool._from_apply(
-            "datetime.is_between", self, start, end, inclusive=inclusive
+            "wf.datetime.is_between", self, start, end, inclusive=inclusive
         )

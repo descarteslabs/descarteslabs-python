@@ -75,7 +75,7 @@ class KnownDict(GenericProxytype):
                 "Dict keys are of type {}, but indexed with {}".format(kt, item)
             )
 
-        return result_cls._from_apply("get", self, item)
+        return result_cls._from_apply("wf.get", self, item)
 
     def get(self, item, default=None):
         items, kt, vt = self._type_params
@@ -101,4 +101,4 @@ class KnownDict(GenericProxytype):
                 )
             )
 
-        return result_cls._from_apply("get", self, item, default=default)
+        return result_cls._from_apply("wf.get", self, item, default=default)

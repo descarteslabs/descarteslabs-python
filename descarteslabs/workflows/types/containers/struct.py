@@ -94,7 +94,7 @@ class Struct(GenericProxytype):
     # docstrings for struct fields; must be dict[str, str] or None
     _doc = None
     # function name to use in graft for instantiation; can be overridden in subclasses
-    _constructor = "struct"
+    _constructor = "wf.struct"
     # optional arguments for __init__; must be a set or None
     _optional = None
     # read only attributes
@@ -271,6 +271,6 @@ class Struct(GenericProxytype):
                     "{} has no attribute {!r}".format(type(self).__name__, attr)
                 )
 
-            item = value_type._from_apply("getattr", self, attr)
+            item = value_type._from_apply("wf.getattr", self, attr)
             self._items_cache[attr] = item
         return item

@@ -22,5 +22,5 @@ def range(start=None, stop=None, step=1):
     if isinstance(stop, NoneType):
         if isinstance(start, NoneType):
             raise TypeError("Must pass the stop value to range")
-        return List[Int]._from_apply("range", start)
-    return List[Int]._from_apply("range", start, stop, step=step)
+        return List[Int]._from_apply("wf.range", start)
+    return List[Int]._from_apply("wf.range", start, stop, step=step)

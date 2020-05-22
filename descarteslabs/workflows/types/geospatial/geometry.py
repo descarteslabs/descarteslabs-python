@@ -27,7 +27,7 @@ class Geometry(GeometryStruct, GeometryMixin):
     {'type': 'Point', 'coordinates': [1, 2]}
     """
 
-    _constructor = "Geometry.create"
+    _constructor = "wf.Geometry.create"
 
     def __init__(self, type, coordinates):
         return super(Geometry, self).__init__(type=type, coordinates=coordinates)

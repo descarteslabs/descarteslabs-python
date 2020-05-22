@@ -52,16 +52,16 @@ class TestConstruct(object):
     def test_explicit_cast_to_int(self):
         i = Int(Float(1.0))
         assert isinstance(i, Int)
-        assert i.graft[i.graft["returns"]][0] == "Int.cast"
+        assert i.graft[i.graft["returns"]][0] == "wf.Int.cast"
 
         i = Int(Bool(True))
         assert isinstance(i, Int)
-        assert i.graft[i.graft["returns"]][0] == "Int.cast"
+        assert i.graft[i.graft["returns"]][0] == "wf.Int.cast"
 
     def test_explicit_cast_to_float(self):
         f = Float(Int(1))
         assert isinstance(f, Float)
-        assert f.graft[f.graft["returns"]][0] == "Float.cast"
+        assert f.graft[f.graft["returns"]][0] == "wf.Float.cast"
 
 
 class TestNumPyScalars(object):

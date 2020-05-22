@@ -53,9 +53,9 @@ class Array(BaseArray):
             arr = arr.tolist()
         if isinstance(arr, (int, float, bool)):
             self._literal_value = arr
-            self.graft = client.apply_graft("array.create", arr)
+            self.graft = client.apply_graft("wf.array.create", arr)
         elif isinstance(arr, (Int, Float, Bool, List)):
-            self.graft = client.apply_graft("array.create", arr)
+            self.graft = client.apply_graft("wf.array.create", arr)
         else:
             if not isinstance(arr, np.ndarray):
                 try:
@@ -68,7 +68,7 @@ class Array(BaseArray):
 
             self._literal_value = arr
             arr_list = arr.tolist()
-            self.graft = client.apply_graft("array.create", arr_list)
+            self.graft = client.apply_graft("wf.array.create", arr_list)
 
     @classmethod
     def _promote(cls, obj):

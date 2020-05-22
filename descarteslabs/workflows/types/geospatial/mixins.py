@@ -32,7 +32,7 @@ class BandsMixin:
                         value, name, str(e)
                     )
                 )
-        return self._from_apply("with_bandinfo", self, band, **bandinfo_promoted)
+        return self._from_apply("wf.with_bandinfo", self, band, **bandinfo_promoted)
 
     def without_bandinfo(self, band, *bandinfo_keys):
         if not isinstance(band, (Str, six.string_types)):
@@ -49,7 +49,7 @@ class BandsMixin:
                         type(bandinfo_key).__name__
                     )
                 )
-        return self._from_apply("without_bandinfo", self, band, *bandinfo_keys)
+        return self._from_apply("wf.without_bandinfo", self, band, *bandinfo_keys)
 
     def pick_bands(self, bands, allow_missing=False):
         """
@@ -71,7 +71,6 @@ class BandsMixin:
         >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
         >>> rgb = img.pick_bands("red green blue")
         """
-        namespace = type(self).__name__
         if isinstance(bands, abc.Sequence):
             # Allows for a cleaner graft for this common use-case.
             # Note that both strings and normal lists/tuples are Sequences.
@@ -85,22 +84,15 @@ class BandsMixin:
                         "Band names must all be strings, not {!r}".format(bands)
                     )
             return self._from_apply(
-                "{}.pick_bands".format(namespace),
-                self,
-                *bands,
-                allow_missing=allow_missing
+                "wf.pick_bands", self, *bands, allow_missing=allow_missing
             )
         else:
             return self._pick_bands_list(bands, allow_missing=allow_missing)
 
     @typecheck_promote(List[Str], allow_missing=Bool)
     def _pick_bands_list(self, bands, allow_missing=False):
-        namespace = type(self).__name__
         return self._from_apply(
-            "{}.pick_bands_list".format(namespace),
-            self,
-            bands,
-            allow_missing=allow_missing,
+            "wf.pick_bands_list", self, bands, allow_missing=allow_missing
         )
 
     def unpack_bands(self, bands):
@@ -153,14 +145,12 @@ class BandsMixin:
 
     @typecheck_promote(Dict[Str, Str])
     def _rename_bands(self, new_names):
-        namespace = type(self).__name__
-        return self._from_apply("{}.rename_bands".format(namespace), self, new_names)
+        return self._from_apply("wf.rename_bands", self, new_names)
 
     @typecheck_promote(List[Str])
     def _rename_bands_positionally(self, new_positional_names):
-        namespace = type(self).__name__
         return self._from_apply(
-            "{}.rename_bands_positionally".format(namespace), self, new_positional_names
+            "wf.rename_bands_positionally", self, new_positional_names
         )
 
     def map_bands(self, func):
@@ -205,11 +195,11 @@ class BandsMixin:
 
         delayed_func = Function._delay(func, None, Str, self_type)
         result_type = type(delayed_func)
-        func = "map_bands_imagery"
+        func = "wf.map_bands_imagery"
 
         if result_type not in (Image, ImageCollection):
             result_type = Dict[Str, result_type]
-            func = "map_bands"
+            func = "wf.map_bands"
         return result_type._from_apply(func, self, delayed_func)
 
 
@@ -234,7 +224,7 @@ class GeometryMixin:
         >>> geom = wf.Geometry(type="Point", coordinates=[1, 2])
         >>> buffered = geom.buffer(2)
         """
-        return self._from_apply("buffer", self, distance)
+        return self._from_apply("wf.buffer", self, distance)
 
     @typecheck_promote(value=(Int, Float))
     def rasterize(self, value=1):
@@ -267,4 +257,4 @@ class GeometryMixin:
         """
         from .image import Image
 
-        return Image._from_apply("rasterize", self, value, env.geoctx)
+        return Image._from_apply("wf.rasterize", self, value, env.geoctx)

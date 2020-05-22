@@ -29,7 +29,7 @@ class BaseArray(NumPyMixin, Proxytype):
         dtype("float64")
         """
 
-        return DType._from_apply("array.dtype", self)
+        return DType._from_apply("wf.array.dtype", self)
 
     @property
     def ndim(self):
@@ -44,7 +44,7 @@ class BaseArray(NumPyMixin, Proxytype):
         >>> arr.ndim.compute(geoctx) # doctest: +SKIP
         3
         """
-        return Int._from_apply("array.ndim", self)
+        return Int._from_apply("wf.array.ndim", self)
 
     @property
     def shape(self):
@@ -62,7 +62,7 @@ class BaseArray(NumPyMixin, Proxytype):
         >>> arr.shape.compute(geoctx) # doctest: +SKIP
         (3, 512, 512)
         """
-        return List[Int]._from_apply("array.shape", self)
+        return List[Int]._from_apply("wf.array.shape", self)
 
     @property
     def size(self):
@@ -80,7 +80,7 @@ class BaseArray(NumPyMixin, Proxytype):
         >>> arr.size.compute() # doctest: +SKIP
         786432
         """
-        return Int._from_apply("array.size", self)
+        return Int._from_apply("wf.array.size", self)
 
     @property
     def literal_value(self):
@@ -102,7 +102,7 @@ class BaseArray(NumPyMixin, Proxytype):
         >>> int_arr.compute() # doctest: +SKIP
         array([1, 0, 1])
         """
-        return self._from_apply("array.astype", self, dtype)
+        return self._from_apply("wf.array.astype", self, dtype)
 
     def flatten(self):
         """
@@ -115,7 +115,7 @@ class BaseArray(NumPyMixin, Proxytype):
         >>> arr.flatten().compute() # doctest: +SKIP
         array([1, 2, 3, 4, 5, 6])
         """
-        return self._from_apply("array.flatten", self)
+        return self._from_apply("wf.array.flatten", self)
 
     def reshape(self, *newshape):
         """
@@ -195,19 +195,19 @@ class BaseArray(NumPyMixin, Proxytype):
             )
 
         return ImageCollection._from_apply(
-            "to_imagery", self, properties, bandinfo, env.geoctx
+            "wf.to_imagery", self, properties, bandinfo, env.geoctx
         )
 
     def __getitem__(self, idx):
         idx = typecheck_getitem(idx)
 
-        return self._from_apply("array.getitem", self, idx)
+        return self._from_apply("wf.array.getitem", self, idx)
 
     def __neg__(self):
         return _delayed_numpy().negative(self)
 
     def __pos__(self):
-        return self._from_apply("pos", self)
+        return self._from_apply("wf.pos", self)
 
     def __abs__(self):
         return _delayed_numpy().absolute(self)
@@ -413,7 +413,7 @@ class BaseArray(NumPyMixin, Proxytype):
         mask=False,
         fill_value=1e+20)
         """
-        return self._stats_return_type(axis)._from_apply("median", self, axis)
+        return self._stats_return_type(axis)._from_apply("wf.median", self, axis)
 
     def sum(self, axis=None):
         """ Sum along a given axis.

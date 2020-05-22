@@ -26,7 +26,7 @@ def log(obj):
     0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("log", obj)
+    return return_type._from_apply("wf.log", obj)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -44,7 +44,7 @@ def log2(obj):
     0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("log2", obj)
+    return return_type._from_apply("wf.log2", obj)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -62,7 +62,7 @@ def log10(obj):
     0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("log10", obj)
+    return return_type._from_apply("wf.log10", obj)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -80,7 +80,7 @@ def log1p(obj):
     0.6931471805599453
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("log1p", obj)
+    return return_type._from_apply("wf.log1p", obj)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -98,7 +98,7 @@ def sqrt(obj):
     2.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("sqrt", obj)
+    return return_type._from_apply("wf.sqrt", obj)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -116,7 +116,7 @@ def cos(obj):
     1.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("cos", obj)
+    return return_type._from_apply("wf.cos", obj)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -134,7 +134,7 @@ def arccos(obj):
     1.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("arccos", obj)
+    return return_type._from_apply("wf.arccos", obj)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -152,7 +152,7 @@ def sin(obj):
     0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("sin", obj)
+    return return_type._from_apply("wf.sin", obj)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -170,7 +170,7 @@ def arcsin(obj):
     0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("arcsin", obj)
+    return return_type._from_apply("wf.arcsin", obj)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -188,7 +188,7 @@ def tan(obj):
     0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("tan", obj)
+    return return_type._from_apply("wf.tan", obj)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -206,7 +206,7 @@ def arctan(obj):
     0.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("arctan", obj)
+    return return_type._from_apply("wf.arctan", obj)
 
 
 def normalized_difference(x, y):
@@ -305,7 +305,7 @@ def arctan2(y, x):
     .. [1] ISO/IEC standard 9899:1999, "Programming language C."
     """
     return_type = _higher_precedence_type(type(y), type(x))
-    return return_type._from_apply("arctan2", y, x)
+    return return_type._from_apply("wf.arctan2", y, x)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -323,7 +323,7 @@ def exp(obj):
     2.718281828459045
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("exp", obj)
+    return return_type._from_apply("wf.exp", obj)
 
 
 @typecheck_promote((Int, Float, Image, ImageCollection))
@@ -341,4 +341,4 @@ def square(obj):
     4.0
     """
     return_type = Float if isinstance(obj, Number) else type(obj)
-    return return_type._from_apply("square", obj)
+    return return_type._from_apply("wf.square", obj)

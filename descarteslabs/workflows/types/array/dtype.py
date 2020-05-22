@@ -43,7 +43,7 @@ class DType(Proxytype):
                 "Cannot construct a DType object from {}. Must be a "
                 "NumPy dtype, NumPy type, Python type, or proxy type.".format(type_)
             )
-        self.graft = client.apply_graft("dtype.create", val)
+        self.graft = client.apply_graft("wf.dtype.create", val)
 
     @classmethod
     def _promote(cls, obj):

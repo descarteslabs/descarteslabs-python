@@ -39,7 +39,7 @@
 #      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
 #    """
 #
-#    _constructor = "PCA.create"
+#    _constructor = "wf.PCA.create"
 #    _optional = {"strategy", "fill_value", "n_components"}
 #
 #    _doc = {
@@ -72,7 +72,7 @@
 #        >>> pca.fit(img)
 #        <descarteslabs.workflows.types.geospatial.pca.PCA object at 0x...>
 #        """
-#        return self._from_apply("PCA.fit", self, obj)
+#        return self._from_apply("wf.PCA.fit", self, obj)
 #
 #    @typecheck_promote((Image, ImageCollection))
 #    def fit_transform(self, obj):
@@ -92,7 +92,7 @@
 #            * bandinfo: 'principle_component_1', 'principle_component_2', ...
 #            * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
 #        """
-#        return type(obj)._from_apply("PCA.fit_transform", self, obj)
+#        return type(obj)._from_apply("wf.PCA.fit_transform", self, obj)
 #
 #    @typecheck_promote((Image, ImageCollection))
 #    def transform(self, obj):
@@ -114,7 +114,7 @@
 #            * bandinfo: 'principle_component_1', 'principle_component_2', ...
 #            * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
 #        """
-#        return type(obj)._from_apply("PCA.transform", self, obj)
+#        return type(obj)._from_apply("wf.PCA.transform", self, obj)
 #
 #    @typecheck_promote((Image, ImageCollection))
 #    def score(self, obj):
@@ -132,7 +132,7 @@
 #        >>> fit_pca.score(img).compute(geoctx) # doctest: +SKIP
 #        150.70311325376323
 #        """
-#        return Float._from_apply("PCA.score", self, obj)
+#        return Float._from_apply("wf.PCA.score", self, obj)
 #
 #    def components(self):
 #        """Principal axes in feature space, representing the directions of maximum variance in the data.
@@ -152,7 +152,7 @@
 #          -0.19245005302246823,
 #        ...
 #        """
-#        return List[List[Float]]._from_apply("PCA.components", self)
+#        return List[List[Float]]._from_apply("wf.PCA.components", self)
 #
 #    def explained_variance(self):
 #        """The amount of variance explained by each of the selected components.
@@ -171,7 +171,7 @@
 #         9.551961156579615e-06,
 #         3.7431008990160355e-34]
 #        """
-#        return List[Float]._from_apply("PCA.explained_variance", self)
+#        return List[Float]._from_apply("wf.PCA.explained_variance", self)
 #
 #    def get_covariance(self):
 #        """Compute data covariance with the generative model.
@@ -189,7 +189,7 @@
 #          0.19204415215386159,
 #        ...
 #        """
-#        return List[List[Float]]._from_apply("PCA.get_covariance", self)
+#        return List[List[Float]]._from_apply("wf.PCA.get_covariance", self)
 #
 #    def compute(self, *args, **kwargs):
 #        "PCA objects cannot be directly computed. Instead, compute `.transform`, `.components` etc."

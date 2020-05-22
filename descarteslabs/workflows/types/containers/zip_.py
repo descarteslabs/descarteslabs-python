@@ -48,4 +48,4 @@ def zip(*sequences):
     )
     tuple_type = Tuple[itemtypes]
 
-    return List[tuple_type]._from_apply("zip", *sequences)
+    return List[tuple_type]._from_apply("wf.zip", *sequences)

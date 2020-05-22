@@ -91,11 +91,11 @@ class ImageCollectionGroupby(GenericProxytype):
                 )
             )
 
-        self.graft = client.apply_graft("ImageCollectionGroupby.create", imgs, func)
+        self.graft = client.apply_graft("wf.ImageCollectionGroupby.create", imgs, func)
 
         # store this once so that repeated calls to `.groups` refer to the same object in the graft
         self._groups = Dict[self.key_type, ImageCollection]._from_apply(
-            "ImageCollectionGroupby.groups", self
+            "wf.ImageCollectionGroupby.groups", self
         )
 
     @property
@@ -122,12 +122,12 @@ class ImageCollectionGroupby(GenericProxytype):
         (5, ImageCollection...)
         """
         return Tuple[self.key_type, ImageCollection]._from_apply(
-            "ImageCollectionGroupby.one", self
+            "wf.ImageCollectionGroupby.one", self
         )
 
     @typecheck_promote(lambda self: self.key_type)
     def __getitem__(self, idx):
-        return ImageCollection._from_apply("ImageCollectionGroupby.get", self, idx)
+        return ImageCollection._from_apply("wf.ImageCollectionGroupby.get", self, idx)
 
     def compute(self, *args, **kwargs):
         raise TypeError(
@@ -174,10 +174,10 @@ class ImageCollectionGroupby(GenericProxytype):
 
         if result_type in (ImageCollection, Image):
             out_type = ImageCollection
-            func = "ImageCollectionGroupby.map_ic"
+            func = "wf.ImageCollectionGroupby.map_ic"
         else:
             out_type = Dict[self.key_type, result_type]
-            func = "ImageCollectionGroupby.map"
+            func = "wf.ImageCollectionGroupby.map"
         return out_type._from_apply(func, self, proxy_func)
 
     def count(self, axis=None):

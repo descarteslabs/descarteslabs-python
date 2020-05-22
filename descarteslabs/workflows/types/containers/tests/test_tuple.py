@@ -19,7 +19,7 @@ def test_init_sequence():
     tup = Tuple[Int, Str, Int]([1, "foo", 3])
     assert client.is_delayed(tup)
     assert interpreter.interpret(
-        tup.graft, builtins={"tuple": lambda *tuple: tuple}
+        tup.graft, builtins={"wf.tuple": lambda *tuple: tuple}
     )() == (1, "foo", 3)
 
 
@@ -87,7 +87,7 @@ def test_getitem_roundtrip():
     for i, truth in enumerate(src):
         value = interpreter.interpret(
             tup[i].graft,
-            builtins={"tuple": lambda *tuple: tuple, "getitem": operator.getitem},
+            builtins={"wf.tuple": lambda *tuple: tuple, "wf.getitem": operator.getitem},
         )()
         assert value == truth
 

@@ -81,130 +81,130 @@ class Any(Proxytype):
 
     # Binary comparators
     def __lt__(self, other):
-        return Bool._from_apply("lt", self, other)
+        return Bool._from_apply("wf.lt", self, other)
 
     def __le__(self, other):
-        return Bool._from_apply("le", self, other)
+        return Bool._from_apply("wf.le", self, other)
 
     def __eq__(self, other):
-        return Bool._from_apply("eq", self, other)
+        return Bool._from_apply("wf.eq", self, other)
 
     def __ne__(self, other):
-        return Bool._from_apply("ne", self, other)
+        return Bool._from_apply("wf.ne", self, other)
 
     def __gt__(self, other):
-        return Bool._from_apply("gt", self, other)
+        return Bool._from_apply("wf.gt", self, other)
 
     def __ge__(self, other):
-        return Bool._from_apply("ge", self, other)
+        return Bool._from_apply("wf.ge", self, other)
 
     # Bitwise operators
     def __invert__(self):
-        return self._from_apply("invert", self)
+        return self._from_apply("wf.invert", self)
 
     def __and__(self, other):
-        return self._from_apply("and", self, other)
+        return self._from_apply("wf.and", self, other)
 
     def __or__(self, other):
-        return self._from_apply("or", self, other)
+        return self._from_apply("wf.or", self, other)
 
     def __xor__(self, other):
-        return self._from_apply("xor", self, other)
+        return self._from_apply("wf.xor", self, other)
 
     def __lshift__(self, other):
-        return self._from_apply("lshift", self, other)
+        return self._from_apply("wf.lshift", self, other)
 
     def __rshift__(self, other):
-        return self._from_apply("rshift", self, other)
+        return self._from_apply("wf.rshift", self, other)
 
     # Reflected bitwise operators
     def __rand__(self, other):
-        return self._from_apply("and", other, self)
+        return self._from_apply("wf.and", other, self)
 
     def __ror__(self, other):
-        return self._from_apply("or", other, self)
+        return self._from_apply("wf.or", other, self)
 
     def __rxor__(self, other):
-        return self._from_apply("xor", other, self)
+        return self._from_apply("wf.xor", other, self)
 
     def __rlshift__(self, other):
-        return self._from_apply("lshift", other, self)
+        return self._from_apply("wf.lshift", other, self)
 
     def __rrshift__(self, other):
-        return self._from_apply("rshift", other, self)
+        return self._from_apply("wf.rshift", other, self)
 
     # Arithmetic operators
     def __neg__(self):
-        return self._from_apply("neg", self)
+        return self._from_apply("wf.neg", self)
 
     def __pos__(self):
-        return self._from_apply("pos", self)
+        return self._from_apply("wf.pos", self)
 
     def __abs__(self):
-        return self._from_apply("abs", self)
+        return self._from_apply("wf.abs", self)
 
     def __add__(self, other):
-        return self._from_apply("add", self, other)
+        return self._from_apply("wf.add", self, other)
 
     def __sub__(self, other):
-        return self._from_apply("sub", self, other)
+        return self._from_apply("wf.sub", self, other)
 
     def __mul__(self, other):
-        return self._from_apply("mul", self, other)
+        return self._from_apply("wf.mul", self, other)
 
     def __div__(self, other):
-        return self._from_apply("div", self, other)
+        return self._from_apply("wf.div", self, other)
 
     def __truediv__(self, other):
-        return self._from_apply("div", self, other)
+        return self._from_apply("wf.div", self, other)
 
     def __floordiv__(self, other):
-        return self._from_apply("floordiv", self, other)
+        return self._from_apply("wf.floordiv", self, other)
 
     def __mod__(self, other):
-        return self._from_apply("mod", self, other)
+        return self._from_apply("wf.mod", self, other)
 
     def __pow__(self, other):
-        return self._from_apply("pow", self, other)
+        return self._from_apply("wf.pow", self, other)
 
     def __divmod__(self, other):
         from ..containers import Tuple
 
-        return Tuple[Any, Any]._from_apply("divmod", self, other)
+        return Tuple[Any, Any]._from_apply("wf.divmod", self, other)
 
     # Reflected arithmetic operators
     def __radd__(self, other):
-        return self._from_apply("add", other, self)
+        return self._from_apply("wf.add", other, self)
 
     def __rsub__(self, other):
-        return self._from_apply("sub", other, self)
+        return self._from_apply("wf.sub", other, self)
 
     def __rmul__(self, other):
-        return self._from_apply("mul", other, self)
+        return self._from_apply("wf.mul", other, self)
 
     def __rdiv__(self, other):
-        return self._from_apply("div", other, self)
+        return self._from_apply("wf.div", other, self)
 
     def __rtruediv__(self, other):
-        return self._from_apply("truediv", other, self)
+        return self._from_apply("wf.truediv", other, self)
 
     def __rfloordiv__(self, other):
-        return self._from_apply("floordiv", other, self)
+        return self._from_apply("wf.floordiv", other, self)
 
     def __rmod__(self, other):
-        return self._from_apply("mod", other, self)
+        return self._from_apply("wf.mod", other, self)
 
     def __rpow__(self, other):
-        return self._from_apply("pow", other, self)
+        return self._from_apply("wf.pow", other, self)
 
     def __rdivmod__(self, other):
         from ..containers import Tuple
 
-        return Tuple[Any, Any]._from_apply("divmod", other, self)
+        return Tuple[Any, Any]._from_apply("wf.divmod", other, self)
 
     # Mapping operators
     def __getitem__(self, item):
-        return self._from_apply("getitem", self, item)
+        return self._from_apply("wf.getitem", self, item)
 
     def __getattr__(self, attr):
         if attr[0] == "_":
@@ -212,11 +212,11 @@ class Any(Proxytype):
                 "'Any' object has no attribute {!r}. Perhaps you need "
                 "to change it to the correct type via `.cast`?".format(attr)
             )
-        return self._from_apply("getattr", self, attr)
+        return self._from_apply("wf.getattr", self, attr)
 
     # Sequence operators
     def __reversed__(self):
-        return self._from_apply("reversed", self)
+        return self._from_apply("wf.reversed", self)
 
     def __iter__(self):
         raise TypeError("Any object is not iterable")
@@ -235,7 +235,7 @@ class Any(Proxytype):
         Boolean
             A Boolean ProxyType
         """
-        return Bool._from_apply("contains", self, other)
+        return Bool._from_apply("wf.contains", self, other)
 
     def length(self):
         """Length is equivalent to the Python ``len`` operator.
@@ -245,4 +245,4 @@ class Any(Proxytype):
         Int
             An Int proxytype
         """
-        return Int._from_apply("length", self)
+        return Int._from_apply("wf.length", self)

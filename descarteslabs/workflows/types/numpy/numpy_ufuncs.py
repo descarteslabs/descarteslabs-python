@@ -89,7 +89,7 @@ def ufunc(np_ufunc, return_type_override=None):
             *promoted, return_type_override=return_type_override
         )
 
-        return return_type._from_apply("numpy." + np_ufunc.__name__, *promoted)
+        return return_type._from_apply("wf.numpy." + np_ufunc.__name__, *promoted)
 
     HANDLED_UFUNCS[np_ufunc.__name__] = wf_ufunc
 

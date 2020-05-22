@@ -31,7 +31,7 @@ class Kernel(KernelBase):
         "dims": "Tuple containing the dimensions of the kernel",
         "data": "List containing the kernel data in row-major format",
     }
-    _constructor = "Kernel.load"
+    _constructor = "wf.Kernel.load"
 
     def __init__(self, dims, data):
         return super(Kernel, self).__init__(dims=dims, data=data)
@@ -55,4 +55,4 @@ def conv2d(obj, filt):
       * bandinfo: 'red', 'green', 'blue'
       * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
     """
-    return obj._from_apply("conv2d", obj, filt)
+    return obj._from_apply("wf.conv2d", obj, filt)
