@@ -619,7 +619,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         >>> rg.bandinfo.keys() # doctest: +SKIP
         ['red', 'green']
         """
-        return self._from_apply("wf.ImageCollection.concat_bands", self, other)
+        return self._from_apply("wf.concat_bands", self, other)
 
     # @typecheck_promote(lambda: Tuple[ImageCollection])
     # Once we support checking variadic positional args in typecheck_promote, we can use typecheck_promote instead
