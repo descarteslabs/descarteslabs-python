@@ -10,6 +10,24 @@ Changelog
 
 ## Pending
 
+### Workflows (channel `v0-15`) - Added
+- NumPy functions including `hypot`, `bitwise_and`, `bitwise_or`, `bitwise_xor`, `bitwise_not`, `invert`, and `ldexp`
+- Bitwise `Array` and `MaskedArray` operations
+- `shape` attribute on `Array` and `MaskedArray`
+- `astype` function on `Array` and `MaskedArray` for changing the dtype
+- `flatten` function on `Array` and `MaskedArray` for flattening into a 1D array
+- `MaskedArray.compressed` for getting all unmasked data as a 1D array
+- `get` function on `Dict` and `KnownDict` for getting a value at a specified key, with a default value if the key does not exist
+- `nbands` attribute on `Image` and `ImageCollection`
+
+### Workflows - Fixed
+- `wf.numpy.dot` and `wf.numpy.einsum` no longer fail when being called correctly
+- `Array`s can now be constructed from proxy `List`s
+
+### Workflows - Changed
+- `wf.numpy.percentile` no longer accepts an `axis` argument
+- `proxify` can handle `scenes.GeoContext`s
+
 ## [1.2.0] - 2020-04-23
 
 ### Workflows (channel `v0-14`) - Added
