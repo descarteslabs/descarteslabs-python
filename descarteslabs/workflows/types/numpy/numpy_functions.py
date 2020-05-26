@@ -35,7 +35,7 @@ def np_func(numpy_func, name, signatures):
         name,
         signatures,
         merged_signature=SIG_OVERRIDES.get(name, None),
-        namespace="numpy",
+        namespace="wf.numpy",
     )
     HANDLED_FUNCTIONS[numpy_func] = func
     copy_docstring_from_numpy(func, numpy_func)
