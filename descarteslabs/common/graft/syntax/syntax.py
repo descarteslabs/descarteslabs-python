@@ -10,6 +10,7 @@ except ImportError:
 
 
 PRIMITIVE_TYPES = six.string_types + (numbers.Number, bool, type(None))
+RESERVED_WORDS = ("parameters", "returns")
 
 
 def is_nonstring_sequence(x, other_types=()):
@@ -20,7 +21,7 @@ def is_nonstring_sequence(x, other_types=()):
 
 
 def is_key(expr):
-    return isinstance(expr, six.string_types)
+    return isinstance(expr, six.string_types) and expr not in RESERVED_WORDS
 
 
 def is_guid_key(expr):

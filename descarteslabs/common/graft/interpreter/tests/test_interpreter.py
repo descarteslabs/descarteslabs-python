@@ -236,7 +236,7 @@ class TestErrors(object):
         graft = {"x": [name], "returns": "x"}
         with pytest.raises(
             interpreter.exceptions.GraftSyntaxError,
-            match="Cannot depend on the {!r} key".format(name),
+            match=r"Not a valid expression: \[{!r}\]".format(name),
         ):
             interpreter.interpret(graft)()
 

@@ -92,8 +92,6 @@ GUID_COUNTER = itertools.count()
 # https://mail.python.org/pipermail//python-ideas/2016-August/041871.html
 # https://stackoverflow.com/a/27062830/10519953
 
-RESERVED_WORDS = ("parmeters", "returns")
-
 
 def guid():
     return str(next(GUID_COUNTER))
@@ -127,6 +125,10 @@ def value_graft(value, key=None):
         return value.graft
     if key is None:
         key = guid()
+    elif not syntax.is_key(key):
+        raise TypeError(
+            "Key must be a string, and not one of {}".format(syntax.RESERVED_WORDS)
+        )
     if isinstance(value, syntax.PRIMITIVE_TYPES):
         return {key: value, "returns": key}
     elif isinstance(value, (tuple, list, dict)):
@@ -152,11 +154,8 @@ def keyref_graft(key):
     key: str
     """
     if not syntax.is_key(key):
-        raise TypeError("Key must be of type str")
-
-    if key in RESERVED_WORDS:
         raise ValueError(
-            "Key cannot be a reserved graft keyword (one of {})".format(RESERVED_WORDS)
+            "Key must be a string, and not one of {}".format(syntax.RESERVED_WORDS)
         )
 
     return {"returns": key}
@@ -309,7 +308,10 @@ def function_graft(result, *parameters, **kwargs):
         param["returns"] if is_keyref_graft(param) else param for param in parameters
     ]
     if not syntax.is_params(parameters):
-        raise ValueError("Invalid parameters for a graft: {}".format(parameters))
+        raise ValueError(
+            "Invalid parameters for a graft (must be a sequence of strings, "
+            "none of which are in {}): {}".format(syntax.RESERVED_WORDS, parameters)
+        )
     result_graft = result if syntax.is_graft(result) else value_graft(result)
 
     if first_guid is not None:
@@ -371,6 +373,10 @@ def merge_value_grafts(**grafts):
     """
     merged = {}
     for name, value in six.iteritems(grafts):
+        if name in syntax.RESERVED_WORDS:
+            raise ValueError(
+                "Cannot use reserved name {!r} as a key in a graft".format(name)
+            )
         if isinstance(value, syntax.PRIMITIVE_TYPES):
             # fastpath for simple case
             merged[name] = value
@@ -481,6 +487,12 @@ def parametrize(graft, **params):
         Value graft also representing ``graft``,
         but with ``graft`` isolated to a subscope in which ``params`` are defined.
     """
+    for param in params:
+        if param in syntax.RESERVED_WORDS:
+            raise ValueError(
+                "Cannot use reserved name {!r} as a key in a graft".format(param)
+            )
+
     subgraft = isolate_keys(graft, wrap_function=True)
     subgraft.update(merge_value_grafts(**params))
 
