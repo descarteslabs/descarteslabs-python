@@ -54,7 +54,6 @@ See :ref:`numpy-functions` for a full list of available functions.
 
   docs/types/numpy
 
-
 :workflow_api_nontoc_heading:`Primitives`
 
 .. autosummary::
@@ -158,6 +157,18 @@ See :ref:`numpy-functions` for a full list of available functions.
   ~descarteslabs.workflows.models.compute
   ~descarteslabs.workflows.models.publish
   ~descarteslabs.workflows.models.use
+
+:workflow_api_nontoc_heading:`Output Formats`
+
+Workflows exposes a number of serialization formats for results. Use the ``format`` argument to `~.models.compute` to specify a format.
+
+See :ref:`output-formats` for more information on supported formats.
+
+.. toctree::
+  :hidden:
+  :glob:
+
+  docs/formats
 
 :workflow_api_nontoc_heading:`Result Types`
 

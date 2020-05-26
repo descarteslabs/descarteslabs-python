@@ -1,3 +1,4 @@
+.. _result-types:
 .. default-role:: py:obj
 
 Result Types

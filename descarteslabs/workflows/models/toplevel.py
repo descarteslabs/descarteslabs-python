@@ -27,6 +27,9 @@ def compute(
         this parameter is optional.
     format: str or dict, default "pyarrow"
         The serialization format for the result.
+        See the `formats
+        <https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html#output-formats>`_
+        documentation for more information.
     timeout: int, optional
         The number of seconds to wait for the result, if ``block`` is True.
         Raises ``JobTimeoutError`` if the timeout passes.
@@ -55,8 +58,8 @@ def compute(
 
     Example
     -------
-    >>> from descarteslabs.workflows import Int
-    >>> num = Int(1) + 1
+    >>> import descarteslabs.workflows as wf
+    >>> num = wf.Int(1) + 1
     >>> num.compute() # doctest: +SKIP
     2
     >>> # same computation but do not block
@@ -65,6 +68,22 @@ def compute(
     <descarteslabs.workflows.models.job.Job object at 0x...>
     >>> job.result() # doctest: +SKIP
     2
+
+    >>> # specifying a format
+    >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1").pick_bands("red")
+    >>> img.compute(geoctx=ctx, format="pyarrow") # default # doctest: +SKIP
+    ImageResult:
+    ...
+    >>> # same computation but with json format
+    >>> img.compute(geoctx=ctx, format="json") # doctest: +SKIP
+    {'ndarray': [[[0.39380000000000004,
+        0.3982,
+        0.3864,
+    ...
+    >>> # same computation but with geotiff format (and some format options)
+    >>> bytes_ = img.compute(geoctx=ctx, format={"type": "geotiff", "tiled": False}) # doctest: +SKIP
+    >>> with open("/home/example.tiff", "wb") as out: # doctest: +SKIP
+    >>>     out.write(bytes_) # doctest: +SKIP
     """
     if geoctx is not None:
         params["geoctx"] = geoctx
