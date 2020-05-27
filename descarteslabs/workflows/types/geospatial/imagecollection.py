@@ -193,6 +193,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         (at the year level, for example), then using `filter` to do more sophisticated filtering
         within that subset if necessary.
 
+        The `ImageCollection` is sorted by date, in ascending order (older Images come first).
+
         If no imagery is found to satisfy the constraints, an empty `ImageCollection` is returned.
 
         Parameters
