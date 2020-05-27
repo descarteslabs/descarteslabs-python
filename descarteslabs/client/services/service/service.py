@@ -386,7 +386,7 @@ class Service(object):
         self.base_url = url
 
         if retries is None:
-            self._adapter = Service.ADAPTER
+            self._adapter = self.ADAPTER
         else:
             self._adapter = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=retries))
 
