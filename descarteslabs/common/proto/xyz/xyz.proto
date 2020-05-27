@@ -16,7 +16,9 @@ service XYZAPI {
 
 message XYZ {
   string id = 1;
+  // milliseconds since the UNIX epoch (UTC)
   int64 created_timestamp = 2;
+  // milliseconds since the UNIX epoch (UTC)
   int64 updated_timestamp = 3;
   string name = 7;
   string description = 8;
@@ -43,12 +45,14 @@ message GetXYZRequest { string xyz_id = 1; }
 message GetXYZSessionErrorsRequest {
   string xyz_id = 1;
   string session_id = 2;
+  // milliseconds since the UNIX epoch (UTC)
   int64 start_timestamp = 3;
 }
 
 message XYZError {
   ErrorCode code = 1;
   string message = 2;
+  // milliseconds since the UNIX epoch (UTC)
   int64 timestamp = 3;
   string session_id = 4;
 }

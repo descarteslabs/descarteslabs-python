@@ -112,7 +112,7 @@ class TestXYZ(object):
             xyz.object
 
     def test_iter_tile_errors(self, stub):
-        start_datetime = datetime.datetime.utcnow()
+        start_datetime = datetime.datetime.now(datetime.timezone.utc)
         session_id = "bar"
         errors = [
             xyz_pb2.XYZError(session_id=session_id),

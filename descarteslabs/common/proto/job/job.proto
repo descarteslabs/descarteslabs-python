@@ -26,6 +26,7 @@ message Job {
   string parameters = 4;
   bool no_cache = 5;
   string channel = 6;
+  // milliseconds since the UNIX epoch (UTC)
   int64 timestamp = 7;
   string user = 8;
   string org = 9;
@@ -57,6 +58,7 @@ message Job {
     Stage stage = 1;
     TasksProgress tasks_progress = 2;
     Error error = 3;
+    // milliseconds since the UNIX epoch (UTC)
     int64 timestamp = 4;
   }
 

@@ -566,13 +566,13 @@ class XYZErrorListener(object):
             Unique, client-generated ID that error logs are stored under.
             See `XYZ.url` for more information.
         start_datetime: datetime.datetime
-            Only listen for errors occuring after this datetime.
+            Only listen for errors occuring after this datetime. Must be tz-aware.
 
         Example
         -------
         >>> from descarteslabs.workflows import XYZErrorListener
         >>> listener = XYZErrorListener("xyz_id") # doctest: +SKIP
-        >>> listener.listen("session-id", start_datetime=datetime.datetime.now()) #doctest: +SKIP
+        >>> listener.listen("session-id", start_datetime=datetime.datetime.now(datetime.timezone.utc)) #doctest: +SKIP
         """
         self._rendezvous = _tile_error_stream(
             self.xyz_id, session_id, start_datetime=start_datetime, client=self._client

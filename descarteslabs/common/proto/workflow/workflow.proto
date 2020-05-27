@@ -15,7 +15,9 @@ service WorkflowAPI {
 
 message Workflow {
     string id = 1;
+    // milliseconds since the UNIX epoch (UTC)
     int64 created_timestamp = 2;
+    // milliseconds since the UNIX epoch (UTC)
     int64 updated_timestamp = 3;
     string name = 7;
     string description = 8;

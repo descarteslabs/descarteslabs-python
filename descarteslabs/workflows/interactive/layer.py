@@ -222,7 +222,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
 
         listener = self.xyz_obj.error_listener()
         listener.add_callback(self._log_errors_callback)
-        listener.listen(self.session_id, datetime.datetime.now())
+        listener.listen(self.session_id, datetime.datetime.now(datetime.timezone.utc))
 
         self._error_listener = listener
 
