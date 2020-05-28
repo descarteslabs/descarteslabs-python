@@ -5,6 +5,7 @@ package descarteslabs.workflows;
 
 import "google/protobuf/wrappers.proto";
 
+import "descarteslabs/common/proto/destinations/destinations.proto";
 import "descarteslabs/common/proto/formats/formats.proto";
 import "descarteslabs/common/proto/types/types.proto";
 import "descarteslabs/common/proto/typespec/typespec.proto";
@@ -65,6 +66,7 @@ message Job {
   State state = 10;
   ResultType type = 11;
   Format format = 12;
+  Destination destination = 13;
 }
 
 message CreateJobRequest {
@@ -75,6 +77,7 @@ message CreateJobRequest {
   string channel = 5;
   ResultType type = 6;
   Format format = 7;
+  Destination destination = 8;
 }
 
 message GetJobRequest { string id = 1; }

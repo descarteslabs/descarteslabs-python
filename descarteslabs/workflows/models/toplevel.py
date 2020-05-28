@@ -6,6 +6,7 @@ def compute(
     obj,
     geoctx=None,
     format="pyarrow",
+    destination="download",
     timeout=None,
     block=True,
     progress_bar=None,
@@ -88,7 +89,9 @@ def compute(
     if geoctx is not None:
         params["geoctx"] = geoctx
 
-    job = Job(obj, params, format=format, client=client, cache=cache)
+    job = Job(
+        obj, params, format=format, destination=destination, client=client, cache=cache
+    )
     if block:
         return job.result(timeout=timeout, progress_bar=progress_bar)
     else:

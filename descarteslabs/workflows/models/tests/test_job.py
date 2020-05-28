@@ -12,7 +12,10 @@ from descarteslabs.common.proto.errors import errors_pb2
 from descarteslabs.common.proto.job import job_pb2
 from descarteslabs.common.proto.types import types_pb2
 from descarteslabs.common.workflows.arrow_serialization import serialization_context
-from descarteslabs.common.workflows.formats import user_format_to_proto
+from descarteslabs.common.workflows.result_options import (
+    user_format_to_proto,
+    user_destination_to_proto,
+)
 from descarteslabs.common.graft import client as graft_client
 
 from descarteslabs.workflows import _channel
@@ -55,12 +58,14 @@ class TestJob(object):
         format_proto = user_format_to_proto(
             {"type": "pyarrow", "compression": "brotli"}
         )
+        destination_proto = user_destination_to_proto({"type": "download"})
         create_job_request_message = job_pb2.CreateJobRequest(
             parameters=json.dumps(parameters_to_grafts(**parameters)),
             serialized_graft=json.dumps(obj.graft),
             typespec=typespec,
             type=types_pb2.ResultType.Value(cereal.typespec_to_unmarshal_str(typespec)),
             format=format_proto,
+            destination=destination_proto,
             no_cache=False,
             channel=_channel.__channel__,
         )
@@ -72,12 +77,18 @@ class TestJob(object):
             typespec=create_job_request_message.typespec,
             type=create_job_request_message.type,
             format=create_job_request_message.format,
+            destination=create_job_request_message.destination,
             no_cache=create_job_request_message.no_cache,
             channel=create_job_request_message.channel,
         )
         stub.return_value.CreateJob.return_value = message
 
-        job = Job(obj, parameters, format={"type": "pyarrow", "compression": "brotli"})
+        job = Job(
+            obj,
+            parameters,
+            format={"type": "pyarrow", "compression": "brotli"},
+            destination="download",
+        )
 
         stub.return_value.CreateJob.assert_called_once_with(
             create_job_request_message,
@@ -253,7 +264,8 @@ class TestJob(object):
 
     def test_wait_for_result_success(self, stub):
         id_ = "foo"
-        message = job_pb2.Job(id=id_)
+        destination = user_destination_to_proto({"type": "download"})
+        message = job_pb2.Job(id=id_, destination=destination)
         j = Job._from_proto(message)
         j._load_result = mock.Mock()
         job_state = job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED)
@@ -266,7 +278,8 @@ class TestJob(object):
 
     def test_wait_for_result_failure(self, stub):
         id_ = "foo"
-        message = job_pb2.Job(id=id_)
+        destination = user_destination_to_proto({"type": "download"})
+        message = job_pb2.Job(id=id_, destination=destination)
         j = Job._from_proto(message)
 
         job_state = job_pb2.Job.State(
@@ -282,7 +295,8 @@ class TestJob(object):
 
     def test_wait_for_result_terminated(self, stub):
         id_ = "foo"
-        message = job_pb2.Job(id=id_)
+        destination = user_destination_to_proto({"type": "download"})
+        message = job_pb2.Job(id=id_, destination=destination)
         j = Job._from_proto(message)
 
         job_state = job_pb2.Job.State(
@@ -298,7 +312,8 @@ class TestJob(object):
 
     def test_wait_for_result_timeout(self, stub):
         id_ = "foo"
-        message = job_pb2.Job(id=id_)
+        destination = user_destination_to_proto({"type": "download"})
+        message = job_pb2.Job(id=id_, destination=destination)
         j = Job._from_proto(message)
 
         job_state = job_pb2.Job.State(stage=job_pb2.Job.Stage.QUEUED)
@@ -319,8 +334,10 @@ class TestJob(object):
         assert j._message.state.stage == job_state.stage
 
     def test_load_result_error(self, stub):
+        destination = user_destination_to_proto({"type": "download"})
         message = job_pb2.Job(
             id="foo",
+            destination=destination,
             state=job_pb2.Job.State(
                 stage=job_pb2.Job.Stage.FAILED,
                 error=job_pb2.Job.Error(code=errors_pb2.ERROR_INVALID),

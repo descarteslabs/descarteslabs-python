@@ -13,9 +13,11 @@ from descarteslabs.common.graft import client as graft_client
 from descarteslabs.common.proto.job import job_pb2
 from descarteslabs.common.proto.types import types_pb2
 from descarteslabs.common.workflows.arrow_serialization import serialization_context
-from descarteslabs.common.workflows.formats import (
+from descarteslabs.common.workflows.result_options import (
     user_format_to_proto,
+    user_destination_to_proto,
     format_proto_to_user_facing_format,
+    destination_proto_to_user_facing_destination,
 )
 
 from .. import _channel
@@ -71,7 +73,13 @@ class Job(object):
     WAIT_INTERVAL = 0.1
 
     def __init__(
-        self, proxy_object, parameters, format="pyarrow", client=None, cache=True
+        self,
+        proxy_object,
+        parameters,
+        format="pyarrow",
+        destination="download",
+        client=None,
+        cache=True,
     ):
         """
         Creates a new `Job` to compute the provided proxy object with the given
@@ -85,6 +93,8 @@ class Job(object):
             Python dictionary of parameter names and values
         format: str or dict, default "pyarrow"
             The serialization format for the result.
+        destination: str or dict, default "download"
+            The destination for the result.
         client : `.workflows.client.Client`, optional
             Allows you to use a specific client instance with non-default
             auth and parameters
@@ -115,6 +125,13 @@ class Job(object):
             format = {"type": format}
         format_proto = user_format_to_proto(format)
 
+        if isinstance(destination, str):
+            if "@" in destination:
+                destination = {"type": "email", "to": destination}
+            else:
+                destination = {"type": destination}
+        destination_proto = user_destination_to_proto(destination)
+
         parameters = parameters_to_grafts(**parameters)
 
         message = client.api["CreateJob"](
@@ -124,6 +141,7 @@ class Job(object):
                 typespec=typespec,
                 type=types_pb2.ResultType.Value(result_type),
                 format=format_proto,
+                destination=destination_proto,
                 no_cache=not cache,
                 channel=_channel.__channel__,
             ),
@@ -366,6 +384,11 @@ class Job(object):
         return format_proto_to_user_facing_format(self._message.format)
 
     @property
+    def destination(self):
+        "The destination for the Job results, as a dictionary."
+        return destination_proto_to_user_facing_destination(self._message.destination)
+
+    @property
     def error(self):
         "The error of the Job, or None if it finished successfully."
         error_code = self._message.state.error.code
@@ -432,7 +455,13 @@ class Job(object):
                 self._draw_progress_bar(output=progress_bar_io)
         else:
             if self.done:
-                return self._load_result()
+                if self._message.destination.has_download:
+                    # We only want it to load the result from the bucket
+                    # if the destination was download
+                    return self._load_result()
+                else:
+                    # Destination was email
+                    return None
             else:
                 raise JobTimeoutError(
                     "timeout while waiting on result for Job('{}')".format(self.id)

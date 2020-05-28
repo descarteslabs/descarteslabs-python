@@ -39,8 +39,9 @@ message Format {
 
 message PyArrow {
   enum Compression {
-    lz4 = 0;
-    brotli = 1;
+    UNSPECIFIED = 0;
+    LZ4 = 1;
+    BROTLI = 2;
   }
   Compression compression = 1;
 }
@@ -57,10 +58,10 @@ message GeoTIFF {
   bool not_overviews = 1;
   bool not_tiled = 2;
   enum Compression {
-    LZW = 0;
-    None = 1;
-    JPEG = 2;
-    JPEG2000 = 3;
+    UNSPECIFIED = 0;
+    LZW = 1;
+    NONE = 2;
+    JPEG = 3;
   }
   Compression compression = 3;
 }

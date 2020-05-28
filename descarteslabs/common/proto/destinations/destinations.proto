@@ -1,0 +1,21 @@
+syntax="proto3";
+
+package descarteslabs.workflows;
+
+message Destination {
+  Download download = 1;
+  Email email = 2;
+
+  bool has_download = 20;
+  bool has_email = 21;
+}
+
+message Download {}
+
+message Email {
+  repeated string to = 1;
+  repeated string cc = 2;
+  repeated string bcc = 3;
+  string subject = 4;
+  string body = 5;
+}

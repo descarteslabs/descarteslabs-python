@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n0descarteslabs/common/proto/formats/formats.proto\x12\x17\x64\x65scarteslabs.workflows\x1a google/protobuf/descriptor.proto\"\xef\x05\n\x06\x46ormat\x12W\n\x07pyarrow\x18\x01 \x01(\x0b\x32 .descarteslabs.workflows.PyArrowB\x1b\xd2\xc9\x01\x17\x61pplication/vnd.pyarrowR\x07pyarrow\x12G\n\x04json\x18\x02 \x01(\x0b\x32\x1d.descarteslabs.workflows.JSONB\x14\xd2\xc9\x01\x10\x61pplication/jsonR\x04json\x12T\n\x07geojson\x18\x03 \x01(\x0b\x32 .descarteslabs.workflows.GeoJSONB\x18\xd2\xc9\x01\x14\x61pplication/geo+jsonR\x07geojson\x12<\n\x03\x63sv\x18\x04 \x01(\x0b\x32\x1c.descarteslabs.workflows.CSVB\x0c\xd2\xc9\x01\x08text/csvR\x03\x63sv\x12=\n\x03png\x18\x05 \x01(\x0b\x32\x1c.descarteslabs.workflows.PNGB\r\xd2\xc9\x01\timage/pngR\x03png\x12J\n\x07geotiff\x18\x06 \x01(\x0b\x32 .descarteslabs.workflows.GeoTIFFB\x0e\xd2\xc9\x01\nimage/tiffR\x07geotiff\x12S\n\x07msgpack\x18\x07 \x01(\x0b\x32 .descarteslabs.workflows.MsgPackB\x17\xd2\xc9\x01\x13\x61pplication/msgpackR\x07msgpack\x12\x1f\n\x0bhas_pyarrow\x18\x14 \x01(\x08R\nhasPyarrow\x12\x19\n\x08has_json\x18\x15 \x01(\x08R\x07hasJson\x12\x1f\n\x0bhas_geojson\x18\x16 \x01(\x08R\nhasGeojson\x12\x17\n\x07has_csv\x18\x17 \x01(\x08R\x06hasCsv\x12\x17\n\x07has_png\x18\x18 \x01(\x08R\x06hasPng\x12\x1f\n\x0bhas_geotiff\x18\x19 \x01(\x08R\nhasGeotiff\x12\x1f\n\x0bhas_msgpack\x18\x1a \x01(\x08R\nhasMsgpack\"}\n\x07PyArrow\x12N\n\x0b\x63ompression\x18\x01 \x01(\x0e\x32,.descarteslabs.workflows.PyArrow.CompressionR\x0b\x63ompression\"\"\n\x0b\x43ompression\x12\x07\n\x03lz4\x10\x00\x12\n\n\x06\x62rotli\x10\x01\"\x06\n\x04JSON\"\t\n\x07GeoJSON\"\x05\n\x03\x43SV\"\x05\n\x03PNG\"\xd5\x01\n\x07GeoTIFF\x12#\n\rnot_overviews\x18\x01 \x01(\x08R\x0cnotOverviews\x12\x1b\n\tnot_tiled\x18\x02 \x01(\x08R\x08notTiled\x12N\n\x0b\x63ompression\x18\x03 \x01(\x0e\x32,.descarteslabs.workflows.GeoTIFF.CompressionR\x0b\x63ompression\"8\n\x0b\x43ompression\x12\x07\n\x03LZW\x10\x00\x12\x08\n\x04None\x10\x01\x12\x08\n\x04JPEG\x10\x02\x12\x0c\n\x08JPEG2000\x10\x03\"\t\n\x07MsgPack::\n\x08mimetype\x12\x1d.google.protobuf.FieldOptions\x18\x9a\x19 \x01(\tR\x08mimetypeb\x06proto3'
+  serialized_pb=b'\n0descarteslabs/common/proto/formats/formats.proto\x12\x17\x64\x65scarteslabs.workflows\x1a google/protobuf/descriptor.proto\"\xef\x05\n\x06\x46ormat\x12W\n\x07pyarrow\x18\x01 \x01(\x0b\x32 .descarteslabs.workflows.PyArrowB\x1b\xd2\xc9\x01\x17\x61pplication/vnd.pyarrowR\x07pyarrow\x12G\n\x04json\x18\x02 \x01(\x0b\x32\x1d.descarteslabs.workflows.JSONB\x14\xd2\xc9\x01\x10\x61pplication/jsonR\x04json\x12T\n\x07geojson\x18\x03 \x01(\x0b\x32 .descarteslabs.workflows.GeoJSONB\x18\xd2\xc9\x01\x14\x61pplication/geo+jsonR\x07geojson\x12<\n\x03\x63sv\x18\x04 \x01(\x0b\x32\x1c.descarteslabs.workflows.CSVB\x0c\xd2\xc9\x01\x08text/csvR\x03\x63sv\x12=\n\x03png\x18\x05 \x01(\x0b\x32\x1c.descarteslabs.workflows.PNGB\r\xd2\xc9\x01\timage/pngR\x03png\x12J\n\x07geotiff\x18\x06 \x01(\x0b\x32 .descarteslabs.workflows.GeoTIFFB\x0e\xd2\xc9\x01\nimage/tiffR\x07geotiff\x12S\n\x07msgpack\x18\x07 \x01(\x0b\x32 .descarteslabs.workflows.MsgPackB\x17\xd2\xc9\x01\x13\x61pplication/msgpackR\x07msgpack\x12\x1f\n\x0bhas_pyarrow\x18\x14 \x01(\x08R\nhasPyarrow\x12\x19\n\x08has_json\x18\x15 \x01(\x08R\x07hasJson\x12\x1f\n\x0bhas_geojson\x18\x16 \x01(\x08R\nhasGeojson\x12\x17\n\x07has_csv\x18\x17 \x01(\x08R\x06hasCsv\x12\x17\n\x07has_png\x18\x18 \x01(\x08R\x06hasPng\x12\x1f\n\x0bhas_geotiff\x18\x19 \x01(\x08R\nhasGeotiff\x12\x1f\n\x0bhas_msgpack\x18\x1a \x01(\x08R\nhasMsgpack\"\x8e\x01\n\x07PyArrow\x12N\n\x0b\x63ompression\x18\x01 \x01(\x0e\x32,.descarteslabs.workflows.PyArrow.CompressionR\x0b\x63ompression\"3\n\x0b\x43ompression\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x07\n\x03LZ4\x10\x01\x12\n\n\x06\x42ROTLI\x10\x02\"\x06\n\x04JSON\"\t\n\x07GeoJSON\"\x05\n\x03\x43SV\"\x05\n\x03PNG\"\xd8\x01\n\x07GeoTIFF\x12#\n\rnot_overviews\x18\x01 \x01(\x08R\x0cnotOverviews\x12\x1b\n\tnot_tiled\x18\x02 \x01(\x08R\x08notTiled\x12N\n\x0b\x63ompression\x18\x03 \x01(\x0e\x32,.descarteslabs.workflows.GeoTIFF.CompressionR\x0b\x63ompression\";\n\x0b\x43ompression\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x07\n\x03LZW\x10\x01\x12\x08\n\x04NONE\x10\x02\x12\x08\n\x04JPEG\x10\x03\"\t\n\x07MsgPack::\n\x08mimetype\x12\x1d.google.protobuf.FieldOptions\x18\x9a\x19 \x01(\tR\x08mimetypeb\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_descriptor__pb2.DESCRIPTOR,])
 
@@ -40,18 +40,22 @@ _PYARROW_COMPRESSION = _descriptor.EnumDescriptor(
   file=DESCRIPTOR,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='lz4', index=0, number=0,
+      name='UNSPECIFIED', index=0, number=0,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='brotli', index=1, number=1,
+      name='LZ4', index=1, number=1,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='BROTLI', index=2, number=2,
       serialized_options=None,
       type=None),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=956,
-  serialized_end=990,
+  serialized_start=957,
+  serialized_end=1008,
 )
 _sym_db.RegisterEnumDescriptor(_PYARROW_COMPRESSION)
 
@@ -62,26 +66,26 @@ _GEOTIFF_COMPRESSION = _descriptor.EnumDescriptor(
   file=DESCRIPTOR,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='LZW', index=0, number=0,
+      name='UNSPECIFIED', index=0, number=0,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='None', index=1, number=1,
+      name='LZW', index=1, number=1,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='JPEG', index=2, number=2,
+      name='NONE', index=2, number=2,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='JPEG2000', index=3, number=3,
+      name='JPEG', index=3, number=3,
       serialized_options=None,
       type=None),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1183,
-  serialized_end=1239,
+  serialized_start=1201,
+  serialized_end=1260,
 )
 _sym_db.RegisterEnumDescriptor(_GEOTIFF_COMPRESSION)
 
@@ -235,8 +239,8 @@ _PYARROW = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=865,
-  serialized_end=990,
+  serialized_start=866,
+  serialized_end=1008,
 )
 
 
@@ -259,8 +263,8 @@ _JSON = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=992,
-  serialized_end=998,
+  serialized_start=1010,
+  serialized_end=1016,
 )
 
 
@@ -283,8 +287,8 @@ _GEOJSON = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1000,
-  serialized_end=1009,
+  serialized_start=1018,
+  serialized_end=1027,
 )
 
 
@@ -307,8 +311,8 @@ _CSV = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1011,
-  serialized_end=1016,
+  serialized_start=1029,
+  serialized_end=1034,
 )
 
 
@@ -331,8 +335,8 @@ _PNG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1018,
-  serialized_end=1023,
+  serialized_start=1036,
+  serialized_end=1041,
 )
 
 
@@ -377,8 +381,8 @@ _GEOTIFF = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1026,
-  serialized_end=1239,
+  serialized_start=1044,
+  serialized_end=1260,
 )
 
 
@@ -401,8 +405,8 @@ _MSGPACK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1241,
-  serialized_end=1250,
+  serialized_start=1262,
+  serialized_end=1271,
 )
 
 _FORMAT.fields_by_name['pyarrow'].message_type = _PYARROW
