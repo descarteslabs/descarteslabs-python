@@ -8,8 +8,11 @@ from .helpers import (
 
 
 DEFAULTS = {
-    formats_pb2.GeoTIFF: {"compression": "LZW"},
-    formats_pb2.PyArrow: {"compression": "LZ4"},
+    formats_pb2.Geotiff: {
+        "compression": "GEOTIFFCOMPRESSION_LZW",
+        "overview_resampler": "GEOTIFFOVERVIEWRESAMPLER_NEAREST",
+    },
+    formats_pb2.Pyarrow: {"compression": "PYARROWCOMPRESSION_LZ4"},
 }
 
 
@@ -57,9 +60,8 @@ def mimetype_to_proto(mimetype: str) -> formats_pb2.Format:
             parsed_params[key] = value
         except ValueError:
             raise ValueError(
-                "Invalid MIME type {}. If the final character in your MIME type is a semicolon, remove it.".format(
-                    mimetype
-                )
+                "Invalid MIME type {}. If the final character in your MIME type is a"
+                " semicolon, remove it.".format(mimetype)
             )
 
     return user_options_to_proto(

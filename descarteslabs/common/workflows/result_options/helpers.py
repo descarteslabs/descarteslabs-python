@@ -15,6 +15,10 @@ def cast_enum(value):
     return str(value).upper()
 
 
+def camelize(string):
+    return "".join([word.capitalize() for word in string.split("_")])
+
+
 proto_field_type_to_python_type = {
     FieldDescriptor.TYPE_DOUBLE: float,
     FieldDescriptor.TYPE_FLOAT: float,
@@ -74,10 +78,12 @@ def user_options_to_proto(
             except KeyError:
                 raise ValueError(
                     "Unsupported parameter '{}' for {} '{}'. For supported parameters, "
-                    "see {} in the formats documentation at https://docs.descarteslabs.com"
+                    "see {} in the formats documentation at"
+                    " https://docs.descarteslabs.com"
                     "/descarteslabs/workflows/docs/formats.html#output-formats "
                     "or destinations documentation at https://docs.descarteslabs.com"
-                    "/descarteslabs/workflows/docs/destinations.html#output-destinations".format(
+                    "/descarteslabs/workflows/docs/destinations.html#output-destinations"
+                    .format(
                         key, type_.__name__.lower(), field_name, specific_type.__name__
                     )
                 ) from None
@@ -95,6 +101,14 @@ def user_options_to_proto(
                 cast_value = [cast_func(v) for v in value]
             else:
                 cast_value = cast_func(value)
+                # for enums, "NEAREST" becomes "GEOTIFFOVERVIEWRESAMPLER_NEAREST"
+                if cast_func is cast_enum:
+                    cast_value = (
+                        field_name.upper()
+                        + field_key.replace("_", "").upper()
+                        + "_"
+                        + cast_value
+                    )
         except (AssertionError, ValueError, AttributeError):
             raise ValueError(
                 "Parameter {!r} must be castable to {}, but it was not.".format(
@@ -139,9 +153,9 @@ def user_facing_options(
             val = not val
 
         if field_type is cast_enum and isinstance(val, int):
-            enum = key.capitalize()
+            enum = camelize(type_) + camelize(key)
             val = getattr(specific_format, enum).Name(val)
-            val = val.lower()
+            val = val.split("_")[1].lower()
 
         output_options[key] = val
 

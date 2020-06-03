@@ -10,28 +10,31 @@ from ..formats import (
 
 
 def test_mimetype_to_proto():
-    proto = mimetype_to_proto("application/vnd.pyarrow; compression=lz4")
+    proto = mimetype_to_proto("application/vnd.pyarrow; compression=LZ4")
     assert isinstance(proto, formats_pb2.Format)
     assert proto.has_pyarrow and not proto.has_geotiff
-    assert proto.pyarrow.compression == formats_pb2.PyArrow.Compression.LZ4
+    assert (
+        proto.pyarrow.compression
+        == formats_pb2.Pyarrow.PyarrowCompression.PYARROWCOMPRESSION_LZ4
+    )
 
 
 def test_mimetype_to_proto_more_options():
-    proto = mimetype_to_proto(
-        "image/tiff; overviews=False; tiled=False; compression=JPEG"
-    )
+    proto = mimetype_to_proto("image/tiff; overviews=False; compression=JPEG")
     assert isinstance(proto, formats_pb2.Format)
     assert proto.has_geotiff and not proto.has_pyarrow
     assert proto.geotiff.not_overviews
-    assert proto.geotiff.not_tiled
-    assert proto.geotiff.compression == formats_pb2.GeoTIFF.Compression.JPEG
+    assert (
+        proto.geotiff.compression
+        == formats_pb2.Geotiff.GeotiffCompression.GEOTIFFCOMPRESSION_JPEG
+    )
 
 
 @pytest.mark.parametrize(
     "mimetype, error_msg",
     [
         ("application/does-not-exist", "Unknown MIME type"),
-        ("application/vnd.pyarrow; compression=lz4;", "Invalid MIME type"),
+        ("application/vnd.pyarrow; compression=LZ4;", "Invalid MIME type"),
         ("application/vnd.pyarrow; foo=1", "Unsupported parameter 'foo' for format"),
         ("image/tiff; overviews=13", "Parameter 'overviews' must be castable"),
     ],
@@ -42,21 +45,26 @@ def test_mimetype_to_proto_invalid(mimetype, error_msg):
 
 
 def test_user_format_to_proto():
-    proto = user_format_to_proto({"type": "pyarrow", "compression": "lz4"})
+    proto = user_format_to_proto({"type": "pyarrow", "compression": "LZ4"})
     assert isinstance(proto, formats_pb2.Format)
     assert proto.has_pyarrow and not proto.has_geotiff
-    assert proto.pyarrow.compression == formats_pb2.PyArrow.Compression.LZ4
+    assert (
+        proto.pyarrow.compression
+        == formats_pb2.Pyarrow.PyarrowCompression.PYARROWCOMPRESSION_LZ4
+    )
 
 
 def test_user_format_to_proto_more_options():
     proto = user_format_to_proto(
-        {"type": "geotiff", "overviews": False, "tiled": False, "compression": "JPEG"}
+        {"type": "geotiff", "overviews": False, "compression": "JPEG"}
     )
     assert isinstance(proto, formats_pb2.Format)
     assert proto.has_geotiff and not proto.has_pyarrow
     assert proto.geotiff.not_overviews
-    assert proto.geotiff.not_tiled
-    assert proto.geotiff.compression == formats_pb2.GeoTIFF.Compression.JPEG
+    assert (
+        proto.geotiff.compression
+        == formats_pb2.Geotiff.GeotiffCompression.GEOTIFFCOMPRESSION_JPEG
+    )
 
 
 @pytest.mark.parametrize(
@@ -81,7 +89,12 @@ def test_user_format_to_proto_invalid(format_, error_msg):
     [
         {"type": "json"},
         {"type": "pyarrow", "compression": "lz4"},
-        {"type": "geotiff", "overviews": False, "tiled": False, "compression": "jpeg"},
+        {
+            "type": "geotiff",
+            "overviews": False,
+            "compression": "jpeg",
+            "overview_resampler": "nearest",
+        },
     ],
 )
 def test_format_proto_to_user_facing_format(format_):

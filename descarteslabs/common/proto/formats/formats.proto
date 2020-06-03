@@ -16,16 +16,16 @@ extend google.protobuf.FieldOptions {
 // a default value of True. Applications presenting these fields to
 // users should do so without the 'not_' prefix and with a default of True.
 // Mimetypes support passing these parameters without the 'not_' prefix,
-// in which case the value is inverted. 
+// in which case the value is inverted.
 
 message Format {
   // TODO: add oneof for these once we can handle it better on the backend
-  PyArrow pyarrow = 1 [(mimetype) = "application/vnd.pyarrow"];
+  Pyarrow pyarrow = 1 [(mimetype) = "application/vnd.pyarrow"];
   JSON json = 2 [(mimetype) = "application/json"];
   GeoJSON geojson = 3 [(mimetype) = "application/geo+json"];
   CSV csv = 4 [(mimetype) = "text/csv"];
   PNG png = 5 [(mimetype) = "image/png"];
-  GeoTIFF geotiff = 6 [(mimetype) = "image/tiff"];
+  Geotiff geotiff = 6 [(mimetype) = "image/tiff"];
   MsgPack msgpack = 7 [(mimetype) = "application/msgpack"];
 
   bool has_pyarrow = 20;
@@ -37,13 +37,14 @@ message Format {
   bool has_msgpack = 26;
 }
 
-message PyArrow {
-  enum Compression {
-    UNSPECIFIED = 0;
-    LZ4 = 1;
-    BROTLI = 2;
-  }
-  Compression compression = 1;
+
+message Pyarrow {
+    enum PyarrowCompression {
+        PYARROWCOMPRESSION_UNSPECIFIED = 0;
+        PYARROWCOMPRESSION_LZ4 = 1; // default
+        PYARROWCOMPRESSION_BROTLI = 2;
+    }
+    PyarrowCompression compression = 1;
 }
 
 message JSON {}
@@ -54,16 +55,26 @@ message CSV {}
 
 message PNG {}
 
-message GeoTIFF {
-  bool not_overviews = 1;
-  bool not_tiled = 2;
-  enum Compression {
-    UNSPECIFIED = 0;
-    LZW = 1;
-    NONE = 2;
-    JPEG = 3;
-  }
-  Compression compression = 3;
+
+
+message Geotiff {
+    bool not_overviews = 1;
+    enum GeotiffCompression {
+        GEOTIFFCOMPRESSION_UNSPECIFIED = 0;
+        GEOTIFFCOMPRESSION_LZW = 1; // default
+        GEOTIFFCOMPRESSION_NONE = 2;
+        GEOTIFFCOMPRESSION_JPEG = 3;
+    }
+    GeotiffCompression compression = 2;
+    enum GeotiffOverviewResampler {
+      GEOTIFFOVERVIEWRESAMPLER_UNSPECIFIED = 0;
+      GEOTIFFOVERVIEWRESAMPLER_NEAREST = 1; // default
+      GEOTIFFOVERVIEWRESAMPLER_AVERAGE = 2;
+      GEOTIFFOVERVIEWRESAMPLER_BILINEAR = 3;
+      GEOTIFFOVERVIEWRESAMPLER_CUBIC = 4;
+      GEOTIFFOVERVIEWRESAMPLER_MODE = 5;
+    }
+    GeotiffOverviewResampler overview_resampler = 3;
 }
 
 message MsgPack {}
