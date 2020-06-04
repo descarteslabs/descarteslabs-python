@@ -11,6 +11,8 @@ Changelog
 ## Pending
 
 ### Workflows (channel `v0-15`) - Added
+- **Output formats for Job results** including PyArrow, MessagePack, JSON and GeoTIFF. Usage details can be found [on the docs](https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html).
+- **Destinations for Job results** including download and email. Usage details can be found [on the docs](https://docs.descarteslabs.com/descarteslabs/workflows/docs/destinations.html).
 - NumPy functions including `hypot`, `bitwise_and`, `bitwise_or`, `bitwise_xor`, `bitwise_not`, `invert`, and `ldexp`
 - Bitwise `Array` and `MaskedArray` operations
 - `shape` attribute on `Array` and `MaskedArray`
