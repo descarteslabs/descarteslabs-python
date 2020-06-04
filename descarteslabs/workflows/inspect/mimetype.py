@@ -8,20 +8,28 @@ user_facing_format_to_mimetype = {
 }
 
 
-def format_to_mimetype(format, format_options=None):
-    if format_options is None:
-        format_options = {}
+def format_to_mimetype(format_):
+    format_copy = format_.copy()
 
     try:
-        mimetype = user_facing_format_to_mimetype[format]
+        format_name = format_copy.pop("type")
+    except KeyError:
+        raise ValueError(
+            "The format dictionary must include a serialization type"
+            "(like `'type': 'json'`), but key 'type' does not exist."
+        )
+
+    try:
+        mimetype = user_facing_format_to_mimetype[format_name]
     except KeyError:
         raise ValueError(
             "Output format for inspect must be one of {}, but got {}.".format(
-                ", ".join(key for key in user_facing_format_to_mimetype.keys()), format
+                ", ".join(key for key in user_facing_format_to_mimetype.keys()),
+                format_name,
             )
         )
 
-    for name, val in format_options.items():
+    for name, val in format_copy.items():
         assert isinstance(
             name, str
         ), "Format options keys must be strings, but the key {} is a(n) {}".format(

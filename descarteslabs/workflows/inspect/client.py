@@ -60,7 +60,7 @@ class InspectClient(Service):
             retries=retries if retries is not None else self.RETRY_CONFIG,
         )
 
-    def inspect(self, obj, timeout=30, format="pyarrow", format_options=None, **params):
+    def inspect(self, obj, timeout=30, format="pyarrow", **params):
         graft = obj.graft
         params_dict = parameters_to_grafts(**params)
 
@@ -69,7 +69,10 @@ class InspectClient(Service):
         result_type = typespec_to_unmarshal_str(typespec)
         # ^ this also preemptively checks whether the result type is something we'll know how to unmarshal
 
-        mimetype = format_to_mimetype(format, format_options=format_options)
+        if isinstance(format, str):
+            format = {"type": format}
+
+        mimetype = format_to_mimetype(format)
 
         # TODO stream=True, use resp.raw and stream through pyarrow?
         try:
