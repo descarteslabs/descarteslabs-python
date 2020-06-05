@@ -165,10 +165,20 @@ Workflows exposes a number of serialization formats for results. Use the ``forma
 See :ref:`output-formats` for more information on supported formats.
 
 .. toctree::
-  :hidden:
   :glob:
 
   docs/formats
+
+:workflow_api_nontoc_heading:`Output Destinations`
+
+Workflows exposes a number of destinations for results. Use the ``destination`` argument to `~.models.compute` to specify a destination.
+
+See :ref:`output-destinations` for more information on supported destinations.
+
+.. toctree::
+  :glob:
+
+  docs/destinations
 
 :workflow_api_nontoc_heading:`Result Types`
 

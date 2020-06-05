@@ -4,6 +4,12 @@
 Output Formats
 --------------
 
+.. note::
+  Output formats control *how* results are stored -- like GeoTIFF, JSON, etc. You can use output destinations, which control *where* the results are stored, in conjunction with output formats. For example, with ``format='geotiff'`` you could use ``destination='email@example.com'`` to send an email with a link to download a GeoTIFF result. 
+
+..
+  TODO: Add "Some output formats must be used with certain destinations. For example, with the Catalog destination you can only use the GeoTIFF format." when we have the Catalog destination
+
 When calling `~.models.compute`, you can pick the output format for the results using the ``format`` argument. The supported formats are "pyarrow" (default), "geotiff", "json", and "msgpack".
 
 If you don't need to supply any options for the formatter, you can pass the format name as a string::
@@ -28,12 +34,16 @@ The following is a list of the available options for each format. The keys in th
 PyArrow
 ~~~~~~~
 
+Shorthand: "pyarrow"
+
 `PyArrow <https://arrow.apache.org/docs/python/ipc.html#arbitrary-object-serialization>`_ (the default) is the best format for loading data back into Python for further use. It's fast and memory-efficient, especially for NumPy arrays, and also automatically unpacks results into :ref:`result-types`.
 
 - ``compression``: the type of compression used for the data (string, default "lz4", one of "lz4" or "brotli")
 
 GeoTIFF
 ~~~~~~~
+
+Shorthand: "geotiff"
 
 `GeoTIFF <https://en.wikipedia.org/wiki/GeoTIFF>`_ is the best format for using raster data with other geospatial software, such as ArcGIS or QGIS. Only `~.geospatial.Image` objects can be computed in GeoTIFF format. GeoTIFF data is returned in raw bytes, so in most cases, you'll want to write the data out to a file.
 
@@ -45,12 +55,16 @@ GeoTIFF
 JSON
 ~~~~
 
+Shorthand: "json"
+
 `JSON <json.org/json-en.html>`_ is the best format for using the data in other languages because it is language independent.
 
 - No options
 
 MsgPack
 ~~~~~~~
+
+Shorthand: "msgpack"
 
 `MsgPack <https://msgpack.org/index.html>`_ is similar to JSON. It is a good format for using the data in other languages, but it is faster and smaller than JSON, especially for NumPy Arrays. Note that array data (`Array`, `~.geospatial.Image`, etc.) is encoded in raw bytes using the `msgpack-numpy <https://github.com/lebedov/msgpack-numpy>`_ library, so msgpack is only recommended for use with Python.
 

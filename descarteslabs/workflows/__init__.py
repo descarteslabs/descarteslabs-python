@@ -116,6 +116,11 @@ def compute(
         See the `formats
         <https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html#output-formats>`_
         documentation for more information.
+    destination: str or dict, default "download"
+        The destination for the result.
+        See the `destinations
+        <https://docs.descarteslabs.com/descarteslabs/workflows/docs/destinations.html#output-destinations>`_
+        documentation for more information.
     timeout: int, optional
         The number of seconds to wait for the result, if ``block`` is True.
         Raises ``JobTimeoutError`` if the timeout passes.
@@ -171,6 +176,21 @@ def compute(
     >>> bytes_ = wf.compute(img, geoctx=ctx, format={"type": "geotiff", "tiled": False}) # doctest: +SKIP
     >>> with open("/home/example.tiff", "wb") as out: # doctest: +SKIP
     >>>     out.write(bytes_) # doctest: +SKIP
+
+    >>> # specifying a destination
+    >>> num = wf.Int(1) + 1
+    >>> num.compute(destination="download") # default # doctest: +SKIP
+    2
+    >>> # same computation but with email destination
+    >>> num.compute(destination="example@email.com") # doctest: +SKIP
+    >>> # now with some destination options
+    >>> num.compute(
+    ...     destination={
+    ...         "type": "email",
+    ...         "to": "example@email.com",
+    ...         "subject": "My Computation is Done"
+    ...     }
+    ... ) # doctest: +SKIP
     """
     if isinstance(obj, (tuple, list)):
         obj = proxify(obj)
