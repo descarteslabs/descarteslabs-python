@@ -397,7 +397,13 @@ class Job(object):
 
     def _load_result(self):
         if self._message.state.stage == job_pb2.Job.Stage.SUCCEEDED:
-            return self._download_result()
+            if self._message.destination.has_download:
+                # We only want it to load the result from the bucket
+                # if the destination was download
+                return self._download_result()
+            else:
+                # Destination was email
+                return None
         elif self._message.state.stage == job_pb2.Job.Stage.FAILED:
             raise self.error
         elif self._message.state.stage == job_pb2.Job.Stage.CANCELLED:
@@ -455,13 +461,7 @@ class Job(object):
                 self._draw_progress_bar(output=progress_bar_io)
         else:
             if self.done:
-                if self._message.destination.has_download:
-                    # We only want it to load the result from the bucket
-                    # if the destination was download
-                    return self._load_result()
-                else:
-                    # Destination was email
-                    return None
+                return self._load_result()
             else:
                 raise JobTimeoutError(
                     "timeout while waiting on result for Job('{}')".format(self.id)
