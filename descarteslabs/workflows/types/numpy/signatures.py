@@ -493,8 +493,21 @@ NUMPY_SIGNATURES = {
     "histogram": Sig(
         [
             Param("a", Array),
-            Param("bins", Union[List[Int], List[Float], Int], 10),
-            Param("range", Union[Tuple[Int, Int], Tuple[Float, Float], NoneType], None),
+            Param("bins", Union[Int, List[Int], List[Float], List[Scalar], Array], 10),
+            Param(
+                "range",
+                Union[
+                    Tuple[Int, Int],
+                    Tuple[Float, Float],
+                    Tuple[Scalar, Scalar],
+                    Tuple[Int, Scalar],
+                    Tuple[Float, Scalar],
+                    Tuple[Scalar, Int],
+                    Tuple[Scalar, Float],
+                    NoneType,
+                ],
+                None,
+            ),
             Param("weights", Union[Array, NoneType], None),
             Param("density", Union[Bool, NoneType], None),
         ],
