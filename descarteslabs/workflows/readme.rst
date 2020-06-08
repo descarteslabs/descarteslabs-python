@@ -160,23 +160,19 @@ See :ref:`numpy-functions` for a full list of available functions.
 
 :workflow_api_nontoc_heading:`Output Formats`
 
-Workflows exposes a number of serialization formats for results. Use the ``format`` argument to `~.models.compute` to specify a format.
-
-See :ref:`output-formats` for more information on supported formats.
+Workflows exposes a number of :ref:`serialization formats <output-formats>` for results. Use the ``format`` argument to `~.models.compute` to specify a format.
 
 .. toctree::
-  :glob:
+  :maxdepth: 3
 
   docs/formats
 
 :workflow_api_nontoc_heading:`Output Destinations`
 
-Workflows exposes a number of destinations for results. Use the ``destination`` argument to `~.models.compute` to specify a destination.
-
-See :ref:`output-destinations` for more information on supported destinations.
+Workflows exposes a number of :ref:`destinations <output-destinations>` for results. Use the ``destination`` argument to `~.models.compute` to specify a destination.
 
 .. toctree::
-  :glob:
+  :maxdepth: 3
 
   docs/destinations
 

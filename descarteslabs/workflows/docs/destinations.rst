@@ -5,10 +5,17 @@ Output Destinations
 -------------------
 
 .. note::
-  Output destinations control *where* results are stored -- like an email versus a download link. You can use output formats, which control *how* the results are stored, in conjunction with output destinations. For example, with ``destination='email@example.com'`` you could use ``format='geotiff'`` to send an email with a link to download a GeoTIFF result. 
+  Output destinations control *where* results are stored -- like an email versus a download link. You can use output formats, which control *how* the results are stored, in conjunction with output destinations.
+
+  For example, with ``destination='email@example.com'`` you might use ``format='geotiff'`` or ``format='json'``. Both would send emails; the emails would have links to download data in GeoTIFF versus JSON format.
 
 ..
   TODO: Add "Some output destinations can only be used with certain output formats. For example, with the Catalog destination you can only use the GeoTIFF format." when we have the Catalog destination
+
+.. contents::
+  :local:
+  :depth: 2
+  :backlinks: none
 
 When calling `~.models.compute`, you can pick the destination for the results using the ``destination`` argument.
 
@@ -25,11 +32,9 @@ For the email destination, you can pass the receiver's email address as a string
 If you would like to provide more destination options, you pass the destination as a dictionary::
 
   >>> two = wf.Int(1) + 1
-  >>> two.compute(destination={"type": "email", "address": "example@email.com", "subject": "My Computation is Done"})
+  >>> two.compute(destination={"type": "email", "to": "example@email.com", "subject": "My Computation is Done"})
 
 Note that when passing the destination as a dictionary, it must include a ``type`` key corresponding to the desired destination.
-
-When using the "download" destination, results will be returned locally. When using the "email" destination, results will be stored in a Workflows managed bucket. You will receive an email when the results have been stored, with a link to access them. 
 
 Destination Options
 ^^^^^^^^^^^^^^^^^^^
@@ -39,7 +44,7 @@ The following is a list of the available options for each destination. The keys 
 Download
 ~~~~~~~~
 
-Shorthand: "download"
+Shorthand: ``"download"``
 
 Download (the default) stores a result (in any :ref:`format <output-formats>`) and gives you a link to download it. The link is valid for 10 days after job completion, then the data is automatically deleted. Download is good for getting results back locally, whether to continue using results in Python (with the ``pyarrow`` format) or save results to disk (with formats like ``geotiff``).
 
@@ -64,9 +69,9 @@ Examples
 Email
 ~~~~~
 
-Shorthand: an email address, like "example@email.com"
+Shorthand: an email address, like ``"example@email.com"``
 
-Email stores results (in any :ref:`format <output-formats>`) on a Workflows managed bucket and emails you when the computation is finished. Email is equivalent to 'download', but also send an email when the job is done. The email contains a link to download the data and that link will expire after 10 days.
+Email is equivalent to `Download`_, but also sends an email when the job is done. The email contains a link to download the data. Anyone with that link can download the data. As with `Download`_, that link will expire after 10 days.
 
 Options
 *******
@@ -88,4 +93,4 @@ Examples
   >>> two.compute(destination="example@email.com")
 
   >>> two = wf.Int(1) + 1
-  >>> two.compute(destination={"type": "email", "address": "example@email.com", "subject": "My Computation is Done"})
+  >>> two.compute(destination={"type": "email", "to": "example@email.com", "subject": "My Computation is Done"})
