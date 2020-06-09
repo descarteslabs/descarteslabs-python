@@ -46,6 +46,7 @@ from .math import (
     exp,
     square,
 )
+from .conditional import ifelse
 from .constants import e, inf, nan, pi
 from .identifier import parameter, identifier
 
@@ -118,12 +119,14 @@ __all__ = [
     "exp",
     "square",
     "normalized_difference",
-    # .identifier
-    "parameter",
-    "identifier",
+    # .conditional
+    "ifelse",
     # .constants
     "e",
     "inf",
     "nan",
     "pi",
+    # .identifier
+    "parameter",
+    "identifier",
 ]

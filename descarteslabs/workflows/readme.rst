@@ -14,6 +14,29 @@ The tables below list the types and functions available through the Workflows AP
 
 .. include:: /descarteslabs/workflows/docs/request.rst
 
+.. toctree::
+  :hidden:
+  :glob:
+
+  docs/types/geospatial
+  docs/types/array
+  docs/types/numpy
+  docs/types/primitives
+  docs/types/containers
+  docs/types/datetimes
+  docs/types/function
+  docs/types/math
+  docs/types/constants
+  docs/interactive
+  docs/types/identifier
+  docs/types/conditional
+  docs/execution
+  docs/results
+  docs/exceptions
+  docs/client
+  /descarteslabs/common/retry/readme
+
+
 :workflow_api_nontoc_heading:`Geospatial`
 
 .. autosummary::
@@ -47,12 +70,6 @@ The tables below list the types and functions available through the Workflows AP
 Workflows exposes a large chunk of the NumPy API. Either use the ``workflows.numpy`` submodule (preferred), or pass Workflows `.Array` or `.MaskedArray` objects into NumPy functions directly.
 
 See :ref:`numpy-functions` for a full list of available functions.
-
-.. toctree::
-  :hidden:
-  :glob:
-
-  docs/types/numpy
 
 :workflow_api_nontoc_heading:`Primitives`
 
@@ -145,6 +162,13 @@ See :ref:`numpy-functions` for a full list of available functions.
 
   ~descarteslabs.workflows.types.identifier.parameter
 
+:workflow_api_nontoc_heading:`Conditionals`
+
+.. autosummary::
+  :nosignatures:
+
+  ~descarteslabs.workflows.types.conditional.ifelse
+
 :workflow_api_nontoc_heading:`Execution`
 
 .. autosummary::
@@ -212,23 +236,3 @@ Workflows exposes a number of :ref:`destinations <output-destinations>` for resu
   :nosignatures:
 
   ~descarteslabs.workflows.client.Client
-
-.. toctree::
-  :hidden:
-  :glob:
-
-  docs/types/geospatial
-  docs/types/array
-  docs/types/primitives
-  docs/types/containers
-  docs/types/datetimes
-  docs/types/function
-  docs/types/math
-  docs/types/constants
-  docs/types/identifier
-  docs/interactive
-  docs/execution
-  docs/results
-  docs/exceptions
-  docs/client
-  /descarteslabs/common/retry/readme

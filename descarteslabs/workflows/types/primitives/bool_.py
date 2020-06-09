@@ -48,12 +48,10 @@ class Bool(NumPyMixin, Primitive):
             "{} object to make an immediate yes/no decision. This isn't possible, "
             "because we don't know if the value is True or False without calling `compute`.\n\n"
             "Depending on what you're trying to do, here are some ways to refactor your code:\n"
-            " - Use bitwise operators (like & and |)\n"
-            " - In place of `y in x` use `y.contains(x)` ('y' must be a proxy object so use "
+            " - Instead of Python's `and` and `or`, use bitwise operators (like & and |)\n"
+            " - Instead of `y in x`, use `y.contains(x)` ('y' must be a proxy object, so use "
             "`wf.proxify(y)` if it's a Python list or dict)\n"
-            " - There is currently no direct Workflows equivalent to `if x` but you "
-            "can construct a `Dict` from `x -> y` and select values out of it with "
-            "'x' or use `wf.where` to achieve a similar result.".format(
+            " - Instead of `if x`, consider `wf.ifelse(x, true_value, false_value)`\n".format(
                 type(self).__name__
             )
         )
