@@ -78,6 +78,11 @@ class JobSerialization(JobComputeError):
     pass
 
 
+class JobDestination(JobComputeError):
+    "Raised when a job fails while sending results to the destination."
+    pass
+
+
 ERRORS = {
     errors_pb2.ERROR_NONE: None,
     errors_pb2.ERROR_UNKNOWN: JobComputeError,
@@ -89,6 +94,7 @@ ERRORS = {
     errors_pb2.ERROR_AUTH: JobAuth,
     errors_pb2.ERROR_TYPING: JobInvalidTyping,
     errors_pb2.ERROR_SERIALIZATION: JobSerialization,
+    errors_pb2.ERROR_DESTINATION: JobDestination,
 }
 
 

@@ -13,4 +13,5 @@ enum ErrorCode {
     ERROR_AUTH = 17;
     ERROR_TYPING = 18;
     ERROR_SERIALIZATION = 19;
+    ERROR_DESTINATION = 20;
 }

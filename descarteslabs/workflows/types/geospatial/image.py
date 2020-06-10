@@ -1191,7 +1191,7 @@ class Image(ImageBase, BandsMixin):
         Parameters
         ----------
         range_min: float
-            Minimum value of output range..
+            Minimum value of output range.
         range_max: float
             Maximum value of output range.
         domain_min: float, default None
