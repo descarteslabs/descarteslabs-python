@@ -53,11 +53,7 @@ class Function(GenericProxytype):
         if isinstance(function, six.string_types):
             self.function = function
         elif callable(function):
-            arg_types, kwargs_types, return_type = (
-                self._type_params[:-2],
-                self._type_params[-2],
-                self._type_params[-1],
-            )
+            *arg_types, kwargs_types, return_type = self._type_params
             if len(kwargs_types) > 0:
                 raise TypeError(
                     "Cannot create a Function with optional arguments from a Python function, "
@@ -73,11 +69,7 @@ class Function(GenericProxytype):
             )
 
     def __call__(self, *args, **kwargs):
-        arg_types, kwargs_types, return_type = (
-            self._type_params[:-2],
-            self._type_params[-2],
-            self._type_params[-1],
-        )
+        *arg_types, kwargs_types, return_type = self._type_params
         func_name = type(self).__name__
 
         if len(args) != len(arg_types):
@@ -117,6 +109,18 @@ class Function(GenericProxytype):
         }
 
         return return_type._from_apply(self.function, *promoted_args, **promoted_kwargs)
+
+    @property
+    def arg_types(self):
+        return self._type_params[:-2]
+
+    @property
+    def kwarg_types(self):
+        return self._type_params[-2]
+
+    @property
+    def return_type(self):
+        return self._type_params[-1]
 
     @classmethod
     def _validate_params(cls, type_params):
