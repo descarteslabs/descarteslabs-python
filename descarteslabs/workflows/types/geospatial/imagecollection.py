@@ -355,7 +355,11 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Bands can be given as a sequence of strings,
         or a single space-separated string (like ``"red green blue"``).
 
-        Bands on the Images will be in the order given.
+        Bands on the new `ImageCollection` will be in the order given.
+
+        If names are duplicated, repeated names will be suffixed with ``_N``,
+        with N incrementing from 1 for each duplication (``pick_bands("red red red")``
+        returns bands named ``red red_1 red_2``).
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
 
@@ -370,6 +374,17 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
         ...     start_datetime="2017-01-01", end_datetime="2017-05-30")
         >>> rgb = col.pick_bands("red green blue")
+        >>> rgb.bandinfo.keys().inspect(ctx)  # doctest: +SKIP
+        ["red", "green", "blue"]
+
+        >>> red = col.pick_bands(["red", "nonexistent_band_name"], allow_missing=True)
+        >>> red.bandinfo.keys().inspect(ctx)  # doctest: +SKIP
+        ["red"]
+
+        >>> s1_col = ImageCollection.from_id("sentinel-1:GRD")
+        >>> vv_vh_vv = s1_col.pick_bands("vv vh vv")
+        >>> vv_vh_vv.bandinfo.keys().inspect(ctx)  # doctest: +SKIP
+        ["vv", "vh", "vv_1"]
         """
         return super(ImageCollection, self).pick_bands(
             bands, allow_missing=allow_missing

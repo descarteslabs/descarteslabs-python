@@ -60,6 +60,12 @@ class BandsMixin:
 
         Bands on the new `Image` will be in the order given.
 
+        If names are duplicated, repeated names will be suffixed with ``_N``,
+        with N incrementing from 1 for each duplication (``pick_bands("red red red")``
+        returns bands named ``red red_1 red_2``).
+
+        If the `Image` is empty, returns the empty `Image`.
+
         If ``allow_missing`` is False (default), raises an error if given band
         names that don't exist in the `Image`. If ``allow_missing``
         is True, any missing names are dropped, and if none of the names exist,
@@ -70,6 +76,17 @@ class BandsMixin:
         >>> from descarteslabs.workflows import Image
         >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
         >>> rgb = img.pick_bands("red green blue")
+        >>> rgb.bandinfo.keys().inspect(ctx)  # doctest: +SKIP
+        ["red", "green", "blue"]
+
+        >>> red = img.pick_bands(["red", "nonexistent_band_name"], allow_missing=True)
+        >>> red.bandinfo.keys().inspect(ctx)  # doctest: +SKIP
+        ["red"]
+
+        >>> s1_img = Image.from_id("sentinel-1:GRD:meta_2020-06-09_049A0903_S1B")
+        >>> vv_vh_vv = s1_img.pick_bands("vv vh vv")
+        >>> vv_vh_vv.bandinfo.keys().inspect(ctx)  # doctest: +SKIP
+        ["vv", "vh", "vv_1"]
         """
         if isinstance(bands, abc.Sequence):
             # Allows for a cleaner graft for this common use-case.
