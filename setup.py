@@ -15,6 +15,7 @@
 # limitations under the License.
 import ast
 import re
+import sys
 
 from setuptools import find_packages, setup
 
@@ -39,7 +40,7 @@ def check_setuptools():
     try:
         list(pkg_resources.parse_requirements('foo;platform_system!="Windows"'))
     except pkg_resources.RequirementParseError:
-        exit(
+        sys.exit(
             "Your Python is using an outdated version of `setuptools`. Please "
             "run `pip install -U setuptools` and try again."
         )
@@ -61,8 +62,9 @@ def do_setup():
             "Programming Language :: Python :: 3.7",
         ],
         license="Apache 2.0",
-        download_url="https://github.com/descarteslabs/descarteslabs-python/archive/v{}.tar.gz".format(
-            version
+        download_url=(
+            "https://github.com/descarteslabs/descarteslabs-python/archive/v{}.tar.gz"
+            .format(version)
         ),
         version=version,
         packages=find_packages(),
@@ -99,7 +101,7 @@ def do_setup():
                 'blosc==1.8.3;platform_system!="Windows"',
                 "matplotlib>=3.0.3",
                 "mercantile>=1.1.3",
-                "ipyleaflet>=0.12.2,<1",
+                "ipyleaflet>=0.13.0,<1",
                 "ipywidgets>=7.5.1,<8",
                 "traitlets>=4.3.3,<5",
             ],
