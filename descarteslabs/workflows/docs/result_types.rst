@@ -10,6 +10,6 @@ Note that these are just simple containers, and aren't interoparable with their 
 
 .. https://plaintexttools.github.io/plain-text-table/ sure makes this easier to format!
 
-.. automodule:: descarteslabs.workflows.results
+.. automodule:: descarteslabs.workflows.result_types
   :members:
   :autosummary:

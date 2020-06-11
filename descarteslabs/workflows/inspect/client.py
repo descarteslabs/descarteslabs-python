@@ -1,8 +1,7 @@
 import os
 import random
-import json
+import shutil
 
-import pyarrow as pa
 import requests
 from urllib3.util.retry import Retry
 
@@ -11,21 +10,20 @@ from descarteslabs.client.services.service.service import (
     HttpStatusCode,
     HttpRequestMethod,
 )
+from descarteslabs.common.workflows.outputs import (
+    user_format_to_mimetype,
+    field_name_to_mimetype,
+)
+from descarteslabs.workflows.result_types.deserialize_pyarrow import deserialize_pyarrow
 
-from descarteslabs.common.workflows import unmarshal
-from descarteslabs.common.workflows.arrow_serialization import serialization_context
-
-from ..cereal import serialize_typespec, typespec_to_unmarshal_str
 from .. import _channel
+from ..cereal import serialize_typespec, typespec_to_unmarshal_str
 
 from ..models.exceptions import JobTimeoutError
 from ..models.parameters import parameters_to_grafts
 
-from .mimetype import format_to_mimetype
 
-from descarteslabs.workflows import results  # noqa: F401 isort:skip
-
-# ^ we must import to register its unmarshallers
+_pyarrow_content_type = field_name_to_mimetype["pyarrow"]
 
 
 class InspectClient(Service):
@@ -60,7 +58,7 @@ class InspectClient(Service):
             retries=retries if retries is not None else self.RETRY_CONFIG,
         )
 
-    def inspect(self, obj, timeout=30, format="pyarrow", **params):
+    def inspect(self, obj, format="pyarrow", file=None, timeout=30, **params):
         graft = obj.graft
         params_dict = parameters_to_grafts(**params)
 
@@ -69,36 +67,43 @@ class InspectClient(Service):
         result_type = typespec_to_unmarshal_str(typespec)
         # ^ this also preemptively checks whether the result type is something we'll know how to unmarshal
 
-        if isinstance(format, str):
-            format = {"type": format}
+        mimetype = user_format_to_mimetype(format)
 
-        mimetype = format_to_mimetype(format)
-
-        # TODO stream=True, use resp.raw and stream through pyarrow?
-        try:
-            resp = self.session.post(
-                "/inspect",
-                json={"graft": graft, "parameters": params_dict},
-                timeout=timeout,
-                headers={"Accept": mimetype},
-            )
-        except requests.exceptions.Timeout as e:
-            raise JobTimeoutError(e) from None
-
-        if resp.headers["content-type"] == "application/vnd.pyarrow":
-            buffer = pa.decompress(
-                resp.content,
-                codec=resp.headers["X-Arrow-Codec"],
-                decompressed_size=int(resp.headers["X-Decompressed-Size"]),
-            )
-
-            marshalled = pa.deserialize(buffer, context=serialization_context)
-            return unmarshal.unmarshal(result_type, marshalled)
-        elif resp.headers["content-type"] == "application/json":
-            return json.loads(resp.content)
+        if file is not None and not hasattr(file, "read"):
+            # assume it's a path
+            file = open(os.path.expanduser(file), "wb")
+            close_file = True
         else:
-            # return the raw data
-            return resp.content
+            close_file = False
+
+        try:
+            # TODO stream=True, use resp.raw and stream through pyarrow?
+            try:
+                resp = self.session.post(
+                    "/inspect",
+                    json={"graft": graft, "parameters": params_dict},
+                    timeout=timeout,
+                    headers={"Accept": mimetype},
+                    stream=file is not None,
+                )
+                resp.raise_for_status()
+            except requests.exceptions.Timeout as e:
+                raise JobTimeoutError(e) from None
+
+            if file is None:
+                if resp.headers["Content-Type"] == _pyarrow_content_type:
+                    codec = resp.headers["X-Arrow-Codec"]
+                    decompressed_size = int(resp.headers["X-Decompressed-Size"])
+                    return deserialize_pyarrow(
+                        resp.content, codec, decompressed_size, result_type
+                    )
+                else:
+                    return resp.content
+            else:
+                shutil.copyfileobj(resp.raw, file)
+        finally:
+            if close_file:
+                file.close()
 
 
 global_inspect_client = None

@@ -31,7 +31,7 @@ The tables below list the types and functions available through the Workflows AP
   docs/types/identifier
   docs/types/conditional
   docs/execution
-  docs/results
+  docs/result_types
   docs/exceptions
   docs/client
   /descarteslabs/common/retry/readme
@@ -205,12 +205,12 @@ Workflows exposes a number of :ref:`destinations <output-destinations>` for resu
 .. autosummary::
   :nosignatures:
 
-  ~descarteslabs.workflows.results.ImageResult
-  ~descarteslabs.workflows.results.ImageCollectionResult
-  ~descarteslabs.workflows.results.GeometryResult
-  ~descarteslabs.workflows.results.GeometryCollectionResult
-  ~descarteslabs.workflows.results.FeatureResult
-  ~descarteslabs.workflows.results.FeatureCollectionResult
+  ~descarteslabs.workflows.result_types.ImageResult
+  ~descarteslabs.workflows.result_types.ImageCollectionResult
+  ~descarteslabs.workflows.result_types.GeometryResult
+  ~descarteslabs.workflows.result_types.GeometryCollectionResult
+  ~descarteslabs.workflows.result_types.FeatureResult
+  ~descarteslabs.workflows.result_types.FeatureCollectionResult
 
 :workflow_api_nontoc_heading:`Exceptions`
 

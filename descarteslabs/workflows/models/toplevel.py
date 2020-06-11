@@ -7,6 +7,7 @@ def compute(
     geoctx=None,
     format="pyarrow",
     destination="download",
+    file=None,
     timeout=None,
     block=True,
     progress_bar=None,
@@ -31,11 +32,14 @@ def compute(
         See the `formats
         <https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html#output-formats>`_
         documentation for more information.
+        If "pyarrow" (the default), returns an appropriate Python object, otherwise returns raw bytes.
     destination: str or dict, default "download"
         The destination for the result.
         See the `destinations
         <https://docs.descarteslabs.com/descarteslabs/workflows/docs/destinations.html#output-destinations>`_
         documentation for more information.
+    file: path or file-like object, optional
+        If specified, writes results to the path or file instead of returning them.
     timeout: int, optional
         The number of seconds to wait for the result, if ``block`` is True.
         Raises ``JobTimeoutError`` if the timeout passes.
@@ -47,63 +51,66 @@ def compute(
         Whether to draw the progress bar. If ``None`` (default),
         will display a progress bar in Jupyter Notebooks, but not elsewhere.
         Ignored if ``block==False``.
-    client : `.workflows.client.Client`, optional
+    client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
-    cache : bool, default True
+    cache: bool, default True
         Whether to use the cache for this job.
     **params: Proxytype
         Parameters under which to run the computation, such as ``geoctx``.
 
     Returns
     -------
-    result
-        Appropriate Python object representing the result,
-        either as a plain Python type, or object from
-        `descarteslabs.workflows.results`.
+    result: Python object, bytes, or None
+        When ``format="pyarrow"`` (the default), returns an appropriate Python object representing
+        the result, either as a plain Python type, or object from `descarteslabs.workflows.result_types`.
+        For other formats, returns raw bytes. Consider using `file` in that case to save the results to a file.
+        If the destination doesn't support retrieving results (like "email"), returns None
 
     Example
     -------
     >>> import descarteslabs.workflows as wf
     >>> num = wf.Int(1) + 1
-    >>> num.compute() # doctest: +SKIP
+    >>> wf.compute(num) # doctest: +SKIP
     2
     >>> # same computation but do not block
-    >>> job = num.compute(block=False) # doctest: +SKIP
+    >>> job = wf.compute(num, block=False) # doctest: +SKIP
     >>> job # doctest: +SKIP
     <descarteslabs.workflows.models.job.Job object at 0x...>
     >>> job.result() # doctest: +SKIP
     2
+    >>> # pass multiple proxy objects to `wf.compute` to compute all at once
+    >>> wf.compute((num, num, num)) # doctest: +SKIP
+    (2, 2, 2)
 
     >>> # specifying a format
     >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1").pick_bands("red")
-    >>> img.compute(geoctx=ctx, format="pyarrow") # default # doctest: +SKIP
+    >>> wf.compute(img, geoctx=ctx, format="pyarrow") # default # doctest: +SKIP
     ImageResult:
     ...
     >>> # same computation but with json format
-    >>> img.compute(geoctx=ctx, format="json") # doctest: +SKIP
-    {'ndarray': [[[0.39380000000000004,
-        0.3982,
-        0.3864,
-    ...
+    >>> wf.compute(img, geoctx=ctx, format="json") # doctest: +SKIP
+    b'{"ndarray":[[[0.39380000000000004,0.3982,0.3864,...
     >>> # same computation but with geotiff format (and some format options)
-    >>> bytes_ = img.compute(geoctx=ctx, format={"type": "geotiff", "tiled": False}) # doctest: +SKIP
-    >>> with open("/home/example.tiff", "wb") as out: # doctest: +SKIP
-    >>>     out.write(bytes_) # doctest: +SKIP
+    >>> bytes_ = wf.compute(img, geoctx=ctx, format={"type": "geotiff", "tiled": False}) # doctest: +SKIP
+    >>> # you probably want to save the geotiff to a file:
+    >>> wf.compute(img, geoctx=ctx, file="my_geotiff.tif", format={"type": "geotiff", "tiled": False}) # doctest: +SKIP
 
     >>> # specifying a destination
     >>> num = wf.Int(1) + 1
-    >>> num.compute(destination="download") # default # doctest: +SKIP
+    >>> wf.compute(num, destination="download") # default # doctest: +SKIP
     2
     >>> # same computation but with email destination
-    >>> num.compute(destination="example@email.com") # doctest: +SKIP
+    >>> wf.compute(num, destination="example@email.com") # doctest: +SKIP
     >>> # now with some destination options
-    >>> num.compute(
+    >>> wf.compute(
+    ...     num,
     ...     destination={
     ...         "type": "email",
     ...         "to": "example@email.com",
     ...         "subject": "My Computation is Done"
-    ...     }
+    ...     },
+    ...     format="json",
     ... ) # doctest: +SKIP
     """
     if geoctx is not None:
@@ -113,7 +120,15 @@ def compute(
         obj, params, format=format, destination=destination, client=client, cache=cache
     )
     if block:
-        return job.result(timeout=timeout, progress_bar=progress_bar)
+        job.wait(timeout=timeout, progress_bar=progress_bar)
+        if file is not None:
+            return job.result_to_file(file)
+        else:
+            try:
+                return job.result()
+            except NotImplementedError:
+                # suppress error if destination isn't supported; return nothing
+                return
     else:
         return job
 
@@ -130,7 +145,7 @@ def publish(obj, name="", description="", client=None):
         Name for the new `Workflow`
     description: str, default ""
         Long-form description of this `Workflow`. Markdown is supported.
-    client : `.workflows.client.Client`, optional
+    client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
 
@@ -163,7 +178,7 @@ def retrieve(workflow_id, client=None):
     ----------
     workflow_id: str
         ID of the `Workflow` to retrieve
-    client : Compute, optional
+    client: Compute, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
 
@@ -209,7 +224,7 @@ def use(workflow_id, client=None):
     ----------
     workflow_id: str
         ID of the `Workflow` to retrieve
-    client : `.workflows.client.Client`, optional
+    client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
 

@@ -7,7 +7,7 @@ from descarteslabs.common.proto.typespec.typespec_pb2 import (
     Map,
     CompositeType,
 )
-from descarteslabs.common.workflows import unmarshal
+from descarteslabs.workflows.result_types import unmarshal
 
 
 PRIMITIVES = (int, float, bool, str)

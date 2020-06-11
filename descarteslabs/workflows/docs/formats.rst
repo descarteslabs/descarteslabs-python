@@ -31,7 +31,7 @@ If you would like to provide more format options, you pass the format as a dicti
 
 Note that when passing the format as a dictionary, it must include a ``type`` key corresponding to the desired format.
 
-The results will be returned differently depending on the ``format`` specified. When using the "pyarrow" format, results will be deserialized and unpacked into :ref:`result-types`. When using the "json" format, results will be deserialized into a Python dictionary. For all other formats, the results will not be deserialized and will be returned as raw bytes.
+The results will be returned differently depending on the ``format`` specified. When using the "pyarrow" format, results will be deserialized and unpacked into :ref:`result-types`. For all other formats, the results will not be deserialized and will be returned as raw bytes.
 
 Format Options
 ^^^^^^^^^^^^^^
@@ -52,19 +52,19 @@ GeoTIFF
 
 Shorthand: ``"geotiff"``
 
-`GeoTIFF <https://en.wikipedia.org/wiki/GeoTIFF>`_ is the best format for using raster data with other geospatial software, such as ArcGIS or QGIS. Only `~.geospatial.Image` objects can be computed in GeoTIFF format. GeoTIFF data is returned in raw bytes, so in most cases, you'll want to write the data out to a file.
+`GeoTIFF <https://en.wikipedia.org/wiki/GeoTIFF>`_ is the best format for using raster data with other geospatial software, such as ArcGIS or QGIS. Only `~.geospatial.Image` objects can be computed in GeoTIFF format. GeoTIFF data is returned in raw bytes, so in most cases, you'll want to write the data out to a file (use the ``file=`` parameter to `~.models.compute` for this).
 
-- ``overviews``: whether to include overviews, overview levels are automatically calculated (bool, default True)
+- ``overviews``: whether to include overviews; overview levels are calculated automatically (bool, default True)
 - ``tiled``: whether to create a tiled GeoTIFF (bool, default True)
 - ``compression``: the compression to use (string, default "LZW", one of "LZW", "None", or "JPEG")
-- ``overviewresampler``: the resampler to use for calculating overviews (string, default "nearest", one of "nearest", "average", "bilinear", "cubic", or "mode")
+- ``overview_resampler``: the resampler to use for calculating overviews (string, default "nearest", one of "nearest", "average", "bilinear", "cubic", or "mode")
 
 JSON
 ~~~~
 
 Shorthand: ``"json"``
 
-`JSON <json.org/json-en.html>`_ is the best format for using the data in other languages because it is language independent.
+`JSON <json.org/json-en.html>`_ is the best format for using the data in other languages because it is language-independent.
 
 - No options
 

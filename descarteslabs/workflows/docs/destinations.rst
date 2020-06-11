@@ -62,16 +62,16 @@ Examples
 ********
   >>> two = wf.Int(1) + 1
   >>> two.compute(destination="download")
-
-  >>> two = wf.Int(1) + 1
-  >>> two.compute(destination={"type": "download"})
+  1
+  >>> two.compute(destination="download", format="json")
+  b'1'
 
 Email
 ~~~~~
 
 Shorthand: an email address, like ``"example@email.com"``
 
-Email is equivalent to `Download`_, but also sends an email when the job is done. The email contains a link to download the data. Anyone with that link can download the data. As with `Download`_, that link will expire after 10 days.
+Email is equivalent to `Download`_, but also sends an email when the job is done. The email contains a link to download the data. Anyone with that link can download the data. As with `Download`_, the link will expire after 10 days.
 
 Options
 *******
@@ -79,18 +79,18 @@ Options
 - ``to``: the email address to send the email to (string or list of strings)
 - ``cc``: the email address to cc on the email (string or list of strings)
 - ``bcc``: the email address to bcc on the email (string or list of strings)
-- ``subject``: the subject of the email (string, default "Your Computation is Finished")
-- ``body``: the body of the email (string, default "The computation of your Job has finished.")
+- ``subject``: the subject of the email (string, default "Your job has completed"). Always prefixed with ``Workflows:``.
+- ``body``: the body of the email (string, default "Your Workflows job is done.")
 
 Compatible Formats
 ******************
 
-- All :ref:`formats <output-formats>`
+- All :ref:`formats <output-formats>`. However, widely-used formats like JSON or GeoTIFF usually make the most sense for email. With formats like MsgPack and especially PyArrow, recipients would have to write code to parse the data, instead of clicking the download link and getting a file they can easily work with.
 
 Examples
 ********
   >>> two = wf.Int(1) + 1
-  >>> two.compute(destination="example@email.com")
+  >>> two.compute(destination="example@email.com", format="json")
 
   >>> two = wf.Int(1) + 1
-  >>> two.compute(destination={"type": "email", "to": "example@email.com", "subject": "My Computation is Done"})
+  >>> two.compute(destination={"type": "email", "to": "example@email.com", "subject": "My Computation is Done"}, format="json")

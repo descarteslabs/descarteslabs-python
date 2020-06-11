@@ -1,6 +1,6 @@
 import pytest
 
-from descarteslabs.common.workflows import unmarshal
+from .. import unmarshal
 
 
 def test_register():

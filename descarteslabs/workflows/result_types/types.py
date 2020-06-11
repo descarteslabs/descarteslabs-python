@@ -8,7 +8,7 @@ import functools
 import six
 import numpy as np
 
-from descarteslabs.common.workflows import unmarshal
+from . import unmarshal
 
 
 unmarshal.register("Number", unmarshal.identity)

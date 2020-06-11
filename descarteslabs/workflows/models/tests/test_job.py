@@ -12,17 +12,18 @@ from descarteslabs.common.proto.errors import errors_pb2
 from descarteslabs.common.proto.job import job_pb2
 from descarteslabs.common.proto.types import types_pb2
 from descarteslabs.common.workflows.arrow_serialization import serialization_context
-from descarteslabs.common.workflows.result_options import (
+from descarteslabs.common.workflows.outputs import (
     user_format_to_proto,
     user_destination_to_proto,
 )
+from descarteslabs.common.workflows.proto_munging import has_proto_to_user_dict
 from descarteslabs.common.graft import client as graft_client
 
 from descarteslabs.workflows import _channel
 
 from ... import cereal, types
 from ..exceptions import JobInvalid, JobComputeError, JobTerminated, JobTimeoutError
-from ..job import Job
+from ..job import Job, download
 from ..parameters import parameters_to_grafts
 from ..utils import pb_milliseconds_to_datetime
 
@@ -207,6 +208,8 @@ class TestJob(object):
         id_ = "foo"
         obj = types.Int(1)
         parameters = {"foo": types.Str("bar")}
+        format = "geotiff"
+        destination = {"type": "email", "to": "example@example.com"}
 
         job_state = job_pb2.Job.State(stage=job_pb2.Job.Stage.QUEUED)
 
@@ -219,11 +222,13 @@ class TestJob(object):
                 type=req.type,
                 channel=req.channel,
                 state=job_state,
+                format=user_format_to_proto(format),
+                destination=user_destination_to_proto(destination),
             )
 
         stub.return_value.CreateJob.side_effect = create_side_effect
 
-        job = Job(obj, parameters)
+        job = Job(obj, parameters, format=format, destination=destination)
         job_from_msg = Job._from_proto(job._message, client=job._client)
 
         assert job.object is obj
@@ -242,6 +247,9 @@ class TestJob(object):
         assert job.runtime is None
         assert job.error is None
         assert job.done is False
+        assert job.cache_enabled is True
+        assert job.format == has_proto_to_user_dict(job._message.format)
+        assert job.destination == has_proto_to_user_dict(job._message.destination)
 
         job._message.state.stage = job_pb2.Job.Stage.SUCCEEDED
         job._message.timestamp = 1
@@ -262,21 +270,19 @@ class TestJob(object):
         assert isinstance(job.error, JobInvalid)
         assert job.done is True
 
-    def test_wait_for_result_success(self, stub):
+    def test_wait_success(self, stub):
         id_ = "foo"
         destination = user_destination_to_proto({"type": "download"})
         message = job_pb2.Job(id=id_, destination=destination)
         j = Job._from_proto(message)
-        j._load_result = mock.Mock()
         job_state = job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED)
 
         stub.return_value.WatchJob.return_value = [job_state]
 
-        j._wait_for_result()
-        j._load_result.assert_called_once_with()
+        j.wait()
         assert j._message.state.stage == job_state.stage
 
-    def test_wait_for_result_failure(self, stub):
+    def test_wait_failure(self, stub):
         id_ = "foo"
         destination = user_destination_to_proto({"type": "download"})
         message = job_pb2.Job(id=id_, destination=destination)
@@ -290,10 +296,10 @@ class TestJob(object):
         stub.return_value.WatchJob.return_value = [job_state]
 
         with pytest.raises(JobComputeError):
-            j._wait_for_result()
+            j.wait()
         assert j._message.state.stage == job_state.stage
 
-    def test_wait_for_result_terminated(self, stub):
+    def test_wait_terminated(self, stub):
         id_ = "foo"
         destination = user_destination_to_proto({"type": "download"})
         message = job_pb2.Job(id=id_, destination=destination)
@@ -307,10 +313,10 @@ class TestJob(object):
         stub.return_value.WatchJob.return_value = [job_state]
 
         with pytest.raises(JobTerminated):
-            j._wait_for_result()
+            j.wait()
         assert j._message.state.stage == job_state.stage
 
-    def test_wait_for_result_timeout(self, stub):
+    def test_wait_timeout(self, stub):
         id_ = "foo"
         destination = user_destination_to_proto({"type": "download"})
         message = job_pb2.Job(id=id_, destination=destination)
@@ -328,33 +334,25 @@ class TestJob(object):
 
             stub.return_value.WatchJob.side_effect = side_effect
 
-            j._wait_for_result(1e-4)
+            j.wait(1e-4)
 
         stub.return_value.WatchJob.assert_called()
         assert j._message.state.stage == job_state.stage
 
-    def test_load_result_error(self, stub):
-        destination = user_destination_to_proto({"type": "download"})
-        message = job_pb2.Job(
-            id="foo",
-            destination=destination,
-            state=job_pb2.Job.State(
-                stage=job_pb2.Job.Stage.FAILED,
-                error=job_pb2.Job.Error(code=errors_pb2.ERROR_INVALID),
-            ),
-        )
-
-        job = Job._from_proto(message)
-        with pytest.raises(JobInvalid):
-            job._load_result()
-
     @responses.activate
-    def test_download_result(self, stub):
+    def test_result(self, stub):
+        format_proto = user_format_to_proto(
+            {"type": "pyarrow", "compression": "brotli"}
+        )
+        destination_proto = user_destination_to_proto("download")
+
         job = Job._from_proto(
             job_pb2.Job(
                 id="foo",
                 state=job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED),
                 type=9,
+                format=format_proto,
+                destination=destination_proto,
             )
         )
 
@@ -374,4 +372,42 @@ class TestJob(object):
             status=200,
         )
 
-        assert job._download_result() == result
+        assert download(job) == result
+
+    @pytest.mark.parametrize("file_path", [True, False])
+    @responses.activate
+    def test_result_to_file(self, stub, file_path, tmpdir):
+        format_proto = user_format_to_proto("json")
+        destination_proto = user_destination_to_proto("download")
+
+        job = Job._from_proto(
+            job_pb2.Job(
+                id="foo",
+                state=job_pb2.Job.State(stage=job_pb2.Job.Stage.SUCCEEDED),
+                format=format_proto,
+                destination=destination_proto,
+            )
+        )
+
+        result = [1, 2, 3, 4]
+        responses.add(
+            responses.GET,
+            Job.BUCKET_PREFIX.format(job.id),
+            body=json.dumps(result),
+            headers={"x-goog-stored-content-encoding": "application/json"},
+            status=200,
+            stream=True,
+        )
+
+        path = tmpdir.join("test.json")
+        file_arg = str(path) if file_path else path.open("wb")
+
+        job.result_to_file(file_arg)
+
+        if not file_path:
+            assert not file_arg.closed
+            file_arg.close()
+
+        print(path)
+        with open(path, "rb") as f:
+            assert result == json.load(f)

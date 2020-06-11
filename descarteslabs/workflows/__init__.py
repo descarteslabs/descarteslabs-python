@@ -94,10 +94,12 @@ def compute(
     geoctx=None,
     format="pyarrow",
     destination="download",
+    file=None,
     timeout=None,
     block=True,
     progress_bar=None,
     client=None,
+    cache=True,
     **params
 ):
     """
@@ -117,11 +119,14 @@ def compute(
         See the `formats
         <https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html#output-formats>`_
         documentation for more information.
+        If "pyarrow" (the default), returns an appropriate Python object, otherwise returns raw bytes.
     destination: str or dict, default "download"
         The destination for the result.
         See the `destinations
         <https://docs.descarteslabs.com/descarteslabs/workflows/docs/destinations.html#output-destinations>`_
         documentation for more information.
+    file: path or file-like object, optional
+        If specified, writes results to the path or file instead of returning them.
     timeout: int, optional
         The number of seconds to wait for the result, if ``block`` is True.
         Raises ``JobTimeoutError`` if the timeout passes.
@@ -133,18 +138,21 @@ def compute(
         Whether to draw the progress bar. If ``None`` (default),
         will display a progress bar in Jupyter Notebooks, but not elsewhere.
         Ignored if ``block==False``.
-    client : `.workflows.client.Client`, optional
+    client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
+    cache: bool, default True
+        Whether to use the cache for this job.
     **params: Proxytype
         Parameters under which to run the computation, such as ``geoctx``.
 
     Returns
     -------
-    result
-        Appropriate Python object representing the result,
-        either as a plain Python type, or object from
-        `descarteslabs.workflows.results`.
+    result: Python object, bytes, or None
+        When ``format="pyarrow"`` (the default), returns an appropriate Python object representing
+        the result, either as a plain Python type, or object from `descarteslabs.workflows.result_types`.
+        For other formats, returns raw bytes. Consider using `file` in that case to save the results to a file.
+        If the destination doesn't support retrieving results (like "email"), returns None
 
     Example
     -------
@@ -153,12 +161,12 @@ def compute(
     >>> wf.compute(num) # doctest: +SKIP
     2
     >>> # same computation but do not block
-    >>> job = wf.compute(block=False) # doctest: +SKIP
+    >>> job = wf.compute(num, block=False) # doctest: +SKIP
     >>> job # doctest: +SKIP
     <descarteslabs.workflows.models.job.Job object at 0x...>
     >>> job.result() # doctest: +SKIP
     2
-    >>> # pass multiple proxy objects to compute at once
+    >>> # pass multiple proxy objects to `wf.compute` to compute all at once
     >>> wf.compute((num, num, num)) # doctest: +SKIP
     (2, 2, 2)
 
@@ -169,28 +177,27 @@ def compute(
     ...
     >>> # same computation but with json format
     >>> wf.compute(img, geoctx=ctx, format="json") # doctest: +SKIP
-    {'ndarray': [[[0.39380000000000004,
-        0.3982,
-        0.3864,
-    ...
+    b'{"ndarray":[[[0.39380000000000004,0.3982,0.3864,...
     >>> # same computation but with geotiff format (and some format options)
     >>> bytes_ = wf.compute(img, geoctx=ctx, format={"type": "geotiff", "tiled": False}) # doctest: +SKIP
-    >>> with open("/home/example.tiff", "wb") as out: # doctest: +SKIP
-    >>>     out.write(bytes_) # doctest: +SKIP
+    >>> # you probably want to save the geotiff to a file:
+    >>> wf.compute(img, geoctx=ctx, file="my_geotiff.tif", format={"type": "geotiff", "tiled": False}) # doctest: +SKIP
 
     >>> # specifying a destination
     >>> num = wf.Int(1) + 1
-    >>> num.compute(destination="download") # default # doctest: +SKIP
+    >>> wf.compute(num, destination="download") # default # doctest: +SKIP
     2
     >>> # same computation but with email destination
-    >>> num.compute(destination="example@email.com") # doctest: +SKIP
+    >>> wf.compute(num, destination="example@email.com") # doctest: +SKIP
     >>> # now with some destination options
-    >>> num.compute(
+    >>> wf.compute(
+    ...     num,
     ...     destination={
     ...         "type": "email",
     ...         "to": "example@email.com",
     ...         "subject": "My Computation is Done"
-    ...     }
+    ...     },
+    ...     format="json",
     ... ) # doctest: +SKIP
     """
     if isinstance(obj, (tuple, list)):
@@ -204,6 +211,7 @@ def compute(
         geoctx=geoctx,
         format=format,
         destination=destination,
+        file=file,
         timeout=timeout,
         block=block,
         progress_bar=progress_bar,
@@ -325,10 +333,14 @@ __all__ = [
 def _compute_mixin(
     self,
     geoctx=None,
+    format="pyarrow",
+    destination="download",
+    file=None,
     timeout=None,
     block=True,
     progress_bar=None,
     client=None,
+    cache=True,
     **params
 ):
     """
@@ -341,6 +353,19 @@ def _compute_mixin(
         Almost all computations will require a `~.workflows.types.geospatial.GeoContext`,
         but for operations that only involve non-geospatial types,
         this parameter is optional.
+    format: str or dict, default "pyarrow"
+        The serialization format for the result.
+        See the `formats
+        <https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html#output-formats>`_
+        documentation for more information.
+        If "pyarrow" (the default), returns an appropriate Python object, otherwise returns raw bytes.
+    destination: str or dict, default "download"
+        The destination for the result.
+        See the `destinations
+        <https://docs.descarteslabs.com/descarteslabs/workflows/docs/destinations.html#output-destinations>`_
+        documentation for more information.
+    file: path or file-like object, optional
+        If specified, writes results to the path or file instead of returning them.
     timeout: int, optional
         The number of seconds to wait for the result, if ``block`` is True.
         Raises `~descarteslabs.workflows.models.JobTimeoutError` if the timeout passes.
@@ -352,28 +377,35 @@ def _compute_mixin(
         Whether to draw the progress bar. If ``None`` (default),
         will display a progress bar in Jupyter Notebooks, but not elsewhere.
         Ignored if ``block==False``.
-    client : `.workflows.client.Client`, optional
+    client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
+    cache: bool, default True
+        Whether to use the cache for this job.
     **params: Proxytype
         Parameters under which to run the computation.
 
     Returns
     -------
-    result
-        Appropriate Python object representing the result,
-        either as a plain Python type, or object from
-        `descarteslabs.workflows.results`.
+    result: Python object, bytes, or None
+        When ``format="pyarrow"`` (the default), returns an appropriate Python object representing
+        the result, either as a plain Python type, or object from `descarteslabs.workflows.result_types`.
+        For other formats, returns raw bytes. Consider using `file` in that case to save the results to a file.
+        If the destination doesn't support retrieving results (like "email"), returns None
     """
     if geoctx is not None:
         params["geoctx"] = GeoContext._promote(geoctx)
 
     return compute(
         self,
+        format=format,
+        destination=destination,
+        file=file,
         timeout=timeout,
         block=block,
         progress_bar=progress_bar,
         client=client,
+        cache=cache,
         **params
     )
 
@@ -388,7 +420,7 @@ def _publish_mixin(self, name="", description="", client=None):
         Name for the new `.Workflow`
     description: str, default ""
         Long-form description of this `.Workflow`. Markdown is supported.
-    client : `.workflows.client.Client`, optional
+    client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
 
@@ -400,7 +432,9 @@ def _publish_mixin(self, name="", description="", client=None):
     return publish(self, name, description, client)
 
 
-def _inspect_mixin(self, geoctx=None, timeout=30, client=None, **params):
+def _inspect_mixin(
+    self, geoctx=None, format="pyarrow", file=None, timeout=30, client=None, **params
+):
     """
     Quickly compute this proxy object using a low-latency, lower-reliability backend.
 
@@ -418,6 +452,14 @@ def _inspect_mixin(self, geoctx=None, timeout=30, client=None, **params):
         Almost all computations will require a `~.workflows.types.geospatial.GeoContext`,
         but for operations that only involve non-geospatial types,
         this parameter is optional.
+    format: str or dict, default "pyarrow"
+        The serialization format for the result.
+        See the `formats
+        <https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html#output-formats>`_
+        documentation for more information.
+        If "pyarrow" (the default), returns an appropriate Python object, otherwise returns raw bytes.
+    file: path or file-like object, optional
+        If specified, writes results to the path or file instead of returning them.
     timeout: int, optional, default 30
         The number of seconds to wait for the result.
         Raises `~descarteslabs.workflows.models.JobTimeoutError` if the timeout passes.
@@ -429,10 +471,10 @@ def _inspect_mixin(self, geoctx=None, timeout=30, client=None, **params):
 
     Returns
     -------
-    result
-        Appropriate Python object representing the result,
-        either as a plain Python type, or object from
-        `descarteslabs.workflows.results`.
+    result: Python object or bytes
+        When ``format="pyarrow"`` (the default), returns an appropriate Python object representing
+        the result, either as a plain Python type, or object from `descarteslabs.workflows.result_types`.
+        For other formats, returns raw bytes. Consider using `file` in that case to save the results to a file.
     """
     if geoctx is not None:
         params["geoctx"] = GeoContext._promote(geoctx)
@@ -440,7 +482,7 @@ def _inspect_mixin(self, geoctx=None, timeout=30, client=None, **params):
     if client is None:
         client = _get_global_inspect_client()
 
-    return client.inspect(self, timeout=timeout, **params)
+    return client.inspect(self, format=format, file=file, timeout=timeout, **params)
 
 
 _compute_mixin.__name__ = "compute"

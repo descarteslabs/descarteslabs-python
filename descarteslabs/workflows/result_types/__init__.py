@@ -1,4 +1,4 @@
-from .results import (
+from .types import (
     ImageResult,
     ImageCollectionResult,
     GeometryResult,

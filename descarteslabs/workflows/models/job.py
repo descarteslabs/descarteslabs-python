@@ -1,24 +1,29 @@
-from __future__ import division
-
 import json
 import logging
 import sys
 import time
+import shutil
+import os
 
-import six
-
-import pyarrow as pa
 import requests
+
 from descarteslabs.common.graft import client as graft_client
+from descarteslabs.common.registry import registry
 from descarteslabs.common.proto.job import job_pb2
 from descarteslabs.common.proto.types import types_pb2
-from descarteslabs.common.workflows.arrow_serialization import serialization_context
-from descarteslabs.common.workflows.result_options import (
+from descarteslabs.common.proto.destinations import destinations_pb2
+from descarteslabs.common.proto.formats import formats_pb2
+from descarteslabs.common.workflows.outputs import (
     user_format_to_proto,
     user_destination_to_proto,
-    format_proto_to_user_facing_format,
-    destination_proto_to_user_facing_destination,
 )
+from descarteslabs.common.workflows.proto_munging import (
+    which_has,
+    has_proto_to_user_dict,
+)
+
+from descarteslabs.workflows.result_types.deserialize_pyarrow import deserialize_pyarrow
+
 
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec, typespec_to_unmarshal_str
@@ -27,11 +32,6 @@ from .exceptions import error_code_to_exception, JobTimeoutError, JobCancelled
 from .utils import in_notebook, pb_milliseconds_to_datetime
 from .parameters import parameters_to_grafts
 
-from descarteslabs.common.workflows import unmarshal
-
-from descarteslabs.workflows import results  # noqa: F401 isort:skip
-
-# ^ we must import to register its unmarshallers
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,6 @@ class Job(object):
     """
 
     BUCKET_PREFIX = "https://storage.googleapis.com/dl-compute-dev-results/{}"
-    WAIT_INTERVAL = 0.1
 
     def __init__(
         self,
@@ -121,15 +120,7 @@ class Job(object):
         result_type = typespec_to_unmarshal_str(typespec)
         # ^ this also preemptively checks whether the result type is something we'll know how to unmarshal
 
-        if isinstance(format, str):
-            format = {"type": format}
         format_proto = user_format_to_proto(format)
-
-        if isinstance(destination, str):
-            if "@" in destination:
-                destination = {"type": "email", "to": destination}
-            else:
-                destination = {"type": destination}
         destination_proto = user_destination_to_proto(destination)
 
         parameters = parameters_to_grafts(**parameters)
@@ -273,6 +264,9 @@ class Job(object):
         Get the result of the job. This blocks until the job is
         complete.
 
+        Only the "download" destination can be retrieved.
+        Raises NotImplementedError for other destinations.
+
         Parameters
         ----------
         timeout: int, optional
@@ -283,10 +277,11 @@ class Job(object):
 
         Returns
         -------
-        result
-            Appropriate Python object representing the result,
-            either as a plain Python type, or object from
-            ``descarteslabs.common.workflows.results``.
+        result: Python object or bytes
+            When the Job's format is "pyarrow", returns a Python object representing
+            the result, either as a plain Python type, or object from `descarteslabs.workflows.result_types`.
+            For other formats, returns raw bytes. Consider using `result_to_file` in that case
+            to save the results to a file.
 
         Example
         -------
@@ -295,11 +290,127 @@ class Job(object):
         >>> job.result() # doctest: +SKIP
         1
         """
+        handler = get_loader(self._message.destination)
+        self.wait(timeout=timeout, progress_bar=progress_bar)
+        return handler(self)
 
+    def result_to_file(self, file, timeout=None, progress_bar=None):
+        """
+        Save the result of the job to a file. This blocks until the job is
+        complete.
+
+        Only the "download" destination can be written to a file.
+        For destinations like "catalog", where the data is handed off
+        to another service, you'll need to use that service to retrieve it.
+        (In the "catalog" case, that's `Raster` and `Metadata`.)
+
+        Parameters
+        ----------
+        file: path or file-like object
+            Path or file where results will be written
+        timeout: int, optional
+            The number of seconds to wait for the result.
+        progress_bar: bool, optional
+            Flag to draw the progress bar. Default is to ``True`` if in
+            Jupyter Notebook.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Job, Int
+        >>> job = Job(Int(1), {}, format="json") # doctest: +SKIP
+        >>> job.result_to_file("one.json") # doctest: +SKIP
+
+        >>> import io
+        >>> from descarteslabs.workflows import Job, Int
+        >>> job = Job(Int(2), {}, format="json") # doctest: +SKIP
+        >>> bytestream = io.BytesIO() # doctest: +SKIP
+        >>> job.result_to_file(bytestream) # doctest: +SKIP
+        >>> print(bytestream.read()) # doctest: +SKIP
+        b'2'
+        """
+        destination_name = which_has(self._message.destination)
+        if destination_name not in ("download", "email"):
+            raise NotImplementedError(
+                "Not possible to automatically write results to a file for "
+                "output destination {}. You'll need to load the data and write it "
+                "out yourself.".format(destination_name)
+            )
+
+        if hasattr(file, "read"):
+            close_file = False
+        else:
+            # assume it's a path
+            file = open(os.path.expanduser(file), "wb")
+            close_file = True
+
+        try:
+            self.wait(timeout=timeout, progress_bar=progress_bar)
+
+            response = requests.get(self.url, stream=True)
+            response.raise_for_status()
+            # TODO error handling; likely the result has expired
+
+            response.raw.decode_content = True
+            shutil.copyfileobj(response.raw, file)
+            # https://stackoverflow.com/a/13137873/10519953
+
+        finally:
+            if close_file:
+                file.close()
+
+    def wait(self, timeout=None, progress_bar=False):
+        """
+        Block until the Job is complete, optionally displaying a progress bar.
+
+        Raises any error that occurs with the `Job`, or `JobTimeoutError` if
+        the timeout passes before the `Job` is complete.
+
+        Parameters
+        ----------
+        timeout: int, optional
+            The number of seconds to wait for the result.
+        progress_bar: bool, optional
+            Flag to draw the progress bar. Default is to ``True`` if in
+            Jupyter Notebook.
+        """
         if progress_bar is None:
             progress_bar = in_notebook()
 
-        return self._wait_for_result(timeout=timeout, progress_bar=progress_bar)
+        if timeout is None:
+            exceeded_timeout = lambda: False  # noqa: E731
+        else:
+            stop_at = time.time() + timeout
+            exceeded_timeout = lambda: time.time() > stop_at  # noqa: E731
+
+        stream = self.watch()
+
+        show_progress = progress_bar is not False
+        if show_progress:
+            progress_bar_io = sys.stdout if progress_bar is True else progress_bar
+            _write_to_io_or_widget(progress_bar_io, "\nJob ID: {}\n".format(self.id))
+
+        while not self.done and not exceeded_timeout():
+            try:
+                next(stream)
+
+            except Exception as e:
+                if isinstance(e, StopIteration) or default_grpc_retry_predicate(e):
+                    stream = self.watch()
+                else:
+                    raise
+
+            if show_progress:
+                self._draw_progress_bar(output=progress_bar_io)
+        else:
+            if self.done:
+                if self._message.state.stage == job_pb2.Job.Stage.SUCCEEDED:
+                    return
+                if self._message.state.stage == job_pb2.Job.Stage.FAILED:
+                    raise self.error
+                if self._message.state.stage == job_pb2.Job.Stage.CANCELLED:
+                    raise JobCancelled("Job {} was cancelled.".format(self.id))
+            else:
+                raise JobTimeoutError("Timed out waiting for Job {}".format(self.id))
 
     @property
     def object(self):
@@ -381,12 +492,23 @@ class Job(object):
     @property
     def format(self):
         "The serialization format of the Job, as a dictionary."
-        return format_proto_to_user_facing_format(self._message.format)
+        return has_proto_to_user_dict(self._message.format)
 
     @property
     def destination(self):
         "The destination for the Job results, as a dictionary."
-        return destination_proto_to_user_facing_destination(self._message.destination)
+        return has_proto_to_user_dict(self._message.destination)
+
+    @property
+    def url(self):
+        """
+        The download URL for this Job's results.
+
+        If `format` is not "download" or "email", `url` will be None.
+        """
+        if which_has(self._message.destination) not in ("download", "email"):
+            return None
+        return self.BUCKET_PREFIX.format(self.id)
 
     @property
     def error(self):
@@ -394,78 +516,6 @@ class Job(object):
         error_code = self._message.state.error.code
         exc = error_code_to_exception(error_code)
         return exc(self) if exc is not None else None
-
-    def _load_result(self):
-        if self._message.state.stage == job_pb2.Job.Stage.SUCCEEDED:
-            if self._message.destination.has_download:
-                # We only want it to load the result from the bucket
-                # if the destination was download
-                return self._download_result()
-            else:
-                # Destination was email
-                return None
-        elif self._message.state.stage == job_pb2.Job.Stage.FAILED:
-            raise self.error
-        elif self._message.state.stage == job_pb2.Job.Stage.CANCELLED:
-            raise JobCancelled("Job {} was cancelled.".format(self.id))
-        else:
-            raise AttributeError("job {} {}".format(self.id, self.stage))
-
-    def _download_result(self):
-        response = requests.get(self.BUCKET_PREFIX.format(self.id))
-        response.raise_for_status()
-
-        content_type = response.headers["x-goog-stored-content-encoding"]
-
-        if content_type == "application/vnd.pyarrow":
-            buffer = pa.decompress(
-                response.content,
-                codec=response.headers["x-goog-meta-X-Arrow-Codec"],
-                decompressed_size=int(
-                    response.headers["x-goog-meta-X-Decompressed-Size"]
-                ),
-            )
-            marshalled = pa.deserialize(buffer, context=serialization_context)
-            return unmarshal.unmarshal(self.result_type, marshalled)
-        elif content_type == "application/json":
-            return json.loads(response.content)
-        else:
-            # return the raw data
-            return response.content
-
-    def _wait_for_result(self, timeout=None, progress_bar=False):
-        if timeout is None:
-            exceeded_timeout = lambda: False  # noqa
-        else:
-            stop_at = time.time() + timeout
-            exceeded_timeout = lambda: time.time() > stop_at  # noqa
-
-        stream = self.watch()
-
-        show_progress = progress_bar is not False
-        if show_progress:
-            progress_bar_io = sys.stdout if progress_bar is True else progress_bar
-            _write_to_io_or_widget(progress_bar_io, "\nJob ID: {}\n".format(self.id))
-
-        while not self.done and not exceeded_timeout():
-            try:
-                next(stream)
-
-            except Exception as e:
-                if isinstance(e, StopIteration) or default_grpc_retry_predicate(e):
-                    stream = self.watch()
-                else:
-                    six.reraise(*sys.exc_info())
-
-            if show_progress:
-                self._draw_progress_bar(output=progress_bar_io)
-        else:
-            if self.done:
-                return self._load_result()
-            else:
-                raise JobTimeoutError(
-                    "timeout while waiting on result for Job('{}')".format(self.id)
-                )
 
     def _draw_progress_bar(self, output=None):
         """
@@ -523,3 +573,40 @@ def _is_job_done(stage):
         job_pb2.Job.Stage.FAILED,
         job_pb2.Job.Stage.CANCELLED,
     )
+
+
+LOADERS, register = registry()
+
+
+def get_loader(output_destination: destinations_pb2.Destination):
+    specific_destination = getattr(output_destination, which_has(output_destination))
+    try:
+        return LOADERS[type(specific_destination)]
+    except KeyError:
+        raise NotImplementedError(
+            "Not possible to load results for "
+            "output destination {}".format(type(specific_destination).__name__)
+        )
+
+
+@register(destinations_pb2.Download)
+# NOTE(gabe): Disabling email as a downloadable destination for now, because it's confusing
+# when `.compute(destination="email@example.com")` returns the data in your notebook.
+# Especially if that data is 30mb of binary GeoTIFF dumped into your terminal.
+# @register(destinations_pb2.Email)
+def download(job: Job):
+    response = requests.get(job.url)
+    response.raise_for_status()
+    # TODO error handling; likely the result has expired
+    data = response.content
+
+    message = job._message
+    specific_format = getattr(message.format, which_has(message.format))
+
+    if isinstance(specific_format, formats_pb2.Pyarrow):
+        codec = response.headers["x-goog-meta-X-Arrow-Codec"]
+        decompressed_size = int(response.headers["x-goog-meta-X-Decompressed-Size"])
+        result_type = job.result_type
+        return deserialize_pyarrow(data, codec, decompressed_size, result_type)
+
+    return data
