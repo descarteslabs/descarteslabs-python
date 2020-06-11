@@ -1,11 +1,12 @@
 import six
 
 from ...cereal import serializable
-from ..core import GenericProxytype, ProxyTypeError, assert_is_proxytype
+from ..core import assert_is_proxytype
+from .dict_ import BaseDict
 
 
 @serializable()
-class KnownDict(GenericProxytype):
+class KnownDict(BaseDict):
     """
     ``KnownDict[<{key: KnownType, ...}>, KeyType, ValueType]``: Proxy mapping from specific keys to specific value
     types, with default type for unknown values.
@@ -61,44 +62,22 @@ class KnownDict(GenericProxytype):
             error_message="KnownDict value type parameter must be a Proxytype, not a value",
         )
 
-    def __getitem__(self, item):
-        items, kt, vt = self._type_params
+    def __getitem__(self, key):
         try:
-            result_cls = items[item]
+            result_cls = self._type_params[0][key]
         except (TypeError, KeyError):
-            result_cls = vt
+            result_cls = self.value_type
 
+        return result_cls._from_apply("wf.get", self, self._promote_key(key))
+
+    def get(self, key, default):
         try:
-            item = kt._promote(item)
-        except ProxyTypeError:
-            raise ProxyTypeError(
-                "Dict keys are of type {}, but indexed with {}".format(kt, item)
-            )
-
-        return result_cls._from_apply("wf.get", self, item)
-
-    def get(self, item, default=None):
-        items, kt, vt = self._type_params
-        try:
-            result_cls = items[item]
+            result_cls = self._type_params[0][key]
         except (TypeError, KeyError):
-            result_cls = vt
+            result_cls = self.value_type
 
-        try:
-            item = kt._promote(item)
-        except ProxyTypeError:
-            raise ProxyTypeError(
-                "Dict keys are of type {}, but indexed with {}".format(kt, item)
-            )
+        return result_cls._from_apply(
+            "wf.get", self, self._promote_key(key), self._promote_default(default)
+        )
 
-        try:
-            default = vt._promote(default)
-        except ProxyTypeError:
-            raise ProxyTypeError(
-                "The ``default`` must be the same type as the Dict values."
-                " Expected something of type {} but got type {}.".format(
-                    vt.__name__, type(default)
-                )
-            )
-
-        return result_cls._from_apply("wf.get", self, item, default=default)
+    get.__doc__ = BaseDict.get.__doc__

@@ -7,7 +7,7 @@ from descarteslabs.common.graft import client
 from descarteslabs.common.graft import interpreter
 
 from ...core import ProxyTypeError
-from ...primitives import Int, Str, Float
+from ...primitives import Int, Str, Float, Bool
 from .. import Tuple, List, Dict
 
 
@@ -163,6 +163,18 @@ def test_items():
     dct = Dict[Str, Float](x=1.0, y=2.2)
     items = dct.items()
     assert isinstance(items, List[Tuple[Str, Float]])
+
+
+def test_contains():
+    dct = Dict[Str, Float](x=1.0, y=2.2)
+    assert isinstance(dct.contains("foo"), Bool)
+    with pytest.raises(TypeError):
+        dct.contains(1)
+
+
+def test_length():
+    dct = Dict[Str, Float](x=1.0, y=2.2)
+    assert isinstance(dct.length(), Int)
 
 
 def test_iter_error():

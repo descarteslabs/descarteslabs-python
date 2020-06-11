@@ -25,6 +25,7 @@ Changelog
 - `get` function on `Dict` and `KnownDict` for providing a default value if a key does not exist
 - `nbands` attribute on `Image` and `ImageCollection`
 - `proxify` can handle `scenes.GeoContext`s
+- `Dict.contains`, `Dict.length`
 
 ### Workflows - Fixed
 - **Fewer failures and hanging calls when connecting to the Workflows backend** (like `.compute`, `.visualize`, `Job.get`, etc.)
