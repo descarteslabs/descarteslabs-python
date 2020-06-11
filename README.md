@@ -11,24 +11,40 @@ Changelog
 ## Pending
 
 ### Workflows (channel `v0-15`) - Added
-- **Output formats for Job results** including PyArrow, MessagePack, JSON and GeoTIFF. Usage details can be found [on the docs](https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html).
-- **Destinations for Job results** including download and email. Usage details can be found [on the docs](https://docs.descarteslabs.com/descarteslabs/workflows/docs/destinations.html).
+- **Output formats for `.compute` including GeoTIFF, JSON**, PyArrow, and MessagePack. Usage details can be found [in the docs](https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html).
+- **Destinations for Job results: download and email**. Usage details can be found [in the docs](https://docs.descarteslabs.com/descarteslabs/workflows/docs/destinations.html).
+- **Save `.compute` outputs to a file** with the `file=` argument.
+- **Pixel value inspector**: click in the map widget to view pixel values.
+- **`wf.ifelse`** for simple conditional logic.
 - NumPy functions including `hypot`, `bitwise_and`, `bitwise_or`, `bitwise_xor`, `bitwise_not`, `invert`, and `ldexp`
 - Bitwise `Array` and `MaskedArray` operations
-- `shape` attribute on `Array` and `MaskedArray`
+- `size` attribute on `Array` and `MaskedArray`
 - `astype` function on `Array` and `MaskedArray` for changing the dtype
 - `flatten` function on `Array` and `MaskedArray` for flattening into a 1D array
 - `MaskedArray.compressed` for getting all unmasked data as a 1D array
-- `get` function on `Dict` and `KnownDict` for getting a value at a specified key, with a default value if the key does not exist
+- `get` function on `Dict` and `KnownDict` for providing a default value if a key does not exist
 - `nbands` attribute on `Image` and `ImageCollection`
+- `proxify` can handle `scenes.GeoContext`s
 
 ### Workflows - Fixed
-- `wf.numpy.dot` and `wf.numpy.einsum` no longer fail when being called correctly
+- **Fewer failures and hanging calls when connecting to the Workflows backend** (like `.compute`, `.visualize`, `Job.get`, etc.)
+- **`wf.numpy.histogram` works correctly with computed values for `range` and `bins` (such as `range=[arr.min(), arr.max()]`)**
+- More consistent throughput when a large number of jobs are submitted
 - `Array`s can now be constructed from proxy `List`s
+- `MaskedArray.filled` works correctly when passed Python values
+- Long-running sessions (like Jupyter kernels) refresh credentials instead of failing with auth errors after many hours of use
+- `wf.numpy.dot` and `wf.numpy.einsum` no longer fail when being called correctly
+- Occasional errors like `('array-89199362e9a5d598fb5c82805136834d', 0, 0)` when calling `wf.compute()` with multiple values are resolved
 
 ### Workflows - Changed
+- **`pick_bands` accepts duplicate band names.** Enjoy easier Sentinel-1 `"vv vh vv"` visualizations!
+- **`ImageCollection.from_id` is always ordered by date**
 - `wf.numpy.percentile` no longer accepts an `axis` argument
-- `proxify` can handle `scenes.GeoContext`s
+- **breaking** `wf.Job` construction and interface changes:
+  - Use a single `wf.Job(..)` call instead of `wf.Job.build(...).execute()` to create and launch a Job
+  - New `Job.result_to_file` method
+  - `Job.status` is removed in favor of a single `Job.stage`
+  - `wf.TimeoutError` renamed to `wf.JobTimeoutError`
 
 ## [1.2.0] - 2020-04-23
 
