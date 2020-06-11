@@ -6,6 +6,7 @@ import sys
 import functools
 
 import six
+from backports.datetime_fromisoformat import datetime_fromisoformat
 import numpy as np
 
 from . import unmarshal
@@ -39,7 +40,7 @@ unmarshal.register("DType", dtype_from_string)
 
 
 def datetime_from_string(s):
-    return datetime.datetime.fromisoformat(s)
+    return datetime_fromisoformat(s)
 
 
 def timedelta_from_seconds(s):

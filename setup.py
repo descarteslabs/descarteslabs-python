@@ -84,6 +84,7 @@ def do_setup():
         python_requires="~=3.5",
         install_requires=[
             "affine>=2.2.1",
+            "backports-datetime-fromisoformat>=1.0.0",
             "cachetools>=2.0.1",
             "cloudpickle==0.4.0",
             "geojson>=2.5.0",
