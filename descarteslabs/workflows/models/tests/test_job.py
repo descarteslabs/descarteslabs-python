@@ -406,8 +406,11 @@ class TestJob(object):
 
         if not file_path:
             assert not file_arg.closed
-            file_arg.close()
+            file_arg.flush()
 
         print(path)
         with open(path, "rb") as f:
             assert result == json.load(f)
+
+        if not file_path:
+            file_arg.close()
