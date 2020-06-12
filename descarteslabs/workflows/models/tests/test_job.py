@@ -409,7 +409,7 @@ class TestJob(object):
             file_arg.flush()
 
         print(path)
-        with open(str(path), "rb") as f:
+        with open(str(path), "r") as f:
             assert result == json.load(f)
 
         if not file_path:
