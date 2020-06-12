@@ -8,7 +8,7 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## Pending
+## [1.3.0] - 2020-06-12
 
 ### Workflows (channel `v0-15`) - Added
 - **Output formats for `.compute` including GeoTIFF, JSON**, PyArrow, and MessagePack. Usage details can be found [in the docs](https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html).
