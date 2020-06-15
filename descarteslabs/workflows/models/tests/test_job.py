@@ -209,7 +209,7 @@ class TestJob(object):
         obj = types.Int(1)
         parameters = {"foo": types.Str("bar")}
         format = "geotiff"
-        destination = {"type": "email", "to": "example@example.com"}
+        destination = {"type": "email"}
 
         job_state = job_pb2.Job.State(stage=job_pb2.Job.Stage.QUEUED)
 

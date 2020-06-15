@@ -591,7 +591,7 @@ def get_loader(output_destination: destinations_pb2.Destination):
 
 @register(destinations_pb2.Download)
 # NOTE(gabe): Disabling email as a downloadable destination for now, because it's confusing
-# when `.compute(destination="email@example.com")` returns the data in your notebook.
+# when `.compute(destination="email")` returns the data in your notebook.
 # Especially if that data is 30mb of binary GeoTIFF dumped into your terminal.
 # @register(destinations_pb2.Email)
 def download(job: Job):

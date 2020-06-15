@@ -13,9 +13,6 @@ message Destination {
 message Download {}
 
 message Email {
-  repeated string to = 1;
-  repeated string cc = 2;
-  repeated string bcc = 3;
-  string subject = 4;
-  string body = 5;
+  string subject = 1;
+  string body = 2;
 }

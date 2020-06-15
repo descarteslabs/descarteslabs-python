@@ -23,14 +23,7 @@ from ..user_dict_to_proto import user_dict_to_has_proto
         ),
         ({"type": "download"}, destinations_pb2.Destination),
         (
-            {
-                "type": "email",
-                "to": ["test@email.com", "other@email.com"],
-                "cc": ["someone@email.com", "other_other@email.com"],
-                "bcc": ["someone_else@email.com", "someone_else_else@email.com"],
-                "subject": "This is a test",
-                "body": "Testing",
-            },
+            {"type": "email", "subject": "This is a test", "body": "Testing"},
             destinations_pb2.Destination,
         ),
     ],

@@ -20,35 +20,23 @@ def test_user_dict_to_has_proto():
     )
 
     proto = user_dict_to_has_proto(
-        {"type": "email", "to": "test@email.com", "subject": 1234},
-        destinations_pb2.Destination,
-        {},
+        {"type": "email", "subject": 1234}, destinations_pb2.Destination, {}
     )
     assert isinstance(proto, destinations_pb2.Destination)
     assert proto.has_email and not proto.has_download
-    assert proto.email.to == ["test@email.com"]
-    assert proto.email.cc == []
-    assert proto.email.bcc == []
     assert proto.email.subject == "1234"
     assert proto.email.body == ""
 
 
 def test_user_dict_to_has_proto_defaults():
-    defaults = {
-        "to": ["foo", "bar"],
-        "bcc": "hahaha@example.com",
-        "body": "job is done",
-    }
+    defaults = {"body": "job is done"}
     proto = user_dict_to_has_proto(
-        {"type": "email", "to": "test@email.com"},
+        {"type": "email"},
         destinations_pb2.Destination,
         {destinations_pb2.Email: defaults},
     )
     assert isinstance(proto, destinations_pb2.Destination)
     assert proto.has_email and not proto.has_download
-    assert proto.email.to == ["test@email.com"]
-    assert proto.email.cc == []
-    assert proto.email.bcc == [defaults["bcc"]]
     assert proto.email.subject == ""
     assert proto.email.body == defaults["body"]
 

@@ -18,7 +18,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n:descarteslabs/common/proto/destinations/destinations.proto\x12\x17\x64\x65scarteslabs.workflows\"\xc2\x01\n\x0b\x44\x65stination\x12=\n\x08\x64ownload\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.DownloadR\x08\x64ownload\x12\x34\n\x05\x65mail\x18\x02 \x01(\x0b\x32\x1e.descarteslabs.workflows.EmailR\x05\x65mail\x12!\n\x0chas_download\x18\x14 \x01(\x08R\x0bhasDownload\x12\x1b\n\thas_email\x18\x15 \x01(\x08R\x08hasEmail\"\n\n\x08\x44ownload\"g\n\x05\x45mail\x12\x0e\n\x02to\x18\x01 \x03(\tR\x02to\x12\x0e\n\x02\x63\x63\x18\x02 \x03(\tR\x02\x63\x63\x12\x10\n\x03\x62\x63\x63\x18\x03 \x03(\tR\x03\x62\x63\x63\x12\x18\n\x07subject\x18\x04 \x01(\tR\x07subject\x12\x12\n\x04\x62ody\x18\x05 \x01(\tR\x04\x62odyb\x06proto3'
+  serialized_pb=b'\n:descarteslabs/common/proto/destinations/destinations.proto\x12\x17\x64\x65scarteslabs.workflows\"\xc2\x01\n\x0b\x44\x65stination\x12=\n\x08\x64ownload\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.DownloadR\x08\x64ownload\x12\x34\n\x05\x65mail\x18\x02 \x01(\x0b\x32\x1e.descarteslabs.workflows.EmailR\x05\x65mail\x12!\n\x0chas_download\x18\x14 \x01(\x08R\x0bhasDownload\x12\x1b\n\thas_email\x18\x15 \x01(\x08R\x08hasEmail\"\n\n\x08\x44ownload\"5\n\x05\x45mail\x12\x18\n\x07subject\x18\x01 \x01(\tR\x07subject\x12\x12\n\x04\x62ody\x18\x02 \x01(\tR\x04\x62odyb\x06proto3'
 )
 
 
@@ -108,36 +108,15 @@ _EMAIL = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='to', full_name='descarteslabs.workflows.Email.to', index=0,
-      number=1, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='to', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='cc', full_name='descarteslabs.workflows.Email.cc', index=1,
-      number=2, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='cc', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='bcc', full_name='descarteslabs.workflows.Email.bcc', index=2,
-      number=3, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='bcc', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='subject', full_name='descarteslabs.workflows.Email.subject', index=3,
-      number=4, type=9, cpp_type=9, label=1,
+      name='subject', full_name='descarteslabs.workflows.Email.subject', index=0,
+      number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='subject', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='body', full_name='descarteslabs.workflows.Email.body', index=4,
-      number=5, type=9, cpp_type=9, label=1,
+      name='body', full_name='descarteslabs.workflows.Email.body', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -155,7 +134,7 @@ _EMAIL = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=296,
-  serialized_end=399,
+  serialized_end=349,
 )
 
 _DESTINATION.fields_by_name['download'].message_type = _DOWNLOAD

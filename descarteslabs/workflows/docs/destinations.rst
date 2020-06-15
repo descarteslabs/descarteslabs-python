@@ -24,15 +24,10 @@ If you don't need to supply any options for the destination, you can pass the de
   >>> two = wf.Int(1) + 1
   >>> two.compute(destination="download")
 
-For the email destination, you can pass the receiver's email address as a string for convenience::
-
-  >>> two = wf.Int(1) + 1
-  >>> two.compute(destination="example@email.com")
-
 If you would like to provide more destination options, you pass the destination as a dictionary::
 
   >>> two = wf.Int(1) + 1
-  >>> two.compute(destination={"type": "email", "to": "example@email.com", "subject": "My Computation is Done"})
+  >>> two.compute(destination={"type": "email", "subject": "My Computation is Done"})
 
 Note that when passing the destination as a dictionary, it must include a ``type`` key corresponding to the desired destination.
 
@@ -69,16 +64,13 @@ Examples
 Email
 ~~~~~
 
-Shorthand: an email address, like ``"example@email.com"``
+Shorthand: ``"email"``
 
 Email is equivalent to `Download`_, but also sends an email when the job is done. The email contains a link to download the data. Anyone with that link can download the data. As with `Download`_, the link will expire after 10 days.
 
 Options
 *******
 
-- ``to``: the email address to send the email to (string or list of strings)
-- ``cc``: the email address to cc on the email (string or list of strings)
-- ``bcc``: the email address to bcc on the email (string or list of strings)
 - ``subject``: the subject of the email (string, default "Your job has completed"). Always prefixed with ``Workflows:``.
 - ``body``: the body of the email (string, default "Your Workflows job is done.")
 
@@ -90,7 +82,7 @@ Compatible Formats
 Examples
 ********
   >>> two = wf.Int(1) + 1
-  >>> two.compute(destination="example@email.com", format="json")
+  >>> two.compute(destination="email", format="json")
 
   >>> two = wf.Int(1) + 1
-  >>> two.compute(destination={"type": "email", "to": "example@email.com", "subject": "My Computation is Done"}, format="json")
+  >>> two.compute(destination={"type": "email", "subject": "My Computation is Done"}, format="json")

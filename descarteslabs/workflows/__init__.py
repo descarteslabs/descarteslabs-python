@@ -188,13 +188,12 @@ def compute(
     >>> wf.compute(num, destination="download") # default # doctest: +SKIP
     2
     >>> # same computation but with email destination
-    >>> wf.compute(num, destination="example@email.com") # doctest: +SKIP
+    >>> wf.compute(num, destination="email") # doctest: +SKIP
     >>> # now with some destination options
     >>> wf.compute(
     ...     num,
     ...     destination={
     ...         "type": "email",
-    ...         "to": "example@email.com",
     ...         "subject": "My Computation is Done"
     ...     },
     ...     format="json",

@@ -14,10 +14,7 @@ DEFAULTS = {
 
 def user_destination_to_proto(params: Union[dict, str]) -> destinations_pb2.Destination:
     if isinstance(params, str):
-        if "@" in params:
-            params = {"type": "email", "to": params}
-        else:
-            params = {"type": params}
+        params = {"type": params}
     else:
         if "type" not in params:
             raise ValueError(
