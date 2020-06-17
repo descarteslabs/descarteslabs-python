@@ -4,17 +4,24 @@ from .list_ import List
 from .tuple_ import Tuple
 
 from ..primitives import Str
-from ..geospatial import ImageCollection, FeatureCollection, GeometryCollection
+from ..geospatial import ImageCollection, Image, FeatureCollection, GeometryCollection
 
-zippable_types = (List, ImageCollection, FeatureCollection, GeometryCollection, Str)
+zippable_types = (
+    List,
+    ImageCollection,
+    Image,
+    FeatureCollection,
+    GeometryCollection,
+    Str,
+)
 
 
 def zip(*sequences):
     """
     Returns a `List` of `Tuple`, where each tuple contains the i-th element
     from each of the arguments. All arguments must be Proxytype `List`,
-    `~.geospatial.ImageCollection`, `~.geospatial.FeatureCollection`,
-    `~.geospatial.GeometryCollection`, or `Str`.
+    `~.geospatial.ImageCollection` (zips along axis="images"), `~.geospatial.Image` (zips along axis="bands"),
+    `~.geospatial.FeatureCollection`, `~.geospatial.GeometryCollection`, or `Str`.
 
     The returned `List` is truncated in length to the length of the shortest
     argument sequence.
@@ -43,9 +50,7 @@ def zip(*sequences):
                     seq,
                 )
             )
-    itemtypes = tuple(
-        seq._element_type if not isinstance(seq, Str) else Str for seq in sequences
-    )
+    itemtypes = tuple(getattr(seq, "_element_type", type(seq)) for seq in sequences)
     tuple_type = Tuple[itemtypes]
 
     return List[tuple_type]._from_apply("wf.zip", *sequences)

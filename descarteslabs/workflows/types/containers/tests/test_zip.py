@@ -2,7 +2,7 @@ import pytest
 
 from ...core import ProxyTypeError
 from ...primitives import Int, Str
-from ...geospatial import ImageCollection, FeatureCollection, GeometryCollection
+from ...geospatial import ImageCollection, Image, FeatureCollection, GeometryCollection
 
 from .. import Tuple, List, zip as wf_zip
 
@@ -12,6 +12,7 @@ examples = [
     List[Str](["a", "b", "c"]),
     List[Tuple[Int, Str]]([(1, "foo"), (3, "bar")]),
     ImageCollection.from_id("foo"),
+    Image.from_id("foo"),
     FeatureCollection.from_vector_id("bar"),
     GeometryCollection.from_geojson({"type": "GeometryCollection", "geometries": []}),
 ]
@@ -20,7 +21,10 @@ examples = [
 @pytest.mark.parametrize("args", [examples, ()] + [(ex,) for ex in examples])
 def test_zip(args):
     zipped = wf_zip(*args)
-    assert isinstance(zipped, List[Tuple[tuple(arg._element_type for arg in args)]])
+    assert isinstance(
+        zipped,
+        List[Tuple[tuple(getattr(arg, "_element_type", type(arg)) for arg in args)]],
+    )
 
 
 def test_zip_str():
