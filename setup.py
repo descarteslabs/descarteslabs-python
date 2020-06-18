@@ -91,7 +91,7 @@ def do_setup():
             "grpcio>=1.16.1,<2",
             "protobuf==3.11.2,<4",
             "numpy>=1.17.4",
-            "pyarrow==0.16.0",
+            "pyarrow==0.17.1",
             "pytz>=2019.1",
             "requests[security]>=2.20.1,<3",
             "six>=1.12.0",
