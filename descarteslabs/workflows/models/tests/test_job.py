@@ -3,7 +3,6 @@ import json
 import freezegun
 import pytest
 import mock
-import pyarrow as pa
 import responses
 
 from descarteslabs.workflows.client import Client
@@ -11,7 +10,7 @@ from descarteslabs.workflows.client import Client
 from descarteslabs.common.proto.errors import errors_pb2
 from descarteslabs.common.proto.job import job_pb2
 from descarteslabs.common.proto.types import types_pb2
-from descarteslabs.common.workflows.arrow_serialization import serialization_context
+from descarteslabs.common.workflows.arrow_serialization import serialize_pyarrow
 from descarteslabs.common.workflows.outputs import (
     user_format_to_proto,
     user_destination_to_proto,
@@ -357,17 +356,16 @@ class TestJob(object):
         )
 
         result = 2
-        buffer = pa.serialize(result, context=serialization_context).to_buffer()
         codec = "lz4"
+        serialized = serialize_pyarrow(result, codec)
 
         responses.add(
             responses.GET,
             Job.BUCKET_PREFIX.format(job.id),
-            body=pa.compress(buffer, codec=codec, asbytes=True),
+            body=serialized,
             headers={
                 "x-goog-stored-content-encoding": "application/vnd.pyarrow",
                 "x-goog-meta-X-Arrow-Codec": codec,
-                "x-goog-meta-X-Decompressed-Size": str(len(buffer)),
             },
             status=200,
         )

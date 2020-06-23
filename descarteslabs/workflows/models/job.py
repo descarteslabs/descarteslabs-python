@@ -21,13 +21,12 @@ from descarteslabs.common.workflows.proto_munging import (
     which_has,
     has_proto_to_user_dict,
 )
-
-from descarteslabs.workflows.result_types.deserialize_pyarrow import deserialize_pyarrow
-
+from descarteslabs.common.workflows.arrow_serialization import deserialize_pyarrow
 
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec, typespec_to_unmarshal_str
 from ..client import get_global_grpc_client, default_grpc_retry_predicate
+from ..result_types import unmarshal
 from .exceptions import error_code_to_exception, JobTimeoutError, JobCancelled
 from .utils import in_notebook, pb_milliseconds_to_datetime
 from .parameters import parameters_to_grafts
@@ -552,8 +551,10 @@ def _draw_progress_bar(finished, total, stage, output, width=6):
     else:
         bar = "#" * int(width * percent)
 
-    progress_output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
-        bar=bar, width=width, finished=finished, total=total, stage=stage
+    progress_output = (
+        "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
+            bar=bar, width=width, finished=finished, total=total, stage=stage
+        )
     )
 
     _write_to_io_or_widget(output, "{:<79}".format(progress_output))
@@ -584,8 +585,9 @@ def get_loader(output_destination: destinations_pb2.Destination):
         return LOADERS[type(specific_destination)]
     except KeyError:
         raise NotImplementedError(
-            "Not possible to load results for "
-            "output destination {}".format(type(specific_destination).__name__)
+            "Not possible to load results for output destination {}".format(
+                type(specific_destination).__name__
+            )
         )
 
 
@@ -605,8 +607,8 @@ def download(job: Job):
 
     if isinstance(specific_format, formats_pb2.Pyarrow):
         codec = response.headers["x-goog-meta-X-Arrow-Codec"]
-        decompressed_size = int(response.headers["x-goog-meta-X-Decompressed-Size"])
         result_type = job.result_type
-        return deserialize_pyarrow(data, codec, decompressed_size, result_type)
+        marshalled = deserialize_pyarrow(data, codec)
+        return unmarshal.unmarshal(result_type, marshalled)
 
     return data

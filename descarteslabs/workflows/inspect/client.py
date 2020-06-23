@@ -14,13 +14,13 @@ from descarteslabs.common.workflows.outputs import (
     user_format_to_mimetype,
     field_name_to_mimetype,
 )
-from descarteslabs.workflows.result_types.deserialize_pyarrow import deserialize_pyarrow
+from descarteslabs.common.workflows.arrow_serialization import deserialize_pyarrow
 
 from .. import _channel
 from ..cereal import serialize_typespec, typespec_to_unmarshal_str
-
 from ..models.exceptions import JobTimeoutError
 from ..models.parameters import parameters_to_grafts
+from ..result_types import unmarshal
 
 
 _pyarrow_content_type = field_name_to_mimetype["pyarrow"]
@@ -93,10 +93,8 @@ class InspectClient(Service):
             if file is None:
                 if resp.headers["Content-Type"] == _pyarrow_content_type:
                     codec = resp.headers["X-Arrow-Codec"]
-                    decompressed_size = int(resp.headers["X-Decompressed-Size"])
-                    return deserialize_pyarrow(
-                        resp.content, codec, decompressed_size, result_type
-                    )
+                    marshalled = deserialize_pyarrow(resp.content, codec)
+                    return unmarshal.unmarshal(result_type, marshalled)
                 else:
                     return resp.content
             else:
