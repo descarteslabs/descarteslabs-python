@@ -119,7 +119,6 @@ def compute(
         obj, params, format=format, destination=destination, client=client, cache=cache
     )
     if block:
-        job.wait(timeout=timeout, progress_bar=progress_bar)
         if file is not None:
             return job.result_to_file(file)
         else:
