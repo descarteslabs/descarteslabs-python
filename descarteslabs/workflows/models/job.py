@@ -212,6 +212,33 @@ class Job(object):
         )
         self._message = message
 
+    def resubmit(self):
+        """
+        Resubmit this job, returning a new `Job` object.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Job, Int
+        >>> job = Job(Int(1), {}) # doctest: +SKIP
+        >>> job.id # doctest: +SKIP
+        abc123
+        >>> job.result() # doctest: +SKIP
+        1
+        >>> new_job = job.resubmit() # doctest: +SKIP
+        >>> new_job.id # doctest: +SKIP
+        xyz456
+        >>> new_job.result() # doctest: +SKIP
+        1
+        """
+        return Job(
+            self.object,
+            self.parameters,
+            format=self.format,
+            destination=self.destination,
+            client=self._client,
+            cache=self.cache_enabled,
+        )
+
     # Not implemented on the backend yet
     # def cancel(self):
     #     """
@@ -551,10 +578,8 @@ def _draw_progress_bar(finished, total, stage, output, width=6):
     else:
         bar = "#" * int(width * percent)
 
-    progress_output = (
-        "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
-            bar=bar, width=width, finished=finished, total=total, stage=stage
-        )
+    progress_output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
+        bar=bar, width=width, finished=finished, total=total, stage=stage
     )
 
     _write_to_io_or_widget(output, "{:<79}".format(progress_output))

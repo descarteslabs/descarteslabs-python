@@ -43,7 +43,7 @@ def parameters_to_grafts(**parameters):
     """
     grafts = {}
     for name, param in six.iteritems(parameters):
-        if graft_syntax.is_literal(param):
+        if graft_syntax.is_literal(param) or graft_syntax.is_graft(param):
             graftable = param
         else:
             try:
