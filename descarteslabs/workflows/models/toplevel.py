@@ -120,10 +120,10 @@ def compute(
     )
     if block:
         if file is not None:
-            return job.result_to_file(file)
+            return job.result_to_file(file, timeout=timeout, progress_bar=progress_bar)
         else:
             try:
-                return job.result()
+                return job.result(timeout=timeout, progress_bar=progress_bar)
             except NotImplementedError:
                 # suppress error if destination isn't supported; return nothing
                 return
