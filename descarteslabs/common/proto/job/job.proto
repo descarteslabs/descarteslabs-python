@@ -16,7 +16,7 @@ service JobAPI {
   rpc CreateJob(CreateJobRequest) returns (Job) {}
   rpc ListJobs(ListJobsRequest) returns (stream Job) {}
   rpc GetJob(GetJobRequest) returns (Job) {}
-  rpc CancelJob(CancelJobRequest) returns (Job) {}
+  rpc CancelJob(CancelJobRequest) returns (CancelJobResponse) {}
   rpc WatchJob(WatchJobRequest) returns (stream Job.State) {}
 }
 
@@ -83,6 +83,8 @@ message CreateJobRequest {
 message GetJobRequest { string id = 1; }
 
 message CancelJobRequest { string id = 1; }
+
+message CancelJobResponse {}
 
 message WatchJobRequest { string id = 1; }
 

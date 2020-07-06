@@ -239,22 +239,20 @@ class Job(object):
             cache=self.cache_enabled,
         )
 
-    # Not implemented on the backend yet
-    # def cancel(self):
-    #     """
-    #     Cancel a running job.
+    def cancel(self):
+        """
+        Cancel a running job.
 
-    #     Example
-    #     -------
-    #     >>> from descarteslabs.workflows import Job, Int, parameter
-    #     >>> my_int = Int(1) + parameter("other_int", Int)
-    #     >>> job = Job(my_int, {"other_int": 10}) # doctest: +SKIP
-    #     >>> job.cancel() # doctest: +SKIP
-    #     """
-    #     message = self._client.api["CancelJob"](
-    #         job_pb2.CancelJobRequest(id=self.id), timeout=self._client.DEFAULT_TIMEOUT
-    #     )
-    #     self._message.state.CopyFrom(message)
+        Example
+        -------
+        >>> from descarteslabs.workflows import Job, Int, parameter
+        >>> my_int = Int(1) + parameter("other_int", Int)
+        >>> job = Job(my_int, {"other_int": 10}) # doctest: +SKIP
+        >>> job.cancel() # doctest: +SKIP
+        """
+        self._client.api["CancelJob"](
+            job_pb2.CancelJobRequest(id=self.id), timeout=self._client.DEFAULT_TIMEOUT
+        )
 
     def watch(self):
         """
@@ -384,7 +382,13 @@ class Job(object):
             if close_file:
                 file.close()
 
-    def wait(self, timeout=None, progress_bar=False):
+    def wait(
+        self,
+        timeout=None,
+        progress_bar=False,
+        cancel_on_timeout=True,
+        cancel_on_interrupt=True,
+    ):
         """
         Block until the Job is complete, optionally displaying a progress bar.
 
@@ -398,6 +402,10 @@ class Job(object):
         progress_bar: bool, optional
             Flag to draw the progress bar. Default is to ``True`` if in
             Jupyter Notebook.
+        cancel_on_timeout: bool, optional
+            Whether to cancel the job on client timeout. Default is True.
+        cancel_on_interrupt: bool, optional
+            Whether to cancel the job on interrupt (e.g. ctrl + c). Default is True.
         """
         if progress_bar is None:
             progress_bar = in_notebook()
@@ -415,28 +423,46 @@ class Job(object):
             progress_bar_io = sys.stdout if progress_bar is True else progress_bar
             _write_to_io_or_widget(progress_bar_io, "\nJob ID: {}\n".format(self.id))
 
-        while not self.done and not exceeded_timeout():
-            try:
-                next(stream)
+        try:
+            while not self.done and not exceeded_timeout():
+                try:
+                    next(stream)
 
-            except Exception as e:
-                if isinstance(e, StopIteration) or default_grpc_retry_predicate(e):
-                    stream = self.watch()
-                else:
-                    raise
+                except Exception as e:
+                    if isinstance(e, StopIteration) or default_grpc_retry_predicate(e):
+                        stream = self.watch()
+                    else:
+                        raise
 
-            if show_progress:
-                self._draw_progress_bar(output=progress_bar_io)
-        else:
-            if self.done:
-                if self._message.state.stage == job_pb2.Job.Stage.SUCCEEDED:
-                    return
-                if self._message.state.stage == job_pb2.Job.Stage.FAILED:
-                    raise self.error
-                if self._message.state.stage == job_pb2.Job.Stage.CANCELLED:
-                    raise JobCancelled("Job {} was cancelled.".format(self.id))
+                if show_progress:
+                    self._draw_progress_bar(output=progress_bar_io)
             else:
-                raise JobTimeoutError("Timed out waiting for Job {}".format(self.id))
+                if self.done:
+                    if self._message.state.stage == job_pb2.Job.Stage.SUCCEEDED:
+                        return
+                    if self._message.state.stage == job_pb2.Job.Stage.FAILED:
+                        raise self.error
+                    if self._message.state.stage == job_pb2.Job.Stage.CANCELLED:
+                        raise JobCancelled("Job {} was cancelled.".format(self.id))
+                else:
+                    if cancel_on_timeout:
+                        if show_progress:
+                            _write_to_io_or_widget(
+                                progress_bar_io, "\nCancelling job {}\n".format(self.id)
+                            )
+                        self.cancel()
+
+                    raise JobTimeoutError(
+                        "Timed out waiting for Job {}".format(self.id)
+                    )
+        except KeyboardInterrupt:
+            if cancel_on_interrupt:
+                if show_progress:
+                    _write_to_io_or_widget(
+                        progress_bar_io, "\nCancelling job {}\n".format(self.id)
+                    )
+                self.cancel()
+            raise
 
     @property
     def object(self):
@@ -481,10 +507,10 @@ class Job(object):
         "bool: Whether the Job has completed or not."
         return _is_job_done(self._message.state.stage)
 
-    # @property
-    # def cancelled(self):
-    #     """Whether the job has been cancelled."""
-    #     return self._message.state.stage == job_pb2.Job.Stage.CANCELLED
+    @property
+    def cancelled(self):
+        """Whether the job has been cancelled."""
+        return self._message.state.stage == job_pb2.Job.Stage.CANCELLED
 
     @property
     def cache_enabled(self):
