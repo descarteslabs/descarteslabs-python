@@ -1,10 +1,10 @@
 import json
 import logging
-import sys
-import time
-import shutil
 import os
+import shutil
+import sys
 
+import grpc
 import requests
 
 from descarteslabs.common.graft import client as graft_client
@@ -254,9 +254,15 @@ class Job(object):
             job_pb2.CancelJobRequest(id=self.id), timeout=self._client.DEFAULT_TIMEOUT
         )
 
-    def watch(self):
+    def watch(self, timeout=None):
         """
         Generator that yields ``self`` each time an update to the Job occurs.
+
+        Parameters
+        ----------
+        timeout: int, optional
+            The number of seconds to watch for Job updates. Defaults to
+            self._client.STREAM_TIMEOUT, which is also the maximum allowed.
 
         Example
         -------
@@ -271,12 +277,15 @@ class Job(object):
         SAVING
         SUCCEEDED
         """
-        # Note(Winston): If we need to support long-running connections,
-        # this is where we would infinitely loop on `grpc.StatusCode.DEADLINE_EXCEEDED` exceptions.
-        # Currently, this will timeout as specified with `client.STREAM_TIMEOUT`, (as of writing, 24 hours).
+        if timeout is None:
+            timeout = self._client.STREAM_TIMEOUT
+        else:
+            # Take the shortest of the user-specified timeout and the client default
+            # stream timeout.
+            timeout = min(timeout, self._client.STREAM_TIMEOUT)
 
         stream = self._client.api["WatchJob"](
-            job_pb2.WatchJobRequest(id=self.id), timeout=self._client.STREAM_TIMEOUT
+            job_pb2.WatchJobRequest(id=self.id), timeout=timeout
         )
 
         for state in stream:
@@ -410,13 +419,7 @@ class Job(object):
         if progress_bar is None:
             progress_bar = in_notebook()
 
-        if timeout is None:
-            exceeded_timeout = lambda: False  # noqa: E731
-        else:
-            stop_at = time.time() + timeout
-            exceeded_timeout = lambda: time.time() > stop_at  # noqa: E731
-
-        stream = self.watch()
+        stream = self.watch(timeout)
 
         show_progress = progress_bar is not False
         if show_progress:
@@ -424,37 +427,40 @@ class Job(object):
             _write_to_io_or_widget(progress_bar_io, "\nJob ID: {}\n".format(self.id))
 
         try:
-            while not self.done and not exceeded_timeout():
+            while not self.done:
                 try:
                     next(stream)
-
+                except grpc.RpcError as e:
+                    if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                        if cancel_on_timeout:
+                            if show_progress:
+                                _write_to_io_or_widget(
+                                    progress_bar_io,
+                                    "\nCancelling job {}\n".format(self.id),
+                                )
+                            self.cancel()
+                        raise JobTimeoutError(
+                            "Timed out waiting for Job {}".format(self.id)
+                        )
+                    elif default_grpc_retry_predicate(e):
+                        stream = self.watch(timeout)
+                    else:
+                        raise
                 except Exception as e:
-                    if isinstance(e, StopIteration) or default_grpc_retry_predicate(e):
-                        stream = self.watch()
+                    if isinstance(e, StopIteration):
+                        stream = self.watch(timeout)
                     else:
                         raise
 
                 if show_progress:
                     self._draw_progress_bar(output=progress_bar_io)
             else:
-                if self.done:
-                    if self._message.state.stage == job_pb2.Job.Stage.SUCCEEDED:
-                        return
-                    if self._message.state.stage == job_pb2.Job.Stage.FAILED:
-                        raise self.error
-                    if self._message.state.stage == job_pb2.Job.Stage.CANCELLED:
-                        raise JobCancelled("Job {} was cancelled.".format(self.id))
-                else:
-                    if cancel_on_timeout:
-                        if show_progress:
-                            _write_to_io_or_widget(
-                                progress_bar_io, "\nCancelling job {}\n".format(self.id)
-                            )
-                        self.cancel()
-
-                    raise JobTimeoutError(
-                        "Timed out waiting for Job {}".format(self.id)
-                    )
+                if self._message.state.stage == job_pb2.Job.Stage.SUCCEEDED:
+                    return
+                if self._message.state.stage == job_pb2.Job.Stage.FAILED:
+                    raise self.error
+                if self._message.state.stage == job_pb2.Job.Stage.CANCELLED:
+                    raise JobCancelled("Job {} was cancelled.".format(self.id))
         except KeyboardInterrupt:
             if cancel_on_interrupt:
                 if show_progress:

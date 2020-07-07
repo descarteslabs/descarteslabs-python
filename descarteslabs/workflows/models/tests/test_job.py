@@ -1,9 +1,10 @@
 import json
 
-import freezegun
-import pytest
 import mock
+import pytest
 import responses
+
+import grpc
 
 from descarteslabs.workflows.client import Client
 
@@ -42,6 +43,14 @@ class TestTypespecToUnmarshalStr(object):
         typespec = cereal.serialize_typespec(types.Function[{}, types.Int])
         with pytest.raises(TypeError, match="'Function' is not a computable type"):
             cereal.typespec_to_unmarshal_str(typespec)
+
+
+class MockRpcError(grpc.RpcError, grpc.Call):
+    def __init__(self, code):
+        self._code = code
+
+    def code(self):
+        return self._code
 
 
 @mock.patch(
@@ -323,17 +332,14 @@ class TestJob(object):
 
         job_state = job_pb2.Job.State(stage=job_pb2.Job.Stage.QUEUED)
 
-        with pytest.raises(JobTimeoutError), freezegun.freeze_time(
-            "2020-01-01"
-        ) as freezer:
+        def side_effect(*args, **kwargs):
+            yield job_state
+            raise MockRpcError(grpc.StatusCode.DEADLINE_EXCEEDED)
 
-            def side_effect(*args, **kwargs):
-                freezer.tick()  # ticks by 1 second
-                return [job_state]
+        stub.return_value.WatchJob.side_effect = side_effect
 
-            stub.return_value.WatchJob.side_effect = side_effect
-
-            j.wait(1e-4)
+        with pytest.raises(JobTimeoutError):
+            j.wait(timeout=1)
 
         stub.return_value.WatchJob.assert_called()
         assert j._message.state.stage == job_state.stage
