@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package descarteslabs.vektorius;
+
+// A request for the schema of a table.
+message SchemaRequest {
+
+  // The name of the table.
+  string table_name = 1;
+}
+
+// A response that contains a table schema.
+message SchemaResponse {
+
+  // The schema for a table, JSON-encoded.
+  string schema = 1;
+}
+
+// A query job.
+message Job {
+
+  // The id for the Job.
+  string job_id = 1;
+
+  // The status of the Job.
+  //
+  // TODO should be an enum
+  string status = 2;
+}
+
+// An Arrow RecordBatch.
+message RecordBatch {
+
+  // The bytes of the RecordBatch.
+  bytes data = 1;
+}
+
+// Token used when retrieving pages of a query response.
+message ContinuationToken {
+
+  // Meta information about the read session (optional).
+  string session_data = 1;
+
+  // Row offset for the page of the response.
+  uint64 offset = 2;
+
+  // Total number of rows in the job result
+  uint64 total_rows = 3;
+}
+
+// Terminating element to a page of a search.
+message StreamingEpilogue {
+
+  // The Job associated with the search.
+  Job job = 1;
+
+  // ContinuationToken for the next page of the search.
+  ContinuationToken continuation_token = 2;
+}
+
+// A request that initiates a search Job.
+message SearchRequest {
+
+  // The query that the Job should run. JSON-encoded.
+  string query = 1;
+}
+
+// A response that contains the Job information for the search.
+message SearchResponse {
+
+  // The Job associated with the search.
+  Job job = 1;
+}
+
+// A request to get the status of a search Job.
+message SearchStatusRequest {
+
+  // The id for the Job.
+  string job_id = 1;
+}
+
+// A response that contains the updated Job information.
+message SearchStatusResponse {
+
+  // The Job with updated status information.
+  Job job = 1;
+}
+
+// A request to get a page of a search.
+message SearchResultsRequest {
+
+  // The id for the search Job.
+  string job_id = 1;
+
+  // ContiuationToken containing information about what page to retrieve (optional).
+  ContinuationToken continuation_token = 2;
+
+  // Number of rows to retrive in a page (optional).
+  //
+  // This is an advanced feature and should not be commonly used.
+  uint32 page_size = 3;
+}
+
+// A response containing part of the page data for a response
+// or a StreamingEpilogue with information on how to initiate
+// the next page.
+message SearchResultsResponse {
+  oneof block {
+
+    // Arrow RecordBatch data.
+    RecordBatch batch = 1;
+
+    // StreamingEpilogue with continuation meta info.
+    StreamingEpilogue epilogue = 2;
+  }
+}
+
+// The Vektorius service definition.
+service Vektorius {
+
+  // Get the schema for a table.
+  rpc GetSchema(SchemaRequest) returns (SchemaResponse);
+
+  // Initiate a search Job.
+  rpc Search(SearchRequest) returns (SearchResponse);
+
+  // Get the status of a search Job.
+  rpc SearchStatus(SearchStatusRequest) returns (SearchStatusResponse);
+
+  // Get the results of a successful search Job.
+  rpc SearchResults(SearchResultsRequest) returns (stream SearchResultsResponse);
+}

@@ -32,7 +32,7 @@ class JobAPIStub(object):
     self.CancelJob = channel.unary_unary(
         '/descarteslabs.workflows.JobAPI/CancelJob',
         request_serializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.CancelJobRequest.SerializeToString,
-        response_deserializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.Job.FromString,
+        response_deserializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.CancelJobResponse.FromString,
         )
     self.WatchJob = channel.unary_stream(
         '/descarteslabs.workflows.JobAPI/WatchJob',
@@ -101,7 +101,7 @@ def add_JobAPIServicer_to_server(servicer, server):
       'CancelJob': grpc.unary_unary_rpc_method_handler(
           servicer.CancelJob,
           request_deserializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.CancelJobRequest.FromString,
-          response_serializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.Job.SerializeToString,
+          response_serializer=descarteslabs_dot_common_dot_proto_dot_job_dot_job__pb2.CancelJobResponse.SerializeToString,
       ),
       'WatchJob': grpc.unary_stream_rpc_method_handler(
           servicer.WatchJob,
