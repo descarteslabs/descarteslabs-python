@@ -1,51 +1,90 @@
-syntax="proto3";
+syntax = "proto3";
 
 package descarteslabs.workflows;
-
-import "descarteslabs/common/proto/types/types.proto";
 import "descarteslabs/common/proto/typespec/typespec.proto";
 
 service WorkflowAPI {
-    rpc CreateWorkflow(CreateWorkflowRequest) returns (Workflow) {}
-    rpc ListWorkflows(ListWorkflowsRequest) returns (stream Workflow) {}
-    rpc GetWorkflow(GetWorkflowRequest) returns (Workflow) {}
-    rpc UpdateWorkflow(UpdateWorkflowRequest) returns (Workflow) {}
+  rpc UpsertWorkflow(UpsertWorkflowRequest) returns (Workflow) {}
+  rpc GetWorkflow(GetWorkflowRequest) returns (Workflow) {}
+  rpc GetVersion(GetVersionRequest) returns (VersionedGraft) {}
+  rpc SearchWorkflows(SearchWorkflowsRequest) returns (stream Workflow) {}
+  rpc DeleteWorkflow(DeleteWorkflowRequest) returns (Empty) {}
 }
-
 
 message Workflow {
-    string id = 1;
-    // milliseconds since the UNIX epoch (UTC)
-    int64 created_timestamp = 2;
-    // milliseconds since the UNIX epoch (UTC)
-    int64 updated_timestamp = 3;
-    string name = 7;
-    string description = 8;
-    ResultType type = 9;
-    string channel = 10;
+  // "email@example.com:name" - email + ":" + name
+  string id = 1;
 
-    string serialized_graft = 21;
-    // TODO: remove serialized_typespec
-    string serialized_typespec = 22  [deprecated=true];
-    Typespec typespec = 25;
+  // milliseconds since the UNIX epoch (UTC)
+  int64 created_timestamp = 2;
+  // milliseconds since the UNIX epoch (UTC)
+  int64 updated_timestamp = 3;
 
-    string user = 23;
-    string org = 24;
+  bool public = 5;
+
+  string title = 9;
+  string description = 8;
+
+  repeated VersionedGraft versioned_grafts = 26;
+  map<string, string> labels = 27;
+  repeated string tags = 29;
+
+  // RO
+  string user = 23;
+  string org = 24;
+  string email = 25;
+  string name = 28;
 }
 
-message CreateWorkflowRequest {
-    Workflow workflow = 1;
+message UpsertWorkflowRequest {
+  string id = 1;
+
+  bool public = 2;
+  string title = 3;
+  string description = 4;
+
+  repeated VersionedGraft versioned_grafts = 26;
+  map<string, string> labels = 27;
+  repeated string tags = 29;
+
+  bool dry_run = 50;
 }
 
-message GetWorkflowRequest {
-    string id = 1;
+message GetWorkflowRequest { string id = 1; }
+
+message GetVersionRequest {
+  string id = 1;
+  string version = 2;
 }
 
-message UpdateWorkflowRequest {
-    Workflow workflow = 1;
+message DeleteWorkflowRequest { string id = 1; }
+
+message SearchWorkflowsRequest {
+  string email = 1;
+  string name_prefix = 2;
+
+  // must have any of these labels
+  repeated string tags = 29;
+
+  // TODO
+  // string start_datetime = 1;
+  // string end_datetime = 2;
 }
 
-message ListWorkflowsRequest {
-    string start_datetime = 1;
-    string end_datetime = 2;
+message VersionedGraft {
+  // "1.2.3" - should adhere to semantic versioning.
+  // See https://semver.org/
+  string version = 1;
+  string serialized_graft = 2;
+  string channel = 3;
+  Typespec typespec = 4;
+  string docstring = 5;
+
+  map<string, string> labels = 6;
+
+  int64 created_timestamp = 7;
+  int64 updated_timestamp = 8;
+  int64 deprecated_timestamp = 9;
 }
+
+message Empty {}

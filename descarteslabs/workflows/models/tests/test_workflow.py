@@ -1,16 +1,15 @@
 import json
-
-import hypothesis.strategies as st
 import mock
 import pytest
-from descarteslabs.common.proto.workflow import workflow_pb2
-from hypothesis import given
 
-from ... import _channel, cereal
-from ...client import Client
-from .. import Workflow
-from ..utils import pb_milliseconds_to_datetime
-from . import utils
+from descarteslabs.common.proto.workflow import workflow_pb2
+
+from descarteslabs.workflows import _channel
+from descarteslabs.workflows.client import Client
+from descarteslabs.workflows.models import Workflow
+from descarteslabs.workflows.models.utils import pb_milliseconds_to_datetime
+from descarteslabs.workflows.models.tests import utils
+from descarteslabs.workflows.types import Int
 
 
 @mock.patch(
@@ -20,45 +19,22 @@ from . import utils
 @mock.patch("descarteslabs.common.proto.workflow.workflow_pb2_grpc.WorkflowAPIStub")
 class TestWorkflow(object):
     def test_build(self, stub):
-        obj = utils.Foo(1)
-        wf = Workflow.build(obj, name="foo", description="a foo")
+        wf = Workflow(
+            id="bob@gmail.com:test",
+            title="test",
+            description="a test",
+            public=True,
+            labels={"foo": "bar"},
+            tags=["foo", "bar"],
+        )
+        msg = wf._message
 
-        assert wf._object is obj
-        assert wf._client is not None
-        message = wf._message
-
-        assert json.loads(message.serialized_graft) == utils.json_normalize(obj.graft)
-        assert message.name == "foo"
-        assert message.description == "a foo"
-        assert message.channel == _channel.__channel__
-
-    def test_roundtrip_from_proto(self, stub):
-        obj = utils.Bar(utils.Foo(1))
-        wf = Workflow.build(obj, name="bar", description="a bar")
-        message = wf._message
-
-        wf_from_proto = Workflow._from_proto(message)
-
-        new_obj = wf_from_proto.object
-        assert type(new_obj) == type(obj)
-        utils.assert_graft_is_scope_isolated_equvalent(new_obj.graft, obj.graft)
-
-    def test_roundtrip_from_proto_no_graft(self, stub):
-        obj = utils.Bar(utils.Foo(1))
-        wf = Workflow.build(obj, name="bar", description="a bar")
-        message = wf._message
-        message.id = "bar_id"
-        message.serialized_graft = ""
-
-        wf_from_proto = Workflow._from_proto(message)
-
-        new_obj = wf_from_proto.object
-        assert type(new_obj) == type(obj)
-
-        use_application = new_obj.graft[new_obj.graft["returns"]]
-        assert use_application[0] == "Workflow.use"
-        assert "workflow_id" in use_application[1]
-        assert new_obj.graft[use_application[1]["workflow_id"]] == message.id
+        assert msg.id == "bob@gmail.com:test"
+        assert msg.title == "test"
+        assert msg.description == "a test"
+        assert msg.public is True
+        assert msg.labels == {"foo": "bar"}
+        assert msg.tags == ["foo", "bar"]
 
     def test_get(self, stub):
         message = "foo"
@@ -74,79 +50,148 @@ class TestWorkflow(object):
                 metadata=(("x-wf-channel", _channel.__channel__),),
             )
 
-    @pytest.mark.skip(
-        reason=(
-            "this test is flaky for an inscrutable reason. "
-            "possibly some race condition with the stub mock? but hypothesis doesn't "
-            "parallelize as far as I can tell."
-        )
-    )
-    @given(
-        st.just(utils.Bar(1)) | st.none(), st.text() | st.none(), st.text() | st.none()
-    )
-    def test_update(self, stub, new_obj, new_name, new_description):
-        old_obj = utils.Bar(utils.Foo(1))
-        old_name = "bar"
-        old_description = "a bar"
-        wf = Workflow.build(old_obj, name=old_name, description=old_description)
-        wf.update(new_obj, new_name, new_description)
-
-        message = stub.return_value.UpdateWorkflow.call_args[0][0].workflow
-
-        should_be_obj = new_obj if new_obj is not None else old_obj
-        assert json.loads(message.serialized_graft) == utils.json_normalize(
-            should_be_obj.graft
-        )
-        assert message.typespec == cereal.serialize_typespec(type(should_be_obj))
-
-        assert message.name == new_name if new_name is not None else old_name
-        assert (
-            message.description == new_description
-            if new_description is not None
-            else old_description
-        )
-
-    def test_save(self, stub):
-        new_message = "fake message"
-        stub.return_value.CreateWorkflow.return_value = new_message
-
-        obj = utils.Bar(utils.Foo(1))
-        wf = Workflow.build(obj, name="bar", description="a bar")
-        old_message = wf._message
-
-        wf.save()
-        assert wf._message is new_message
-        stub.return_value.CreateWorkflow.assert_called_once_with(
-            workflow_pb2.CreateWorkflowRequest(workflow=old_message),
+    def test_delete_id(self, stub):
+        workflow_id = "foo"
+        Workflow.delete_id(workflow_id)
+        stub.return_value.DeleteWorkflow.assert_called_once_with(
+            workflow_pb2.DeleteWorkflowRequest(id=workflow_id),
             timeout=Client.DEFAULT_TIMEOUT,
             metadata=(("x-wf-channel", _channel.__channel__),),
         )
 
-    def test_properties(self, stub):
-        obj = utils.Bar(utils.Foo(1))
-        wf = Workflow.build(obj, name="bar", description="a bar")
+    def test_delete(self, stub):
+        workflow_id = "bob@gmail.com:test"
+        wf = Workflow(id=workflow_id)
+        wf.delete()
+        stub.return_value.DeleteWorkflow.assert_called_once_with(
+            workflow_pb2.DeleteWorkflowRequest(id=workflow_id),
+            timeout=Client.DEFAULT_TIMEOUT,
+            metadata=(("x-wf-channel", _channel.__channel__),),
+        )
 
-        assert wf.object == obj
-        assert wf.type == type(obj)
-        assert wf.id is None
+    def test_save(self, stub):
+        new_message = "fake message"
+        stub.return_value.UpsertWorkflow.return_value = new_message
+
+        wf = Workflow(
+            id="bob@gmail.com:test",
+            title="test",
+            description="a test",
+            public=True,
+            labels={"foo": "bar"},
+            tags=["foo", "bar"],
+        )
+        old_message = wf._message
+
+        wf.save()
+        assert wf._message is new_message
+        stub.return_value.UpsertWorkflow.assert_called_once_with(
+            workflow_pb2.UpsertWorkflowRequest(
+                id=old_message.id,
+                public=old_message.public,
+                title=old_message.title,
+                description=old_message.description,
+                versioned_grafts=old_message.versioned_grafts,
+                labels=old_message.labels,
+                tags=old_message.tags,
+            ),
+            timeout=Client.DEFAULT_TIMEOUT,
+            metadata=(("x-wf-channel", _channel.__channel__),),
+        )
+
+    def test_set_version(self, stub):
+        version = "v0.0.1"
+        obj = Int(1)
+        docstring = "the integer 1"
+        labels = {"foo": "bar"}
+        wf = Workflow(id="bob@gmail.com:test")
+        assert len(wf._message.versioned_grafts) == 0
+        new_vg = wf.set_version(version, obj, docstring=docstring, labels=labels)
+        assert new_vg.version == version
+        assert new_vg.docstring == docstring
+        assert new_vg.labels == labels
+        assert len(wf._message.versioned_grafts) == 1
+        new_vg_proto = wf._message.versioned_grafts[0]
+        assert type(new_vg.object) == type(obj)
+        assert new_vg_proto.version == version
+        assert new_vg_proto.docstring == docstring
+        assert new_vg_proto.labels == labels
+        assert new_vg_proto.serialized_graft == json.dumps(obj.graft)
+
+    def test_set_version_overwrite(self, stub):
+        version = "v0.0.1"
+        obj = Int(1)
+        docstring = "the integer 1"
+        labels = {"foo": "bar"}
+        wf = Workflow(id="bob@gmail.com:test")
+        assert len(wf._message.versioned_grafts) == 0
+        wf.set_version(version, obj, docstring=docstring, labels=labels)
+        assert len(wf._message.versioned_grafts) == 1
+        assert wf._message.versioned_grafts[0].version == version
+        new_docstring = "our super cool integer 1"
+        new_labels = {"bar": "baz"}
+        new_vg = wf.set_version(
+            version, obj, docstring=new_docstring, labels=new_labels
+        )
+        assert type(new_vg.object) == type(obj)
+        assert new_vg.version == version
+        assert new_vg.docstring == new_docstring
+        assert new_vg.labels == new_labels
+        assert len(wf._message.versioned_grafts) == 1
+        new_vg_proto = wf._message.versioned_grafts[0]
+        assert new_vg_proto.version == version
+        assert new_vg_proto.docstring == new_docstring
+        assert new_vg_proto.labels == new_labels
+        assert new_vg_proto.serialized_graft == json.dumps(obj.graft)
+
+    def test_get_version(self, stub):
+        version = "v0.0.1"
+        obj = Int(1)
+        wf = Workflow(id="bob@gmail.com:test")
+        assert len(wf._message.versioned_grafts) == 0
+        wf.set_version(version, obj)
+        assert len(wf._message.versioned_grafts) == 1
+        assert wf._message.versioned_grafts[0].version == version
+        vg = wf.get_version(version)
+        assert vg.version == version
+        assert type(vg.object) == type(obj)
+
+    def test_get_version_raises_wrong_type(self, stub):
+        version = 5
+        wf = Workflow(id="bob@gmail.com:test")
+        with pytest.raises(TypeError):
+            wf.get_version(version)
+
+    def test_get_version_raises_doesnt_exist(self, stub):
+        version = "v0.0.1"
+        wf = Workflow(id="bob@gmail.com:test")
+        with pytest.raises(KeyError):
+            wf.get_version(version)
+
+    def test_properties(self, stub):
+        wf = Workflow(
+            id="bob@gmail.com:test",
+            title="test",
+            description="a test",
+            public=True,
+            labels={"foo": "bar"},
+            tags=["foo", "bar"],
+        )
+
+        assert wf.id == "bob@gmail.com:test"
+        assert wf.title == "test"
+        assert wf.description == "a test"
+        assert wf.public is True
+        assert wf.labels == {"foo": "bar"}
+        assert wf.tags == ["foo", "bar"]
+        assert wf.name is None
         assert wf.created_timestamp is None
         assert wf.updated_timestamp is None
-        assert wf.name == "bar"
-        assert wf.description == "a bar"
-        assert wf.channel == _channel.__channel__
 
-        wf._message.id = "1234"
+        wf._message.name = "test"
         wf._message.created_timestamp = 100
         wf._message.updated_timestamp = 200
 
-        assert wf.id == "1234"
+        assert wf.name == "test"
         assert wf.created_timestamp == pb_milliseconds_to_datetime(100)
         assert wf.updated_timestamp == pb_milliseconds_to_datetime(200)
-
-    def test_incompatible_channel(self, stub):
-        obj = utils.Foo(1)
-        wf = Workflow.build(obj, name="foo", description="a foo")
-        wf._message.channel = "foobar"
-
-        with pytest.raises(ValueError, match="only defined for channel 'foobar'"):
-            wf.object

@@ -14,14 +14,9 @@ class WorkflowAPIStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.CreateWorkflow = channel.unary_unary(
-        '/descarteslabs.workflows.WorkflowAPI/CreateWorkflow',
-        request_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.CreateWorkflowRequest.SerializeToString,
-        response_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Workflow.FromString,
-        )
-    self.ListWorkflows = channel.unary_stream(
-        '/descarteslabs.workflows.WorkflowAPI/ListWorkflows',
-        request_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.ListWorkflowsRequest.SerializeToString,
+    self.UpsertWorkflow = channel.unary_unary(
+        '/descarteslabs.workflows.WorkflowAPI/UpsertWorkflow',
+        request_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.UpsertWorkflowRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Workflow.FromString,
         )
     self.GetWorkflow = channel.unary_unary(
@@ -29,10 +24,20 @@ class WorkflowAPIStub(object):
         request_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.GetWorkflowRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Workflow.FromString,
         )
-    self.UpdateWorkflow = channel.unary_unary(
-        '/descarteslabs.workflows.WorkflowAPI/UpdateWorkflow',
-        request_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.UpdateWorkflowRequest.SerializeToString,
+    self.GetVersion = channel.unary_unary(
+        '/descarteslabs.workflows.WorkflowAPI/GetVersion',
+        request_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.GetVersionRequest.SerializeToString,
+        response_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.VersionedGraft.FromString,
+        )
+    self.SearchWorkflows = channel.unary_stream(
+        '/descarteslabs.workflows.WorkflowAPI/SearchWorkflows',
+        request_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.SearchWorkflowsRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Workflow.FromString,
+        )
+    self.DeleteWorkflow = channel.unary_unary(
+        '/descarteslabs.workflows.WorkflowAPI/DeleteWorkflow',
+        request_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.DeleteWorkflowRequest.SerializeToString,
+        response_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Empty.FromString,
         )
 
 
@@ -40,14 +45,7 @@ class WorkflowAPIServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
-  def CreateWorkflow(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def ListWorkflows(self, request, context):
+  def UpsertWorkflow(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -61,7 +59,21 @@ class WorkflowAPIServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def UpdateWorkflow(self, request, context):
+  def GetVersion(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def SearchWorkflows(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def DeleteWorkflow(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -71,14 +83,9 @@ class WorkflowAPIServicer(object):
 
 def add_WorkflowAPIServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'CreateWorkflow': grpc.unary_unary_rpc_method_handler(
-          servicer.CreateWorkflow,
-          request_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.CreateWorkflowRequest.FromString,
-          response_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Workflow.SerializeToString,
-      ),
-      'ListWorkflows': grpc.unary_stream_rpc_method_handler(
-          servicer.ListWorkflows,
-          request_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.ListWorkflowsRequest.FromString,
+      'UpsertWorkflow': grpc.unary_unary_rpc_method_handler(
+          servicer.UpsertWorkflow,
+          request_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.UpsertWorkflowRequest.FromString,
           response_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Workflow.SerializeToString,
       ),
       'GetWorkflow': grpc.unary_unary_rpc_method_handler(
@@ -86,10 +93,20 @@ def add_WorkflowAPIServicer_to_server(servicer, server):
           request_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.GetWorkflowRequest.FromString,
           response_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Workflow.SerializeToString,
       ),
-      'UpdateWorkflow': grpc.unary_unary_rpc_method_handler(
-          servicer.UpdateWorkflow,
-          request_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.UpdateWorkflowRequest.FromString,
+      'GetVersion': grpc.unary_unary_rpc_method_handler(
+          servicer.GetVersion,
+          request_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.GetVersionRequest.FromString,
+          response_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.VersionedGraft.SerializeToString,
+      ),
+      'SearchWorkflows': grpc.unary_stream_rpc_method_handler(
+          servicer.SearchWorkflows,
+          request_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.SearchWorkflowsRequest.FromString,
           response_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Workflow.SerializeToString,
+      ),
+      'DeleteWorkflow': grpc.unary_unary_rpc_method_handler(
+          servicer.DeleteWorkflow,
+          request_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.DeleteWorkflowRequest.FromString,
+          response_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Empty.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

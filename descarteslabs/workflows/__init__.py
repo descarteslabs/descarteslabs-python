@@ -64,11 +64,11 @@ from .models import (
     JobComputeError,
     JobTimeoutError,
     Workflow,
+    VersionedGraft,
     Job,
     XYZ,
     XYZErrorListener,
     compute as _compute,
-    retrieve,
     use,
     publish as _publish,
 )
@@ -219,9 +219,83 @@ def compute(
     )
 
 
-def publish(obj, name="", description="", client=None):
+def publish(
+    obj,
+    id,
+    version,
+    title="",
+    description="",
+    public=False,
+    labels=None,
+    tags=None,
+    docstring="",
+    version_labels=None,
+    client=None,
+):
+    """
+    Publish a proxy object as a `Workflow` with the given version.
+
+    Parameters
+    ----------
+    obj: Proxytype
+        A proxy object to compute
+    id: str
+        ID for the new `Workflow`. This should be of the form ``"email:workflow_name"``
+        and should be globally unique. If this ID is not of the proper format, you will
+        not be able to save the `Workflow`.
+    version: str
+        The version to be set, tied to the given `proxy_object`. This should adhere
+        to the semantic versioning schema (https://semver.org).
+    title: str, default ""
+        User-friendly title for the `Workflow`.
+    description: str, default ""
+        Long-form description of this `Workflow`. Markdown is supported.
+    public: bool, default `False`
+        Whether this `Workflow` will be publicly accessible.
+    labels: dict, optional
+        Key-value pair labels to add to the `Workflow`.
+    tags: list, optional
+        A list of strings to add as tags to the `Workflow`.
+    docstring: str, default ""
+        The docstring for this version.
+    version_labels: dict, optional
+        Key-value pair labels to add to the version.
+    client: `.workflows.client.Client`, optional
+        Allows you to use a specific client instance with non-default
+        auth and parameters
+
+    Returns
+    -------
+    workflow: `Workflow`
+        The saved `Workflow` object. ``workflow.id`` contains the ID of the new Workflow.
+
+    Example
+    -------
+    >>> from descarteslabs.workflows import Image, Function
+    >>> def ndvi(img):
+    ...     nir, red = img.unpack_bands("nir red")
+    ...     return (nir - red) / (nir + red)
+    >>> func = Function.from_callable(ndvi, Image)
+    >>> workflow = wf.publish(func, "bob@gmail.com:ndvi", "v0.0.1") # doctest: +SKIP
+    >>> workflow # doctest: +SKIP
+    <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
+    >>> workflow.version_names # doctest: +SKIP
+    ["v0.0.1"]
+    """
     obj = proxify(obj)
-    return _publish(obj, name, description, client)
+    return _publish(
+        obj,
+        id,
+        version,
+        title=title,
+        description=description,
+        public=public,
+        labels=labels,
+        tags=tags,
+        docstring=docstring,
+        version_labels=version_labels,
+        client=client,
+    )
 
 
 __all__ = [
@@ -288,10 +362,10 @@ __all__ = [
     "JobComputeError",
     "JobTimeoutError",
     "Workflow",
+    "VersionedGraft",
     "Job",
     "XYZ",
     "XYZErrorListener",
-    "retrieve",
     "use",
     # .env
     "env",
@@ -409,16 +483,45 @@ def _compute_mixin(
     )
 
 
-def _publish_mixin(self, name="", description="", client=None):
+def _publish_mixin(
+    self,
+    id,
+    version,
+    title="",
+    description="",
+    public=False,
+    labels=None,
+    tags=None,
+    docstring="",
+    version_labels=None,
+    client=None,
+):
     """
-    Publish this proxy object as a `.Workflow`.
+    Publish this proxy object as a `.Workflow` version.
 
     Parameters
     ----------
-    name: str, default ""
-        Name for the new `.Workflow`
+    id: str
+        ID for the new `Workflow`. This should be of the form ``"email:workflow_name"``
+        and should be globally unique. If this ID is not of the proper format, you will
+        not be able to save the `Workflow`.
+    version: str
+        The version to be set, tied to the given `proxy_object`. This should adhere
+        to the semantic versioning schema.
+    title: str, default ""
+        User-friendly title for the `Workflow`.
     description: str, default ""
-        Long-form description of this `.Workflow`. Markdown is supported.
+        Long-form description of this `Workflow`. Markdown is supported.
+    public: bool, default `False`
+        Whether this `Workflow` will be publicly accessible.
+    labels: dict, optional
+        Key-value pair labels to add to the `Workflow`.
+    tags: list, optional
+        A list of tag strings to add to the `Workflow`.
+    docstring: str, default ""
+        The docstring for this version.
+    version_labels: dict, optional
+        Key-value pair labels to add to the version.
     client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
@@ -428,7 +531,19 @@ def _publish_mixin(self, name="", description="", client=None):
     workflow: `.Workflow`
         The saved `.Workflow` object. ``workflow.id`` contains the ID of the new Workflow.
     """
-    return publish(self, name, description, client)
+    return publish(
+        self,
+        id,
+        version,
+        title=title,
+        description=description,
+        public=public,
+        labels=labels,
+        tags=tags,
+        docstring=docstring,
+        version_labels=version_labels,
+        client=client,
+    )
 
 
 def _inspect_mixin(

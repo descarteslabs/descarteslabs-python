@@ -1,8 +1,9 @@
 from .exceptions import JobComputeError, JobTimeoutError
 from .workflow import Workflow
+from .versionedgraft import VersionedGraft
 from .job import Job
 from .xyz import XYZ, XYZErrorListener
-from .toplevel import compute, publish, retrieve, use
+from .toplevel import compute, publish, use
 
 __all__ = [
     # .exceptions
@@ -10,6 +11,8 @@ __all__ = [
     "JobTimeoutError",
     # .workflow
     "Workflow",
+    # .versionedgraft
+    "VersionedGraft",
     # .job
     "Job",
     # .xyz
@@ -18,6 +21,5 @@ __all__ = [
     # .toplevel
     "compute",
     "publish",
-    "retrieve",
     "use",
 ]

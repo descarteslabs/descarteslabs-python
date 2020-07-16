@@ -1,4 +1,5 @@
 from .workflow import Workflow
+from .versionedgraft import VersionedGraft
 from .job import Job
 
 
@@ -131,18 +132,47 @@ def compute(
         return job
 
 
-def publish(obj, name="", description="", client=None):
+def publish(
+    obj,
+    id,
+    version,
+    title="",
+    description="",
+    public=False,
+    labels=None,
+    tags=None,
+    docstring="",
+    version_labels=None,
+    client=None,
+):
     """
-    Publish a proxy object as a `Workflow`.
+    Publish a proxy object as a `Workflow` with the given version.
 
     Parameters
     ----------
     obj: Proxytype
         A proxy object to compute
-    name: str, default ""
-        Name for the new `Workflow`
+    id: str
+        ID for the new `Workflow`. This should be of the form ``"email:workflow_name"``
+        and should be globally unique. If this ID is not of the proper format, you will
+        not be able to save the `Workflow`.
+    version: str
+        The version to be set, tied to the given `proxy_object`. This should adhere
+        to the semantic versioning schema.
+    title: str, default ""
+        User-friendly title for the `Workflow`.
     description: str, default ""
         Long-form description of this `Workflow`. Markdown is supported.
+    public: bool, default `False`
+        Whether this `Workflow` will be publicly accessible.
+    labels: dict, optional
+        Key-value pair labels to add to the `Workflow`.
+    tags: list, optional
+        A list of tag strings to add to the `Workflow`.
+    docstring: str, default ""
+        The docstring for this version.
+    version_labels: dict, optional
+        Key-value pair labels to add to the version.
     client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
@@ -159,69 +189,38 @@ def publish(obj, name="", description="", client=None):
     ...     nir, red = img.unpack_bands("nir red")
     ...     return (nir - red) / (nir + red)
     >>> func = Function.from_callable(ndvi, Image)
-    >>> workflow = func.publish("NDVI") # doctest: +SKIP
+    >>> workflow = wf.publish(func, "bob@gmail.com:ndvi", "v0.0.1") # doctest: +SKIP
     >>> workflow # doctest: +SKIP
     <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
+    >>> workflow.version_names # doctest: +SKIP
+    ["v0.0.1"]
     """
-    workflow = Workflow.build(obj, name=name, description=description, client=client)
+    workflow = Workflow(
+        id,
+        title=title,
+        description=description,
+        public=public,
+        labels=labels,
+        tags=tags,
+        client=client,
+    )
+    workflow.set_version(
+        version, proxy_object=obj, docstring=docstring, labels=version_labels
+    )
     workflow.save()
     return workflow
 
 
-def retrieve(workflow_id, client=None):
+def use(workflow_id, version, client=None):
     """
-    Load a published `Workflow` object.
+    Use like ``import``: load the proxy object of a published `Workflow` version.
 
     Parameters
     ----------
     workflow_id: str
         ID of the `Workflow` to retrieve
-    client: Compute, optional
-        Allows you to use a specific client instance with non-default
-        auth and parameters
-
-    Returns
-    -------
-    workflow: `Workflow`
-        Object representing the workflow, including both its metadata
-        (like ``workflow.name``, ``workflow.description``) and proxy object
-        (``workflow.object``).
-
-    Example
-    -------
-    >>> from descarteslabs.workflows import Image, Function, retrieve
-    >>> def ndvi(img):
-    ...     nir, red = img.unpack_bands("nir red")
-    ...     return (nir - red) / (nir + red)
-    >>> func = Function.from_callable(ndvi, Image) # create a function that can be called on an Image
-    >>> workflow = func.publish("NDVI") # doctest: +SKIP
-    >>> workflow.id # doctest: +SKIP
-    '42cea96a864811f00f0bcdb8177ba80d6dc9c7492e13e794'
-    >>> same_workflow = retrieve('42cea96a864811f00f0bcdb8177ba80d6dc9c7492e13e794') # doctest: +SKIP
-    >>> same_workflow # doctest: +SKIP
-    <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
-    >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
-    >>> same_workflow.object(img).compute(geoctx) # geoctx is an arbitrary geocontext for 'img' # doctest: +SKIP
-    >>> # notice the bandname is comprised of the operations called to create it
-    ImageResult:
-      * ndarray: MaskedArray<shape=(1, 512, 512), dtype=float64>
-      * properties: 'absolute_orbit', 'acquired', 'archived', 'area', ...
-      * bandinfo: 'nir_sub_red_div_nir_add_red'
-      * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
-    """
-    return Workflow.get(workflow_id, client=client)
-
-
-def use(workflow_id, client=None):
-    """
-    Use like ``import``: load the proxy object of a published `Workflow`.
-
-    Shorthand for ``retrieve(workflow_id).object``.
-
-    Parameters
-    ----------
-    workflow_id: str
-        ID of the `Workflow` to retrieve
+    version: str
+        Version of the workflow to retrive
     client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters
@@ -229,7 +228,7 @@ def use(workflow_id, client=None):
     Returns
     -------
     obj: Proxytype
-        Proxy object of the `Workflow`.
+        Proxy object of the `Workflow` version.
 
     Example
     -------
@@ -238,10 +237,10 @@ def use(workflow_id, client=None):
     ...     nir, red = img.unpack_bands("nir red")
     ...     return (nir - red) / (nir + red)
     >>> func = Function.from_callable(ndvi, Image) # create a function that can be called on an Image
-    >>> workflow = func.publish("NDVI") # doctest: +SKIP
+    >>> workflow = wf.publish(func, "bob@gmail.com:ndvi", "v0.0.1") # doctest: +SKIP
     >>> workflow.id # doctest: +SKIP
-    '42cea96a864811f00f0bcdb8177ba80d6dc9c7492e13e794'
-    >>> same_function = use('42cea96a864811f00f0bcdb8177ba80d6dc9c7492e13e794') # doctest: +SKIP
+    'bob@gmail.com:ndvi'
+    >>> same_function = use('bob@gmail.com:ndvi') # doctest: +SKIP
     >>> same_function # doctest: +SKIP
     <descarteslabs.workflows.types.function.function.Function[Image, {}, Image] object at 0x...>
     >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
@@ -249,4 +248,4 @@ def use(workflow_id, client=None):
     ImageResult:
     ...
     """
-    return retrieve(workflow_id, client=client).object
+    return VersionedGraft.get(workflow_id, version, client=client).object
