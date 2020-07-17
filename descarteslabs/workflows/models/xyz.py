@@ -1,3 +1,4 @@
+import os
 import json
 import threading
 import urllib
@@ -45,7 +46,9 @@ class XYZ(object):
     <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
     """
 
-    BASE_URL = "https://workflows.descarteslabs.com"
+    BASE_URL = "https://" + os.environ.get(
+        "DESCARTESLABS_WORKFLOWS_TILES_HOST", "workflows.descarteslabs.com"
+    )
 
     def __init__(self, proxy_object, proto_message, client=None):
         """
