@@ -29,11 +29,10 @@ _pyarrow_content_type = field_name_to_mimetype["pyarrow"]
 class InspectClient(Service):
     RETRY_CONFIG = Retry(
         total=3,
-        connect=2,
-        read=2,
-        status=2,
         backoff_factor=random.uniform(1, 3),
-        method_whitelist=frozenset([HttpRequestMethod.HEAD, HttpRequestMethod.GET]),
+        method_whitelist=frozenset(
+            [HttpRequestMethod.HEAD, HttpRequestMethod.GET, HttpRequestMethod.POST]
+        ),
         status_forcelist=[
             HttpStatusCode.BadGateway,
             HttpStatusCode.ServiceUnavailable,
