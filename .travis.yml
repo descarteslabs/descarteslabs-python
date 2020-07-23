@@ -2,17 +2,18 @@ language: python
 python:
 - '3.5'
 - '3.6'
-matrix:
+- '3.7'
+jobs:
   include:
     # Direct Python support is not yet supported in Travis so manual installation
     # via choco and conda is required for now. Based on tips grafted from
     # https://travis-ci.community/t/python-support-on-windows/241/4
     - os: windows
-      language: sh
+      language: shell
       python: '3.7'
       filter_secrets: false
       before_install:
-        - choco install miniconda3
+        - choco install miniconda3 --version=4.7.12.1
         # python is in miniconda3, conda is in miniconda3/Scripts, openssl is in miniconda3/Library/bin
         - export PATH="/c/Tools/miniconda3:/c/Tools/miniconda3/Scripts:/c/Tools/miniconda3/Library/bin:$PATH"
         - conda install shapely numpy --yes
