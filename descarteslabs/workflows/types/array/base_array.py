@@ -1,7 +1,7 @@
 from ... import env
 from .dtype import DType
 from .scalar import Scalar
-from ..containers import Dict, Ellipsis as wf_Ellipsis, List, Slice, Tuple
+from ..containers import Dict, KnownDict, Ellipsis as wf_Ellipsis, List, Slice, Tuple
 from ..core import typecheck_promote, allow_reflect, Proxytype, ProxyTypeError
 from ..mixins import NumPyMixin
 from ..primitives import Bool, Int, Str, NoneType
@@ -182,14 +182,14 @@ class BaseArray(NumPyMixin, Proxytype):
         """
         from ..geospatial import ImageCollection
 
-        if not isinstance(properties, (type(None), dict, list, Dict, List)):
+        if not isinstance(properties, (type(None), dict, list, Dict, KnownDict, List)):
             raise TypeError(
                 "Provided properties must be a Dict (3-dimensional Array) or List (4-dimensional Array), got {}".format(
                     type(properties)
                 )
             )
 
-        if not isinstance(bandinfo, (type(None), dict, Dict)):
+        if not isinstance(bandinfo, (type(None), dict, Dict, KnownDict)):
             raise TypeError(
                 "Provided bandinfo must be a Dict, got {}".format(type(properties))
             )
