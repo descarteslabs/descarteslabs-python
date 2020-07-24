@@ -34,7 +34,13 @@ class Number(NumPyMixin, Primitive):
     """
 
     def __init__(self, obj):
-        if isinstance(obj, Number) and not self._is_generic() or isinstance(obj, Bool):
+        from .string import Str
+
+        if (
+            isinstance(obj, Number)
+            and not self._is_generic()
+            or isinstance(obj, (Bool, Str))
+        ):
             if isinstance(obj, type(self)):
                 self.graft = obj.graft
             else:
@@ -48,10 +54,12 @@ class Number(NumPyMixin, Primitive):
 
     @classmethod
     def _promote(cls, obj):
+        from .string import Str
+
         if isinstance(obj, cls):
             return obj
-        elif isinstance(obj, Number):
-            # Another Number that isn't our type:
+        elif isinstance(obj, (Number, Str)):
+            # Another Number that isn't our type, or a string:
             # we won't auto-convert it
             raise ProxyTypeError(
                 "Cannot promote {} to {}. "

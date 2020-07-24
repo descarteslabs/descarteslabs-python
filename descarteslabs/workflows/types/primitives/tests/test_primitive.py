@@ -31,7 +31,7 @@ def test_constructor_from_own_type():
 
 def test_construct_from_unsupported_proxy_type():
     with pytest.raises(ProxyTypeError, match="Cannot promote"):
-        Int(Str(""))
+        Int(NoneType(None))
 
 
 def test_constructor_from_any():

@@ -6,6 +6,7 @@ import numpy as np
 from ...core import ProxyTypeError
 from ...containers import Tuple, List
 from ..bool_ import Bool
+from ..string import Str
 from ..number import Float, Int, Number, _binop_result
 
 from ...core.tests.utils import operator_test
@@ -58,8 +59,20 @@ class TestConstruct(object):
         assert isinstance(i, Int)
         assert i.graft[i.graft["returns"]][0] == "wf.Int.cast"
 
+        i = Int(Str("1"))
+        assert isinstance(i, Int)
+        assert i.graft[i.graft["returns"]][0] == "wf.Int.cast"
+
     def test_explicit_cast_to_float(self):
         f = Float(Int(1))
+        assert isinstance(f, Float)
+        assert f.graft[f.graft["returns"]][0] == "wf.Float.cast"
+
+        f = Float(Bool(True))
+        assert isinstance(f, Float)
+        assert f.graft[f.graft["returns"]][0] == "wf.Float.cast"
+
+        f = Float(Str("1"))
         assert isinstance(f, Float)
         assert f.graft[f.graft["returns"]][0] == "wf.Float.cast"
 
