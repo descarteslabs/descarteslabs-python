@@ -655,7 +655,6 @@ NUMPY_SIGNATURES = {
                 Param("num", Int, 50),
                 Param("endpoint", Bool, True),
                 Param("dtype", Union[DType, NoneType], None),
-                Param("axis", Int, 0),
             ],
             Array,
         )
