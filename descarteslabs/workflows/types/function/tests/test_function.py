@@ -189,17 +189,67 @@ class TestFunction(object):
             Function[Int, {}, "test"]
 
     def test_from_callable(self):
-        def py_func(a, b, c):
+        def py_func(a: Int, b: Float, c: Int) -> Float:
+            "my func"
             return (a + b) / c
 
         func = Function.from_callable(py_func)
-        assert isinstance(func, Function[Any, Any, Any, {}, Any])
+        assert isinstance(func, Function[Int, Float, Int, {}, Float])
+        assert func.__doc__ == "my func"
 
-        result = func(7, 1, 4)
+        result = func(7, 1.0, 4)
         interpreted = interpreter.interpret(
-            result.graft, builtins={"wf.add": operator.add, "wf.div": operator.truediv}
+            result.graft,
+            builtins={
+                "wf.numpy.add": operator.add,
+                "wf.numpy.true_divide": operator.truediv,
+            },
         )()
         assert interpreted == 2
+
+    def test_from_callable_infer_return(self):
+        def py_func(a: Int, b: Float, c: Int):
+            return (a + b) / c
+
+        func = Function.from_callable(py_func)
+        assert isinstance(func, Function[Int, Float, Int, {}, Float])
+
+    def test_from_callable_proxyfunc(self):
+        func = Function[Int, {}, Int]("foo")
+
+        assert Function.from_callable(func) is func
+        assert Function.from_callable(func, Int) is func
+
+        with pytest.raises(TypeError, match="Expected a Function with parameters"):
+            Function.from_callable(func, Str)
+
+    def test_from_callable_bad_annotations(self):
+        def py_func(a: Int, b: int):
+            pass
+
+        with pytest.raises(
+            TypeError,
+            match="For parameter 'b' to function 'py_func': type annotation must be a Proxytype",
+        ):
+            Function.from_callable(py_func)
+
+        def py_func(a: Int, b: Int) -> float:
+            pass
+
+        with pytest.raises(
+            TypeError,
+            match="For return type of function 'py_func': type annotation must be a Proxytype",
+        ):
+            Function.from_callable(py_func)
+
+        def py_func(a: Int, b) -> Int:
+            pass
+
+        with pytest.raises(
+            TypeError,
+            match="No type annotation given for parameter 'b' to function 'py_func'",
+        ):
+            Function.from_callable(py_func)
 
     def test_returns_closure(self):
         def outer(a):

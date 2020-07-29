@@ -20,7 +20,7 @@ from descarteslabs.workflows import _channel
 class TestVersionedGraft(object):
     def test_build(self, stub):
         obj = Int(42)
-        version = "v0.0.1"
+        version = "0.0.1"
         docstring = "int 42"
         labels = {
             "github_url": "http://github.com/someurl",
@@ -39,7 +39,7 @@ class TestVersionedGraft(object):
 
     def test_from_proto(self, stub):
         obj = Int(40) + Int(42)
-        version = "v0.0.1"
+        version = "0.0.1"
         versionedGraft = VersionedGraft(version, obj)
 
         proto_msg = versionedGraft._message
@@ -50,7 +50,7 @@ class TestVersionedGraft(object):
 
     def test_get(self, stub):
         workflow_id = "foobar"
-        version = "v0.0.1"
+        version = "0.0.1"
 
         message = "foo"
 
@@ -68,7 +68,7 @@ class TestVersionedGraft(object):
 
     def test_incompatible_channel(self, stub):
         obj = Int(42)
-        version = "v0.0.1"
+        version = "0.0.1"
         vg = VersionedGraft(version, obj)
         vg._message.channel = "foobar"
 

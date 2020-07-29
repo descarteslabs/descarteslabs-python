@@ -46,7 +46,7 @@ class VersionedGraft:
             serialized_graft=json.dumps(graft),
             channel=_channel.__channel__,
             typespec=typespec,
-            docstring=docstring,
+            docstring=textwrap.dedent(docstring),
             labels=labels,
         )
         self._object = proxy_object
@@ -150,6 +150,7 @@ class VersionedGraft:
             graft = json.loads(self._message.serialized_graft)
             isolated = graft_client.isolate_keys(graft)
             proxy_obj = proxy_type._from_graft(isolated)
+            proxy_obj.__doc__ = self.docstring
             self._object = proxy_obj
 
         return self._object
@@ -162,7 +163,7 @@ class VersionedGraft:
     def __repr__(self):
         return """\
 VersionedGraft: {self.version}
-    - type: {self.type}
+    - type: {self.type.__name__}
     - labels: {self.labels}
     - channel: {self.channel}
     {docstring}

@@ -1,11 +1,12 @@
 import six
+import typing
 
 from inspect import signature
 
 from descarteslabs.common.graft import client
 
 from ...cereal import serializable
-from ..core import GenericProxytype, ProxyTypeError, assert_is_proxytype
+from ..core import Proxytype, GenericProxytype, ProxyTypeError, assert_is_proxytype
 from ..primitives import Any
 from ..identifier import identifier
 from ..proxify import proxify
@@ -33,6 +34,12 @@ class Function(GenericProxytype):
     Examples
     --------
     >>> from descarteslabs.workflows import Bool, Int, Float, Function
+    >>> @Function.from_callable
+    ... def pow(base: Int, exp: Float) -> Float:
+    ...     return base ** exp
+    >>> print(pow)
+    <descarteslabs.workflows.types.function.function.Function[Int, Float, {}, Float] object at 0x...>
+
     >>> func_type = Function[Int, {}, Int] # function with Int arg, no kwargs, returning an Int
     >>> func_type = Function[Int, {'x': Float}, Bool] # function with Int arg, kwarg 'x' of type Float, returning a Bool
     >>> func_type = Function[{}, Int] # zero-argument function, returning a Int
@@ -69,6 +76,8 @@ class Function(GenericProxytype):
             )
 
     def __call__(self, *args, **kwargs):
+        # TODO generate signature and annotations for this based on type_params.
+
         *arg_types, kwargs_types, return_type = self._type_params
         func_name = type(self).__name__
 
@@ -174,18 +183,31 @@ class Function(GenericProxytype):
         return new
 
     @classmethod
-    def from_callable(cls, func, *arg_types):
+    def from_callable(cls, func, *arg_types, return_type=None):
         """
         Construct a Workflows Function from a Python callable.
+
+        You must specify the types of arguments the function takes.
+        If the function has type annotations (preferable), `from_callable` can be used as a decorator::
+
+            @wf.Function.from_callable
+            def my_function(x: wf.Int, y: wf.Image) -> wf.ImageCollection:
+                ...
+
+        Otherwise, the argument types must be passed to `from_callable`.
 
         Parameters
         ----------
         func: Python callable
-        *arg_types: ProxyType
+        *arg_types: Proxytype, optional
             For each parameter of ``func``, the type that it should accept.
             The number of argument types given much match the number of arguments ``func`` actually accepts.
-            If not given, the number of parameters is inferred from the function's signature,
-            and `Any` is the type used for each.
+            If not given, ``func`` must have type annotations for all of its arguments.
+            If ``func`` has type annotations, but ``arg_types`` are also given explicitly, then the annotations
+            are ignored.
+        return_type: Proxytype, optional
+            The type the function should return. If not given, and there is no return type annotation,
+            the return type will be inferred from what the function actually returns when called.
 
         Returns
         -------
@@ -193,26 +215,62 @@ class Function(GenericProxytype):
 
         Example
         -------
-        >>> from descarteslabs.workflows import Function, Int, Image
-        >>> my_img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
-        >>> def my_add(x, y):
-        ...     return x + y # function taking two values and adding them together
-        >>> my_func = Function.from_callable(my_add, Image, Int) # Image and Int are the argument types
-        >>> my_func
-        <descarteslabs.workflows.types.function.function.Function[Image, Int, {}, Image] object at 0x...>
-        >>> my_func(my_img, 10).compute(my_geoctx) # my_geoctx is an arbitrary geocontext for 'img' # doctest: +SKIP
-        ImageResult:
-        ...
+        >>> import descarteslabs.workflows as wf
+        >>> @wf.Function.from_callable  # types inferred from annotations
+        ... def string_pow(base: wf.Str, exp: wf.Float) -> wf.Float:
+        ...     return wf.Float(base) ** exp
+        >>> print(string_pow)
+        <descarteslabs.workflows.types.function.function.Function[Str, Float, {}, Float] object at 0x...>
+
+        >>> # or, passing Str and Float as the argument types explicitly:
+        >>> def string_pow(base, exp):
+        ...     return wf.Float(base) ** exp
+        >>> wf_pow = Function.from_callable(string_pow, wf.Str, wf.Float, return_type=wf.Float)
+        >>> wf_pow
+        <descarteslabs.workflows.types.function.function.Function[Str, Float, {}, Float] object at 0x...>
+        >>> wf_pow("3", 2.0).inspect()  # doctest: +SKIP
+        9.0
         """
-        # TODO(gabe): use type annotations for great good!
+        if isinstance(func, Function):
+            if len(arg_types) > 0 and func.arg_types != arg_types:
+                # TODO contravariant checking of arg types! this is a very unhelpful check.
+                raise TypeError(
+                    "Expected a Function with parameters: {}. "
+                    "Got one with parameters: {}.".format(arg_types, func.arg_types)
+                )
+            return func
+
         if len(arg_types) == 0:
-            func_signature = signature(func)
-            arg_types = (Any,) * len(func_signature.parameters)
-        result = cls._delay(func, None, *arg_types)
+            arg_types, return_type = arg_types_from_annotations(func)
+            arg_names = tuple(signature(func).parameters)
+        else:
+            arg_names = tuple(range(len(arg_types)))
+
+        for arg_type, name in zip(arg_types, arg_names):
+            if not issubclass(arg_type, Proxytype):
+                raise TypeError(
+                    "For parameter {!r} to function {!r}: type annotation must be a Proxytype, "
+                    "not {}".format(name, func.__name__, arg_type)
+                )
+
+        if return_type is not None and not issubclass(return_type, Proxytype):
+            raise TypeError(
+                "For return type of function {!r}: "
+                "type annotation must be a Proxytype, not {}".format(
+                    func.__name__, return_type
+                )
+            )
+
+        result = cls._delay(func, return_type, *arg_types)
         result_type = type(result)
 
         concrete_type = cls[arg_types + ({}, result_type)]
-        return concrete_type._from_graft(result.graft)
+        instance = concrete_type._from_graft(result.graft)
+
+        if func.__doc__:
+            instance.__doc__ = func.__doc__
+
+        return instance
 
     # NOTE(gabe): this method will inherently fail to describe functions that return literals,
     # since if you just return a literal value from `func` that didn't interact with
@@ -297,3 +355,36 @@ class Function(GenericProxytype):
                 result, *tuple(func_signature.parameters), first_guid=first_guid
             )
         )
+
+
+def arg_types_from_annotations(func):
+    sig = signature(func)
+    hints = typing.get_type_hints(func)
+
+    argtypes = []
+    for name, param in sig.parameters.items():
+        if not (
+            param.kind is param.POSITIONAL_ONLY
+            or (
+                param.kind is param.POSITIONAL_OR_KEYWORD
+                and param.default is param.empty
+            )
+        ):
+            raise TypeError(
+                "Workflows functions can only have fixed positional arguments without default values. "
+                "Parameter {!r} to {!r} violates this.".format(name, func.__name__)
+            )
+
+        try:
+            argtype = hints[name]
+        except KeyError:
+            raise TypeError(
+                "No type annotation given for parameter {!r} to function {!r}".format(
+                    name, func.__name__
+                )
+            )
+
+        argtypes.append(argtype)
+
+    returns = hints.get("return", None)
+    return tuple(argtypes), returns

@@ -31,16 +31,16 @@ class Workflow:
         - labels: {'project': 'arithmetic'}
         - tags: ['test', 'cool', 'deep learning', 'AI', 'digital twin']
         - versions: '0.0.1'
-            The result of 1 plus 1
+        The result of 1 plus 1
     >>> workflow.get_version("0.0.1").object  # doctest: +SKIP
     <descarteslabs.workflows.types.primitives.number.Int object at 0x...>
-    >>> workflow.get_version("0.0.1").object.compute()  # doctest: +SKIP
+    >>> workflow.get_version("0.0.1").object.inspect()  # doctest: +SKIP
     2
 
     >>> workflow.set_version(num + 2, version="0.0.2", docstring="1 + 2")  # doctest: +SKIP
     >>> workflow.description = "The result of 1 + 2"  # doctest: +SKIP
     >>> workflow.save()  # doctest: +SKIP
-    >>> workflow.get_version("0.0.2").object.compute()  # doctest: +SKIP
+    >>> workflow.get_version("0.0.2").object.inspect()  # doctest: +SKIP
     3
     >>> workflow  # doctest: +SKIP
     Workflow: "Bob's Super Cool Addition Model"
@@ -49,7 +49,7 @@ class Workflow:
         - labels: {'project': 'arithmetic'}
         - tags: ['test', 'cool', 'deep learning', 'AI', 'digital twin']
         - versions: '0.0.1', '0.0.2'
-            The result of 1 plus 2
+        The result of 1 plus 2
     """
 
     def __init__(
@@ -107,7 +107,7 @@ class Workflow:
             - labels: {'project': 'arithmetic'}
             - tags: ['test', 'cool', 'deep learning', 'AI', 'digital twin']
             - versions: '0.0.1', '0.0.2'
-                The result of 1 plus 1
+            The result of 1 plus 1
         """
         if client is None:
             client = get_global_grpc_client()
@@ -115,7 +115,7 @@ class Workflow:
         message = workflow_pb2.Workflow(
             id=id,
             title=title,
-            description=description,
+            description=textwrap.dedent(description),
             public=public,
             labels=labels,
             tags=tags,
@@ -152,7 +152,7 @@ class Workflow:
             - labels: {'project': 'arithmetic'}
             - tags: ['test', 'cool', 'deep learning', 'AI', 'digital twin']
             - versions: '0.0.1', '0.0.2'
-                The result of 1 plus 1
+            The result of 1 plus 1
         """
         if client is None:
             client = get_global_grpc_client()
@@ -313,7 +313,7 @@ class Workflow:
         self._message = new_message
         return self
 
-    def set_version(self, version, proxy_object=None, docstring="", labels=None):
+    def set_version(self, version, obj=None, docstring="", labels=None):
         """
         Register a version to an object. Can also be used as a decorator.
 
@@ -322,11 +322,11 @@ class Workflow:
         Parameters
         ----------
         version: str
-            The version to be set, tied to the given `proxy_object`. This should adhere
+            The version to be set, tied to the given `obj`. This should adhere
             to the semantic versioning schema (https://semver.org).
-        proxy_object: Proxytype, optional
+        obj: Proxytype, optional
             The object to store as this version. If not provided, it's assumed
-            that `set_version` is being used as a decorator.
+            that `set_version` is being used as a decorator on a function.
         docstring: str, default ""
             The docstring for this version. If not provided and `set_version` is not
             being used as a decorator, then the version's docstring will be set to the
@@ -338,16 +338,16 @@ class Workflow:
 
         Returns
         -------
-        version: VersionedGraft
+        version: VersionedGraft or Function
             The version set.
+            If used as a decorator, returns the `~.Function` instead.
         """
-        if proxy_object is None:
+        if obj is None:
             # decorator format
             def version_decorator(py_func):
-                from descarteslabs.workflows import Function
+                from descarteslabs.workflows.types import Function
 
                 wf_func = Function.from_callable(py_func)
-                # ^ TODO use wf.function [WF-28]
                 docstring_ = docstring
                 if not docstring_:
                     docstring_ = textwrap.dedent(py_func.__doc__)
@@ -357,7 +357,7 @@ class Workflow:
             return version_decorator
 
         new_vg = VersionedGraft(
-            version, proxy_object, docstring=docstring, labels=labels
+            version, obj, docstring=docstring, labels=labels
         )
 
         for v in self._message.versioned_grafts:
@@ -429,7 +429,7 @@ class Workflow:
         Note
         ----
         You can also use indexing syntax as shorthand for `get_version`:
-        ``workflow["v1.0.0"]`` is equivalent to ``workflow.get_version("v1.0.0")``.
+        ``workflow["1.0.0"]`` is equivalent to ``workflow.get_version("1.0.0")``.
 
         Parameters
         ----------
@@ -540,7 +540,7 @@ class Workflow:
 
     @description.setter
     def description(self, description):
-        self._message.description = description
+        self._message.description = textwrap.dedent(description)
 
     @property
     def labels(self):

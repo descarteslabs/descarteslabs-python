@@ -133,9 +133,9 @@ def compute(
 
 
 def publish(
-    obj,
     id,
     version,
+    obj=None,
     title="",
     description="",
     public=False,
@@ -146,12 +146,10 @@ def publish(
     client=None,
 ):
     """
-    Publish a proxy object as a `Workflow` with the given version.
+    Publish a proxy object as a `Workflow` with the given version. Can also be used as a decorator.
 
     Parameters
     ----------
-    obj: Proxytype
-        A proxy object to compute
     id: str
         ID for the new `Workflow`. This should be of the form ``"email:workflow_name"``
         and should be globally unique. If this ID is not of the proper format, you will
@@ -159,6 +157,9 @@ def publish(
     version: str
         The version to be set, tied to the given `proxy_object`. This should adhere
         to the semantic versioning schema.
+    obj: Proxytype
+        The object to store as this version. If not provided, it's assumed
+        that `publish` is being used as a decorator on a function.
     title: str, default ""
         User-friendly title for the `Workflow`.
     description: str, default ""
@@ -168,7 +169,7 @@ def publish(
     labels: dict, optional
         Key-value pair labels to add to the `Workflow`.
     tags: list, optional
-        A list of tag strings to add to the `Workflow`.
+        A list of strings to add as tags to the `Workflow`.
     docstring: str, default ""
         The docstring for this version.
     version_labels: dict, optional
@@ -179,21 +180,28 @@ def publish(
 
     Returns
     -------
-    workflow: `Workflow`
+    workflow: Workflow or Function
         The saved `Workflow` object. ``workflow.id`` contains the ID of the new Workflow.
+        If used as a decorator, returns the `~.Function` instead.
 
     Example
     -------
-    >>> from descarteslabs.workflows import Image, Function
-    >>> def ndvi(img):
+    >>> import descarteslabs.workflows as wf
+    >>> @wf.publish("bob@gmail.com:ndvi", "0.0.1") # doctest: +SKIP
+    ... def ndvi(img: wf.Image) -> wf.Image:
+    ...     "Compute the NDVI of an Image"
     ...     nir, red = img.unpack_bands("nir red")
     ...     return (nir - red) / (nir + red)
-    >>> func = Function.from_callable(ndvi, Image)
-    >>> workflow = wf.publish(func, "bob@gmail.com:ndvi", "v0.0.1") # doctest: +SKIP
+    >>> # `ndvi` becomes a Function proxy object
+    >>> ndvi  # doctest: +SKIP
+    <descarteslabs.workflows.types.Function[Image, {}, Image] object at 0x...>
+
+    >>> two = wf.Int(1) + 1
+    >>> workflow = wf.publish("bob@gmail.com:two", "1.0.0", two) # doctest: +SKIP
     >>> workflow # doctest: +SKIP
     <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
     >>> workflow.version_names # doctest: +SKIP
-    ["v0.0.1"]
+    ["1.0.0"]
     """
     workflow = Workflow(
         id,
@@ -204,9 +212,19 @@ def publish(
         tags=tags,
         client=client,
     )
-    workflow.set_version(
-        version, proxy_object=obj, docstring=docstring, labels=version_labels
+    vg_or_deco = workflow.set_version(
+        version, obj=obj, docstring=docstring, labels=version_labels
     )
+
+    if callable(vg_or_deco):
+        # decorator format
+        def publish_decorator(func):
+            wf_func = vg_or_deco(func)
+            workflow.save()
+            return wf_func
+
+        return publish_decorator
+
     workflow.save()
     return workflow
 
@@ -232,18 +250,16 @@ def use(workflow_id, version, client=None):
 
     Example
     -------
-    >>> from descarteslabs.workflows import Image, Function, use
-    >>> def ndvi(img):
+    >>> import descarteslabs.workflows as wf
+    >>> @wf.publish("bob@gmail.com:ndvi", "0.0.1") # doctest: +SKIP
+    ... def ndvi(img: wf.Image) -> wf.Image:
     ...     nir, red = img.unpack_bands("nir red")
     ...     return (nir - red) / (nir + red)
-    >>> func = Function.from_callable(ndvi, Image) # create a function that can be called on an Image
-    >>> workflow = wf.publish(func, "bob@gmail.com:ndvi", "v0.0.1") # doctest: +SKIP
-    >>> workflow.id # doctest: +SKIP
-    'bob@gmail.com:ndvi'
-    >>> same_function = use('bob@gmail.com:ndvi') # doctest: +SKIP
+
+    >>> same_function = wf.use("bob@gmail.com:ndvi", "0.0.1") # doctest: +SKIP
     >>> same_function # doctest: +SKIP
     <descarteslabs.workflows.types.function.function.Function[Image, {}, Image] object at 0x...>
-    >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+    >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
     >>> same_function(img).compute(geoctx) # geoctx is an arbitrary geocontext for 'img' # doctest: +SKIP
     ImageResult:
     ...

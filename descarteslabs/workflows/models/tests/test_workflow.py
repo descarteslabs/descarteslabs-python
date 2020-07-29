@@ -9,7 +9,7 @@ from descarteslabs.workflows.client import Client
 from descarteslabs.workflows.models import Workflow
 from descarteslabs.workflows.models.utils import pb_milliseconds_to_datetime
 from descarteslabs.workflows.models.tests import utils
-from descarteslabs.workflows.types import Int
+from descarteslabs.workflows.types import Int, Function
 
 
 @mock.patch(
@@ -100,7 +100,7 @@ class TestWorkflow(object):
         )
 
     def test_set_version(self, stub):
-        version = "v0.0.1"
+        version = "0.0.1"
         obj = Int(1)
         docstring = "the integer 1"
         labels = {"foo": "bar"}
@@ -118,8 +118,30 @@ class TestWorkflow(object):
         assert new_vg_proto.labels == labels
         assert new_vg_proto.serialized_graft == json.dumps(obj.graft)
 
+    def test_set_version_deco(self, stub):
+        version = "0.0.1"
+        labels = {"foo": "bar"}
+        wf = Workflow(id="bob@gmail.com:test")
+        assert len(wf._message.versioned_grafts) == 0
+
+        @wf.set_version(version, labels=labels)
+        def func(x: Int, y: Int):
+            "add stuff"
+            return x + y
+
+        assert isinstance(func, Function)
+
+        new_vg = wf[version]
+        assert new_vg.version == version
+        assert new_vg.docstring == "add stuff"
+        assert new_vg.labels == labels
+        assert len(wf._message.versioned_grafts) == 1
+        assert type(new_vg.object) == type(func)
+        new_vg_proto = wf._message.versioned_grafts[0]
+        assert new_vg_proto.serialized_graft == json.dumps(func.graft)
+
     def test_set_version_overwrite(self, stub):
-        version = "v0.0.1"
+        version = "0.0.1"
         obj = Int(1)
         docstring = "the integer 1"
         labels = {"foo": "bar"}
@@ -145,7 +167,7 @@ class TestWorkflow(object):
         assert new_vg_proto.serialized_graft == json.dumps(obj.graft)
 
     def test_get_version(self, stub):
-        version = "v0.0.1"
+        version = "0.0.1"
         obj = Int(1)
         wf = Workflow(id="bob@gmail.com:test")
         assert len(wf._message.versioned_grafts) == 0
@@ -163,7 +185,7 @@ class TestWorkflow(object):
             wf.get_version(version)
 
     def test_get_version_raises_doesnt_exist(self, stub):
-        version = "v0.0.1"
+        version = "0.0.1"
         wf = Workflow(id="bob@gmail.com:test")
         with pytest.raises(KeyError):
             wf.get_version(version)
