@@ -11,29 +11,110 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+from descarteslabs.common.proto.ibis import ibis_pb2 as descarteslabs_dot_common_dot_proto_dot_ibis_dot_ibis__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='descarteslabs/common/proto/vektorius/vektorius.proto',
-  package='descarteslabs.vektorius',
+  package='descarteslabs.vektorius.v1',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n4descarteslabs/common/proto/vektorius/vektorius.proto\x12\x17\x64\x65scarteslabs.vektorius\".\n\rSchemaRequest\x12\x1d\n\ntable_name\x18\x01 \x01(\tR\ttableName\"(\n\x0eSchemaResponse\x12\x16\n\x06schema\x18\x01 \x01(\tR\x06schema\"4\n\x03Job\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x16\n\x06status\x18\x02 \x01(\tR\x06status\"!\n\x0bRecordBatch\x12\x12\n\x04\x64\x61ta\x18\x01 \x01(\x0cR\x04\x64\x61ta\"m\n\x11\x43ontinuationToken\x12!\n\x0csession_data\x18\x01 \x01(\tR\x0bsessionData\x12\x16\n\x06offset\x18\x02 \x01(\x04R\x06offset\x12\x1d\n\ntotal_rows\x18\x03 \x01(\x04R\ttotalRows\"\x9e\x01\n\x11StreamingEpilogue\x12.\n\x03job\x18\x01 \x01(\x0b\x32\x1c.descarteslabs.vektorius.JobR\x03job\x12Y\n\x12\x63ontinuation_token\x18\x02 \x01(\x0b\x32*.descarteslabs.vektorius.ContinuationTokenR\x11\x63ontinuationToken\"%\n\rSearchRequest\x12\x14\n\x05query\x18\x01 \x01(\tR\x05query\"@\n\x0eSearchResponse\x12.\n\x03job\x18\x01 \x01(\x0b\x32\x1c.descarteslabs.vektorius.JobR\x03job\",\n\x13SearchStatusRequest\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\"F\n\x14SearchStatusResponse\x12.\n\x03job\x18\x01 \x01(\x0b\x32\x1c.descarteslabs.vektorius.JobR\x03job\"\xa5\x01\n\x14SearchResultsRequest\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12Y\n\x12\x63ontinuation_token\x18\x02 \x01(\x0b\x32*.descarteslabs.vektorius.ContinuationTokenR\x11\x63ontinuationToken\x12\x1b\n\tpage_size\x18\x03 \x01(\rR\x08pageSize\"\xa8\x01\n\x15SearchResultsResponse\x12<\n\x05\x62\x61tch\x18\x01 \x01(\x0b\x32$.descarteslabs.vektorius.RecordBatchH\x00R\x05\x62\x61tch\x12H\n\x08\x65pilogue\x18\x02 \x01(\x0b\x32*.descarteslabs.vektorius.StreamingEpilogueH\x00R\x08\x65pilogueB\x07\n\x05\x62lock2\xa3\x03\n\tVektorius\x12\\\n\tGetSchema\x12&.descarteslabs.vektorius.SchemaRequest\x1a\'.descarteslabs.vektorius.SchemaResponse\x12Y\n\x06Search\x12&.descarteslabs.vektorius.SearchRequest\x1a\'.descarteslabs.vektorius.SearchResponse\x12k\n\x0cSearchStatus\x12,.descarteslabs.vektorius.SearchStatusRequest\x1a-.descarteslabs.vektorius.SearchStatusResponse\x12p\n\rSearchResults\x12-.descarteslabs.vektorius.SearchResultsRequest\x1a..descarteslabs.vektorius.SearchResultsResponse0\x01\x62\x06proto3'
+  serialized_pb=b'\n4descarteslabs/common/proto/vektorius/vektorius.proto\x12\x1a\x64\x65scarteslabs.vektorius.v1\x1a*descarteslabs/common/proto/ibis/ibis.proto\"J\n\rSchemaRequest\x12\x1d\n\ntable_name\x18\x01 \x01(\tR\ttableName\x12\x1a\n\x08\x64\x61tabase\x18\x02 \x01(\tR\x08\x64\x61tabase\"c\n\x0eSchemaResponse\x12\x32\n\x06schema\x18\x01 \x01(\x0b\x32\x1a.descarteslabs.ibis.SchemaR\x06schema\x12\x1d\n\ntable_name\x18\x02 \x01(\tR\ttableName\"\xa6\x01\n\x03Job\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12>\n\x06status\x18\x02 \x01(\x0e\x32&.descarteslabs.vektorius.v1.Job.STATUSR\x06status\"H\n\x06STATUS\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07PENDING\x10\x01\x12\x0b\n\x07RUNNING\x10\x02\x12\x08\n\x04\x44ONE\x10\x03\x12\r\n\tCANCELLED\x10\x04\"!\n\x0bRecordBatch\x12\x12\n\x04\x64\x61ta\x18\x01 \x01(\x0cR\x04\x64\x61ta\"!\n\x05\x45rror\x12\x18\n\x07message\x18\x01 \x01(\tR\x07message\"\xbc\x01\n\x0cSearchStatus\x12\x31\n\x03job\x18\x01 \x01(\x0b\x32\x1f.descarteslabs.vektorius.v1.JobR\x03job\x12+\n\x11results_available\x18\x02 \x01(\x08R\x10resultsAvailable\x12\x1d\n\ntotal_rows\x18\x03 \x01(\x04R\ttotalRows\x12-\n\x12\x63ontinuation_token\x18\x04 \x01(\tR\x11\x63ontinuationToken\"@\n\rSearchRequest\x12/\n\x05query\x18\x01 \x01(\x0b\x32\x19.descarteslabs.ibis.QueryR\x05query\"R\n\x0eSearchResponse\x12@\n\x06status\x18\x01 \x01(\x0b\x32(.descarteslabs.vektorius.v1.SearchStatusR\x06status\"D\n\x13SearchStatusRequest\x12-\n\x12\x63ontinuation_token\x18\x01 \x01(\tR\x11\x63ontinuationToken\"X\n\x14SearchStatusResponse\x12@\n\x06status\x18\x01 \x01(\x0b\x32(.descarteslabs.vektorius.v1.SearchStatusR\x06status\"]\n\x14SearchResultsRequest\x12-\n\x12\x63ontinuation_token\x18\x01 \x01(\tR\x11\x63ontinuationToken\x12\x16\n\x06offset\x18\x02 \x01(\x04R\x06offset\"\xa5\x01\n\x15SearchResultsResponse\x12\x42\n\x06status\x18\x01 \x01(\x0b\x32(.descarteslabs.vektorius.v1.SearchStatusH\x00R\x06status\x12?\n\x05\x62\x61tch\x18\x02 \x01(\x0b\x32\'.descarteslabs.vektorius.v1.RecordBatchH\x00R\x05\x62\x61tchB\x07\n\x05\x62lock2\xbb\x03\n\tVektorius\x12\x62\n\tGetSchema\x12).descarteslabs.vektorius.v1.SchemaRequest\x1a*.descarteslabs.vektorius.v1.SchemaResponse\x12_\n\x06Search\x12).descarteslabs.vektorius.v1.SearchRequest\x1a*.descarteslabs.vektorius.v1.SearchResponse\x12q\n\x0cSearchStatus\x12/.descarteslabs.vektorius.v1.SearchStatusRequest\x1a\x30.descarteslabs.vektorius.v1.SearchStatusResponse\x12v\n\rSearchResults\x12\x30.descarteslabs.vektorius.v1.SearchResultsRequest\x1a\x31.descarteslabs.vektorius.v1.SearchResultsResponse0\x01\x62\x06proto3'
+  ,
+  dependencies=[descarteslabs_dot_common_dot_proto_dot_ibis_dot_ibis__pb2.DESCRIPTOR,])
+
+
+
+_JOB_STATUS = _descriptor.EnumDescriptor(
+  name='STATUS',
+  full_name='descarteslabs.vektorius.v1.Job.STATUS',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='UNKNOWN', index=0, number=0,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='PENDING', index=1, number=1,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='RUNNING', index=2, number=2,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DONE', index=3, number=3,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='CANCELLED', index=4, number=4,
+      serialized_options=None,
+      type=None),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=400,
+  serialized_end=472,
 )
-
-
+_sym_db.RegisterEnumDescriptor(_JOB_STATUS)
 
 
 _SCHEMAREQUEST = _descriptor.Descriptor(
   name='SchemaRequest',
-  full_name='descarteslabs.vektorius.SchemaRequest',
+  full_name='descarteslabs.vektorius.v1.SchemaRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='table_name', full_name='descarteslabs.vektorius.SchemaRequest.table_name', index=0,
+      name='table_name', full_name='descarteslabs.vektorius.v1.SchemaRequest.table_name', index=0,
       number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='tableName', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='database', full_name='descarteslabs.vektorius.v1.SchemaRequest.database', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='database', file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=128,
+  serialized_end=202,
+)
+
+
+_SCHEMARESPONSE = _descriptor.Descriptor(
+  name='SchemaResponse',
+  full_name='descarteslabs.vektorius.v1.SchemaResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='schema', full_name='descarteslabs.vektorius.v1.SchemaResponse.schema', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='schema', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='table_name', full_name='descarteslabs.vektorius.v1.SchemaResponse.table_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -50,60 +131,29 @@ _SCHEMAREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=81,
-  serialized_end=127,
-)
-
-
-_SCHEMARESPONSE = _descriptor.Descriptor(
-  name='SchemaResponse',
-  full_name='descarteslabs.vektorius.SchemaResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='schema', full_name='descarteslabs.vektorius.SchemaResponse.schema', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='schema', file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=129,
-  serialized_end=169,
+  serialized_start=204,
+  serialized_end=303,
 )
 
 
 _JOB = _descriptor.Descriptor(
   name='Job',
-  full_name='descarteslabs.vektorius.Job',
+  full_name='descarteslabs.vektorius.v1.Job',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='job_id', full_name='descarteslabs.vektorius.Job.job_id', index=0,
+      name='job_id', full_name='descarteslabs.vektorius.v1.Job.job_id', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='jobId', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='status', full_name='descarteslabs.vektorius.Job.status', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='status', full_name='descarteslabs.vektorius.v1.Job.status', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='status', file=DESCRIPTOR),
@@ -112,6 +162,7 @@ _JOB = _descriptor.Descriptor(
   ],
   nested_types=[],
   enum_types=[
+    _JOB_STATUS,
   ],
   serialized_options=None,
   is_extendable=False,
@@ -119,20 +170,20 @@ _JOB = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=171,
-  serialized_end=223,
+  serialized_start=306,
+  serialized_end=472,
 )
 
 
 _RECORDBATCH = _descriptor.Descriptor(
   name='RecordBatch',
-  full_name='descarteslabs.vektorius.RecordBatch',
+  full_name='descarteslabs.vektorius.v1.RecordBatch',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='data', full_name='descarteslabs.vektorius.RecordBatch.data', index=0,
+      name='data', full_name='descarteslabs.vektorius.v1.RecordBatch.data', index=0,
       number=1, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=b"",
       message_type=None, enum_type=None, containing_type=None,
@@ -150,39 +201,25 @@ _RECORDBATCH = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=225,
-  serialized_end=258,
+  serialized_start=474,
+  serialized_end=507,
 )
 
 
-_CONTINUATIONTOKEN = _descriptor.Descriptor(
-  name='ContinuationToken',
-  full_name='descarteslabs.vektorius.ContinuationToken',
+_ERROR = _descriptor.Descriptor(
+  name='Error',
+  full_name='descarteslabs.vektorius.v1.Error',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='session_data', full_name='descarteslabs.vektorius.ContinuationToken.session_data', index=0,
+      name='message', full_name='descarteslabs.vektorius.v1.Error.message', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='sessionData', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='offset', full_name='descarteslabs.vektorius.ContinuationToken.offset', index=1,
-      number=2, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='offset', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='total_rows', full_name='descarteslabs.vektorius.ContinuationToken.total_rows', index=2,
-      number=3, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='totalRows', file=DESCRIPTOR),
+      serialized_options=None, json_name='message', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -195,29 +232,43 @@ _CONTINUATIONTOKEN = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=260,
-  serialized_end=369,
+  serialized_start=509,
+  serialized_end=542,
 )
 
 
-_STREAMINGEPILOGUE = _descriptor.Descriptor(
-  name='StreamingEpilogue',
-  full_name='descarteslabs.vektorius.StreamingEpilogue',
+_SEARCHSTATUS = _descriptor.Descriptor(
+  name='SearchStatus',
+  full_name='descarteslabs.vektorius.v1.SearchStatus',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='job', full_name='descarteslabs.vektorius.StreamingEpilogue.job', index=0,
+      name='job', full_name='descarteslabs.vektorius.v1.SearchStatus.job', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='job', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='continuation_token', full_name='descarteslabs.vektorius.StreamingEpilogue.continuation_token', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='results_available', full_name='descarteslabs.vektorius.v1.SearchStatus.results_available', index=1,
+      number=2, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='resultsAvailable', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='total_rows', full_name='descarteslabs.vektorius.v1.SearchStatus.total_rows', index=2,
+      number=3, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='totalRows', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='continuation_token', full_name='descarteslabs.vektorius.v1.SearchStatus.continuation_token', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='continuationToken', file=DESCRIPTOR),
@@ -233,22 +284,22 @@ _STREAMINGEPILOGUE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=372,
-  serialized_end=530,
+  serialized_start=545,
+  serialized_end=733,
 )
 
 
 _SEARCHREQUEST = _descriptor.Descriptor(
   name='SearchRequest',
-  full_name='descarteslabs.vektorius.SearchRequest',
+  full_name='descarteslabs.vektorius.v1.SearchRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='query', full_name='descarteslabs.vektorius.SearchRequest.query', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='query', full_name='descarteslabs.vektorius.v1.SearchRequest.query', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='query', file=DESCRIPTOR),
@@ -264,25 +315,25 @@ _SEARCHREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=532,
-  serialized_end=569,
+  serialized_start=735,
+  serialized_end=799,
 )
 
 
 _SEARCHRESPONSE = _descriptor.Descriptor(
   name='SearchResponse',
-  full_name='descarteslabs.vektorius.SearchResponse',
+  full_name='descarteslabs.vektorius.v1.SearchResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='job', full_name='descarteslabs.vektorius.SearchResponse.job', index=0,
+      name='status', full_name='descarteslabs.vektorius.v1.SearchResponse.status', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='job', file=DESCRIPTOR),
+      serialized_options=None, json_name='status', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -295,25 +346,25 @@ _SEARCHRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=571,
-  serialized_end=635,
+  serialized_start=801,
+  serialized_end=883,
 )
 
 
 _SEARCHSTATUSREQUEST = _descriptor.Descriptor(
   name='SearchStatusRequest',
-  full_name='descarteslabs.vektorius.SearchStatusRequest',
+  full_name='descarteslabs.vektorius.v1.SearchStatusRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='job_id', full_name='descarteslabs.vektorius.SearchStatusRequest.job_id', index=0,
+      name='continuation_token', full_name='descarteslabs.vektorius.v1.SearchStatusRequest.continuation_token', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='jobId', file=DESCRIPTOR),
+      serialized_options=None, json_name='continuationToken', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -326,25 +377,25 @@ _SEARCHSTATUSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=637,
-  serialized_end=681,
+  serialized_start=885,
+  serialized_end=953,
 )
 
 
 _SEARCHSTATUSRESPONSE = _descriptor.Descriptor(
   name='SearchStatusResponse',
-  full_name='descarteslabs.vektorius.SearchStatusResponse',
+  full_name='descarteslabs.vektorius.v1.SearchStatusResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='job', full_name='descarteslabs.vektorius.SearchStatusResponse.job', index=0,
+      name='status', full_name='descarteslabs.vektorius.v1.SearchStatusResponse.status', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='job', file=DESCRIPTOR),
+      serialized_options=None, json_name='status', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -357,39 +408,32 @@ _SEARCHSTATUSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=683,
-  serialized_end=753,
+  serialized_start=955,
+  serialized_end=1043,
 )
 
 
 _SEARCHRESULTSREQUEST = _descriptor.Descriptor(
   name='SearchResultsRequest',
-  full_name='descarteslabs.vektorius.SearchResultsRequest',
+  full_name='descarteslabs.vektorius.v1.SearchResultsRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='job_id', full_name='descarteslabs.vektorius.SearchResultsRequest.job_id', index=0,
+      name='continuation_token', full_name='descarteslabs.vektorius.v1.SearchResultsRequest.continuation_token', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='jobId', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='continuation_token', full_name='descarteslabs.vektorius.SearchResultsRequest.continuation_token', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
       serialized_options=None, json_name='continuationToken', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='page_size', full_name='descarteslabs.vektorius.SearchResultsRequest.page_size', index=2,
-      number=3, type=13, cpp_type=3, label=1,
+      name='offset', full_name='descarteslabs.vektorius.v1.SearchResultsRequest.offset', index=1,
+      number=2, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='pageSize', file=DESCRIPTOR),
+      serialized_options=None, json_name='offset', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -402,32 +446,32 @@ _SEARCHRESULTSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=756,
-  serialized_end=921,
+  serialized_start=1045,
+  serialized_end=1138,
 )
 
 
 _SEARCHRESULTSRESPONSE = _descriptor.Descriptor(
   name='SearchResultsResponse',
-  full_name='descarteslabs.vektorius.SearchResultsResponse',
+  full_name='descarteslabs.vektorius.v1.SearchResultsResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='batch', full_name='descarteslabs.vektorius.SearchResultsResponse.batch', index=0,
+      name='status', full_name='descarteslabs.vektorius.v1.SearchResultsResponse.status', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='batch', file=DESCRIPTOR),
+      serialized_options=None, json_name='status', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='epilogue', full_name='descarteslabs.vektorius.SearchResultsResponse.epilogue', index=1,
+      name='batch', full_name='descarteslabs.vektorius.v1.SearchResultsResponse.batch', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='epilogue', file=DESCRIPTOR),
+      serialized_options=None, json_name='batch', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -440,32 +484,34 @@ _SEARCHRESULTSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
     _descriptor.OneofDescriptor(
-      name='block', full_name='descarteslabs.vektorius.SearchResultsResponse.block',
+      name='block', full_name='descarteslabs.vektorius.v1.SearchResultsResponse.block',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=924,
-  serialized_end=1092,
+  serialized_start=1141,
+  serialized_end=1306,
 )
 
-_STREAMINGEPILOGUE.fields_by_name['job'].message_type = _JOB
-_STREAMINGEPILOGUE.fields_by_name['continuation_token'].message_type = _CONTINUATIONTOKEN
-_SEARCHRESPONSE.fields_by_name['job'].message_type = _JOB
-_SEARCHSTATUSRESPONSE.fields_by_name['job'].message_type = _JOB
-_SEARCHRESULTSREQUEST.fields_by_name['continuation_token'].message_type = _CONTINUATIONTOKEN
+_SCHEMARESPONSE.fields_by_name['schema'].message_type = descarteslabs_dot_common_dot_proto_dot_ibis_dot_ibis__pb2._SCHEMA
+_JOB.fields_by_name['status'].enum_type = _JOB_STATUS
+_JOB_STATUS.containing_type = _JOB
+_SEARCHSTATUS.fields_by_name['job'].message_type = _JOB
+_SEARCHREQUEST.fields_by_name['query'].message_type = descarteslabs_dot_common_dot_proto_dot_ibis_dot_ibis__pb2._QUERY
+_SEARCHRESPONSE.fields_by_name['status'].message_type = _SEARCHSTATUS
+_SEARCHSTATUSRESPONSE.fields_by_name['status'].message_type = _SEARCHSTATUS
+_SEARCHRESULTSRESPONSE.fields_by_name['status'].message_type = _SEARCHSTATUS
 _SEARCHRESULTSRESPONSE.fields_by_name['batch'].message_type = _RECORDBATCH
-_SEARCHRESULTSRESPONSE.fields_by_name['epilogue'].message_type = _STREAMINGEPILOGUE
+_SEARCHRESULTSRESPONSE.oneofs_by_name['block'].fields.append(
+  _SEARCHRESULTSRESPONSE.fields_by_name['status'])
+_SEARCHRESULTSRESPONSE.fields_by_name['status'].containing_oneof = _SEARCHRESULTSRESPONSE.oneofs_by_name['block']
 _SEARCHRESULTSRESPONSE.oneofs_by_name['block'].fields.append(
   _SEARCHRESULTSRESPONSE.fields_by_name['batch'])
 _SEARCHRESULTSRESPONSE.fields_by_name['batch'].containing_oneof = _SEARCHRESULTSRESPONSE.oneofs_by_name['block']
-_SEARCHRESULTSRESPONSE.oneofs_by_name['block'].fields.append(
-  _SEARCHRESULTSRESPONSE.fields_by_name['epilogue'])
-_SEARCHRESULTSRESPONSE.fields_by_name['epilogue'].containing_oneof = _SEARCHRESULTSRESPONSE.oneofs_by_name['block']
 DESCRIPTOR.message_types_by_name['SchemaRequest'] = _SCHEMAREQUEST
 DESCRIPTOR.message_types_by_name['SchemaResponse'] = _SCHEMARESPONSE
 DESCRIPTOR.message_types_by_name['Job'] = _JOB
 DESCRIPTOR.message_types_by_name['RecordBatch'] = _RECORDBATCH
-DESCRIPTOR.message_types_by_name['ContinuationToken'] = _CONTINUATIONTOKEN
-DESCRIPTOR.message_types_by_name['StreamingEpilogue'] = _STREAMINGEPILOGUE
+DESCRIPTOR.message_types_by_name['Error'] = _ERROR
+DESCRIPTOR.message_types_by_name['SearchStatus'] = _SEARCHSTATUS
 DESCRIPTOR.message_types_by_name['SearchRequest'] = _SEARCHREQUEST
 DESCRIPTOR.message_types_by_name['SearchResponse'] = _SEARCHRESPONSE
 DESCRIPTOR.message_types_by_name['SearchStatusRequest'] = _SEARCHSTATUSREQUEST
@@ -477,84 +523,84 @@ _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 SchemaRequest = _reflection.GeneratedProtocolMessageType('SchemaRequest', (_message.Message,), {
   'DESCRIPTOR' : _SCHEMAREQUEST,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.SchemaRequest)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.SchemaRequest)
   })
 _sym_db.RegisterMessage(SchemaRequest)
 
 SchemaResponse = _reflection.GeneratedProtocolMessageType('SchemaResponse', (_message.Message,), {
   'DESCRIPTOR' : _SCHEMARESPONSE,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.SchemaResponse)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.SchemaResponse)
   })
 _sym_db.RegisterMessage(SchemaResponse)
 
 Job = _reflection.GeneratedProtocolMessageType('Job', (_message.Message,), {
   'DESCRIPTOR' : _JOB,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.Job)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.Job)
   })
 _sym_db.RegisterMessage(Job)
 
 RecordBatch = _reflection.GeneratedProtocolMessageType('RecordBatch', (_message.Message,), {
   'DESCRIPTOR' : _RECORDBATCH,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.RecordBatch)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.RecordBatch)
   })
 _sym_db.RegisterMessage(RecordBatch)
 
-ContinuationToken = _reflection.GeneratedProtocolMessageType('ContinuationToken', (_message.Message,), {
-  'DESCRIPTOR' : _CONTINUATIONTOKEN,
+Error = _reflection.GeneratedProtocolMessageType('Error', (_message.Message,), {
+  'DESCRIPTOR' : _ERROR,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.ContinuationToken)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.Error)
   })
-_sym_db.RegisterMessage(ContinuationToken)
+_sym_db.RegisterMessage(Error)
 
-StreamingEpilogue = _reflection.GeneratedProtocolMessageType('StreamingEpilogue', (_message.Message,), {
-  'DESCRIPTOR' : _STREAMINGEPILOGUE,
+SearchStatus = _reflection.GeneratedProtocolMessageType('SearchStatus', (_message.Message,), {
+  'DESCRIPTOR' : _SEARCHSTATUS,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.StreamingEpilogue)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.SearchStatus)
   })
-_sym_db.RegisterMessage(StreamingEpilogue)
+_sym_db.RegisterMessage(SearchStatus)
 
 SearchRequest = _reflection.GeneratedProtocolMessageType('SearchRequest', (_message.Message,), {
   'DESCRIPTOR' : _SEARCHREQUEST,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.SearchRequest)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.SearchRequest)
   })
 _sym_db.RegisterMessage(SearchRequest)
 
 SearchResponse = _reflection.GeneratedProtocolMessageType('SearchResponse', (_message.Message,), {
   'DESCRIPTOR' : _SEARCHRESPONSE,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.SearchResponse)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.SearchResponse)
   })
 _sym_db.RegisterMessage(SearchResponse)
 
 SearchStatusRequest = _reflection.GeneratedProtocolMessageType('SearchStatusRequest', (_message.Message,), {
   'DESCRIPTOR' : _SEARCHSTATUSREQUEST,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.SearchStatusRequest)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.SearchStatusRequest)
   })
 _sym_db.RegisterMessage(SearchStatusRequest)
 
 SearchStatusResponse = _reflection.GeneratedProtocolMessageType('SearchStatusResponse', (_message.Message,), {
   'DESCRIPTOR' : _SEARCHSTATUSRESPONSE,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.SearchStatusResponse)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.SearchStatusResponse)
   })
 _sym_db.RegisterMessage(SearchStatusResponse)
 
 SearchResultsRequest = _reflection.GeneratedProtocolMessageType('SearchResultsRequest', (_message.Message,), {
   'DESCRIPTOR' : _SEARCHRESULTSREQUEST,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.SearchResultsRequest)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.SearchResultsRequest)
   })
 _sym_db.RegisterMessage(SearchResultsRequest)
 
 SearchResultsResponse = _reflection.GeneratedProtocolMessageType('SearchResultsResponse', (_message.Message,), {
   'DESCRIPTOR' : _SEARCHRESULTSRESPONSE,
   '__module__' : 'descarteslabs.common.proto.vektorius.vektorius_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.SearchResultsResponse)
+  # @@protoc_insertion_point(class_scope:descarteslabs.vektorius.v1.SearchResultsResponse)
   })
 _sym_db.RegisterMessage(SearchResultsResponse)
 
@@ -562,16 +608,16 @@ _sym_db.RegisterMessage(SearchResultsResponse)
 
 _VEKTORIUS = _descriptor.ServiceDescriptor(
   name='Vektorius',
-  full_name='descarteslabs.vektorius.Vektorius',
+  full_name='descarteslabs.vektorius.v1.Vektorius',
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=1095,
-  serialized_end=1514,
+  serialized_start=1309,
+  serialized_end=1752,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetSchema',
-    full_name='descarteslabs.vektorius.Vektorius.GetSchema',
+    full_name='descarteslabs.vektorius.v1.Vektorius.GetSchema',
     index=0,
     containing_service=None,
     input_type=_SCHEMAREQUEST,
@@ -580,7 +626,7 @@ _VEKTORIUS = _descriptor.ServiceDescriptor(
   ),
   _descriptor.MethodDescriptor(
     name='Search',
-    full_name='descarteslabs.vektorius.Vektorius.Search',
+    full_name='descarteslabs.vektorius.v1.Vektorius.Search',
     index=1,
     containing_service=None,
     input_type=_SEARCHREQUEST,
@@ -589,7 +635,7 @@ _VEKTORIUS = _descriptor.ServiceDescriptor(
   ),
   _descriptor.MethodDescriptor(
     name='SearchStatus',
-    full_name='descarteslabs.vektorius.Vektorius.SearchStatus',
+    full_name='descarteslabs.vektorius.v1.Vektorius.SearchStatus',
     index=2,
     containing_service=None,
     input_type=_SEARCHSTATUSREQUEST,
@@ -598,7 +644,7 @@ _VEKTORIUS = _descriptor.ServiceDescriptor(
   ),
   _descriptor.MethodDescriptor(
     name='SearchResults',
-    full_name='descarteslabs.vektorius.Vektorius.SearchResults',
+    full_name='descarteslabs.vektorius.v1.Vektorius.SearchResults',
     index=3,
     containing_service=None,
     input_type=_SEARCHRESULTSREQUEST,

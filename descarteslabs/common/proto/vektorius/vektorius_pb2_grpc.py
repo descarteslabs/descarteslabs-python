@@ -15,22 +15,22 @@ class VektoriusStub(object):
       channel: A grpc.Channel.
     """
     self.GetSchema = channel.unary_unary(
-        '/descarteslabs.vektorius.Vektorius/GetSchema',
+        '/descarteslabs.vektorius.v1.Vektorius/GetSchema',
         request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SchemaRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SchemaResponse.FromString,
         )
     self.Search = channel.unary_unary(
-        '/descarteslabs.vektorius.Vektorius/Search',
+        '/descarteslabs.vektorius.v1.Vektorius/Search',
         request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchResponse.FromString,
         )
     self.SearchStatus = channel.unary_unary(
-        '/descarteslabs.vektorius.Vektorius/SearchStatus',
+        '/descarteslabs.vektorius.v1.Vektorius/SearchStatus',
         request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchStatusRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchStatusResponse.FromString,
         )
     self.SearchResults = channel.unary_stream(
-        '/descarteslabs.vektorius.Vektorius/SearchResults',
+        '/descarteslabs.vektorius.v1.Vektorius/SearchResults',
         request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchResultsRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchResultsResponse.FromString,
         )
@@ -93,5 +93,5 @@ def add_VektoriusServicer_to_server(servicer, server):
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
-      'descarteslabs.vektorius.Vektorius', rpc_method_handlers)
+      'descarteslabs.vektorius.v1.Vektorius', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))
