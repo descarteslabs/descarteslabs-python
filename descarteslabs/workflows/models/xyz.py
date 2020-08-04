@@ -353,9 +353,8 @@ class XYZ(object):
             if len(scales) not in (0, 1, 3):
                 raise (
                     ValueError(
-                        "Invalid scales passed: expected 0, 1, or 3 scales, but got {}".format(
-                            len(scales)
-                        )
+                        "Invalid scales passed: expected 0, 1, or 3 scales, but got {}"
+                        .format(len(scales))
                     )
                 )
 
@@ -381,9 +380,8 @@ class XYZ(object):
                     x is None for x in scaling
                 ):
                     raise ValueError(
-                        "Invalid scales passed: one number and one None in scaling {}".format(
-                            i, scaling
-                        )
+                        "Invalid scales passed: one number and one None in scaling {}"
+                        .format(i, scaling)
                     )
 
             return [

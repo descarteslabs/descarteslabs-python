@@ -610,8 +610,10 @@ def _draw_progress_bar(finished, total, stage, output, width=6):
     else:
         bar = "#" * int(width * percent)
 
-    progress_output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
-        bar=bar, width=width, finished=finished, total=total, stage=stage
+    progress_output = (
+        "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
+            bar=bar, width=width, finished=finished, total=total, stage=stage
+        )
     )
 
     _write_to_io_or_widget(output, "{:<79}".format(progress_output))
