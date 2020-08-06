@@ -22,45 +22,6 @@ _RETRYABLE_STATUS_CODES = {
 }
 
 
-def wrap_stub(func, default_retry, default_metadata=None):
-    if default_metadata is None:
-        default_metadata = tuple()
-
-    @_wraps(func)
-    def wrapper(*args, **kwargs):
-        retry = kwargs.pop("retry", default_retry)
-
-        # If retry is none, use identity function.
-        if retry is None:
-
-            def retry(f):
-                return f
-
-        # Merge and set default request headers
-        # example: https://github.com/grpc/grpc/blob/master/examples/python/metadata/metadata_client.py
-        # NOTE(Clark): We use an OrderedDict to ensure a stable ordering for Python 3.5
-        # and 3.6.
-        # TODO(Clark): Revert back to dict once Python 3.5 is dropped.
-        merged_metadata = OrderedDict(
-            default_metadata + kwargs.get("metadata", tuple())
-        )
-
-        kwargs["metadata"] = tuple(merged_metadata.items())
-
-        try:
-            return retry(func)(*args, **kwargs)
-        except grpc.RpcError as e:
-            raise from_grpc_error(e) from None
-        except RetryError as e:
-            e._exceptions = [
-                from_grpc_error(exc) if isinstance(exc, grpc.RpcError) else exc
-                for exc in e._exceptions
-            ]
-            raise e from e._exceptions[-1]
-
-    return wrapper
-
-
 def default_grpc_retry_predicate(e):
     try:
         code = e.code()
@@ -87,6 +48,8 @@ class GrpcClient:
     >>> client = MyClient()
     """
 
+    SECURE_CHANNEL_FACTORY = staticmethod(grpc.secure_channel)
+    INSECURE_CHANNEL_FACTORY = staticmethod(grpc.insecure_channel)
     DEFAULT_TIMEOUT = 5
     STREAM_TIMEOUT = 60 * 60 * 24
 
@@ -95,15 +58,21 @@ class GrpcClient:
         host,
         auth=None,
         certificate=None,
-        port=443,
+        port=None,
         default_retry=None,
         default_metadata=None,
+        use_insecure_channel=False,
     ):
         if auth is None:
             auth = Auth()
 
         self.auth = auth
         self.host = host
+        if not port:
+            if use_insecure_channel:
+                port = 8000
+            else:
+                port = 443
         self.port = port
 
         self._default_metadata = default_metadata
@@ -111,6 +80,7 @@ class GrpcClient:
             default_retry = Retry(predicate=default_grpc_retry_predicate, retries=5)
         self._default_retry = default_retry
 
+        self._use_insecure_channel = use_insecure_channel
         self._channel = None
         self._certificate = certificate
         self._stubs = None
@@ -145,6 +115,29 @@ class GrpcClient:
             self._initialize()
         return self._api
 
+    def health(self, timeout=None):
+        """Check the health of the GRPC server (SERVING, NOT_SERVING, UNKNOWN).
+
+        Example
+        -------
+        >>> from descarteslabs.client.grpc import GrpcClient
+        >>> GrpcClient().health() # doctest: +SKIP
+        SERVING
+        """
+        if timeout is None:
+            timeout = self.DEFAULT_TIMEOUT
+
+        return self.api["Check"](
+            health_pb2.HealthCheckRequest(), timeout=self.DEFAULT_TIMEOUT
+        )
+
+    def close(self):
+        "Close the GRPC channel associated with the Client."
+        # NOTE: this may be a blocking operation
+        if self._channel:
+            self._channel.close()
+            self._channel = None
+
     def _add_stub(self, name, stub):
         self._stubs[name] = stub(self.channel)
 
@@ -152,7 +145,7 @@ class GrpcClient:
         stub = self._stubs[stub_name]
         func = getattr(stub, func_name)
 
-        self._api[func_name] = wrap_stub(
+        self._api[func_name] = self._wrap_stub(
             func, default_retry=default_retry, default_metadata=self._default_metadata
         )
 
@@ -185,32 +178,58 @@ class GrpcClient:
         return composite_credentials
 
     def _open_channel(self):
-        return grpc.secure_channel(
-            "{}:{}".format(self.host, self.port), self._get_credentials()
+        if self._use_insecure_channel:
+            return self.INSECURE_CHANNEL_FACTORY("{}:{}".format(self.host, self.port))
+        else:
+            return self.SECURE_CHANNEL_FACTORY(
+                "{}:{}".format(self.host, self.port), self._get_credentials()
+            )
+
+    def _wrap_stub(self, func, default_retry, default_metadata=None):
+        if default_metadata is None:
+            default_metadata = tuple()
+
+        @_wraps(func)
+        def wrapper(*args, **kwargs):
+            retry, kwargs = self._prepare_stub_kwargs(
+                default_retry, default_metadata, kwargs
+            )
+
+            try:
+                return retry(func)(*args, **kwargs)
+            except grpc.RpcError as e:
+                raise from_grpc_error(e) from None
+            except RetryError as e:
+                e._exceptions = [
+                    from_grpc_error(exc) if isinstance(exc, grpc.RpcError) else exc
+                    for exc in e._exceptions
+                ]
+                raise e from e._exceptions[-1]
+
+        return wrapper
+
+    @staticmethod
+    def _prepare_stub_kwargs(default_retry, default_metadata, kwargs):
+        retry = kwargs.pop("retry", default_retry)
+
+        # If retry is none, use identity function.
+        if retry is None:
+
+            def retry(f):
+                return f
+
+        # Merge and set default request headers
+        # example: https://github.com/grpc/grpc/blob/master/examples/python/metadata/metadata_client.py
+        # NOTE(Clark): We use an OrderedDict to ensure a stable ordering for Python 3.5
+        # and 3.6.
+        # TODO(Clark): Revert back to dict once Python 3.5 is dropped.
+        merged_metadata = OrderedDict(
+            default_metadata + kwargs.get("metadata", tuple())
         )
 
-    def health(self, timeout=None):
-        """Check the health of the GRPC server (SERVING, NOT_SERVING, UNKNOWN).
+        kwargs["metadata"] = tuple(merged_metadata.items())
 
-        Example
-        -------
-        >>> from descarteslabs.client.grpc import GrpcClient
-        >>> GrpcClient().health() # doctest: +SKIP
-        SERVING
-        """
-        if timeout is None:
-            timeout = self.DEFAULT_TIMEOUT
-
-        return self.api["Check"](
-            health_pb2.HealthCheckRequest(), timeout=self.DEFAULT_TIMEOUT
-        )
-
-    def close(self):
-        "Close the GRPC channel associated with the Client."
-        # NOTE: this may be a blocking operation
-        if self._channel:
-            self._channel.close()
-            self._channel = None
+        return retry, kwargs
 
     def __enter__(self):
         return self

@@ -6,7 +6,6 @@ import pytest
 from descarteslabs.common.retry import Retry
 
 from .. import GrpcClient
-from ..client import wrap_stub
 
 
 class FakeRpcError(grpc.RpcError):
@@ -53,17 +52,20 @@ def test_client_health_default_retry_false_predicate(stub, _):
     assert len(stub.return_value.Check.call_args_list) == 1
 
 
-def test_wrap_stub_with_default_retry():
+@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+def test_wrap_stub_with_default_retry(_):
     def f(*args, **kwargs):
         return args, kwargs
 
     retry = mock.Mock()
-    wrapped = wrap_stub(f, retry)()
+    client = GrpcClient("host", auth=mock.Mock())
+    wrapped = client._wrap_stub(f, retry)
     wrapped()
     retry.assert_called_once_with(f)
 
 
-def test_wrap_stub_with_kwarg():
+@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+def test_wrap_stub_with_kwarg(_):
     args = (0,)
     kwargs = {
         "foo": "bar",
@@ -72,12 +74,14 @@ def test_wrap_stub_with_kwarg():
 
     f = mock.Mock()
 
-    wrapped = wrap_stub(f, mock.Mock())
+    client = GrpcClient("host", auth=mock.Mock())
+    wrapped = client._wrap_stub(f, mock.Mock())
     wrapped(*args, retry=Retry(), **kwargs)
     f.assert_called_once_with(*args, **kwargs)
 
 
-def test_wrap_stub_args_kwargs():
+@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+def test_wrap_stub_args_kwargs(_):
     args = (0,)
     kwargs = {
         "foo": "bar",
@@ -86,12 +90,14 @@ def test_wrap_stub_args_kwargs():
 
     f = mock.Mock()
 
-    wrapped = wrap_stub(f, Retry())
+    client = GrpcClient("host", auth=mock.Mock())
+    wrapped = client._wrap_stub(f, Retry())
     wrapped(*args, **kwargs)
     f.assert_called_once_with(*args, **kwargs)
 
 
-def test_metadata_header():
+@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+def test_metadata_header(_):
     # Test that channel is added as a header
     args = (0,)
     kwargs = {
@@ -100,8 +106,10 @@ def test_metadata_header():
 
     f = mock.Mock()
 
+    client = GrpcClient("host", auth=mock.Mock())
+
     default_metadata = (("x-wf-channel", "foo"),)
-    wrapped = wrap_stub(f, Retry(), default_metadata)
+    wrapped = client._wrap_stub(f, Retry(), default_metadata)
     wrapped(*args, **kwargs)
 
     kwargs_w_header = kwargs.copy()
@@ -112,7 +120,7 @@ def test_metadata_header():
     # Test header can be shadowed when function is called
     f = mock.Mock()
 
-    wrapped = wrap_stub(f, Retry(), default_metadata)
+    wrapped = client._wrap_stub(f, Retry(), default_metadata)
     wrapped(*args, metadata=(("x-wf-channel", "override_value"),), **kwargs)
 
     kwargs_w_header = kwargs.copy()
@@ -123,7 +131,7 @@ def test_metadata_header():
     # Test headrs can be merged
     f = mock.Mock()
 
-    wrapped = wrap_stub(f, Retry(), default_metadata)
+    wrapped = client._wrap_stub(f, Retry(), default_metadata)
     wrapped(*args, metadata=(("key", "val"),), **kwargs)
 
     kwargs_w_header = kwargs.copy()
