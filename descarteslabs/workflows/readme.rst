@@ -147,6 +147,7 @@ See :ref:`numpy-functions` for a full list of available functions.
   :nosignatures:
 
   ~descarteslabs.workflows.interactive.map
+  ~descarteslabs.workflows.interactive.flows
   ~descarteslabs.workflows.interactive.Map
   ~descarteslabs.workflows.interactive.MapApp
   ~descarteslabs.workflows.interactive.WorkflowsLayer
@@ -154,6 +155,7 @@ See :ref:`numpy-functions` for a full list of available functions.
   ~descarteslabs.workflows.interactive.LayerControllerList
   ~descarteslabs.workflows.interactive.ParameterSet
   ~descarteslabs.workflows.interactive.PixelInspector
+  ~descarteslabs.workflows.interactive.WorkflowsBrowser
 
 :workflow_api_nontoc_heading:`Parameter`
 

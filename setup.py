@@ -105,6 +105,7 @@ def do_setup():
                 "ipyleaflet>=0.13.0,<1",
                 "ipywidgets>=7.5.1,<8",
                 "traitlets>=4.3.3,<5",
+                "markdown2>=2.3.9,<3",
             ],
             "tests": [
                 "hypothesis[numpy]==5.7.0",

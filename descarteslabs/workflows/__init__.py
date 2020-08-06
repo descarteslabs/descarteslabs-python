@@ -78,7 +78,7 @@ from .inspect import (
     get_global_inspect_client as _get_global_inspect_client,
 )
 
-from .interactive import map, Map, WorkflowsLayer, LayerController, LayerControllerList
+from .interactive import map, flows, Map, WorkflowsLayer, LayerController, LayerControllerList
 
 from . import env
 from ._channel import __channel__, _set_channel
@@ -388,6 +388,7 @@ __all__ = [
     "InspectClient",
     # .interactive
     "map",
+    "flows",
     "Map",
     "WorkflowsLayer",
     "LayerController",
