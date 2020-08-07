@@ -137,6 +137,13 @@ class GrpcClient:
         if self._channel:
             self._channel.close()
             self._channel = None
+        # stubs and apis hang on to channel
+        if self._api is not None:
+            del self._api
+            self._api = None
+        if self._stubs is not None:
+            del self._stubs
+            self._stubs = None
 
     def _add_stub(self, name, stub):
         self._stubs[name] = stub(self.channel)
