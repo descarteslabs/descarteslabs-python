@@ -63,8 +63,9 @@ def do_setup():
         ],
         license="Apache 2.0",
         download_url=(
-            "https://github.com/descarteslabs/descarteslabs-python/archive/v{}.tar.gz"
-            .format(version)
+            "https://github.com/descarteslabs/descarteslabs-python/archive/v{}.tar.gz".format(
+                version
+            )
         ),
         version=version,
         packages=find_packages(),
@@ -84,7 +85,7 @@ def do_setup():
         python_requires="~=3.5",
         install_requires=[
             "affine>=2.2.1",
-            "backports-datetime-fromisoformat>=1.0.0",
+            "backports-datetime-fromisoformat>=1.0.0;python_version<'3.7'",
             "cachetools>=2.0.1",
             "cloudpickle==0.4.0",
             "geojson>=2.5.0",
