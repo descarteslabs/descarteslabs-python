@@ -128,11 +128,13 @@ class NamedCatalogObject(CatalogObject):
     Any combination that will yield the image name and the product id will work, but
     the preferred way is using the `name` and `product`:
 
+    >>> from descarteslabs.catalog import Product, Image
     >>> product_id = "some_org:some_product_name"
-    >>> product = Product.get(product_id)
+    >>> product = Product.get(product_id) # doctest: +SKIP
     >>> image_name = "some_image_name"
     >>> # Preferred
-    >>> image = Image(name=image_name, product=product)
+    >>> product = Product(id=product_id)
+    >>> image = Image(name=image_name, product=product) # doctest: +SKIP
     >>> # Also possible...
     >>> image_id = "{}:{}".format(product.id, image_name)
     >>> image = Image(id=image_id)
@@ -196,11 +198,11 @@ class NamedCatalogObject(CatalogObject):
 
         Example
         -------
+        >>> from descarteslabs.catalog import SpectralBand, Band
         >>> name = "This is ań @#$^*% ïñvalid name!!!!"
         >>> band = SpectralBand()
         >>> band.name = Band.make_valid_name(name)
         >>> band.name
         'This_is_a_valid_name_'
-        >>>
         """
         return cls._invalid_sequence_pattern_for_name.sub("_", name)

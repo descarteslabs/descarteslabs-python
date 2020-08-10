@@ -337,9 +337,10 @@ class Image(NamedCatalogObject):
 
         Example
         -------
+        >>> from descarteslabs.catalog import Image
         >>> search = Image.search().limit(10)
-        >>> for result in search:
-                print(result.name)
+        >>> for result in search: # doctest: +SKIP
+        ...     print(result.name) # doctest: +SKIP
 
         """
         from .search import ImageSearch

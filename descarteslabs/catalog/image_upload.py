@@ -391,10 +391,14 @@ class ImageUpload(CatalogObjectBase):
 
         Example
         -------
-        >>> from descarteslabs.catalog import properties as p
+        >>> from descarteslabs.catalog import (
+        ...     ImageUpload,
+        ...     ImageUploadStatus,
+        ...     properties as p,
+        ... )
         >>> search = ImageUpload.search().filter(p.status == ImageUploadStatus.FAILURE)
-        >>> for result in search:
-                print(result)
+        >>> for result in search: # doctest: +SKIP
+        ...     print(result) # doctest: +SKIP
 
         """
         from .search import Search

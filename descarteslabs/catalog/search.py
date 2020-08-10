@@ -32,8 +32,9 @@ class Search(object):
 
     Example
     -------
+    >>> from descarteslabs.catalog import Product, Search, properties as p
     >>> search = Search(Product).filter(p.start_datetime >= "2012-01-01")
-    >>> list(search)
+    >>> list(search) # doctest: +SKIP
     """
 
     def __init__(self, model, client=None, url=None, includes=True):
@@ -84,8 +85,9 @@ class Search(object):
 
         Example
         -------
+        >>> from descarteslabs.catalog import Product, Search
         >>> search = Search(Product).sort("created", ascending=False)
-        >>> list(search)
+        >>> list(search) # doctest: +SKIP
 
         """
         s = copy.deepcopy(self)
@@ -129,10 +131,11 @@ class Search(object):
 
         Example
         -------
+        >>> from descarteslabs.catalog import Product, Search, properties as p
         >>> search = Search(Product).filter(
         ...     (p.resolution_min < 60) & (p.start_datetime > "2000-01-01")
         ... )
-        >>> list(search)
+        >>> list(search) # doctest: +SKIP
         """
         s = copy.deepcopy(self)
         if s._filter_properties is None:
@@ -219,7 +222,9 @@ class Search(object):
 
         Example
         -------
-        >>> count = Search(Band).filter(p.type=="spectral").count()
+        >>> from descarteslabs.catalog import Band, Search, properties as p
+        >>> search = Search(Band).filter(p.type=="spectral")
+        >>> count = search.count() # doctest: +SKIP
         """
 
         # modify query to return 0 results, and just get the object count
@@ -248,8 +253,9 @@ class Search(object):
 
         Example
         -------
+        >>> from descarteslabs.catalog import Product, Search, properties as p
         >>> search = Search(Product).filter(p.tags == "test")
-        >>> list(search)
+        >>> list(search) # doctest: +SKIP
 
         """
         url_next, params = self._to_request()
@@ -419,11 +425,12 @@ class ImageSearch(Search):
 
         Example
         -------
-        >>> s = Image
-        ...     .search()
-        ...     .filter(p.product_id=="landsat:LC08:01:RT:TOAR")
-        ...     .summary()
-        >>> print(s.count, s.bytes)
+        >>> from descarteslabs.catalog import Image, properties as p
+        >>> search = Image.search().filter(
+        ...     p.product_id=="landsat:LC08:01:RT:TOAR"
+        ... )
+        >>> s = search.summary() # doctest: +SKIP
+        >>> print(s.count, s.bytes) # doctest: +SKIP
         """
 
         s = copy.deepcopy(self)
@@ -482,14 +489,14 @@ class ImageSearch(Search):
         Example
         -------
         >>> from descarteslabs.catalog import Image, AggregateDateField, Interval, properties
-        >>> interval_results = (
+        >>> search = (
         ...     Image.search()
         ...     .filter(properties.product_id == "landsat:LC08:01:RT:TOAR")
-        ...     .summary_interval(
-        ...         aggregate_date_field=AggregateDateField.ACQUIRED, interval=Interval.MONTH
-        ...     )
         ... )
-        >>> print([(i.interval_start, i.count) for i in interval_results])
+        >>> interval_results = search.summary_interval(
+        ...         aggregate_date_field=AggregateDateField.ACQUIRED, interval=Interval.MONTH
+        ... ) # doctest: +SKIP
+        >>> print([(i.interval_start, i.count) for i in interval_results]) # doctest: +SKIP
         """
         s = copy.deepcopy(self)
         summary_url = "{}/summary/{}/{}".format(s._url, aggregate_date_field, interval)

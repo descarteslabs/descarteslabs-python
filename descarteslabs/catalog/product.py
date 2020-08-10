@@ -386,9 +386,9 @@ class Product(CatalogObject):
 
         Example
         -------
-        >>> product = Product.get('product-id')
-        >>> product.update_related_objects_permissions()
-        >>> product.get_update_permissions_status()
+        >>> product = Product.get('product-id') # doctest: +SKIP
+        >>> product.update_related_objects_permissions() # doctest: +SKIP
+        >>> product.get_update_permissions_status() # doctest: +SKIP
 
         """
         r = self._client.session.get(

@@ -676,9 +676,9 @@ class CatalogObjectBase(AttributeEqualityMixin):
 
         Example
         -------
-        >>> search = Product.search().limit(10)
-        >>> for result in search:
-                print(result.name)
+        >>> search = Product.search().limit(10) # doctest: +SKIP
+        >>> for result in search: # doctest: +SKIP
+                print(result.name) # doctest: +SKIP
 
         """
         from .search import Search
@@ -731,6 +731,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
 
         Example
         -------
+        >>> from descarteslabs.catalog import Product
         >>> new_product = Product(
         ...     id="my-product",
         ...     name="My Product",
@@ -738,25 +739,25 @@ class CatalogObjectBase(AttributeEqualityMixin):
         ... )
         >>> new_product.state
         <DocumentState.UNSAVED: 'unsaved'>
-        >>> new_product.save()
+        >>> new_product.save() # doctest: +SKIP
         >>> # ids will be automatically prefixed by the Descartes Labs catalog
         >>> # with your organization id
-        >>> new_product.id
+        >>> new_product.id # doctest: +SKIP
         my_org_id:my-product
         >>> # Now you can retrieve the product and update it
-        >>> existing_product = Product.get(new_product.id)
-        >>> existing_product.state
+        >>> existing_product = Product.get(new_product.id) # doctest: +SKIP
+        >>> existing_product.state # doctest: +SKIP
         <DocumentState.SAVED: 'saved'>
-        >>> existing_product.name = "My Updated Product"
-        >>> existing_product.state
+        >>> existing_product.name = "My Updated Product" # doctest: +SKIP
+        >>> existing_product.state # doctest: +SKIP
         <DocumentState.MODIFIED: 'modified'>
-        >>> existing_product.save()
-        >>> existing_product.state
+        >>> existing_product.save() # doctest: +SKIP
+        >>> existing_product.state # doctest: +SKIP
         <DocumentState.SAVED: 'saved'>
         >>> # After you delete it...
-        >>> existing_product.delete()
+        >>> existing_product.delete() # doctest: +SKIP
         True
-        >>> product.state
+        >>> product.state # doctest: +SKIP
         <DocumentState.DELETED: 'deleted'>
 
         """
@@ -810,24 +811,21 @@ class CatalogObjectBase(AttributeEqualityMixin):
 
         Example
         -------
-        >>> p = Product("my_org_id:my_product_id")
+        >>> from descarteslabs.catalog import Product
+        >>> p = Product(id="my_org_id:my_product_id")
         >>> # Some time elapses and a concurrent change was made
-        >>> p.state
+        >>> p.state # doctest: +SKIP
         <DocumentState.SAVED: 'saved'>
-        >>> p.reload()
+        >>> p.reload() # doctest: +SKIP
         >>> # But once you make changes, you cannot use this method any more
         >>> p.name = "My name has changed"
-        >>> p.reload()
+        >>> p.reload() # doctest: +SKIP
         Traceback (most recent call last):
-        File "<stdin>", line 1, in <module>
-        File "/usr/lib/python3/site-packages/descarteslabs/catalog/catalog_base.py", line 47, in wrapper
-            return f(self, *args, **kwargs)
-        File "/usr/lib/python3/site-packages/descarteslabs/catalog/catalog_base.py", line 879, in reload
-            \"""Reload all attributes from the Descartes Labs catalog.
+            ...
         ValueError: Product instance with id my_org_id:my_product_id has not been saved
         >>> # But you can revert
-        >>> p = Product.get(p.id)
-        >>> p.state
+        >>> p = Product.get(p.id) # doctest: +SKIP
+        >>> p.state # doctest: +SKIP
         <DocumentState.SAVED: 'saved'>
 
         """
@@ -883,7 +881,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
 
         Example
         -------
-        >>> Image.delete('my-image-id')
+        >>> Image.delete('my-image-id') # doctest: +SKIP
         """
         if client is None:
             client = CatalogClient.get_default_client()

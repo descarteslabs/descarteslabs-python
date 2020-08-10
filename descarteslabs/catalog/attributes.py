@@ -791,14 +791,17 @@ class MappingAttribute(ModelAttribute, AttributeEqualityMixin, metaclass=Attribu
     they are instantiated as part of a class definition, and the instance
     is cached on the class.
 
+    The other way mapping attributes are used is but instantiating a new instance and
+    assigning that instance to a model object.
+    >>> from descarteslabs.catalog.attributes import (
+    ...     MappingAttribute,
+    ...     Attribute,
+    ... )
+    >>> from descarteslabs.catalog import CatalogObject
     >>> class MyMapping(MappingAttribute):
     ...     foo = Attribute()
     >>> class ExampleCatalogObject(CatalogObject):
     ...     map_attr = MyMapping()
-
-    The other way mapping attributes are used is but instantiating a new instance and
-    assigning that instance to a model object.
-
     >>> my_map = MyMapping(foo="bar")
     >>> obj1 = ExampleCatalogObject(map_attr=my_map)
     >>> obj2 = ExampleCatalogObject(map_attr=my_map)
@@ -958,7 +961,7 @@ class Resolution(MappingAttribute):
     case the value is always in meters. For example, retrieving all bands with
     a resolution of 60 meters per pixel:
 
-    >>> Band.search().filter(p.resolution == 60)
+    >>> Band.search().filter(p.resolution == 60) # doctest: +SKIP
 
     Parameters
     ----------
@@ -1127,6 +1130,8 @@ class ListAttribute(ModelAttribute, MutableSequence):
     This is the recommended way to instantiate a ListAttribute, you don't maintain a
     reference to the original list but the semantics are much cleaner.
 
+    >>> from descarteslabs.catalog import CatalogObject, File
+    >>> from descarteslabs.catalog.attributes import ListAttribute
     >>> class ExampleCatalogObject(CatalogObject):
     ...     files = ListAttribute(File)
     >>> files = [
@@ -1415,6 +1420,8 @@ class ExtraPropertiesAttribute(ModelAttribute, MutableMapping):
     This is the recommended way to instantiate a ExtraPropertiesAttribute, you don't
     maintain a reference to the original list but the semantics are much cleaner.
 
+    >>> from descarteslabs.catalog import CatalogObject
+    >>> from descarteslabs.catalog.attributes import ExtraPropertiesAttribute
     >>> class ExampleCatalogObject(CatalogObject):
     ...     extra_properties = ExtraPropertiesAttribute()
     >>> properties = {
