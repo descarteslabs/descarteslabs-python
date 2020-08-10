@@ -17,15 +17,36 @@ def proto_to_user_dict(msg) -> dict:
         val = getattr(msg, key)
 
         val_transform = None
+        its_a_map = False
         if key.startswith("not_"):
             key = key[4:]
             val_transform = operator.not_
         elif fd.type == fd.TYPE_ENUM:
             val = without_prefix(fd.enum_type.values_by_number[val].name).lower()
         elif fd.type == fd.TYPE_MESSAGE:
-            val_transform = proto_to_user_dict
+            if fd.message_type and getattr(
+                fd.message_type.GetOptions(), "map_entry", False
+            ):
+                its_a_map = True
+                if fd.message_type.fields_by_name["key"].type in (
+                    fd.TYPE_MESSAGE,
+                    fd.TYPE_ENUM,
+                ):
+                    raise ValueError(
+                        "Cannot handle proto maps where keys are messages or enums."
+                    )
+                if fd.message_type.fields_by_name["value"].type == fd.TYPE_MESSAGE:
+                    # values of the map are themselves messages
+                    val_transform = proto_to_user_dict
+            else:
+                val_transform = proto_to_user_dict
 
-        if val_transform is not None:
+        if its_a_map:
+            val = {
+                k: val_transform(v) if val_transform is not None else v
+                for k, v in val.items()
+            }
+        elif val_transform is not None:
             val = (
                 [val_transform(v) for v in val]
                 if fd.label == fd.LABEL_REPEATED

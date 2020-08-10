@@ -146,7 +146,7 @@ class Band(NamedCatalogObject):
     :attr:`~descarteslabs.catalog.GenericBand.type`,
     :attr:`~descarteslabs.catalog.GenericBand.sort_order`,
     :attr:`~descarteslabs.catalog.GenericBand.data_type`,
-    :attr:`~descarteslabs.catalog.GenericBand.no_data`,
+    :attr:`~descarteslabs.catalog.GenericBand.nodata`,
     :attr:`~descarteslabs.catalog.GenericBand.data_range`,
     :attr:`~descarteslabs.catalog.GenericBand.display_range`,
     :attr:`~descarteslabs.catalog.GenericBand.resolution`,

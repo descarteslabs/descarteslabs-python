@@ -23,6 +23,8 @@ from descarteslabs.common.workflows.proto_munging import (
 )
 from descarteslabs.common.workflows.arrow_serialization import deserialize_pyarrow
 
+from descarteslabs import catalog
+
 from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec, typespec_to_unmarshal_str
 from ..client import get_global_grpc_client, default_grpc_retry_predicate
@@ -610,10 +612,8 @@ def _draw_progress_bar(finished, total, stage, output, width=6):
     else:
         bar = "#" * int(width * percent)
 
-    progress_output = (
-        "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
-            bar=bar, width=width, finished=finished, total=total, stage=stage
-        )
+    progress_output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
+        bar=bar, width=width, finished=finished, total=total, stage=stage
     )
 
     _write_to_io_or_widget(output, "{:<79}".format(progress_output))
@@ -671,3 +671,9 @@ def download(job: Job):
         return unmarshal.unmarshal(result_type, marshalled)
 
     return data
+
+
+@register(destinations_pb2.Catalog)
+def catalog_image(job: Job):
+    destination = job.destination
+    return catalog.Image.get(destination["product_id"] + ":" + destination["name"])

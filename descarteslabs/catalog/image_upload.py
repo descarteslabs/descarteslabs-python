@@ -1,6 +1,11 @@
 from enum import Enum
 import time
 import itertools
+import urllib3.exceptions
+import requests.exceptions
+import warnings
+
+from descarteslabs.client.exceptions import ServerError
 
 from .catalog_base import CatalogObjectBase, check_deleted
 from .attributes import (
@@ -405,7 +410,7 @@ class ImageUpload(CatalogObjectBase):
 
         return Search(cls, client=client, includes=includes)
 
-    def wait_for_completion(self, timeout=None):
+    def wait_for_completion(self, timeout=None, warn_transient_errors=True):
         """Wait for the upload to complete.
 
         Parameters
@@ -413,6 +418,9 @@ class ImageUpload(CatalogObjectBase):
         timeout : int, optional
             If specified, will wait up to specified number of seconds and will raise
             a `concurrent.futures.TimeoutError` if the upload has not completed.
+        warn_transient_errors : bool, optional, default True
+            Any transient errors while periodically checking upload status are suppressed.
+            If True, those errors will be printed as warnings.
 
         Raises
         ------
@@ -428,7 +436,20 @@ class ImageUpload(CatalogObjectBase):
             self._POLLING_INTERVALS, itertools.repeat(self._POLLING_INTERVALS[-1])
         )
         while True:
-            self.reload()
+            try:
+                self.reload()
+            except (
+                ServerError,
+                urllib3.exceptions.MaxRetryError,
+                requests.exceptions.RetryError,
+                urllib3.exceptions.TimeoutError,
+            ) as e:
+                # If a reload fails, just try again on the next interval
+                if warn_transient_errors:
+                    warnings.warn(
+                        "In wait_for_completion: error fetching status for ImageUpload {!r}; "
+                        "will retry: {}".format(self.id, e)
+                    )
             if self.status in self._TERMINAL_STATES:
                 return
             interval = next(intervals)

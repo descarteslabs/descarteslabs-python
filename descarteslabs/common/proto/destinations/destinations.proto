@@ -5,9 +5,11 @@ package descarteslabs.workflows;
 message Destination {
   Download download = 1;
   Email email = 2;
+  Catalog catalog = 3;
 
   bool has_download = 20;
   bool has_email = 21;
+  bool has_catalog = 23;
 }
 
 message Download {}
@@ -15,4 +17,15 @@ message Download {}
 message Email {
   string subject = 1;
   string body = 2;
+}
+
+message Catalog {
+  bool overwrite = 1;
+  bool rescale = 2;
+  bool change_dtype = 3;
+
+  string name = 10;
+  string product_id = 11;
+  string acquired = 12;
+  map<string, string> attributes_json = 13;
 }

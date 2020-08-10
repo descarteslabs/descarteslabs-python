@@ -132,17 +132,35 @@ def user_dict_to_proto(dct, msg):
             raise ValueError("Unknown field {!r} for {}.".format(k, type(msg).__name__))
             # TODO list valid names
 
+        msg_field = getattr(msg, proto_k)
+
+        if fd.message_type and getattr(fd.message_type.GetOptions(), "map_entry", False):
+            # absolutely disgusting: proto compiles maps into repeated key,value submessages:
+            # https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/descriptor.proto#L499-L510
+            if not isinstance(proto_v, dict):
+                raise TypeError(
+                    "Expected dict for field {!r}, not {!r}.".format(k, proto_v)
+                )
+            proto_v = [
+                {"key": map_k, "value": map_v} for map_k, map_v in proto_v.items()
+            ]
+            entry_class = msg_field.GetEntryClass()
+            for entry_v in proto_v:
+                entry = entry_class()
+                user_dict_to_proto(entry_v, entry)
+                msg_field[entry.key] = entry.value
+            continue
+
         if fd.label == fd.LABEL_REPEATED and not isinstance(proto_v, (list, tuple)):
             proto_v = [proto_v]
 
         if fd.type == fd.TYPE_MESSAGE:
             # recursively dictify sub-messages
             if fd.label == fd.LABEL_REPEATED:
-                repeated_field = getattr(msg, proto_k)
                 for sub_v in proto_v:
-                    user_dict_to_proto(sub_v, repeated_field.add())
+                    user_dict_to_proto(sub_v, msg_field.add())
             else:
-                user_dict_to_proto(proto_v, getattr(msg, proto_k))
+                user_dict_to_proto(proto_v, msg_field)
         else:
 
             if fd.type == fd.TYPE_ENUM:

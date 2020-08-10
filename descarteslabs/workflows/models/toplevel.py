@@ -126,8 +126,8 @@ def compute(
             try:
                 return job.result(timeout=timeout, progress_bar=progress_bar)
             except NotImplementedError:
-                # suppress error if destination isn't supported; return nothing
-                return
+                # suppress error if destination isn't supported; just wait and return nothing
+                job.wait(timeout=timeout, progress_bar=progress_bar)
     else:
         return job
 
