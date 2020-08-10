@@ -106,17 +106,78 @@ class Retry(object):
                 multiplier=self._multiplier,
             )
 
-            return _retry(
-                target,
-                retries=self._retries,
-                predicate=self._predicate,
-                exceptions=self._exceptions,
-                blacklist=self._blacklist,
-                delay_generator=delay_generator,
-                deadline=self._deadline,
-            )
+            return self._retry(target, delay_generator)
 
         return wrapper
+
+    def _retry(self, func, delay_generator):
+
+        deadline = self._deadline_datetime(self._deadline)
+
+        retries = self._retries
+
+        previous_exceptions = []
+
+        for delay in delay_generator:
+
+            try:
+                return func()
+            except Exception as e:
+                self._handle_exception(e, previous_exceptions)
+
+            # will raise RetryError if deadline or retries exceeded
+            retries = self._check_retries(
+                retries, _name_of_func(func), deadline, previous_exceptions
+            )
+
+            time.sleep(delay)
+        else:
+            raise ValueError("Bad delay generator")
+
+    def _handle_exception(self, exception, previous_exceptions):
+        if callable(self._predicate) and not self._predicate(exception):
+            raise
+
+        if self._blacklist is not None and isinstance(exception, self._blacklist):
+            raise
+
+        if self._exceptions is not None and not isinstance(exception, self._exceptions):
+            raise
+
+        previous_exceptions.append(exception)
+
+    def _check_retries(self, retries, name, deadline, previous_exceptions):
+        # Raise RetryError if deadline exceeded
+        if deadline is not None and deadline <= datetime.datetime.utcnow():
+            six.raise_from(
+                RetryError(
+                    "Deadline of {:.1f}s exceeded while calling {}".format(
+                        deadline, name
+                    ),
+                    previous_exceptions,
+                ),
+                previous_exceptions[-1],
+            )
+
+        # Raise RetryError if retries exhausted
+        if retries is not None and retries == 0:
+            six.raise_from(
+                RetryError(
+                    "Maximum retry attempts calling {}".format(name),
+                    previous_exceptions,
+                ),
+                previous_exceptions[-1],
+            )
+
+        if retries is not None:
+            retries -= 1
+        return retries
+
+    @staticmethod
+    def _deadline_datetime(deadline):
+        if deadline is None:
+            return None
+        return datetime.datetime.utcnow() + datetime.timedelta(seconds=deadline)
 
 
 class RetryError(Exception):
@@ -191,70 +252,3 @@ def _wraps(wrapped):
         return six.wraps(wrapped, assigned=_SAFE_VALID_ASSIGNMENTS)
     else:
         return six.wraps(wrapped)
-
-
-def _retry(
-    func,
-    delay_generator,
-    retries=None,
-    predicate=None,
-    exceptions=None,
-    blacklist=None,
-    deadline=None,
-):
-    if deadline is not None:
-        deadline_datetime = datetime.datetime.utcnow() + datetime.timedelta(
-            seconds=deadline
-        )
-    else:
-        deadline_datetime = None
-
-    previous_exceptions = []
-
-    for delay in delay_generator:
-
-        try:
-            return func()
-        except Exception as exception:  # noqa
-            if callable(predicate) and not predicate(exception):
-                raise
-
-            if blacklist is not None and isinstance(exception, blacklist):
-                raise
-
-            if exceptions is not None and not isinstance(exception, exceptions):
-                raise
-
-            previous_exceptions.append(exception)
-
-        # Raise RetryError if deadline exceeded
-        if (
-            deadline_datetime is not None
-            and deadline_datetime <= datetime.datetime.utcnow()
-        ):
-            six.raise_from(
-                RetryError(
-                    "Deadline of {:.1f}s exceeded while calling {}".format(
-                        deadline, _name_of_func(func)
-                    ),
-                    previous_exceptions,
-                ),
-                previous_exceptions[-1],
-            )
-
-        # Raise RetryError if retries exhausted
-        if retries is not None and retries == 0:
-            six.raise_from(
-                RetryError(
-                    "Maximum retry attempts calling {}".format(_name_of_func(func)),
-                    previous_exceptions,
-                ),
-                previous_exceptions[-1],
-            )
-
-        if retries is not None:
-            retries -= 1
-
-        time.sleep(delay)
-    else:
-        raise ValueError("Bad delay generator")
