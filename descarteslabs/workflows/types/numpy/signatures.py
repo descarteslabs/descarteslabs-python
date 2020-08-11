@@ -687,6 +687,20 @@ NUMPY_SIGNATURES = {
             Scalar,  # TODO: Float
         ),
     ],
+    "median": [
+        Sig([Param("a", Array), Param("axis", Union[Int, List[Int]], None)], Array),
+        Sig(
+            [Param("a", MaskedArray), Param("axis", Union[Int, List[Int]], None)],
+            MaskedArray,
+        ),
+        Sig(
+            [
+                Param("a", Union[Array, MaskedArray, Scalar]),
+                Param("axis", NoneType, None),
+            ],
+            Scalar,
+        ),
+    ],
     "meshgrid": Sig(
         [
             Param("xi", Union[Array, MaskedArray, Scalar], kind=VAR_P),
