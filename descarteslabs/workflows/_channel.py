@@ -17,3 +17,10 @@ def _set_channel(channel):
     """
     global __channel__
     __channel__ = channel
+
+    # reset global clients that may have the channel already stored
+    from .client import client
+    from .inspect import client as inspect_client
+
+    client.global_grpc_client = None
+    inspect_client.global_inspect_client = None
