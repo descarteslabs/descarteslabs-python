@@ -215,6 +215,7 @@ def compute(
         block=block,
         progress_bar=progress_bar,
         client=client,
+        cache=cache,
         **params
     )
 
