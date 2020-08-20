@@ -159,6 +159,12 @@ class MapApp(widgets.VBox):
             map = Map()
             map.add_control(ipyleaflet.FullScreenControl())
             map.add_control(ipyleaflet.ScaleControl(position="bottomleft"))
+            map.add_control(
+                ipyleaflet.SearchControl(
+                    position="topleft",
+                    url="https://nominatim.openstreetmap.org/search?format=json&q={s}",
+                )
+            )
 
         if layer_controller_list is None:
             from .layer_controller import LayerControllerList

@@ -103,7 +103,7 @@ def do_setup():
                 'blosc==1.8.3;platform_system!="Windows"',
                 "matplotlib>=3.0.3",
                 "mercantile>=1.1.3",
-                "ipyleaflet>=0.13.0,<1",
+                "ipyleaflet>=0.13.1,<1",
                 "ipywidgets>=7.5.1,<8",
                 "traitlets>=4.3.3,<5",
                 "markdown2>=2.3.9,<3",
