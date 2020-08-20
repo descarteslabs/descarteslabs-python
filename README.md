@@ -8,7 +8,7 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## Unreleased
+## [1.4.0] - 2020-08-20
 
 ### Catalog client
 
