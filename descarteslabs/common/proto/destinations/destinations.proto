@@ -26,6 +26,5 @@ message Catalog {
 
   string name = 10;
   string product_id = 11;
-  string acquired = 12;
   map<string, string> attributes_json = 13;
 }

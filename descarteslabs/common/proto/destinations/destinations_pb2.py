@@ -18,7 +18,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n:descarteslabs/common/proto/destinations/destinations.proto\x12\x17\x64\x65scarteslabs.workflows\"\x9f\x02\n\x0b\x44\x65stination\x12=\n\x08\x64ownload\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.DownloadR\x08\x64ownload\x12\x34\n\x05\x65mail\x18\x02 \x01(\x0b\x32\x1e.descarteslabs.workflows.EmailR\x05\x65mail\x12:\n\x07\x63\x61talog\x18\x03 \x01(\x0b\x32 .descarteslabs.workflows.CatalogR\x07\x63\x61talog\x12!\n\x0chas_download\x18\x14 \x01(\x08R\x0bhasDownload\x12\x1b\n\thas_email\x18\x15 \x01(\x08R\x08hasEmail\x12\x1f\n\x0bhas_catalog\x18\x17 \x01(\x08R\nhasCatalog\"\n\n\x08\x44ownload\"5\n\x05\x45mail\x12\x18\n\x07subject\x18\x01 \x01(\tR\x07subject\x12\x12\n\x04\x62ody\x18\x02 \x01(\tR\x04\x62ody\"\xd5\x02\n\x07\x43\x61talog\x12\x1c\n\toverwrite\x18\x01 \x01(\x08R\toverwrite\x12\x18\n\x07rescale\x18\x02 \x01(\x08R\x07rescale\x12!\n\x0c\x63hange_dtype\x18\x03 \x01(\x08R\x0b\x63hangeDtype\x12\x12\n\x04name\x18\n \x01(\tR\x04name\x12\x1d\n\nproduct_id\x18\x0b \x01(\tR\tproductId\x12\x1a\n\x08\x61\x63quired\x18\x0c \x01(\tR\x08\x61\x63quired\x12]\n\x0f\x61ttributes_json\x18\r \x03(\x0b\x32\x34.descarteslabs.workflows.Catalog.AttributesJsonEntryR\x0e\x61ttributesJson\x1a\x41\n\x13\x41ttributesJsonEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x62\x06proto3'
+  serialized_pb=b'\n:descarteslabs/common/proto/destinations/destinations.proto\x12\x17\x64\x65scarteslabs.workflows\"\x9f\x02\n\x0b\x44\x65stination\x12=\n\x08\x64ownload\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.DownloadR\x08\x64ownload\x12\x34\n\x05\x65mail\x18\x02 \x01(\x0b\x32\x1e.descarteslabs.workflows.EmailR\x05\x65mail\x12:\n\x07\x63\x61talog\x18\x03 \x01(\x0b\x32 .descarteslabs.workflows.CatalogR\x07\x63\x61talog\x12!\n\x0chas_download\x18\x14 \x01(\x08R\x0bhasDownload\x12\x1b\n\thas_email\x18\x15 \x01(\x08R\x08hasEmail\x12\x1f\n\x0bhas_catalog\x18\x17 \x01(\x08R\nhasCatalog\"\n\n\x08\x44ownload\"5\n\x05\x45mail\x12\x18\n\x07subject\x18\x01 \x01(\tR\x07subject\x12\x12\n\x04\x62ody\x18\x02 \x01(\tR\x04\x62ody\"\xb9\x02\n\x07\x43\x61talog\x12\x1c\n\toverwrite\x18\x01 \x01(\x08R\toverwrite\x12\x18\n\x07rescale\x18\x02 \x01(\x08R\x07rescale\x12!\n\x0c\x63hange_dtype\x18\x03 \x01(\x08R\x0b\x63hangeDtype\x12\x12\n\x04name\x18\n \x01(\tR\x04name\x12\x1d\n\nproduct_id\x18\x0b \x01(\tR\tproductId\x12]\n\x0f\x61ttributes_json\x18\r \x03(\x0b\x32\x34.descarteslabs.workflows.Catalog.AttributesJsonEntryR\x0e\x61ttributesJson\x1a\x41\n\x13\x41ttributesJsonEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x62\x06proto3'
 )
 
 
@@ -185,8 +185,8 @@ _CATALOG_ATTRIBUTESJSONENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=721,
-  serialized_end=786,
+  serialized_start=693,
+  serialized_end=758,
 )
 
 _CATALOG = _descriptor.Descriptor(
@@ -232,14 +232,7 @@ _CATALOG = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='productId', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='acquired', full_name='descarteslabs.workflows.Catalog.acquired', index=5,
-      number=12, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='acquired', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='attributes_json', full_name='descarteslabs.workflows.Catalog.attributes_json', index=6,
+      name='attributes_json', full_name='descarteslabs.workflows.Catalog.attributes_json', index=5,
       number=13, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -258,7 +251,7 @@ _CATALOG = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=445,
-  serialized_end=786,
+  serialized_end=758,
 )
 
 _DESTINATION.fields_by_name['download'].message_type = _DOWNLOAD

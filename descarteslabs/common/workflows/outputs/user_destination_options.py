@@ -38,8 +38,6 @@ def user_destination_to_proto(
 def _image_to_catalog_params(img: Image, **non_img_args) -> dict:
     if not img.id:
         raise ValueError("Catalog Image must have 'id' field.")
-    if not img.acquired:
-        raise ValueError("Catalog Image must have 'acquired' field.")
     if img.product.state != DocumentState.SAVED:
         raise ValueError(
             "Product {!r} has not been saved. Please save before uploading images".format(
@@ -53,7 +51,6 @@ def _image_to_catalog_params(img: Image, **non_img_args) -> dict:
         "type": "catalog",
         "name": cereal.pop("name"),
         "product_id": cereal.pop("product_id"),
-        "acquired": cereal.pop("acquired"),
         "attributes_json": {k: json.dumps(v) for k, v in cereal.items()},
         **non_img_args,
     }
