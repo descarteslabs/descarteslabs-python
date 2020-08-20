@@ -256,7 +256,6 @@ class WorkflowsBrowser(ipywidgets.VBox):
         ipywidgets.link((mine, "value"), (self, "mine"))
         ipywidgets.link((self._email, "value"), (self, "email"))
 
-        self._own_email = get_global_grpc_client().auth.payload["email"]
         self._lister = WorkflowsListerWidget(flows=[])
 
         self._lister.observe(
@@ -290,11 +289,13 @@ class WorkflowsBrowser(ipywidgets.VBox):
             ),
         ]
 
-        # Track that we haven't done the initial search yet.
+        # Track that we haven't done the initial search or gotten `own_email`
+        # (which may require a token fetch) yet.
         # We should do this before displaying to users, but we'll
         # defer until `_ipython_display_` so constructing the singleton
         # `wf.flows` (and therefore import) doesn't make a network call.
         self._initialized = False
+        self._own_email = None
 
     @traitlets.observe("name", "mine", "email")
     def _observe_search(self, change):
@@ -445,6 +446,7 @@ class WorkflowsBrowser(ipywidgets.VBox):
     def _ipython_display_(self):
         # the first time we're displayed, do the search so there's something to show.
         if not self._initialized:
+            self._own_email = get_global_grpc_client().auth.payload["email"]
             self._observe_search({})
             self._initialized = True
         super()._ipython_display_()
