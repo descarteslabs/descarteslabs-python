@@ -8,6 +8,29 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## Unreleased
+
+### Catalog client
+
+- Example code has been cleaned up.
+
+### Workflows (channel `v0-16`) - Added
+- **Sharing of any Workflows object as a `Workflow`** with version and access control. Browse through shared `Workflow`s with the `wf.flows` browser widget.
+- **Upload images to the DL catalog from Workflows jobs**. Usage details can be found [in the docs](https://docs.descarteslabs.com/descarteslabs/workflows/docs/destinations.html).
+- `wf.np.median`
+- `Job.cancel()` to cancel running jobs.
+- Transient failures in Jobs are automatically retried, resulting in fewer errors.
+- [Search widget](https://ipyleaflet.readthedocs.io/en/latest/api_reference/search_control.html) on `wf.map` by default.
+
+### Workflows - Fixed
+- Bitwise operations on imagery no longer fail
+- `wf.np.linspace` no longer fails when being called correctly
+- `.median` is slightly less prone to OOM errors
+
+### Workflows - Changed
+- `Array.to_imagery` now accepts `KnownDict` for bandinfo and properties.
+- `Number`s can now be constructed from `Str`s
+
 ## [1.3.0] - 2020-06-12
 
 ### Workflows (channel `v0-15`) - Added
