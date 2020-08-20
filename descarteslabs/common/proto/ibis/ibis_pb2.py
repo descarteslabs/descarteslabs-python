@@ -18,7 +18,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.ibis',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n*descarteslabs/common/proto/ibis/ibis.proto\x12\x12\x64\x65scarteslabs.ibis\"Y\n\x0bSchemaValue\x12\x14\n\x05names\x18\x01 \x03(\tR\x05names\x12\x34\n\x05types\x18\x02 \x03(\x0b\x32\x1e.descarteslabs.ibis.SchemaTypeR\x05types\"Q\n\x10\x41rraySchemaValue\x12=\n\nvalue_type\x18\x01 \x01(\x0b\x32\x1e.descarteslabs.ibis.SchemaTypeR\tvalueType\"H\n\x12\x44\x65\x63imalSchemaValue\x12\x1c\n\tprecision\x18\x01 \x01(\rR\tprecision\x12\x14\n\x05scale\x18\x02 \x01(\x05R\x05scale\"E\n\x15GeospatialSchemaValue\x12\x18\n\x07geotype\x18\x01 \x01(\tR\x07geotype\x12\x12\n\x04srid\x18\x02 \x01(\rR\x04srid\"\xb3\x02\n\nSchemaType\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x39\n\x06struct\x18\x02 \x01(\x0b\x32\x1f.descarteslabs.ibis.SchemaValueH\x00R\x06struct\x12<\n\x05\x61rray\x18\x03 \x01(\x0b\x32$.descarteslabs.ibis.ArraySchemaValueH\x00R\x05\x61rray\x12K\n\ngeospatial\x18\x04 \x01(\x0b\x32).descarteslabs.ibis.GeospatialSchemaValueH\x00R\ngeospatial\x12\x42\n\x07\x64\x65\x63imal\x18\x05 \x01(\x0b\x32&.descarteslabs.ibis.DecimalSchemaValueH\x00R\x07\x64\x65\x63imalB\x07\n\x05value\"S\n\x06Schema\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x35\n\x05value\x18\x02 \x01(\x0b\x32\x1f.descarteslabs.ibis.SchemaValueR\x05value\"_\n\x0bWindowTuple\x12!\n\x0bstart_value\x18\x01 \x01(\x04H\x00R\nstartValue\x12\x1d\n\tend_value\x18\x02 \x01(\x04H\x01R\x08\x65ndValueB\x07\n\x05startB\x05\n\x03\x65nd\"\xd2\x01\n\x0bWindowParam\x12\x18\n\x06offset\x18\x01 \x01(\x04H\x00R\x06offset\x12\x37\n\x05tuple\x18\x02 \x01(\x0b\x32\x1f.descarteslabs.ibis.WindowTupleH\x00R\x05tuple\x12.\n\x04\x65xpr\x18\x03 \x01(\x0b\x32\x18.descarteslabs.ibis.ExprH\x00R\x04\x65xpr\x12\x37\n\x07literal\x18\x04 \x01(\x0b\x32\x1b.descarteslabs.ibis.LiteralH\x00R\x07literalB\x07\n\x05value\"\xcb\x02\n\x0bWindowValue\x12\x33\n\x08group_by\x18\x01 \x03(\x0b\x32\x18.descarteslabs.ibis.ExprR\x07groupBy\x12\x33\n\x08order_by\x18\x02 \x03(\x0b\x32\x18.descarteslabs.ibis.ExprR\x07orderBy\x12=\n\tpreceding\x18\x03 \x01(\x0b\x32\x1f.descarteslabs.ibis.WindowParamR\tpreceding\x12=\n\tfollowing\x18\x04 \x01(\x0b\x32\x1f.descarteslabs.ibis.WindowParamR\tfollowing\x12\x42\n\x0cmax_lookback\x18\x05 \x01(\x0b\x32\x1f.descarteslabs.ibis.WindowParamR\x0bmaxLookback\x12\x10\n\x03how\x18\x06 \x01(\tR\x03how\"S\n\x06Window\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x35\n\x05value\x18\x02 \x01(\x0b\x32\x1f.descarteslabs.ibis.WindowValueR\x05value\".\n\x08Geometry\x12\x10\n\x03wkt\x18\x01 \x01(\tR\x03wkt\x12\x10\n\x03\x63rs\x18\x02 \x01(\tR\x03\x63rs\"\x88\x01\n\tPrimitive\x12\x14\n\x04\x62ool\x18\x01 \x01(\x08H\x00R\x04\x62ool\x12\x12\n\x03int\x18\x02 \x01(\x03H\x00R\x03int\x12\x14\n\x04uint\x18\x03 \x01(\x04H\x00R\x04uint\x12\x18\n\x06\x64ouble\x18\x04 \x01(\x01H\x00R\x06\x64ouble\x12\x18\n\x06string\x18\x05 \x01(\tH\x00R\x06stringB\x07\n\x05value\"\xda\x01\n\x07Literal\x12\x16\n\x06opname\x18\x01 \x01(\tR\x06opname\x12\x14\n\x05\x64type\x18\x02 \x01(\tR\x05\x64type\x12\x14\n\x04\x62ool\x18\x03 \x01(\x08H\x00R\x04\x62ool\x12\x12\n\x03int\x18\x04 \x01(\x03H\x00R\x03int\x12\x18\n\x06\x64ouble\x18\x05 \x01(\x01H\x00R\x06\x64ouble\x12\x18\n\x06string\x18\x06 \x01(\tH\x00R\x06string\x12:\n\x08geometry\x18\x07 \x01(\x0b\x32\x1c.descarteslabs.ibis.GeometryH\x00R\x08geometryB\x07\n\x05value\"D\n\x0cMapValueList\x12\x34\n\x06values\x18\x01 \x03(\x0b\x32\x1c.descarteslabs.ibis.MapValueR\x06values\"\xdf\x02\n\x08MapValue\x12\x36\n\x04list\x18\x01 \x01(\x0b\x32 .descarteslabs.ibis.MapValueListH\x00R\x04list\x12.\n\x04\x65xpr\x18\x02 \x01(\x0b\x32\x18.descarteslabs.ibis.ExprH\x00R\x04\x65xpr\x12\x37\n\x07literal\x18\x03 \x01(\x0b\x32\x1b.descarteslabs.ibis.LiteralH\x00R\x07literal\x12\x34\n\x06schema\x18\x04 \x01(\x0b\x32\x1a.descarteslabs.ibis.SchemaH\x00R\x06schema\x12\x34\n\x06window\x18\x05 \x01(\x0b\x32\x1a.descarteslabs.ibis.WindowH\x00R\x06window\x12=\n\tprimitive\x18\x06 \x01(\x0b\x32\x1d.descarteslabs.ibis.PrimitiveH\x00R\tprimitiveB\x07\n\x05value\"\xef\x01\n\x04\x45xpr\x12\x16\n\x06opname\x18\x01 \x01(\tR\x06opname\x12\x12\n\x04type\x18\x02 \x01(\tR\x04type\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\x12\x14\n\x05\x61lias\x18\x04 \x01(\x05R\x05\x61lias\x12\x39\n\x05value\x18\x05 \x03(\x0b\x32#.descarteslabs.ibis.Expr.ValueEntryR\x05value\x1aV\n\nValueEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32\x1c.descarteslabs.ibis.MapValueR\x05value:\x02\x38\x01\"s\n\nQueryValue\x12,\n\x04\x65xpr\x18\x01 \x01(\x0b\x32\x18.descarteslabs.ibis.ExprR\x04\x65xpr\x12\x37\n\ntable_refs\x18\x02 \x03(\x0b\x32\x18.descarteslabs.ibis.ExprR\ttableRefs\"Q\n\x05Query\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32\x1e.descarteslabs.ibis.QueryValueR\x05valueb\x06proto3'
+  serialized_pb=b'\n*descarteslabs/common/proto/ibis/ibis.proto\x12\x12\x64\x65scarteslabs.ibis\"Y\n\x0bSchemaValue\x12\x14\n\x05names\x18\x01 \x03(\tR\x05names\x12\x34\n\x05types\x18\x02 \x03(\x0b\x32\x1e.descarteslabs.ibis.SchemaTypeR\x05types\"Q\n\x10\x41rraySchemaValue\x12=\n\nvalue_type\x18\x01 \x01(\x0b\x32\x1e.descarteslabs.ibis.SchemaTypeR\tvalueType\"H\n\x12\x44\x65\x63imalSchemaValue\x12\x1c\n\tprecision\x18\x01 \x01(\rR\tprecision\x12\x14\n\x05scale\x18\x02 \x01(\x05R\x05scale\"E\n\x15GeospatialSchemaValue\x12\x18\n\x07geotype\x18\x01 \x01(\tR\x07geotype\x12\x12\n\x04srid\x18\x02 \x01(\rR\x04srid\"\xb3\x02\n\nSchemaType\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x39\n\x06struct\x18\x02 \x01(\x0b\x32\x1f.descarteslabs.ibis.SchemaValueH\x00R\x06struct\x12<\n\x05\x61rray\x18\x03 \x01(\x0b\x32$.descarteslabs.ibis.ArraySchemaValueH\x00R\x05\x61rray\x12K\n\ngeospatial\x18\x04 \x01(\x0b\x32).descarteslabs.ibis.GeospatialSchemaValueH\x00R\ngeospatial\x12\x42\n\x07\x64\x65\x63imal\x18\x05 \x01(\x0b\x32&.descarteslabs.ibis.DecimalSchemaValueH\x00R\x07\x64\x65\x63imalB\x07\n\x05value\"S\n\x06Schema\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x35\n\x05value\x18\x02 \x01(\x0b\x32\x1f.descarteslabs.ibis.SchemaValueR\x05value\"_\n\x0bWindowTuple\x12!\n\x0bstart_value\x18\x01 \x01(\x04H\x00R\nstartValue\x12\x1d\n\tend_value\x18\x02 \x01(\x04H\x01R\x08\x65ndValueB\x07\n\x05startB\x05\n\x03\x65nd\"\xd2\x01\n\x0bWindowParam\x12\x18\n\x06offset\x18\x01 \x01(\x04H\x00R\x06offset\x12\x37\n\x05tuple\x18\x02 \x01(\x0b\x32\x1f.descarteslabs.ibis.WindowTupleH\x00R\x05tuple\x12.\n\x04\x65xpr\x18\x03 \x01(\x0b\x32\x18.descarteslabs.ibis.ExprH\x00R\x04\x65xpr\x12\x37\n\x07literal\x18\x04 \x01(\x0b\x32\x1b.descarteslabs.ibis.LiteralH\x00R\x07literalB\x07\n\x05value\"\xcb\x02\n\x0bWindowValue\x12\x33\n\x08group_by\x18\x01 \x03(\x0b\x32\x18.descarteslabs.ibis.ExprR\x07groupBy\x12\x33\n\x08order_by\x18\x02 \x03(\x0b\x32\x18.descarteslabs.ibis.ExprR\x07orderBy\x12=\n\tpreceding\x18\x03 \x01(\x0b\x32\x1f.descarteslabs.ibis.WindowParamR\tpreceding\x12=\n\tfollowing\x18\x04 \x01(\x0b\x32\x1f.descarteslabs.ibis.WindowParamR\tfollowing\x12\x42\n\x0cmax_lookback\x18\x05 \x01(\x0b\x32\x1f.descarteslabs.ibis.WindowParamR\x0bmaxLookback\x12\x10\n\x03how\x18\x06 \x01(\tR\x03how\"S\n\x06Window\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x35\n\x05value\x18\x02 \x01(\x0b\x32\x1f.descarteslabs.ibis.WindowValueR\x05value\".\n\x08Geometry\x12\x10\n\x03wkt\x18\x01 \x01(\tR\x03wkt\x12\x10\n\x03\x63rs\x18\x02 \x01(\tR\x03\x63rs\"\x88\x01\n\tPrimitive\x12\x14\n\x04\x62ool\x18\x01 \x01(\x08H\x00R\x04\x62ool\x12\x12\n\x03int\x18\x02 \x01(\x03H\x00R\x03int\x12\x14\n\x04uint\x18\x03 \x01(\x04H\x00R\x04uint\x12\x18\n\x06\x64ouble\x18\x04 \x01(\x01H\x00R\x06\x64ouble\x12\x18\n\x06string\x18\x05 \x01(\tH\x00R\x06stringB\x07\n\x05value\"\x1f\n\x07IntList\x12\x14\n\x05value\x18\x01 \x03(\x03R\x05value\" \n\x08\x42oolList\x12\x14\n\x05value\x18\x01 \x03(\x08R\x05value\"\"\n\nDoubleList\x12\x14\n\x05value\x18\x01 \x03(\x01R\x05value\"\"\n\nStringList\x12\x14\n\x05value\x18\x01 \x03(\tR\x05value\"\xd7\x03\n\x07Literal\x12\x16\n\x06opname\x18\x01 \x01(\tR\x06opname\x12\x14\n\x05\x64type\x18\x02 \x01(\tR\x05\x64type\x12\x14\n\x04\x62ool\x18\x03 \x01(\x08H\x00R\x04\x62ool\x12\x12\n\x03int\x18\x04 \x01(\x03H\x00R\x03int\x12\x18\n\x06\x64ouble\x18\x05 \x01(\x01H\x00R\x06\x64ouble\x12\x18\n\x06string\x18\x06 \x01(\tH\x00R\x06string\x12:\n\x08geometry\x18\x07 \x01(\x0b\x32\x1c.descarteslabs.ibis.GeometryH\x00R\x08geometry\x12\x38\n\x08int_list\x18\x08 \x01(\x0b\x32\x1b.descarteslabs.ibis.IntListH\x00R\x07intList\x12;\n\tbool_list\x18\t \x01(\x0b\x32\x1c.descarteslabs.ibis.BoolListH\x00R\x08\x62oolList\x12\x41\n\x0b\x64ouble_list\x18\n \x01(\x0b\x32\x1e.descarteslabs.ibis.DoubleListH\x00R\ndoubleList\x12\x41\n\x0bstring_list\x18\x0b \x01(\x0b\x32\x1e.descarteslabs.ibis.StringListH\x00R\nstringListB\x07\n\x05value\"D\n\x0cMapValueList\x12\x34\n\x06values\x18\x01 \x03(\x0b\x32\x1c.descarteslabs.ibis.MapValueR\x06values\"\xdf\x02\n\x08MapValue\x12\x36\n\x04list\x18\x01 \x01(\x0b\x32 .descarteslabs.ibis.MapValueListH\x00R\x04list\x12.\n\x04\x65xpr\x18\x02 \x01(\x0b\x32\x18.descarteslabs.ibis.ExprH\x00R\x04\x65xpr\x12\x37\n\x07literal\x18\x03 \x01(\x0b\x32\x1b.descarteslabs.ibis.LiteralH\x00R\x07literal\x12\x34\n\x06schema\x18\x04 \x01(\x0b\x32\x1a.descarteslabs.ibis.SchemaH\x00R\x06schema\x12\x34\n\x06window\x18\x05 \x01(\x0b\x32\x1a.descarteslabs.ibis.WindowH\x00R\x06window\x12=\n\tprimitive\x18\x06 \x01(\x0b\x32\x1d.descarteslabs.ibis.PrimitiveH\x00R\tprimitiveB\x07\n\x05value\"\xef\x01\n\x04\x45xpr\x12\x16\n\x06opname\x18\x01 \x01(\tR\x06opname\x12\x12\n\x04type\x18\x02 \x01(\tR\x04type\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\x12\x14\n\x05\x61lias\x18\x04 \x01(\x05R\x05\x61lias\x12\x39\n\x05value\x18\x05 \x03(\x0b\x32#.descarteslabs.ibis.Expr.ValueEntryR\x05value\x1aV\n\nValueEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32\x1c.descarteslabs.ibis.MapValueR\x05value:\x02\x38\x01\"s\n\nQueryValue\x12,\n\x04\x65xpr\x18\x01 \x01(\x0b\x32\x18.descarteslabs.ibis.ExprR\x04\x65xpr\x12\x37\n\ntable_refs\x18\x02 \x03(\x0b\x32\x18.descarteslabs.ibis.ExprR\ttableRefs\"Q\n\x05Query\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32\x1e.descarteslabs.ibis.QueryValueR\x05valueb\x06proto3'
 )
 
 
@@ -572,6 +572,130 @@ _PRIMITIVE = _descriptor.Descriptor(
 )
 
 
+_INTLIST = _descriptor.Descriptor(
+  name='IntList',
+  full_name='descarteslabs.ibis.IntList',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='value', full_name='descarteslabs.ibis.IntList.value', index=0,
+      number=1, type=3, cpp_type=2, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='value', file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1696,
+  serialized_end=1727,
+)
+
+
+_BOOLLIST = _descriptor.Descriptor(
+  name='BoolList',
+  full_name='descarteslabs.ibis.BoolList',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='value', full_name='descarteslabs.ibis.BoolList.value', index=0,
+      number=1, type=8, cpp_type=7, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='value', file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1729,
+  serialized_end=1761,
+)
+
+
+_DOUBLELIST = _descriptor.Descriptor(
+  name='DoubleList',
+  full_name='descarteslabs.ibis.DoubleList',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='value', full_name='descarteslabs.ibis.DoubleList.value', index=0,
+      number=1, type=1, cpp_type=5, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='value', file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1763,
+  serialized_end=1797,
+)
+
+
+_STRINGLIST = _descriptor.Descriptor(
+  name='StringList',
+  full_name='descarteslabs.ibis.StringList',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='value', full_name='descarteslabs.ibis.StringList.value', index=0,
+      number=1, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='value', file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1799,
+  serialized_end=1833,
+)
+
+
 _LITERAL = _descriptor.Descriptor(
   name='Literal',
   full_name='descarteslabs.ibis.Literal',
@@ -628,6 +752,34 @@ _LITERAL = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='geometry', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='int_list', full_name='descarteslabs.ibis.Literal.int_list', index=7,
+      number=8, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='intList', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='bool_list', full_name='descarteslabs.ibis.Literal.bool_list', index=8,
+      number=9, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='boolList', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='double_list', full_name='descarteslabs.ibis.Literal.double_list', index=9,
+      number=10, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='doubleList', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='string_list', full_name='descarteslabs.ibis.Literal.string_list', index=10,
+      number=11, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='stringList', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -643,8 +795,8 @@ _LITERAL = _descriptor.Descriptor(
       name='value', full_name='descarteslabs.ibis.Literal.value',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1697,
-  serialized_end=1915,
+  serialized_start=1836,
+  serialized_end=2307,
 )
 
 
@@ -674,8 +826,8 @@ _MAPVALUELIST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1917,
-  serialized_end=1985,
+  serialized_start=2309,
+  serialized_end=2377,
 )
 
 
@@ -743,8 +895,8 @@ _MAPVALUE = _descriptor.Descriptor(
       name='value', full_name='descarteslabs.ibis.MapValue.value',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1988,
-  serialized_end=2339,
+  serialized_start=2380,
+  serialized_end=2731,
 )
 
 
@@ -781,8 +933,8 @@ _EXPR_VALUEENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2495,
-  serialized_end=2581,
+  serialized_start=2887,
+  serialized_end=2973,
 )
 
 _EXPR = _descriptor.Descriptor(
@@ -839,8 +991,8 @@ _EXPR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2342,
-  serialized_end=2581,
+  serialized_start=2734,
+  serialized_end=2973,
 )
 
 
@@ -877,8 +1029,8 @@ _QUERYVALUE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2583,
-  serialized_end=2698,
+  serialized_start=2975,
+  serialized_end=3090,
 )
 
 
@@ -915,8 +1067,8 @@ _QUERY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2700,
-  serialized_end=2781,
+  serialized_start=3092,
+  serialized_end=3173,
 )
 
 _SCHEMAVALUE.fields_by_name['types'].message_type = _SCHEMATYPE
@@ -981,6 +1133,10 @@ _PRIMITIVE.oneofs_by_name['value'].fields.append(
   _PRIMITIVE.fields_by_name['string'])
 _PRIMITIVE.fields_by_name['string'].containing_oneof = _PRIMITIVE.oneofs_by_name['value']
 _LITERAL.fields_by_name['geometry'].message_type = _GEOMETRY
+_LITERAL.fields_by_name['int_list'].message_type = _INTLIST
+_LITERAL.fields_by_name['bool_list'].message_type = _BOOLLIST
+_LITERAL.fields_by_name['double_list'].message_type = _DOUBLELIST
+_LITERAL.fields_by_name['string_list'].message_type = _STRINGLIST
 _LITERAL.oneofs_by_name['value'].fields.append(
   _LITERAL.fields_by_name['bool'])
 _LITERAL.fields_by_name['bool'].containing_oneof = _LITERAL.oneofs_by_name['value']
@@ -996,6 +1152,18 @@ _LITERAL.fields_by_name['string'].containing_oneof = _LITERAL.oneofs_by_name['va
 _LITERAL.oneofs_by_name['value'].fields.append(
   _LITERAL.fields_by_name['geometry'])
 _LITERAL.fields_by_name['geometry'].containing_oneof = _LITERAL.oneofs_by_name['value']
+_LITERAL.oneofs_by_name['value'].fields.append(
+  _LITERAL.fields_by_name['int_list'])
+_LITERAL.fields_by_name['int_list'].containing_oneof = _LITERAL.oneofs_by_name['value']
+_LITERAL.oneofs_by_name['value'].fields.append(
+  _LITERAL.fields_by_name['bool_list'])
+_LITERAL.fields_by_name['bool_list'].containing_oneof = _LITERAL.oneofs_by_name['value']
+_LITERAL.oneofs_by_name['value'].fields.append(
+  _LITERAL.fields_by_name['double_list'])
+_LITERAL.fields_by_name['double_list'].containing_oneof = _LITERAL.oneofs_by_name['value']
+_LITERAL.oneofs_by_name['value'].fields.append(
+  _LITERAL.fields_by_name['string_list'])
+_LITERAL.fields_by_name['string_list'].containing_oneof = _LITERAL.oneofs_by_name['value']
 _MAPVALUELIST.fields_by_name['values'].message_type = _MAPVALUE
 _MAPVALUE.fields_by_name['list'].message_type = _MAPVALUELIST
 _MAPVALUE.fields_by_name['expr'].message_type = _EXPR
@@ -1039,6 +1207,10 @@ DESCRIPTOR.message_types_by_name['WindowValue'] = _WINDOWVALUE
 DESCRIPTOR.message_types_by_name['Window'] = _WINDOW
 DESCRIPTOR.message_types_by_name['Geometry'] = _GEOMETRY
 DESCRIPTOR.message_types_by_name['Primitive'] = _PRIMITIVE
+DESCRIPTOR.message_types_by_name['IntList'] = _INTLIST
+DESCRIPTOR.message_types_by_name['BoolList'] = _BOOLLIST
+DESCRIPTOR.message_types_by_name['DoubleList'] = _DOUBLELIST
+DESCRIPTOR.message_types_by_name['StringList'] = _STRINGLIST
 DESCRIPTOR.message_types_by_name['Literal'] = _LITERAL
 DESCRIPTOR.message_types_by_name['MapValueList'] = _MAPVALUELIST
 DESCRIPTOR.message_types_by_name['MapValue'] = _MAPVALUE
@@ -1130,6 +1302,34 @@ Primitive = _reflection.GeneratedProtocolMessageType('Primitive', (_message.Mess
   # @@protoc_insertion_point(class_scope:descarteslabs.ibis.Primitive)
   })
 _sym_db.RegisterMessage(Primitive)
+
+IntList = _reflection.GeneratedProtocolMessageType('IntList', (_message.Message,), {
+  'DESCRIPTOR' : _INTLIST,
+  '__module__' : 'descarteslabs.common.proto.ibis.ibis_pb2'
+  # @@protoc_insertion_point(class_scope:descarteslabs.ibis.IntList)
+  })
+_sym_db.RegisterMessage(IntList)
+
+BoolList = _reflection.GeneratedProtocolMessageType('BoolList', (_message.Message,), {
+  'DESCRIPTOR' : _BOOLLIST,
+  '__module__' : 'descarteslabs.common.proto.ibis.ibis_pb2'
+  # @@protoc_insertion_point(class_scope:descarteslabs.ibis.BoolList)
+  })
+_sym_db.RegisterMessage(BoolList)
+
+DoubleList = _reflection.GeneratedProtocolMessageType('DoubleList', (_message.Message,), {
+  'DESCRIPTOR' : _DOUBLELIST,
+  '__module__' : 'descarteslabs.common.proto.ibis.ibis_pb2'
+  # @@protoc_insertion_point(class_scope:descarteslabs.ibis.DoubleList)
+  })
+_sym_db.RegisterMessage(DoubleList)
+
+StringList = _reflection.GeneratedProtocolMessageType('StringList', (_message.Message,), {
+  'DESCRIPTOR' : _STRINGLIST,
+  '__module__' : 'descarteslabs.common.proto.ibis.ibis_pb2'
+  # @@protoc_insertion_point(class_scope:descarteslabs.ibis.StringList)
+  })
+_sym_db.RegisterMessage(StringList)
 
 Literal = _reflection.GeneratedProtocolMessageType('Literal', (_message.Message,), {
   'DESCRIPTOR' : _LITERAL,

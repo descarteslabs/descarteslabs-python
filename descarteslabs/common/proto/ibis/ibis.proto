@@ -114,6 +114,18 @@ message Primitive {
     }
 }
 
+message IntList {
+    repeated int64 value = 1;
+}
+message BoolList {
+    repeated bool value = 1;
+}
+message DoubleList {
+    repeated double value = 1;
+}
+message StringList {
+    repeated string value = 1;
+}
 // ibis.expr.operations support
 // Literals need some special handling so aren't handled as Exprs
 message Literal {
@@ -126,6 +138,10 @@ message Literal {
         double double = 5;
         string string = 6;
         Geometry geometry = 7;
+        IntList int_list = 8;
+        BoolList bool_list = 9;
+        DoubleList double_list = 10;
+        StringList string_list = 11;
     }
 }
 
