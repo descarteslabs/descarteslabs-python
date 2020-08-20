@@ -9,8 +9,7 @@ Output Formats
 
   For example, with ``format='geotiff'`` you might use ``destination='email@example.com'`` or ``destination='download'``. Both would produce GeoTIFFs; one would send an email with a link to the file, and the other would download the GeoTIFF within your script.
 
-..
-  TODO: Add "Some output formats must be used with certain destinations. For example, with the Catalog destination you can only use the GeoTIFF format." when we have the Catalog destination
+  Some output formats are required by certain destinations. For example, with the Catalog destination, you can only use the GeoTIFF format.
 
 .. contents::
   :local:
@@ -29,14 +28,14 @@ If you would like to provide more format options, you pass the format as a dicti
   >>> two = wf.Int(1) + 1
   >>> two.compute(format={"type": "pyarrow", "compression": "brotli"})
 
-Note that when passing the format as a dictionary, it must include a ``type`` key corresponding to the desired format.
+Note that when passing the format as a dictionary, it must include a ``type`` key with the format's name.
 
 The results will be returned differently depending on the ``format`` specified. When using the "pyarrow" format, results will be deserialized and unpacked into :ref:`result-types`. For all other formats, the results will not be deserialized and will be returned as raw bytes.
 
-Format Options
-^^^^^^^^^^^^^^
+Available Formats
+^^^^^^^^^^^^^^^^^
 
-The following is a list of the available options for each format. The keys in the format dictionary must match the keys listed here.
+The following is a list of the available formats and their options. The keys in the format dictionary must match the keys listed here.
 
 PyArrow
 ~~~~~~~

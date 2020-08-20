@@ -18,8 +18,10 @@ DEFAULTS = {
 def user_destination_to_proto(
     params: Union[dict, str, Image]
 ) -> destinations_pb2.Destination:
-    if isinstance(params, (str, Image)):
+    if isinstance(params, str):
         params = {"type": params}
+    elif isinstance(params, Image):
+        params = {"type": "catalog", "image": params}
     else:
         if "type" not in params:
             raise ValueError(
@@ -27,9 +29,19 @@ def user_destination_to_proto(
                 "(like `'type': 'download'`), but key 'type' does not exist."
             )
 
-    # TODO less weird way to conveniently set overwrite?
-    if isinstance(params["type"], Image):
-        img = params.pop("type")
+    if params["type"].lower() == "catalog":
+        try:
+            img = params.pop("image")
+        except KeyError:
+            if (
+                "name" not in params
+                and "product_id" not in params
+                and "attributes_json" not in params
+            ):
+                raise ValueError(
+                    "For the Catalog destination, the options dict must contain an `image` field "
+                    "with the `dl.catalog.Image` to upload to."
+                ) from None
         params = _image_to_catalog_params(img, **params)
 
     return user_dict_to_has_proto(params, destinations_pb2.Destination, DEFAULTS)
