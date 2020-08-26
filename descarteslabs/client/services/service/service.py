@@ -336,6 +336,10 @@ class Service(object):
 
     _session_class = Session
 
+    # List of attributes that will be included in state for pickling.
+    # Subclasses can extend this attribute list.
+    __attrs__ = ["auth", "base_url", "_session_class", "RETRY_CONFIG"]
+
     @classmethod
     def set_default_session_class(cls, session_class):
         """Set the default session class for :py:class:`Service`.
@@ -388,7 +392,8 @@ class Service(object):
         if retries is None:
             self._adapter = self.ADAPTER
         else:
-            self._adapter = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=retries))
+            self.RETRY_CONFIG = retries
+            self._init_adapter()
 
         if session_class is not None:
             # Overwrite the default session class
@@ -399,6 +404,14 @@ class Service(object):
 
             self._session_class = session_class
 
+        self._init_session()
+
+    def _init_adapter(self):
+        self._adapter = ThreadLocalWrapper(
+            lambda: HTTPAdapter(max_retries=self.RETRY_CONFIG)
+        )
+
+    def _init_session(self):
         # Sessions can't be shared across threads or processes because the underlying
         # SSL connection pool can't be shared. We create them thread-local to avoid
         # intractable exceptions when users naively share clients e.g. when using
@@ -463,6 +476,16 @@ class Service(object):
             pass
 
         return session
+
+    def __getstate__(self):
+        return dict((attr, getattr(self, attr)) for attr in self.__attrs__)
+
+    def __setstate__(self, state):
+        for name, value in state.items():
+            setattr(self, name, value)
+
+        self._init_adapter()
+        self._init_session()
 
 
 class JsonApiSession(Session):

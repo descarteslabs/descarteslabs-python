@@ -73,6 +73,19 @@ class Auth:
 
     ADAPTER = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=Auth.RETRY_CONFIG))
 
+    __attrs__ = [
+        "domain",
+        "scope",
+        "leeway",
+        "token_info_path",
+        "client_id",
+        "client_secret",
+        "refresh_token",
+        "_token",
+        "_namespace",
+        "RETRY_CONFIG",
+    ]
+
     def __init__(
         self,
         domain="https://accounts.descarteslabs.com",
@@ -83,6 +96,7 @@ class Auth:
         client_secret=None,
         jwt_token=None,
         refresh_token=None,
+        retries=None,
     ):
         """
         Helps retrieve JWT from a client id and refresh token for cli usage.
@@ -110,8 +124,10 @@ class Auth:
                 with open(self.token_info_path) as fp:
                     token_info = json.load(fp)
             except (IOError, ValueError) as e:
-                warnings.warn("unable to read token_info from {} with error {}.".format(
-                    self.token_info_path, str(e))
+                warnings.warn(
+                    "unable to read token_info from {} with error {}.".format(
+                        self.token_info_path, str(e)
+                    )
                 )
 
         self.client_id = next(
@@ -200,7 +216,12 @@ class Auth:
                 self._token = None
 
         self._namespace = None
-        self._session = ThreadLocalWrapper(self.build_session)
+        if retries is None:
+            self._adapter = self.ADAPTER
+        else:
+            self.RETRY_CONFIG = retries
+            self._init_adapter()
+        self._init_session()
         self.domain = domain
         self.leeway = leeway
 
@@ -219,6 +240,18 @@ class Auth:
         :param token_info_path: Path to a JSON file optionally holding auth information
         """
         return Auth(**kwargs)
+
+    def _init_adapter(self):
+        self._adapter = ThreadLocalWrapper(
+            lambda: HTTPAdapter(max_retries=self.RETRY_CONFIG)
+        )
+
+    def _init_session(self):
+        # Sessions can't be shared across threads or processes because the underlying
+        # SSL connection pool can't be shared. We create them thread-local to avoid
+        # intractable exceptions when users naively share clients e.g. when using
+        # multiprocessing.
+        self._session = ThreadLocalWrapper(self.build_session)
 
     @property
     def token(self):
@@ -359,8 +392,10 @@ class Auth:
                 with open(self.token_info_path) as fp:
                     token_info = json.load(fp)
             except (IOError, ValueError) as e:
-                warnings.warn("unable to read token_info from {} with error {}.".format(
-                    self.token_info_path, str(e))
+                warnings.warn(
+                    "unable to read token_info from {} with error {}.".format(
+                        self.token_info_path, str(e)
+                    )
                 )
                 return
 
@@ -394,6 +429,16 @@ class Auth:
         if self._namespace is None:
             self._namespace = sha1(self.payload["sub"].encode("utf-8")).hexdigest()
         return self._namespace
+
+    def __getstate__(self):
+        return dict((attr, getattr(self, attr)) for attr in self.__attrs__)
+
+    def __setstate__(self, state):
+        for name, value in state.items():
+            setattr(self, name, value)
+
+        self._init_adapter()
+        self._init_session()
 
 
 if __name__ == "__main__":
