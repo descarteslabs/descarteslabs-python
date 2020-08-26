@@ -9,7 +9,6 @@ import grpc
 from descarteslabs.common.graft import client as graft_client
 from descarteslabs.common.proto.xyz import xyz_pb2
 
-from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec
 from ..client import get_global_grpc_client
 from .utils import pb_datetime_to_milliseconds, pb_milliseconds_to_datetime
@@ -126,6 +125,8 @@ class XYZ(object):
         >>> xyz # doctest: +SKIP
         <descarteslabs.workflows.models.xyz.XYZ object at 0x...>
         """
+        if client is None:
+            client = get_global_grpc_client()
         typespec = serialize_typespec(type(proxy_object))
         graft = proxy_object.graft
 
@@ -134,7 +135,7 @@ class XYZ(object):
             description=description,
             serialized_graft=json.dumps(graft),
             typespec=typespec,
-            channel=_channel.__channel__,
+            channel=client._wf_channel,
         )
         return cls(proxy_object, message, client=client)
 
@@ -353,8 +354,9 @@ class XYZ(object):
             if len(scales) not in (0, 1, 3):
                 raise (
                     ValueError(
-                        "Invalid scales passed: expected 0, 1, or 3 scales, but got {}"
-                        .format(len(scales))
+                        "Invalid scales passed: expected 0, 1, or 3 scales, but got {}".format(
+                            len(scales)
+                        )
                     )
                 )
 
@@ -380,8 +382,9 @@ class XYZ(object):
                     x is None for x in scaling
                 ):
                     raise ValueError(
-                        "Invalid scales passed: one number and one None in scaling {}"
-                        .format(i, scaling)
+                        "Invalid scales passed: one number and one None in scaling {}".format(
+                            i, scaling
+                        )
                     )
 
             return [
@@ -450,11 +453,11 @@ class XYZ(object):
 
         Raises ValueError if the XYZ is not compatible with the current channel.
         """
-        if self.channel != _channel.__channel__:
+        if self.channel != self._client._wf_channel:
             raise ValueError(
                 "This client is compatible with channel '{}', "
                 "but the XYZ '{}' is only defined for channel '{}'.".format(
-                    _channel.__channel__, self.id, self.channel
+                    self._client._wf_channel, self.id, self.channel
                 )
             )
         return self._object

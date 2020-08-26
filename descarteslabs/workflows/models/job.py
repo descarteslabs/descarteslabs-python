@@ -25,7 +25,6 @@ from descarteslabs.common.workflows.arrow_serialization import deserialize_pyarr
 
 from descarteslabs import catalog
 
-from .. import _channel
 from ..cereal import deserialize_typespec, serialize_typespec, typespec_to_unmarshal_str
 from ..client import get_global_grpc_client, default_grpc_retry_predicate
 from ..result_types import unmarshal
@@ -135,7 +134,7 @@ class Job(object):
                 format=format_proto,
                 destination=destination_proto,
                 no_cache=not cache,
-                channel=_channel.__channel__,
+                channel=client._wf_channel,
             ),
             timeout=client.DEFAULT_TIMEOUT,
         )

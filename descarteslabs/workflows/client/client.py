@@ -25,19 +25,24 @@ class Client(GrpcClient):
     <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
     """
 
-    def __init__(self, host=None, auth=None, certificate=None, port=443):
+    def __init__(self, host=None, auth=None, certificate=None, port=443, channel=None):
         if host is None:
             host = os.environ.get(
                 "DESCARTESLABS_WORKFLOWS_HOST", "workflows-api.descarteslabs.com"
             )
+
+        if channel is None:
+            channel = _channel.__channel__
 
         super().__init__(
             host=host,
             auth=auth,
             certificate=certificate,
             port=port,
-            default_metadata=(("x-wf-channel", _channel.__channel__),),
+            default_metadata=(("x-wf-channel", channel),),
         )
+
+        self._wf_channel = channel
 
     def _populate_api(self):
         self._add_stub("Workflow", workflow_pb2_grpc.WorkflowAPIStub)

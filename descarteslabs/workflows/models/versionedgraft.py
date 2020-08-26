@@ -3,7 +3,6 @@ import textwrap
 
 from descarteslabs.common.graft import client as graft_client
 from descarteslabs.common.proto.workflow import workflow_pb2
-from descarteslabs.workflows import _channel
 from descarteslabs.workflows.cereal import deserialize_typespec, serialize_typespec
 from descarteslabs.workflows.client import get_global_grpc_client
 
@@ -16,7 +15,7 @@ class VersionedGraft:
     use the `Workflow` object and `wf.use <.models.use>`.
     """
 
-    def __init__(self, version, proxy_object, docstring="", labels=None):
+    def __init__(self, version, proxy_object, docstring="", labels=None, client=None):
         """
         Construct a VersionedGraft object from a proxy object.
 
@@ -33,22 +32,29 @@ class VersionedGraft:
             Docstring for the VersionedGraft.
         labels: dict, optional
             Key-value pair labels to add to the VersionedGraft.
+        client : `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters
 
         Returns
         -------
         VersionedGraft
         """
+        if client is None:
+            client = get_global_grpc_client()
+
         typespec = serialize_typespec(type(proxy_object))
         graft = proxy_object.graft
 
         message = workflow_pb2.VersionedGraft(
             version=version,
             serialized_graft=json.dumps(graft),
-            channel=_channel.__channel__,
+            channel=client._wf_channel,
             typespec=typespec,
             docstring=textwrap.dedent(docstring),
             labels=labels,
         )
+        self._client = client
         self._object = proxy_object
         self._message = message
 
@@ -83,7 +89,7 @@ class VersionedGraft:
         return cls._from_proto(versioned_graft_message)
 
     @classmethod
-    def _from_proto(cls, message):
+    def _from_proto(cls, message, client=None):
         """
         Low-level constructor for a `VersionedGraft` object from a Protobuf message.
 
@@ -94,6 +100,9 @@ class VersionedGraft:
         ----------
         proto_message: workflow_pb2.VersionedGraft message
             Protobuf message for the VersionedGraft
+        client : `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters
 
         Returns
         -------
@@ -101,6 +110,10 @@ class VersionedGraft:
         """
         obj = cls.__new__(cls)  # bypass __init__
 
+        if client is None:
+            client = get_global_grpc_client()
+
+        obj._client = client
         obj._message = message
         obj._object = None
 
@@ -138,11 +151,11 @@ class VersionedGraft:
 
         Raises ValueError if the VersionedGraft is not compatible with the current channel.
         """
-        if self.channel != _channel.__channel__:
+        if self.channel != self._client._wf_channel:
             raise ValueError(
                 "This client is compatible with channel '{}', "
                 "but the VersionedGraft is only defined for channel '{}'.".format(
-                    _channel.__channel__, self.channel
+                    self._client._wf_channel, self.channel
                 )
             )
         if self._object is None:
