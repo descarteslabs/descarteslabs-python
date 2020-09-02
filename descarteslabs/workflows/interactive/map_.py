@@ -129,6 +129,7 @@ class MapApp(widgets.VBox):
         "layers",
         "bounds",
         "bounds_polygon",
+        "pixel_bounds",
         # from subclass
         "output_log",
         "error_log",
@@ -281,40 +282,6 @@ class MapApp(widgets.VBox):
 
         if self._view_name is not None:
             self._handle_displayed(**kwargs)
-
-
-# Source: https://wiki.openstreetmap.org/wiki/Mercator#Python_implementation
-def merc_x(lon):
-    """convert from wgs84 longitude (decimal degrees) to epsg3857 meters"""
-    r_major = EARTH_EQUATORIAL_RADIUS_WGS84_M
-    return r_major * math.radians(lon)
-
-
-# Source: https://wiki.openstreetmap.org/wiki/Mercator#Python_implementation
-def merc_y(lat):
-    """convert from wgs84 latitude (decimal degrees) to epsg3857 meters"""
-    if lat > 89.5:
-        lat = 89.5
-    if lat < -89.5:
-        lat = -89.5
-    r_major = EARTH_EQUATORIAL_RADIUS_WGS84_M
-    r_minor = 6356752.3142
-    temp = r_minor / r_major
-    eccent = math.sqrt(1 - temp ** 2)
-    phi = math.radians(lat)
-    sinphi = math.sin(phi)
-    con = eccent * sinphi
-    com = eccent / 2
-    con = ((1.0 - con) / (1.0 + con)) ** com
-    ts = math.tan((math.pi / 2 - phi) / 2) / con
-    y = 0 - r_major * math.log(ts)
-    return y
-
-
-def resolution_from_zoom(z, tilesize=256):
-    """calculate resolution from zoom level (assuming epsg3857 crs)"""
-    num_tiles = 1 << z
-    return (2 * math.pi * EARTH_EQUATORIAL_RADIUS_WGS84_M) / num_tiles / tilesize
 
 
 class Map(ipyleaflet.Map):
@@ -523,16 +490,7 @@ class Map(ipyleaflet.Map):
 
     def map_dimensions(self):
         """
-        Approximate (width, height) of the given ipyleaflet Map, in pixels.
-
-        These dimensions are not exposed directly by the ipyleaflet.Map widget
-        so this calculation approximates them by projecting the map bounds into
-        web mercator (EPSG3857).
-
-        Raises
-        ------
-        RuntimeError
-            if ``crs`` is not 'EPSG3857'
+        Width, height of this Map, in pixels.
 
         Example
         -------
@@ -541,21 +499,9 @@ class Map(ipyleaflet.Map):
         >>> wf.map.map_dimensions() # doctest: +SKIP
         (1182, 398)
         """
-        if self.crs != "EPSG3857":
-            raise RuntimeError("CRS must be EPSG3857 to calculate map dimensions")
-
-        (miny, minx), (maxy, maxx) = self.bounds
-        maxy_m, miny_m = merc_y(maxy), merc_y(miny)
-        maxx_m, minx_m = merc_x(maxx), merc_x(minx)
-
-        width_m = maxx_m - minx_m
-        height_m = maxy_m - miny_m
-        resolution = resolution_from_zoom(int(self.zoom))
-
-        width = round(width_m / resolution)
-        height = round(height_m / resolution)
-
-        return width, height
+        # https://github.com/jupyter-widgets/ipyleaflet/pull/616#issue-433563400
+        (left, top), (right, bottom) = self.pixel_bounds
+        return (math.ceil(right - left), math.ceil(bottom - top))
 
     def geocontext(self, resolution=None, shape=None, crs="EPSG:3857"):
         """
