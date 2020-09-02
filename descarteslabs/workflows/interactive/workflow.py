@@ -41,9 +41,14 @@ class VersionGraftWidget(ipywidgets.HTML):
             self.value = ""
             return
 
+        try:
+            type_line = f"<b>Type:</b> <code>{vg.type.__name__}</code>"
+        except ValueError:
+            type_line = f"<b>Channel:</b> ❌ <code>{vg.channel}</code> (incompatible with current version)"
+
         self.value = f"""
         <h2>Version {vg.version}</h2>
-        <p><b>Type:</b> <code>{vg.type.__name__}</code></p>
+        <p>{type_line}</p>
         <p><b>Labels:</b> <code>{vg.labels!r}</code></p>
         <hr>
         <pre>
@@ -59,6 +64,7 @@ class WorkflowWidget(ipywidgets.VBox):
     `version` holds the currently-selected version name as a string, and can be modified.
     `current_vg` is a read-only trait holding the currently-selected `~.VersionedGraft`.
     """
+
     flow = traitlets.Instance(klass=Workflow, allow_none=True)
     version = traitlets.CUnicode(allow_none=True)
 
@@ -320,13 +326,13 @@ class WorkflowsBrowser(ipywidgets.VBox):
         try:
             id = self.current_flow.id
             version = self.current_vg.version
-        except AttributeError:
+            obj = self.current_vg.object
+        except (AttributeError, ValueError):
             self._use.value = ""
             self._add_to_map.disabled = True
         else:
             self._use.value = f'<code>wf.use("{id}", "{version}")</code>'
 
-            obj = self.current_vg.object
             if isinstance(obj, types.Function):
                 if any(t not in proxytype_to_py_type for t in obj.arg_types):
                     obj = None  # dumb way to ensure the `isinstance` below will fail
@@ -369,6 +375,7 @@ class WorkflowsBrowser(ipywidgets.VBox):
         ------
         ValueError
             If a Workflow and version are not currently selected.
+            If the currently-selected Workflow and version is incompatible with this client version.
         TypeError
             If the selected version is not one of the supported types.
         """
@@ -393,9 +400,7 @@ class WorkflowsBrowser(ipywidgets.VBox):
                     for name, type_ in zip(param_names, obj.arg_types)
                 }
             except KeyError as e:
-                raise TypeError(
-                    f"Cannot create interactive control for type {e}"
-                )
+                raise TypeError(f"Cannot create interactive control for type {e}")
 
             obj = obj(*graft_params)
 

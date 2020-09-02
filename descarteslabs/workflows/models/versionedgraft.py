@@ -121,7 +121,11 @@ class VersionedGraft:
 
     @property
     def type(self):
-        """type: The type of the proxy object."""
+        """
+        type: The type of the proxy object.
+
+        Raises ValueError if the `VersionedGraft` is not compatible with the current client version.
+        """
         return type(self.object)
 
     @property
@@ -147,9 +151,9 @@ class VersionedGraft:
     @property
     def object(self):
         """
-        Proxytype: The proxy object of this Workflow.
+        Proxytype: The proxy object of this `VersionedGraft`.
 
-        Raises ValueError if the VersionedGraft is not compatible with the current channel.
+        Raises ValueError if the `VersionedGraft` is not compatible with the current client version.
         """
         if self.channel != self._client._wf_channel:
             raise ValueError(
@@ -174,12 +178,21 @@ class VersionedGraft:
         return self._message == other._message
 
     def __repr__(self):
+        try:
+            type_line = "type: {}".format(self.type.__name__)
+        except ValueError:
+            type_line = "channel: {} (incompatible with current version)".format(
+                self.channel
+            )
+
         return """\
 VersionedGraft: {self.version}
-    - type: {self.type.__name__}
+    - {type_line}
     - labels: {self.labels}
     - channel: {self.channel}
     {docstring}
 """.format(
-            self=self, docstring=textwrap.indent(self.docstring, "    ")
+            self=self,
+            type_line=type_line,
+            docstring=textwrap.indent(self.docstring, "    "),
         )
