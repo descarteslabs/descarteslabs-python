@@ -33,35 +33,10 @@ The Descartes Labs Platform simplifies analysis of **global-scale raster data** 
     and `view imagery <https://viewer.descarteslabs.com/>`_, including your data you create
 """
 
-import sys
-import warnings
-
-if sys.version_info.major == 2:
-    with warnings.catch_warnings():
-        warnings.simplefilter("once")
-        warnings.warn(
-            DeprecationWarning(
-                """
-You are using the Descartes Labs Python client library with Python 2.
-After January 1st, 2020, all future client library releases will be Python 3 only.
-For more information, please contact support@descarteslabs.com.
-For porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html."""
-            ),
-            DeprecationWarning,
-            2,
-        )
-else:
-    # By importing cloudpickle here, we avoid a DeprecationWarning
-    import cloudpickle
-
-# Turn on deprecation warnings for all API clients
-warnings.simplefilter("always", DeprecationWarning)
-
-# flake8: noqa
 from .client import exceptions
 from .client import services
 from .client.auth import Auth
-from .client.services import *
+from .client.services import *  # noqa: F403
 from .client.version import __version__
 from .common.property_filtering import GenericProperties
 
@@ -82,24 +57,31 @@ except ImportError:
 
 
 descartes_auth = Auth.from_environment_or_token_json()
-metadata = Metadata(auth=descartes_auth)
-places = Places(auth=descartes_auth)
-raster = Raster(auth=descartes_auth)
-storage = Storage(auth=descartes_auth)
-tasks = Tasks(auth=descartes_auth)
-vector = Vector(auth=descartes_auth)
+metadata = Metadata(auth=descartes_auth)  # noqa: F405
+places = Places(auth=descartes_auth)  # noqa: F405
+raster = Raster(auth=descartes_auth)  # noqa: F405
+storage = Storage(auth=descartes_auth)  # noqa: F405
+tasks = Tasks(auth=descartes_auth)  # noqa: F405
+vector = Vector(auth=descartes_auth)  # noqa: F405
 properties = GenericProperties()
 
 __all__ = [
     "descartes_auth",
+    "scenes",
+    "vectors",
+    "catalog",
     "metadata",
     "places",
     "raster",
     "storage",
     "tasks",
     "vector",
+    "services",
     "properties",
     "Auth",
     "exceptions",
-] + services.__all__
+    "__version__",
+]
+__all__ += services.__all__
+
 __author__ = "Descartes Labs"

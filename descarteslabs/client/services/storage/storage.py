@@ -14,7 +14,6 @@
 
 import os
 import six
-import warnings
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.service import Service, ThirdPartyService
@@ -42,7 +41,6 @@ class Storage(Service):
         if auth is None:
             auth = Auth()
 
-        warnings.simplefilter("always", DeprecationWarning)
         if url is None:
             url = os.environ.get(
                 "DESCARTESLABS_STORAGE_URL",

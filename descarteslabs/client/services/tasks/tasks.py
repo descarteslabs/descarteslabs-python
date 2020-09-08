@@ -139,7 +139,7 @@ class Tasks(Service):
 
         :return: `True` if successful, `False` otherwise.
         """
-        warn(CREATE_NAMESPACE_DEPRECATION_MESSAGE, DeprecationWarning)
+        warn(CREATE_NAMESPACE_DEPRECATION_MESSAGE, FutureWarning)
         return self._create_namespace()
 
     def new_group(
@@ -639,7 +639,7 @@ class Tasks(Service):
         :rtype: DotDict
         """
         if offset is not None:
-            warn(OFFSET_DEPRECATION_MESSAGE, DeprecationWarning)
+            warn(OFFSET_DEPRECATION_MESSAGE, FutureWarning)
 
         params = {"limit": limit}
         for field in [
@@ -942,7 +942,7 @@ class Tasks(Service):
             given name exists.
         :rtype: :class:`CloudFunction`
         """
-        warn(GET_FUNCTION_DEPRECATION_MESSAGE, DeprecationWarning)
+        warn(GET_FUNCTION_DEPRECATION_MESSAGE, FutureWarning)
 
         group_info = self.get_group_by_name(name)
         if group_info is None:
@@ -1009,7 +1009,7 @@ class Tasks(Service):
             the supplied parameters are invalid.
         """
 
-        warn(CREATE_OR_GET_DEPRECATION_MESSAGE, DeprecationWarning)
+        warn(CREATE_OR_GET_DEPRECATION_MESSAGE, FutureWarning)
 
         if name:
             cached = self.get_function(name)

@@ -446,7 +446,7 @@ class TestWarningsClass(unittest.TestCase):
     @mock.patch.object(requests.Session, "request")
     def test_session_deprecation_warning(self, request, warn):
         message = "Warning"
-        cls = DeprecationWarning
+        cls = FutureWarning
 
         class result:
             status_code = HttpStatusCode.Ok

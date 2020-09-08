@@ -382,7 +382,7 @@ class Service(object):
         if token is not None:
             warn(
                 "setting token at service level will be removed in future",
-                DeprecationWarning,
+                FutureWarning,
             )
             auth._token = token
 

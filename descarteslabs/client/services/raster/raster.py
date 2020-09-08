@@ -188,7 +188,7 @@ class Raster(Service):
             warnings.warn(
                 "The maxtiles argument is deprecated and will be removed in a future "
                 "release.",
-                DeprecationWarning,
+                FutureWarning,
             )
 
         shape = shapely_to_geojson(shape)

@@ -841,8 +841,8 @@ class TestProduct(ClientTestCase):
                 "meta": {
                     "warnings": [
                         {
-                            "category": "DeprecationWarning",
-                            "message": "This is a test of a DeprecationWarning",
+                            "category": "FutureWarning",
+                            "message": "This is a test of a FutureWarning",
                         },
                         {
                             "category": "SomeWarning",
@@ -858,8 +858,8 @@ class TestProduct(ClientTestCase):
             warnings.simplefilter("always")
             Product.get("product_id", client=self.client)
 
-        assert w[0].category is DeprecationWarning
-        assert str(w[0].message) == "This is a test of a DeprecationWarning"
+        assert w[0].category is FutureWarning
+        assert str(w[0].message) == "This is a test of a FutureWarning"
         assert w[1].category is UserWarning
         assert (
             str(w[1].message)
@@ -899,8 +899,8 @@ class TestProduct(ClientTestCase):
                 "meta": {
                     "warnings": [
                         {
-                            "category": "DeprecationWarning",
-                            "bad_message": "This is a test of a DeprecationWarning",
+                            "category": "FutureWarning",
+                            "bad_message": "This is a test of a FutureWarning",
                         },
                         "some_other_garbage",
                     ]

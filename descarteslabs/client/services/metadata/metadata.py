@@ -15,7 +15,6 @@
 import json
 import os
 import itertools
-from warnings import simplefilter
 from six import string_types
 from descarteslabs.client.services.service import Service
 from descarteslabs.client.services.places import Places
@@ -57,7 +56,6 @@ class Metadata(Service):
         if auth is None:
             auth = Auth()
 
-        simplefilter("always", DeprecationWarning)
         if url is None:
             url = os.environ.get(
                 "DESCARTESLABS_METADATA_URL",

@@ -86,7 +86,7 @@ class MetadataTest(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             collection = self.instance.paged_search(limit=100, start_time="2017-07-08")
             assert 1 == len(w)
-            assert w[0].category == DeprecationWarning
+            assert w[0].category == FutureWarning
         assert features == collection.features
 
     @responses.activate

@@ -394,9 +394,8 @@ class Image(NamedCatalogObject):
         if not self.acquired:
             raise ValueError("acquired field required")
         if self.cs_code or self.projection:
-            print("warning!")
             warnings.warn(
-                "cs_code and projection fields not permitted", DeprecationWarning
+                "cs_code and projection fields not permitted", FutureWarning
             )
             # raise ValueError("cs_code and projection fields not permitted")
 
@@ -531,7 +530,7 @@ class Image(NamedCatalogObject):
         if self.cs_code and self.projection:
             warnings.warn(
                 "Only one of cs_code and projection fields permitted",
-                DeprecationWarning,
+                FutureWarning,
             )
             # raise ValueError("only one of cs_code and projection fields permitted")
 

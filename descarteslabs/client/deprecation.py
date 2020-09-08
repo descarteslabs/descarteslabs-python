@@ -42,7 +42,7 @@ def check_deprecated_kwargs(kwargs, renames):
                     "The parameter `{}` has been deprecated "
                     "and will be removed in future versions.".format(field)
                 )
-            warnings.warn(msg, DeprecationWarning)
+            warnings.warn(msg, FutureWarning)
 
 
 def deprecate(required=None, renames=None):
@@ -153,7 +153,7 @@ def deprecate(required=None, renames=None):
                     ).format(old=old, new=new)
                     raise SyntaxError(msg)
 
-                warnings.warn(msg, DeprecationWarning)
+                warnings.warn(msg, FutureWarning)
 
             for key in required:
                 if key not in kwargs:
