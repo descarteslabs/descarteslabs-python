@@ -28,6 +28,7 @@ Changelog
 - `.median` is slightly less prone to OOM errors
 
 ### Workflows - Changed
+- **Breaking: Workflows sharing**: `wf.publish()` and `wf.use()` have new signatures, `wf.retrieve()` has been removed in favor of `wf.Workflow.get()` and `wf.VersionedGraft.get_version()` and the `wf.Workflow` object has been completely refactored. Detailed information is [in the docs](https://docs.descarteslabs.com/descarteslabs/workflows/docs/execution.html#module-descarteslabs.workflows.models).
 - `Array.to_imagery` now accepts `KnownDict` for bandinfo and properties.
 - `Number`s can now be constructed from `Str`s
 
