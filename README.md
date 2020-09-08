@@ -8,6 +8,15 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## [1.4.1] - 2020-09-02
+
+### Fixed
+No more irrelevant `DeprecationWarning`s when importing the `descarteslabs` package ([#235](https://github.com/descarteslabs/descarteslabs-python/issues/235)). Deprecated functionality in the package will now show `FutureWarning`s instead.
+
+### Workflows (channel `v0-16`) - Fixed
+- `wf.map.geocontext` doesn't raise an error about the CRS of the map
+- `wf.flows` doesn't raise an error about versions from incompatible channels
+
 ## [1.4.0] - 2020-08-20
 
 ### Catalog client
