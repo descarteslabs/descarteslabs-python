@@ -40,11 +40,14 @@ message Job {
   STATUS status = 2;
 }
 
-// An Arrow RecordBatch.
-message RecordBatch {
+// Byte-slice of an Arrow RecordBatch.
+message RecordBatchSlice {
 
-  // The bytes of the RecordBatch.
+  // The byte-slice of the RecordBatch.
   bytes data = 1;
+
+  // Indicates if this is the last slice of a RecordBatch.
+  bool final = 2;
 }
 
 // StreamingStatus error.
@@ -117,8 +120,8 @@ message SearchResultsResponse {
     // Current search status as of this point in the results stream.
     SearchStatus status = 1;
 
-    // Arrow RecordBatch data.
-    RecordBatch batch = 2;
+    // Byte-slice of Arrow RecordBatch data.
+    RecordBatchSlice slice = 2;
   }
 }
 
