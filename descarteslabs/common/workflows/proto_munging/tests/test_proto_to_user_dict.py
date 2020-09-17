@@ -21,9 +21,14 @@ from ..user_dict_to_proto import user_dict_to_has_proto
             },
             formats_pb2.Format,
         ),
-        ({"type": "download"}, destinations_pb2.Destination),
+        ({"type": "download", "result_url": ""}, destinations_pb2.Destination),
         (
-            {"type": "email", "subject": "This is a test", "body": "Testing"},
+            {
+                "type": "email",
+                "subject": "This is a test",
+                "body": "Testing",
+                "result_url": "",
+            },
             destinations_pb2.Destination,
         ),
     ],

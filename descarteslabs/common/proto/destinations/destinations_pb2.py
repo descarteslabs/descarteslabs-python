@@ -18,7 +18,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n:descarteslabs/common/proto/destinations/destinations.proto\x12\x17\x64\x65scarteslabs.workflows\"\x9f\x02\n\x0b\x44\x65stination\x12=\n\x08\x64ownload\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.DownloadR\x08\x64ownload\x12\x34\n\x05\x65mail\x18\x02 \x01(\x0b\x32\x1e.descarteslabs.workflows.EmailR\x05\x65mail\x12:\n\x07\x63\x61talog\x18\x03 \x01(\x0b\x32 .descarteslabs.workflows.CatalogR\x07\x63\x61talog\x12!\n\x0chas_download\x18\x14 \x01(\x08R\x0bhasDownload\x12\x1b\n\thas_email\x18\x15 \x01(\x08R\x08hasEmail\x12\x1f\n\x0bhas_catalog\x18\x17 \x01(\x08R\nhasCatalog\"\n\n\x08\x44ownload\"5\n\x05\x45mail\x12\x18\n\x07subject\x18\x01 \x01(\tR\x07subject\x12\x12\n\x04\x62ody\x18\x02 \x01(\tR\x04\x62ody\"\xb9\x02\n\x07\x43\x61talog\x12\x1c\n\toverwrite\x18\x01 \x01(\x08R\toverwrite\x12\x18\n\x07rescale\x18\x02 \x01(\x08R\x07rescale\x12!\n\x0c\x63hange_dtype\x18\x03 \x01(\x08R\x0b\x63hangeDtype\x12\x12\n\x04name\x18\n \x01(\tR\x04name\x12\x1d\n\nproduct_id\x18\x0b \x01(\tR\tproductId\x12]\n\x0f\x61ttributes_json\x18\r \x03(\x0b\x32\x34.descarteslabs.workflows.Catalog.AttributesJsonEntryR\x0e\x61ttributesJson\x1a\x41\n\x13\x41ttributesJsonEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x62\x06proto3'
+  serialized_pb=b'\n:descarteslabs/common/proto/destinations/destinations.proto\x12\x17\x64\x65scarteslabs.workflows\"\x9f\x02\n\x0b\x44\x65stination\x12=\n\x08\x64ownload\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.DownloadR\x08\x64ownload\x12\x34\n\x05\x65mail\x18\x02 \x01(\x0b\x32\x1e.descarteslabs.workflows.EmailR\x05\x65mail\x12:\n\x07\x63\x61talog\x18\x03 \x01(\x0b\x32 .descarteslabs.workflows.CatalogR\x07\x63\x61talog\x12!\n\x0chas_download\x18\x14 \x01(\x08R\x0bhasDownload\x12\x1b\n\thas_email\x18\x15 \x01(\x08R\x08hasEmail\x12\x1f\n\x0bhas_catalog\x18\x17 \x01(\x08R\nhasCatalog\")\n\x08\x44ownload\x12\x1d\n\nresult_url\x18\x01 \x01(\tR\tresultUrl\"T\n\x05\x45mail\x12\x18\n\x07subject\x18\x01 \x01(\tR\x07subject\x12\x12\n\x04\x62ody\x18\x02 \x01(\tR\x04\x62ody\x12\x1d\n\nresult_url\x18\x03 \x01(\tR\tresultUrl\"\xb9\x02\n\x07\x43\x61talog\x12\x1c\n\toverwrite\x18\x01 \x01(\x08R\toverwrite\x12\x18\n\x07rescale\x18\x02 \x01(\x08R\x07rescale\x12!\n\x0c\x63hange_dtype\x18\x03 \x01(\x08R\x0b\x63hangeDtype\x12\x12\n\x04name\x18\n \x01(\tR\x04name\x12\x1d\n\nproduct_id\x18\x0b \x01(\tR\tproductId\x12]\n\x0f\x61ttributes_json\x18\r \x03(\x0b\x32\x34.descarteslabs.workflows.Catalog.AttributesJsonEntryR\x0e\x61ttributesJson\x1a\x41\n\x13\x41ttributesJsonEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x62\x06proto3'
 )
 
 
@@ -97,6 +97,13 @@ _DOWNLOAD = _descriptor.Descriptor(
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='result_url', full_name='descarteslabs.workflows.Download.result_url', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='resultUrl', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -110,7 +117,7 @@ _DOWNLOAD = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=377,
-  serialized_end=387,
+  serialized_end=418,
 )
 
 
@@ -135,6 +142,13 @@ _EMAIL = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='body', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='result_url', full_name='descarteslabs.workflows.Email.result_url', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='resultUrl', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -147,8 +161,8 @@ _EMAIL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=389,
-  serialized_end=442,
+  serialized_start=420,
+  serialized_end=504,
 )
 
 
@@ -185,8 +199,8 @@ _CATALOG_ATTRIBUTESJSONENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=693,
-  serialized_end=758,
+  serialized_start=755,
+  serialized_end=820,
 )
 
 _CATALOG = _descriptor.Descriptor(
@@ -250,8 +264,8 @@ _CATALOG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=445,
-  serialized_end=758,
+  serialized_start=507,
+  serialized_end=820,
 )
 
 _DESTINATION.fields_by_name['download'].message_type = _DOWNLOAD

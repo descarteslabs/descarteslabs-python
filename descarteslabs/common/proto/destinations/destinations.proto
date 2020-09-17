@@ -12,11 +12,16 @@ message Destination {
   bool has_catalog = 23;
 }
 
-message Download {}
+message Download {
+  // NOTE: this is filled in by the backend; any value set by the client will be ignored.
+  string result_url = 1;
+}
 
 message Email {
   string subject = 1;
   string body = 2;
+  // NOTE: this is filled in by the backend; any value set by the client will be ignored.
+  string result_url = 3;
 }
 
 message Catalog {

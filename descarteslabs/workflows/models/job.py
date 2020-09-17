@@ -69,8 +69,6 @@ class Job(object):
     2
     """
 
-    BUCKET_PREFIX = "https://storage.googleapis.com/dl-compute-dev-results/{}"
-
     def __init__(
         self,
         proxy_object,
@@ -565,9 +563,11 @@ class Job(object):
 
         If `format` is not "download" or "email", `url` will be None.
         """
-        if which_has(self._message.destination) not in ("download", "email"):
+        destination = which_has(self._message.destination)
+        if destination not in ("download", "email"):
             return None
-        return self.BUCKET_PREFIX.format(self.id)
+
+        return getattr(self._message.destination, destination).result_url
 
     @property
     def error(self):

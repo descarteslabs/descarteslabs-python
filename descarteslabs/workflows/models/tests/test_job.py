@@ -350,6 +350,9 @@ class TestJob(object):
             {"type": "pyarrow", "compression": "brotli"}
         )
         destination_proto = user_destination_to_proto("download")
+        destination_proto.download.result_url = (
+            "https://storage.googleapis.com/dl-compute-dev-results"
+        )
 
         job = Job._from_proto(
             job_pb2.Job(
@@ -367,7 +370,7 @@ class TestJob(object):
 
         responses.add(
             responses.GET,
-            Job.BUCKET_PREFIX.format(job.id),
+            job.url,
             body=serialized,
             headers={
                 "x-goog-stored-content-encoding": "application/vnd.pyarrow",
@@ -383,6 +386,9 @@ class TestJob(object):
     def test_result_to_file(self, stub, file_path, tmpdir):
         format_proto = user_format_to_proto("json")
         destination_proto = user_destination_to_proto("download")
+        destination_proto.download.result_url = (
+            "https://storage.googleapis.com/dl-compute-dev-results"
+        )
 
         job = Job._from_proto(
             job_pb2.Job(
@@ -396,7 +402,7 @@ class TestJob(object):
         result = [1, 2, 3, 4]
         responses.add(
             responses.GET,
-            Job.BUCKET_PREFIX.format(job.id),
+            job.url,
             body=json.dumps(result),
             headers={"x-goog-stored-content-encoding": "application/json"},
             status=200,
@@ -412,7 +418,6 @@ class TestJob(object):
             assert not file_arg.closed
             file_arg.flush()
 
-        print(path)
         with open(str(path), "r") as f:
             assert result == json.load(f)
 
