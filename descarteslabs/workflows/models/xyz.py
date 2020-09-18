@@ -1,4 +1,3 @@
-import os
 import json
 import threading
 import urllib
@@ -44,10 +43,6 @@ class XYZ(object):
     >>> same_xyz.object # doctest: +SKIP
     <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
     """
-
-    BASE_URL = "https://" + os.environ.get(
-        "DESCARTESLABS_WORKFLOWS_TILES_HOST", "workflows.descarteslabs.com"
-    )
 
     def __init__(self, proxy_object, proto_message, client=None):
         """
@@ -267,9 +262,8 @@ class XYZ(object):
             raise ValueError(
                 "This XYZ object has not been persisted yet; call .save() to do so."
             )
-        url = "{base}/{channel}/xyz/{id}/{{z}}/{{x}}/{{y}}.png".format(
-            base=self.BASE_URL, channel=self.channel, id=self.id
-        )
+
+        url = "{base}/{{z}}/{{x}}/{{y}}.png".format(base=self._message.base_url)
 
         query_args = {}
         if session_id is not None:

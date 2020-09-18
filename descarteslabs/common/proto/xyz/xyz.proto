@@ -30,6 +30,7 @@ message XYZ {
 
   string user = 23;
   string org = 24;
+  string base_url = 26;
 }
 
 message CreateXYZRequest {
