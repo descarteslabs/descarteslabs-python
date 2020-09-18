@@ -97,8 +97,6 @@ def do_setup():
             "requests[security]>=2.20.1,<3",
             "six>=1.12.0",
             "shapely>=1.6.3,<2",
-            "ibis-framework>=1.3.0",
-            "geopandas>= 0.7.0",
         ],
         extras_require={
             "complete": [
