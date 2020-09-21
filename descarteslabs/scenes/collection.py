@@ -60,7 +60,7 @@ class Collection(object):
             if isinstance(idx, slice):
                 idx = list(range(*idx.indices(len(self))))
             if isinstance(item, six.string_types) or not isinstance(
-                item, collections.Sequence
+                item, collections.abc.Sequence
             ):  # if scalar
                 item = [item] * len(idx)
             item = list(item)

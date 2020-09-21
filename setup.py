@@ -60,6 +60,7 @@ def do_setup():
             "Programming Language :: Python :: 3.5",
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
+            "Programming Language :: Python :: 3.8",
         ],
         license="Apache 2.0",
         download_url=(
@@ -87,7 +88,8 @@ def do_setup():
             "affine>=2.2.1",
             "backports-datetime-fromisoformat>=1.0.0;python_version<'3.7'",
             "cachetools>=2.0.1",
-            "cloudpickle==0.4.0",
+            "cloudpickle==0.4.0;python_version<'3.8'",
+            "cloudpickle==1.6.0;python_version>='3.8'",
             "geojson>=2.5.0",
             "grpcio>=1.16.1,<2",
             "protobuf==3.11.2,<4",

@@ -8,6 +8,18 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## Unreleased
+
+### Python 3.8 Support
+- Python 3.8 is now supported in the client.
+
+### Tasks Client
+- Altered the behavior of Task function creation. Deprecation warnings will be issued when attempting to create
+  a Task function for which support will be removed in the near future. **It is
+  strongly recommended to test any existing code which uses the Tasks client when upgrading to this
+  release.**
+- New tasks public images for for use with Python 3.8 are available.
+
 ## [1.4.1] - 2020-09-02
 
 ### Fixed
@@ -16,7 +28,6 @@ No more irrelevant `DeprecationWarning`s when importing the `descarteslabs` pack
 ### Workflows (channel `v0-16`) - Fixed
 - `wf.map.geocontext` doesn't raise an error about the CRS of the map
 - `wf.flows` doesn't raise an error about versions from incompatible channels
-
 ## [1.4.0] - 2020-08-20
 
 ### Catalog client

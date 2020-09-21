@@ -75,11 +75,15 @@ class ClientTestCase(unittest.TestCase):
 
 
 class TasksTest(ClientTestCase):
+    @pytest.mark.skipif(
+        sys.version_info >= (3, 8), reason="requires python3.7 or lower"
+    )
     @responses.activate
-    @mock.patch.object(sys.modules["cloudpickle"], "__version__", "0.3.0")
+    @mock.patch.object(sys.modules.get("cloudpickle", {}), "__version__", "0.3.0")
     def test_new_group(self):
         def f():
-            return True
+            # force pickling
+            return sys.version_info
 
         self.mock_response(
             responses.POST,
@@ -91,18 +95,24 @@ class TasksTest(ClientTestCase):
         with warnings.catch_warnings(record=True) as w:
             group = self.client.new_group(f, "task-image")
             assert "foo" == group.id
-            assert 1 == len(w)
+            assert 2 == len(w)
+            assert "cloudpickle" in str(w[0].message)
 
+    @pytest.mark.skipif(
+        sys.version_info >= (3, 8), reason="requires python3.7 or lower"
+    )
     @responses.activate
-    @mock.patch.object(sys.modules["cloudpickle"], "__version__", None)
+    @mock.patch.object(sys.modules.get("cloudpickle", {}), "__version__", None)
     def test_cloudpickle_not_found(self):
         def f():
-            return True
+            # force pickling
+            return sys.version_info
 
         self.mock_response(responses.POST, {}, status=201)
         with warnings.catch_warnings(record=True) as w:
             group = self.client.new_group(f, "task-image")
-            assert 1 == len(w)
+            assert 2 == len(w)
+            assert "cloudpickle" in str(w[0].message)
 
     @responses.activate
     def test_iter_groups(self):
@@ -235,7 +245,11 @@ class TasksPackagingTest(ClientTestCase):
         curdir = os.getcwd()
         tempdir = None
         sys_path = sys.path
-        sys_modules = sys.modules.copy()
+        # python 3.8 ends up with funky imports of the core library if you remove
+        # everything; we only depend on descarteslabs being removed.
+        sys_modules = {
+            k: v for k, v in sys.modules.items() if k.startswith("descarteslabs")
+        }
 
         try:
             # Create a temp directory to extract the sources into
@@ -245,7 +259,9 @@ class TasksPackagingTest(ClientTestCase):
             # Set the env to only look at the temp directory
             os.chdir(tempdir)
             sys.path = ["{}/{}".format(tempdir, DIST)]
-            sys.modules.clear()
+            # remove descarteslabs modules
+            for k in sys_modules:
+                sys.modules.pop(k)
 
             # Import the module using a clean environment
             env = runpy.run_module(os.path.splitext(ENTRYPOINT)[0])
@@ -281,6 +297,35 @@ class TasksPackagingTest(ClientTestCase):
                 "task-image",
                 include_data=[self.DATA_FILE_PATH],
                 include_modules=[self.TEST_MODULE],
+            )
+
+        body = responses.calls[0].request.body.decode(
+            "utf-8"
+        )  # prior to 3.6, json does not accept bytes
+        call_args = json.loads(body)
+        bundle = responses.calls[1].request.body
+        try:
+            with ZipFile(bundle.name, mode="r") as zf:
+                assert len(zf.namelist()) > 0
+        finally:
+            os.remove(bundle.name)
+
+        assert call_args["function_type"] == FunctionType.PY_BUNDLE
+
+    @responses.activate
+    def test_new_group_default_bundle(self):
+        def foo():
+            pass
+
+        upload_url = "https://storage.google.com/upload/b/dl-pex-storage/o/12345343"
+        resp_json = {"id": 12345343, "upload_url": upload_url}
+        self.mock_response(responses.POST, status=201, json=resp_json)
+        responses.add(responses.PUT, upload_url, status=200)
+        with mock.patch(
+            "os.remove"
+        ):  # Don't delete bundle so we can read it back below
+            self.client.new_group(
+                foo, "task-image",
             )
 
         body = responses.calls[0].request.body.decode(
@@ -473,7 +518,7 @@ class TasksPackagingTest(ClientTestCase):
         try:
             with ZipFile(zf) as arc:
                 with pytest.raises(ImportError):
-                    self.call_function(arc, self.LOCAL_STRING + self.GLOBAL_STRING)
+                    self.call_function(arc, None)
         finally:
             if os.path.exists(zf):
                 os.remove(zf)
@@ -500,9 +545,10 @@ class TasksPackagingTest(ClientTestCase):
 
     def test_requirements_string_file(self):
         good_requirements = os.path.join(self.TEST_DATA_PATH, "good_requirements.txt")
-        assert open(good_requirements).read() == self.client._requirements_string(
-            good_requirements
-        )
+        with open(good_requirements) as requirements:
+            assert requirements.read() == self.client._requirements_string(
+                good_requirements
+            )
 
     def test_requirements_string_bad(self):
         with pytest.raises(ValueError):

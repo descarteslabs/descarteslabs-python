@@ -60,8 +60,7 @@ class TestDotDict(unittest.TestCase):
     def test_repr(self):
         d = DotDict(long=list(range(100)))
         # long lists should be truncated with "..."
-        with pytest.raises((SyntaxError, ValueError)):
-            ast.literal_eval(repr(d))
+        assert "..." in repr(d)
 
         d = DotDict({i: i for i in range(100)})
         # a long top-level dict should not be truncated
@@ -339,7 +338,9 @@ class TestDotList(unittest.TestCase):
 
 class TestIndentedRepr(unittest.TestCase):
     def test_idr_short(self):
-        assert idr.indent == 2, "indented repr indent has changed, other tests will fail"
+        assert (
+            idr.indent == 2
+        ), "indented repr indent has changed, other tests will fail"
         obj = [{u"key": 1.01, "bool": False, (1, (2, 3)): {"a", "b", "c"}}, [4, 5, 6]]
         unicode_prefix = ""
         set_start = "{"
@@ -358,7 +359,9 @@ class TestIndentedRepr(unittest.TestCase):
         assert "  {\n" in output
         assert "\n    {}'key': 1.01".format(unicode_prefix) in output
         assert "\n    'bool': False" in output
-        assert "\n    (1, (2, 3)): {}'a', 'b', 'c'{}".format(set_start, set_end) in output
+        assert (
+            "\n    (1, (2, 3)): {}'a', 'b', 'c'{}".format(set_start, set_end) in output
+        )
         assert "\n  }" in output
         assert "\n  [4, 5, 6]" in output
         assert "\n]" in output

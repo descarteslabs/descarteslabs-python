@@ -3,6 +3,7 @@ python:
 - '3.5'
 - '3.6'
 - '3.7'
+- '3.8'
 jobs:
   include:
     # Direct Python support is not yet supported in Travis so manual installation
@@ -14,6 +15,15 @@ jobs:
       filter_secrets: false
       before_install:
         - choco install miniconda3 --version=4.7.12.1
+        # python is in miniconda3, conda is in miniconda3/Scripts, openssl is in miniconda3/Library/bin
+        - export PATH="/c/Tools/miniconda3:/c/Tools/miniconda3/Scripts:/c/Tools/miniconda3/Library/bin:$PATH"
+        - conda install shapely numpy --yes
+    - os: windows
+      language: shell
+      python: '3.8'
+      filter_secrets: false
+      before_install:
+        - choco install miniconda3
         # python is in miniconda3, conda is in miniconda3/Scripts, openssl is in miniconda3/Library/bin
         - export PATH="/c/Tools/miniconda3:/c/Tools/miniconda3/Scripts:/c/Tools/miniconda3/Library/bin:$PATH"
         - conda install shapely numpy --yes
