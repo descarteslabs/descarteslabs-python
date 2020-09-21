@@ -1400,7 +1400,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         >>> col.mosaic()
         <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
         >>> date_mosaic = col.sorted(lambda img: img.properties['date']).mosaic()
-        >>> cloudfree_mosaic = col.sorted(lambda img: img.properties['cloud_fraction']).mosaic()
+        >>> cloudfree_mosaic = col.sorted(lambda img: img.properties['cloud_fraction'], reverse=True).mosaic()
         """
         return Image._from_apply("wf.mosaic", self, reverse=reverse)
 
