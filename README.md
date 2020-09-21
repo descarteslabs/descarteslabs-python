@@ -10,8 +10,9 @@ Changelog
 
 ## Unreleased
 
-### Python 3.8 Support
+### Python Version Support
 - Python 3.8 is now supported in the client.
+- As Python 3.5 has reached End Of Life, it is no longer supported by the descarteslabs client.
 
 ### Tasks Client
 - Altered the behavior of Task function creation. Deprecation warnings will be issued when attempting to create

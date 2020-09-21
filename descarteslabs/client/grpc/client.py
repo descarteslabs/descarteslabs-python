@@ -1,5 +1,4 @@
 import os
-from collections import OrderedDict
 
 import certifi
 import grpc
@@ -227,12 +226,7 @@ class GrpcClient:
 
         # Merge and set default request headers
         # example: https://github.com/grpc/grpc/blob/master/examples/python/metadata/metadata_client.py
-        # NOTE(Clark): We use an OrderedDict to ensure a stable ordering for Python 3.5
-        # and 3.6.
-        # TODO(Clark): Revert back to dict once Python 3.5 is dropped.
-        merged_metadata = OrderedDict(
-            default_metadata + kwargs.get("metadata", tuple())
-        )
+        merged_metadata = dict(default_metadata + kwargs.get("metadata", tuple()))
 
         kwargs["metadata"] = tuple(merged_metadata.items())
 

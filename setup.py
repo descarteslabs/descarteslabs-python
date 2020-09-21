@@ -57,7 +57,6 @@ def do_setup():
         classifiers=[
             "Programming Language :: Python",
             "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.5",
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
@@ -83,7 +82,7 @@ def do_setup():
                 "descarteslabs = descarteslabs.client.scripts.__main__:main"
             ]
         },
-        python_requires="~=3.5",
+        python_requires="~=3.6",
         install_requires=[
             "affine>=2.2.1",
             "backports-datetime-fromisoformat>=1.0.0;python_version<'3.7'",
@@ -113,7 +112,7 @@ def do_setup():
             "tests": [
                 "hypothesis[numpy]==5.7.0",
                 "mock",
-                "pytest==4.6.3",
+                "pytest==6.0.0",
                 "responses",
                 "freezegun",
             ],

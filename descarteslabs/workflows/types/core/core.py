@@ -1,10 +1,7 @@
-import sys
 import six
 
 from descarteslabs.common.graft import client, syntax
 from .exceptions import ProxyTypeError
-
-PY36 = sys.version_info[:2] >= (3, 6)
 
 
 class Castable(object):
@@ -114,8 +111,7 @@ class Proxytype(Castable):
 class GenericProxytypeMetaclass(type):
     """
     Override ``isinstance`` and ``issubclass`` to make them covariant
-    for `GenericProxytype`s and their concrete subclasses, and support
-    ``__init_subclass__`` in Python < 3.6.
+    for `GenericProxytype`s and their concrete subclasses.
 
     Formally: ``issubclass(typA, typB) is True`` iff the generic type of ``typA``
     is a subclass of the generic type of ``typB``, and all the type parameters of ``typA``
@@ -149,10 +145,6 @@ class GenericProxytypeMetaclass(type):
 
     Horrifyingly, it also implements ``__getitem__`` to emulate ``__class_getitem__`` in Python < 3.7,
     so ``List[Str]`` works in both versions.
-
-    The backport of ``__init_subclass__`` in Python < 3.6 matches
-    https://docs.python.org/3/reference/datamodel.html#object.__init_subclass__,
-    except that ``__init_subclass__`` must be decorated with ``@classmethod``.
     """
 
     def __instancecheck__(self, obj):
@@ -214,14 +206,6 @@ class GenericProxytypeMetaclass(type):
         # QUESTION(gabe): does it matter that this happens on the concrete subtypes themselves?
         cls._concrete_subtypes = {}
         super(GenericProxytypeMetaclass, cls).__init__(name, bases, dct)
-
-        if not PY36:
-            parent_cls = super(cls, cls)
-            if hasattr(parent_cls, "__init_subclass__"):
-                parent_cls.__init_subclass__()
-                # NOTE(gabe): you'd think the `cls` argument passed into the `__init_subclass__`
-                # classmethod would be `parent_cls` here, but it's actualy just `cls`,
-                # so this correctly follows the `__init_subclass__` py3.6 API.
 
     def __getitem__(cls, idx):
         "Emulate __class_getitem__ for Python < 3.7"

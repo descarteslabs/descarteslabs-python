@@ -1,7 +1,5 @@
 import pytest
 
-from collections import OrderedDict
-
 from .. import user_format_to_mimetype
 
 
@@ -20,17 +18,13 @@ def test_format_to_mimetype_no_options(format, expected):
 
 def test_format_to_mimetype_with_options():
     mimetype = user_format_to_mimetype(
-        OrderedDict([("type", "pyarrow"), ("compression", "lz4"), ("other_param", 1)])
+        {"type": "pyarrow", "compression": "lz4", "other_param": 1}
     )
-    # TODO: Remove OrderedDict from this test once we drop support for py3.5
     assert mimetype == "application/vnd.pyarrow; compression=lz4; other_param=1"
 
 
 def test_format_to_mimetype_with_not_options():
-    mimetype = user_format_to_mimetype(
-        OrderedDict([("type", "geotiff"), ("overviews", False)])
-    )
-    # TODO: Remove OrderedDict from this test once we drop support for py3.5
+    mimetype = user_format_to_mimetype({"type": "geotiff", "overviews": False})
     assert mimetype == "image/tiff; overviews=False"
 
 
