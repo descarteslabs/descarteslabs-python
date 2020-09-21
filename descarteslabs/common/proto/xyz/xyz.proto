@@ -30,7 +30,9 @@ message XYZ {
 
   string user = 23;
   string org = 24;
-  string base_url = 26;
+  // Template string like "https://workflows.descarteslabs.com/v0-5/xyz/1234567/{z}/{x}/{y}.png".
+  // Compatible with Leaflet, OpenLayers, Python format strings.
+  string url_template = 26;
 }
 
 message CreateXYZRequest {

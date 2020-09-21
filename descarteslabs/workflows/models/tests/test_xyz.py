@@ -162,9 +162,9 @@ class TestXYZ(object):
 
         xyz._message.id = "baz"
         xyz._message.channel = "v0-0"
-        xyz._message.base_url = "https://workflows.descarteslabs.com/v0-0/xyz/baz"
+        xyz._message.url_template = "https://workflows.descarteslabs.com/v0-0/xyz/baz/{z}/{x}/{y}.png"
 
-        url_base = "https://workflows.descarteslabs.com/v0-0/xyz/baz/{z}/{x}/{y}.png"
+        url_base = xyz._message.url_template
         url_base_q = url_base + "?"
 
         assert xyz.url() == url_base

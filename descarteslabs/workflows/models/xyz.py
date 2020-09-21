@@ -263,8 +263,6 @@ class XYZ(object):
                 "This XYZ object has not been persisted yet; call .save() to do so."
             )
 
-        url = "{base}/{{z}}/{{x}}/{{y}}.png".format(base=self._message.base_url)
-
         query_args = {}
         if session_id is not None:
             query_args["session_id"] = session_id
@@ -288,6 +286,8 @@ class XYZ(object):
                     )
                 }
             )
+
+        url = self._message.url_template
 
         if query_args:
             url = url + "?" + urllib.parse.urlencode(query_args)
