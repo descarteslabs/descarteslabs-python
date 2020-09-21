@@ -3,8 +3,8 @@ import six
 from ... import env
 from collections import abc
 
-from ..containers import Dict, List
-from ..core import typecheck_promote
+from ..containers import Dict, List, Tuple
+from ..core import typecheck_promote, Proxytype
 from ..primitives import Float, Int, Str, Bool
 from ..proxify import proxify
 from ..function import Function
@@ -104,6 +104,8 @@ class BandsMixin:
                 "wf.pick_bands", self, *bands, allow_missing=allow_missing
             )
         else:
+            if isinstance(bands, Str):
+                bands = bands.split()
             return self._pick_bands_list(bands, allow_missing=allow_missing)
 
     @typecheck_promote(List[Str], allow_missing=Bool)
@@ -127,6 +129,16 @@ class BandsMixin:
         """
         if isinstance(bands, six.string_types):
             bands = bands.split()
+        if not isinstance(bands, (abc.Sequence, Tuple)):
+            msg = "unpack_bands requires a Python string or sequence, not {}".format(
+                bands
+            )
+            if isinstance(bands, Proxytype):
+                msg += (
+                    ". Proxytypes cannot be used, since their length is unknown, "
+                    "so we don't know how many values to return."
+                )
+            raise TypeError(msg)
         if len(bands) == 1:
             return self.pick_bands(bands[0])
         else:
