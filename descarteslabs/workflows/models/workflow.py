@@ -349,7 +349,7 @@ class Workflow:
 
                 wf_func = Function.from_callable(py_func)
                 docstring_ = docstring
-                if not docstring_:
+                if not docstring_ and py_func.__doc__:
                     docstring_ = textwrap.dedent(py_func.__doc__)
                 self.set_version(version, wf_func, docstring=docstring_, labels=labels)
                 return wf_func  # TODO what should we return here?
