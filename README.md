@@ -21,6 +21,11 @@ Changelog
   release.**
 - New tasks public images for for use with Python 3.8 are available.
 
+### Workflows (channel `v0-17`) - Fixed
+- `.pick_bands` supports proxy `wf.Str` objects; `.unpack_bands` supports `wf.Str` and `wf.Tuple[wf.Str, ...]`.
+- Better performance constructing a `wf.Array` from a `List` of numbers (like `wf.Array(ic.sum(["pixels", "bands"]))`)
+- No more error using `@wf.publish` as a decorator on a function without a docstring
+
 ## [1.4.1] - 2020-09-02
 
 ### Fixed
