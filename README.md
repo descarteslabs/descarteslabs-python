@@ -8,7 +8,7 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## Unreleased
+## [1.5.0] - 2020-09-22
 
 ### Python Version Support
 - Python 3.8 is now supported in the client.
