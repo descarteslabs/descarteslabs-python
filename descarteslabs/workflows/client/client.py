@@ -11,6 +11,8 @@ from descarteslabs.client.grpc import (  # noqa: F401
 
 from descarteslabs.workflows import _channel
 
+from ._host import DEFAULT_HOST
+
 
 class Client(GrpcClient):
     """Low-level gRPC client for interacting with the Workflows backend. Not intended for users to use directly.
@@ -27,9 +29,7 @@ class Client(GrpcClient):
 
     def __init__(self, host=None, auth=None, certificate=None, port=443, channel=None):
         if host is None:
-            host = os.environ.get(
-                "DESCARTESLABS_WORKFLOWS_HOST", "workflows-api.descarteslabs.com"
-            )
+            host = os.environ.get("DESCARTESLABS_WORKFLOWS_HOST", DEFAULT_HOST)
 
         if channel is None:
             channel = _channel.__channel__
