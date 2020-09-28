@@ -1375,6 +1375,76 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("wf.count", self, axis)
 
+    @typecheck_promote(operation=Str)
+    def composite(self, operation, axis=None):
+        """
+        Composite the `ImageCollection` along the provided ``axis``, or across all pixels in the image
+        collection if no ``axis`` argument is provided.
+
+        If the `ImageCollection` is empty, an empty (of the type determined by ``axis``) will be returned.
+
+        Parameters
+        ----------
+        operation: {"min", "max", "mean", "median", "sum", "std", "count"}
+            A string indicating the compositing method to apply along the specified axis.
+        axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
+            A Python string indicating the axis along which to perform the composite.
+
+            Options:
+
+            * ``"images"``: Returns an `.Image`
+              containing the composite across all scenes, for each pixel in each
+              band (i.e., a temporal composite.)
+            * ``"bands"``: Returns a new `ImageCollection` with one band, named according to ``operation``,
+              containing the composite across all bands, for each pixel in each
+              scene.
+            * ``"pixels"`` Returns a ``List[Dict[Str, Float]]`` containing each band's
+              composite, for each scene in the collection.
+            * ``None``: Returns a `.Float` that represents the composite of the
+              entire `ImageCollection`, across all scenes, bands, and pixels.
+            * ``("images", "pixels")``: Returns a ``Dict[Str, Float]`` containing the composite
+              across all scenes, for each band, keyed by band name.
+            * ``("bands", "pixels")``: Returns a ``List[Float]`` containing the composite
+              across all bands, for each scene.
+            * ``("images", "bands")``: Returns an `.Image` containing the composite
+              across all scenes and bands.
+
+        Returns
+        -------
+        ``Dict[Str, Float]``, ``List[Float]``, ``List[Dict[Str, Float]]``, `.ImageCollection`, `.Image` or `.Float`
+            Composite along the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
+        >>> std_composite = col.composite("std", axis="images")
+        >>> std_col = col.composite("std", axis="bands")
+        >>> band_stds_per_scene = col.composite("std", axis="pixels")
+        >>> scene_stds = col.composite("std", axis=("bands", "pixels"))
+        >>> band_stds = col.composite("std", axis=("images", "pixels"))
+        >>> std = col.composite("std", axis=None)
+        """
+        if operation.literal_value is not None and operation.literal_value not in [
+            "min",
+            "max",
+            "mean",
+            "median",
+            "sum",
+            "std",
+            "count",
+        ]:
+            raise ValueError(
+                "Invalid operation {!r}, must be 'min', 'max', 'mean', 'median', 'sum', 'std', or 'count'.".format(
+                    operation.literal_value
+                )
+            )
+
+        return_type = self._stats_return_type(axis)
+        axis = list(axis) if isinstance(axis, tuple) else axis
+        return return_type._from_apply("wf.composite", self, operation, axis=axis)
+
     @typecheck_promote(Bool)
     def mosaic(self, reverse=False):
         """
