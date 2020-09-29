@@ -154,7 +154,7 @@ def test_all_methods_nonstats():
 @pytest.mark.parametrize(
     "stats_func_name", ["min", "max", "mean", "median", "sum", "std", "count"]
 )
-def test_all_stats_methods_and_composites(stats_func_name):
+def test_all_stats_methods_and_reduction(stats_func_name):
     col = ImageCollection.from_id("foo")
     stats_func = getattr(col, stats_func_name)
 
@@ -165,7 +165,7 @@ def test_all_stats_methods_and_composites(stats_func_name):
     ):
         assert isinstance(stats_func(axis=thaw_axis(axis)), return_type)
         assert isinstance(
-            col.composite(stats_func_name, axis=thaw_axis(axis)), return_type
+            col.reduction(stats_func_name, axis=thaw_axis(axis)), return_type
         )
 
 

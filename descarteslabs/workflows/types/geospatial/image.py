@@ -831,6 +831,64 @@ class Image(ImageBase, BandsMixin):
         axis = list(axis) if isinstance(axis, tuple) else axis
         return return_type._from_apply("wf.count", self, axis)
 
+    @typecheck_promote(operation=Str)
+    def reduction(self, operation, axis=None):
+        """
+        Reduction along the provided ``axis``, or across all pixels in the image
+        if no ``axis`` argument is provided.
+
+        If the `Image` is empty, an empty (of the type determined by ``axis``) will be returned.
+
+        Parameters
+        ----------
+        operation: {"min", "max", "mean", "median", "sum", "std", "count"}
+            A string indicating the reduction method to apply along the specified axis.
+        axis: {None, "pixels", "bands"}
+            A Python string indicating the axis along which to perform the reduction.
+
+            Options:
+
+            * ``"pixels"``: Returns a ``Dict[Str, Float]`` containing the reduction
+              across each band.
+            * ``"bands"``: Returns a new `.Image` with
+              one band, ``"std"``, containing the reduction across all bands
+              for each pixel.
+            * ``None``: Returns a `.Float` that represents the reduction of the
+              entire image.
+
+        Returns
+        -------
+        ``Dict[Str, Float]`` or `.Image` or `.Float`
+            Reduction along the provided ``axis``.  See the options for the ``axis``
+            argument for details.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_033035_20170516_20170516_01_RT_v1")
+        >>> std_img = img.reduction("std", axis="bands")
+        >>> band_stds = img.reduction("std", axis="pixels")
+        >>> std = img.reduction("std", axis=None)
+        """
+        if operation.literal_value is not None and operation.literal_value not in [
+            "min",
+            "max",
+            "mean",
+            "median",
+            "sum",
+            "std",
+            "count",
+        ]:
+            raise ValueError(
+                "Invalid operation {!r}, must be 'min', 'max', 'mean', 'median', 'sum', 'std', or 'count'.".format(
+                    operation.literal_value
+                )
+            )
+
+        return_type = self._stats_return_type(axis)
+        axis = list(axis) if isinstance(axis, tuple) else axis
+        return return_type._from_apply("wf.reduction", self, operation, axis=axis)
+
     # Binary comparators
     @typecheck_promote((lambda: Image, lambda: _DelayedImageCollection(), Int, Float))
     def __lt__(self, other):

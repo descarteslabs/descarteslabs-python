@@ -1376,9 +1376,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         return return_type._from_apply("wf.count", self, axis)
 
     @typecheck_promote(operation=Str)
-    def composite(self, operation, axis=None):
+    def reduction(self, operation, axis=None):
         """
-        Composite the `ImageCollection` along the provided ``axis``, or across all pixels in the image
+        Reduce the `ImageCollection` along the provided ``axis``, or across all pixels in the image
         collection if no ``axis`` argument is provided.
 
         If the `ImageCollection` is empty, an empty (of the type determined by ``axis``) will be returned.
@@ -1386,27 +1386,27 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         Parameters
         ----------
         operation: {"min", "max", "mean", "median", "sum", "std", "count"}
-            A string indicating the compositing method to apply along the specified axis.
+            A string indicating the reduction method to apply along the specified axis.
         axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
-            A Python string indicating the axis along which to perform the composite.
+            A Python string indicating the axis along which to perform the reduction.
 
             Options:
 
             * ``"images"``: Returns an `.Image`
-              containing the composite across all scenes, for each pixel in each
-              band (i.e., a temporal composite.)
+              containing the reduction across all scenes, for each pixel in each
+              band (i.e., a temporal reduction.)
             * ``"bands"``: Returns a new `ImageCollection` with one band, named according to ``operation``,
-              containing the composite across all bands, for each pixel in each
+              containing the reduction across all bands, for each pixel in each
               scene.
             * ``"pixels"`` Returns a ``List[Dict[Str, Float]]`` containing each band's
-              composite, for each scene in the collection.
-            * ``None``: Returns a `.Float` that represents the composite of the
+              reduction, for each scene in the collection.
+            * ``None``: Returns a `.Float` that represents the reduction of the
               entire `ImageCollection`, across all scenes, bands, and pixels.
-            * ``("images", "pixels")``: Returns a ``Dict[Str, Float]`` containing the composite
+            * ``("images", "pixels")``: Returns a ``Dict[Str, Float]`` containing the reduction
               across all scenes, for each band, keyed by band name.
-            * ``("bands", "pixels")``: Returns a ``List[Float]`` containing the composite
+            * ``("bands", "pixels")``: Returns a ``List[Float]`` containing the reduction
               across all bands, for each scene.
-            * ``("images", "bands")``: Returns an `.Image` containing the composite
+            * ``("images", "bands")``: Returns an `.Image` containing the reduction
               across all scenes and bands.
 
         Returns
@@ -1419,12 +1419,12 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         -------
         >>> import descarteslabs.workflows as wf
         >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
-        >>> std_composite = col.composite("std", axis="images")
-        >>> std_col = col.composite("std", axis="bands")
-        >>> band_stds_per_scene = col.composite("std", axis="pixels")
-        >>> scene_stds = col.composite("std", axis=("bands", "pixels"))
-        >>> band_stds = col.composite("std", axis=("images", "pixels"))
-        >>> std = col.composite("std", axis=None)
+        >>> std_reduction = col.reduction("std", axis="images")
+        >>> std_col = col.reduction("std", axis="bands")
+        >>> band_stds_per_scene = col.reduction("std", axis="pixels")
+        >>> scene_stds = col.reduction("std", axis=("bands", "pixels"))
+        >>> band_stds = col.reduction("std", axis=("images", "pixels"))
+        >>> std = col.reduction("std", axis=None)
         """
         if operation.literal_value is not None and operation.literal_value not in [
             "min",
@@ -1443,7 +1443,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         return_type = self._stats_return_type(axis)
         axis = list(axis) if isinstance(axis, tuple) else axis
-        return return_type._from_apply("wf.composite", self, operation, axis=axis)
+        return return_type._from_apply("wf.reduction", self, operation, axis=axis)
 
     @typecheck_promote(Bool)
     def mosaic(self, reverse=False):
