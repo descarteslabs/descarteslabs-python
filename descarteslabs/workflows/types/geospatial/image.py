@@ -455,9 +455,17 @@ class Image(ImageBase, BandsMixin):
             or `~.workflows.types.geospatial.FeatureCollection`),
             in which case pixels *outside* the vector are masked.
         replace: Bool, default False
-            If False (default), adds this mask to the current one,
-            so already-masked pixels remain masked,
-            or replaces the current mask with this new one if True.
+            Whether to add to the Image's current mask, or replace it.
+
+            If False (default):
+
+            * Adds this mask to the current one, so already-masked pixels remain masked.
+            * Masked-out pixels in the `mask` are ignored (considered False).
+
+            If True:
+
+            * Replaces the current mask with this new one.
+            * Masked-out pixels in the `mask` are also masked in the result.
 
         Example
         -------
