@@ -4,7 +4,6 @@ import pytest
 
 from descarteslabs.common.proto.workflow import workflow_pb2
 
-from descarteslabs.workflows import _channel
 from descarteslabs.workflows.client import Client
 from descarteslabs.workflows.models import Workflow
 from descarteslabs.workflows.models.utils import pb_milliseconds_to_datetime
@@ -47,7 +46,7 @@ class TestWorkflow(object):
             stub.return_value.GetWorkflow.assert_called_once_with(
                 workflow_pb2.GetWorkflowRequest(id="fake_id"),
                 timeout=Client.DEFAULT_TIMEOUT,
-                metadata=(("x-wf-channel", _channel.__channel__),),
+                metadata=mock.ANY,
             )
 
     def test_delete_id(self, stub):
@@ -56,7 +55,7 @@ class TestWorkflow(object):
         stub.return_value.DeleteWorkflow.assert_called_once_with(
             workflow_pb2.DeleteWorkflowRequest(id=workflow_id),
             timeout=Client.DEFAULT_TIMEOUT,
-            metadata=(("x-wf-channel", _channel.__channel__),),
+            metadata=mock.ANY,
         )
 
     def test_delete(self, stub):
@@ -66,7 +65,7 @@ class TestWorkflow(object):
         stub.return_value.DeleteWorkflow.assert_called_once_with(
             workflow_pb2.DeleteWorkflowRequest(id=workflow_id),
             timeout=Client.DEFAULT_TIMEOUT,
-            metadata=(("x-wf-channel", _channel.__channel__),),
+            metadata=mock.ANY,
         )
 
     def test_save(self, stub):
@@ -96,7 +95,7 @@ class TestWorkflow(object):
                 tags=old_message.tags,
             ),
             timeout=Client.DEFAULT_TIMEOUT,
-            metadata=(("x-wf-channel", _channel.__channel__),),
+            metadata=mock.ANY,
         )
 
     def test_set_version(self, stub):

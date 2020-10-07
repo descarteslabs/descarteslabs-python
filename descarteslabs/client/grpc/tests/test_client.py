@@ -5,7 +5,7 @@ import pytest
 
 from descarteslabs.common.retry import Retry
 
-from .. import GrpcClient
+from ..client import GrpcClient, USER_AGENT_HEADER
 
 
 class FakeRpcError(grpc.RpcError):
@@ -28,6 +28,16 @@ def test_client_health(stub, _):
 
 @mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
 @mock.patch("descarteslabs.common.proto.health.health_pb2_grpc.HealthStub")
+def test_client_health_called_with_user_agent_metadata(stub, _):
+    stub.return_value.Check.return_value = True
+    client = GrpcClient("host", auth=mock.Mock())
+
+    assert client.health() == stub.return_value.Check.return_value
+    assert USER_AGENT_HEADER in stub.return_value.Check.call_args_list[0][1]["metadata"]
+
+
+@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+@mock.patch("descarteslabs.common.proto.health.health_pb2_grpc.HealthStub")
 def test_client_health_called_with_default_metadata(stub, _):
     stub.return_value.Check.return_value = True
     client = GrpcClient(
@@ -35,9 +45,11 @@ def test_client_health_called_with_default_metadata(stub, _):
     )
 
     assert client.health() == stub.return_value.Check.return_value
-    assert stub.return_value.Check.call_args_list[0][1]["metadata"] == (
-        ("x-test-header", "foo"),
-    )
+    assert ("x-test-header", "foo") in stub.return_value.Check.call_args_list[0][1][
+        "metadata"
+    ]
+    # Confirm that user-agent header is still included.
+    assert USER_AGENT_HEADER in stub.return_value.Check.call_args_list[0][1]["metadata"]
 
 
 @mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
@@ -59,7 +71,7 @@ def test_wrap_stub_with_default_retry(_):
 
     retry = mock.Mock()
     client = GrpcClient("host", auth=mock.Mock())
-    wrapped = client._wrap_stub(f, retry)
+    wrapped = client._wrap_stub(f, retry, ())
     wrapped()
     retry.assert_called_once_with(f)
 
@@ -75,7 +87,7 @@ def test_wrap_stub_with_kwarg(_):
     f = mock.Mock()
 
     client = GrpcClient("host", auth=mock.Mock())
-    wrapped = client._wrap_stub(f, mock.Mock())
+    wrapped = client._wrap_stub(f, mock.Mock(), ())
     wrapped(*args, retry=Retry(), **kwargs)
     f.assert_called_once_with(*args, **kwargs)
 
@@ -91,7 +103,7 @@ def test_wrap_stub_args_kwargs(_):
     f = mock.Mock()
 
     client = GrpcClient("host", auth=mock.Mock())
-    wrapped = client._wrap_stub(f, Retry())
+    wrapped = client._wrap_stub(f, Retry(), ())
     wrapped(*args, **kwargs)
     f.assert_called_once_with(*args, **kwargs)
 
@@ -135,12 +147,42 @@ def test_metadata_header(_):
     wrapped(*args, metadata=(("key", "val"),), **kwargs)
 
     kwargs_w_header = kwargs.copy()
-    kwargs_w_header["metadata"] = (
-        ("x-wf-channel", "foo"),
-        ("key", "val"),
-    )
+    kwargs_w_header["metadata"] = (("x-wf-channel", "foo"), ("key", "val"))
 
     f.assert_called_once_with(*args, **kwargs_w_header)
+
+
+@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+def test_add_api_metadata_header_merge(_):
+    client = GrpcClient(
+        "host", auth=mock.Mock(), default_metadata=(("foo", "bar"), ("baz", "qux"))
+    )
+    client._initialize()
+
+    stub_callable = mock.Mock()
+    stub = mock.Mock()
+    stub_callable.return_value = stub
+
+    client._add_stub("Foo", stub_callable)
+    client._add_api(
+        "Foo",
+        "Bar",
+        # ("baz", "quux") should override ("baz", "qux")
+        default_metadata=(("baz", "quux"), ("corge", "grault"), ("garply", "waldo")),
+    )
+    # ("garply", "fred") should override ("garply", "waldo")
+    client.api["Bar"]("thud", metadata=(("garply", "fred"), ("plugh", "xyzzy")))
+    stub.Bar.assert_called_once_with(
+        "thud",
+        metadata=(
+            ("foo", "bar"),
+            ("baz", "quux"),
+            USER_AGENT_HEADER,
+            ("corge", "grault"),
+            ("garply", "fred"),
+            ("plugh", "xyzzy"),
+        ),
+    )
 
 
 @mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")

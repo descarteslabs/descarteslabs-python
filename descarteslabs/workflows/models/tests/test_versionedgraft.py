@@ -63,7 +63,7 @@ class TestVersionedGraft(object):
             stub.return_value.GetVersion.assert_called_once_with(
                 workflow_pb2.GetVersionRequest(id=workflow_id, version=version),
                 timeout=Client.DEFAULT_TIMEOUT,
-                metadata=(("x-wf-channel", _channel.__channel__),),
+                metadata=mock.ANY,
             )
 
     def test_incompatible_channel(self, stub):

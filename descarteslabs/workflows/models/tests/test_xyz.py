@@ -57,7 +57,7 @@ class TestXYZ(object):
             stub.return_value.GetXYZ.assert_called_once_with(
                 xyz_pb2.GetXYZRequest(xyz_id="fake_id"),
                 timeout=Client.DEFAULT_TIMEOUT,
-                metadata=(("x-wf-channel", _channel.__channel__),),
+                metadata=mock.ANY,
             )
 
     def test_save(self, stub):
@@ -79,7 +79,7 @@ class TestXYZ(object):
                 channel=_channel.__channel__,
             ),
             timeout=Client.DEFAULT_TIMEOUT,
-            metadata=(("x-wf-channel", _channel.__channel__),),
+            metadata=mock.ANY,
         )
 
     def test_properties(self, stub):
@@ -139,7 +139,7 @@ class TestXYZ(object):
                 xyz_id=xyz.id,
             ),
             timeout=Client.STREAM_TIMEOUT,
-            metadata=(("x-wf-channel", _channel.__channel__),),
+            metadata=mock.ANY,
         )
 
     def test_from_proto(self, stub):
@@ -162,7 +162,9 @@ class TestXYZ(object):
 
         xyz._message.id = "baz"
         xyz._message.channel = "v0-0"
-        xyz._message.url_template = "https://workflows.descarteslabs.com/v0-0/xyz/baz/{z}/{x}/{y}.png"
+        xyz._message.url_template = (
+            "https://workflows.descarteslabs.com/v0-0/xyz/baz/{z}/{x}/{y}.png"
+        )
 
         url_base = xyz._message.url_template
         url_base_q = url_base + "?"

@@ -11,6 +11,7 @@ def test_client_health_called_with_default_metadata(stub):
     client = Client(auth=mock.Mock())
 
     assert client.health() == stub.return_value.Check.return_value
-    assert stub.return_value.Check.call_args_list[0][1]["metadata"] == (
-        ("x-wf-channel", _channel.__channel__),
-    )
+    assert (
+        "x-wf-channel",
+        _channel.__channel__,
+    ) in stub.return_value.Check.call_args_list[0][1]["metadata"]

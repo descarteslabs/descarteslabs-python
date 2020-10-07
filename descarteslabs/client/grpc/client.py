@@ -3,6 +3,7 @@ import os
 import certifi
 import grpc
 from descarteslabs.client.auth import Auth
+from descarteslabs.client.version import __version__
 from descarteslabs.common.proto.health import health_pb2, health_pb2_grpc
 from descarteslabs.common.retry import Retry, RetryError
 from descarteslabs.common.retry.retry import _wraps
@@ -19,6 +20,8 @@ _RETRYABLE_STATUS_CODES = {
     grpc.StatusCode.UNKNOWN,
     grpc.StatusCode.DEADLINE_EXCEEDED,
 }
+
+USER_AGENT_HEADER = ("user-agent", "dl-python/{}".format(__version__))
 
 
 def default_grpc_retry_predicate(e):
@@ -74,7 +77,10 @@ class GrpcClient:
                 port = 443
         self.port = port
 
-        self._default_metadata = default_metadata
+        if default_metadata is None:
+            default_metadata = ()
+        self._default_metadata = default_metadata + (USER_AGENT_HEADER,)
+
         if default_retry is None:
             default_retry = Retry(predicate=default_grpc_retry_predicate, retries=5)
         self._default_retry = default_retry
@@ -147,12 +153,20 @@ class GrpcClient:
     def _add_stub(self, name, stub):
         self._stubs[name] = stub(self.channel)
 
-    def _add_api(self, stub_name, func_name, default_retry=None):
+    def _add_api(self, stub_name, func_name, default_retry=None, default_metadata=None):
+        if default_retry is None:
+            default_retry = self._default_retry
+        if default_metadata is None:
+            default_metadata = ()
+        default_metadata = tuple(
+            dict(self._default_metadata + default_metadata).items()
+        )
+
         stub = self._stubs[stub_name]
         func = getattr(stub, func_name)
 
         self._api[func_name] = self._wrap_stub(
-            func, default_retry=default_retry, default_metadata=self._default_metadata
+            func, default_retry=default_retry, default_metadata=default_metadata
         )
 
     def _initialize(self):
@@ -191,10 +205,7 @@ class GrpcClient:
                 "{}:{}".format(self.host, self.port), self._get_credentials()
             )
 
-    def _wrap_stub(self, func, default_retry, default_metadata=None):
-        if default_metadata is None:
-            default_metadata = tuple()
-
+    def _wrap_stub(self, func, default_retry, default_metadata):
         @_wraps(func)
         def wrapper(*args, **kwargs):
             retry, kwargs = self._prepare_stub_kwargs(
@@ -226,7 +237,7 @@ class GrpcClient:
 
         # Merge and set default request headers
         # example: https://github.com/grpc/grpc/blob/master/examples/python/metadata/metadata_client.py
-        merged_metadata = dict(default_metadata + kwargs.get("metadata", tuple()))
+        merged_metadata = dict(default_metadata + kwargs.get("metadata", ()))
 
         kwargs["metadata"] = tuple(merged_metadata.items())
 

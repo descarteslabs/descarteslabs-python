@@ -102,7 +102,7 @@ class TestJob(object):
         stub.return_value.CreateJob.assert_called_once_with(
             create_job_request_message,
             timeout=Client.DEFAULT_TIMEOUT,
-            metadata=(("x-wf-channel", create_job_request_message.channel),),
+            metadata=mock.ANY,
         )
 
         assert job._message is message
@@ -157,7 +157,7 @@ class TestJob(object):
         stub.return_value.GetJob.assert_called_with(
             job_pb2.GetJobRequest(id=id_),
             timeout=Client.DEFAULT_TIMEOUT,
-            metadata=(("x-wf-channel", _channel.__channel__),),
+            metadata=mock.ANY,
         )
 
         if client is not None:
@@ -178,7 +178,7 @@ class TestJob(object):
         stub.return_value.GetJob.assert_called_with(
             job_pb2.GetJobRequest(id=job.id),
             timeout=Client.DEFAULT_TIMEOUT,
-            metadata=(("x-wf-channel", _channel.__channel__),),
+            metadata=mock.ANY,
         )
         assert job._message == refresh_message
 
