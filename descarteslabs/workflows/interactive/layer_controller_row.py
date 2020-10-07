@@ -5,7 +5,7 @@ import numpy as np
 import threading
 
 from ..models import JobComputeError
-from ..types import Image
+from ..types import Image, ImageCollection
 
 from .map_ import Map
 from .layer import WorkflowsLayer
@@ -118,6 +118,8 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
         Whether to show the button for autoscaling
     colormappable: Bool, default True
         Whether to show controls for selecting the colormap
+    reducible: Bool, default True
+        Whether to show controls for selecting the reduction method
     checkerboardable: Bool, default True
         Whether to show controls for toggling checkerboards for transparent/missing data
     """
@@ -128,6 +130,7 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
     scaleable = traitlets.Bool(True)
     autoscaleable = traitlets.Bool(True)
     colormappable = traitlets.Bool(True)
+    reducible = traitlets.Bool(True)
     checkerboardable = traitlets.Bool(True)
 
     _colormap_legends = {}  # cache of pre-rendered colormap legends
@@ -218,6 +221,15 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
             )
             self._observe_colormap_make_legend({})  # initialize colormap
 
+        reduction = widgets.Dropdown(
+            options=["mosaic", "min", "max", "mean", "median", "sum", "std", "count"],
+            value=layer.reduction,
+            layout=widgets.Layout(width="initial", max_width="10.6em"),
+        )
+        widgets.link((reduction, "value"), (layer, "reduction"))
+        reduction.observe(self._observe_supported_controls, names="value")
+        self._widgets["reduction"] = reduction
+
         checkerboard = widgets.ToggleButton(
             value=layer.checkerboard,
             description="",
@@ -297,6 +309,8 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
             widgets["colormap"].layout.width = (
                 "2.1em" if self.layer.colormap is None else ""
             )
+        if self.reducible and isinstance(self.layer.imagery, ImageCollection):
+            children.append(widgets["reduction"])
         if self.checkerboardable:
             children.append(widgets["checkerboard"])
         if self.autoscaleable:
@@ -307,7 +321,7 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
         return children
 
     @traitlets.observe(
-        "autoscaleable", "colormappable", "scaleable", "checkerboardable"
+        "autoscaleable", "colormappable", "scaleable", "reducible", "checkerboardable"
     )
     def _observe_supported_controls(self, change):
         self.children = self._make_children()
@@ -347,7 +361,11 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
             if self.layer.autoscale_progress.outputs:
                 self.layer.autoscale_progress.set_output(())
 
-            result = self.layer.image.compute(
+            imagery = self.layer.imagery
+            if isinstance(imagery, ImageCollection):
+                imagery = imagery.reduction(self.layer.reduction, axis="images")
+
+            result = imagery.compute(
                 ctx, progress_bar=self.layer.autoscale_progress, **params
             )
 

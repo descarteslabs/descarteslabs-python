@@ -42,6 +42,16 @@ class XYZ(object):
     'https://workflows.descarteslabs.com/master/xyz/24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6/{z}/{x}/{y}.png'
     >>> same_xyz.object # doctest: +SKIP
     <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>
+
+    >>> from descarteslabs.workflows import ImageCollection, XYZ
+    >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+    ...        start_datetime="2017-01-01",
+    ...        end_datetime="2017-12-31")
+    >>> rgb = col.pick_bands("red green blue")
+    >>> xyz = XYZ.build(rgb, name="RGB")
+    >>> xyz.save() # doctest: +SKIP
+    >>> xyz.url() # doctest: +SKIP
+    'https://workflows.descarteslabs.com/tiles-ic/xyz/bdbeb4706f3025f4ee4eeff4dec46f6f2554c583d830e5e9/{z}/{x}/{y}.png'
     """
 
     def __init__(self, proxy_object, proto_message, client=None):
@@ -199,6 +209,7 @@ class XYZ(object):
         session_id=None,
         colormap=None,
         scales=None,
+        reduction="mosaic",
         checkerboard=False,
         **parameters
     ):
@@ -212,16 +223,25 @@ class XYZ(object):
             Since multiple users may access tiles from the same `XYZ` object,
             each user should set their own ``session_id`` to get individual error logs.
         colormap: str, optional, default None
-            Name of the colormap to use. If set, the displayed `~.geospatial.Image` must have 1 band.
+            Name of the colormap to use. If set, the displayed `~.geospatial.Image`
+            or `~.geospatial.ImageCollection` must have 1 band.
         scales: list of lists, optional, default None
-            The scaling to apply to each band in the `~.geospatial.Image` this `XYZ` object will display.
+            The scaling to apply to each band in the `~.geospatial.Image`.
+            If displaying an `~.geospatial.ImageCollection`, it is reduced into
+            an `~.geospatial.Image` before scaling.
 
-            If the `~.geospatial.Image` contains 3 bands, ``scales`` must be a list like ``[(0, 1), (0, 1), (-1, 1)]``.
+            If the `~.geospatial.Image` or `~.geospatial.ImageCollection` contains 3 bands,
+            ``scales`` must be a list like ``[(0, 1), (0, 1), (-1, 1)]``.
 
-            If the `~.geospatial.Image` contains 1 band, ``scales`` must be a list like ``[(0, 1)]``,
-            or just ``(0, 1)`` for convenience
+            If the `~.geospatial.Image` or `~.geospatial.ImageCollection` contains 1 band,
+            ``scales`` must be a list like ``[(0, 1)]``, or just ``(0, 1)`` for convenience
 
             If None, each 256x256 tile will be scaled independently.
+        reduction: str, optional, default "mosaic"
+            One of "mosaic", "min", "max", "mean", "median", "sum", "std", or "count".
+            If displaying an `~.geospatial.ImageCollection`, this method is used to reduce it into
+            an `~.geospatial.Image`. The reduction is performed before applying a colormap or scaling.
+            If displaying an `~.geospatial.Image`, reduction is ignored.
         checkerboard: bool, default False
             Whether to display a checkerboarded background for missing or masked data.
         parameters: dict[str, Union[Proxytype, json_serializable_value]]
@@ -257,6 +277,18 @@ class XYZ(object):
         >>> xyz.url("some_session", colormap="magma", scales=[(0.2, 0.8)], exponent=2.5) # doctest: +SKIP
         'https://workflows.descarteslabs.com/master/xyz/0d21037edb4bdd16b735f24bb3bff6d4202a71c20404b101/
          {z}/{x}/{y}.png?session_id=some_session&colormap=magma&scales=[[0.2, 0.8]]&exponent=2.5'
+
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> red = col.pick_bands("red")
+        >>> viz = red ** wf.parameter("exponent", wf.Float)
+        >>> xyz = wf.XYZ.build(viz, name="Red band ImageCollection raised to exponent")
+        >>> xyz.save() # doctest: +SKIP
+        >>> xyz.url("some_session", reduction="min", exponent=2.5) # doctest: +SKIP
+        'https://workflows.descarteslabs.com/tiles-ic/xyz/bdbeb4706f3025f4ee4eeff4dec46f6f2554c583d830e5e9/
+         {z}/{x}/{y}.png?session_id=some_session&reduction=min&exponent=2.5'
         """
         if self.id is None:
             raise ValueError(
@@ -268,6 +300,9 @@ class XYZ(object):
             query_args["session_id"] = session_id
         if colormap is not None:
             query_args["colormap"] = colormap
+        if reduction != "mosaic":
+            # We don't include a reduction query arg if it's the default value
+            query_args["reduction"] = reduction
         if checkerboard:
             query_args["checkerboard"] = "true"
 

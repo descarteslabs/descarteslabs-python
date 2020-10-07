@@ -9,7 +9,7 @@ import traitlets
 import cachetools
 
 from ..models import JobTimeoutError
-from ..types import GeoContext
+from ..types import GeoContext, ImageCollection
 from .layer import WorkflowsLayer
 
 
@@ -298,18 +298,21 @@ class InspectorRowGenerator(traitlets.HasTraits):
             self.set_updating()
             # NOTE(gabe): I don't trust traitlets or ipywidgets to be thread-safe,
             # so we pull all values out of traits here and pass them in to the thread directly
-            img = self.layer.image
             ctx = self.marker.geoctx
             thread = threading.Thread(
                 target=self._fetch_and_set_thread,
-                args=(img, xy_3857, ctx, params, cache_key),
+                args=(xy_3857, ctx, params, cache_key),
                 daemon=True,
             )
             thread.start()
 
-    def _fetch_and_set_thread(self, img, xy_3857, ctx, params, cache_key):
-        img = self.layer.image
-        proxy_value_list = img.value_at(*xy_3857).values()
+    def _fetch_and_set_thread(self, xy_3857, ctx, params, cache_key):
+        imagery = self.layer.imagery
+
+        if isinstance(imagery, ImageCollection):
+            imagery = imagery.reduction(self.layer.reduction, axis="images")
+
+        proxy_value_list = imagery.value_at(*xy_3857).values()
 
         try:
             value_list = proxy_value_list.inspect(ctx, **params)

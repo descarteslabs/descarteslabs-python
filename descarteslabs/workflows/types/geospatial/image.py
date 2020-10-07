@@ -1637,7 +1637,7 @@ class Image(ImageBase, BandsMixin):
         for layer in map.layers:
             if layer.name == name:
                 with layer.hold_trait_notifications():
-                    layer.image = self
+                    layer.imagery = self
                     layer.set_scales(scales, new_colormap=colormap)
                     layer.checkerboard = checkerboard
                     layer.set_parameters(**parameters)

@@ -423,7 +423,7 @@ class ParameterSet(traitlets.HasTraits):
         >>> layer = masked_img.visualize("sample", colormap="plasma", threshold=0.07) # doctest: +SKIP
         >>> scaled_img = img * wf.parameter("scale", wf.Float) + wf.parameter("offset", wf.Float) # doctest: +SKIP
         >>> with layer.hold_trait_notifications(): # doctest: +SKIP
-        ...     layer.image = scaled_img # doctest: +SKIP
+        ...     layer.imagery = scaled_img # doctest: +SKIP
         ...     layer.parameters.update(scale=FloatSlider(min=0, max=10, value=2), offset=2.5) # doctest: +SKIP
         >>> # ^ re-use the same layer instance for a new Image with different parameters
         """

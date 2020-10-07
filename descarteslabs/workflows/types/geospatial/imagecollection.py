@@ -1393,8 +1393,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         Parameters
         ----------
-        operation: {"min", "max", "mean", "median", "sum", "std", "count"}
+        operation: {"min", "max", "mean", "median", "mosaic", "sum", "std", "count"}
             A string indicating the reduction method to apply along the specified axis.
+            If operation is "mosaic", ``axis`` must be "images".
         axis: {None, "images", "bands", "pixels", ("images", "pixels"), ("bands", "pixels"), ("images", "bands")}
             A Python string indicating the axis along which to perform the reduction.
 
@@ -1439,14 +1440,14 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             "max",
             "mean",
             "median",
+            "mosaic",
             "sum",
             "std",
             "count",
         ]:
             raise ValueError(
-                "Invalid operation {!r}, must be 'min', 'max', 'mean', 'median', 'sum', 'std', or 'count'.".format(
-                    operation.literal_value
-                )
+                "Invalid operation {!r}, must be 'min', 'max', 'mean', 'median', 'mosaic', "
+                "'sum', 'std', or 'count'.".format(operation.literal_value)
             )
 
         return_type = self._stats_return_type(axis)
@@ -2092,3 +2093,171 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     @typecheck_promote((Image, lambda: ImageCollection, Int, Float))
     def __rpow__(self, other):
         return self._from_apply("wf.pow", other, self)
+
+    def tile_layer(
+        self,
+        name=None,
+        scales=None,
+        colormap=None,
+        reduction="mosaic",
+        checkerboard=True,
+        **parameters
+    ):
+        """
+        Reduce this `ImageCollection` into an `Image`, and create a `.WorkflowsLayer` for it.
+
+        Generally, use `ImageCollection.visualize` for displaying on map.
+        Only use this method if you're managing your own ipyleaflet Map instances,
+        and creating more custom visualizations.
+
+        An empty  `ImageCollection` will be rendered as a checkerboard (default) or blank tile.
+
+        Parameters
+        ----------
+        name: str
+            The name of the layer.
+        scales: list of lists, default None
+            The scaling to apply to each band in the `ImageCollection` after being reduced into an `Image`.
+
+            If `ImageCollection` contains 3 bands, ``scales`` must be a list like ``[(0, 1), (0, 1), (-1, 1)]``.
+
+            If `ImageCollection` contains 1 band, ``scales`` must be a list like ``[(0, 1)]``,
+            or just ``(0, 1)`` for convenience
+
+            If None, each 256x256 tile will be scaled independently.
+            based on the min and max values of its data.
+        colormap: str, default None
+            The name of the colormap to apply to the `ImageCollection` after being reduced.
+            Only valid if the `ImageCollection` has a single band.
+        reduction: {"mosaic", "min", "max", "mean", "median", "sum", "std", "count"}
+            The method used to reduce the `ImageCollection` into an `Image`.
+            Reduction is performed before applying a colormap or scaling.
+        checkerboard: bool, default True
+            Whether to display a checkerboarded background for missing or masked data.
+        **parameters: JSON-serializable value, Proxytype, or ipywidgets.Widget
+            Runtime parameters to use when computing tiles.
+            Values can be any JSON-serializable value, a `Proxytype` instance, or an ipywidgets ``Widget``.
+
+            See the docstring for `visualize` for more detail.
+
+        Returns
+        -------
+        layer: `.WorkflowsLayer`
+        """
+        from ... import interactive
+
+        layer = interactive.WorkflowsLayer(self, name=name, parameters=parameters)
+        layer.set_scales(scales, new_colormap=colormap)
+        layer.reduction = reduction
+        layer.checkerboard = checkerboard
+
+        return layer
+
+    def visualize(
+        self,
+        name,
+        scales=None,
+        colormap=None,
+        reduction="mosaic",
+        checkerboard=True,
+        map=None,
+        **parameters
+    ):
+        """
+        Reduce this `ImageCollection` into an `Image`, and add to `wf.map <.interactive.map>`,
+        or replace a layer with the same name.
+
+        An empty  `ImageCollection` will be rendered as a checkerboard (default) or blank tile.
+
+        Parameters
+        ----------
+        name: str
+            The name of the layer.
+
+            If a layer with this name already exists on `wf.map <.interactive.map>`,
+            it will be replaced with this reduced `ImageCollection`, scales, and colormap.
+            This allows you to re-run cells in Jupyter calling `visualize`
+            without adding duplicate layers to the map.
+        scales: list of lists, default None
+            The scaling to apply to each band in the `ImageCollection` after being reduced into an `Image`.
+
+            If `ImageCollection` contains 3 bands, ``scales`` must be a list like ``[(0, 1), (0, 1), (-1, 1)]``.
+
+            If `ImageCollection` contains 1 band, ``scales`` must be a list like ``[(0, 1)]``,
+            or just ``(0, 1)`` for convenience
+
+            If None, each 256x256 tile will be scaled independently.
+            based on the min and max values of its data.
+        colormap: str, default None
+            The name of the colormap to apply to the `ImageCollection` after being reduced.
+            Only valid if the `ImageCollection` has a single band.
+        reduction: {"mosaic", "min", "max", "mean", "median", "sum", "std", "count"}
+            The method used to reduce the `ImageCollection` into an `Image`.
+            Compositing is performed before applying a colormap or scaling.
+        checkerboard: bool, default True
+            Whether to display a checkerboarded background for missing or masked data.
+        map: `.Map` or `.MapApp`, optional, default None
+            The `.Map` (or plain ipyleaflet Map) instance on which to show the reduced `ImageCollection`.
+            If None (default), uses `wf.map <.interactive.map>`, the singleton Workflows `.MapApp` object.
+        **parameters: JSON-serializable value, Proxytype, or ipywidgets.Widget
+            Runtime parameters to use when computing tiles.
+            Values can be any JSON-serializable value, a `Proxytype` instance, or an ipywidgets ``Widget``.
+
+            Once these initial parameter values are set, they can be modified by assigning to
+            `~.WorkflowsLayer.parameters` on the returned `WorkflowsLayer`.
+
+            If a Widget is given, it's automatically linked, so updating the widget causes the parameter
+            value to change, and the map to update. Running `visualize` again and passing in a different
+            widget instance will un-link the old one automatically.
+
+            If a Python value or `Proxytype` is given, values you later assign to that parameter
+            must be of a compatible type (for example, you can't give ``threshold=0.6``, then assign
+            ``lyr.parameters.threshold = "foo"``, because ``"foo"`` can't be cast to a float).
+
+            For more information, see the docstring to `ParameterSet`.
+
+        Returns
+        -------
+        layer: WorkflowsLayer
+            The layer displaying this reduced `ImageCollection`. Either a new `WorkflowsLayer` if one was created,
+            or the layer with the same ``name`` that was already on the map.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR")
+        >>> rgb = col.pick_bands("red green blue")
+        >>> lyr = min_rgb.visualize(
+        ...     name="My Cool Min RGB",
+        ...     scales=[0, 1],
+        ...     colormap="viridis",
+        ...     reduction="min",
+        ... )  # doctest: +SKIP
+        >>> wf.map  # doctest: +SKIP
+        >>> # `wf.map` actually displays the map; right click and open in new view in JupyterLab
+        """
+        from ... import interactive
+
+        if map is None:
+            map = interactive.map
+
+        for layer in map.layers:
+            if layer.name == name:
+                with layer.hold_trait_notifications():
+                    layer.imagery = self
+                    layer.set_scales(scales, new_colormap=colormap)
+                    layer.reduction = reduction
+                    layer.checkerboard = checkerboard
+                    layer.set_parameters(**parameters)
+                return layer
+        else:
+            layer = self.tile_layer(
+                name=name,
+                scales=scales,
+                colormap=colormap,
+                reduction=reduction,
+                checkerboard=checkerboard,
+                **parameters
+            )
+            map.add_layer(layer)
+            return layer

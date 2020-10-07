@@ -174,6 +174,9 @@ class TestXYZ(object):
             {"session_id": "foo"}
         )
         assert xyz.url(colormap="foo") == url_base_q + urlencode({"colormap": "foo"})
+        assert xyz.url(reduction="mean") == url_base_q + urlencode(
+            {"reduction": "mean"}
+        )
         assert xyz.url(checkerboard=True) == url_base_q + urlencode(
             {"checkerboard": "true"}
         )

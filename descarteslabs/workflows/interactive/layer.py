@@ -8,7 +8,7 @@ import traitlets
 
 
 from ..models import XYZ
-from ..types import Image
+from ..types import Image, ImageCollection
 
 from . import parameters
 from .clearable import ClearableOutput
@@ -25,12 +25,13 @@ class ScaleFloat(traitlets.CFloat):
 
 class WorkflowsLayer(ipyleaflet.TileLayer):
     """
-    Subclass of ``ipyleaflet.TileLayer`` for displaying a Workflows `~.geospatial.Image`.
+    Subclass of ``ipyleaflet.TileLayer`` for displaying a Workflows
+    `~.geospatial.Image` or `~.geospatial.ImageCollection`.
 
     Attributes
     ----------
-    image: ~.geospatial.Image
-        The `~.geospatial.Image` to use
+    imagery: ~.geospatial.Image or ~.geospatial.ImageCollection
+        The `~.geospatial.Image` or `~.geospatial.ImageCollection` to use
     parameters: ParameterSet
         Parameters to use while computing; modify attributes under ``.parameters``
         (like ``layer.parameters.foo = "bar"``) to cause the layer to recompute
@@ -43,7 +44,10 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         Whether to display a checkerboarded background for missing or masked data.
     colormap: str, optional, default None
         Name of the colormap to use.
-        If set, `image` must have 1 band.
+        If set, `imagery` must have 1 band.
+    reduction: {"min", "max", "mean", "median", "mosaic", "sum", "std", "count"}
+        If displaying an `~.geospatial.ImageCollection`, this method is used to reduce it
+        into an `~.geospatial.Image`. Reduction is performed before applying a colormap or scaling.
     r_min: float, optional, default None
         Min value for scaling the red band. Along with r_max,
         controls scaling when a colormap is enabled.
@@ -82,12 +86,16 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     min_zoom = traitlets.Int(5).tag(sync=True, o=True)
     url = traitlets.Unicode(read_only=True).tag(sync=True)
 
-    image = traitlets.Instance(Image)
+    imagery = traitlets.Union(
+        [traitlets.Instance(Image), traitlets.Instance(ImageCollection)]
+    )
+
     parameters = traitlets.Instance(parameters.ParameterSet, allow_none=True)
     xyz_obj = traitlets.Instance(XYZ, read_only=True)
     session_id = traitlets.Unicode(read_only=True)
 
     checkerboard = traitlets.Bool(True)
+    reduction = traitlets.Unicode("mosaic")
     colormap = traitlets.Unicode(None, allow_none=True)
 
     r_min = ScaleFloat(None, allow_none=True)
@@ -100,12 +108,13 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     error_output = traitlets.Instance(widgets.Output, allow_none=True)
     autoscale_progress = traitlets.Instance(ClearableOutput)
 
-    def __init__(self, image, *args, **kwargs):
+    def __init__(self, imagery, *args, **kwargs):
         params = kwargs.pop("parameters", {})
         super(WorkflowsLayer, self).__init__(*args, **kwargs)
 
         with self.hold_trait_notifications():
-            self.image = image
+            self.imagery = imagery
+
             self.set_trait("session_id", uuid.uuid4().hex)
             self.set_trait(
                 "autoscale_progress",
@@ -124,7 +133,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         """
         Generate the URL for this layer.
 
-        This is called automatically as the attributes (`image`, `colormap`, scales, etc.) are changed.
+        This is called automatically as the attributes (`imagery`, `colormap`, scales, etc.) are changed.
 
         Example
         -------
@@ -157,11 +166,12 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             session_id=self.session_id,
             colormap=self.colormap,
             scales=scales,
+            reduction=self.reduction,
             checkerboard=self.checkerboard,
             **parameters
         )
 
-    @traitlets.observe("image")
+    @traitlets.observe("imagery")
     def _update_xyz(self, change):
         old, new = change["old"], change["new"]
         if old is new:
@@ -177,6 +187,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         "visible",
         "checkerboard",
         "colormap",
+        "reduction",
         "r_min",
         "r_max",
         "g_min",
@@ -280,11 +291,14 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         Parameters
         ----------
         scales: list of lists, default None
-            The scaling to apply to each band in the `Image`.
+            The scaling to apply to each band in the `Image` or `ImageCollection`.
+            If displaying an `ImageCollection`, it is reduced into an `Image`
+            before applying scaling.
 
-            If `Image` contains 3 bands, ``scales`` must be a list like ``[(0, 1), (0, 1), (-1, 1)]``.
+            If `Image` or `ImageCollection` contains 3 bands,
+            ``scales`` must be a list like ``[(0, 1), (0, 1), (-1, 1)]``.
 
-            If `Image` contains 1 band, ``scales`` must be a list like ``[(0, 1)]``,
+            If `Image` or `ImageCollection` contains 1 band, ``scales`` must be a list like ``[(0, 1)]``,
             or just ``(0, 1)`` for convenience
 
             If None, each 256x256 tile will be scaled independently
@@ -355,7 +369,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         Instead, use this function when you need to change the *names or types*
         of parameters available on the `WorkflowsLayer`. (Users shouldn't need to
         do this, as `~.Image.visualize` handles it for you, but custom widget developers
-        may need to use this method when they change the `image` field on a `WorkflowsLayer`.)
+        may need to use this method when they change the `imagery` field on a `WorkflowsLayer`.)
 
         If a value is an ipywidgets Widget, it will be linked to that parameter
         (via its ``"value"`` attribute). If a parameter was previously set with
@@ -380,7 +394,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         >>> layer = masked_img.tile_layer("sample", colormap="plasma", threshold=0.07) # doctest: +SKIP
         >>> scaled_img = img * wf.parameter("scale", wf.Float) + wf.parameter("offset", wf.Float) # doctest: +SKIP
         >>> with layer.hold_trait_notifications(): # doctest: +SKIP
-        ...     layer.image = scaled_img # doctest: +SKIP
+        ...     layer.imagery = scaled_img # doctest: +SKIP
         ...     layer.set_parameters(scale=FloatSlider(min=0, max=10, value=2), offset=2.5) # doctest: +SKIP
         >>> # ^ re-use the same layer instance for a new Image with different parameters
         """

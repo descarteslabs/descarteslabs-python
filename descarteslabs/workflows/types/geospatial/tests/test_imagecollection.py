@@ -117,6 +117,7 @@ def test_all_methods_nonstats():
     assert isinstance(col.index_to_coords(0, 0), Tuple[Float, Float])
     assert isinstance(col.coords_to_index(0.0, 0.0), Tuple[Int, Int])
     assert isinstance(col.mosaic(), Image)
+    assert isinstance(col.reduction("mosaic", axis="images"), Image)
     assert isinstance(col.concat(img), ImageCollection)
     assert isinstance(col.mask(img), ImageCollection)
     assert isinstance(col.mask(img, replace=True), ImageCollection)
