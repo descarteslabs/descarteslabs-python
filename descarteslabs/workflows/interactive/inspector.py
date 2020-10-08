@@ -237,7 +237,9 @@ class InspectorRowGenerator(traitlets.HasTraits):
 
         marker.observe(self.recalculate, "geoctx", type="change")
         layer.observe(
-            self.recalculate, ["parameters", "xyz_obj", "visible"], type="change"
+            self.recalculate,
+            ["parameters", "xyz_obj", "visible", "reduction"],
+            type="change",
         )
         layer.observe(self.recalculate, "parameters", type="delete")
 
@@ -260,7 +262,9 @@ class InspectorRowGenerator(traitlets.HasTraits):
         # we must explicitly unobserve for exactly the names and types we observed for.
         self.marker.unobserve(self.recalculate, "geoctx", type="change")
         self.layer.unobserve(
-            self.recalculate, ["parameters", "xyz_obj", "visible"], type="change"
+            self.recalculate,
+            ["parameters", "xyz_obj", "visible", "reduction"],
+            type="change",
         )
         self.layer.unobserve(self.recalculate, "parameters", type="delete")
         self._name_link.unlink()
@@ -272,9 +276,10 @@ class InspectorRowGenerator(traitlets.HasTraits):
             return
 
         params = self.layer.parameters.to_dict()
+        reduction = self.layer.reduction
         xy_3857 = self.marker.xy_3857
 
-        # try to make a cache key from the marker location, XYZ ID, and parameters.
+        # try to make a cache key from the marker location, XYZ ID, reduction, and parameters.
         # if the parameters are unhashable (probably because they contain grafts),
         # we'll consider it a cache miss and go fetch.
         try:
@@ -282,7 +287,7 @@ class InspectorRowGenerator(traitlets.HasTraits):
         except TypeError:
             cache_key = None
         else:
-            cache_key = (xy_3857, self.layer.xyz_obj.id, params_key)
+            cache_key = (xy_3857, self.layer.xyz_obj.id, reduction, params_key)
 
         if cache_key:
             try:
@@ -299,18 +304,19 @@ class InspectorRowGenerator(traitlets.HasTraits):
             # NOTE(gabe): I don't trust traitlets or ipywidgets to be thread-safe,
             # so we pull all values out of traits here and pass them in to the thread directly
             ctx = self.marker.geoctx
+            imagery = self.layer.imagery
             thread = threading.Thread(
                 target=self._fetch_and_set_thread,
-                args=(xy_3857, ctx, params, cache_key),
+                args=(imagery, reduction, xy_3857, ctx, params, cache_key),
                 daemon=True,
             )
             thread.start()
 
-    def _fetch_and_set_thread(self, xy_3857, ctx, params, cache_key):
-        imagery = self.layer.imagery
-
+    def _fetch_and_set_thread(
+        self, imagery, reduction, xy_3857, ctx, params, cache_key
+    ):
         if isinstance(imagery, ImageCollection):
-            imagery = imagery.reduction(self.layer.reduction, axis="images")
+            imagery = imagery.reduction(reduction, axis="images")
 
         proxy_value_list = imagery.value_at(*xy_3857).values()
 
