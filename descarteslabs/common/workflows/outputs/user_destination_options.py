@@ -42,7 +42,8 @@ def user_destination_to_proto(
                     "For the Catalog destination, the options dict must contain an `image` field "
                     "with the `dl.catalog.Image` to upload to."
                 ) from None
-        params = _image_to_catalog_params(img, **params)
+        else:
+            params = _image_to_catalog_params(img, **params)
 
     return user_dict_to_has_proto(params, destinations_pb2.Destination, DEFAULTS)
 
