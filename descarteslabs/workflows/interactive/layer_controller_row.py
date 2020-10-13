@@ -228,6 +228,7 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
         )
         widgets.link((reduction, "value"), (layer, "reduction"))
         reduction.observe(self._observe_supported_controls, names="value")
+        layer.observe(self._observe_supported_controls, names="imagery")
         self._widgets["reduction"] = reduction
 
         checkerboard = widgets.ToggleButton(
