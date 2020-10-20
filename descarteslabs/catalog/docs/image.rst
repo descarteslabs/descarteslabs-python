@@ -17,6 +17,8 @@ Image
   :members:
   :inherited-members:
   :undoc-members:
+  :exclude-members: brightness_temperature_k1_k2, c6s_dlsr, confidence_dlsr,
+    radiance_gain_bias, reflectance_gain_bias, temperature_gain_bias
 
 .. autoclass:: descarteslabs.catalog.ImageUpload
   :autosummary:

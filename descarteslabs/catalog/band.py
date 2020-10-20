@@ -145,6 +145,7 @@ class Band(NamedCatalogObject):
     :attr:`~descarteslabs.catalog.GenericBand.description`,
     :attr:`~descarteslabs.catalog.GenericBand.type`,
     :attr:`~descarteslabs.catalog.GenericBand.sort_order`,
+    :attr:`~descarteslabs.catalog.GenericBand.vendor_order`,
     :attr:`~descarteslabs.catalog.GenericBand.data_type`,
     :attr:`~descarteslabs.catalog.GenericBand.nodata`,
     :attr:`~descarteslabs.catalog.GenericBand.data_range`,
@@ -235,6 +236,16 @@ class Band(NamedCatalogObject):
 
         If not set for newly created bands, this will default to the current maximum
         sort order + 1 in the product.
+
+        *Sortable*.
+        """,
+    )
+    vendor_order = TypedAttribute(
+        int,
+        doc="""int, optional: A number defining the ordering of bands within a product
+        as defined by the data vendor. 1-based. Used for indexing ``c6s_dlsr``,
+        ``brightness_temperature_k1_k2``, ``radiance_gain_bias``, ``reflectance_gain_bias``,
+        and ``temperature_gain_bias``. Generally only used internally by certain core products.
 
         *Sortable*.
         """,

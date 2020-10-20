@@ -186,10 +186,31 @@ class Image(NamedCatalogObject):
         *Filterable, sortable*.
         """,
     )
+    brightness_temperature_k1_k2 = ListAttribute(
+        ListAttribute(TypedAttribute(float, coerce=True)),
+        doc="""list(list(float), optional: radiance to brightness temperature
+        conversion coefficients.
+
+        Outer list indexed by ``Band.vendor_order``, inner lists are ``[k1, k2]`` or
+        empty if not applicable.
+        """,
+    )
+    c6s_dlsr = ListAttribute(
+        ListAttribute(TypedAttribute(float, coerce=True)),
+        doc="list(list(float), optional: DLSR conversion coefficients.",
+    )
     cloud_fraction = TypedAttribute(
         float,
         coerce=True,
         doc="""float, optional: Fraction of pixels which are obscured by clouds.
+
+        *Filterable, sortable*.
+        """,
+    )
+    confidence_dlsr = TypedAttribute(
+        float,
+        coerce=True,
+        doc="""float, optional: Confidence value for DLSR coefficients.
 
         *Filterable, sortable*.
         """,
@@ -228,6 +249,22 @@ class Image(NamedCatalogObject):
         *Filterable, sortable*.
         """,
     )
+    radiance_gain_bias = ListAttribute(
+        ListAttribute(TypedAttribute(float, coerce=True)),
+        doc="""list(list(float), optional: radiance conversion gain and bias.
+
+        Outer list indexed by ``Band.vendor_order``, inner lists are ``[gain, bias]`` or
+        empty if not applicable.
+        """,
+    )
+    reflectance_gain_bias = ListAttribute(
+        ListAttribute(TypedAttribute(float, coerce=True)),
+        doc="""list(list(float), optional: reflectance conversion gain and bias.
+
+        Outer list indexed by ``Band.vendor_order``, inner lists are ``[gain, bias]`` or
+        empty if not applicable.
+        """,
+    )
     reflectance_scale = ListAttribute(
         TypedAttribute(float, coerce=True),
         doc="list(float), optional: Scale factors converting TOA radiances to TOA reflectances.",
@@ -254,6 +291,14 @@ class Image(NamedCatalogObject):
         doc="""float, optional: Solar elevation angle at capture time.
 
         *Filterable, sortable*.
+        """,
+    )
+    temperature_gain_bias = ListAttribute(
+        ListAttribute(TypedAttribute(float, coerce=True)),
+        doc="""list(list(float), optional: surface temperature conversion coefficients.
+
+        Outer list indexed by ``Band.vendor_order``, inner lists are ``[gain, bias]`` or
+        empty if not applicable.
         """,
     )
     view_angle = TypedAttribute(
@@ -394,9 +439,7 @@ class Image(NamedCatalogObject):
         if not self.acquired:
             raise ValueError("acquired field required")
         if self.cs_code or self.projection:
-            warnings.warn(
-                "cs_code and projection fields not permitted", FutureWarning
-            )
+            warnings.warn("cs_code and projection fields not permitted", FutureWarning)
             # raise ValueError("cs_code and projection fields not permitted")
 
         if self.state != DocumentState.UNSAVED:
@@ -529,8 +572,7 @@ class Image(NamedCatalogObject):
             raise ValueError("acquired field required")
         if self.cs_code and self.projection:
             warnings.warn(
-                "Only one of cs_code and projection fields permitted",
-                FutureWarning,
+                "Only one of cs_code and projection fields permitted", FutureWarning,
             )
             # raise ValueError("only one of cs_code and projection fields permitted")
 
