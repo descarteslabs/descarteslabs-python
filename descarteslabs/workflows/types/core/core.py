@@ -271,8 +271,20 @@ class GenericProxytype(Proxytype):
           ```
           if self._type_params is None:
               raise TypeError(
-                  f"Cannot instantiate a generic {type(self).__name__}; the item type must be specified"
+                  f"Cannot instantiate a generic {type(self).__name__}; the item type must be specified "
+                  f"like {type(self).__name__}[<example of using type params>].
               )
+          ```
+
+          You can also do this with:
+          ```
+          try:
+              super().__init__()
+          except TypeError:
+              raise TypeError(
+                  f"Cannot instantiate a generic {type(self).__name__}; the item type must be specified "
+                  f"like {type(self).__name__}[<example of using type params>].
+              ) from None
           ```
 
           If your Proxytype is representing a Python type, ``__init__`` should probably resemble
@@ -413,7 +425,11 @@ class GenericProxytype(Proxytype):
             return obj.cast(cls)
         except Exception:
             pass
-        return cls(obj)
+
+        try:
+            return cls(obj)
+        except Exception as e:
+            raise ProxyTypeError(e)
 
     @classmethod
     def _from_graft(cls, graft):
@@ -429,6 +445,13 @@ class GenericProxytype(Proxytype):
             cls.__name__
         )
         return super(GenericProxytype, cls)._from_graft(graft)
+
+    def __init__(self):
+        if self._type_params is None:
+            raise TypeError(
+                "Cannot instantiate a generic {0}; the type parameters must be provided "
+                "(like `{0}[...]`)".format(type(self).__name__)
+            )
 
 
 def is_generic(type_):

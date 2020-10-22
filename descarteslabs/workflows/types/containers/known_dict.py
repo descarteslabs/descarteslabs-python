@@ -29,13 +29,18 @@ class KnownDict(BaseDict):
     <descarteslabs.workflows.types.primitives.number.Int object at 0x...>
     """
 
-    def __init__(self):
-        if self._type_params is None:
-            raise TypeError(
-                "Cannot instantiate a generic Dict; the key and value types must be specified "
-                "(like `KnownDict[Str, Bool]`)"
-            )
-        super(KnownDict, self).__init__()
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError(
+            "Cannot construct instances of KnownDict directly. "
+            "If calling `.get`, pass an empty Python dict `{}` as the default value."
+        )
+
+    @classmethod
+    def _promote(cls, obj):
+        # allow promotion from an empty dict literal for convenience, for `Dict.get`
+        if isinstance(obj, dict) and len(obj) == 0:
+            return cls._from_apply("wf.dict.create")
+        return super()._promote(obj)
 
     @classmethod
     def _validate_params(cls, type_params):
