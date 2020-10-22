@@ -181,6 +181,14 @@ class TestXYZ(object):
             {"checkerboard": "true"}
         )
         assert xyz.url(checkerboard=False) == url_base
+
+        assert xyz.url(bands=["red"]) == url_base_q + urlencode({"band": "red"})
+        assert xyz.url(bands=["red", "green"]) == url_base_q + urlencode(
+            {"band": ["red", "green"]}, doseq=True
+        )
+        with pytest.raises(ValueError, match="Up to 3 bands may be specified, not 4"):
+            xyz.url(bands=["a", "b", "c", "d"])
+
         # 1-band scales are normalized
         assert xyz.url(scales=[0, 1]) == url_base_q + urlencode(
             {"scales": "[[0.0, 1.0]]"}
@@ -236,9 +244,7 @@ class TestXYZ(object):
             TypeError, match="Scaling 0: items in scaling must be numbers"
         ):
             XYZ._validate_scales([1, "foo"])
-        with pytest.raises(ValueError, match="expected 0, 1, or 3 scales, but got 2"):
-            XYZ._validate_scales([[0.0, 1.0], [0.0, 1.0]])
-        with pytest.raises(ValueError, match="expected 0, 1, or 3 scales, but got 4"):
+        with pytest.raises(ValueError, match="expected up to 3 scales, but got 4"):
             XYZ._validate_scales([[0.0, 1.0], [0.0, 1.0], [0.0, 1.0], [0.0, 1.0]])
         with pytest.raises(ValueError, match="but length was 3"):
             XYZ._validate_scales([[0.0, 1.0, 2.0]])

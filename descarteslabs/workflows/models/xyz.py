@@ -208,10 +208,11 @@ class XYZ(object):
         self,
         session_id=None,
         colormap=None,
+        bands=None,
         scales=None,
         reduction="mosaic",
         checkerboard=False,
-        **parameters
+        **parameters,
     ):
         """
         XYZ tile URL format-string, like ``https://workflows.descarteslabs.com/v0-5/xyz/1234567/{z}/{x}/{y}.png``
@@ -225,6 +226,9 @@ class XYZ(object):
         colormap: str, optional, default None
             Name of the colormap to use. If set, the displayed `~.geospatial.Image`
             or `~.geospatial.ImageCollection` must have 1 band.
+        bands: list of str, optional, default None
+            The band names to select from the imagery. If None (default),
+            the imagery should already have 1-3 bands selected.
         scales: list of lists, optional, default None
             The scaling to apply to each band in the `~.geospatial.Image`.
             If displaying an `~.geospatial.ImageCollection`, it is reduced into
@@ -306,6 +310,19 @@ class XYZ(object):
         if checkerboard:
             query_args["checkerboard"] = "true"
 
+        if bands is not None:
+            try:
+                nbands = len(bands)
+            except Exception:
+                raise TypeError(f"bands must be a sequence; got {bands!r}")
+
+            if nbands > 3:
+                raise ValueError(
+                    f"Up to 3 bands may be specified, not {nbands}: {bands!r}"
+                )
+
+            query_args["band"] = bands
+
         if scales is not None:
             scales = self._validate_scales(scales)
 
@@ -325,7 +342,7 @@ class XYZ(object):
         url = self._message.url_template
 
         if query_args:
-            url = url + "?" + urllib.parse.urlencode(query_args)
+            url = url + "?" + urllib.parse.urlencode(query_args, doseq=True)
         return url
 
     @staticmethod
@@ -345,6 +362,7 @@ class XYZ(object):
         Scales can be given as:
 
         * Three scalings, for 3-band images, like ``[[0, 1], [0, 0.5], [None, None]]``
+        * Two scalings, for 2-band images, like ``[[0, 1], [None, None]]``
         * 1-list/tuple of 1 scaling, for 1-band images, like ``[[0, 1]]``
         * 1 scaling (for convenience), which is equivalent to the above: ``[0, 1]``
         * None, or an empty list or tuple for no scalings
@@ -357,7 +375,7 @@ class XYZ(object):
         Returns
         -------
         scales: list
-            0, 1- or 3-length list of scalings, where each item is a float.
+            0- to 3-length list of scalings, where each item is a float.
             (``[0, 1]`` would become ``[[0.0, 1.0]]``, for example.)
             If no scalings are given, an empty list is returned.
 
@@ -380,10 +398,10 @@ class XYZ(object):
                 # allow a single 2-tuple for convenience with colormaps/1-band images
                 scales = (scales,)
 
-            if len(scales) not in (0, 1, 3):
+            if len(scales) > 3:
                 raise (
                     ValueError(
-                        "Invalid scales passed: expected 0, 1, or 3 scales, but got {}".format(
+                        "Too many scales passed: expected up to 3 scales, but got {}".format(
                             len(scales)
                         )
                     )
