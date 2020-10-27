@@ -48,7 +48,7 @@ class InspectClient(Service):
         if url is None:
             url = os.environ.get(
                 "DESCARTESLABS_WORKFLOWS_URL_HTTP",
-                "https://workflows.descarteslabs.com/{}".format(channel),
+                f"https://{_channel.DEFAULT_HTTP_HOST}/{channel}",
             )
 
         super().__init__(

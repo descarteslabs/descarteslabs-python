@@ -1,4 +1,6 @@
 __channel__ = "v0-17"
+DEFAULT_GRPC_HOST = "workflows-api.descarteslabs.com"
+DEFAULT_HTTP_HOST = "workflows.descarteslabs.com"
 
 
 def _set_channel(channel):
