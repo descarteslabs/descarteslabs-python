@@ -511,8 +511,14 @@ def consistent_guid(start=0):
     """
     global GUID_COUNTER
     original_counter = GUID_COUNTER
+    if getattr(consistent_guid, "_in_use", False):
+        raise RuntimeError(
+            "consistent_guid is already in use and cannot be used reentrantly"
+        )
     try:
+        consistent_guid._in_use = True
         GUID_COUNTER = itertools.count(start)
         yield
     finally:
         GUID_COUNTER = original_counter
+        consistent_guid._in_use = False
