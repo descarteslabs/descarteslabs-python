@@ -198,14 +198,14 @@ class GenericProxytypeMetaclass(type):
             or _type_params_issubclass(othercls._type_params, mycls._type_params)
         )
 
-    def __init__(cls, name, bases, dct):
+    def __init__(cls, name, bases, dct, **kwargs):
         # Ensure every subclass gets its own `_concrete_subtypes` dict,
         # which it will use to register parameterized (concrete) subtypes
         # (so calling `List[Int]` twice will return the same object both times)
 
         # QUESTION(gabe): does it matter that this happens on the concrete subtypes themselves?
         cls._concrete_subtypes = {}
-        super(GenericProxytypeMetaclass, cls).__init__(name, bases, dct)
+        super(GenericProxytypeMetaclass, cls).__init__(name, bases, dct, **kwargs)
 
     def __getitem__(cls, idx):
         "Emulate __class_getitem__ for Python < 3.7"

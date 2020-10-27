@@ -116,9 +116,8 @@ class Struct(GenericProxytype):
         return name, bases, dct
 
     @classmethod
-    def __init_subclass__(subcls):
-        # NOTE(gabe): the `GenericProxytypeMetaclass` provides a backport of this Python 3.6 functionality.
-
+    def __init_subclass__(subcls, **kwargs):
+        super().__init_subclass__(**kwargs)
         # If a subclass of a Struct sets the `_doc` class attribute,
         # we replace any field getters (created in `__class_getitem_hook__`)
         # with new field getters that include the given docstrings
