@@ -3,10 +3,18 @@ import operator
 import pytest
 
 from ...containers import Tuple
+from ...identifier import parameter
 from ..any_ import Any
 from ..bool_ import Bool
 from ..number import Int
 from ..string import Str
+
+
+def test_init():
+    assert Any(1).params == ()
+
+    x = parameter("x", Int)
+    assert Any(x).params == (x,)
 
 
 @pytest.mark.parametrize(

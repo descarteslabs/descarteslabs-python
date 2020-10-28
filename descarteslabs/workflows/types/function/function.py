@@ -58,7 +58,8 @@ class Function(GenericProxytype):
                 "Cannot instantiate a generic Function; the parameter and return types must be specified".format()
             )
         if isinstance(function, six.string_types):
-            self.function = function
+            self.graft = client.keyref_graft(function)
+            self.params = ()
         elif callable(function):
             *arg_types, kwargs_types, return_type = self._type_params
             if len(kwargs_types) > 0:
@@ -67,8 +68,9 @@ class Function(GenericProxytype):
                     "since optional arguments or conditionals can't be represented with graft. "
                     "You must delay Python functions into Proxtype Functions that only have positional arguments."
                 )
-            self.function = self._delay(function, return_type, *arg_types)
-            self.graft = self.function.graft
+            result = self._delay(function, return_type, *arg_types)
+            self.graft = result.graft
+            self.params = result.params
         else:
             raise ProxyTypeError(
                 "Function must be a Python callable or string name, "
@@ -117,7 +119,7 @@ class Function(GenericProxytype):
             for arg_name, arg_value in six.iteritems(kwargs)
         }
 
-        return return_type._from_apply(self.function, *promoted_args, **promoted_kwargs)
+        return return_type._from_apply(self, *promoted_args, **promoted_kwargs)
 
     @property
     def arg_types(self):
@@ -168,19 +170,12 @@ class Function(GenericProxytype):
             assert_is_proxytype(type_param, error_message=error_message)
 
         # Check return type
-        error_message = "Function return type parameter must be a Proxytype, but got {!r}".format(
-            return_type
+        error_message = (
+            "Function return type parameter must be a Proxytype, but got {!r}".format(
+                return_type
+            )
         )
         assert_is_proxytype(return_type, error_message=error_message)
-
-    @classmethod
-    def _from_graft(cls, graft):
-        # Necessary to have this custom initializer because we store `.function`
-        # separately from `.graft`, since the function could just be a string,
-        # which isn't a valid graft.
-        new = super(Function, cls)._from_graft(graft)  # validate graft
-        new.function = new.graft
-        return new
 
     @classmethod
     def from_callable(cls, func, *arg_types, return_type=None):
@@ -265,7 +260,7 @@ class Function(GenericProxytype):
         result_type = type(result)
 
         concrete_type = cls[arg_types + ({}, result_type)]
-        instance = concrete_type._from_graft(result.graft)
+        instance = result._cast(concrete_type)
 
         if func.__doc__:
             instance.__doc__ = func.__doc__
@@ -353,7 +348,8 @@ class Function(GenericProxytype):
         return type(result)._from_graft(
             client.function_graft(
                 result, *tuple(func_signature.parameters), first_guid=first_guid
-            )
+            ),
+            params=result.params,
         )
 
 

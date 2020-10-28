@@ -5,6 +5,7 @@ import pytest
 from ...primitives import Int, Str, Any
 from ...containers import List
 from ...geospatial import ImageCollection
+from ...identifier import parameter
 from .. import MaskedArray, Array, DType, Scalar
 
 import numpy as np
@@ -20,27 +21,40 @@ ma = MaskedArray([[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]], False)
 def test_init():
     ma = MaskedArray(arr_fixture, mask_fixture)
     assert isinstance(ma, MaskedArray)
+    assert ma.params == ()
 
 
 def test_init_bool_mask():
     ma = MaskedArray(arr_fixture, False)
     assert isinstance(ma, MaskedArray)
+    assert ma.params == ()
 
 
 def test_init_fill_value():
     fill_value = 5
     ma = MaskedArray(arr_fixture, mask_fixture, fill_value=fill_value)
     assert isinstance(ma, MaskedArray)
+    assert ma.params == ()
 
     fill_value = Array([5, 6])
     ma = MaskedArray(arr_fixture, mask_fixture, fill_value=fill_value)
-    assert isinstance(ma, MaskedArray)
 
 
 def test_from_numpy():
     np_ma = np.ma.masked_array([1, 2, 3], [True, True, False])
     ma = MaskedArray.from_numpy(np_ma)
     assert isinstance(ma, MaskedArray)
+    assert isinstance(ma, MaskedArray)
+    assert ma.params == ()
+
+
+def test_init_params():
+    x = parameter("x", Int)
+    y = parameter("y", Int)
+
+    ma = MaskedArray(data=x, mask=mask_fixture, fill_value=y)
+    assert isinstance(ma, MaskedArray)
+    assert ma.params == (x, y)
 
 
 @pytest.mark.parametrize(

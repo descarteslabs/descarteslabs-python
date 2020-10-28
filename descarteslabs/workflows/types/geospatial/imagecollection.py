@@ -159,6 +159,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         self.graft = client.apply_graft(
             "wf.ImageCollection.from_images", images, env.geoctx
         )
+        self.params = images.params
 
     @classmethod
     @typecheck_promote(

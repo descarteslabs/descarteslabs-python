@@ -3,7 +3,7 @@ import numpy as np
 from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..primitives import Bool, Int, Float, NoneType
-from ..core import ProxyTypeError, typecheck_promote
+from ..core import ProxyTypeError, typecheck_promote, merge_params
 from .array_ import Array
 from .scalar import Scalar
 from .base_array import BaseArray
@@ -52,6 +52,7 @@ class MaskedArray(BaseArray):
             )
 
         self.graft = client.apply_graft("wf.maskedarray.create", data, mask, fill_value)
+        self.params = merge_params(data, mask, fill_value)
 
     @classmethod
     def from_numpy(cls, arr):

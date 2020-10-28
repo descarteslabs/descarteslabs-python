@@ -8,6 +8,7 @@ from ...core.tests import utils
 from .... import env
 from ...containers import Dict, List, Slice, Tuple
 from ...primitives import Float, Int, Str, Bool, NoneType, Any
+from ...identifier import parameter
 
 from .. import (
     Image,
@@ -27,7 +28,9 @@ def thaw_axis(frozen_axis):
 
 
 def test_init():
-    ImageCollection([Image.from_id("foo")])
+    x = parameter("x", Image)
+    ic = ImageCollection([Image.from_id("foo"), x])
+    assert ic.params == (x,)
 
     with pytest.raises(TypeError):
         ImageCollection("", "")

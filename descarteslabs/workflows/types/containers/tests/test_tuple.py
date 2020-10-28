@@ -7,6 +7,7 @@ from descarteslabs.common.graft import interpreter
 
 from ...core import ProxyTypeError
 from ...primitives import Int, Str, Bool
+from ...identifier import parameter
 from .. import Tuple, List
 
 
@@ -16,11 +17,13 @@ def test_init_unparameterized():
 
 
 def test_init_sequence():
-    tup = Tuple[Int, Str, Int]([1, "foo", 3])
+    b = parameter("b", Bool)
+    tup = Tuple[Int, Str, Int, Bool]([1, "foo", 3, b])
     assert client.is_delayed(tup)
+    assert tup.params == (b,)
     assert interpreter.interpret(
-        tup.graft, builtins={"wf.tuple": lambda *tuple: tuple}
-    )() == (1, "foo", 3)
+        tup.graft, builtins={"wf.tuple": lambda *tuple: tuple, b._name: True}
+    )() == (1, "foo", 3, True)
 
 
 def test_init_iterable():
@@ -32,6 +35,7 @@ def test_init_iterable():
 
     tup = Tuple[Int, Str, Int](generator())
     assert client.is_delayed(tup)
+    assert tup.params == ()
 
 
 def test_init_sequence_wronglength():

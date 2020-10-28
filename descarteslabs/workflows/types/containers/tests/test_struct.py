@@ -4,6 +4,7 @@ from descarteslabs.common.graft import client
 
 from ...core import ProxyTypeError
 from ...primitives import Int, Str
+from ...identifier import parameter
 from .. import Struct, List, Tuple, struct as struct_
 
 
@@ -83,16 +84,26 @@ def test_promote_kwargs_wrong_type():
 
 
 def test_init():
-    struct = Struct[{"a": Int, "b": Str}](a=1, b="foo")
+    b = parameter("b", Str)
+    c = parameter("c", Int)
+
+    struct = Struct[{"a": Int, "b": Str, "c": Int, "d": Str}](a=1, b=b, c=c, d=b)
     assert client.is_delayed(struct)
+    assert struct.params == (b, c)
     assert isinstance(struct._items_cache["a"], Int)
     assert isinstance(struct._items_cache["b"], Str)
+    assert isinstance(struct._items_cache["c"], Int)
+    assert isinstance(struct._items_cache["d"], Str)
 
 
-def test_attr_type():
-    struct = Struct[{"a": Int, "b": Str}](a=1, b="foo")
+def test_attr_type_and_params():
+    b = parameter("b", Str)
+    struct = Struct[{"a": Int, "b": Str}](a=1, b=b)
     assert isinstance(struct._attr("a"), Int)
     assert isinstance(struct._attr("b"), Str)
+
+    assert struct._attr("a").params == ()
+    assert struct._attr("b").params == (b,)
 
 
 def test_attr_error():

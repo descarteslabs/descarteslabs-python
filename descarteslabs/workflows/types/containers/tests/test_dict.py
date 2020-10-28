@@ -8,6 +8,7 @@ from descarteslabs.common.graft import interpreter
 
 from ...core import ProxyTypeError
 from ...primitives import Int, Str, Float, Bool
+from ...identifier import parameter
 from .. import Tuple, List, Dict
 
 
@@ -40,6 +41,7 @@ def test_init_fromdict(mock_apply):
         assert isinstance(value_item, Float)
 
     assert client.is_delayed(dct)
+    assert dct.params == ()
     assert interpreter.interpret(
         dct.graft, builtins={"wf.dict.create": dict_builtin}
     )() == {1: 1.1, 2: 2.2}
@@ -56,6 +58,7 @@ def test_init_fromkwargs(mock_apply):
         assert isinstance(value, Int)
 
     assert client.is_delayed(dct)
+    assert dct.params == ()
     assert interpreter.interpret(
         dct.graft, builtins={"wf.dict.create": dict_builtin}
     )() == dict(a=1, b=2, c=3)
@@ -72,16 +75,29 @@ def test_init_fromdict_andkwargs(mock_apply):
         assert isinstance(value, Int)
 
     assert client.is_delayed(dct)
+    assert dct.params == ()
 
     assert interpreter.interpret(
         dct.graft, builtins={"wf.dict.create": dict_builtin}
     )() == {"a": 1, "z": 100, "b": 2, "c": 3}
 
 
+def test_init_merge_params():
+    x = parameter("x", Float)
+    y = parameter("y", Float)
+
+    dct = Dict[Int, Float]({1: x, 2: 9999.9, 3: y, 4: x})
+    assert dct.params == (x, y)
+
+    dct2 = Dict[Str, Float]({"a": x, "b": 9999.9, "c": y, "d": x})
+    assert dct2.params == (x, y)
+
+
 def test_init_fromproxydict():
     dct1 = Dict[Str, Int](a=1, b=2)
     dc2 = Dict[Str, Int](dct1)
     assert dc2.graft == dct1.graft
+    assert dc2.params is dct1.params
 
 
 def test_init_fromproxydict_wrongtype():
@@ -100,7 +116,7 @@ def test_init_wrongtype():
         Dict[Str, Int](Str("sdf"))
 
 
-def test_validate_params():
+def test_validate_type_params():
     Dict[Str, Int]
     Dict[Str, List[Tuple[Str, Float]]]
 

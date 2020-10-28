@@ -1,5 +1,6 @@
 import numpy as np
 
+from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..core import ProxyTypeError, typecheck_promote, allow_reflect
 from ..mixins import NumPyMixin
@@ -41,12 +42,14 @@ class Number(NumPyMixin, Primitive):
             and not self._is_generic()
             or isinstance(obj, (Bool, Str))
         ):
+            self.params = obj.params
             if isinstance(obj, type(self)):
                 self.graft = obj.graft
             else:
-                self.graft = self._from_apply(
+                self.graft = client.apply_graft(
                     "wf.{}.cast".format(self.__class__.__name__), obj
-                ).graft
+                )
+                self.params = obj.params
         else:
             if isinstance(obj, np.generic):
                 obj = obj.tolist()

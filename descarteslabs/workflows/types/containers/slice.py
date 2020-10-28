@@ -1,6 +1,6 @@
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import Proxytype, typecheck_promote
+from ..core import Proxytype, typecheck_promote, merge_params
 from ..primitives import Int, NoneType
 
 
@@ -40,6 +40,7 @@ class Slice(Proxytype):
         self.graft = client.apply_graft(
             "wf.Slice.create", start=start, stop=stop, step=step
         )
+        self.params = merge_params(start, stop, step)
 
     @classmethod
     def from_slice(cls, obj):

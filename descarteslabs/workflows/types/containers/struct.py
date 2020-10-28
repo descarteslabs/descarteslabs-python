@@ -2,7 +2,7 @@ import six
 
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import ProxyTypeError, GenericProxytype, assert_is_proxytype
+from ..core import ProxyTypeError, GenericProxytype, assert_is_proxytype, merge_params
 from ..primitives import NoneType, Any
 
 
@@ -161,6 +161,8 @@ class Struct(GenericProxytype):
             kwargs, optional=self._optional, read_only=self._read_only
         )
         self.graft = client.apply_graft(self._constructor, **promoted)
+        self.params = merge_params(self._constructor, *kwargs.values())
+        # ^ NOTE: this would need to include the keys as well if proxytypes ever become hashable
 
         self._items_cache = promoted
         # ^ this _might_ be wrong, since the getattr graft won't include `getattr`

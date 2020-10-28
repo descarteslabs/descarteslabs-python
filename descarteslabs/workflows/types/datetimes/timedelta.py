@@ -1,6 +1,6 @@
 from descarteslabs.common.graft import client
 from ...cereal import serializable
-from ..core import typecheck_promote
+from ..core import typecheck_promote, merge_params
 from ..containers import Struct
 from ..primitives import Bool, Float, Int, Number, Any
 
@@ -57,6 +57,9 @@ class Timedelta(TimedeltaStruct):
             minutes=minutes,
             hours=hours,
             weeks=weeks,
+        )
+        self.params = merge_params(
+            days, seconds, microseconds, milliseconds, minutes, hours, weeks
         )
 
     @classmethod

@@ -70,6 +70,8 @@ class Array(BaseArray):
             arr_list = arr.tolist()
             self.graft = client.apply_graft("wf.array.create", arr_list)
 
+        self.params = getattr(arr, "params", ())
+
     @classmethod
     def _promote(cls, obj):
         if isinstance(obj, cls):

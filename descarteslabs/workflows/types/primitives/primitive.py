@@ -23,12 +23,14 @@ class Primitive(Proxytype):
 
         if isinstance(obj, (type(self), Any)):
             self.graft = obj.graft
+            self.params = obj.params
         else:
             if not isinstance(obj, self._pytype):
                 raise ProxyTypeError(
                     "Cannot promote {} to {}".format(type(obj), type(self))
                 )
             self.graft = client.value_graft(obj)
+            self.params = ()
             self._literal_value = obj
 
     @classmethod

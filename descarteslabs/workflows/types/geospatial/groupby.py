@@ -1,7 +1,7 @@
 from descarteslabs.common.graft import client
 
 
-from ..core import typecheck_promote, GenericProxytype
+from ..core import typecheck_promote, GenericProxytype, merge_params
 from ..containers import Dict, Tuple
 from ..function import Function
 
@@ -92,6 +92,7 @@ class ImageCollectionGroupby(GenericProxytype):
             )
 
         self.graft = client.apply_graft("wf.ImageCollectionGroupby.create", imgs, func)
+        self.params = merge_params(imgs, func)
 
         # store this once so that repeated calls to `.groups` refer to the same object in the graft
         self._groups = Dict[self.key_type, ImageCollection]._from_apply(

@@ -12,6 +12,7 @@ class Ellipsis(Proxytype):
 
     def __init__(self):
         self.graft = client.keyref_graft("wf.Ellipsis")
+        self.params = ()
 
     @classmethod
     def _promote(cls, obj):

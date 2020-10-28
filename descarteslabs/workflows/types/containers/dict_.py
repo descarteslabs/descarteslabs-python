@@ -9,6 +9,7 @@ from ..core import (
     GenericProxytype,
     typecheck_promote,
     assert_is_proxytype,
+    merge_params,
 )
 from ..primitives import Str, Bool, Int
 from .list_ import List
@@ -201,6 +202,7 @@ class Dict(BaseDict):
                     )
                 )
             self.graft = dct.graft
+            self.params = dct.params
             if len(kwargs) > 0:
                 raise NotImplementedError(
                     "Don't have key merging onto a proxy dict yet."
@@ -232,6 +234,7 @@ class Dict(BaseDict):
                     promoted[key] = promoted_val
                     # note we use the unpromoted key, which should be a string
                     # this is an optimization that produces a cleaner graph for the case of string-keyed dicts
+                    # FIXME this logic would break on Str proxytype keys, if proxytypes every become hashable
                 else:
                     promoted += [promoted_key, promoted_val]
                     # for non-string dicts, we just give varargs of key, value, key, value, ...
@@ -240,8 +243,10 @@ class Dict(BaseDict):
 
             if is_str_dict:
                 self.graft = client.apply_graft("wf.dict.create", **promoted)
+                self.params = merge_params(*dct.values())
             else:
                 self.graft = client.apply_graft("wf.dict.create", *promoted)
+                self.params = merge_params(*(x for kv in dct.items() for x in kv))
 
     @classmethod
     def _validate_params(cls, type_params):

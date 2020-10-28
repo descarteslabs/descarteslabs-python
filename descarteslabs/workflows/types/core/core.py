@@ -5,12 +5,17 @@ from .exceptions import ProxyTypeError
 
 
 class Castable(object):
-    "Mixin to support casting without explicitly allowing it in ``__init__``"
+    """
+    Mixin to support casting and instantiation from grafts as separate constructors from ``__init__``
+
+    Provides methods to construct delayed objects from grafts, and to propagate along
+    any graft parameters they depend on.
+    """
 
     @classmethod
-    def _from_graft(cls, graft):
+    def _from_graft(cls, graft, params=()):
         """
-        Create an instance of this class with the given graft dict, circumventing ``__init__``
+        Create an instance of this class with the given graft dict and parameters, circumventing ``__init__``
 
         To use safely, this class must function correctly if its ``__init__`` method is not called.
 
@@ -22,19 +27,58 @@ class Castable(object):
         ), "Attempted to instantiate {} from the non-graft-like object {!r}".format(
             cls.__name__, graft
         )
+        assert isinstance(params, tuple), f"params must be a tuple, not {params!r}"
+
         # create a new, empty ``cls`` object, circumventing its __init__ method.
         new = cls.__new__(cls)
         new.graft = graft
+        new.params = params
+        return new
+
+    @classmethod
+    def _as_param(cls, name: str):
+        "Construct a new instance of `cls` as a parameter referencing `name`."
+        new = cls._from_graft(client.keyref_graft(name))
+        new.params = (new,)
+        # ^ NOTE: this is all that makes something a parameter: its params list contains itself.
+        # that way, all other objects that interact with it will propagate that parameter forward.
+        new._name = name
         return new
 
     @classmethod
     def _from_apply(cls, function, *args, **kwargs):
-        "Shorthand for ``cls._from_graft(client.apply_graft(function, *args, **kwargs))``"
-        return cls._from_graft(client.apply_graft(function, *args, **kwargs))
+        """
+        Construct a new instance of `cls` from a graft function application.
+
+        Like ``cls._from_graft(client.apply_graft(function, *args, **kwargs))``,
+        with parameter merging of the inputs.
+        """
+        return cls._from_graft(
+            client.apply_graft(function, *args, **kwargs),
+            params=merge_params(function, *args, *kwargs.values()),
+        )
 
     def _cast(self, cls):
         "Copy of ``self`` as ``cls``. ``cls.__init__`` will not be called."
-        return cls._from_graft(self.graft)
+        return cls._from_graft(self.graft, self.params)
+
+
+def merge_params(*args: Castable) -> tuple:
+    "Returns merged and deduplicated parameters from the args"
+    params = {}
+    for arg in args:
+        for p in getattr(arg, "params", ()):
+            current = params.setdefault(p._name, p)
+            if current is not p:
+                raise ValueError(
+                    f"Arguments combine two different parameter objects with the same names. "
+                    f"A parameter named {p._name!r} ({p!r}) is used by the argument {arg!r}, "
+                    f"but a prior argument used a different parameter object named {p._name!r}: "
+                    f"{current!r}.\n\n"
+                    f"If these parameters {p._name!r} mean different things, then give them different names. "
+                    f"Otherwise, use the same parameter object for both."
+                )
+    return tuple(params.values())
 
 
 class Proxytype(Castable):
@@ -162,10 +206,9 @@ class GenericProxytypeMetaclass(type):
         try:
             my_generic_parent_type = mycls._generictype
         except AttributeError:
-            assert issuperclass(
-                GenericProxytype, mycls
-            ), "{} is not a subclass of GenericProxytype. Do not use the GenericProxytypeMetaclass on it!".format(
-                mycls
+            assert issuperclass(GenericProxytype, mycls), (
+                f"{mycls} is not a subclass of GenericProxytype. "
+                "Do not use the GenericProxytypeMetaclass on it!"
             )
             # If `mycls` doesn't have a `_generictype` attr, it's already a generic
             my_generic_parent_type = mycls
@@ -178,16 +221,12 @@ class GenericProxytypeMetaclass(type):
             other_generic_parent_type = othercls
 
         assert my_generic_parent_type._type_params is None, (
-            "Expected {} to be generic, "
-            "but _type_params is not None: {}".format(
-                my_generic_parent_type, my_generic_parent_type._type_params
-            )
+            f"Expected {my_generic_parent_type} to be generic, "
+            f"but _type_params is not None: {my_generic_parent_type._type_params}"
         )
         assert getattr(other_generic_parent_type, "_type_params", None) is None, (
-            "Expected {} to be generic, "
-            "but _type_params is not None: {}".format(
-                other_generic_parent_type, other_generic_parent_type._type_params
-            )
+            f"Expected {other_generic_parent_type} to be generic, "
+            f"but _type_params is not None: {other_generic_parent_type._type_params}"
         )
 
         # Check that the generic type of the other is a subclass of our generic type,
@@ -378,8 +417,11 @@ class GenericProxytype(Proxytype):
                 # so we do our own dict formatting using `cls.__name__` for read/copy-ability
                 "{{{}}}".format(
                     ", ".join(
-                        "{!r}: {}".format(k, param_cls.__name__)
-                        for k, param_cls in sorted(six.iteritems(type_param))
+                        "{!r}: {}".format(
+                            k,
+                            param.__name__ if isinstance(param, type) else repr(param),
+                        )
+                        for k, param in sorted(six.iteritems(type_param))
                     )
                 )
                 if isinstance(type_param, dict)
@@ -432,9 +474,9 @@ class GenericProxytype(Proxytype):
             raise ProxyTypeError(e)
 
     @classmethod
-    def _from_graft(cls, graft):
+    def _from_graft(cls, graft, params=()):
         """
-        Create an instance of this class with the given graft dict, circumventing ``__init__``
+        Create an instance of this class with the given graft dict and params, circumventing ``__init__``
 
         To use safely, this class must function correctly if its ``__init__`` method is not called.
 
@@ -444,7 +486,7 @@ class GenericProxytype(Proxytype):
         assert not is_generic(cls), "Cannot instantiate a generic {}".format(
             cls.__name__
         )
-        return super(GenericProxytype, cls)._from_graft(graft)
+        return super(GenericProxytype, cls)._from_graft(graft, params=params)
 
     def __init__(self):
         if self._type_params is None:

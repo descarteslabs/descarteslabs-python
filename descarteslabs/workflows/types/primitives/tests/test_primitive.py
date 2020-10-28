@@ -15,7 +15,8 @@ def test_construct_generic_not_allowed():
 )
 def test_construct_from_python_primitive(val, proxytype):
     # not much of a test. just making sure nothing raises.
-    proxytype(val)
+    prim = proxytype(val)
+    assert prim.params == ()
 
 
 def test_construct_from_wrong_python_primitive():
@@ -27,6 +28,7 @@ def test_constructor_from_own_type():
     proxy = Float(1.0)
     proxy2 = Float(proxy)
     assert proxy2.graft == proxy.graft
+    assert proxy2.params == proxy.params
 
 
 def test_construct_from_unsupported_proxy_type():
@@ -38,3 +40,4 @@ def test_constructor_from_any():
     proxy = Any(None)
     proxy2 = Float(proxy)
     assert proxy2.graft == proxy.graft
+    assert proxy2.params == proxy.params

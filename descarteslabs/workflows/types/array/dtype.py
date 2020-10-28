@@ -44,6 +44,7 @@ class DType(Proxytype):
                 "NumPy dtype, NumPy type, Python type, or proxy type.".format(type_)
             )
         self.graft = client.apply_graft("wf.dtype.create", val)
+        self.params = getattr(type_, "params", ())
 
     @classmethod
     def _promote(cls, obj):

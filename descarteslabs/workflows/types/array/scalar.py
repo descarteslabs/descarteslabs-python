@@ -38,6 +38,8 @@ class Scalar(Proxytype, NumPyMixin):
         else:
             raise ProxyTypeError("Cannot instantiate a Scalar from {}.".format(obj))
 
+        self.params = getattr(obj, "params", ())
+
     def __neg__(self):
         return _delayed_numpy_ufuncs().negative(self)
 

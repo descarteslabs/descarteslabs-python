@@ -7,6 +7,7 @@ from descarteslabs.common.graft import interpreter
 
 from ...core import ProxyTypeError
 from ...primitives import Int, Str, Bool, NoneType
+from ...identifier import parameter
 from .. import List, Tuple
 
 
@@ -18,9 +19,18 @@ def test_init_unparameterized():
 def test_init():
     lst = List[Int]([1, 2, 3])
     assert client.is_delayed(lst)
+    assert lst.params == ()
     assert interpreter.interpret(
         lst.graft, builtins={"wf.list": lambda *args: list(args)}
     )() == [1, 2, 3]
+
+
+def test_init_merge_params():
+    x = parameter("x", Int)
+    y = parameter("y", Int)
+
+    lst = List[Int]([1, x, 2, y, 3, x])
+    assert lst.params == (x, y)
 
 
 def test_init_notsequence():
@@ -41,6 +51,7 @@ def test_init_copy():
     lst2 = List[Int](lst1)
 
     assert lst2.graft != lst1.graft
+    assert lst2.params is lst1.params
     assert interpreter.interpret(
         lst2.graft, builtins={"wf.list": lambda *args: list(args), "wf.list.copy": list}
     )() == [1, 2, 3]

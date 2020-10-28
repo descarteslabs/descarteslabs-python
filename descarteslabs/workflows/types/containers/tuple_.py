@@ -9,6 +9,7 @@ from ..core import (
     GenericProxytype,
     typecheck_promote,
     assert_is_proxytype,
+    merge_params,
 )
 from ..proxify import proxify
 from ..primitives import Any, Int, Bool
@@ -100,6 +101,7 @@ class Tuple(GenericProxytype):
 
         iterable = tuple(checker_promoter(i, x) for i, x in enumerate(iterable))
         self.graft = client.apply_graft("wf.tuple", *iterable)
+        self.params = merge_params(*iterable)
 
     @classmethod
     def _validate_params(cls, type_params):

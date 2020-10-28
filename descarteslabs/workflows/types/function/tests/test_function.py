@@ -70,6 +70,17 @@ class TestDelay(object):
         delayed = Function._delay(delayable, None, Int, Float)
         assert isinstance(delayed, Tuple[Float, Tuple[Int, Float], Int, Str])
 
+    @pytest.mark.parametrize("ret_type", [None, Str])
+    def test_delay_propagate_params(self, ret_type):
+        p = parameter("p", Int)
+
+        def delayable(a):
+            return a * p
+
+        delayed = Function._delay(delayable, ret_type, Str)
+        assert isinstance(delayed, Str)
+        assert delayed.params == (p,)
+
 
 class TestFunction(object):
     def test_init_unparameterized(self):
@@ -84,14 +95,22 @@ class TestFunction(object):
 
     def test_init_str(self):
         func = Function[{}, Int]("foo")
-        assert func.function == "foo"
+        assert func.graft == client.keyref_graft("foo")
 
     def test_init_callable(self):
         func = Function[{}, Int](lambda: 1)
-        assert isinstance(func.function, Int)
-        # ^ this is weird and should change eventually
+        assert client.is_delayed(func)
         interpreted_func = interpreter.interpret(func.graft)
         assert interpreted_func() == 1
+
+    def test_init_callable_propagate_params(self):
+        p = parameter("p", Int)
+        func = Function[Float, {}, Float](lambda x: x + p)
+        assert func.params == (p,)
+        assert func(0.0).params == (p,)
+
+        q = parameter("q", Float)
+        assert func(q).params == (p, q)
 
     def test_call(self):
         def delayable(a, b):
@@ -108,17 +127,26 @@ class TestFunction(object):
         builtins = {"func": lambda a, x=1, y="foo": (a, x, y)}
         func = Function[Int, {"x": Int, "y": Str}, Tuple[Int, Int, Str]]("func")
 
-        res1 = func(1)
-        assert interpreter.interpret(res1.graft, builtins)() == (1, 1, "foo")
+        res = func(1)
+        assert interpreter.interpret(res.graft, builtins)() == (1, 1, "foo")
 
-        res2 = func(1, x=-1)
-        assert interpreter.interpret(res2.graft, builtins)() == (1, -1, "foo")
+        res = func(1, x=-1)
+        assert interpreter.interpret(res.graft, builtins)() == (1, -1, "foo")
 
-        res2 = func(1, y="bar")
-        assert interpreter.interpret(res2.graft, builtins)() == (1, 1, "bar")
+        res = func(1, y="bar")
+        assert interpreter.interpret(res.graft, builtins)() == (1, 1, "bar")
 
-        res2 = func(1, x=-1, y="bar")
-        assert interpreter.interpret(res2.graft, builtins)() == (1, -1, "bar")
+        res = func(1, x=-1, y="bar")
+        assert interpreter.interpret(res.graft, builtins)() == (1, -1, "bar")
+
+        p = parameter("p", Int)
+        res = func(1, x=p, y="bar")
+        assert res.params == (p,)
+        assert interpreter.interpret(res.graft, dict(builtins, p=-1))() == (
+            1,
+            -1,
+            "bar",
+        )
 
     def test_call_wrong_positional_args(self):
         func = Function[Int, Str, {}, Str]("func")
@@ -252,8 +280,11 @@ class TestFunction(object):
             Function.from_callable(py_func)
 
     def test_returns_closure(self):
+        global_p = parameter("global", Int)
+        # ^ will be 1; use to track closure correctness
+
         def outer(a):
-            b = a + parameter("global", Int)  # 1; use to track closure correctness
+            b = a + global_p
 
             def inner(x, y):
                 return (x + y) / b
@@ -261,15 +292,18 @@ class TestFunction(object):
             return inner
 
         func = Function[Int, {}, Function[Int, Int, {}, Float]](outer)
+        assert func.params == (global_p,)
 
         global_value = 1
         first_call_arg = 4
 
         proxy_inner = func(4)
         assert isinstance(proxy_inner, Function[Int, Int, {}, Float])
+        assert proxy_inner.params == (global_p,)
         result_2 = proxy_inner(6, 4)
         result_3 = proxy_inner(10, 5)
         result = result_2 + result_3
+        assert result.params == (global_p,)
 
         m = mock.MagicMock()
         m.__radd__.side_effect = lambda other: other + global_value
@@ -326,6 +360,7 @@ class TestFunction(object):
         func = Function[Int, {}, Function[Int, Int, {}, Function[Int, {}, Int]]](
             make_function()
         )
+        assert tuple(p._name for p in func.params) == ("ext1", "ext2")
 
         def do_operation(f):
             b = f(2)

@@ -5,6 +5,7 @@ import numpy as np
 
 from ...core import ProxyTypeError
 from ...containers import Tuple, List
+from ...identifier import parameter
 from ..bool_ import Bool
 from ..string import Str
 from ..number import Float, Int, Number, _binop_result
@@ -49,32 +50,61 @@ class TestConstruct(object):
     def test_explicit_cast_passthrough(self):
         i = Int(Int(1))
         assert i.graft[i.graft["returns"]] == 1
+        assert i.params == ()
+
+        x = parameter("x", Int)
+        i = Int(x)
+        assert i.params == (x,)
 
     def test_explicit_cast_to_int(self):
         i = Int(Float(1.0))
         assert isinstance(i, Int)
         assert i.graft[i.graft["returns"]][0] == "wf.Int.cast"
+        assert i.params == ()
+        x = parameter("x", Float)
+        i = Int(x)
+        assert i.params == (x,)
 
         i = Int(Bool(True))
         assert isinstance(i, Int)
         assert i.graft[i.graft["returns"]][0] == "wf.Int.cast"
+        assert i.params == ()
+        x = parameter("x", Bool)
+        i = Int(x)
+        assert i.params == (x,)
 
         i = Int(Str("1"))
         assert isinstance(i, Int)
         assert i.graft[i.graft["returns"]][0] == "wf.Int.cast"
+        assert i.params == ()
+        x = parameter("x", Str)
+        i = Int(x)
+        assert i.params == (x,)
 
     def test_explicit_cast_to_float(self):
         f = Float(Int(1))
         assert isinstance(f, Float)
         assert f.graft[f.graft["returns"]][0] == "wf.Float.cast"
+        assert f.params == ()
+        x = parameter("x", Int)
+        f = Float(x)
+        assert f.params == (x,)
 
         f = Float(Bool(True))
         assert isinstance(f, Float)
         assert f.graft[f.graft["returns"]][0] == "wf.Float.cast"
+        assert f.params == ()
+        x = parameter("x", Bool)
+        f = Float(x)
+        assert f.params == (x,)
 
         f = Float(Str("1"))
         assert isinstance(f, Float)
         assert f.graft[f.graft["returns"]][0] == "wf.Float.cast"
+        assert f.params == ()
+        x = parameter("x", Str)
+        f = Float(x)
+        assert f.params == (x,)
 
 
 class TestNumPyScalars(object):
@@ -94,11 +124,13 @@ class TestNumPyScalars(object):
     def test_int(self, val):
         i = Int(val)
         assert isinstance(i.graft[i.graft["returns"]], int)
+        assert i.params == ()
 
     @pytest.mark.parametrize("val", [np.float16(1), np.float32(1), np.float64(1)])
     def test_float(self, val):
         i = Float(val)
         assert isinstance(i.graft[i.graft["returns"]], float)
+        assert i.params == ()
 
     def test_failure(self):
         with pytest.raises(TypeError):

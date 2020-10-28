@@ -4,6 +4,7 @@ import operator
 import pytest
 
 from ...primitives import Float, Bool, Int, Any
+from ...identifier import parameter
 from ..timedelta import Timedelta
 from ..datetime_ import Datetime
 
@@ -22,6 +23,12 @@ def test_init():
     )
 
     assert isinstance(Timedelta(), Timedelta)
+
+    assert Timedelta().params == ()
+
+    x = parameter("x", Int)
+    y = parameter("y", Int)
+    assert Timedelta(days=x, hours=x, weeks=y).params == (x, y)
 
 
 def test_total_seconds():

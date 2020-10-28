@@ -1,6 +1,6 @@
 import pytest
 
-from ..core import _type_params_issubclass
+from ..core import _type_params_issubclass, merge_params
 from .. import Proxytype, GenericProxytype, is_generic, validate_typespec
 from ... import Struct, List, Tuple, Int, Float, Str
 
@@ -315,3 +315,44 @@ class TestProxytypePyInterfaceErrors:
             ),
         ):
             iter(HasMap())
+
+
+class TestMergeParameters:
+    def test_basic(self):
+        x = Int._as_param("x")
+        y = Int._as_param("y")
+        z = Float._as_param("z")
+
+        assert merge_params() == ()
+        assert merge_params(x) == (x,)
+        assert merge_params(x, y, z) == (x, y, z)
+        assert merge_params(x, "foo", y, 1234, z) == (x, y, z)
+
+    def test_from_apply(self):
+        x = Int._as_param("x")
+        y = Int._as_param("y")
+        z = Float._as_param("z")
+
+        res = Str._from_apply("foo_func", y, bar=z)
+        assert res.params == (y, z)
+
+        res_funcparam = Str._from_apply(x, y, bar=z)
+        assert res_funcparam.params == (x, y, z)
+
+    def test_dedup(self):
+        x = Int._as_param("x")
+        y = Int._as_param("y")
+
+        assert merge_params(x, x, x) == (x,)
+        assert merge_params(x, x, y) == (x, y)
+        assert merge_params(x, y, x) == (x, y)
+
+    def test_duplicate_name_error(self):
+        x = Int._as_param("x")
+        x2 = Int._as_param("x")
+        y = Int._as_param("y")
+
+        with pytest.raises(
+            ValueError, match="If these parameters 'x' mean different things"
+        ):
+            merge_params(x, y, x2)

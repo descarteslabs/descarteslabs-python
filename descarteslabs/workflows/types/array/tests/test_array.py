@@ -8,6 +8,7 @@ from ...core import ProxyTypeError
 from ...primitives import Float, Bool, Str, Int, Any
 from ...geospatial import ImageCollection
 from ...containers import List
+from ...identifier import parameter
 from .. import Array, DType, Scalar
 
 
@@ -15,11 +16,21 @@ arr = Array([[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]])
 
 
 @pytest.mark.parametrize(
-    "val", [1, Int(1), [1, 2, 3, 4], np.ones((1, 2, 3)), List[Int]([1, 2, 3])]
+    "val",
+    [
+        1,
+        Int(1),
+        parameter("p", Float),
+        [1, 2, 3, 4],
+        np.ones((1, 2, 3)),
+        List[Int]([1, 2, 3]),
+        List[Float]([1.1, 2.2, parameter("p", Float)]),
+    ],
 )
 def test_init(val):
     arr = Array(val)
     assert isinstance(arr, Array)
+    assert arr.params == getattr(val, "params", ())
 
 
 @pytest.mark.parametrize(

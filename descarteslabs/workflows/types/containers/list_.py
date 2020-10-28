@@ -9,6 +9,7 @@ from ..core import (
     GenericProxytype,
     typecheck_promote,
     assert_is_proxytype,
+    merge_params,
 )
 from ..primitives import Int, Bool
 from .collection import CollectionMixin
@@ -54,6 +55,7 @@ class List(GenericProxytype, CollectionMixin):
 
         if isinstance(iterable, type(self)):
             self.graft = client.apply_graft("wf.list.copy", iterable)
+            self.params = iterable.params
         elif isinstance(iterable, List):
             raise ProxyTypeError(
                 "Cannot convert {} to {}, since they have different value types".format(
@@ -77,6 +79,7 @@ class List(GenericProxytype, CollectionMixin):
 
             iterable = tuple(checker_promoter(i, x) for i, x in enumerate(iterable))
             self.graft = client.apply_graft("wf.list", *iterable)
+            self.params = merge_params(*iterable)
 
     @classmethod
     def _validate_params(cls, type_params):

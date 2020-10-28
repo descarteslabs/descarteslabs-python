@@ -59,6 +59,7 @@ class Any(Proxytype):
 
     def __init__(self, value):
         self.graft = client.value_graft(value)
+        self.params = getattr(value, "params", ())
 
     @classmethod
     def _promote(cls, obj):

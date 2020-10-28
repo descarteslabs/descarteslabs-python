@@ -21,7 +21,7 @@ def parameter(name, type_):
 
     Returns
     -------
-    proxyTime:
+    parameter:
         a Proxytype object of type ``type_``.
 
     Example
@@ -39,12 +39,12 @@ def parameter(name, type_):
             "Parameter type cannot be generic, must be concrete (like List[Int], not plain List)"
         )
 
-    return identifier(name, type_)
+    return type_._as_param(name)
 
 
 def identifier(name, type_):
     """
-    Create a Proxytype instance that references a graft key.
+    Create a non-parameter Proxytype instance that references a graft key.
     Internal method meant for references to builtin constants or parameters.
     You shouldn't use this directly; consider `parameter` instead.
     """
