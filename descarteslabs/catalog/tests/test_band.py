@@ -5,8 +5,16 @@ import textwrap
 from descarteslabs.client.exceptions import NotFoundError
 
 from .base import ClientTestCase
-from ..attributes import AttributeValidationError
-from ..band import Band, MaskBand, SpectralBand, DerivedBand, GenericBand, MicrowaveBand
+from ..attributes import AttributeValidationError, DocumentState
+from ..band import (
+    Band,
+    MaskBand,
+    SpectralBand,
+    DerivedBand,
+    GenericBand,
+    MicrowaveBand,
+    ProcessingStepAttribute,
+)
 from ..product import Product
 
 
@@ -226,6 +234,151 @@ class TestBand(ClientTestCase):
         self.assertEqual(b.id, id)
         self.assertEqual(b.product_id, product_id)
         self.assertEqual(b.name, band_name)
+
+    def test_processing_levels_create(self):
+        band_id = "some_product_id:band"
+
+        b = SpectralBand(id=band_id)
+        self.assertIsNone(b.processing_levels)
+
+        b = SpectralBand(id=band_id, processing_levels={"default": "toa", "toa": []})
+        self.assertEqual(b.processing_levels, {"default": "toa", "toa": []})
+
+        b = SpectralBand(
+            id=band_id,
+            processing_levels={
+                "default": "toa_reflectance",
+                "toa_reflectance": [
+                    {"function": "fun", "parameter": "param", "index": 0}
+                ],
+            },
+        )
+        self.assertEqual(
+            b.processing_levels,
+            {
+                "default": "toa_reflectance",
+                "toa_reflectance": [
+                    ProcessingStepAttribute(function="fun", parameter="param", index=0)
+                ],
+            },
+        )
+
+        with pytest.raises(AttributeValidationError):
+            SpectralBand(id=band_id, processing_levels={"default": 1})
+
+        with pytest.raises(AttributeValidationError):
+            SpectralBand(id=band_id, processing_levels=[])
+
+        with pytest.raises(AttributeValidationError):
+            SpectralBand(
+                id=band_id, processing_levels={"default": "toa", "toa": ["string"]}
+            )
+
+        with pytest.raises(AttributeValidationError):
+            SpectralBand(
+                id=band_id,
+                processing_levels={
+                    "default": "toa_reflectance",
+                    "toa_reflectance": [
+                        {"function": "fun", "parameter": "param", "index": "foo"}
+                    ],
+                },
+            )
+
+        with pytest.raises(AttributeValidationError):
+            SpectralBand(
+                id=band_id,
+                processing_levels={
+                    "default": "toa_reflectance",
+                    "toa_reflectance": [
+                        {
+                            "function": "fun",
+                            "parameter": "param",
+                            "index": 0,
+                            "foo": "bar",
+                        }
+                    ],
+                },
+            )
+
+    def test_processing_levels_modified(self):
+        band_id = "some_product_id:band"
+        pl = {
+            "default": "surface_reflectance",
+            "surface_reflectance": [
+                {
+                    "function": "gain_bias",
+                    "parameter": "reflectance_gain_bias",
+                    "index": 0,
+                }
+            ],
+        }
+        b = SpectralBand(id=band_id, processing_levels=pl, _saved=True,)
+
+        assert b.state == DocumentState.SAVED
+
+        b.processing_levels["surface_reflectance"][0].index = 1
+        assert b.state == DocumentState.MODIFIED
+
+        # reset modified state
+        b._modified = set()
+        assert b.state == DocumentState.SAVED
+
+        b.processing_levels["surface_reflectance"].append(
+            {"function": "gain_bias", "parameter": "reflectance_gain_bias", "index": 2}
+        )
+        assert b.state == DocumentState.MODIFIED
+
+    @responses.activate
+    def test_processing_levels_io(self):
+        band_id = "some_product_id:band"
+        pl = {
+            "default": "surface_reflectance",
+            "surface_reflectance": [
+                {
+                    "function": "gain_bias",
+                    "parameter": "reflectance_gain_bias",
+                    "index": 0,
+                }
+            ],
+        }
+
+        self.mock_response(
+            responses.POST,
+            {
+                "data": {
+                    "attributes": {
+                        "readers": [],
+                        "writers": [],
+                        "owners": ["org:descarteslabs"],
+                        "modified": "2019-06-11T23:31:33.714883Z",
+                        "created": "2019-06-11T23:31:33.714883Z",
+                        "name": "band",
+                        "product_id": "some_product_id",
+                        "type": "spectral",
+                        "processing_levels": pl,
+                    },
+                    "type": "band",
+                    "id": "p1:blue",
+                },
+                "links": {
+                    "self": "https://www.example.com/catalog/v2/bands/{}".format(
+                        band_id
+                    )
+                },
+                "jsonapi": {"version": "1.0"},
+            },
+        )
+
+        b = SpectralBand(id=band_id, processing_levels=pl, client=self.client,)
+        assert isinstance(
+            b.processing_levels["surface_reflectance"][0], ProcessingStepAttribute
+        )
+        b.save()
+        assert isinstance(
+            b.processing_levels["surface_reflectance"][0], ProcessingStepAttribute
+        )
+        assert self.get_request_body(0)["data"]["attributes"]["processing_levels"] == pl
 
 
 class TestDerivedBand(ClientTestCase):

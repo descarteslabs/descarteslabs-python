@@ -1,4 +1,5 @@
 from enum import Enum
+from collections.abc import Iterable, Mapping, MutableMapping
 
 from descarteslabs.common.property_filtering import GenericProperties
 from .catalog_base import CatalogObject, _new_abstract_class
@@ -11,6 +12,9 @@ from .attributes import (
     ListAttribute,
     TupleAttribute,
     TypedAttribute,
+    ModelAttribute,
+    MappingAttribute,
+    AttributeValidationError,
 )
 
 
@@ -129,6 +133,205 @@ class Colormap(str, Enum):
     GIST_EARTH = "gist_earth"
     TERRAIN = "terrain"
     CDL = "cdl"
+
+
+class ProcessingStepAttribute(MappingAttribute):
+    """File definition for an Image.
+
+    Attributes
+    ----------
+    function : str
+        Name of the processing function to apply. Required.
+    parameter : str
+        Name of the parameter in the image metadata containing
+        the coefficients for the processing function. Required.
+    index : int
+        Optional index into the named parameter (an array) for the band.
+    """
+
+    function = TypedAttribute(str)
+    parameter = TypedAttribute(str)
+    index = TypedAttribute(int)
+
+
+class ProcessingLevelsAttribute(ModelAttribute, MutableMapping):
+    """An attribute that contains properties (key/value pairs).
+
+    Can be set using a dictionary of items or any `Mapping`, or an instance of this
+    attribute.  All keys must be string and values can be string or an iterable
+    of ProcessingStepAttributes (or compatible mapping).
+    ProcessingLevelsAttribute behaves similar to dictionaries.
+    """
+
+    # this value is ONLY used for for instances of the attribute that
+    # are attached to class definitions. It's confusing to put this
+    # instantiation into __init__, because the value is only ever set
+    # from AttributeMeta.__new__, after it's already been instantiated
+    _attribute_name = None
+
+    def __init__(self, value=None, validate=True, **kwargs):
+        self._items = {}
+
+        super(ProcessingLevelsAttribute, self).__init__(**kwargs)
+
+        if value is not None:
+            # we always validate, to correctly coerce the values
+            value = {
+                key: self.validate_key_and_value(key, val) for key, val in value.items()
+            }
+
+            self._items.update(value)
+
+    def __repr__(self):
+        return "{}{}{}".format(
+            "{",
+            ", ".join(
+                [
+                    "{}: {}".format(repr(key), repr(value))
+                    for key, value in self._items.items()
+                ]
+            ),
+            "}",
+        )
+
+    def validate_key_and_value(self, key, value):
+        """Validate the key and value.
+
+        The key must be a string, and the value either a string or an iterable of ProcessingStepAttributes
+        or a compatible mapping.
+
+        Returns a fully formed value (a string or a ListAttribute of ProcessingStepAttributes)
+        """
+        if not isinstance(key, str):
+            raise AttributeValidationError(
+                "Keys for property {} must be strings: {}".format(
+                    self._attribute_name, key
+                )
+            )
+        if isinstance(value, str):
+            return value
+        elif isinstance(value, ListAttribute) and all(
+            map(lambda x: isinstance(x, ProcessingStepAttribute), value)
+        ):
+            value._add_model_object(self)
+            return value
+        elif isinstance(value, Iterable):
+            items = []
+            for v in value:
+                if isinstance(v, ProcessingStepAttribute):
+                    items.append(v)
+                elif isinstance(v, Mapping):
+                    try:
+                        items.append(ProcessingStepAttribute(**v))
+                    except AttributeError as ex:
+                        raise AttributeValidationError(
+                            "The value for property {} with key {} must"
+                            " conform to a valid ProcessingStepAttribute: {}: {}".format(
+                                self._attribute_name, key, v, ex
+                            )
+                        )
+                else:
+                    break
+            else:
+                value = ListAttribute(ProcessingStepAttribute, items=items)
+                value._add_model_object(self)
+                return value
+        raise AttributeValidationError(
+            "The value for property {} with key {} must be a string"
+            " or an iterable of ProcessingStepAttribute: {}".format(
+                self._attribute_name, key, value
+            )
+        )
+
+    def serialize(self, value, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
+        """
+        if value is None:
+            return None
+
+        # Shallow copy for strings, deserialize ListAttributes
+        return {
+            k: v
+            if isinstance(v, str)
+            else v.serialize(v, jsonapi_format=jsonapi_format)
+            for k, v in value.items()
+        }
+
+    def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        See :meth:`Attribute.deserialize`.
+
+        Parameters
+        ----------
+        value : dict or ProcessingLevelsAttribute
+            A set of values to use to initialize a new ProcessingLevelsAttribute
+            instance.  All keys must be strings, and values can be strings or numbers.
+
+        Returns
+        -------
+        ProcessingLevelsAttribute
+            A `ProcessingLevelsAttribute` with the given items.
+
+        Raises
+        ------
+        AttributeValidationError
+            If the value is not a mapping or any of the keys are not strings, or any
+            of the values are not strings or numbers.
+        """
+        if value is None:
+            return None
+
+        if isinstance(value, ProcessingLevelsAttribute):
+            return value
+
+        if validate:
+            if not isinstance(value, Mapping):
+                raise AttributeValidationError(
+                    "A ProcessingLevelsAttribute expects a mapping: {}".format(
+                        self._attribute_name
+                    )
+                )
+
+            value = {
+                key: self.validate_key_and_value(key, val) for key, val in value.items()
+            }
+
+        return ProcessingLevelsAttribute(
+            value, validate=validate, **self._get_attr_params()
+        )
+
+    # Mapping methods
+
+    def __getitem__(self, key):
+        return self._items[key]
+
+    def __setitem__(self, key, value):
+        self._raise_if_immutable_or_readonly("set")
+        value = self.validate_key_and_value(key, value)
+
+        old_value = self._items.get(key, None)
+        changed = key not in self._items or old_value != value
+        self._set_modified(changed=changed)
+        self._items[key] = value
+        if isinstance(old_value, ModelAttribute):
+            old_value._remove_model_object(self)
+
+    def __delitem__(self, key):
+        self._raise_if_immutable_or_readonly("delete")
+        if key in self._items:
+            self._set_modified(changed=True)
+        old_value = self._items.pop(key)
+        if isinstance(old_value, ModelAttribute):
+            old_value._remove_model_object(self)
+
+    def __iter__(self):
+        return iter(self._items)
+
+    def __len__(self):
+        return len(self._items)
 
 
 class Band(NamedCatalogObject):
@@ -295,6 +498,7 @@ class Band(NamedCatalogObject):
         Defaults to 0.
         """,
     )
+    processing_levels = ProcessingLevelsAttribute()
 
     def __new__(cls, *args, **kwargs):
         return _new_abstract_class(cls, Band)
