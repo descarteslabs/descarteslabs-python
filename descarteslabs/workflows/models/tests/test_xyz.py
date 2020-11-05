@@ -7,6 +7,8 @@ from six.moves import queue
 import grpc
 import mock
 import pytest
+
+from descarteslabs.client.version import __version__
 from descarteslabs.common.proto.xyz import xyz_pb2
 
 from ... import _channel
@@ -34,6 +36,7 @@ class TestXYZ(object):
         assert message.name == "foo"
         assert message.description == "a foo"
         assert message.channel == _channel.__channel__
+        assert message.client_version == __version__
 
     def test_roundtrip_from_proto(self, stub):
         obj = utils.Bar(utils.Foo(1))
@@ -149,7 +152,10 @@ class TestXYZ(object):
 
         with pytest.raises(
             AttributeError,
-            match=r"^The serialized .* XYZ 'foo'\. To share objects with others, please use a Workflow instead\.$",
+            match=(
+                r"^The serialized .* XYZ 'foo'\. To share objects with others, please"
+                r" use a Workflow instead\.$"
+            ),
         ):
             XYZ._from_proto(message)
 

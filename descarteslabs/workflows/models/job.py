@@ -7,6 +7,7 @@ import sys
 import grpc
 import requests
 
+from descarteslabs.client.version import __version__
 from descarteslabs.common.graft import client as graft_client
 from descarteslabs.common.registry import registry
 from descarteslabs.common.proto.job import job_pb2
@@ -133,6 +134,7 @@ class Job(object):
                 destination=destination_proto,
                 no_cache=not cache,
                 channel=client._wf_channel,
+                client_version=__version__,
             ),
             timeout=client.DEFAULT_TIMEOUT,
         )
@@ -611,8 +613,10 @@ def _draw_progress_bar(finished, total, stage, output, width=6):
     else:
         bar = "#" * int(width * percent)
 
-    progress_output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
-        bar=bar, width=width, finished=finished, total=total, stage=stage
+    progress_output = (
+        "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
+            bar=bar, width=width, finished=finished, total=total, stage=stage
+        )
     )
 
     _write_to_io_or_widget(output, "{:<79}".format(progress_output))

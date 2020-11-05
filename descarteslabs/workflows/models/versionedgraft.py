@@ -1,6 +1,7 @@
 import json
 import textwrap
 
+from descarteslabs.client.version import __version__
 from descarteslabs.common.graft import client as graft_client
 from descarteslabs.common.proto.workflow import workflow_pb2
 from descarteslabs.workflows.cereal import deserialize_typespec, serialize_typespec
@@ -50,6 +51,7 @@ class VersionedGraft:
             version=version,
             serialized_graft=json.dumps(graft),
             channel=client._wf_channel,
+            client_version=__version__,
             typespec=typespec,
             docstring=textwrap.dedent(docstring),
             labels=labels,

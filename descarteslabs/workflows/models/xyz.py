@@ -5,6 +5,7 @@ import urllib
 import six
 
 import grpc
+from descarteslabs.client.version import __version__
 from descarteslabs.common.graft import client as graft_client
 from descarteslabs.common.proto.xyz import xyz_pb2
 
@@ -141,6 +142,7 @@ class XYZ(object):
             serialized_graft=json.dumps(graft),
             typespec=typespec,
             channel=client._wf_channel,
+            client_version=__version__,
         )
         return cls(proxy_object, message, client=client)
 

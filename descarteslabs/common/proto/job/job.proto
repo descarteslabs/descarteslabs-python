@@ -27,6 +27,7 @@ message Job {
   string parameters = 4;
   bool no_cache = 5;
   string channel = 6;
+  string client_version = 14;
   // milliseconds since the UNIX epoch (UTC)
   int64 timestamp = 7;
   string user = 8;
@@ -75,6 +76,7 @@ message CreateJobRequest {
   string parameters = 3;
   bool no_cache = 4;
   string channel = 5;
+  string client_version = 9;
   ResultType type = 6;
   Format format = 7;
   Destination destination = 8;

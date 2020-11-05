@@ -77,6 +77,7 @@ message VersionedGraft {
   string version = 1;
   string serialized_graft = 2;
   string channel = 3;
+  string client_version = 10;
   Typespec typespec = 4;
   string docstring = 5;
 

@@ -24,6 +24,7 @@ message XYZ {
   string description = 8;
   ResultType type = 9;
   string channel = 10;
+  string client_version = 11;
 
   string serialized_graft = 21;
   Typespec typespec = 25;
@@ -41,6 +42,7 @@ message CreateXYZRequest {
   string serialized_graft = 3;
   Typespec typespec = 4;
   string channel = 5;
+  string client_version = 6;
 }
 
 message GetXYZRequest { string xyz_id = 1; }

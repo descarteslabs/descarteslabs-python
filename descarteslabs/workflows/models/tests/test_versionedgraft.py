@@ -4,6 +4,7 @@ import pytest
 
 from descarteslabs.common.proto.workflow import workflow_pb2
 
+from descarteslabs.client.version import __version__
 from descarteslabs.workflows.types import Int
 from descarteslabs.workflows.client import Client
 from descarteslabs.workflows.cereal import serialize_typespec
@@ -35,6 +36,7 @@ class TestVersionedGraft(object):
         assert vg._message.serialized_graft == json.dumps(obj.graft)
         assert vg._message.typespec == serialize_typespec(type(obj))
         assert vg.channel == _channel.__channel__
+        assert vg._message.client_version == __version__
         assert vg.type == type(obj)
 
     def test_from_proto(self, stub):

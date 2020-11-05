@@ -8,6 +8,7 @@ import grpc
 
 from descarteslabs.workflows.client import Client
 
+from descarteslabs.client.version import __version__
 from descarteslabs.common.proto.errors import errors_pb2
 from descarteslabs.common.proto.job import job_pb2
 from descarteslabs.common.proto.types import types_pb2
@@ -77,6 +78,7 @@ class TestJob(object):
             destination=destination_proto,
             no_cache=False,
             channel=_channel.__channel__,
+            client_version=__version__,
         )
 
         message = job_pb2.Job(
@@ -89,6 +91,7 @@ class TestJob(object):
             destination=create_job_request_message.destination,
             no_cache=create_job_request_message.no_cache,
             channel=create_job_request_message.channel,
+            client_version=create_job_request_message.client_version,
         )
         stub.return_value.CreateJob.return_value = message
 
