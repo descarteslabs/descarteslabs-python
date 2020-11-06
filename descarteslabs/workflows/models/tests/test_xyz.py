@@ -80,6 +80,7 @@ class TestXYZ(object):
                 serialized_graft=old_message.serialized_graft,
                 typespec=old_message.typespec,
                 channel=_channel.__channel__,
+                client_version=__version__,
             ),
             timeout=Client.DEFAULT_TIMEOUT,
             metadata=mock.ANY,

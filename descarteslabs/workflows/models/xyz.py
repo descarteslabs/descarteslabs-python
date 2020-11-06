@@ -201,6 +201,7 @@ class XYZ(object):
                 serialized_graft=self._message.serialized_graft,
                 typespec=self._message.typespec,
                 channel=self._message.channel,
+                client_version=self._message.client_version,
             ),
             timeout=self._client.DEFAULT_TIMEOUT,
         )
