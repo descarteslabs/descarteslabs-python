@@ -127,6 +127,7 @@ class MapApp(widgets.VBox):
         "east",
         "west",
         "layers",
+        "controls",
         "bounds",
         "bounds_polygon",
         "pixel_bounds",
