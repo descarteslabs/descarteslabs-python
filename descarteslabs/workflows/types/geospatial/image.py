@@ -1500,7 +1500,13 @@ class Image(ImageBase, BandsMixin):
         return _result_type(other)._from_apply("wf.pow", other, self)
 
     def tile_layer(
-        self, name=None, scales=None, colormap=None, checkerboard=True, **parameters
+        self,
+        name=None,
+        scales=None,
+        colormap=None,
+        checkerboard=True,
+        log_level=None,
+        **parameters,
     ):
         """
         A `.WorkflowsLayer` for this `Image`.
@@ -1529,6 +1535,10 @@ class Image(ImageBase, BandsMixin):
             The name of the colormap to apply to the `Image`. Only valid if the `Image` has a single band.
         checkerboard: bool, default True
             Whether to display a checkerboarded background for missing or masked data.
+        log_level: int, default logging.DEBUG
+            Only listen for log records at or above this log level during tile computation.
+            See https://docs.python.org/3/library/logging.html#logging-levels for valid
+            log levels.
         **parameters: JSON-serializable value, Proxytype, or ipywidgets.Widget
             Runtime parameters to use when computing tiles.
             Values can be any JSON-serializable value, a `Proxytype` instance, or an ipywidgets ``Widget``.
@@ -1541,7 +1551,9 @@ class Image(ImageBase, BandsMixin):
         """
         from ... import interactive
 
-        layer = interactive.WorkflowsLayer(self, name=name, parameters=parameters)
+        layer = interactive.WorkflowsLayer(
+            self, name=name, log_level=log_level, parameters=parameters
+        )
         layer.set_scales(scales, new_colormap=colormap)
         layer.checkerboard = checkerboard
 
@@ -1553,8 +1565,9 @@ class Image(ImageBase, BandsMixin):
         scales=None,
         colormap=None,
         checkerboard=True,
+        log_level=None,
         map=None,
-        **parameters
+        **parameters,
     ):
         """
         Add this `Image` to `wf.map <.interactive.map>`, or replace a layer with the same name.
@@ -1584,6 +1597,10 @@ class Image(ImageBase, BandsMixin):
             The name of the colormap to apply to the `Image`. Only valid if the `Image` has a single band.
         checkerboard: bool, default True
             Whether to display a checkerboarded background for missing or masked data.
+        log_level: int, default logging.DEBUG
+            Only listen for log records at or above this log level during tile computation.
+            See https://docs.python.org/3/library/logging.html#logging-levels for valid
+            log levels.
         map: `.Map` or `.MapApp`, optional, default None
             The `.Map` (or plain ipyleaflet Map) instance on which to show the `Image`.
             If None (default), uses `wf.map <.interactive.map>`, the singleton Workflows `.MapApp` object.
@@ -1640,6 +1657,8 @@ class Image(ImageBase, BandsMixin):
                     layer.imagery = self
                     layer.set_scales(scales, new_colormap=colormap)
                     layer.checkerboard = checkerboard
+                    if log_level is not None:
+                        layer.log_level = log_level
                     layer.set_parameters(**parameters)
                 return layer
         else:
@@ -1648,7 +1667,8 @@ class Image(ImageBase, BandsMixin):
                 scales=scales,
                 colormap=colormap,
                 checkerboard=checkerboard,
-                **parameters
+                log_level=log_level,
+                **parameters,
             )
             map.add_layer(layer)
             return layer

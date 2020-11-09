@@ -1,6 +1,7 @@
 import os
 import random
 import shutil
+import warnings
 
 import requests
 from urllib3.util.retry import Retry
@@ -88,6 +89,11 @@ class InspectClient(Service):
                 resp.raise_for_status()
             except requests.exceptions.Timeout as e:
                 raise JobTimeoutError(e) from None
+
+            wf_warnings = resp.headers.get("x-wf-warnings")
+            if wf_warnings:
+                for wf_warning in wf_warnings.split(","):
+                    warnings.warn(wf_warning)
 
             if file is None:
                 if resp.headers["Content-Type"] == _pyarrow_content_type:

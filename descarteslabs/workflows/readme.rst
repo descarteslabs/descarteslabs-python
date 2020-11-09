@@ -179,7 +179,7 @@ See :ref:`numpy-functions` for a full list of available functions.
   ~descarteslabs.workflows.models.Workflow
   ~descarteslabs.workflows.models.Job
   ~descarteslabs.workflows.models.XYZ
-  ~descarteslabs.workflows.models.XYZErrorListener
+  ~descarteslabs.workflows.models.XYZLogListener
   ~descarteslabs.workflows.models.compute
   ~descarteslabs.workflows.models.publish
   ~descarteslabs.workflows.models.use

@@ -87,6 +87,7 @@ class GrpcClient:
 
         self._use_insecure_channel = use_insecure_channel
         self._channel = None
+        self._interceptors = []
         self._certificate = certificate
         self._stubs = None
         self._api = None
@@ -101,6 +102,10 @@ class GrpcClient:
         "The GRPC channel of the Client."
         if self._channel is None:
             self._channel = self._open_channel()
+            if self._interceptors:
+                self._channel = grpc.intercept_channel(
+                    self._channel, *self._interceptors
+                )
         return self._channel
 
     @property
@@ -180,6 +185,14 @@ class GrpcClient:
     def _populate_api(self):
         """Derived gRPC client classes should use this method to add stubs and RPC methods."""
         raise NotImplementedError
+
+    def _register_interceptor(self, interceptor):
+        """Register a client interceptor."""
+        self._interceptors.append(interceptor)
+
+    def _clear_interceptors(self):
+        """Clear all registered client interceptors."""
+        self._interceptors.clear()
 
     def _get_credentials(self):
         token_provider_plugin = TokenProviderMetadataPlugin(

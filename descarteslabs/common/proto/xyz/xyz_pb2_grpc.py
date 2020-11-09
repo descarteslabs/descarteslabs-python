@@ -24,10 +24,10 @@ class XYZAPIStub(object):
         request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
         )
-    self.GetXYZSessionErrors = channel.unary_stream(
-        '/descarteslabs.workflows.XYZAPI/GetXYZSessionErrors',
-        request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZSessionErrorsRequest.SerializeToString,
-        response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZError.FromString,
+    self.GetXYZSessionLogs = channel.unary_stream(
+        '/descarteslabs.workflows.XYZAPI/GetXYZSessionLogs',
+        request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZSessionLogsRequest.SerializeToString,
+        response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZLogRecord.FromString,
         )
 
 
@@ -49,7 +49,7 @@ class XYZAPIServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def GetXYZSessionErrors(self, request, context):
+  def GetXYZSessionLogs(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -69,10 +69,10 @@ def add_XYZAPIServicer_to_server(servicer, server):
           request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZRequest.FromString,
           response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.SerializeToString,
       ),
-      'GetXYZSessionErrors': grpc.unary_stream_rpc_method_handler(
-          servicer.GetXYZSessionErrors,
-          request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZSessionErrorsRequest.FromString,
-          response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZError.SerializeToString,
+      'GetXYZSessionLogs': grpc.unary_stream_rpc_method_handler(
+          servicer.GetXYZSessionLogs,
+          request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZSessionLogsRequest.FromString,
+          response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZLogRecord.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

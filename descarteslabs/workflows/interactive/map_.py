@@ -132,7 +132,7 @@ class MapApp(widgets.VBox):
         "pixel_bounds",
         # from subclass
         "output_log",
-        "error_log",
+        "logs",
         "inspecting_pixels",
         # methods
         "move_layer",
@@ -189,12 +189,12 @@ class MapApp(widgets.VBox):
         def on_clear():
             for layer in self.map.layers:
                 try:
-                    layer.forget_errors()
+                    layer.forget_logs()
                 except AttributeError:
                     pass
 
-        self.errors = ClearableOutput(
-            map.error_log,
+        self.clearable_logs = ClearableOutput(
+            map.logs,
             on_clear=on_clear,
             layout=widgets.Layout(max_height="20rem", flex="0 0 auto"),
         )
@@ -211,7 +211,7 @@ class MapApp(widgets.VBox):
         super(MapApp, self).__init__(
             [
                 map,
-                self.errors,
+                self.clearable_logs,
                 map.output_log,
                 self.autoscale_outputs,
                 map_controller,
@@ -315,10 +315,10 @@ class Map(ipyleaflet.Map):
         True, help="Whether the map can be zoomed by using the mouse wheel"
     ).tag(sync=True, o=True)
 
-    error_log = traitlets.Instance(
+    logs = traitlets.Instance(
         widgets.Output,
         args=(),
-        help="Widget where tiles layers can write their error messages.",
+        help="Widget where tiles layers can write their log messages.",
     )
 
     output_log = traitlets.Instance(

@@ -6,12 +6,13 @@ package descarteslabs.workflows;
 import "descarteslabs/common/proto/types/types.proto";
 import "descarteslabs/common/proto/typespec/typespec.proto";
 import "descarteslabs/common/proto/errors/errors.proto"; // backwards compatible fix for ErrorCode
+import "descarteslabs/common/proto/logging/logging.proto";
 
 service XYZAPI {
   rpc CreateXYZ(CreateXYZRequest) returns (XYZ) {}
   rpc GetXYZ(GetXYZRequest) returns (XYZ) {}
-  rpc GetXYZSessionErrors(GetXYZSessionErrorsRequest)
-      returns (stream XYZError) {}
+  rpc GetXYZSessionLogs(GetXYZSessionLogsRequest)
+      returns (stream XYZLogRecord) {}
 }
 
 message XYZ {
@@ -31,7 +32,8 @@ message XYZ {
 
   string user = 23;
   string org = 24;
-  // Template string like "https://workflows.descarteslabs.com/v0-5/xyz/1234567/{z}/{x}/{y}.png".
+  // Template string like
+  // "https://workflows.descarteslabs.com/v0-5/xyz/1234567/{z}/{x}/{y}.png".
   // Compatible with Leaflet, OpenLayers, Python format strings.
   string url_template = 26;
 }
@@ -47,17 +49,15 @@ message CreateXYZRequest {
 
 message GetXYZRequest { string xyz_id = 1; }
 
-message GetXYZSessionErrorsRequest {
+message GetXYZSessionLogsRequest {
   string xyz_id = 1;
   string session_id = 2;
+  LogRecord.Level level = 3;
   // milliseconds since the UNIX epoch (UTC)
-  int64 start_timestamp = 3;
+  int64 start_timestamp = 4;
 }
 
-message XYZError {
-  ErrorCode code = 1;
-  string message = 2;
-  // milliseconds since the UNIX epoch (UTC)
-  int64 timestamp = 3;
-  string session_id = 4;
+message XYZLogRecord {
+  LogRecord record = 1;
+  string session_id = 2;
 }

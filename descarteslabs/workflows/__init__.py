@@ -67,7 +67,7 @@ from .models import (
     VersionedGraft,
     Job,
     XYZ,
-    XYZErrorListener,
+    XYZLogListener,
     compute as _compute,
     use,
     publish as _publish,
@@ -78,7 +78,14 @@ from .inspect import (
     get_global_inspect_client as _get_global_inspect_client,
 )
 
-from .interactive import map, flows, Map, WorkflowsLayer, LayerController, LayerControllerList
+from .interactive import (
+    map,
+    flows,
+    Map,
+    WorkflowsLayer,
+    LayerController,
+    LayerControllerList,
+)
 
 from . import env
 from ._channel import __channel__, _set_channel
@@ -372,7 +379,7 @@ __all__ = [
     "VersionedGraft",
     "Job",
     "XYZ",
-    "XYZErrorListener",
+    "XYZLogListener",
     "use",
     # .env
     "env",

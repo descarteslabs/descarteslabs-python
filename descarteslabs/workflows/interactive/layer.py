@@ -1,4 +1,5 @@
 import datetime
+import logging
 import uuid
 import threading
 
@@ -6,6 +7,7 @@ import ipyleaflet
 import ipywidgets as widgets
 import traitlets
 
+from descarteslabs.common.proto.logging import logging_pb2
 
 from ..models import XYZ
 from ..types import Image, ImageCollection
@@ -39,7 +41,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     xyz_obj: ~.models.XYZ
         Read-only: The `XYZ` object this layer is displaying.
     session_id: str
-        Read-only: Unique ID that error logs will be stored under, generated automatically.
+        Read-only: Unique ID that logs will be stored under, generated automatically.
     checkerboard: bool, default True
         Whether to display a checkerboarded background for missing or masked data.
     colormap: str, optional, default None
@@ -62,9 +64,13 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         Min value for scaling the blue band.
     b_max: float, optional, default None
         Max value for scaling the blue band.
-    error_output: ipywidgets.Output, optional, default None
-        If set, write unique errors from tiles computation to this output area
+    log_output: ipywidgets.Output, optional, default None
+        If set, write unique log records from tiles computation to this output area
         from a background thread. Setting to None stops the listener thread.
+    log_level: int, default logging.DEBUG
+        Only listen for log records at or above this log level during tile computation.
+        See https://docs.python.org/3/library/logging.html#logging-levels for valid
+        log levels.
 
     Example
     -------
@@ -93,6 +99,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     parameters = traitlets.Instance(parameters.ParameterSet, allow_none=True)
     xyz_obj = traitlets.Instance(XYZ, read_only=True)
     session_id = traitlets.Unicode(read_only=True)
+    log_level = traitlets.Int(logging.DEBUG)
 
     checkerboard = traitlets.Bool(True)
     reduction = traitlets.Unicode("mosaic")
@@ -105,16 +112,19 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     b_min = ScaleFloat(None, allow_none=True)
     b_max = ScaleFloat(None, allow_none=True)
 
-    error_output = traitlets.Instance(widgets.Output, allow_none=True)
+    log_output = traitlets.Instance(widgets.Output, allow_none=True)
     autoscale_progress = traitlets.Instance(ClearableOutput)
 
     def __init__(self, imagery, *args, **kwargs):
         params = kwargs.pop("parameters", {})
+        log_level = kwargs.pop("log_level", None)
+        if log_level is None:
+            log_level = logging.DEBUG
         super(WorkflowsLayer, self).__init__(*args, **kwargs)
 
         with self.hold_trait_notifications():
             self.imagery = imagery
-
+            self.log_level = log_level
             self.set_trait("session_id", uuid.uuid4().hex)
             self.set_trait(
                 "autoscale_progress",
@@ -125,9 +135,9 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             )
             self.set_parameters(**params)
 
-        self._error_listener = None
-        self._known_errors = set()
-        self._known_errors_lock = threading.Lock()
+        self._log_listener = None
+        self._known_logs = set()
+        self._known_logs_lock = threading.Lock()
 
     def make_url(self):
         """
@@ -168,7 +178,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             scales=scales,
             reduction=self.reduction,
             checkerboard=self.checkerboard,
-            **parameters
+            **parameters,
         )
 
     @traitlets.observe("imagery")
@@ -215,60 +225,65 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             if "Invalid scales passed" not in str(e):
                 raise e
 
-    @traitlets.observe("xyz_obj", "session_id")
-    def _update_error_logger(self, change):
-        if self.error_output is None:
+    @traitlets.observe("xyz_obj", "session_id", "log_level")
+    def _update_logger(self, change):
+        if self.log_output is None:
             return
 
-        # Remove old errors for the layer
-        self.forget_errors()
-        new_errors = []
-        for error in self.error_output.outputs:
-            if not error["text"].startswith(self.name + ": "):
-                new_errors.append(error)
-        self.error_output.outputs = tuple(new_errors)
+        # Remove old log records for the layer
+        self.forget_logs()
+        new_logs = []
+        for record in self.log_output.outputs:
+            if not record["text"].startswith(self.name + ": "):
+                new_logs.append(record)
+        self.log_output.outputs = tuple(new_logs)
 
-        if self._error_listener is not None:
-            self._error_listener.stop(timeout=1)
+        if self._log_listener is not None:
+            self._log_listener.stop(timeout=1)
 
-        listener = self.xyz_obj.error_listener()
-        listener.add_callback(self._log_errors_callback)
-        listener.listen(self.session_id, datetime.datetime.now(datetime.timezone.utc))
+        listener = self.xyz_obj.log_listener()
+        listener.add_callback(self._logs_callback)
+        listener.listen(
+            self.session_id,
+            datetime.datetime.now(datetime.timezone.utc),
+            level=self.log_level,
+        )
 
-        self._error_listener = listener
+        self._log_listener = listener
 
-    def _stop_error_logger(self):
-        if self._error_listener is not None:
-            self._error_listener.stop(timeout=1)
-            self._error_listener = None
+    def _stop_logger(self):
+        if self._log_listener is not None:
+            self._log_listener.stop(timeout=1)
+            self._log_listener = None
 
-    @traitlets.observe("error_output")
-    def _toggle_error_listener_if_output(self, change):
+    @traitlets.observe("log_output")
+    def _toggle_log_listener_if_output(self, change):
         if change["new"] is None:
-            self._stop_error_logger()
+            self._stop_logger()
         else:
-            if self._error_listener is None:
-                self._update_error_logger({})
+            if self._log_listener is None:
+                self._update_logger({})
 
-    def _log_errors_callback(self, msg):
-        message = msg.message
+    def _logs_callback(self, record):
+        message = record.record.message
 
-        with self._known_errors_lock:
-            if message in self._known_errors:
+        with self._known_logs_lock:
+            if message in self._known_logs:
                 return
             else:
-                self._known_errors.add(message)
+                self._known_logs.add(message)
 
-        error = "{}: {}\n".format(self.name, message)
-        self.error_output.append_stdout(error)
+        log_level = logging_pb2.LogRecord.Level.Name(record.record.level)
+        msg = "{}: {} - {}\n".format(self.name, log_level, message)
+        self.log_output.append_stdout(msg)
 
     def __del__(self):
-        self._stop_error_logger()
+        self._stop_logger()
         super(WorkflowsLayer, self).__del__()
 
-    def forget_errors(self):
+    def forget_logs(self):
         """
-        Clear the set of known errors, so they are re-displayed if they occur again
+        Clear the set of known log records, so they are re-displayed if they occur again
 
         Example
         -------
@@ -277,12 +292,12 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         >>> wf.map # doctest: +SKIP
         >>> layer = img.visualize("sample visualization") # doctest: +SKIP
         >>> # ^ will show an error for attempting to visualize more than 3 bands
-        >>> layer.forget_errors() # doctest: +SKIP
+        >>> layer.forget_logs() # doctest: +SKIP
         >>> wf.map.zoom = 10 # doctest: +SKIP
         >>> # ^ attempting to load more tiles from img will cause the same error to appear
         """
-        with self._known_errors_lock:
-            self._known_errors.clear()
+        with self._known_logs_lock:
+            self._known_logs.clear()
 
     def set_scales(self, scales, new_colormap=False):
         """

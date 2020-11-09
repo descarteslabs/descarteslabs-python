@@ -2102,6 +2102,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         colormap=None,
         reduction="mosaic",
         checkerboard=True,
+        log_level=None,
         **parameters
     ):
         """
@@ -2135,6 +2136,10 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             Reduction is performed before applying a colormap or scaling.
         checkerboard: bool, default True
             Whether to display a checkerboarded background for missing or masked data.
+        log_level: int, default logging.DEBUG
+            Only listen for log records at or above this log level during tile computation.
+            See https://docs.python.org/3/library/logging.html#logging-levels for valid
+            log levels.
         **parameters: JSON-serializable value, Proxytype, or ipywidgets.Widget
             Runtime parameters to use when computing tiles.
             Values can be any JSON-serializable value, a `Proxytype` instance, or an ipywidgets ``Widget``.
@@ -2147,7 +2152,9 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         """
         from ... import interactive
 
-        layer = interactive.WorkflowsLayer(self, name=name, parameters=parameters)
+        layer = interactive.WorkflowsLayer(
+            self, name=name, log_level=log_level, parameters=parameters
+        )
         layer.set_scales(scales, new_colormap=colormap)
         layer.reduction = reduction
         layer.checkerboard = checkerboard
@@ -2161,6 +2168,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         colormap=None,
         reduction="mosaic",
         checkerboard=True,
+        log_level=None,
         map=None,
         **parameters
     ):
@@ -2197,6 +2205,10 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             Compositing is performed before applying a colormap or scaling.
         checkerboard: bool, default True
             Whether to display a checkerboarded background for missing or masked data.
+        log_level: int, default logging.DEBUG
+            Only listen for log records at or above this log level during tile computation.
+            See https://docs.python.org/3/library/logging.html#logging-levels for valid
+            log levels.
         map: `.Map` or `.MapApp`, optional, default None
             The `.Map` (or plain ipyleaflet Map) instance on which to show the reduced `ImageCollection`.
             If None (default), uses `wf.map <.interactive.map>`, the singleton Workflows `.MapApp` object.
@@ -2249,6 +2261,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
                     layer.set_scales(scales, new_colormap=colormap)
                     layer.reduction = reduction
                     layer.checkerboard = checkerboard
+                    layer.log_level = log_level
                     layer.set_parameters(**parameters)
                 return layer
         else:
@@ -2258,6 +2271,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
                 colormap=colormap,
                 reduction=reduction,
                 checkerboard=checkerboard,
+                log_level=log_level,
                 **parameters
             )
             map.add_layer(layer)

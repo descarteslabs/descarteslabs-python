@@ -1,4 +1,17 @@
 import datetime
+import logging
+
+from descarteslabs.common.proto.logging import logging_pb2
+
+
+LOG_LEVEL_TO_PROTO_LOG_LEVEL = {
+    logging.NOTSET: logging_pb2.LogRecord.Level.DEBUG,
+    logging.DEBUG: logging_pb2.LogRecord.Level.DEBUG,
+    logging.INFO: logging_pb2.LogRecord.Level.INFO,
+    logging.WARNING: logging_pb2.LogRecord.Level.WARNING,
+    logging.ERROR: logging_pb2.LogRecord.Level.ERROR,
+    logging.CRITICAL: logging_pb2.LogRecord.Level.ERROR,
+}
 
 
 def pb_milliseconds_to_datetime(ms):
@@ -22,3 +35,16 @@ def in_notebook():
         return "IPKernelApp" in get_ipython().config
     except Exception:
         return False
+
+
+def py_log_level_to_proto_log_level(level):
+    try:
+        return LOG_LEVEL_TO_PROTO_LOG_LEVEL[level]
+    except KeyError as e:
+        valid_log_levels = ", ".join(LOG_LEVEL_TO_PROTO_LOG_LEVEL.keys())
+        raise ValueError(
+            f"Provided log level {e!s} not in set of valid log levels: "
+            f"{valid_log_levels}. Please see "
+            "https://docs.python.org/3/library/logging.html#logging-levels for the "
+            "logging module constants that correspond to these valid log levels."
+        )

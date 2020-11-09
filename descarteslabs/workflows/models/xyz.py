@@ -1,4 +1,5 @@
 import json
+import logging
 import threading
 import urllib
 
@@ -11,7 +12,11 @@ from descarteslabs.common.proto.xyz import xyz_pb2
 
 from ..cereal import deserialize_typespec, serialize_typespec
 from ..client import get_global_grpc_client
-from .utils import pb_datetime_to_milliseconds, pb_milliseconds_to_datetime
+from .utils import (
+    pb_datetime_to_milliseconds,
+    pb_milliseconds_to_datetime,
+    py_log_level_to_proto_log_level,
+)
 from .parameters import parameters_to_grafts
 
 
@@ -23,8 +28,8 @@ class XYZ(object):
     so the XYZ tile service can display them, rather than for persisting
     and sharing workflows between users.
 
-    Use `.url` to generate an XYZ URL template, and `.iter_tile_errors`
-    or `.error_listener` to retrieve error messages that happen while
+    Use `.url` to generate an XYZ URL template, and `.iter_tile_logs`
+    or `.log_listener` to retrieve log messages that happen while
     computing them.
 
     Examples
@@ -223,9 +228,9 @@ class XYZ(object):
         Parameters
         ----------
         session_id: str, optional, default None
-            Unique, client-generated ID that error logs will be stored under.
+            Unique, client-generated ID that logs will be stored under.
             Since multiple users may access tiles from the same `XYZ` object,
-            each user should set their own ``session_id`` to get individual error logs.
+            each user should set their own ``session_id`` to get individual logs.
         colormap: str, optional, default None
             Name of the colormap to use. If set, the displayed `~.geospatial.Image`
             or `~.geospatial.ImageCollection` must have 1 band.
@@ -445,22 +450,27 @@ class XYZ(object):
         else:
             return []
 
-    def iter_tile_errors(self, session_id, start_datetime=None):
+    def iter_tile_logs(self, session_id, start_datetime=None, level=None):
         """
-        Iterator over errors generated while computing tiles
+        Iterator over log messages generated while computing tiles
 
         Parameters
         ----------
         session_id: str
-            Unique, client-generated that error logs are stored under.
+            Unique, client-generated that logs are stored under.
         start_datetime: datetime.datetime
-            Only return errors occuring after this datetime
+            Only return log records occuring after this datetime
+        level: int, default logging.DEBUG
+            Only return log records at or above this log level.
+            See https://docs.python.org/3/library/logging.html#logging-levels for valid
+            log levels.
 
         Yields
         ------
-        error: descarteslabs.common.proto.xyz_pb2.XYZError
-            Errors in protobuf message objects,
-            with fields ``code``, ``message``, ``timestamp``, ``session_id``.
+        log_record: descarteslabs.common.proto.xyz_pb2.XYZLogRecord
+            Logs in protobuf message objects,
+            with fields ``session_id`` and ``record``, with the ``record`` field
+            containing ``level``, ``message``, and ``timestamp``.
 
         Example
         -------
@@ -469,16 +479,20 @@ class XYZ(object):
         >>> rgb = img.pick_bands("red green blue")
         >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
         >>> url = xyz.url(session_id="some_session") # doctest: +SKIP
-        >>> for error in xyz.iter_tile_errors("some_session", start_datetime=datetime.datetime.now()): # doctest: +SKIP
-        ...     print(error.code, error.message)
-        >>>     # any errors that occur loading tiles from the generated URL will be printed here
+        >>> for record in xyz.iter_tile_logs("some_session", start_datetime=datetime.datetime.now()): # doctest: +SKIP
+        ...     print(record.level, record.message)
+        >>>     # any logs that occur loading tiles from the generated URL will be printed here
         """
-        return _tile_error_stream(
-            self.id, session_id, start_datetime, client=self._client
+        return _tile_log_stream(
+            self.id,
+            session_id,
+            start_datetime=start_datetime,
+            level=level,
+            client=self._client,
         )
 
-    def error_listener(self):
-        """An `XYZErrorListener` to trigger callbacks when errors occur computing tiles.
+    def log_listener(self):
+        """An `XYZLogListener` to trigger callbacks when logs occur computing tiles.
 
         Example
         -------
@@ -487,14 +501,14 @@ class XYZ(object):
         >>> rgb = img.pick_bands("red green blue")
         >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
         >>> url = xyz.url(session_id="some_session") # doctest: +SKIP
-        >>> listener = xyz.error_listener() # doctest: +SKIP
-        >>> errors_log = []
-        >>> listener.add_callback(lambda error: errors_log.append(error.message)) # doctest: +SKIP
+        >>> listener = xyz.log_listener() # doctest: +SKIP
+        >>> log = []
+        >>> listener.add_callback(lambda record: log.append(record.message)) # doctest: +SKIP
         >>> listener.listen("some_session") # doctest: +SKIP
-        >>> # any errors that occur loading tiles from the generated URL will be appended
-        >>> # to `errors_log` in the background
+        >>> # any logs that occur loading tiles from the generated URL will be appended
+        >>> # to `log` in the background
         """
-        return XYZErrorListener(self.id, client=self._client)
+        return XYZLogListener(self.id, client=self._client)
 
     @property
     def object(self):
@@ -557,9 +571,9 @@ class XYZ(object):
         return self._message.channel
 
 
-class XYZErrorListener(object):
+class XYZLogListener(object):
     """
-    Calls callback functions in a background thread when XYZ errors occur.
+    Calls callback functions in a background thread when XYZ log records occur.
 
     Note: the thread is automatically cleaned up on garbage collection.
 
@@ -569,9 +583,9 @@ class XYZErrorListener(object):
     >>> img = Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
     >>> xyz = XYZ.build(img)
     >>> xyz.save()  # doctest: +SKIP
-    >>> listener = xyz.error_listener()
+    >>> listener = xyz.log_listener()
     >>> def callback(msg):
-    ...     print(msg.code, msg.message)
+    ...     print(msg.level, msg.message)
     >>> listener.add_callback(callback)
     >>> listener.listen("session_id", start_datetime=datetime.datetime.now())  # doctest: +SKIP
     >>> # later
@@ -587,14 +601,18 @@ class XYZErrorListener(object):
 
     def add_callback(self, callback):
         """
-        Function will be called with ``descarteslabs.common.proto.xyz_pb2.XYZError`` on each error.
+        Function will be called with ``descarteslabs.common.proto.xyz_pb2.XYZLogRecord``
+        on each log record.
 
         Parameters
         ----------
         callback: callable
-            Function that takes one argument, a ``descarteslabs.common.proto.xyz_pb2.XYZError``
-            protobuf message object. This message contains the fields ``code``, ``message``,
+            Function that takes one argument, a
+            ``descarteslabs.common.proto.xyz_pb2.XYZLogRecord`` protobuf message object.
+            This message contains the fields ``code``, ``message``,
             ``timestamp``, ``session_id``.
+            This message contains the fields ``session_id`` and ``record``, with the
+            ``record`` field containing ``level``, ``message``, and ``timestamp``.
 
             The function will be called within a separate thread,
             therefore it must behave thread-safely. Any errors raised by the function will
@@ -602,34 +620,46 @@ class XYZErrorListener(object):
 
         Example
         -------
-        >>> from descarteslabs.workflows import XYZErrorListener
-        >>> listener = XYZErrorListener("xyz_id") # doctest: +SKIP
+        >>> from descarteslabs.workflows import XYZLogListener
+        >>> listener = XYZLogListener("xyz_id") # doctest: +SKIP
         >>> def callback(msg):
-        ...     print(msg.code, msg.message)
+        ...     print(msg.level, msg.message)
         >>> listener.add_callback(callback) # doctest: +SKIP
         """
         self.callbacks.append(callback)
 
-    def listen(self, session_id, start_datetime=None):
+    def listen(self, session_id, start_datetime=None, level=None):
         """
-        Start listening for errors.
+        Start listening for logs.
 
         Parameters
         ----------
         session_id: str
-            Unique, client-generated ID that error logs are stored under.
+            Unique, client-generated ID that logs are stored under.
             See `XYZ.url` for more information.
         start_datetime: datetime.datetime
-            Only listen for errors occuring after this datetime. Must be tz-aware.
+            Only listen for log records occuring after this datetime. Must be tz-aware.
+        level: int, default logging.DEBUG
+            Only listen for log records at or above this log level.
+            See https://docs.python.org/3/library/logging.html#logging-levels for valid
+            log levels.
 
         Example
         -------
-        >>> from descarteslabs.workflows import XYZErrorListener
-        >>> listener = XYZErrorListener("xyz_id") # doctest: +SKIP
-        >>> listener.listen("session-id", start_datetime=datetime.datetime.now(datetime.timezone.utc)) #doctest: +SKIP
+        >>> from descarteslabs.workflows import XYZLogListener
+        >>> listener = XYZLogListener("xyz_id") # doctest: +SKIP
+        >>> listener.listen(
+        ...     "session-id",
+        ...     start_datetime=datetime.datetime.now(datetime.timezone.utc),
+        ...     level=logging.WARNING,
+        ... ) #doctest: +SKIP
         """
-        self._rendezvous = _tile_error_stream(
-            self.xyz_id, session_id, start_datetime=start_datetime, client=self._client
+        self._rendezvous = _tile_log_stream(
+            self.xyz_id,
+            session_id,
+            start_datetime=start_datetime,
+            level=level,
+            client=self._client,
         )
         self._thread = threading.Thread(target=self._listener)
         self._thread.daemon = True
@@ -640,8 +670,8 @@ class XYZErrorListener(object):
 
         Example
         -------
-        >>> from descarteslabs.workflows import XYZErrorListener
-        >>> listener = XYZErrorListener("xyz_id") # doctest: +SKIP
+        >>> from descarteslabs.workflows import XYZLogListener
+        >>> listener = XYZLogListener("xyz_id") # doctest: +SKIP
         >>> listener.listen("session-id", start_datetime=datetime.datetime.now()) # doctest: +SKIP
         >>> listener.running() # doctest: +SKIP
         True
@@ -656,8 +686,8 @@ class XYZErrorListener(object):
 
         Example
         -------
-        >>> from descarteslabs.workflows import XYZErrorListener
-        >>> listener = XYZErrorListener("xyz_id") # doctest: +SKIP
+        >>> from descarteslabs.workflows import XYZLogListener
+        >>> listener = XYZLogListener("xyz_id") # doctest: +SKIP
         >>> listener.listen("session-id", start_datetime=datetime.datetime.now()) # doctest: +SKIP
         >>> listener.stop() # doctest: +SKIP
         >>> listener.running() # doctest: +SKIP
@@ -680,7 +710,7 @@ class XYZErrorListener(object):
             self.stop(0)
 
 
-def _tile_error_stream(xyz_id, session_id, start_datetime=None, client=None):
+def _tile_log_stream(xyz_id, session_id, start_datetime=None, level=None, client=None):
     if client is None:
         client = get_global_grpc_client()
 
@@ -689,8 +719,16 @@ def _tile_error_stream(xyz_id, session_id, start_datetime=None, client=None):
     else:
         start_timestamp = pb_datetime_to_milliseconds(start_datetime)
 
-    msg = xyz_pb2.GetXYZSessionErrorsRequest(
-        session_id=session_id, xyz_id=xyz_id, start_timestamp=start_timestamp
+    if level is None:
+        level = logging.DEBUG
+    else:
+        level = py_log_level_to_proto_log_level(level)
+
+    msg = xyz_pb2.GetXYZSessionLogsRequest(
+        session_id=session_id,
+        xyz_id=xyz_id,
+        start_timestamp=start_timestamp,
+        level=level,
     )
 
-    return client.api["GetXYZSessionErrors"](msg, timeout=client.STREAM_TIMEOUT)
+    return client.api["GetXYZSessionLogs"](msg, timeout=client.STREAM_TIMEOUT)

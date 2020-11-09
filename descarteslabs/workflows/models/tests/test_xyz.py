@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 from urllib.parse import urlencode, parse_qs
 
 from six.moves import queue
@@ -10,11 +11,16 @@ import pytest
 
 from descarteslabs.client.version import __version__
 from descarteslabs.common.proto.xyz import xyz_pb2
+from descarteslabs.common.proto.logging import logging_pb2
 
 from ... import _channel
 from ...client import Client
-from .. import XYZ, XYZErrorListener
-from ..utils import pb_datetime_to_milliseconds, pb_milliseconds_to_datetime
+from .. import XYZ, XYZLogListener
+from ..utils import (
+    pb_datetime_to_milliseconds,
+    pb_milliseconds_to_datetime,
+    py_log_level_to_proto_log_level,
+)
 from . import utils
 
 
@@ -115,32 +121,40 @@ class TestXYZ(object):
         with pytest.raises(ValueError, match="only defined for channel 'foobar'"):
             xyz.object
 
-    def test_iter_tile_errors(self, stub):
+    def test_iter_tile_logs(self, stub):
         start_datetime = datetime.datetime.now(datetime.timezone.utc)
+        log_level = logging.WARNING
         session_id = "bar"
-        errors = [
-            xyz_pb2.XYZError(session_id=session_id),
-            xyz_pb2.XYZError(session_id=session_id),
+        logs = [
+            xyz_pb2.XYZLogRecord(
+                record=logging_pb2.LogRecord(message="foo"), session_id=session_id
+            ),
+            xyz_pb2.XYZLogRecord(
+                record=logging_pb2.LogRecord(message="bar"), session_id=session_id
+            ),
         ]
 
         xyz = XYZ.build(utils.Foo(1), name="foo", description="a foo")
 
-        stub.return_value.GetXYZSessionErrors.return_value = errors
+        stub.return_value.GetXYZSessionLogs.return_value = logs
 
         assert (
             list(
-                xyz.iter_tile_errors(
-                    session_id=session_id, start_datetime=start_datetime
+                xyz.iter_tile_logs(
+                    session_id=session_id,
+                    start_datetime=start_datetime,
+                    level=log_level,
                 )
             )
-            == errors
+            == logs
         )
 
-        stub.return_value.GetXYZSessionErrors.assert_called_once_with(
-            xyz_pb2.GetXYZSessionErrorsRequest(
+        stub.return_value.GetXYZSessionLogs.assert_called_once_with(
+            xyz_pb2.GetXYZSessionLogsRequest(
                 session_id=session_id,
                 start_timestamp=pb_datetime_to_milliseconds(start_datetime),
                 xyz_id=xyz.id,
+                level=py_log_level_to_proto_log_level(log_level),
             ),
             timeout=Client.STREAM_TIMEOUT,
             metadata=mock.ANY,
@@ -261,8 +275,8 @@ class TestXYZ(object):
             XYZ._validate_scales([[None, 1.0]])
 
 
-@mock.patch("descarteslabs.workflows.models.xyz._tile_error_stream")
-def test_xyz_error_listener(error_stream_mock):
+@mock.patch("descarteslabs.workflows.models.xyz._tile_log_stream")
+def test_xyz_log_listener(log_stream_mock):
     class FakeRendezvous(object):
         def __init__(self, q):
             self.q = q
@@ -282,15 +296,15 @@ def test_xyz_error_listener(error_stream_mock):
 
     q = queue.Queue()
     rendezvous = FakeRendezvous(q)
-    error_stream_mock.return_value = rendezvous
+    log_stream_mock.return_value = rendezvous
 
-    listener = XYZErrorListener("foobar")
+    listener = XYZLogListener("foobar")
 
     msgs = []
     listener.add_callback(lambda msg: msgs.append(msg))
     listener.listen("foobar")
 
-    error_stream_mock.assert_called_once()
+    log_stream_mock.assert_called_once()
 
     # simulate incoming messages
     q.put("first")

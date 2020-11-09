@@ -136,8 +136,8 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
     _colormap_legends = {}  # cache of pre-rendered colormap legends
 
     def __init__(self, layer, map):
-        if layer.error_output is None:
-            layer.error_output = map.error_log
+        if layer.log_output is None:
+            layer.log_output = map.logs
         self.layer = layer
         self.map = map
 
