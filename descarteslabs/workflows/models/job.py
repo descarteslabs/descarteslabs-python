@@ -425,7 +425,8 @@ class Job(object):
         show_progress = progress_bar is not False
         if show_progress:
             progress_bar_io = sys.stdout if progress_bar is True else progress_bar
-            _write_to_io_or_widget(progress_bar_io, "\nJob ID: {}\n".format(self.id))
+            if not self.done:
+                _write_to_io_or_widget(progress_bar_io, "\nJob ID: {}\n".format(self.id))
 
         try:
             while not self.done:
