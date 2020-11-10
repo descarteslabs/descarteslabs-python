@@ -2,6 +2,7 @@ import datetime
 import logging
 import uuid
 import threading
+import warnings
 
 import ipyleaflet
 import ipywidgets as widgets
@@ -122,6 +123,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             log_level = logging.DEBUG
         super(WorkflowsLayer, self).__init__(*args, **kwargs)
 
+        self._xyz_warnings = []
         with self.hold_trait_notifications():
             self.imagery = imagery
             self.log_level = log_level
@@ -190,7 +192,9 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             return
 
         xyz = XYZ.build(new, name=self.name)
-        xyz.save()
+        with warnings.catch_warnings(record=True) as ws:
+            xyz.save()
+            self._xyz_warnings = ws
         self.set_trait("xyz_obj", xyz)
 
     @traitlets.observe(
@@ -237,6 +241,12 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             if not record["text"].startswith(self.name + ": "):
                 new_logs.append(record)
         self.log_output.outputs = tuple(new_logs)
+
+        for w in self._xyz_warnings:
+            self.log_output.append_stdout(
+                f"{self.name}: WARNING - {w.category.__name__}: {w.message}\n"
+            )
+        self._xyz_warnings = []
 
         if self._log_listener is not None:
             self._log_listener.stop(timeout=1)

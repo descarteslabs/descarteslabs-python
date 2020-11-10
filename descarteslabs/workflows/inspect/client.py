@@ -92,6 +92,8 @@ class InspectClient(Service):
 
             wf_warnings = resp.headers.get("x-wf-warnings")
             if wf_warnings:
+                # NOTE: If any warning header values contain commas, those messages will
+                # be split.
                 for wf_warning in wf_warnings.split(","):
                     warnings.warn(wf_warning)
 

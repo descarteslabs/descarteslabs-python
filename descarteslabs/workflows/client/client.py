@@ -80,12 +80,10 @@ class _LogWarningsInterceptor(grpc.UnaryUnaryClientInterceptor):
 
 def _log_warnings_postprocess(response):
     """Logs warnings contained within the x-wf-warnings response header."""
-    # NOTE: .trailing_metadata() will block.
-    trailing_metadata = dict(response.trailing_metadata())
-    wf_warnings = trailing_metadata.get("x-wf-warnings")
-    if wf_warnings:
-        for wf_warning in wf_warnings.split(","):
-            warnings.warn(wf_warning)
+    # NOTE: .initial_metadata() will block.
+    for key, value in response.initial_metadata():
+        if key == "x-wf-warnings":
+            warnings.warn(value)
 
     return response
 
