@@ -21,6 +21,10 @@ def test_init():
         Timedelta(weeks=0, days=0, hours=0, minutes=0, seconds=0, microseconds=0),
         Timedelta,
     )
+    assert isinstance(
+        Timedelta(weeks=0.5, days=0, hours=1.0, minutes=0, seconds=0, microseconds=1.0),
+        Timedelta,
+    )
 
     assert isinstance(Timedelta(), Timedelta)
 
@@ -41,12 +45,20 @@ def test_total_seconds():
         (operator.add, datetime.timedelta(hours=1), Timedelta, True),
         (operator.add, datetime.datetime.now(), Datetime, True),
         (operator.eq, datetime.timedelta(hours=1), Bool, False),
+        (operator.floordiv, datetime.timedelta(hours=1), Int, False),
+        (operator.floordiv, 2, Timedelta, False),
         (operator.ge, datetime.timedelta(hours=1), Bool, False),
         (operator.gt, datetime.timedelta(hours=1), Bool, False),
         (operator.le, datetime.timedelta(hours=1), Bool, False),
         (operator.lt, datetime.timedelta(hours=1), Bool, False),
+        (operator.mod, datetime.timedelta(hours=1), Timedelta, False),
+        (operator.mul, 2, Timedelta, True),
+        (operator.mul, 2.5, Timedelta, True),
         (operator.ne, datetime.timedelta(hours=1), Bool, False),
         (operator.sub, datetime.timedelta(hours=1), Timedelta, True),
+        (operator.truediv, datetime.timedelta(hours=1), Float, False),
+        (operator.truediv, 2, Timedelta, False),
+        (operator.truediv, 2.2, Timedelta, False),
     ],
 )
 def test_binary_methods(op, other, return_type, reflected):

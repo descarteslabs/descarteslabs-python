@@ -2,7 +2,7 @@ from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..core import typecheck_promote, merge_params
 from ..containers import Struct
-from ..primitives import Bool, Float, Int, Number, Any
+from ..primitives import Bool, Float, Int, Any
 
 TimedeltaStruct = Struct[{"days": Int, "seconds": Int, "microseconds": Int}]
 
@@ -30,13 +30,13 @@ class Timedelta(TimedeltaStruct):
     }
 
     @typecheck_promote(
-        days=(Int, Number),
-        seconds=(Int, Number),
-        microseconds=(Int, Number),
-        milliseconds=(Int, Number),
-        minutes=(Int, Number),
-        hours=(Int, Number),
-        weeks=(Int, Number),
+        days=(Int, Float),
+        seconds=(Int, Float),
+        microseconds=(Int, Float),
+        milliseconds=(Int, Float),
+        minutes=(Int, Float),
+        hours=(Int, Float),
+        weeks=(Int, Float),
     )
     def __init__(
         self,
@@ -91,6 +91,12 @@ class Timedelta(TimedeltaStruct):
     def __eq__(self, other):
         return Bool._from_apply("wf.eq", self, other)
 
+    @typecheck_promote(lambda: (Timedelta, Int))
+    def __floordiv__(self, other):
+        return (self if isinstance(other, Int) else Int)._from_apply(
+            "wf.floordiv", self, other
+        )
+
     @typecheck_promote(lambda: Timedelta)
     def __ge__(self, other):
         return Bool._from_apply("wf.ge", self, other)
@@ -106,6 +112,14 @@ class Timedelta(TimedeltaStruct):
     @typecheck_promote(lambda: Timedelta)
     def __lt__(self, other):
         return Bool._from_apply("wf.lt", self, other)
+
+    @typecheck_promote(lambda: Timedelta)
+    def __mod__(self, other):
+        return self._from_apply("wf.mod", self, other)
+
+    @typecheck_promote(lambda: (Int, Float))
+    def __mul__(self, other):
+        return self._from_apply("wf.mul", self, other)
 
     @typecheck_promote(lambda: Timedelta)
     def __ne__(self, other):
@@ -126,6 +140,10 @@ class Timedelta(TimedeltaStruct):
 
         return radd(other)
 
+    @typecheck_promote(lambda: (Int, Float))
+    def __rmul__(self, other):
+        return self._from_apply("wf.mul", other, self)
+
     @typecheck_promote(lambda: Timedelta)
     def __rsub__(self, other):
         return self._from_apply("wf.sub", other, self)
@@ -133,6 +151,12 @@ class Timedelta(TimedeltaStruct):
     @typecheck_promote(lambda: Timedelta)
     def __sub__(self, other):
         return self._from_apply("wf.sub", self, other)
+
+    @typecheck_promote(lambda: (Timedelta, Int, Float))
+    def __truediv__(self, other):
+        return (Float if isinstance(other, Timedelta) else self)._from_apply(
+            "wf.div", self, other
+        )
 
     def total_seconds(self):
         """The total number of seconds contained in the duration.
