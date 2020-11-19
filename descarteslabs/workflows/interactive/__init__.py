@@ -1,5 +1,6 @@
 import six
 
+from . import widgets
 
 try:
     from .layer import WorkflowsLayer
@@ -72,4 +73,5 @@ __all__ = [
     "PixelInspector",
     "WorkflowsBrowser",
     "flows",
+    "widgets",
 ]

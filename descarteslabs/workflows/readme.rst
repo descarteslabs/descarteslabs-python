@@ -27,9 +27,10 @@ The tables below list the types and functions available through the Workflows AP
   docs/types/function
   docs/types/math
   docs/types/constants
-  docs/interactive
   docs/types/identifier
   docs/types/conditional
+  docs/interactive
+  docs/widgets
   docs/execution
   docs/result_types
   docs/exceptions
@@ -141,6 +142,20 @@ See :ref:`numpy-functions` for a full list of available functions.
   ~descarteslabs.workflows.types.constants.constants.nan
   ~descarteslabs.workflows.types.constants.constants.pi
 
+:workflow_api_nontoc_heading:`Parameter`
+
+.. autosummary::
+  :nosignatures:
+
+  ~descarteslabs.workflows.types.identifier.parameter
+
+:workflow_api_nontoc_heading:`Conditionals`
+
+.. autosummary::
+  :nosignatures:
+
+  ~descarteslabs.workflows.types.conditional.ifelse
+
 :workflow_api_nontoc_heading:`Interactive`
 
 .. autosummary::
@@ -157,19 +172,16 @@ See :ref:`numpy-functions` for a full list of available functions.
   ~descarteslabs.workflows.interactive.PixelInspector
   ~descarteslabs.workflows.interactive.WorkflowsBrowser
 
-:workflow_api_nontoc_heading:`Parameter`
+:workflow_api_nontoc_heading:`Widgets`
 
 .. autosummary::
   :nosignatures:
 
-  ~descarteslabs.workflows.types.identifier.parameter
-
-:workflow_api_nontoc_heading:`Conditionals`
-
-.. autosummary::
-  :nosignatures:
-
-  ~descarteslabs.workflows.types.conditional.ifelse
+  ~descarteslabs.workflows.interactive.widgets.checkbox
+  ~descarteslabs.workflows.interactive.widgets.date
+  ~descarteslabs.workflows.interactive.widgets.input
+  ~descarteslabs.workflows.interactive.widgets.select
+  ~descarteslabs.workflows.interactive.widgets.slider
 
 :workflow_api_nontoc_heading:`Execution`
 

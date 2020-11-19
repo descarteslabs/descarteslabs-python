@@ -81,6 +81,7 @@ from .inspect import (
 from .interactive import (
     map,
     flows,
+    widgets,
     Map,
     WorkflowsLayer,
     LayerController,
@@ -397,6 +398,7 @@ __all__ = [
     # .interactive
     "map",
     "flows",
+    "widgets",
     "Map",
     "WorkflowsLayer",
     "LayerController",

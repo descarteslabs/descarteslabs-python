@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package descarteslabs.workflows;
+import "google/protobuf/timestamp.proto";
+import "descarteslabs/common/proto/typespec/typespec.proto";
+
+
+message Parameter {
+    string name = 1;
+    string label = 2;
+    string doc = 3;  // UNUSED
+
+    Typespec typespec = 4;
+
+    oneof widget {
+        StringInput string_input = 16;
+        IntInput int_input = 17;
+        FloatInput float_input = 18;
+        IntSlider int_slider = 19;
+        FloatSlider float_slider = 20;
+        Date date = 21;
+        StringSelect string_select = 22;
+        IntSelect int_select = 23;
+        FloatSelect float_select = 24;
+        Checkbox checkbox = 25;
+        ImagePicker image = 26;
+        ImageCollectionPicker image_collection = 27;
+    }
+}
+
+
+message StringInput {
+    string default = 1;
+}
+message IntInput {
+    int64 default = 1;
+}
+message FloatInput {
+    float default = 1;
+}
+
+message IntSlider {
+    int64 default = 1;
+    int64 min = 2;
+    int64 max = 3;
+    int64 step = 4;
+}
+message FloatSlider {
+    float default = 1;
+    float min = 2;
+    float max = 3;
+    float step = 4;
+}
+
+message Date {
+    google.protobuf.Timestamp default = 1;
+}
+
+enum SelectFormat {
+    DROPDOWN = 0;
+    RADIO = 1;
+    SLIDER = 2;
+}
+
+message StringSelect {
+    string default = 1;
+    SelectFormat format = 2;
+    repeated string options = 3;
+}
+message IntSelect {
+    int64 default = 1;
+    SelectFormat format = 2;
+    repeated int64 options = 3;
+}
+message FloatSelect {
+    float default = 1;
+    SelectFormat format = 2;
+    repeated float options = 3;
+}
+
+message Checkbox {
+    bool default = 1;
+}
+
+message ImagePicker {
+}
+
+message ImageCollectionPicker {
+}
