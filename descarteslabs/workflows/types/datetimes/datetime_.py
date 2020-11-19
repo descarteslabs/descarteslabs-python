@@ -120,6 +120,9 @@ class Datetime(DatetimeStruct):
         """
         Construct a Workflows Datetime from an ISO 8601-formatted string.
 
+        If there's no timezone offset information in the string, it's assumed to be UTC.
+        If there is, it's converted to UTC.
+
         Parameters
         ----------
         string: Str
