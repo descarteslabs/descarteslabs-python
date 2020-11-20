@@ -1,8 +1,4 @@
-try:
-    from collections import ChainMap
-except ImportError:
-    # backport for py2
-    from chainmap import ChainMap
+from collections import ChainMap
 
 
 class ScopedChainMap(ChainMap):
