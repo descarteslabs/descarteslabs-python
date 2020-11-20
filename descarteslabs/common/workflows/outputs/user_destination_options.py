@@ -23,6 +23,11 @@ def user_destination_to_proto(
     elif isinstance(params, Image):
         params = {"type": "catalog", "image": params}
     else:
+        if not isinstance(params, dict):
+            raise TypeError(
+                "The `destination=` argument must be a str, dict, or `dl.catalog.Image` object, "
+                f"not {type(params)}: {params!r}"
+            )
         if "type" not in params:
             raise ValueError(
                 "The destination dictionary must include a destination type "
@@ -49,6 +54,11 @@ def user_destination_to_proto(
 
 
 def _image_to_catalog_params(img: Image, **non_img_args) -> dict:
+    if not isinstance(img, Image):
+        raise TypeError(
+            "For the Catalog destination, expected a `dl.catalog.Image` object, "
+            f"not {type(img)}: {img!r}"
+        )
     if not img.id:
         raise ValueError("Catalog Image must have 'id' field.")
     if img.product.state != DocumentState.SAVED:
