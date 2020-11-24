@@ -704,7 +704,7 @@ class ClassBand(Band):
     _derived_type = BandType.CLASS.value
 
     colormap_name = EnumAttribute(Colormap, doc=Band._DOC_COLORMAPNAME)
-    colormap = Attribute(Band._DOC_COLORMAP)
+    colormap = Attribute(doc=Band._DOC_COLORMAP)
     class_labels = ListAttribute(
         TypedAttribute(str),
         doc="""list(str or None), optional: A list of labels.
