@@ -11,6 +11,17 @@ try:
     from .inspector import PixelInspector
     from .workflow import WorkflowsBrowser
 
+    import traitlets
+
+    if not hasattr(traitlets.HasTraits, "trait_has_value"):
+        raise ImportError(
+            f"You have version {traitlets.__version__} installed of the `traitlets` library. "
+            "Workflows requires traitlets >= 5.0.5.\n"
+            "Please upgrade your version of traitlets, or better:\n"
+            "$ pip install --upgrade 'descarteslabs[complete]'\n"
+        )
+    del traitlets
+
     map = MapApp()
     """
     A single `MapApp` instance that all ``visualize`` calls are automatically
@@ -39,8 +50,9 @@ except Exception as e:
     class MissingImports(object):
         def _error(self, *args, **kwargs):
             err = ImportError(
-                "Optional dependencies needed for map visualization and Workflow browsing are missing.\n"
-                "Please install `ipyleaflet`, or better:\n"
+                "Optional dependencies needed for map visualization and Workflow browsing "
+                "are missing or outdated.\n"
+                "Please install `ipyleaflet` and `traitlets`, or better:\n"
                 "$ pip install --upgrade 'descarteslabs[complete]'\n"
                 "Then, install the Jupyter extensions:\n"
                 "$ jupyter labextension install jupyter-leaflet @jupyter-widgets/jupyterlab-manager\n"
