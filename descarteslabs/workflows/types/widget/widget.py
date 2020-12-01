@@ -1,4 +1,7 @@
-from typing import List, ClassVar
+from __future__ import annotations
+
+import sys
+from typing import List, ClassVar, TYPE_CHECKING
 
 from google.protobuf import message
 
@@ -8,6 +11,9 @@ from descarteslabs.common.graft import client
 from ...cereal import serialize_typespec, deserialize_typespec
 from ..core import Proxytype
 from ..identifier import parameter
+
+if TYPE_CHECKING:
+    import ipywidgets
 
 
 MSG_TO_WIDGET = {}
@@ -32,6 +38,8 @@ class Widget:
     # their base Proxytype has.
 
     _proto_type: ClassVar[message.Message]
+    widget: ipywidgets.Widget
+    "The ipywidgets Widget instance used to display this widget"
 
     def __init_subclass__(cls, **kwargs):
         "If the subclass has the _proto_type variable set, validate its inheritance and register it for that proto type"
@@ -66,7 +74,7 @@ class Widget:
 
     @property
     def value(self):
-        "The current value of the widget. Shorthand for `self.widget.value`."
+        "The current value of the widget. Shorthand for ``self.widget.value``."
         return self.widget.value
 
     @value.setter
@@ -75,7 +83,12 @@ class Widget:
 
     @property
     def observe(self):
-        "Shorthand for `self.widget.observe`."
+        """
+        Register a handler function to be called when the widget's value changes. Shorthand for ``self.widget.observe``.
+
+        See the `traitlets docs <https://traitlets.readthedocs.io/en/stable/api.html#traitlets.HasTraits.observe>`_
+        for more information.
+        """
         return self.widget.observe
 
     def _to_proto(self) -> widgets_pb2.Parameter:
@@ -85,6 +98,9 @@ class Widget:
         )
 
         widget_msg = getattr(msg, WIDGET_MSG_TYPE_TO_ONEOF_NAME[self._proto_type])
+        widget_msg.SetInParent()
+        # ^ ensure `widget_msg` is registered as WhichOneof, even if it's empty.
+        # https://stackoverflow.com/a/60022948/10519953
         self._to_proto_set_widget_msg(widget_msg)
 
         return msg
@@ -119,7 +135,7 @@ class Widget:
             field: getattr(widget_msg, field)
             for field in cls._proto_type.DESCRIPTOR.fields_by_name
         }
-        return cls(name=name, default=values.pop("default", None), label=label, **values)
+        return cls(name=name, label=label, **values)
 
     @classmethod
     def _from_apply(cls, function, *args, **kwargs):
@@ -145,6 +161,18 @@ class Widget:
 
         type_ = type(self)
         return f"{type_.__qualname__}({', '.join(args)})"
+
+
+# Only add a docstring for sphinx; you'd rather have shift-tab help give you the docstring
+# for the Proxytype it's inheriting from.
+if "sphinx" in sys.modules:
+    Widget.__doc__ = """
+Base class for all Workflows widgets.
+
+Workflows widgets act just like normal Workflows objects, such as `.Int`, `.Str`, or `~.geospatial.ImageCollection`.
+
+They just have a few extra fields you can use to interact with the current value of the widget.
+"""
 
 
 def param_to_proto(param) -> widgets_pb2.Parameter:

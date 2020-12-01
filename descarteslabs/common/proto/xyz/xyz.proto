@@ -5,7 +5,7 @@ package descarteslabs.workflows;
 
 import "descarteslabs/common/proto/types/types.proto";
 import "descarteslabs/common/proto/typespec/typespec.proto";
-import "descarteslabs/common/proto/errors/errors.proto"; // backwards compatible fix for ErrorCode
+import "descarteslabs/common/proto/widgets/widgets.proto";
 import "descarteslabs/common/proto/logging/logging.proto";
 
 service XYZAPI {
@@ -30,6 +30,13 @@ message XYZ {
   string serialized_graft = 21;
   Typespec typespec = 25;
 
+  // `parameters` are metadata about the Function's arguments.
+  // If `typespec` describes a Function, there must be one `parameters` entry
+  // for each positional argument, and its `name` must match the name of the corresponding
+  // parameter in the `serialized_graft`.
+  // Otherwise, `parameters` must be empty.
+  repeated Parameter parameters = 27;
+
   string user = 23;
   string org = 24;
   // Template string like
@@ -43,6 +50,7 @@ message CreateXYZRequest {
   string description = 2;
   string serialized_graft = 3;
   Typespec typespec = 4;
+  repeated Parameter parameters = 7;
   string channel = 5;
   string client_version = 6;
 }

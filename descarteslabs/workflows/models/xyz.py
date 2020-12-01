@@ -3,8 +3,6 @@ import logging
 import threading
 import urllib
 
-import six
-
 import grpc
 from descarteslabs.client.version import __version__
 from descarteslabs.common.graft import client as graft_client
@@ -17,7 +15,9 @@ from .utils import (
     pb_milliseconds_to_datetime,
     py_log_level_to_proto_log_level,
 )
-from .parameters import parameters_to_grafts
+from ..execution import arguments_to_grafts, promote_arguments
+from ..types import Function
+from ..types.widget import serialize_params, deserialize_params
 
 
 class XYZ(object):
@@ -60,7 +60,7 @@ class XYZ(object):
     'https://workflows.descarteslabs.com/tiles-ic/xyz/bdbeb4706f3025f4ee4eeff4dec46f6f2554c583d830e5e9/{z}/{x}/{y}.png'
     """
 
-    def __init__(self, proxy_object, proto_message, client=None):
+    def __init__(self, proxy_object, params, proto_message, client=None):
         """
         Construct a XYZ object from a proxy object and Protobuf message.
 
@@ -71,6 +71,8 @@ class XYZ(object):
         ----------
         proxy_object: Proxytype
             The proxy object to store in this XYZ
+        params: Tuple[Proxytype]
+            Parameter metadata about the arguments to `proxy_object`, if it's a Function
         proto_message: xyz_pb2.XYZ message
             Protobuf message for the XYZ
         client : Compute, optional
@@ -80,6 +82,7 @@ class XYZ(object):
         if client is None:
             client = get_global_grpc_client()
         self._object = proxy_object
+        self._params = params
         self._message = proto_message
         self._client = client
 
@@ -87,11 +90,16 @@ class XYZ(object):
     def _from_proto(cls, message, client=None):
         typespec = message.typespec
         proxytype = deserialize_typespec(typespec)
+        params = deserialize_params(message.parameters)
 
         if message.serialized_graft:
             graft = json.loads(message.serialized_graft)
             isolated = graft_client.isolate_keys(graft)
-            obj = proxytype._from_graft(isolated)
+            obj = proxytype._from_graft(
+                isolated,
+                params=() if issubclass(proxytype, Function) else params
+                # ^ TODO can this be an accurate assumption? should maybe instead be whether it's a function graft?
+            )
         else:
             raise AttributeError(
                 (
@@ -101,20 +109,26 @@ class XYZ(object):
                 ).format(message.id)
             )
 
-        return cls(obj, message, client=client)
+        return cls(obj, params, message, client=client)
 
     @classmethod
     def build(cls, proxy_object, name="", description="", client=None):
         """
         Construct a new XYZ from a proxy object.
 
+        If the proxy object depends on any parameters (``proxy_object.params`` is not empty),
+        it's first internally converted to a `.Function` that takes those parameters
+        (using `.Function.from_object`).
+
         Note that this does not persist the `XYZ`,
-        call `save()` on the returned `XYZ` to do that.
+        call `save` on the returned `XYZ` to do that.
 
         Parameters
         ----------
         proxy_object: Proxytype
-            The proxy object to store in this XYZ
+            The proxy object to store in this XYZ.
+            If it depends on parameters, ``proxy_object`` is first converted
+            to a `.Function` that takes those parameters.
         name: str, default ""
             Name for the new XYZ
         description: str, default ""
@@ -138,6 +152,15 @@ class XYZ(object):
         """
         if client is None:
             client = get_global_grpc_client()
+
+        # TODO what if you're using an actual Function, not a parametrized object?
+        # Probably will need named positional arguments to handle that (turn args into params)
+        proto_params = serialize_params(proxy_object)
+        params = proxy_object.params
+        if len(params) > 0:
+            # turn objects that depend on parameters into Functions
+            proxy_object = Function.from_object(proxy_object)
+
         typespec = serialize_typespec(type(proxy_object))
         graft = proxy_object.graft
 
@@ -146,10 +169,11 @@ class XYZ(object):
             description=description,
             serialized_graft=json.dumps(graft),
             typespec=typespec,
+            parameters=proto_params,
             channel=client._wf_channel,
             client_version=__version__,
         )
-        return cls(proxy_object, message, client=client)
+        return cls(proxy_object, params, message, client=client)
 
     @classmethod
     def get(cls, xyz_id, client=None):
@@ -185,9 +209,9 @@ class XYZ(object):
 
     def save(self):
         """
-        Persist this XYZ layer.
+        Persist this XYZ object.
 
-        After saving, ``self.id`` will contain the new ID of the XYZ layer.
+        After saving, ``self.id`` will contain the new ID of the XYZ object.
 
         Example
         -------
@@ -205,6 +229,7 @@ class XYZ(object):
                 description=self._message.description,
                 serialized_graft=self._message.serialized_graft,
                 typespec=self._message.typespec,
+                parameters=self._message.parameters,
                 channel=self._message.channel,
                 client_version=self._message.client_version,
             ),
@@ -220,7 +245,7 @@ class XYZ(object):
         scales=None,
         reduction="mosaic",
         checkerboard=False,
-        **parameters,
+        **arguments,
     ):
         """
         XYZ tile URL format-string, like ``https://workflows.descarteslabs.com/v0-5/xyz/1234567/{z}/{x}/{y}.png``
@@ -256,13 +281,12 @@ class XYZ(object):
             If displaying an `~.geospatial.Image`, reduction is ignored.
         checkerboard: bool, default False
             Whether to display a checkerboarded background for missing or masked data.
-        parameters: dict[str, Union[Proxytype, json_serializable_value]]
-            Parameters to use while computing.
-
-            Each argument must be the name of a parameter created with `~.identifier.parameter`.
-            Each value must be a JSON-serializable type (``bool``, ``int``, ``float``,
-            ``str``, ``list``, ``dict``, etc.), a `Proxytype` (like `~.geospatial.Image` or `.Timedelta`),
-            or a value that `proxify` can handle (like a ``datetime.datetime``).
+        **arguments: Any
+            Values for all parameters that the `object` depends on
+            (or arguments that `object` takes, if it's a `.Function`).
+            Can be given as Proxytypes, or as Python objects like numbers,
+            lists, and dicts that can be promoted to them.
+            These arguments cannot depend on any parameters.
 
         Returns
         -------
@@ -276,7 +300,10 @@ class XYZ(object):
             If the `XYZ` object has no `id` and `.save` has not been called yet.
 
         TypeError
-            If the ``scales`` or ``parameters`` are of invalid type.
+            If the ``scales`` are of invalid type.
+
+            If the ``arguments`` names or types don't match the `params`
+            that the `object` depends on.
 
         Example
         -------
@@ -302,7 +329,8 @@ class XYZ(object):
         'https://workflows.descarteslabs.com/tiles-ic/xyz/bdbeb4706f3025f4ee4eeff4dec46f6f2554c583d830e5e9/
          {z}/{x}/{y}.png?session_id=some_session&reduction=min&exponent=2.5'
         """
-        if self.id is None:
+        url = self._message.url_template
+        if not url:
             raise ValueError(
                 "This XYZ object has not been persisted yet; call .save() to do so."
             )
@@ -337,17 +365,16 @@ class XYZ(object):
             if any(scale != [None, None] for scale in scales):
                 query_args["scales"] = json.dumps(scales)
 
-        if parameters is not None:
+        promoted_arguments = promote_arguments(arguments, self.params)
+        if promoted_arguments:
             query_args.update(
                 {
                     param: json.dumps(graft)
-                    for param, graft in six.iteritems(
-                        parameters_to_grafts(**parameters)
-                    )
+                    for param, graft in arguments_to_grafts(
+                        **promoted_arguments
+                    ).items()
                 }
             )
-
-        url = self._message.url_template
 
         if query_args:
             url = url + "?" + urllib.parse.urlencode(query_args, doseq=True)
@@ -515,6 +542,10 @@ class XYZ(object):
         """
         Proxytype: The proxy object of this XYZ.
 
+        Note that if the XYZ was originally constructed from an object that depended on parameters,
+        then this `object` property won't hold the same object, but rather a `.Function` which takes
+        those parameters and returns that object.
+
         Raises ValueError if the XYZ is not compatible with the current channel.
         """
         if self.channel != self._client._wf_channel:
@@ -525,6 +556,16 @@ class XYZ(object):
                 )
             )
         return self._object
+
+    @property
+    def params(self):
+        """
+        tuple: Parameter objects corresponding to the arguments to `object`, if it's a `.Function`.
+
+        These represent any parameters (including widget objects from ``wf.widgets``) that
+        `object` depended on before it became a `.Function`.
+        """
+        return self._params
 
     @property
     def type(self):

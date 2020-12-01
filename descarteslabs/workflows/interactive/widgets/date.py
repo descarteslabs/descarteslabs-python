@@ -50,7 +50,7 @@ def date(
     label: str = "",
 ):
     """
-    A date-picker widget, to select a `.Datetime`.
+    A date-picker widget, which acts as a `.Datetime` parameter.
 
     The value of the widget and the date displayed on it are always in UTC.
 
@@ -66,8 +66,9 @@ def date(
     ... ).pick_bands("red green blue")
     >>> s2.visualize("Sentinel-2", scales=[[0, 0.4], [0, 0.4], [0, 0.4]], reduction="median")  # doctest: +SKIP
     >>> # ^ when you call .visualize, the two `date` widgets will automatically show up below
-    >>> wf.map  # doctest: +SKIP
-    >>> # ^ display the map. selecting different dates will change the date range for the imagery.
+
+    Selecting different dates will change the date range for the imagery.
+    (If you haven't already, run ``wf.map`` in another notebook cell to see your layer.)
 
     Parameters
     ----------

@@ -5,6 +5,7 @@ from . import widgets
 try:
     from .layer import WorkflowsLayer
     from .layer_controller import LayerController, LayerControllerList
+    from .layer_picker import ImagePickerWidget, ImageCollectionPickerWidget
     from .map_ import MapApp, Map
     from .parameters import ParameterSet, ProxytypeInstance
     from .inspector import PixelInspector
@@ -30,7 +31,9 @@ try:
     Browse shared `Workflow` objects (and add them to the map) with a predefined `WorkflowsBrowser` instance.
     """
 
+    _successful_import = True
 except Exception as e:
+    _successful_import = False
     error = e
 
     class MissingImports(object):
@@ -53,6 +56,8 @@ except Exception as e:
     WorkflowsLayer = map
     LayerController = map
     LayerControllerList = map
+    ImagePickerWidget = map
+    ImageCollectionPickerWidget = map
     MapApp = map
     Map = map
     ParameterSet = map
@@ -65,6 +70,8 @@ __all__ = [
     "WorkflowsLayer",
     "LayerController",
     "LayerControllerList",
+    "ImagePickerWidget",
+    "ImageCollectionPickerWidget",
     "Map",
     "MapApp",
     "map",

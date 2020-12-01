@@ -82,8 +82,8 @@ def select(
     """
     A widget (dropdown, radio buttons, etc.) to select a value from a list of options.
 
-    Depending on the types of the values you pass for ``options``, the widget will represent
-    a `.Str`, an `.Int`, or a `.Float`.
+    Depending on the types of the values you pass for ``options``, the widget will act as
+    a `.Str`, an `.Int`, or a `.Float` parameter.
 
     Example
     -------
@@ -107,8 +107,9 @@ def select(
     ... )
     >>> s2_bands.visualize("Sentinel-2", scales=[[0, 0.4], [0, 0.4], [0, 0.4]])  # doctest: +SKIP
     >>> # ^ when you call .visualize, the `select` widget will automatically show up below
-    >>> wf.map  # doctest: +SKIP
-    >>> # ^ display the map. selecting a band combination from the radio buttons above will update the map.
+
+    Selecting a band combination from the radio buttons will update the map.
+    (If you haven't already, run ``wf.map`` in another notebook cell to see your layer.)
 
     You may want to display user-friendly terms for your options, rather than the actual values.
     A typical way to do this is to make a `.Dict` mapping the user-friendly terms to their values,
@@ -166,7 +167,7 @@ def select(
     for x in options:
         if not isinstance(x, pytype):
             raise TypeError(
-                f"All options must be the same type. Expected all {pytype!r}, but got {x!r}"
+                f"All options must be the same type. Expected all {pytype}, but got {x!r}"
             )
 
     if default is None:

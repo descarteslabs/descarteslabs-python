@@ -49,6 +49,7 @@ from .math import (
 from .conditional import ifelse
 from .constants import e, inf, nan, pi
 from .identifier import parameter, identifier
+from . import widget
 
 __all__ = [
     # .core
@@ -129,4 +130,6 @@ __all__ = [
     # .identifier
     "parameter",
     "identifier",
+    # .widget
+    "widget",
 ]

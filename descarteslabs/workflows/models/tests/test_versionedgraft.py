@@ -5,7 +5,7 @@ import pytest
 from descarteslabs.common.proto.workflow import workflow_pb2
 
 from descarteslabs.client.version import __version__
-from descarteslabs.workflows.types import Int
+from descarteslabs.workflows.types import Int, Function
 from descarteslabs.workflows.client import Client
 from descarteslabs.workflows.cereal import serialize_typespec
 from descarteslabs.workflows.models.versionedgraft import VersionedGraft
@@ -38,6 +38,22 @@ class TestVersionedGraft(object):
         assert vg.channel == _channel.__channel__
         assert vg._message.client_version == __version__
         assert vg.type == type(obj)
+
+    def test_build_higher_order_function_fails(self, stub):
+        @Function.from_callable
+        def outer(x: Int):
+            def inner(y: Int):
+                return x + y
+
+            return inner
+
+        assert isinstance(outer, Function[Int, {}, Function[Int, {}, Int]])
+
+        with pytest.raises(
+            NotImplementedError,
+            match="Cannot currently publish Functions that return Functions",
+        ):
+            VersionedGraft("0.0.1", outer)
 
     def test_from_proto(self, stub):
         obj = Int(40) + Int(42)

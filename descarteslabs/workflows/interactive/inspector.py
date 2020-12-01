@@ -9,7 +9,7 @@ import traitlets
 import cachetools
 
 from ..models import JobTimeoutError
-from ..types import GeoContext, ImageCollection
+from ..types import GeoContext
 from .layer import WorkflowsLayer
 
 
@@ -238,10 +238,9 @@ class InspectorRowGenerator(traitlets.HasTraits):
         marker.observe(self.recalculate, "geoctx", type="change")
         layer.observe(
             self.recalculate,
-            ["parameters", "xyz_obj", "visible", "reduction"],
+            ["image_value", "visible"],
             type="change",
         )
-        layer.observe(self.recalculate, "parameters", type="delete")
 
         self._viz_links = [
             traitlets.dlink(
@@ -263,10 +262,9 @@ class InspectorRowGenerator(traitlets.HasTraits):
         self.marker.unobserve(self.recalculate, "geoctx", type="change")
         self.layer.unobserve(
             self.recalculate,
-            ["parameters", "xyz_obj", "visible", "reduction"],
+            ["image_value", "visible"],
             type="change",
         )
-        self.layer.unobserve(self.recalculate, "parameters", type="delete")
         self._name_link.unlink()
         for viz_link in self._viz_links:
             viz_link.unlink()
@@ -275,19 +273,22 @@ class InspectorRowGenerator(traitlets.HasTraits):
         if self._updating or not self.layer.visible or self.marker.opacity == 0:
             return
 
-        params = self.layer.parameters.to_dict()
-        reduction = self.layer.reduction
         xy_3857 = self.marker.xy_3857
 
         # try to make a cache key from the marker location, XYZ ID, reduction, and parameters.
         # if the parameters are unhashable (probably because they contain grafts),
         # we'll consider it a cache miss and go fetch.
         try:
-            params_key = frozenset(params.items())
+            params_key = frozenset(self.layer.parameters.to_dict().items())
         except TypeError:
             cache_key = None
         else:
-            cache_key = (xy_3857, self.layer.xyz_obj.id, reduction, params_key)
+            cache_key = (
+                xy_3857,
+                self.layer.xyz_obj.id,
+                self.layer.reduction,
+                params_key,
+            )
 
         if cache_key:
             try:
@@ -304,24 +305,19 @@ class InspectorRowGenerator(traitlets.HasTraits):
             # NOTE(gabe): I don't trust traitlets or ipywidgets to be thread-safe,
             # so we pull all values out of traits here and pass them in to the thread directly
             ctx = self.marker.geoctx
-            imagery = self.layer.imagery
+            image = self.layer.image_value
             thread = threading.Thread(
                 target=self._fetch_and_set_thread,
-                args=(imagery, reduction, xy_3857, ctx, params, cache_key),
+                args=(image, xy_3857, ctx, cache_key),
                 daemon=True,
             )
             thread.start()
 
-    def _fetch_and_set_thread(
-        self, imagery, reduction, xy_3857, ctx, params, cache_key
-    ):
-        if isinstance(imagery, ImageCollection):
-            imagery = imagery.reduction(reduction, axis="images")
-
-        proxy_value_list = imagery.value_at(*xy_3857).values()
+    def _fetch_and_set_thread(self, image, xy_3857, ctx, cache_key):
+        proxy_value_list = image.value_at(*xy_3857).values()
 
         try:
-            value_list = proxy_value_list.inspect(ctx, **params)
+            value_list = proxy_value_list.inspect(ctx)
         except JobTimeoutError:
             value_list = ["⏱"]
         except Exception:

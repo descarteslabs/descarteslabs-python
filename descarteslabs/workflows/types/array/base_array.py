@@ -1,4 +1,3 @@
-from ... import env
 from .dtype import DType
 from .scalar import Scalar
 from ..containers import Dict, KnownDict, Ellipsis as wf_Ellipsis, List, Slice, Tuple
@@ -195,7 +194,7 @@ class BaseArray(NumPyMixin, Proxytype):
             )
 
         return ImageCollection._from_apply(
-            "wf.to_imagery", self, properties, bandinfo, env.geoctx
+            "wf.to_imagery", self, properties, bandinfo
         )
 
     def __getitem__(self, idx):

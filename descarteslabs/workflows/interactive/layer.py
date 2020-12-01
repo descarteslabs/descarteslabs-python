@@ -1,8 +1,10 @@
+from typing import Union
 import datetime
 import logging
 import uuid
 import threading
 import warnings
+import contextlib
 
 import ipyleaflet
 import ipywidgets as widgets
@@ -10,6 +12,8 @@ import traitlets
 
 from descarteslabs.common.proto.logging import logging_pb2
 
+from descarteslabs.common.graft import client as graft_client
+from ..execution import arguments_to_grafts
 from ..models import XYZ
 from ..types import Image, ImageCollection
 
@@ -34,11 +38,25 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     Attributes
     ----------
     imagery: ~.geospatial.Image or ~.geospatial.ImageCollection
-        The `~.geospatial.Image` or `~.geospatial.ImageCollection` to use
+        Read-only: the `~.geospatial.Image` or `~.geospatial.ImageCollection` to use.
+        Change it with `set_imagery`.
+    value: ~.geospatial.Image or ~.geospatial.ImageCollection
+        Read-only: a parametrized version of `imagery`, with all the values of `parameters`
+        embedded in it.
+    image_value: ~.geospatial.Image
+        Read-only: a parametrized version of `imagery` as an `~.geospatial.Image`,
+        with any `reduction` applied and all the values of `parameters` embedded in it
     parameters: ParameterSet
         Parameters to use while computing; modify attributes under ``.parameters``
         (like ``layer.parameters.foo = "bar"``) to cause the layer to recompute
-        and update under those new parameters.
+        and update under those new parameters. This trait is read-only in that you
+        can't do ``layer.parameters = a_new_parameter_set``, but you can change the attributes
+        *within* ``layer.parameters``.
+    clear_on_update: bool, default True
+        Whether to clear all tiles from the map as soon as the layer changes, or leave out-of-date
+        tiles visible until new ones have loaded. True (default) makes it easier to tell whether
+        the layer is done loading and up-to-date or not. False prevents fast-loading layers from
+        appearing to "flicker" as you interact with them.
     xyz_obj: ~.models.XYZ
         Read-only: The `XYZ` object this layer is displaying.
     session_id: str
@@ -92,12 +110,23 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     attribution = traitlets.Unicode("Descartes Labs").tag(sync=True, o=True)
     min_zoom = traitlets.Int(5).tag(sync=True, o=True)
     url = traitlets.Unicode(read_only=True).tag(sync=True)
+    clear_on_update = traitlets.Bool(default_value=True)
 
     imagery = traitlets.Union(
-        [traitlets.Instance(Image), traitlets.Instance(ImageCollection)]
+        [
+            traitlets.Instance(Image, read_only=True),
+            traitlets.Instance(ImageCollection, read_only=True),
+        ]
     )
+    value = traitlets.Union(
+        [
+            traitlets.Instance(Image, read_only=True),
+            traitlets.Instance(ImageCollection, read_only=True),
+        ]
+    )
+    image_value = traitlets.Instance(Image, read_only=True)
 
-    parameters = traitlets.Instance(parameters.ParameterSet, allow_none=True)
+    parameters = traitlets.Instance(parameters.ParameterSet, read_only=True)
     xyz_obj = traitlets.Instance(XYZ, read_only=True)
     session_id = traitlets.Unicode(read_only=True)
     log_level = traitlets.Int(logging.DEBUG)
@@ -116,17 +145,32 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     log_output = traitlets.Instance(widgets.Output, allow_none=True)
     autoscale_progress = traitlets.Instance(ClearableOutput)
 
-    def __init__(self, imagery, *args, **kwargs):
-        params = kwargs.pop("parameters", {})
-        log_level = kwargs.pop("log_level", None)
-        if log_level is None:
-            log_level = logging.DEBUG
-        super(WorkflowsLayer, self).__init__(*args, **kwargs)
+    def __init__(
+        self,
+        imagery,
+        scales=None,
+        colormap=None,
+        checkerboard=None,
+        reduction=None,
+        log_level=logging.DEBUG,
+        parameter_overrides=None,
+        **kwargs,
+    ):
+        if parameter_overrides is None:
+            parameter_overrides = {}
 
-        self._xyz_warnings = []
-        with self.hold_trait_notifications():
-            self.imagery = imagery
+        self._url_updates_blocked = False
+        super().__init__(**kwargs)
+
+        with self.hold_url_updates():
+            self.set_trait("parameters", parameters.ParameterSet(self, "parameters"))
+            self.set_imagery(imagery, **parameter_overrides)
+            self.set_scales(scales, new_colormap=colormap)
+            if reduction is not None:
+                self.reduction = reduction
+            self.checkerboard = checkerboard
             self.log_level = log_level
+
             self.set_trait("session_id", uuid.uuid4().hex)
             self.set_trait(
                 "autoscale_progress",
@@ -135,11 +179,85 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
                     layout=widgets.Layout(max_height="10rem", flex="1 0 auto"),
                 ),
             )
-            self.set_parameters(**params)
 
         self._log_listener = None
         self._known_logs = set()
         self._known_logs_lock = threading.Lock()
+
+    def set_imagery(
+        self, imagery: Union[Image, ImageCollection], **parameter_overrides
+    ):
+        """
+        Set a new `~.geospatial.Image` or `~.geospatial.ImageCollection` object for this layer to use.
+
+        You can set/override the values of any parameters the imagery depends on
+        by passing them as kwargs.
+
+        If the imagery depends on parameters that don't have default values (created with
+        ``wf.parameter("name", wf.Int)`` for example, versus ``wf.widget.input("name", default=1)``),
+        then you *must* pass values for those parameters.
+
+        Parameters
+        ----------
+        **parameter_overrides: JSON-serializable value, Proxytype, or ipywidgets.Widget
+            Paramter names to values. Values can be Python types,
+            `Proxytype` instances, or ``ipywidgets.Widget`` instances.
+            Names must correspond to parameters that ``imagery`` depends on.
+        """
+        if not self.trait_has_value("imagery") or imagery is not self.imagery:
+            # NOTE: `==` checks don't make sense for imagery
+            # (returns another imagery of elemwise equality); checking for the same object is better.
+            # `trait_has_value` is False when the layer is first constructed;
+            # accessing `self.imagery` would cause a validation error in that case.
+
+            should_update_imagery = True
+            xyz = XYZ.build(imagery, name=self.name)
+        else:
+            should_update_imagery = False
+            xyz = self.xyz_obj
+
+        # Combine the parameter dependencies from `imagery` with any overrides
+        # and raise an error for any missing or unexpected parameter overrides.
+        # We don't do any typechecking of parameter values here; that'll be dealt with
+        # later (within `ParameterSet` when trying to actually assign the trait values).
+        merged_params = {}
+        for param in xyz.params:
+            name = param._name
+            try:
+                merged_params[name] = parameter_overrides.pop(name)
+                # TODO when you override the value of a widget-based parameter, you'd like to keep
+                # the same type of widget (but a new instance in case it's linked to other stuff)
+            except KeyError:
+                try:
+                    merged_params[name] = param.widget
+                except AttributeError:
+                    raise ValueError(
+                        f"Missing required parameter {name!r} ({type(param).__name__}) "
+                        f"for layer {self.name!r}"
+                    ) from None
+        if parameter_overrides:
+            raise ValueError(
+                f"Unexpected parameters {tuple(parameter_overrides)}. This layer only "
+                f"accepts the parameters {tuple(p._name for p in xyz.params)}."
+            )
+
+        xyz_warnings = []
+        with self.hold_url_updates():
+            if should_update_imagery:
+                # NOTE: we awkwardly do these sets _after_ parameter merging for nicer tracebacks.
+                # if we did them before, `hold_trait_notifications` would try to run any handlers
+                # for these changed traits before reraising the ValueErrors we raised within the
+                # contextmanager, which leads to a huge and confusing traceback for users.
+                with warnings.catch_warnings(record=True) as xyz_warnings:
+                    xyz.save()
+                self.set_trait("imagery", imagery)
+                self.set_trait("xyz_obj", xyz)
+
+            self.parameters.update(**merged_params)
+
+        # NOTE: we log after the `hold_url_updates` block so our messages don't get immediately cleared
+        for w in xyz_warnings:
+            self._log(w.message)
 
     def make_url(self):
         """
@@ -174,6 +292,12 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
 
         parameters = self.parameters.to_dict()
 
+        # assume a None parameter value means the value is missing
+        # and we can't render the layer.
+        # primarily for the `LayerPicker` widget, which can have no layer selected.
+        if any(v is None for v in parameters.values()):
+            return ""
+
         return self.xyz_obj.url(
             session_id=self.session_id,
             colormap=self.colormap,
@@ -183,19 +307,75 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             **parameters,
         )
 
-    @traitlets.observe("imagery")
-    def _update_xyz(self, change):
-        old, new = change["old"], change["new"]
-        if old is new:
-            # traitlets does an == check between the old and new value to decide if it's changed,
-            # which for an Image, returns another Image, which it considers changed.
+    @contextlib.contextmanager
+    def hold_url_updates(self):
+        """
+        Context manager to prevent the layer URL from being updated multiple times.
+
+        When leaving the context manager, the URL is always updated exactly once.
+
+        Also applies ``hold_trait_notifications``.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+        >>> img = img.pick_bands("red") # doctest: +SKIP
+        >>> layer = img.visualize("sample visualization", colormap="viridis") # doctest: +SKIP
+
+        >>> with layer.hold_url_updates(): # doctest: +SKIP
+        ...     layer.checkerboard = False # doctest: +SKIP
+        ...     layer.set_scales([0, 1], new_colormap="magma") # doctest: +SKIP
+        ...     layer.set_scales([0, 1], new_colormap="magma") # doctest: +SKIP
+        >>> # ^ the layer will now update only once, instead of 3 times.
+        """
+        if self._url_updates_blocked:
+            yield
+        else:
+            try:
+                self._url_updates_blocked = True
+                with self.hold_trait_notifications():
+                    yield
+            finally:
+                self._url_updates_blocked = False
+            self._update_url({})
+
+    @traitlets.observe("xyz_obj", "parameters", type=traitlets.All)
+    def _update_value(self, change):
+        if not self.trait_has_value("xyz_obj"):
+            # avoids crazy tracebacks in __init__ when given bad arguments,
+            # and `hold_trait_notifications` tries to fire notifiers _before_
+            # reraising the exception: `xyz_obj` might not be set yet,
+            # and accessing it would cause its own spew of confusing traitlets errors.
             return
 
-        xyz = XYZ.build(new, name=self.name)
-        with warnings.catch_warnings(record=True) as ws:
-            xyz.save()
-            self._xyz_warnings = ws
-        self.set_trait("xyz_obj", xyz)
+        graft = graft_client.apply_graft(
+            "XYZ.use",
+            self.xyz_obj.id,
+            # TODO potentially should use `promote_arguments` here?
+            # Not sure where the responsibility for typechecking / promotion falls right now.
+            # But having that stricter typechecking would probably break the LayerPicker
+            # widget when its value becomes None.
+            **arguments_to_grafts(**self.parameters.to_dict()),
+        )
+
+        self.set_trait(
+            "value",
+            self.imagery._from_graft(graft),
+        )
+
+    @traitlets.observe("value", "reduction")
+    def _update_image_value(self, change):
+        # TODO do we actually want this thing that's going to inspect/compute
+        # to be an XYZ reference instead of full graft? possibly not.
+        # although weirdly, if the firestore doc is cached on the tiles server,
+        # sending the xyz ID might actually be a tiny tiny bit faster than the whole graft
+        # with network latency... idk.
+        value = self.value
+        if isinstance(value, ImageCollection):
+            value = value.reduction(self.reduction, axis="images")
+
+        self.set_trait("image_value", value)
 
     @traitlets.observe(
         "visible",
@@ -212,54 +392,71 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         "session_id",
         "parameters",
     )
-    @traitlets.observe("parameters", type="delete")
     def _update_url(self, change):
+        if self._url_updates_blocked:
+            return
         try:
             self.set_trait("url", self.make_url())
         except ValueError as e:
             if "Invalid scales passed" not in str(e):
                 raise e
+        self.clear_logs()
+        if self.clear_on_update:
+            self.redraw()
 
     @traitlets.observe("parameters", type="delete")
+    # traitlets is dumb and decorator stacking doesn't work so we have to repeat this
     def _update_url_on_param_delete(self, change):
-        # traitlets is dumb and decorator stacking doesn't work so we have to repeat this
+        if self._url_updates_blocked:
+            return
         try:
             self.set_trait("url", self.make_url())
         except ValueError as e:
             if "Invalid scales passed" not in str(e):
                 raise e
+        self.clear_logs()
+        if self.clear_on_update:
+            self.redraw()
+
+    def _log(self, message: str, level: int = logging_pb2.LogRecord.Level.WARNING):
+        "Log a message to the error output (if there is one), without duplicates"
+        if self.log_output is None:
+            return
+
+        with self._known_logs_lock:
+            if message in self._known_logs:
+                return
+            else:
+                self._known_logs.add(message)
+
+        log_level = logging_pb2.LogRecord.Level.Name(level)
+        msg = "{}: {} - {}\n".format(self.name, log_level, message)
+        self.log_output.append_stdout(msg)
 
     @traitlets.observe("xyz_obj", "session_id", "log_level")
     def _update_logger(self, change):
         if self.log_output is None:
             return
 
-        # Remove old log records for the layer
-        self.forget_logs()
-        new_logs = []
-        for record in self.log_output.outputs:
-            if not record["text"].startswith(self.name + ": "):
-                new_logs.append(record)
-        self.log_output.outputs = tuple(new_logs)
-
-        for w in self._xyz_warnings:
-            self.log_output.append_stdout(
-                f"{self.name}: WARNING - {w.category.__name__}: {w.message}\n"
-            )
-        self._xyz_warnings = []
+        self.clear_logs()
 
         if self._log_listener is not None:
             self._log_listener.stop(timeout=1)
 
         listener = self.xyz_obj.log_listener()
-        listener.add_callback(self._logs_callback)
-        listener.listen(
-            self.session_id,
-            datetime.datetime.now(datetime.timezone.utc),
-            level=self.log_level,
+        listener.add_callback(
+            lambda record: self._log(record.record.message, level=record.record.level)
         )
+        with warnings.catch_warnings(record=True) as ws:
+            listener.listen(
+                self.session_id,
+                datetime.datetime.now(datetime.timezone.utc),
+                level=self.log_level,
+            )
 
         self._log_listener = listener
+        for w in ws:
+            self._log(w.message)
 
     def _stop_logger(self):
         if self._log_listener is not None:
@@ -274,21 +471,9 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             if self._log_listener is None:
                 self._update_logger({})
 
-    def _logs_callback(self, record):
-        message = record.record.message
-
-        with self._known_logs_lock:
-            if message in self._known_logs:
-                return
-            else:
-                self._known_logs.add(message)
-
-        log_level = logging_pb2.LogRecord.Level.Name(record.record.level)
-        msg = "{}: {} - {}\n".format(self.name, log_level, message)
-        self.log_output.append_stdout(msg)
-
     def __del__(self):
         self._stop_logger()
+        self.clear_logs()
         super(WorkflowsLayer, self).__del__()
 
     def forget_logs(self):
@@ -308,6 +493,32 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         """
         with self._known_logs_lock:
             self._known_logs.clear()
+
+    def clear_logs(self):
+        """
+        Clear any logs currently displayed for this layer
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+        >>> wf.map # doctest: +SKIP
+        >>> layer = img.visualize("sample visualization") # doctest: +SKIP
+        >>> # ^ will show an error for attempting to visualize more than 3 bands
+        >>> layer.clear_logs() # doctest: +SKIP
+        >>> # ^ the errors will disappear
+        >>> wf.map.zoom = 10 # doctest: +SKIP
+        >>> # ^ attempting to load more tiles from img will cause the same error to appear
+        """
+        if self.log_output is None:
+            return
+
+        self.forget_logs()
+        new_logs = []
+        for error in self.log_output.outputs:
+            if not error["text"].startswith(self.name + ": "):
+                new_logs.append(error)
+        self.log_output.outputs = tuple(new_logs)
 
     def set_scales(self, scales, new_colormap=False):
         """
@@ -355,7 +566,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
 
                 raise ValueError(msg)
 
-            with self.hold_trait_notifications():
+            with self.hold_url_updates():
                 if colormap is None:
                     self.r_min = scales[0][0]
                     self.r_max = scales[0][1]
@@ -370,7 +581,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
                     self.colormap = new_colormap
         else:
             # scales is None
-            with self.hold_trait_notifications():
+            with self.hold_url_updates():
                 if colormap is None:
                     self.r_min = None
                     self.r_max = None
@@ -383,52 +594,6 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
                     self.r_max = None
                 if new_colormap is not False:
                     self.colormap = new_colormap
-
-    def set_parameters(self, **params):
-        """
-        Set new parameters for this `WorkflowsLayer`.
-
-        In typical cases, you update parameters by assigning to `parameters`
-        (like ``layer.parameters.threshold = 6.6``).
-
-        Instead, use this function when you need to change the *names or types*
-        of parameters available on the `WorkflowsLayer`. (Users shouldn't need to
-        do this, as `~.Image.visualize` handles it for you, but custom widget developers
-        may need to use this method when they change the `imagery` field on a `WorkflowsLayer`.)
-
-        If a value is an ipywidgets Widget, it will be linked to that parameter
-        (via its ``"value"`` attribute). If a parameter was previously set with
-        a widget, and a different widget instance (or non-widget) is passed
-        for its new value, the old widget is automatically unlinked.
-        If the same widget instance is passed as is already linked, no change occurs.
-
-        Parameters
-        ----------
-        params: JSON-serializable value, Proxytype, or ipywidgets.Widget
-            Paramter names to new values. Values can be Python types,
-            `Proxytype` instances, or ``ipywidgets.Widget`` instances.
-
-        Example
-        -------
-
-        >>> import descarteslabs.workflows as wf
-        >>> from ipywidgets import FloatSlider
-        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
-        >>> img = img.pick_bands("red") # doctest: +SKIP
-        >>> masked_img = img.mask(img > wf.parameter("threshold", wf.Float)) # doctest: +SKIP
-        >>> layer = masked_img.tile_layer("sample", colormap="plasma", threshold=0.07) # doctest: +SKIP
-        >>> scaled_img = img * wf.parameter("scale", wf.Float) + wf.parameter("offset", wf.Float) # doctest: +SKIP
-        >>> with layer.hold_trait_notifications(): # doctest: +SKIP
-        ...     layer.imagery = scaled_img # doctest: +SKIP
-        ...     layer.set_parameters(scale=FloatSlider(min=0, max=10, value=2), offset=2.5) # doctest: +SKIP
-        >>> # ^ re-use the same layer instance for a new Image with different parameters
-        """
-        param_set = self.parameters
-        if param_set is None:
-            param_set = self.parameters = parameters.ParameterSet(self, "parameters")
-
-        with self.hold_trait_notifications():
-            param_set.update(**params)
 
     def _ipython_display_(self):
         param_set = self.parameters

@@ -55,7 +55,7 @@ class Function(GenericProxytype):
     def __init__(self, function):
         if self._type_params is None:
             raise TypeError(
-                "Cannot instantiate a generic Function; the parameter and return types must be specified".format()
+                "Cannot instantiate a generic Function; the parameter and return types must be specified"
             )
         if isinstance(function, six.string_types):
             self.graft = client.keyref_graft(function)
@@ -96,6 +96,9 @@ class Function(GenericProxytype):
         # delaying a Python function with keyword arguments, since we can't
         # do default argument values, so there's not really any use.
         # The only downside is lack of named positional arguments in that case.
+
+        # TODO support named positional arguments when we have metadata about the names
+        # (`self.graft` is an actual graft, so we can introspect the `parameters` key).
 
         unexpected_args = six.viewkeys(kwargs) - six.viewkeys(kwargs_types)
         if len(unexpected_args) > 0:
@@ -176,6 +179,61 @@ class Function(GenericProxytype):
             )
         )
         assert_is_proxytype(return_type, error_message=error_message)
+
+    @classmethod
+    def from_object(cls, obj):
+        """
+        Turn a Workflows object that depends on parameters into a `Function`.
+
+        Any parameters ``obj`` depends on become arguments to the `Function`.
+        Calling that function essentially returns ``obj``, with the given values applied
+        to those parameters.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> word = wf.parameter("word", wf.Str)
+        >>> repeats = wf.widgets.slider("repeats", min=0, max=5, step=1)
+        >>> repeated = (word + " ") * repeats
+
+        >>> # `repeated` depends on parameters; we have to pass values for them to compute it
+        >>> repeated.inspect(word="foo", repeats=3) # doctest: +SKIP
+        'foo foo foo '
+
+        >>> # turn `repeated` into a Function that takes those parameters
+        >>> repeat = wf.Function.from_object(repeated)
+        >>> repeat
+        <descarteslabs.workflows.types.function.function.Function[Str, Int, {}, Str] object at 0x...>
+        >>> repeat("foo", 3).inspect() # doctest: +SKIP
+        'foo foo foo '
+        >>> repeat("hello", 2).inspect() # doctest: +SKIP
+        'hello hello '
+
+        Parameters
+        ----------
+        obj: Proxytype
+            A Workflows proxy object.
+
+        Returns
+        -------
+        func: Function
+            A `Function` equivalent to ``obj`` TODO
+        """
+        if any(p is obj for p in obj.params):
+            raise ValueError(
+                f"Cannot create a Function from a parameter object. This parameter {obj._name!r} "
+                "is like an argument to a function---not the body of the function itself."
+            )
+
+        arg_types = tuple(getattr(p, "_proxytype", type(p)) for p in obj.params)
+        # ^ if any of the params are widgets (likely), use their base Proxytype in the Function type signature:
+        # a Function[Checkbox, Slider, ...] would be 1) weird and 2) not serializeable.
+        concrete_function_type = cls[arg_types + ({}, type(obj))]
+
+        graft = client.function_graft(obj, *(p.graft for p in obj.params))
+        # TODO we should probably store `obj.params` somewhere---that's valuable metadata maybe
+        # to show the function as widgets, etc?
+        return concrete_function_type._from_graft(graft)
 
     @classmethod
     def from_callable(cls, func, *arg_types, return_type=None):

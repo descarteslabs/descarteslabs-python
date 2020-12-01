@@ -12,6 +12,7 @@ from .. import types
 from ..models import Workflow, VersionedGraft
 
 from .map_ import MapApp
+from .layer_picker import ImagePickerWidget, ImageCollectionPickerWidget
 from .parameters import py_type_to_widget
 
 
@@ -197,6 +198,8 @@ proxytype_to_widget = {
     proxytype: py_type_to_widget[py_type]
     for proxytype, py_type in proxytype_to_py_type.items()
 }
+proxytype_to_widget[types.Image] = ImagePickerWidget
+proxytype_to_widget[types.ImageCollection] = ImageCollectionPickerWidget
 
 
 class WorkflowsBrowser(ipywidgets.VBox):
@@ -334,7 +337,7 @@ class WorkflowsBrowser(ipywidgets.VBox):
             self._use.value = f'<code>wf.use("{id}", "{version}")</code>'
 
             if isinstance(obj, types.Function):
-                if any(t not in proxytype_to_py_type for t in obj.arg_types):
+                if any(t not in proxytype_to_widget for t in obj.arg_types):
                     obj = None  # dumb way to ensure the `isinstance` below will fail
                 else:
                     obj = obj.return_type._from_apply("")  # just to get an instance
@@ -384,30 +387,30 @@ class WorkflowsBrowser(ipywidgets.VBox):
         if not (flow and vg):
             raise ValueError("No Workflow and version currently selected")
 
+        # TODO: support adding to map multiple times without reusing same param objects
         obj = vg.object
-        parameters = {}
+
+        try:
+            param_overrides = {
+                p._name: proxytype_to_widget[type(p)](
+                    name=p._name,
+                    **(
+                        # omg this is terrible. find a better way.
+                        dict(hide_deps_of=p)
+                        if isinstance(p, (types.Image, types.ImageCollection))
+                        else {}
+                    ),
+                )
+                for p in vg.params
+                if not hasattr(p, "widget")
+            }
+        except KeyError as e:
+            raise TypeError(f"Cannot create interactive control for type {e}")
 
         if isinstance(obj, types.Function):
-            param_names = [f"arg_{i}" for i in range(len(obj.arg_types))]
-            graft_params = [
-                types.parameter(name, type_)
-                for name, type_ in zip(param_names, obj.arg_types)
-            ]
+            obj = obj(*vg.params)
 
-            try:
-                parameters = {
-                    name: proxytype_to_widget[type_]()
-                    for name, type_ in zip(param_names, obj.arg_types)
-                }
-            except KeyError as e:
-                raise TypeError(f"Cannot create interactive control for type {e}")
-
-            obj = obj(*graft_params)
-
-        if isinstance(obj, types.ImageCollection):
-            obj = obj.mosaic()
-
-        if isinstance(obj, types.Image):
+        if isinstance(obj, (types.Image, types.ImageCollection)):
             # NOTE(gabe): we LBYL for all these because accessing a missing key on the
             # fake proto dict object inserts it (like `setdefault`, not `get`), mutating `vg.labels` :(
             if "default_bands" in vg.labels:
@@ -425,14 +428,29 @@ class WorkflowsBrowser(ipywidgets.VBox):
                 colormap=colormap,
                 scales=scales,
                 map=map_,
-                **parameters,
+                **param_overrides,
             )
 
-            if len(parameters) > 0:
+            if len(vg.params) > 0:
                 # hack to display layer params on map
-                ctrl = ipyleaflet.WidgetControl(
-                    widget=lyr.parameters.widget, position="bottomleft"
+                labels = ipywidgets.VBox(
+                    children=[
+                        ipywidgets.Label(getattr(p, "_label", "") or p._name)
+                        for p in vg.params
+                    ]
                 )
+                widgets = ipywidgets.VBox(
+                    children=[
+                        param_overrides.get(p._name, None) or p.widget
+                        for p in vg.params
+                    ]
+                )
+                content = ipywidgets.HBox(children=[labels, widgets])
+                widget = ipywidgets.VBox(
+                    children=[ipywidgets.HTML(f"<b>{lyr.name}<b>"), content]
+                )
+
+                ctrl = ipyleaflet.WidgetControl(widget=widget, position="bottomleft")
                 map_.add_control(ctrl)
 
                 def remove_ctrl_obs(layers_change):

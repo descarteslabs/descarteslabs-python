@@ -1,6 +1,5 @@
 import six
 
-from ... import env
 from collections import abc
 
 from ..containers import Dict, List, Tuple
@@ -286,4 +285,4 @@ class GeometryMixin:
         """
         from .image import Image
 
-        return Image._from_apply("wf.rasterize", self, value, env.geoctx)
+        return Image._from_apply("wf.rasterize", self, value)

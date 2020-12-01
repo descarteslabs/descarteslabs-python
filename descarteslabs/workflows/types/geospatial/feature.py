@@ -1,5 +1,3 @@
-from ... import env
-
 from ...cereal import serializable
 from ..core import typecheck_promote
 from ..primitives import Any, Str, Int, Float
@@ -123,5 +121,5 @@ class Feature(FeatureStruct, GeometryMixin):
         from .image import Image
 
         return Image._from_apply(
-            "wf.rasterize", self, value, env.geoctx, default_value=default_value
+            "wf.rasterize", self, value, default_value=default_value
         )

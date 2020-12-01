@@ -352,22 +352,12 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
 
         ctx = self.map.geocontext()
         try:
-            params = self.layer.parameters.to_dict()
-        except AttributeError:
-            # technically, parameters is allowed to be None
-            params = {}
-
-        try:
             # clear any existing outputs (e.g. from a previous failed autoscale)
             if self.layer.autoscale_progress.outputs:
                 self.layer.autoscale_progress.set_output(())
 
-            imagery = self.layer.imagery
-            if isinstance(imagery, ImageCollection):
-                imagery = imagery.reduction(self.layer.reduction, axis="images")
-
-            result = imagery.compute(
-                ctx, progress_bar=self.layer.autoscale_progress, **params
+            result = self.layer.image_value.compute(
+                ctx, progress_bar=self.layer.autoscale_progress
             )
 
         except JobComputeError as e:
@@ -380,7 +370,7 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
 
             scales_attrs = [("r_min", "r_max"), ("g_min", "g_max"), ("b_min", "b_max")]
 
-            with self.layer.hold_trait_notifications():
+            with self.layer.hold_url_updates():
                 # for a single-band array, only set r_min and r_max
                 for band, (scale_min, scale_max) in zip(arr, scales_attrs):
                     if isinstance(band, np.ma.MaskedArray):

@@ -13,7 +13,7 @@ class Input(Widget, Generic[T]):
 
     def __init__(self, name: str, default: T, label=""):
         super().__init__(name, default, label)
-        self.widget = self._widget_type(value=default)
+        self.widget = self._widget_type(value=default, continuous_update=False)
         self.widget._label = label
 
 
@@ -45,7 +45,9 @@ def input(
     A box to type `.Str`, `.Int`, or `.Float` values into.
 
     Depending on the type of value you pass for ``default``, the widget will represent
-    a `.Str`, an `.Int`, or a `.Float`.
+    a `.Str`, an `.Int`, or a `.Float` parameter.
+
+    Note: updates happen when you press Enter or click out of the box, not on every keystroke.
 
     Example
     -------
@@ -56,9 +58,10 @@ def input(
     >>> img = s2[wf.widgets.input("index", default=0)]
     >>> img.visualize("One S2 image", scales=[[0, 0.4], [0, 0.4], [0, 0.4]])  # doctest: +SKIP
     >>> # ^ when you call .visualize, the `input` widget will automatically show up below
-    >>> wf.map  # doctest: +SKIP
-    >>> # ^ display the map. typing a different number into the input box above will
-    >>> # cause the map to update, and display the Image at that index in the ImageCollection.
+
+    Typing a different number into the input box above will cause the map to update
+    and display the `~.geospatial.Image` at that index in the `~.geospatial.ImageCollection`.
+    (If you haven't already, run ``wf.map`` in another notebook cell to see your layer.)
 
     Parameters
     ----------

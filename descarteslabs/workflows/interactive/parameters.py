@@ -1,3 +1,4 @@
+import copy
 import datetime
 
 import six
@@ -6,6 +7,63 @@ import ipywidgets
 
 
 from .. import types
+
+
+# TODO more graceful option than this??
+class NoEqualityLink(traitlets.link):
+    """
+    Equivalent to `traitlets.link`, but checks for changes with `is` instead of `==`.
+
+    This makes it work with types that overload equality checking (NumPy arrays, Images, etc.)
+    and return non-bool types.
+    """
+
+    # Copied from:
+    # https://github.com/ipython/traitlets/blob/2bb2597224ca5ae485761781b11c06141770f110/traitlets/traitlets.py#L291-L310
+
+    def _update_target(self, change):
+        if self.updating:
+            return
+        with self._busy_updating():
+            setattr(self.target[0], self.target[1], self._transform(change.new))
+            if getattr(self.source[0], self.source[1]) is not change.new:
+                # ^ CHANGED: `!=` to `is not`
+                raise traitlets.TraitError(
+                    "Broken link {}: the source value changed while updating "
+                    "the target.".format(self)
+                )
+
+    def _update_source(self, change):
+        if self.updating:
+            return
+        with self._busy_updating():
+            setattr(self.source[0], self.source[1], self._transform_inv(change.new))
+            if getattr(self.target[0], self.target[1]) is not change.new:
+                # ^ CHANGED: `!=` to `is not`
+                raise traitlets.TraitError(
+                    "Broken link {}: the target value changed while updating "
+                    "the source.".format(self)
+                )
+
+
+class ReadOnlyDirectionalLink(ipywidgets.dlink):
+    "ipywidgets.dlink that forcibly sets the values of read-only traits on `target`"
+
+    def link(self):
+        try:
+            target, target_trait = self.target
+            target.set_trait(
+                target_trait, self._transform(getattr(self.source[0], self.source[1]))
+            )
+        finally:
+            self.source[0].observe(self._update, names=self.source[1])
+
+    def _update(self, change):
+        if self.updating:
+            return
+        with self._busy_updating():
+            target, target_trait = self.target
+            target.set_trait(target_trait, self._transform(change.new))
 
 
 class ProxytypeInstance(traitlets.Instance):
@@ -59,22 +117,24 @@ py_type_to_trait = {
 }
 
 
-def obj_to_trait(obj):
+def obj_to_trait(obj, name):
     """
-    Construct a ``traitlets.TraitType`` instance suitable for holding ``obj``, based on its type.
+    Construct a ``traitlets.TraitType`` instance suitable for holding ``obj`` as ``name``, based on its type.
 
     If ``type(obj)`` is in the ``py_type_to_trait`` dict, it uses the associated trait type.
 
     If ``obj`` is a `Proxytype`, it returns a `ProxytypeInstance` trait (which will take
     new values and attempt to promote them to that `Proxytype`.)
 
-    Otherwise, if ``obj`` is an ipywidget, it will use whatever trait type that object
+    Otherwise, if ``obj`` is a HasTraits instance, it will use whatever trait type that object
     uses for its ``value`` trait.
 
     Parameters
     ----------
-    obj: bool, int, float, str, list, tuple, dict, datetime.datetime, datetime.date, Proxytype, or ipywidgets.Widget
+    obj: bool, int, float, str, list, tuple, dict, datetime.datetime, datetime.date, Proxytype, or traitlets.HasTraits
         Create a trait to hold this value
+    name: str
+        Hold the trait under this name
 
     Returns
     -------
@@ -86,24 +146,27 @@ def obj_to_trait(obj):
     TypeError:
         If there's no registered TraitType to hold this type of value.
 
-        If ``obj`` is an ipywidget without a ``value`` trait.
+        If ``obj`` is a HasTraits instance without a ``value`` trait.
     """
     type_ = type(obj)
     try:
-        return py_type_to_trait[type_]()
+        return py_type_to_trait[type_](name=name)
     except KeyError:
         if isinstance(obj, types.Proxytype):
-            return ProxytypeInstance(klass=type_)
-        elif isinstance(obj, ipywidgets.Widget):
+            return ProxytypeInstance(name=name, klass=type_)
+        elif isinstance(obj, traitlets.HasTraits):
             try:
-                # get the type of the `value` trait
-                trait_type = type(type_.value)
+                # get the descriptor (trait object) for the `value` trait
+                trait = type_.value
             except AttributeError:
                 raise TypeError(
                     "Unsupported widget type {!r}, "
                     "since it has no `value` trait".format(type_.__name__)
                 )
-            return trait_type()
+            else:
+                new_trait = copy.deepcopy(trait)  # hope this actually works...
+                new_trait.name = name
+                return new_trait
 
     raise TypeError(
         "Cannot accept parameter of type {!r}. Must be a Proxytype, or one of: {}".format(
@@ -200,14 +263,15 @@ class ParameterSet(traitlets.HasTraits):
     (``y`` doesn't exist).
 
     When `.Image.visualize` creates a `ParameterSet` for you, it adds fields for
-    whichever parameter names you give at the time. For example, ``img.visualize("my layer", foo="bar", baz=100)``
-    will create the fields ``foo`` and ``bar``. More importantly, it infers the *type*
-    of those fields from the values passed, so ``foo`` would only accept strings,
-    and ``bar`` would only accept ints.
+    whichever parameter the imagery depends on. If ``img`` depends on
+    ``wf.widgets.slider("slidey", 0, 1)`` and ``wf.parameter("td", wf.Timedelta)``
+    for example, then ``img.visualize("my layer", td=wf.Timedelta(days=2))``
+    will create the fields ``slidey`` and ``td``. More importantly, it infers the *type*
+    of those fields from their parameter types, so ``slidey`` would only accept floats,
+    and ``td`` would only accept Timedeltas.
 
     Therefore, if you experience a ``TypeError`` assiging to a `ParameterSet` field,
-    you may need to change the initial value passed into the `.Image.visualize` call,
-    so that the correct type is inferred.
+    you may need to change types of the initial parameters ``img`` depends on.
     """
 
     def __init__(self, notify_object, notify_name, **traits):
@@ -228,6 +292,7 @@ class ParameterSet(traitlets.HasTraits):
         self._links = {}
         self.add_traits(**traits)
 
+        self._order = tuple(traits)
         self.widget = self.make_widget()
 
     @traitlets.observe(traitlets.All, type=traitlets.All)
@@ -281,7 +346,12 @@ class ParameterSet(traitlets.HasTraits):
 
         if target is not None:
             with self.hold_trait_notifications():
-                link = traitlets.link((target, attr), (self, name))
+                link_type = (
+                    ReadOnlyDirectionalLink
+                    if getattr(type(self), name).read_only
+                    else NoEqualityLink
+                )
+                link = link_type((target, attr), (self, name))
                 self._links[name] = link
         else:
             if current_link is not None:
@@ -289,7 +359,7 @@ class ParameterSet(traitlets.HasTraits):
 
     def to_dict(self):
         """
-        Key-value pairs of the parameters.
+        Key-value pairs of the parameters, in order.
 
         Example
         -------
@@ -301,7 +371,24 @@ class ParameterSet(traitlets.HasTraits):
         >>> layer.parameters.to_dict() # doctest: +SKIP
         {'threshold': 0.07}
         """
-        return {name: getattr(self, name) for name in self.trait_names()}
+        # return {name: getattr(self, name) for name in self._order}
+
+        # since `add_traits`, `remove_traits` are still in the public API,
+        # and we can't atomically `update` either, we must treat `self._order`
+        # as just a "guideline" and handle extra names that should or shouldn't
+        # be in it.
+        names = set(self.trait_names())
+        dct = {}
+        for name in self._order:
+            try:
+                dct[name] = getattr(self, name)
+            except AttributeError:
+                pass
+            else:
+                names.remove(name)
+        for name in names:
+            dct[name] = getattr(self, name)
+        return dct
 
     def _make_widget_contents(self, skip=None):
         if skip is None:
@@ -311,8 +398,8 @@ class ParameterSet(traitlets.HasTraits):
             return []
 
         names, values = zip(*items)
-        labels = [ipywidgets.Label(name) for name in names]
 
+        labels = []
         widgets = []
         for name, value in zip(names, values):
             link = self._links.get(name, None)
@@ -325,6 +412,12 @@ class ParameterSet(traitlets.HasTraits):
                         "Instead, manually construct this link (with `ipywidgets.link()`, not `self.link()`) "
                         "*after* auto-generating the controls.".format(name, widget)
                     )
+                label = getattr(widget, "_label", name) or name
+                # ^ HACK: this magic attribute comes from `interactive/widgets`, where we stick any `label`
+                # on the widget object as `_label`. Otherwise, here in `ParameterSet`, we wouldn't know
+                # the longform label for the widget. And if we had actually set the label in `.description`,
+                # then we'd end up with two labels for the widget (one from ParameterSet and one generated by the
+                # widget itself).
             else:
                 try:
                     widget = obj_to_widget(value)
@@ -334,7 +427,10 @@ class ParameterSet(traitlets.HasTraits):
                     )
                 else:
                     self.link(name, widget)
+                label = name
+
             widgets.append(widget)
+            labels.append(ipywidgets.Label(label))
 
         labels_col = ipywidgets.VBox(labels)
         widgets_col = ipywidgets.VBox(widgets)
@@ -390,7 +486,7 @@ class ParameterSet(traitlets.HasTraits):
 
     def update(self, **new_values):
         """
-        Update the `ParameterSet` with a dict of new values.
+        Update the `ParameterSet` with new values.
 
         New parameters are added as fields on the `ParameterSet`,
         with their trait type inferred from the value.
@@ -406,6 +502,8 @@ class ParameterSet(traitlets.HasTraits):
         to a widget, and a different widget instance (or non-widget) is passed
         for its new value, the old widget is automatically unlinked.
         If the same widget instance is passed as is already linked, no change occurs.
+
+        The `ParameterSet` will be reordered to the order of these new values.
 
         Parameters
         ----------
@@ -427,8 +525,51 @@ class ParameterSet(traitlets.HasTraits):
         ...     layer.parameters.update(scale=FloatSlider(min=0, max=10, value=2), offset=2.5) # doctest: +SKIP
         >>> # ^ re-use the same layer instance for a new Image with different parameters
         """
+        old_order = self._order
+        self._order = tuple(new_values)
+
         self._update_traits_for_new_values(new_values)
         self._assign_new_values(new_values)
+
+        if self._order != old_order:
+            # in case _just_ the order changed, but no values, ensure the
+            # widget is still redrawn
+            self.widget.children = self._make_widget_contents()
+
+    # def update_values(self, **new_values):
+    #     """
+    #     Update the current traits of the `ParameterSet` with new values.
+
+    #     Unlike `update`, this does not add, remove, or change the type of any fields.
+
+    #     If a value is an ipywidgets Widget, it will be linked (via its ``"value"`` attribute)
+    #     to that parameter. If a parameter was previously linked
+    #     to a widget, and a different widget instance (or non-widget) is passed
+    #     for its new value, the old widget is automatically unlinked.
+    #     If the same widget instance is passed as is already linked, no change occurs.
+
+    #     Parameters
+    #     ----------
+    #     **new_values: JSON-serializable value, Proxytype, or ipywidgets.Widget
+    #         Parameter names to new values. Values can be Python types,
+    #         `Proxytype` instances, or ``ipywidgets.Widget`` instances.
+
+    #         All the names must already be traits of this `ParameterSet`,
+    #         and all values must be compatible with those current trait types.
+
+    #     Raises
+    #     ------
+    #     ValueError:
+    #         If given a kwarg name that isn't already a trait
+    #     TypeError:
+    #         If given a value that's incompatible with the current trait type for that name
+    #     """
+    #     for name in new_values:
+    #         if not self.has_trait(name):
+    #             raise ValueError(
+    #                 f"The trait {name!r} does not exist in {self.trait_names()!r}"
+    #             )
+    #     self._assign_new_values(new_values)
 
     def _update_traits_for_new_values(self, new_values):
         """
@@ -459,9 +600,13 @@ class ParameterSet(traitlets.HasTraits):
                 continue
 
             old_trait_type = type(current_traits[changed_name])
-            new_trait = obj_to_trait(new_value)  # todo handle error?
-            if old_trait_type != type(new_trait):
+            new_trait = obj_to_trait(new_value, changed_name)  # todo handle error?
+            if old_trait_type != type(new_trait) or isinstance(
+                new_value, traitlets.HasTraits
+            ):
                 # by golly, the trait type has changed!
+                # NOTE: we always replace when given a HasTraits instance, because though
+                # the type of the trait descriptor may not have changed, all its attributes could have.
                 remove_names.add(changed_name)
                 new_traits[changed_name] = new_trait
 
@@ -470,7 +615,9 @@ class ParameterSet(traitlets.HasTraits):
             self.link(name, None)
         self.remove_traits(*remove_names)
 
-        new_traits.update({name: obj_to_trait(new_values[name]) for name in add_names})
+        new_traits.update(
+            {name: obj_to_trait(new_values[name], name) for name in add_names}
+        )
         self.add_traits(**new_traits)
 
     def _assign_new_values(self, new_values):
@@ -496,11 +643,14 @@ class ParameterSet(traitlets.HasTraits):
                         del self._links[name]
                         current_link = None  # we'll check this below
 
-                if isinstance(value, ipywidgets.Widget):
+                if isinstance(value, traitlets.HasTraits):
                     if current_link is None:
-                        self._links[name] = ipywidgets.link(
-                            (value, "value"), (self, name)
+                        link_type = (
+                            ReadOnlyDirectionalLink
+                            if getattr(type(self), name).read_only
+                            else NoEqualityLink
                         )
+                        self._links[name] = link_type((value, "value"), (self, name))
                         self._notify_trait(name, getattr(self, name), value.value)
                 else:
                     self.set_trait(name, value)

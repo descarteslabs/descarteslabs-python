@@ -12,8 +12,9 @@ import pytest
 from descarteslabs.client.version import __version__
 from descarteslabs.common.proto.xyz import xyz_pb2
 from descarteslabs.common.proto.logging import logging_pb2
+from descarteslabs.common.graft import client as graft_client
 
-from ... import _channel
+from ... import _channel, types, cereal
 from ...client import Client
 from .. import XYZ, XYZLogListener
 from ..utils import (
@@ -35,14 +36,35 @@ class TestXYZ(object):
         xyz = XYZ.build(obj, name="foo", description="a foo")
 
         assert xyz._object is obj
+        assert xyz._params == ()
         assert xyz._client is not None
         message = xyz._message
 
-        assert json.loads(message.serialized_graft) == utils.json_normalize(obj.graft)
+        assert json.loads(message.serialized_graft) == obj.graft
         assert message.name == "foo"
         assert message.description == "a foo"
         assert message.channel == _channel.__channel__
         assert message.client_version == __version__
+
+    def test_build_params(self, stub):
+        x = types.parameter("x", types.Image)
+        obj = utils.Foo(x)
+        xyz = XYZ.build(obj)
+        msg = xyz._message
+
+        obj_func = xyz.object
+        assert isinstance(xyz.object, types.Function[type(x), {}, type(obj)])
+
+        assert json.loads(msg.serialized_graft) == obj_func.graft
+        assert msg.typespec == cereal.serialize_typespec(type(obj_func))
+
+        assert xyz.params is obj.params
+
+        params = types.widget.deserialize_params(msg.parameters)
+        assert len(params) == 1
+        param = params[0]
+        assert isinstance(param, type(x))
+        assert param._name == x._name
 
     def test_roundtrip_from_proto(self, stub):
         obj = utils.Bar(utils.Foo(1))
@@ -181,8 +203,6 @@ class TestXYZ(object):
         with pytest.raises(ValueError, match="has not been persisted"):
             xyz.url()
 
-        xyz._message.id = "baz"
-        xyz._message.channel = "v0-0"
         xyz._message.url_template = (
             "https://workflows.descarteslabs.com/v0-0/xyz/baz/{z}/{x}/{y}.png"
         )
@@ -217,26 +237,78 @@ class TestXYZ(object):
         # If all none scales, not included
         assert xyz.url(scales=[None, None]) == url_base
 
-        # Primitives are inserted directly and JSON-encoded
-        assert xyz.url(foo=1) == url_base_q + urlencode({"foo": "1"})
-        assert xyz.url(bar=True) == url_base_q + urlencode({"bar": "true"})
-        assert xyz.url(baz="quz") == url_base_q + urlencode({"baz": '"quz"'})
-        # Grafts are JSON-encoded (along with embedded JSON in grafts)
-        assert xyz.url(foo=obj) == url_base_q + urlencode(
-            {"foo": json.dumps(obj.graft)}
-        )
+        # # Primitives are inserted directly and JSON-encoded
+        # assert xyz.url(foo=1) == url_base_q + urlencode({"foo": "1"})
+        # assert xyz.url(bar=True) == url_base_q + urlencode({"bar": "true"})
+        # assert xyz.url(baz="quz") == url_base_q + urlencode({"baz": '"quz"'})
+        # # Grafts are JSON-encoded (along with embedded JSON in grafts)
+        # assert xyz.url(foo=obj) == url_base_q + urlencode(
+        #     {"foo": json.dumps(obj.graft)}
+        # )
 
         # test everything gets added together correctly
-        base, params = xyz.url(session_id="foo", arg="bar", foo=2.2, obj=obj).split("?")
+        base, params = xyz.url(
+            session_id="foo", colormap="bar", bands=["red", "green"]
+        ).split("?")
         assert base == url_base
         query = parse_qs(params, strict_parsing=True, keep_blank_values=True)
         assert query == {
             # `parse_qs` returns all values wrapped in lists
             "session_id": ["foo"],
-            "arg": ['"bar"'],
-            "foo": ["2.2"],
-            "obj": [json.dumps(obj.graft)],
+            "colormap": ["bar"],
+            "band": ["red", "green"],
         }
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            {
+                "p1": 1,
+                "p2": 2.2,
+                "p3": "2021-01-20",
+            },
+            {
+                "p1": 1,
+                "p2": types.Float(1.1) + 1,
+                "p3": datetime.datetime(2020, 1, 20),
+            },
+            {
+                "p1": types.Int(1),
+                "p2": types.Float(1.1) + 1,
+                "p3": types.Datetime(2021, 1, 20),
+            },
+        ],
+    )
+    def test_url_arguments(self, stub, args):
+        p1 = types.parameter("p1", types.Int)
+        p2 = types.parameter("p2", types.Float)
+        p3 = types.parameter("p3", types.Datetime)
+
+        obj = p3 + types.Timedelta(days=p1, hours=p2)
+        xyz = XYZ.build(obj)
+        xyz._message.url_template = "http://base.net"
+
+        for bad_args in [{}, dict(args, blah="bad")]:
+            with pytest.raises(TypeError, match="Expected the required arguments"):
+                xyz.url(**bad_args)
+
+        with graft_client.consistent_guid():
+            base, params = xyz.url(**args).split("?")
+
+        assert base == xyz._message.url_template
+        query = parse_qs(params, strict_parsing=True, keep_blank_values=True)
+        assert query.keys() == args.keys()
+
+        assert query["p1"] == ["1"]
+        if isinstance(args["p2"], float):
+            assert query["p2"] == ["2.2"]
+        else:
+            assert query["p2"] == [json.dumps(args["p2"].graft)]
+
+        with graft_client.consistent_guid():
+            p3_graft = types.Datetime._promote(args["p3"]).graft
+
+        assert query["p3"] == [json.dumps(p3_graft)]
 
     def test_validate_scales(self, stub):
         assert XYZ._validate_scales([[0.0, 1.0], [0.0, 2.0], [-1.0, 1.0]]) == [

@@ -1,8 +1,8 @@
 import six
+import logging
 
 from descarteslabs import scenes
 
-from ... import env
 from ...cereal import serializable
 from ..array import MaskedArray
 from ..containers import Dict, KnownDict, Struct, Tuple, List
@@ -210,26 +210,20 @@ class Image(ImageBase, BandsMixin):
             "q1",
             "q3",
         ]:
-            raise ValueError(
-                "Unknown resampler type: {}".format(resampler.literal_value)
-            )
+            raise ValueError(f"Unknown resampler type: {resampler.literal_value!r}")
         if (
             processing_level.literal_value is not None
             and processing_level.literal_value not in ("toa", "surface")
         ):
             raise ValueError(
-                "Unknown processing level: {!r}. Must be None, 'toa', or 'surface'.".format(
-                    processing_level.literal_value
-                )
+                f"Unknown processing level: {processing_level.literal_value!r}. "
+                "Must be None, 'toa', or 'surface'."
             )
         return cls._from_apply(
             "wf.Image.load",
             image_id,
-            geocontext=env.geoctx,
-            token=env._token,
             resampler=resampler,
             processing_level=processing_level,
-            ruster=env._ruster,
         )
 
     @classmethod
@@ -1505,8 +1499,8 @@ class Image(ImageBase, BandsMixin):
         scales=None,
         colormap=None,
         checkerboard=True,
-        log_level=None,
-        **parameters,
+        log_level=logging.DEBUG,
+        **parameter_overrides,
     ):
         """
         A `.WorkflowsLayer` for this `Image`.
@@ -1539,11 +1533,24 @@ class Image(ImageBase, BandsMixin):
             Only listen for log records at or above this log level during tile computation.
             See https://docs.python.org/3/library/logging.html#logging-levels for valid
             log levels.
-        **parameters: JSON-serializable value, Proxytype, or ipywidgets.Widget
-            Runtime parameters to use when computing tiles.
-            Values can be any JSON-serializable value, a `Proxytype` instance, or an ipywidgets ``Widget``.
+        **parameter_overrides: JSON-serializable value, Proxytype, or ipywidgets.Widget
+            Values---or ipywidgets---for any parameters that this `Image` depends on.
 
-            See the docstring for `visualize` for more detail.
+            If this `Image` depends on ``wf.widgets``, you don't have to pass anything for those---any
+            widgets it depends on are automatically linked to the layer. However, you can override
+            their current values (or widgets) by passing new values (or ipywidget instances) here.
+
+            Values can be given as Proxytypes, or as Python objects like numbers,
+            lists, and dicts that can be promoted to them.
+            These arguments cannot depend on any parameters.
+
+            If an ``ipywidgets.Widget`` is given, it's automatically linked, so updating the widget causes
+            the argument value to change, and the layer to update.
+
+            Once these initial argument values are set, they can be modified by assigning to
+            `~.WorkflowsLayer.parameters` on the returned `WorkflowsLayer`.
+
+            For more information, see the docstring to `ParameterSet`.
 
         Returns
         -------
@@ -1551,13 +1558,15 @@ class Image(ImageBase, BandsMixin):
         """
         from ... import interactive
 
-        layer = interactive.WorkflowsLayer(
-            self, name=name, log_level=log_level, parameters=parameters
+        return interactive.WorkflowsLayer(
+            self,
+            name=name,
+            scales=scales,
+            colormap=colormap,
+            checkerboard=checkerboard,
+            log_level=log_level,
+            parameter_overrides=parameter_overrides,
         )
-        layer.set_scales(scales, new_colormap=colormap)
-        layer.checkerboard = checkerboard
-
-        return layer
 
     def visualize(
         self,
@@ -1565,14 +1574,14 @@ class Image(ImageBase, BandsMixin):
         scales=None,
         colormap=None,
         checkerboard=True,
-        log_level=None,
+        log_level=logging.DEBUG,
         map=None,
-        **parameters,
+        **parameter_overrides,
     ):
         """
         Add this `Image` to `wf.map <.interactive.map>`, or replace a layer with the same name.
 
-        An empty  `Image` will be rendered as a checkerboard (default) or blank tile.
+        An empty `Image` will be rendered as a checkerboard (default) or blank tile.
 
         Parameters
         ----------
@@ -1604,20 +1613,23 @@ class Image(ImageBase, BandsMixin):
         map: `.Map` or `.MapApp`, optional, default None
             The `.Map` (or plain ipyleaflet Map) instance on which to show the `Image`.
             If None (default), uses `wf.map <.interactive.map>`, the singleton Workflows `.MapApp` object.
-        **parameters: JSON-serializable value, Proxytype, or ipywidgets.Widget
-            Runtime parameters to use when computing tiles.
-            Values can be any JSON-serializable value, a `Proxytype` instance, or an ipywidgets ``Widget``.
+        **parameter_overrides: JSON-serializable value, Proxytype, or ipywidgets.Widget
+            Values---or ipywidgets---for any parameters that this `Image` depends on.
 
-            Once these initial parameter values are set, they can be modified by assigning to
+            If this `Image` depends on ``wf.widgets``, you don't have to pass anything for those---any
+            widgets it depends on are automatically linked to the layer. However, you can override
+            their current values (or widgets) by passing new values (or ipywidget instances) here.
+
+            Values can be given as Proxytypes, or as Python objects like numbers,
+            lists, and dicts that can be promoted to them.
+            These arguments cannot depend on any parameters.
+
+            If an ``ipywidgets.Widget`` is given, it's automatically linked, so updating the widget causes
+            the argument value to change, and the map to update. Running `visualize` again and passing in
+            a different widget instance will un-link the old one automatically.
+
+            Once these initial argument values are set, they can be modified by assigning to
             `~.WorkflowsLayer.parameters` on the returned `WorkflowsLayer`.
-
-            If a Widget is given, it's automatically linked, so updating the widget causes the parameter
-            value to change, and the map to update. Running `visualize` again and passing in a different
-            widget instance will un-link the old one automatically.
-
-            If a Python value or `Proxytype` is given, values you later assign to that parameter
-            must be of a compatible type (for example, you can't give ``threshold=0.6``, then assign
-            ``lyr.parameters.threshold = "foo"``, because ``"foo"`` can't be cast to a float).
 
             For more information, see the docstring to `ParameterSet`.
 
@@ -1653,13 +1665,12 @@ class Image(ImageBase, BandsMixin):
 
         for layer in map.layers:
             if layer.name == name:
-                with layer.hold_trait_notifications():
-                    layer.imagery = self
+                with layer.hold_url_updates():
+                    layer.set_imagery(self, **parameter_overrides)
                     layer.set_scales(scales, new_colormap=colormap)
                     layer.checkerboard = checkerboard
                     if log_level is not None:
                         layer.log_level = log_level
-                    layer.set_parameters(**parameters)
                 return layer
         else:
             layer = self.tile_layer(
@@ -1668,7 +1679,7 @@ class Image(ImageBase, BandsMixin):
                 colormap=colormap,
                 checkerboard=checkerboard,
                 log_level=log_level,
-                **parameters,
+                **parameter_overrides,
             )
             map.add_layer(layer)
             return layer

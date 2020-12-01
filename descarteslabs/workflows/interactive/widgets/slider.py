@@ -39,7 +39,7 @@ def slider(
     label: str = "",
 ):
     """
-    A slider to select `.Int` or `.Float` values.
+    A slider, which acts as an `.Int` or `.Float` parameter.
 
     If any of ``min``, ``max``, or ``step`` are a float, then the slider will represent a `.Float` value,
     otherise an `.Int`.
@@ -55,9 +55,10 @@ def slider(
     >>> high_ndvi = ndvi > wf.widgets.slider("thresh", 0, 0.8, default=0.24, label="Minimum NDVI threshold")
     >>> high_ndvi.visualize("NDVI", scales=[0, 1], colormap="Greens")  # doctest: +SKIP
     >>> # ^ when you call .visualize, the `slider` widget will automatically show up below
-    >>> wf.map  # doctest: +SKIP
-    >>> # ^ display the map. it will show areas where NDVI is greater than the amount on the slider above,
-    >>> # and update when you drag the slider.
+
+    The map will show areas where NDVI is greater than the amount on the slider,
+    and update when you drag the slider.
+    (If you haven't already, run ``wf.map`` in another notebook cell to see your layer.)
 
     Parameters
     ----------

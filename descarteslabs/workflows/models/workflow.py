@@ -319,16 +319,24 @@ class Workflow:
 
         Note: this doesn't save the new version to the backend. Call `~.save` afterwords to do so.
 
+        If the object depends on any parameters (``obj.params`` is not empty),
+        it's first internally converted to a `.Function` that takes those parameters
+        (using `.Function.from_object`).
+
         Parameters
         ----------
         version: str
             The version to be set, tied to the given `obj`. This should adhere
             to the semantic versioning schema (https://semver.org).
         obj: Proxytype, optional
-            The object to store as this version. If not provided, it's assumed
-            that `set_version` is being used as a decorator on a function.
+            The object to store as this version.
+            If it depends on parameters, ``obj`` is first converted
+            to a `.Function` that takes those parameters.
+
+            If not provided, it's assumed that `set_version` is being
+            used as a decorator on a function.
         docstring: str, default ""
-            The docstring for this version. If not provided and `set_version` is not
+            The docstring for this version. If not provided and `set_version` isn't
             being used as a decorator, then the version's docstring will be set to the
             empty string. If not provided and `set_version` is being used as a decorator,
             then the version's docstring will be set to the docstring of the

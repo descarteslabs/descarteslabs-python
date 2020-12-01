@@ -26,9 +26,11 @@ def assert_graft_is_scope_isolated_equvalent(isolated, orig):
 class Foo(types.Proxytype):
     def __init__(self, x):
         self.graft = graft_client.apply_graft("foo", x=x)
+        self.params = getattr(x, "params", ())
 
 
 @cereal.serializable()
 class Bar(types.Proxytype):
     def __init__(self, x):
         self.graft = graft_client.apply_graft("bar", x=x)
+        self.params = getattr(x, "params", ())

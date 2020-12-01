@@ -5,13 +5,23 @@ import "google/protobuf/timestamp.proto";
 import "descarteslabs/common/proto/typespec/typespec.proto";
 
 
+// Parameter provides metadata about a positional argument to a Function.
+// It's ignored when actually computing grafts;
 message Parameter {
+    // The name of the parameter in the graft
     string name = 1;
+
+    // User-facing description of the parameter
     string label = 2;
+
+    // Docstring for the parameter. Currently unused.
     string doc = 3;  // UNUSED
 
+    // The type of the parameter. If a `widget` is set, this should be nil.
     Typespec typespec = 4;
 
+    // The widget representation of the parameter.
+    // Only one of `typespec` and `widget` should be set.
     oneof widget {
         StringInput string_input = 16;
         IntInput int_input = 17;

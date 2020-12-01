@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package descarteslabs.workflows;
 import "descarteslabs/common/proto/typespec/typespec.proto";
+import "descarteslabs/common/proto/widgets/widgets.proto";
 
 service WorkflowAPI {
   rpc UpsertWorkflow(UpsertWorkflowRequest) returns (Workflow) {}
@@ -75,11 +76,18 @@ message VersionedGraft {
   // "1.2.3" - should adhere to semantic versioning.
   // See https://semver.org/
   string version = 1;
+  string docstring = 5;
   string serialized_graft = 2;
+  Typespec typespec = 4;
+
+  // `parameters` are metadata about the Function's arguments.
+  // If `typespec` describes a Function, there must be one `parameters` entry
+  // for each positional argument, and its `name` must match the name of the corresponding
+  // parameter in the `serialized_graft`.
+  // Otherwise, `parameters` must be empty.
+  repeated Parameter parameters = 11;
   string channel = 3;
   string client_version = 10;
-  Typespec typespec = 4;
-  string docstring = 5;
 
   map<string, string> labels = 6;
 

@@ -8,7 +8,7 @@ import grpc
 import requests
 
 from descarteslabs.client.version import __version__
-from descarteslabs.common.graft import client as graft_client
+from descarteslabs.common.graft import client as graft_client, syntax as graft_syntax
 from descarteslabs.common.registry import registry
 from descarteslabs.common.proto.job import job_pb2
 from descarteslabs.common.proto.types import types_pb2
@@ -26,12 +26,13 @@ from descarteslabs.common.workflows.arrow_serialization import deserialize_pyarr
 
 from descarteslabs import catalog
 
-from ..cereal import deserialize_typespec, serialize_typespec, typespec_to_unmarshal_str
+from ..cereal import deserialize_typespec
 from ..client import get_global_grpc_client, default_grpc_retry_predicate
+from ..execution import to_computable
 from ..result_types import unmarshal
+from ..types import GeoContext, ProxyTypeError, Any
 from .exceptions import error_code_to_exception, JobTimeoutError, JobCancelled
 from .utils import in_notebook, pb_milliseconds_to_datetime
-from .parameters import parameters_to_grafts
 
 
 logger = logging.getLogger(__name__)
@@ -47,101 +48,124 @@ def _write_to_io_or_widget(io, string):
             io.flush()
 
 
-class Job(object):
+class Job:
     """
-    A `Job` represents the computation of a proxy object's graft
-    within a specific environment of parameters.
+    A `Job` represents the computation of a proxy object within a `~.geospatial.GeoContext`,
+    with values (arguments) set for any parameters it depends on.
+
+    If the proxy object depends on any parameters (``obj.params`` is not empty),
+    it's first internally converted to a `.Function` that takes those parameters
+    (using `.Function.from_object`).
 
     Example
     -------
-    >>> from descarteslabs.workflows import Int, Job
-    >>> num = Int(1) + 1
-    >>> job = num.compute(block=False)  # doctest: +SKIP
+    >>> import descarteslabs.workflows as wf
+    >>> num = wf.Int(1) + wf.parameter("x", wf.Int)
+    >>> job = num.compute(block=False, x=1)  # doctest: +SKIP
     >>> job # doctest: +SKIP
     <descarteslabs.workflows.models.job.Job object at 0x...>
     >>> job.id # doctest: +SKIP
     '3754676080bbb2b857fbc04a3e48f6312732e1bc42e0bd7b'
     >>> job.result() # doctest: +SKIP
     2
-    >>> same_job = Job.get('3754676080bbb2b857fbc04a3e48f6312732e1bc42e0bd7b') # doctest: +SKIP
+    >>> same_job = wf.Job.get('3754676080bbb2b857fbc04a3e48f6312732e1bc42e0bd7b') # doctest: +SKIP
     >>> same_job.stage # doctest: +SKIP
     'STAGE_DONE'
-    >>> same_job.result # doctest: +SKIP
+    >>> same_job.result() # doctest: +SKIP
     2
+    >>> same_job.arguments() # doctest: +SKIP
+    {'x': 1}
     """
 
     def __init__(
         self,
-        proxy_object,
-        parameters,
+        obj,
+        geoctx=None,
         format="pyarrow",
         destination="download",
-        client=None,
         cache=True,
+        _ruster=None,
+        _trace=False,
+        client=None,
+        **arguments,
     ):
         """
         Creates a new `Job` to compute the provided proxy object with the given
-        parameters.
+        arguments.
 
         Parameters
         ----------
-        proxy_object: Proxytype
-            Proxy object to compute
-        parameters: dict[str, Proxytype]
-            Python dictionary of parameter names and values
+        obj: Proxytype
+            Proxy object to compute, or list/tuple of proxy objects.
+            If it depends on parameters, ``obj`` is first converted
+            to a `.Function` that takes those parameters.
+        geoctx: `~.workflows.types.geospatial.GeoContext`, or None
+            The GeoContext parameter under which to run the computation.
+            Almost all computations will require a `~.workflows.types.geospatial.GeoContext`,
+            but for operations that only involve non-geospatial types,
+            this parameter is optional.
         format: str or dict, default "pyarrow"
             The serialization format for the result.
         destination: str or dict, default "download"
             The destination for the result.
-        client : `.workflows.client.Client`, optional
+        cache: bool, default True
+            Whether to use the cache for this job.
+        client: `.workflows.client.Client`, optional
             Allows you to use a specific client instance with non-default
             auth and parameters
-        cache : bool, default True
-            Whether to use the cache for this job.
-
-        Returns
-        -------
-        Job
-            The job that's executing.
+        **arguments: Any
+            Values for all parameters that ``obj`` depends on
+            (or arguments that ``obj`` takes, if it's a `.Function`).
+            Can be given as Proxytypes, or as Python objects like numbers,
+            lists, and dicts that can be promoted to them.
+            These arguments cannot depend on any parameters.
 
         Example
         -------
         >>> from descarteslabs.workflows import Job, Int, parameter
         >>> my_int = Int(1) + parameter("other_int", Int)
-        >>> job = Job(my_int, {"other_int": 10}) # doctest: +SKIP
+        >>> job = Job(my_int, other_int=10) # doctest: +SKIP
         >>> job.stage # doctest: +SKIP
         QUEUED
         """
         if client is None:
             client = get_global_grpc_client()
 
-        typespec = serialize_typespec(type(proxy_object))
-        result_type = typespec_to_unmarshal_str(typespec)
-        # ^ this also preemptively checks whether the result type is something we'll know how to unmarshal
+        if geoctx is not None:
+            try:
+                geoctx = GeoContext._promote(geoctx)
+            except ProxyTypeError as e:
+                raise TypeError(f"Invalid GeoContext {geoctx!r}: {e}")
+
+        obj, argument_grafts, typespec, result_type = to_computable(obj, arguments)
 
         format_proto = user_format_to_proto(format)
         destination_proto = user_destination_to_proto(destination)
 
-        parameters = parameters_to_grafts(**parameters)
-
         message = client.api["CreateJob"](
             job_pb2.CreateJobRequest(
-                parameters=json.dumps(parameters),
-                serialized_graft=json.dumps(proxy_object.graft),
+                serialized_graft=json.dumps(obj.graft),
                 typespec=typespec,
+                arguments={
+                    name: json.dumps(arg) for name, arg in argument_grafts.items()
+                },
+                geoctx_graft=json.dumps(geoctx.graft) if geoctx is not None else None,
+                no_ruster=_ruster is False,
+                channel=client._wf_channel,
+                client_version=__version__,
+                no_cache=not cache,
+                trace=_trace,
                 type=types_pb2.ResultType.Value(result_type),
                 format=format_proto,
                 destination=destination_proto,
-                no_cache=not cache,
-                channel=client._wf_channel,
-                client_version=__version__,
             ),
             timeout=client.DEFAULT_TIMEOUT,
         )
 
         self._message = message
         self._client = client
-        self._object = proxy_object
+        self._object = obj
+        self._arguments = None
 
     @classmethod
     def get(cls, id, client=None):
@@ -192,6 +216,7 @@ class Job(object):
 
         obj._client = client
         obj._object = None
+        obj._arguments = None
         return obj
 
     def refresh(self):
@@ -201,7 +226,7 @@ class Job(object):
         Example
         -------
         >>> from descarteslabs.workflows import Job, Int
-        >>> job = Job(Int(1), {}) # doctest: +SKIP
+        >>> job = Job(Int(1)) # doctest: +SKIP
         >>> job.stage # doctest: +SKIP
         QUEUED
         >>> job.refresh() # doctest: +SKIP
@@ -220,7 +245,7 @@ class Job(object):
         Example
         -------
         >>> from descarteslabs.workflows import Job, Int
-        >>> job = Job(Int(1), {}) # doctest: +SKIP
+        >>> job = Job(Int(1)) # doctest: +SKIP
         >>> job.id # doctest: +SKIP
         abc123
         >>> job.result() # doctest: +SKIP
@@ -231,13 +256,23 @@ class Job(object):
         >>> new_job.result() # doctest: +SKIP
         1
         """
+        if self.version != __version__:
+            raise NotImplementedError(
+                f"Resubmitting a Job from a different version is not supported. "
+                f"This Job {self.id!r} was created by client version {self.version!r}, "
+                f"but you're currently running {__version__!r}."
+            )
+
         return Job(
             self.object,
-            self.parameters,
+            geoctx=self.geoctx,
             format=self.format,
             destination=self.destination,
             client=self._client,
             cache=self.cache_enabled,
+            _ruster=self._message.ruster,
+            _trace=self._message.trace,
+            **self.arguments,
         )
 
     def cancel(self):
@@ -246,9 +281,9 @@ class Job(object):
 
         Example
         -------
-        >>> from descarteslabs.workflows import Job, Int, parameter
-        >>> my_int = Int(1) + parameter("other_int", Int)
-        >>> job = Job(my_int, {"other_int": 10}) # doctest: +SKIP
+        >>> from descarteslabs.workflows import Job, Int
+        >>> my_int = Int(1)
+        >>> job = Job(my_int) # doctest: +SKIP
         >>> job.cancel() # doctest: +SKIP
         """
         self._client.api["CancelJob"](
@@ -268,7 +303,7 @@ class Job(object):
         Example
         -------
         >>> from descarteslabs.workflows import Job, Int
-        >>> job = Job(Int(1), {}) # doctest: +SKIP
+        >>> job = Job(Int(1)) # doctest: +SKIP
         >>> for job in job.watch(): # doctest: +SKIP
         ...     print(job.stage)
         QUEUED
@@ -320,7 +355,7 @@ class Job(object):
         Example
         -------
         >>> from descarteslabs.workflows import Job, Int
-        >>> job = Job(Int(1), {}) # doctest: +SKIP
+        >>> job = Job(Int(1)) # doctest: +SKIP
         >>> job.result() # doctest: +SKIP
         1
         """
@@ -351,12 +386,12 @@ class Job(object):
         Example
         -------
         >>> from descarteslabs.workflows import Job, Int
-        >>> job = Job(Int(1), {}, format="json") # doctest: +SKIP
+        >>> job = Job(Int(1), format="json") # doctest: +SKIP
         >>> job.result_to_file("one.json") # doctest: +SKIP
 
         >>> import io
         >>> from descarteslabs.workflows import Job, Int
-        >>> job = Job(Int(2), {}, format="json") # doctest: +SKIP
+        >>> job = Job(Int(2), format="json") # doctest: +SKIP
         >>> bytestream = io.BytesIO() # doctest: +SKIP
         >>> job.result_to_file(bytestream) # doctest: +SKIP
         >>> print(bytestream.read()) # doctest: +SKIP
@@ -426,7 +461,9 @@ class Job(object):
         if show_progress:
             progress_bar_io = sys.stdout if progress_bar is True else progress_bar
             if not self.done:
-                _write_to_io_or_widget(progress_bar_io, "\nJob ID: {}\n".format(self.id))
+                _write_to_io_or_widget(
+                    progress_bar_io, "\nJob ID: {}\n".format(self.id)
+                )
 
         try:
             while not self.done:
@@ -475,9 +512,68 @@ class Job(object):
     @property
     def object(self):
         "Proxytype: The proxy object this Job computes."
+        if self.version != __version__:
+            raise NotImplementedError(
+                f"Accessing the `object` of a Job from a different version is not supported. "
+                f"This Job {self.id!r} was created by client version {self.version!r}, "
+                f"but you're currently running {__version__!r}."
+            )
+
         if self._object is None:
             self._object = _proxy_object_from_message(self._message)
         return self._object
+
+    @property
+    def arguments(self):
+        "The arguments of the Job, as a dict of names to Python primitives or `.Any` objects."
+        # TODO turn args back into their correct proxytypes based on the argument types
+        # to the Job's `Function`.
+        # Even though the parameters dict we create the Job with is ordered correctly,
+        # we can't go from the named arguments proto map back to the positional arguments
+        # of the `Function` because the serialization order of proto maps is undefined and unstable.
+        # Yet another thing that has to wait for named positional arguments to Functions!
+        if self.version != __version__:
+            raise NotImplementedError(
+                f"Accessing the `arguments` of a Job from a different version is not supported. "
+                f"This Job {self.id!r} was created by client version {self.version!r}, "
+                f"but you're currently running {__version__!r}."
+            )
+
+        if self._arguments is None:
+            if len(self._message.arguments) == 0:
+                arg_grafts = {}
+            else:
+                arg_grafts = {}
+                for name, json_graft in self._message.arguments.items():
+                    try:
+                        graft = json.loads(json_graft)
+                    except json.JSONDecodeError as e:
+                        raise ValueError(
+                            f"Invalid JSON in graft for argument {name!r}: {e}. Value: {json_graft!r}."
+                        )
+
+                    obj = (
+                        Any._from_graft(graft_client.isolate_keys(graft))
+                        if not (
+                            graft_syntax.is_literal(graft)
+                            or graft_syntax.is_quoted_json(graft)
+                        )
+                        else graft
+                    )
+                    arg_grafts[name] = obj
+
+            self._arguments = arg_grafts
+
+        return self._arguments
+
+    @property
+    def geoctx(self):
+        "The Workflows `~.geospatial.GeoContext` the Job was run within, or None"
+        graft_json = self._message.geoctx_graft
+        if not graft_json:
+            return None
+
+        return GeoContext._from_graft(graft_client.isolate_keys(json.loads(graft_json)))
 
     @property
     def type(self):
@@ -501,6 +597,11 @@ class Job(object):
     def channel(self):
         "str: The channel name where this Job will execute."
         return self._message.channel
+
+    @property
+    def version(self):
+        "str: The ``descarteslabs`` client version that constructed this Job."
+        return self._message.client_version
 
     @property
     def stage(self):
@@ -542,12 +643,6 @@ class Job(object):
             return None
         else:
             return self.updated_datetime - self.created_datetime
-
-    @property
-    def parameters(self):
-        "The parameters of the Job, as a graft."
-        # TODO(gabe): this isn't very useful without reconstructing them into Proxytypes
-        return json.loads(self._message.parameters)
 
     @property
     def format(self):
@@ -628,6 +723,8 @@ def _proxy_object_from_message(message):
     proxytype = deserialize_typespec(typespec)
     graft = json.loads(message.serialized_graft)
     isolated = graft_client.isolate_keys(graft)
+    # TODO what about params? Job doesn't store them right now.
+    # Anything that had params would have become a Function anyway.
     return proxytype._from_graft(isolated)
 
 

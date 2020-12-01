@@ -12,9 +12,11 @@ def compute(
     timeout=None,
     block=True,
     progress_bar=None,
-    client=None,
     cache=True,
-    **params
+    _ruster=None,
+    _trace=False,
+    client=None,
+    **arguments,
 ):
     """
     Compute a proxy object and wait for its result.
@@ -22,7 +24,9 @@ def compute(
     Parameters
     ----------
     obj: Proxytype
-        A proxy object to compute.
+        Proxy object to compute, or list/tuple of proxy objects.
+        If it depends on parameters, ``obj`` is first converted
+        to a `.Function` that takes those parameters.
     geoctx: `~.workflows.types.geospatial.GeoContext`, or None
         The GeoContext parameter under which to run the computation.
         Almost all computations will require a `~.workflows.types.geospatial.GeoContext`,
@@ -33,7 +37,7 @@ def compute(
         See the `formats
         <https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html#output-formats>`_
         documentation for more information.
-        If "pyarrow" (the default), returns an appropriate Python object, otherwise returns raw bytes.
+        If "pyarrow" (the default), returns an appropriate Python object, otherwise returns raw bytes or None.
     destination: str or dict, default "download"
         The destination for the result.
         See the `destinations
@@ -57,8 +61,12 @@ def compute(
         auth and parameters
     cache: bool, default True
         Whether to use the cache for this job.
-    **params: Proxytype
-        Parameters under which to run the computation, such as ``geoctx``.
+    **arguments: Any
+        Values for all parameters that ``obj`` depends on
+        (or arguments that ``obj`` takes, if it's a `.Function`).
+        Can be given as Proxytypes, or as Python objects like numbers,
+        lists, and dicts that can be promoted to them.
+        These arguments cannot depend on any parameters.
 
     Returns
     -------
@@ -66,10 +74,10 @@ def compute(
         When ``format="pyarrow"`` (the default), returns an appropriate Python object representing
         the result, either as a plain Python type, or object from `descarteslabs.workflows.result_types`.
         For other formats, returns raw bytes. Consider using `file` in that case to save the results to a file.
-        If the destination doesn't support retrieving results (like "email"), returns None
+        If the destination doesn't support retrieving results (like "email"), returns None.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import descarteslabs.workflows as wf
     >>> num = wf.Int(1) + 1
     >>> wf.compute(num) # doctest: +SKIP
@@ -113,11 +121,16 @@ def compute(
     ...     format="json",
     ... ) # doctest: +SKIP
     """
-    if geoctx is not None:
-        params["geoctx"] = geoctx
-
     job = Job(
-        obj, params, format=format, destination=destination, client=client, cache=cache
+        obj,
+        geoctx=geoctx,
+        format=format,
+        destination=destination,
+        cache=cache,
+        _ruster=_ruster,
+        _trace=_trace,
+        client=client,
+        **arguments,
     )
     if block:
         if file is not None:
@@ -148,6 +161,10 @@ def publish(
     """
     Publish a proxy object as a `Workflow` with the given version. Can also be used as a decorator.
 
+    If the proxy object depends on any parameters (``obj.params`` is not empty),
+    it's first internally converted to a `.Function` that takes those parameters
+    (using `.Function.from_object`).
+
     Parameters
     ----------
     id: str
@@ -155,11 +172,15 @@ def publish(
         and should be globally unique. If this ID is not of the proper format, you will
         not be able to save the `Workflow`.
     version: str
-        The version to be set, tied to the given `proxy_object`. This should adhere
+        The version to be set, tied to the given `obj`. This should adhere
         to the semantic versioning schema.
-    obj: Proxytype
-        The object to store as this version. If not provided, it's assumed
-        that `publish` is being used as a decorator on a function.
+    obj: Proxytype, optional
+        The object to store as this version.
+        If it depends on parameters, ``obj`` is first converted
+        to a `.Function` that takes those parameters.
+
+        If not provided, it's assumed that `set_version` is being
+        used as a decorator on a function.
     title: str, default ""
         User-friendly title for the `Workflow`.
     description: str, default ""
@@ -184,8 +205,8 @@ def publish(
         The saved `Workflow` object. ``workflow.id`` contains the ID of the new Workflow.
         If used as a decorator, returns the `~.Function` instead.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import descarteslabs.workflows as wf
     >>> @wf.publish("bob@gmail.com:ndvi", "0.0.1") # doctest: +SKIP
     ... def ndvi(img: wf.Image) -> wf.Image:
@@ -202,6 +223,21 @@ def publish(
     <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
     >>> workflow.version_names # doctest: +SKIP
     ["1.0.0"]
+    >>> workflow["1.0.0"].object # doctest: +SKIP
+    <descarteslabs.workflows.types.Int object at 0x...>
+
+    If you publish an object that depends on parameters,
+    it gets turned into a Function that takes those parameters:
+
+    >>> something_plus_one = wf.parameter("x", wf.Int) + 1
+    >>> workflow = wf.publish("bob@gmail.com:plus_one", "1.0.0", something_plus_one) # doctest: +SKIP
+    >>> # `something_plus_one` depended on an Int parameter,
+    >>> # so the stored object turned into a Function that takes an Int
+    >>> add_one_func = workflow["1.0.0"].object # doctest: +SKIP
+    >>> add_one_func # doctest: +SKIP
+    <descarteslabs.workflows.types.Function[Int, {}, Int] object at 0x...>
+    >>> add_one_func(2).inspect() # doctest: +SKIP
+    3
     """
     workflow = Workflow(
         id,
@@ -248,8 +284,8 @@ def use(workflow_id, version, client=None):
     obj: Proxytype
         Proxy object of the `Workflow` version.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import descarteslabs.workflows as wf
     >>> @wf.publish("bob@gmail.com:ndvi", "0.0.1") # doctest: +SKIP
     ... def ndvi(img: wf.Image) -> wf.Image:

@@ -21,7 +21,7 @@ def checkbox(
     label: str = "",
 ):
     """
-    A checkbox widget, to toggle a `.Bool` between True and False.
+    A checkbox widget, which acts as a `.Bool` parameter.
 
     Example
     -------
@@ -38,8 +38,9 @@ def checkbox(
     ... ).pick_bands("red green blue")
     >>> s2.visualize("Sentinel-2", scales=[[0, 0.4], [0, 0.4], [0, 0.4]])  # doctest: +SKIP
     >>> # ^ when you call .visualize, the `checkbox` widget will automatically show up below
-    >>> wf.map  # doctest: +SKIP
-    >>> # ^ display the map. clicking the checkbox above will toggle atmospheric correction on and off.
+
+    Clicking the checkbox above will toggle atmospheric correction on and off.
+    (If you haven't already, run ``wf.map`` in another notebook cell to see your layer.)
 
     Parameters
     ----------

@@ -1,11 +1,9 @@
 import pytest
-import mock
 import six
 
 from ...core import _resolve_lambdas
 from ...core.tests import utils
 
-from .... import env
 from ...containers import Dict, List, Slice, Tuple
 from ...primitives import Float, Int, Str, Bool, NoneType, Any
 from ...identifier import parameter
@@ -36,50 +34,24 @@ def test_init():
         ImageCollection("", "")
 
 
-@mock.patch.object(env, "geoctx")
-@mock.patch.object(env, "_token")
-def test_from_id(mock_geoctx, mock_token):
-    mock_geoctx_graft = mock.PropertyMock(return_value={"returns": "geoctx"})
-    mock_token_graft = mock.PropertyMock(return_value={"returns": "_token_"})
-    type(mock_geoctx).graft = mock_geoctx_graft
-    type(mock_token).graft = mock_token_graft
-    # "Because of the way mock attributes are stored you can't directly attach a PropertyMock to a mock object.
-    # Instead you can attach it to the mock type object."
-    ImageCollection.from_id("foo")
-    mock_geoctx_graft.assert_called()
-    mock_token_graft.assert_called()
-
-
-@mock.patch.object(env, "geoctx")
-@mock.patch.object(env, "_token")
-def test_from_id_with_datetime(mock_geoctx, mock_token):
-    mock_geoctx_graft = mock.PropertyMock(return_value={"returns": "geoctx"})
-    mock_token_graft = mock.PropertyMock(return_value={"returns": "_token_"})
-    type(mock_geoctx).graft = mock_geoctx_graft
-    type(mock_token).graft = mock_token_graft
-    # "Because of the way mock attributes are stored you can't directly attach a PropertyMock to a mock object.
-    # Instead you can attach it to the mock type object."
-    ImageCollection.from_id(
-        "foo",
-        start_datetime="2018-05-17T00:00:00+00:00",
-        end_datetime="2019-05-17T00:00:00+00:00",
+def test_from_id():
+    assert isinstance(ImageCollection.from_id("foo"), ImageCollection)
+    assert isinstance(
+        ImageCollection.from_id(
+            "foo",
+            start_datetime="2020-01-01",
+            end_datetime="2021-01-01",
+            limit=1000,
+            resampler="near",
+            processing_level="toa",
+        ),
+        ImageCollection,
     )
-    mock_geoctx_graft.assert_called()
-    mock_token_graft.assert_called()
 
-
-@mock.patch.object(env, "geoctx")
-@mock.patch.object(env, "_token")
-def test_from_id_with_limit(mock_geoctx, mock_token):
-    mock_geoctx_graft = mock.PropertyMock(return_value={"returns": "geoctx"})
-    mock_token_graft = mock.PropertyMock(return_value={"returns": "_token_"})
-    type(mock_geoctx).graft = mock_geoctx_graft
-    type(mock_token).graft = mock_token_graft
-    # "Because of the way mock attributes are stored you can't directly attach a PropertyMock to a mock object.
-    # Instead you can attach it to the mock type object."
-    ImageCollection.from_id("foo", limit=10)
-    mock_geoctx_graft.assert_called()
-    mock_token_graft.assert_called()
+    with pytest.raises(ValueError, match="Unknown resampler type: 'foo'"):
+        ImageCollection.from_id("foo", resampler="foo")
+    with pytest.raises(ValueError, match="Unknown processing level: 'foo'"):
+        ImageCollection.from_id("foo", processing_level="foo")
 
 
 def test_stats_return_type():

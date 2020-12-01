@@ -1,4 +1,3 @@
-from ... import env
 from ...cereal import serializable
 from ..core import typecheck_promote
 from ..primitives import Str, Int, Float, Bool
@@ -75,8 +74,6 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
         return cls._from_apply(
             "wf.FeatureCollection.from_vector",
             id,
-            geocontext=env.geoctx,
-            __token__=env._token,
         )
 
     @classmethod
@@ -169,7 +166,6 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
             "wf.rasterize",
             self,
             value,
-            env.geoctx,
             default_value=default_value,
             merge_algorithm=merge_algorithm,
         )

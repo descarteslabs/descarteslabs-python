@@ -1,4 +1,3 @@
-
 syntax = "proto3";
 
 package descarteslabs.workflows;
@@ -21,17 +20,38 @@ service JobAPI {
 }
 
 message Job {
+  reserved 4;
+
+  // Core contents: ID, graft, type, and arguments
+
   string id = 1;
   string serialized_graft = 2;
   Typespec typespec = 3;
-  string parameters = 4;
-  bool no_cache = 5;
+
+  // The arguments to the graft function in `serialized_graft`.
+  // Keys are parameter names. Values are argument values,
+  // as either JSON-serialized literals or JSON-serialized grafts.
+  map<string, string> arguments = 15;
+
+  // Env variables
+
+  string geoctx_graft = 16;
+  // internal use only---ignored and always returned as null
+  string token = 17;
+  bool no_ruster = 18;
+
+  // Internal execution settings & metadata
+
   string channel = 6;
   string client_version = 14;
+  bool no_cache = 5;
+  bool trace = 19;
   // milliseconds since the UNIX epoch (UTC)
   int64 timestamp = 7;
   string user = 8;
   string org = 9;
+
+  // State information
 
   enum Stage {
     UNSPECIFIED = 0;
@@ -65,18 +85,37 @@ message Job {
   }
 
   State state = 10;
+
+  // Output settings
+
   ResultType type = 11;
   Format format = 12;
   Destination destination = 13;
 }
 
 message CreateJobRequest {
+  reserved 3;
+
+  // Core contents: graft, type, and arguments
+
   string serialized_graft = 1;
   Typespec typespec = 2;
-  string parameters = 3;
-  bool no_cache = 4;
+  map<string, string> arguments = 10;
+
+  // Env variables
+
+  string geoctx_graft = 11;
+  bool no_ruster = 12;
+
+  // Internal execution settings
+
   string channel = 5;
   string client_version = 9;
+  bool no_cache = 4;
+  bool trace = 13;
+
+  // Output settings
+
   ResultType type = 6;
   Format format = 7;
   Destination destination = 8;

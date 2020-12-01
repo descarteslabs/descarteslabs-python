@@ -1,5 +1,6 @@
 from .client import (
     is_delayed,
+    is_function_graft,
     value_graft,
     keyref_graft,
     apply_graft,
@@ -13,6 +14,7 @@ from .client import (
 
 __all__ = [
     "is_delayed",
+    "is_function_graft",
     "value_graft",
     "keyref_graft",
     "apply_graft",

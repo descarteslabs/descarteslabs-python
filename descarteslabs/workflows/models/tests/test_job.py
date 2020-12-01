@@ -6,6 +6,7 @@ import responses
 
 import grpc
 
+from descarteslabs import scenes
 from descarteslabs.workflows.client import Client
 
 from descarteslabs.client.version import __version__
@@ -25,7 +26,6 @@ from descarteslabs.workflows import _channel
 from ... import cereal, types
 from ..exceptions import JobInvalid, JobComputeError, JobTerminated, JobTimeoutError
 from ..job import Job, download
-from ..parameters import parameters_to_grafts
 from ..utils import pb_milliseconds_to_datetime
 
 from . import utils
@@ -59,63 +59,93 @@ class MockRpcError(grpc.RpcError, grpc.Call):
     new=lambda: utils.MockedClient(),
 )
 @mock.patch("descarteslabs.common.proto.job.job_pb2_grpc.JobAPIStub")
-class TestJob(object):
-    def test_create(self, stub):
-        obj = types.Int(1)
-        parameters = {"foo": types.Str("bar")}
+class TestJob:
+    def test_create_full(self, stub):
+        x = types.Int(1)
+        param = types.parameter("bar", types.Int)
+        obj = x + param
+        arguments = {"bar": 2}
+        format = {"type": "pyarrow", "compression": "brotli"}
+        destination = {"type": "download", "result_url": ""}
 
-        typespec = cereal.serialize_typespec(type(obj))
-        format_proto = user_format_to_proto(
-            {"type": "pyarrow", "compression": "brotli"}
-        )
-        destination_proto = user_destination_to_proto({"type": "download"})
-        create_job_request_message = job_pb2.CreateJobRequest(
-            parameters=json.dumps(parameters_to_grafts(**parameters)),
-            serialized_graft=json.dumps(obj.graft),
-            typespec=typespec,
-            type=types_pb2.ResultType.Value(cereal.typespec_to_unmarshal_str(typespec)),
-            format=format_proto,
-            destination=destination_proto,
-            no_cache=False,
-            channel=_channel.__channel__,
-            client_version=__version__,
-        )
-
-        message = job_pb2.Job(
-            id="foo",
-            parameters=create_job_request_message.parameters,
-            serialized_graft=create_job_request_message.serialized_graft,
-            typespec=create_job_request_message.typespec,
-            type=create_job_request_message.type,
-            format=create_job_request_message.format,
-            destination=create_job_request_message.destination,
-            no_cache=create_job_request_message.no_cache,
-            channel=create_job_request_message.channel,
-            client_version=create_job_request_message.client_version,
-        )
-        stub.return_value.CreateJob.return_value = message
+        response_message = job_pb2.Job()
+        stub.return_value.CreateJob.return_value = response_message
 
         job = Job(
             obj,
-            parameters,
-            format={"type": "pyarrow", "compression": "brotli"},
-            destination="download",
+            format=format,
+            destination=destination,
+            **arguments,
         )
 
-        stub.return_value.CreateJob.assert_called_once_with(
-            create_job_request_message,
-            timeout=Client.DEFAULT_TIMEOUT,
-            metadata=mock.ANY,
+        assert job._message is response_message
+        assert isinstance(job._client, Client)
+        assert isinstance(job._object, types.Function[type(param), {}, type(obj)])
+        assert job._arguments is None
+
+        rpc = stub.return_value.CreateJob
+        rpc.assert_called_once()
+        assert rpc.call_args.kwargs["timeout"] == Client.DEFAULT_TIMEOUT
+
+        request = rpc.call_args.args[0]
+        assert isinstance(request, job_pb2.CreateJobRequest)
+
+        graft = json.loads(request.serialized_graft)
+        assert graft_client.is_function_graft(graft)
+
+        assert (
+            cereal.deserialize_typespec(request.typespec)
+            is types.Function[type(param), {}, type(obj)]
         )
 
-        assert job._message is message
+        request_args = {name: json.loads(v) for name, v in request.arguments.items()}
+        assert request_args == arguments
+
+        assert request.geoctx_graft == ""
+        assert request.no_ruster is False
+        assert request.no_cache is False
+        assert request.channel == _channel.__channel__
+        assert request.trace is False
+        assert request.type == types_pb2.ResultType.Value(type(obj).__name__)
+        assert request.client_version == __version__
+        assert has_proto_to_user_dict(request.format) == format
+        assert has_proto_to_user_dict(request.destination) == destination
+
+    @pytest.mark.parametrize(
+        "ctx",
+        [scenes.XYZTile(30, 40, 8), types.GeoContext.from_dltile_key("fake"), None],
+    )
+    def test_create_geoctx(self, stub, ctx):
+        obj = types.Int(1)
+
+        rpc = stub.return_value.CreateJob
+        rpc.side_effect = lambda req, **kwargs: job_pb2.Job(
+            geoctx_graft=req.geoctx_graft
+        )
+
+        with graft_client.consistent_guid():
+            job = Job(obj, ctx)
+
+        rpc.assert_called_once()
+        ctx_json = rpc.call_args.args[0].geoctx_graft
+        if ctx is None:
+            assert ctx_json == ""
+            assert job.geoctx is None
+        else:
+            with graft_client.consistent_guid():
+                expected = types.GeoContext._promote(ctx)
+
+            graft = json.loads(ctx_json)
+            assert graft == expected.graft
+
+            assert isinstance(job.geoctx, types.GeoContext)
+            utils.assert_graft_is_scope_isolated_equvalent(job.geoctx.graft, graft)
 
     @pytest.mark.parametrize("client", [utils.MockedClient(), None])
     def test_create_client(self, stub, client):
         obj = types.Int(1)
-        parameters = {"foo": types.Str("bar")}
 
-        job = Job(obj, parameters, client=client)
+        job = Job(obj, client=client)
 
         if client is not None:
             assert job._client is client
@@ -126,17 +156,41 @@ class TestJob(object):
     def test_create_cache(self, stub, cache):
         id_ = "foo"
         obj = types.Int(1)
-        parameters = {"foo": types.Str("bar")}
 
         stub.return_value.CreateJob.side_effect = lambda req, **kwargs: job_pb2.Job(
             id=id_, no_cache=req.no_cache
         )
 
-        job = Job(obj, parameters, cache=cache)
+        job = Job(obj, cache=cache)
 
         stub.return_value.CreateJob.assert_called_once()
         assert stub.return_value.CreateJob.call_args[0][0].no_cache == (not cache)
         assert job.cache_enabled == cache
+
+    @pytest.mark.parametrize("ruster", [None, False, True])
+    def test_create_ruster(self, stub, ruster):
+        rpc = stub.return_value.CreateJob
+        rpc.return_value = job_pb2.Job()
+
+        Job(types.Int(1), _ruster=ruster)
+
+        rpc.assert_called_once()
+        request_no_ruster = rpc.call_args.args[0].no_ruster
+
+        if ruster is False:
+            assert request_no_ruster is True
+        else:
+            assert request_no_ruster is False
+
+    @pytest.mark.parametrize("trace", [False, True])
+    def test_create_trace(self, stub, trace):
+        rpc = stub.return_value.CreateJob
+        rpc.return_value = job_pb2.Job()
+
+        Job(types.Int(1), _trace=trace)
+
+        rpc.assert_called_once()
+        assert rpc.call_args.args[0].trace is trace
 
     @pytest.mark.parametrize("client", [mock.Mock(), None])
     def test_from_proto(self, stub, client):
@@ -148,6 +202,9 @@ class TestJob(object):
             assert job._client == client
         else:
             assert isinstance(job._client, Client)
+
+        assert job._object is None
+        assert job._arguments is None
 
     @pytest.mark.parametrize("client", [Client(), None])
     def test_get(self, stub, client):
@@ -185,16 +242,18 @@ class TestJob(object):
         )
         assert job._message == refresh_message
 
-    # def test_cancel(self, stub):
-    #     message = job_pb2.Job(id="foo")
-    #     job = Job._from_proto(message)
-    #     cancel_message = job_pb2.Job.State(stage=job_pb2.Job.Stage.CANCELLED)
-    #     stub.return_value.CancelJob.return_value = cancel_message
-    #     job.cancel()
-    #     stub.return_value.CancelJob.assert_called_with(
-    #         job_pb2.CancelJobRequest(id=job.id), timeout=Client.DEFAULT_TIMEOUT
-    #     )
-    #     assert job._message.state == cancel_message
+    def test_cancel(self, stub):
+        message = job_pb2.Job(id="foo")
+        job = Job._from_proto(message)
+        stub.return_value.CancelJob.return_value = job_pb2.CancelJobResponse()
+
+        job.cancel()
+
+        stub.return_value.CancelJob.assert_called_with(
+            job_pb2.CancelJobRequest(id=job.id),
+            timeout=Client.DEFAULT_TIMEOUT,
+            metadata=mock.ANY,
+        )
 
     def test_watch(self, stub):
         id_ = "foo"
@@ -218,7 +277,6 @@ class TestJob(object):
     def test_properties(self, stub):
         id_ = "foo"
         obj = types.Int(1)
-        parameters = {"foo": types.Str("bar")}
         format = "geotiff"
         destination = {"type": "email"}
 
@@ -227,19 +285,24 @@ class TestJob(object):
         def create_side_effect(req, **kwargs):
             return job_pb2.Job(
                 id=id_,
-                parameters=req.parameters,
                 serialized_graft=req.serialized_graft,
                 typespec=req.typespec,
-                type=req.type,
+                arguments=req.arguments,
+                geoctx_graft=req.geoctx_graft,
+                no_ruster=req.no_ruster,
                 channel=req.channel,
+                client_version=__version__,
+                no_cache=req.no_cache,
+                trace=req.trace,
                 state=job_state,
+                type=req.type,
                 format=user_format_to_proto(format),
                 destination=user_destination_to_proto(destination),
             )
 
         stub.return_value.CreateJob.side_effect = create_side_effect
 
-        job = Job(obj, parameters, format=format, destination=destination)
+        job = Job(obj, format=format, destination=destination)
         job_from_msg = Job._from_proto(job._message, client=job._client)
 
         assert job.object is obj
@@ -248,9 +311,10 @@ class TestJob(object):
         )
         assert job_from_msg.type is type(job_from_msg.object) is type(obj)  # noqa: E721
         assert job.result_type == "Int"
-        assert job.parameters == {"foo": graft_client.value_graft(parameters["foo"])}
 
         assert job.id == id_
+        assert job.arguments == {}
+        assert job.geoctx is None
         assert job.channel == _channel.__channel__
         assert job.stage == "QUEUED"
         assert job.created_datetime is None
@@ -259,6 +323,7 @@ class TestJob(object):
         assert job.error is None
         assert job.done is False
         assert job.cache_enabled is True
+        assert job.version == __version__
         assert job.format == has_proto_to_user_dict(job._message.format)
         assert job.destination == has_proto_to_user_dict(job._message.destination)
 
@@ -280,6 +345,66 @@ class TestJob(object):
         assert job.stage == "FAILED"
         assert isinstance(job.error, JobInvalid)
         assert job.done is True
+
+    @pytest.mark.parametrize(
+        "proxify",
+        [
+            False,
+            True,
+        ],
+    )
+    def test_arguments(self, stub, proxify):
+        x = types.parameter("x", types.Int)
+        lst = types.parameter("lst", types.List[types.Int])
+        obj = lst.map(lambda v: v + x)
+        args = {"x": 1, "lst": [0, 1, 2]}
+
+        def create_side_effect(req, **kwargs):
+            return job_pb2.Job(
+                serialized_graft=req.serialized_graft,
+                typespec=req.typespec,
+                arguments=req.arguments,
+                client_version=__version__,
+                type=req.type,
+            )
+
+        stub.return_value.CreateJob.side_effect = create_side_effect
+
+        with graft_client.consistent_guid():
+            proxy_lst = types.proxify(args["lst"])
+            proxy_args = dict(args, lst=proxy_lst)
+
+        with graft_client.consistent_guid():
+            job = Job(obj, **proxy_args if proxify else args)
+
+        job_args = job.arguments
+        assert job_args.keys() == args.keys()
+        assert job_args["x"] == 1
+        assert isinstance(job_args["lst"], types.Any)
+        utils.assert_graft_is_scope_isolated_equvalent(
+            job_args["lst"].graft, proxy_lst.graft
+        )
+
+        # check it's cached
+        assert job.arguments is job_args
+
+    def test_error_with_version_mismatch(self, stub):
+        job = Job._from_proto(job_pb2.Job(client_version="foo"))
+
+        with pytest.raises(
+            NotImplementedError, match="was created by client version 'foo'"
+        ):
+            job.arguments
+
+        with pytest.raises(
+            NotImplementedError, match="was created by client version 'foo'"
+        ):
+            job.object
+
+        with pytest.raises(
+            NotImplementedError, match="was created by client version 'foo'"
+        ):
+            job.resubmit()
 
     def test_wait_success(self, stub):
         id_ = "foo"

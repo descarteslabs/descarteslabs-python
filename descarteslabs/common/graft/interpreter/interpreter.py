@@ -26,9 +26,12 @@ def interpret(graft, builtins=None, debug=False):
     -------
     function: Callable
     """
-    env = ScopedChainMap()
-    if builtins is not None:
-        env.update(builtins)
+    if isinstance(builtins, ScopedChainMap):
+        env = builtins
+    else:
+        env = ScopedChainMap()
+        if builtins is not None:
+            env.update(builtins)
     debug = DebugState(depth=0) if debug else None
     return as_function(graft, ScopedChainMap(), env, debug=debug)
 

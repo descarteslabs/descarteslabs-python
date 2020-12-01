@@ -227,7 +227,7 @@ def apply_graft(function, *args, **kwargs):
     for name, arg_graft in itertools.chain(
         zip(itertools.repeat(None), pos_args_grafts), six.iteritems(named_arg_grafts)
     ):
-        if is_function_graft(arg_graft):
+        if graft_is_function_graft(arg_graft):
             # argument considered an actual function object, insert it as a subgraft
             arg_key = guid()
             result_graft[arg_key] = arg_graft
@@ -252,6 +252,10 @@ def apply_graft(function, *args, **kwargs):
 
 
 def is_function_graft(graft):
+    return syntax.is_graft(graft) and graft_is_function_graft(graft)
+
+
+def graft_is_function_graft(graft):
     return "parameters" in graft
 
 
@@ -325,7 +329,7 @@ def function_graft(result, *parameters, **kwargs):
     else:
         containing_scope = {}
 
-    if is_function_graft(result_graft):
+    if graft_is_function_graft(result_graft):
         # Graft that returns a function object; i.e. has a "parameters" key
         key = guid()
         containing_scope.update(
@@ -446,7 +450,7 @@ def isolate_keys(graft, wrap_function=False):
     """
     graft = graft if syntax.is_graft(graft) else value_graft(graft)
 
-    if is_function_graft(graft):
+    if graft_is_function_graft(graft):
         if not wrap_function:
             return graft
         else:

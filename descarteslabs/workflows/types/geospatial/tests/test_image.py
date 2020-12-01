@@ -5,7 +5,6 @@ import six
 from descarteslabs import scenes
 from ...core.tests import utils
 
-from .... import env
 from ...core import ProxyTypeError, _resolve_lambdas
 from ...primitives import Str, Float, Int, Bool, NoneType, Any
 from ...containers import Dict, Tuple
@@ -18,18 +17,16 @@ def test_init_raises():
         Image()
 
 
-@mock.patch.object(env, "geoctx")
-@mock.patch.object(env, "_token")
-def test_from_id(mock_geoctx, mock_token):
-    mock_geoctx_graft = mock.PropertyMock(return_value={"returns": "geoctx"})
-    mock_token_graft = mock.PropertyMock(return_value={"returns": "_token_"})
-    type(mock_geoctx).graft = mock_geoctx_graft
-    type(mock_token).graft = mock_token_graft
-    # "Because of the way mock attributes are stored you can't directly attach a PropertyMock to a mock object.
-    # Instead you can attach it to the mock type object."
-    Image.from_id("foo")
-    mock_geoctx_graft.assert_called()
-    mock_token_graft.assert_called()
+def test_from_id():
+    assert isinstance(Image.from_id("foo"), Image)
+    assert isinstance(
+        Image.from_id("foo", resampler="near", processing_level="toa"), Image
+    )
+
+    with pytest.raises(ValueError, match="Unknown resampler type: 'foo'"):
+        Image.from_id("foo", resampler="foo")
+    with pytest.raises(ValueError, match="Unknown processing level: 'foo'"):
+        Image.from_id("foo", processing_level="foo")
 
 
 @mock.patch.object(Image, "from_id", wraps=Image.from_id)

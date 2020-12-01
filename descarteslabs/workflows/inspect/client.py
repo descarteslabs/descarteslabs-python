@@ -18,9 +18,9 @@ from descarteslabs.common.workflows.outputs import (
 from descarteslabs.common.workflows.arrow_serialization import deserialize_pyarrow
 
 from .. import _channel
-from ..cereal import serialize_typespec, typespec_to_unmarshal_str
+from ..execution import to_computable
 from ..models.exceptions import JobTimeoutError
-from ..models.parameters import parameters_to_grafts
+from ..types import ProxyTypeError, GeoContext
 from ..result_types import unmarshal
 
 
@@ -58,14 +58,24 @@ class InspectClient(Service):
             retries=retries if retries is not None else self.RETRY_CONFIG,
         )
 
-    def inspect(self, obj, format="pyarrow", file=None, timeout=30, **params):
-        graft = obj.graft
-        params_dict = parameters_to_grafts(**params)
+    def inspect(
+        self,
+        obj,
+        geoctx=None,
+        format="pyarrow",
+        file=None,
+        cache=True,
+        _ruster=None,
+        timeout=30,
+        **arguments,
+    ):
+        if geoctx is not None:
+            try:
+                geoctx = GeoContext._promote(geoctx)
+            except ProxyTypeError as e:
+                raise TypeError(f"Invalid GeoContext {geoctx!r}: {e}")
 
-        # TODO little dumb to have to serialize the typespec just to get the unmarshal name; EC-300 plz
-        typespec = serialize_typespec(type(obj))
-        result_type = typespec_to_unmarshal_str(typespec)
-        # ^ this also preemptively checks whether the result type is something we'll know how to unmarshal
+        obj, arguments, typespec, result_type = to_computable(obj, arguments)
 
         mimetype = user_format_to_mimetype(format)
 
@@ -77,13 +87,23 @@ class InspectClient(Service):
             close_file = False
 
         try:
-            # TODO stream=True, use resp.raw and stream through pyarrow?
+            headers = {"Accept": mimetype}
+            if cache is False:
+                headers["Cache-Control"] = "no-cache"
+
+            body = {"graft": obj.graft, "arguments": arguments}
+            if geoctx is not None:
+                body["geoctx"] = geoctx.graft
+            if _ruster is False:
+                body["no_ruster"] = True
+
             try:
+                # TODO stream=True, use resp.raw and stream through pyarrow?
                 resp = self.session.post(
                     "/inspect",
-                    json={"graft": graft, "parameters": params_dict},
+                    json=body,
                     timeout=timeout,
-                    headers={"Accept": mimetype},
+                    headers=headers,
                     stream=file is not None,
                 )
                 resp.raise_for_status()
@@ -119,3 +139,80 @@ def get_global_inspect_client():
     if global_inspect_client is None:
         global_inspect_client = InspectClient()
     return global_inspect_client
+
+
+def inspect(
+    obj,
+    geoctx=None,
+    format="pyarrow",
+    file=None,
+    cache=True,
+    _ruster=None,
+    timeout=30,
+    client=None,
+    **arguments,
+):
+    """
+    Quickly compute a proxy object using a low-latency, lower-reliability backend.
+
+    Inspect is meant for getting simple computations out of Workflows, primarily for interactive use.
+    It's quicker but less resilient, won't be retried if it fails, and has no progress updates.
+
+    If you have a larger computation (longer than ~30sec), or you want to be sure the computation will succeed,
+    use `~.compute` instead. `~.compute` creates a `.Job`, which runs asynchronously, will be retried if it fails,
+    and stores its results for later retrieval.
+
+    Parameters
+    ----------
+    obj: Proxytype
+        Proxy object to compute, or list/tuple of proxy objects.
+        If it depends on parameters, ``obj`` is first converted
+        to a `.Function` that takes those parameters.
+    geoctx: `.scenes.geocontext.GeoContext`, `~.workflows.types.geospatial.GeoContext`, or None
+        The GeoContext parameter under which to run the computation.
+        Almost all computations will require a `~.workflows.types.geospatial.GeoContext`,
+        but for operations that only involve non-geospatial types,
+        this parameter is optional.
+    format: str or dict, default "pyarrow"
+        The serialization format for the result.
+        See the `formats
+        <https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html#output-formats>`_
+        documentation for more information.
+        If "pyarrow" (the default), returns an appropriate Python object, otherwise returns raw bytes.
+    file: path or file-like object, optional
+        If specified, writes results to the path or file instead of returning them.
+    cache: bool, default True
+        Whether to use the cache for this job.
+    timeout: int, optional, default 30
+        The number of seconds to wait for the result.
+        Raises `~descarteslabs.workflows.models.JobTimeoutError` if the timeout passes.
+    client: `.workflows.inspect.InspectClient`, optional
+        Allows you to use a specific InspectClient instance with non-default
+        auth and parameters
+    **arguments: Any
+        Values for all parameters that ``obj`` depends on
+        (or arguments that ``obj`` takes, if it's a `.Function`).
+        Can be given as Proxytypes, or as Python objects like numbers,
+        lists, and dicts that can be promoted to them.
+        These arguments cannot depend on any parameters.
+
+    Returns
+    -------
+    result: Python object or bytes
+        When ``format="pyarrow"`` (the default), returns an appropriate Python object representing
+        the result, either as a plain Python type, or object from `descarteslabs.workflows.result_types`.
+        For other formats, returns raw bytes. Consider using `file` in that case to save the results to a file.
+    """
+    if client is None:
+        client = get_global_inspect_client()
+
+    return client.inspect(
+        obj,
+        geoctx=geoctx,
+        format=format,
+        file=file,
+        cache=cache,
+        _ruster=_ruster,
+        timeout=timeout,
+        **arguments,
+    )
