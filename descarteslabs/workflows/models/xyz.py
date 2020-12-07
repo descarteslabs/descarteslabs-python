@@ -611,6 +611,16 @@ class XYZ(object):
         "str: The channel name this XYZ is compatible with."
         return self._message.channel
 
+    @property
+    def user(self):
+        "str: The user which created this XYZ."
+        return self._message.user
+
+    @property
+    def org(self):
+        "str: The org of the user which created this XYZ."
+        return self._message.org
+
 
 class XYZLogListener(object):
     """
