@@ -115,8 +115,8 @@ def test_user_dict_to_proto_recursive_repeated():
         {
             "type": "foo",
             "params": [
-                {"type": "bar", "has_type": True},
-                {"prim": {"int_": 9, "has_int": True}, "has_prim": True},
+                {"type": "bar"},
+                {"primitive": {"int_": 9}},
             ],
         },
         typespec_pb2.CompositeType(),
@@ -125,9 +125,7 @@ def test_user_dict_to_proto_recursive_repeated():
     assert proto == typespec_pb2.CompositeType(
         type="foo",
         params=[
-            typespec_pb2.Typespec(type="bar", has_type=True),
-            typespec_pb2.Typespec(
-                prim=typespec_pb2.Primitive(int_=9, has_int=True), has_prim=True
-            ),
+            typespec_pb2.Typespec(type="bar"),
+            typespec_pb2.Typespec(primitive=typespec_pb2.Primitive(int_=9)),
         ],
     )

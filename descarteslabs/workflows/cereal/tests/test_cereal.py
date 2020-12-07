@@ -3,7 +3,12 @@ import pytest
 from hypothesis import given, settings, HealthCheck
 import hypothesis.strategies as st
 
-from .. import serialize_typespec, deserialize_typespec, serializable
+from .. import (
+    serialize_typespec,
+    deserialize_typespec,
+    serializable,
+    typespec_to_unmarshal_str,
+)
 from ...types import (
     Int,
     Bool,
@@ -96,3 +101,18 @@ proxytypes = st.deferred(
 @settings(suppress_health_check=[HealthCheck.too_slow])
 def test_roundtrip(cls):
     assert deserialize_typespec(serialize_typespec(cls)) == cls
+
+
+class TestTypespecToUnmarshalStr:
+    def test_nonparametric(self):
+        typespec = serialize_typespec(Int)
+        assert typespec_to_unmarshal_str(typespec) == "Int"
+
+    def test_parametric(self):
+        typespec = serialize_typespec(List[Int])
+        assert typespec_to_unmarshal_str(typespec) == "List"
+
+    def test_non_marshallable(self):
+        typespec = serialize_typespec(Function[{}, Int])
+        with pytest.raises(TypeError, match="'Function' is not a computable type"):
+            typespec_to_unmarshal_str(typespec)

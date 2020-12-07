@@ -1,4 +1,5 @@
-import six
+from __future__ import annotations
+from typing import Union, Dict, TYPE_CHECKING
 
 from descarteslabs.common.proto.typespec.typespec_pb2 import (
     Typespec,
@@ -9,52 +10,64 @@ from descarteslabs.common.proto.typespec.typespec_pb2 import (
 )
 from descarteslabs.workflows.result_types import unmarshal
 
+if TYPE_CHECKING:
+    from descarteslabs.workflows.types import Proxytype
+
 
 PRIMITIVES = (int, float, bool, str)
+PrimitiveType = Union[PRIMITIVES]
 
 
-types = {}
+types: Dict[str, Proxytype] = {}
 
 
-def deserialize_typespec(spec):
-    if spec.has_prim:
-        if spec.prim.has_int:
-            return spec.prim.int_
-        if spec.prim.has_float:
-            return spec.prim.float_
-        if spec.prim.has_bool:
-            return spec.prim.bool_
-        else:
-            return spec.prim.string_
-    elif spec.has_type:
+def deserialize_typespec(
+    spec: Typespec,
+) -> Union[
+    PrimitiveType,
+    Dict[Union[PrimitiveType, Proxytype], Union[PrimitiveType, Proxytype]],
+    Proxytype,
+]:
+    component = spec.WhichOneof("component")
+    if component == "primitive":
+        primitive_field = spec.primitive.WhichOneof("value")
+        assert primitive_field is not None, "Primitive message must have a value set"
+        return getattr(spec.primitive, primitive_field)
+    elif component == "type":
         try:
             return types[spec.type]
         except KeyError:
             raise ValueError("No known type {!r}".format(spec.type))
-    elif spec.has_map:
+    elif component == "map":
         return {
             deserialize_typespec(param.key): deserialize_typespec(param.val)
             for param in spec.map.items
         }
-    elif spec.has_comp:
-        generic = deserialize_typespec(Typespec(type=spec.comp.type, has_type=True))
-        params = tuple(deserialize_typespec(param) for param in spec.comp.params)
+    elif component == "composite":
+        generic = deserialize_typespec(Typespec(type=spec.composite.type))
+        params = tuple(deserialize_typespec(param) for param in spec.composite.params)
         return generic[params]
     else:
         raise ValueError(
-            "Invalid typespec in ``deserialize_typespec``: none of the has_ values are set."
+            "Invalid typespec in ``deserialize_typespec``: none of the `component` fields are set."
         )
 
 
-def serialize_typespec(cls):
+def serialize_typespec(
+    cls: Union[
+        PrimitiveType,
+        Dict[Union[PrimitiveType, Proxytype], Union[PrimitiveType, Proxytype]],
+        Proxytype,
+    ]
+) -> Typespec:
     if isinstance(cls, int):
-        return Typespec(prim=Primitive(int_=cls, has_int=True), has_prim=True)
+        return Typespec(primitive=Primitive(int_=cls))
     if isinstance(cls, float):
-        return Typespec(prim=Primitive(float_=cls, has_float=True), has_prim=True)
+        return Typespec(primitive=Primitive(float_=cls))
     if isinstance(cls, bool):
-        return Typespec(prim=Primitive(bool_=cls, has_bool=True), has_prim=True)
+        return Typespec(primitive=Primitive(bool_=cls))
     if isinstance(cls, str):
-        return Typespec(prim=Primitive(string_=cls, has_string=True), has_prim=True)
+        return Typespec(primitive=Primitive(string_=cls))
     if isinstance(cls, dict):
         return Typespec(
             map=Map(
@@ -62,10 +75,9 @@ def serialize_typespec(cls):
                     MapFieldEntry(
                         key=serialize_typespec(key), val=serialize_typespec(val)
                     )
-                    for key, val in six.iteritems(cls)
+                    for key, val in cls.items()
                 ]
             ),
-            has_map=True,
         )
 
     if getattr(cls, "_named_concrete_type", False):
@@ -92,7 +104,7 @@ def serialize_typespec(cls):
         )
 
     if not hasattr(cls, "_type_params") or getattr(cls, "_named_concrete_type", False):
-        return Typespec(type=name, has_type=True)
+        return Typespec(type=name)
     else:
         type_params = cls._type_params
         if type_params is None:
@@ -102,9 +114,7 @@ def serialize_typespec(cls):
 
         serialized_params = [serialize_typespec(param) for param in type_params]
 
-        return Typespec(
-            comp=CompositeType(type=name, params=serialized_params), has_comp=True
-        )
+        return Typespec(composite=CompositeType(type=name, params=serialized_params))
 
 
 def serializable(is_named_concrete_type=False):
@@ -130,13 +140,16 @@ def serializable(is_named_concrete_type=False):
     return inner
 
 
-def typespec_to_unmarshal_str(typespec):
-    if typespec.has_type:
+def typespec_to_unmarshal_str(typespec: Typespec) -> str:
+    component = typespec.WhichOneof("component")
+    if component == "type":
         marshal_type = typespec.type
-    elif typespec.has_comp:
-        marshal_type = typespec.comp.type
+    elif component == "composite":
+        marshal_type = typespec.composite.type
     else:
-        raise ValueError("Invalid typespec: has_type or has_comp must be set.")
+        raise ValueError(
+            "Invalid typespec: the `type` or `composite` field must be set in `component`."
+        )
 
     if marshal_type not in unmarshal.registry:
         raise TypeError(

@@ -31,21 +31,6 @@ from ..utils import pb_milliseconds_to_datetime
 from . import utils
 
 
-class TestTypespecToUnmarshalStr(object):
-    def test_nonparametric(self):
-        typespec = cereal.serialize_typespec(types.Int)
-        assert cereal.typespec_to_unmarshal_str(typespec) == "Int"
-
-    def test_parametric(self):
-        typespec = cereal.serialize_typespec(types.List[types.Int])
-        assert cereal.typespec_to_unmarshal_str(typespec) == "List"
-
-    def test_non_marshallable(self):
-        typespec = cereal.serialize_typespec(types.Function[{}, types.Int])
-        with pytest.raises(TypeError, match="'Function' is not a computable type"):
-            cereal.typespec_to_unmarshal_str(typespec)
-
-
 class MockRpcError(grpc.RpcError, grpc.Call):
     def __init__(self, code):
         self._code = code

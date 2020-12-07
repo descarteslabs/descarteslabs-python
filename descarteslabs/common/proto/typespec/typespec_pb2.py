@@ -18,7 +18,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n2descarteslabs/common/proto/typespec/typespec.proto\x12\x17\x64\x65scarteslabs.workflows\"\xac\x02\n\x08Typespec\x12\x36\n\x04prim\x18\x01 \x01(\x0b\x32\".descarteslabs.workflows.PrimitiveR\x04prim\x12\x12\n\x04type\x18\x02 \x01(\tR\x04type\x12.\n\x03map\x18\x03 \x01(\x0b\x32\x1c.descarteslabs.workflows.MapR\x03map\x12:\n\x04\x63omp\x18\x04 \x01(\x0b\x32&.descarteslabs.workflows.CompositeTypeR\x04\x63omp\x12\x19\n\x08has_prim\x18\x05 \x01(\x08R\x07hasPrim\x12\x19\n\x08has_type\x18\x06 \x01(\x08R\x07hasType\x12\x17\n\x07has_map\x18\x07 \x01(\x08R\x06hasMap\x12\x19\n\x08has_comp\x18\x08 \x01(\x08R\x07hasComp\"\xd3\x01\n\tPrimitive\x12\x11\n\x04int_\x18\x01 \x01(\x05R\x03int\x12\x15\n\x06\x66loat_\x18\x02 \x01(\x02R\x05\x66loat\x12\x13\n\x05\x62ool_\x18\x03 \x01(\x08R\x04\x62ool\x12\x17\n\x07string_\x18\x04 \x01(\tR\x06string\x12\x17\n\x07has_int\x18\x05 \x01(\x08R\x06hasInt\x12\x1b\n\thas_float\x18\x06 \x01(\x08R\x08hasFloat\x12\x19\n\x08has_bool\x18\x07 \x01(\x08R\x07hasBool\x12\x1d\n\nhas_string\x18\x08 \x01(\x08R\thasString\"y\n\rMapFieldEntry\x12\x33\n\x03key\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x03key\x12\x33\n\x03val\x18\x02 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x03val\"C\n\x03Map\x12<\n\x05items\x18\x01 \x03(\x0b\x32&.descarteslabs.workflows.MapFieldEntryR\x05items\"^\n\rCompositeType\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x39\n\x06params\x18\x02 \x03(\x0b\x32!.descarteslabs.workflows.TypespecR\x06paramsb\x06proto3'
+  serialized_pb=b'\n2descarteslabs/common/proto/typespec/typespec.proto\x12\x17\x64\x65scarteslabs.workflows\"\xeb\x01\n\x08Typespec\x12\x42\n\tprimitive\x18\x01 \x01(\x0b\x32\".descarteslabs.workflows.PrimitiveH\x00R\tprimitive\x12\x14\n\x04type\x18\x02 \x01(\tH\x00R\x04type\x12\x30\n\x03map\x18\x03 \x01(\x0b\x32\x1c.descarteslabs.workflows.MapH\x00R\x03map\x12\x46\n\tcomposite\x18\x04 \x01(\x0b\x32&.descarteslabs.workflows.CompositeTypeH\x00R\tcompositeB\x0b\n\tcomponent\"t\n\tPrimitive\x12\x13\n\x04int_\x18\x01 \x01(\x05H\x00R\x03int\x12\x17\n\x06\x66loat_\x18\x02 \x01(\x02H\x00R\x05\x66loat\x12\x15\n\x05\x62ool_\x18\x03 \x01(\x08H\x00R\x04\x62ool\x12\x19\n\x07string_\x18\x04 \x01(\tH\x00R\x06stringB\x07\n\x05value\"y\n\rMapFieldEntry\x12\x33\n\x03key\x18\x01 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x03key\x12\x33\n\x03val\x18\x02 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x03val\"C\n\x03Map\x12<\n\x05items\x18\x01 \x03(\x0b\x32&.descarteslabs.workflows.MapFieldEntryR\x05items\"^\n\rCompositeType\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x39\n\x06params\x18\x02 \x03(\x0b\x32!.descarteslabs.workflows.TypespecR\x06paramsb\x06proto3'
 )
 
 
@@ -32,12 +32,12 @@ _TYPESPEC = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='prim', full_name='descarteslabs.workflows.Typespec.prim', index=0,
+      name='primitive', full_name='descarteslabs.workflows.Typespec.primitive', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='prim', file=DESCRIPTOR),
+      serialized_options=None, json_name='primitive', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='type', full_name='descarteslabs.workflows.Typespec.type', index=1,
       number=2, type=9, cpp_type=9, label=1,
@@ -53,40 +53,12 @@ _TYPESPEC = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='map', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='comp', full_name='descarteslabs.workflows.Typespec.comp', index=3,
+      name='composite', full_name='descarteslabs.workflows.Typespec.composite', index=3,
       number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='comp', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='has_prim', full_name='descarteslabs.workflows.Typespec.has_prim', index=4,
-      number=5, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='hasPrim', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='has_type', full_name='descarteslabs.workflows.Typespec.has_type', index=5,
-      number=6, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='hasType', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='has_map', full_name='descarteslabs.workflows.Typespec.has_map', index=6,
-      number=7, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='hasMap', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='has_comp', full_name='descarteslabs.workflows.Typespec.has_comp', index=7,
-      number=8, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='hasComp', file=DESCRIPTOR),
+      serialized_options=None, json_name='composite', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -98,9 +70,12 @@ _TYPESPEC = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
+    _descriptor.OneofDescriptor(
+      name='component', full_name='descarteslabs.workflows.Typespec.component',
+      index=0, containing_type=None, fields=[]),
   ],
   serialized_start=80,
-  serialized_end=380,
+  serialized_end=315,
 )
 
 
@@ -139,34 +114,6 @@ _PRIMITIVE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='string', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='has_int', full_name='descarteslabs.workflows.Primitive.has_int', index=4,
-      number=5, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='hasInt', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='has_float', full_name='descarteslabs.workflows.Primitive.has_float', index=5,
-      number=6, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='hasFloat', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='has_bool', full_name='descarteslabs.workflows.Primitive.has_bool', index=6,
-      number=7, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='hasBool', file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='has_string', full_name='descarteslabs.workflows.Primitive.has_string', index=7,
-      number=8, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='hasString', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -178,9 +125,12 @@ _PRIMITIVE = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
+    _descriptor.OneofDescriptor(
+      name='value', full_name='descarteslabs.workflows.Primitive.value',
+      index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=383,
-  serialized_end=594,
+  serialized_start=317,
+  serialized_end=433,
 )
 
 
@@ -217,8 +167,8 @@ _MAPFIELDENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=596,
-  serialized_end=717,
+  serialized_start=435,
+  serialized_end=556,
 )
 
 
@@ -248,8 +198,8 @@ _MAP = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=719,
-  serialized_end=786,
+  serialized_start=558,
+  serialized_end=625,
 )
 
 
@@ -286,13 +236,37 @@ _COMPOSITETYPE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=788,
-  serialized_end=882,
+  serialized_start=627,
+  serialized_end=721,
 )
 
-_TYPESPEC.fields_by_name['prim'].message_type = _PRIMITIVE
+_TYPESPEC.fields_by_name['primitive'].message_type = _PRIMITIVE
 _TYPESPEC.fields_by_name['map'].message_type = _MAP
-_TYPESPEC.fields_by_name['comp'].message_type = _COMPOSITETYPE
+_TYPESPEC.fields_by_name['composite'].message_type = _COMPOSITETYPE
+_TYPESPEC.oneofs_by_name['component'].fields.append(
+  _TYPESPEC.fields_by_name['primitive'])
+_TYPESPEC.fields_by_name['primitive'].containing_oneof = _TYPESPEC.oneofs_by_name['component']
+_TYPESPEC.oneofs_by_name['component'].fields.append(
+  _TYPESPEC.fields_by_name['type'])
+_TYPESPEC.fields_by_name['type'].containing_oneof = _TYPESPEC.oneofs_by_name['component']
+_TYPESPEC.oneofs_by_name['component'].fields.append(
+  _TYPESPEC.fields_by_name['map'])
+_TYPESPEC.fields_by_name['map'].containing_oneof = _TYPESPEC.oneofs_by_name['component']
+_TYPESPEC.oneofs_by_name['component'].fields.append(
+  _TYPESPEC.fields_by_name['composite'])
+_TYPESPEC.fields_by_name['composite'].containing_oneof = _TYPESPEC.oneofs_by_name['component']
+_PRIMITIVE.oneofs_by_name['value'].fields.append(
+  _PRIMITIVE.fields_by_name['int_'])
+_PRIMITIVE.fields_by_name['int_'].containing_oneof = _PRIMITIVE.oneofs_by_name['value']
+_PRIMITIVE.oneofs_by_name['value'].fields.append(
+  _PRIMITIVE.fields_by_name['float_'])
+_PRIMITIVE.fields_by_name['float_'].containing_oneof = _PRIMITIVE.oneofs_by_name['value']
+_PRIMITIVE.oneofs_by_name['value'].fields.append(
+  _PRIMITIVE.fields_by_name['bool_'])
+_PRIMITIVE.fields_by_name['bool_'].containing_oneof = _PRIMITIVE.oneofs_by_name['value']
+_PRIMITIVE.oneofs_by_name['value'].fields.append(
+  _PRIMITIVE.fields_by_name['string_'])
+_PRIMITIVE.fields_by_name['string_'].containing_oneof = _PRIMITIVE.oneofs_by_name['value']
 _MAPFIELDENTRY.fields_by_name['key'].message_type = _TYPESPEC
 _MAPFIELDENTRY.fields_by_name['val'].message_type = _TYPESPEC
 _MAP.fields_by_name['items'].message_type = _MAPFIELDENTRY
