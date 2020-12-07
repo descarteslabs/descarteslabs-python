@@ -119,6 +119,9 @@ def slider(
                 else:
                     # Otherwise, use a float slider instead.
                     any_float = True
+            else:
+                # step is a multiple of 1, but truediv always produces floats
+                step = int(step)
 
     assert step < (
         max - min
