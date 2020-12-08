@@ -28,11 +28,14 @@ class Client(GrpcClient):
     <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
     """
 
-    def __init__(self, host=None, auth=None, certificate=None, port=443, channel=None):
+    def __init__(self, host=None, auth=None, certificate=None, port=None, channel=None):
         if host is None:
             host = os.environ.get(
                 "DESCARTESLABS_WORKFLOWS_HOST", _channel.DEFAULT_GRPC_HOST
             )
+
+        if port is None:
+            port = os.environ.get("DESCARTESLABS_WORKFLOWS_PORT", 443)
 
         if channel is None:
             channel = _channel.__channel__
