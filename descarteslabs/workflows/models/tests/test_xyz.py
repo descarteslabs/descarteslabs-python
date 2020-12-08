@@ -1,20 +1,18 @@
 import datetime
-import json
 import logging
 
 from six.moves import queue
 
 import grpc
 import mock
-import pytest
 
-from descarteslabs.client.version import __version__
 from descarteslabs.common.proto.xyz import xyz_pb2
 from descarteslabs.common.proto.logging import logging_pb2
 
-from ... import _channel, types, cereal
-from ...client import Client
+from descarteslabs.workflows import _channel, client
+
 from .. import XYZ, XYZLogListener
+from ..published_graft import PublishedGraft
 from ..utils import (
     pb_datetime_to_milliseconds,
     pb_milliseconds_to_datetime,
@@ -23,57 +21,71 @@ from ..utils import (
 from . import utils
 
 
+def mock_CreateXYZ(msg: xyz_pb2.CreateXYZRequest, **kwargs) -> xyz_pb2.XYZ:
+    assert isinstance(msg, xyz_pb2.CreateXYZRequest)
+    return xyz_pb2.XYZ(
+        id="mclovin",
+        name=msg.name,
+        description=msg.description,
+        serialized_graft=msg.serialized_graft,
+        typespec=msg.typespec,
+        parameters=msg.parameters,
+        channel=msg.channel,
+        client_version=msg.client_version,
+    )
+
+
+@mock.patch(
+    "descarteslabs.workflows.models.published_graft.get_global_grpc_client",
+    new=lambda: utils.MockedClient(),
+)
 @mock.patch(
     "descarteslabs.workflows.models.xyz.get_global_grpc_client",
     new=lambda: utils.MockedClient(),
 )
 @mock.patch("descarteslabs.common.proto.xyz.xyz_pb2_grpc.XYZAPIStub")
 class TestXYZ(object):
-    def test_build(self, stub):
-        obj = utils.Foo(1)
-        xyz = XYZ.build(obj, name="foo", description="a foo")
+    def test_init(self, stub):
+        CreateXYZ = stub.return_value.CreateXYZ
+        CreateXYZ.side_effect = mock_CreateXYZ
 
-        assert xyz._object is obj
-        assert xyz._params == ()
-        assert xyz._client is not None
-        message = xyz._message
-
-        assert json.loads(message.serialized_graft) == obj.graft
-        assert message.name == "foo"
-        assert message.description == "a foo"
-        assert message.channel == _channel.__channel__
-        assert message.client_version == __version__
-
-    def test_build_params(self, stub):
-        x = types.parameter("x", types.Image)
-        obj = utils.Foo(x)
-        xyz = XYZ.build(obj)
-        msg = xyz._message
-
-        obj_func = xyz.object
-        assert isinstance(xyz.object, types.Function[type(x), {}, type(obj)])
-
-        assert json.loads(msg.serialized_graft) == obj_func.graft
-        assert msg.typespec == cereal.serialize_typespec(type(obj_func))
-
-        assert xyz.params is obj.params
-
-        params = types.widget.deserialize_params(msg.parameters)
-        assert len(params) == 1
-        param = params[0]
-        assert isinstance(param, type(x))
-        assert param._name == x._name
-
-    def test_roundtrip_from_proto(self, stub):
         obj = utils.Bar(utils.Foo(1))
-        xyz = XYZ.build(obj, name="bar", description="a bar")
-        message = xyz._message
+        name = "bar"
+        desc = "a bar"
 
-        xyz_from_proto = XYZ._from_proto(message)
+        # do some hackery to pull out the `self._message` produced by the superclass's `__init__`
+        super_message = None
+        orig_init = PublishedGraft.__init__
 
-        new_obj = xyz_from_proto.object
-        assert type(new_obj) == type(obj)
-        utils.assert_graft_is_scope_isolated_equvalent(new_obj.graft, obj.graft)
+        def patched_init(self, *args, **kwargs):
+            "pull out `self._message` at the end of `PublishedGraft.__init__` so we can use it in tests"
+            orig_init(self, *args, **kwargs)
+            nonlocal super_message
+            super_message = self._message
+
+        with mock.patch.object(PublishedGraft, "__init__", patched_init):
+            xyz = XYZ(obj, name=name, description=desc)
+
+        expected_req = xyz_pb2.CreateXYZRequest(
+            name=name,
+            description=desc,
+            serialized_graft=super_message.serialized_graft,
+            typespec=super_message.typespec,
+            parameters=super_message.parameters,
+            channel=super_message.channel,
+            client_version=super_message.client_version,
+        )
+
+        CreateXYZ.assert_called_once_with(
+            expected_req,
+            timeout=client.Client.DEFAULT_TIMEOUT,
+            metadata=mock.ANY,
+        )
+
+        assert xyz._message == mock_CreateXYZ(expected_req)
+
+        assert xyz.name == name
+        assert xyz.description == desc
 
     def test_get(self, stub):
         message = "foo"
@@ -85,42 +97,17 @@ class TestXYZ(object):
             assert _from_proto.call_args[0][0] is message
             stub.return_value.GetXYZ.assert_called_once_with(
                 xyz_pb2.GetXYZRequest(xyz_id="fake_id"),
-                timeout=Client.DEFAULT_TIMEOUT,
+                timeout=client.Client.DEFAULT_TIMEOUT,
                 metadata=mock.ANY,
             )
 
-    def test_save(self, stub):
-        new_message = "fake message"
-        stub.return_value.CreateXYZ.return_value = new_message
-
-        obj = utils.Bar(utils.Foo(1))
-        xyz = XYZ.build(obj, name="bar", description="a bar")
-        old_message = xyz._message
-
-        xyz.save()
-        assert xyz._message is new_message
-        stub.return_value.CreateXYZ.assert_called_once_with(
-            xyz_pb2.CreateXYZRequest(
-                name=old_message.name,
-                description=old_message.description,
-                serialized_graft=old_message.serialized_graft,
-                typespec=old_message.typespec,
-                channel=_channel.__channel__,
-                client_version=__version__,
-            ),
-            timeout=Client.DEFAULT_TIMEOUT,
-            metadata=mock.ANY,
-        )
-
     def test_properties(self, stub):
+        stub.return_value.CreateXYZ.side_effect = mock_CreateXYZ
         obj = utils.Bar(utils.Foo(1))
-        xyz = XYZ.build(obj, name="bar", description="a bar")
+        xyz = XYZ(obj, name="bar", description="a bar")
 
-        assert xyz.object == obj
-        assert xyz.type == type(obj)
-        assert xyz.id is None
-        assert xyz.created_timestamp is None
-        assert xyz.updated_timestamp is None
+        assert xyz.object is obj
+        assert xyz.type is type(obj)
         assert xyz.name == "bar"
         assert xyz.description == "a bar"
         assert xyz.channel == _channel.__channel__
@@ -133,15 +120,9 @@ class TestXYZ(object):
         assert xyz.created_timestamp == pb_milliseconds_to_datetime(100)
         assert xyz.updated_timestamp == pb_milliseconds_to_datetime(200)
 
-    def test_incompatible_channel(self, stub):
-        obj = utils.Foo(1)
-        xyz = XYZ.build(obj, name="foo", description="a foo")
-        xyz._message.channel = "foobar"
-
-        with pytest.raises(ValueError, match="only defined for channel 'foobar'"):
-            xyz.object
-
     def test_iter_tile_logs(self, stub):
+        stub.return_value.CreateXYZ.side_effect = mock_CreateXYZ
+
         start_datetime = datetime.datetime.now(datetime.timezone.utc)
         log_level = logging.WARNING
         session_id = "bar"
@@ -154,7 +135,7 @@ class TestXYZ(object):
             ),
         ]
 
-        xyz = XYZ.build(utils.Foo(1), name="foo", description="a foo")
+        xyz = XYZ(utils.Foo(1), name="foo", description="a foo")
 
         stub.return_value.GetXYZSessionLogs.return_value = logs
 
@@ -176,33 +157,15 @@ class TestXYZ(object):
                 xyz_id=xyz.id,
                 level=py_log_level_to_proto_log_level(log_level),
             ),
-            timeout=Client.STREAM_TIMEOUT,
+            timeout=client.Client.STREAM_TIMEOUT,
             metadata=mock.ANY,
         )
 
-    def test_from_proto(self, stub):
-        message = XYZ.build(utils.Foo(1))._message
-        message.id = "foo"
-        message.serialized_graft = ""
-
-        with pytest.raises(
-            AttributeError,
-            match=(
-                r"^The serialized .* XYZ 'foo'\. To share objects with others, please"
-                r" use a Workflow instead\.$"
-            ),
-        ):
-            XYZ._from_proto(message)
-
     def test_url(self, stub):
+        stub.return_value.CreateXYZ.side_effect = mock_CreateXYZ
         obj = utils.Foo(1)
-        xyz = XYZ.build(obj)
-
-        with pytest.raises(ValueError, match="has not been persisted"):
-            xyz.url()
-
+        xyz = XYZ(obj)
         url_template = xyz._message.url_template = "http://base.net"
-
         assert xyz.url() == url_template
 
 

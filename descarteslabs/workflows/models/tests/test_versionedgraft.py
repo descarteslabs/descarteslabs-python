@@ -5,7 +5,7 @@ import pytest
 from descarteslabs.common.proto.workflow import workflow_pb2
 
 from descarteslabs.client.version import __version__
-from descarteslabs.workflows.types import Int, Function
+from descarteslabs.workflows.types import Int
 from descarteslabs.workflows.client import Client
 from descarteslabs.workflows.cereal import serialize_typespec
 from descarteslabs.workflows.models.versionedgraft import VersionedGraft
@@ -19,7 +19,7 @@ from descarteslabs.workflows import _channel
 )
 @mock.patch("descarteslabs.common.proto.workflow.workflow_pb2_grpc.WorkflowAPIStub")
 class TestVersionedGraft(object):
-    def test_build(self, stub):
+    def test_init(self, stub):
         obj = Int(42)
         version = "0.0.1"
         docstring = "int 42"
@@ -39,33 +39,6 @@ class TestVersionedGraft(object):
         assert vg._message.client_version == __version__
         assert vg.type == type(obj)
 
-    def test_build_higher_order_function_fails(self, stub):
-        @Function.from_callable
-        def outer(x: Int):
-            def inner(y: Int):
-                return x + y
-
-            return inner
-
-        assert isinstance(outer, Function[Int, {}, Function[Int, {}, Int]])
-
-        with pytest.raises(
-            NotImplementedError,
-            match="Cannot currently publish Functions that return Functions",
-        ):
-            VersionedGraft("0.0.1", outer)
-
-    def test_from_proto(self, stub):
-        obj = Int(40) + Int(42)
-        version = "0.0.1"
-        versionedGraft = VersionedGraft(version, obj)
-
-        proto_msg = versionedGraft._message
-        new_vg = VersionedGraft._from_proto(proto_msg)
-        assert new_vg._message == proto_msg
-        assert new_vg.type == type(obj)
-        assert new_vg.version == version
-
     def test_get(self, stub):
         workflow_id = "foobar"
         version = "0.0.1"
@@ -84,14 +57,18 @@ class TestVersionedGraft(object):
                 metadata=mock.ANY,
             )
 
-    def test_incompatible_channel(self, stub):
+    def test_object_doc(self, stub):
         obj = Int(42)
-        version = "0.0.1"
-        vg = VersionedGraft(version, obj)
-        vg._message.channel = "foobar"
+        orig_doc = obj.__doc__
+        doc = "foo"
+        vg = VersionedGraft("0.0.1", obj, docstring=doc)
+        vg._object = None
 
-        with pytest.raises(ValueError, match="only defined for channel 'foobar'"):
-            vg.object
+        new_obj = vg.object
+
+        assert new_obj is not obj
+        assert new_obj.__doc__ == doc
+        assert obj.__doc__ is orig_doc
 
     def test_url(self, stub):
         obj = utils.Foo(1)

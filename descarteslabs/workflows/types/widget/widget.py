@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from typing import List, ClassVar, TYPE_CHECKING
+from typing import List, ClassVar, Type, TYPE_CHECKING
 
 from google.protobuf import message
 
@@ -37,7 +37,7 @@ class Widget:
     # NOTE: we don't set an actual docstring here, so subclasses will inherit whatever docstring
     # their base Proxytype has.
 
-    _proto_type: ClassVar[message.Message]
+    _proto_type: ClassVar[Type[message.Message]]
     widget: ipywidgets.Widget
     "The ipywidgets Widget instance used to display this widget"
 

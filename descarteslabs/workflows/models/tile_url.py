@@ -16,7 +16,7 @@ def tile_url(
     **arguments,
 ):
     """
-    Build the URL template for a tiles endpoint,
+    Build the URL template for a tiles endpoint.
 
     Parameters
     ----------

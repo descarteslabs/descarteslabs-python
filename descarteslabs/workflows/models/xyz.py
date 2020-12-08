@@ -1,25 +1,25 @@
-import json
+from __future__ import annotations
+from typing import Optional, Iterator, Callable, Any
+import datetime
 import logging
 import threading
 
 import grpc
-from descarteslabs.client.version import __version__
-from descarteslabs.common.graft import client as graft_client
 from descarteslabs.common.proto.xyz import xyz_pb2
 
-from ..cereal import deserialize_typespec, serialize_typespec
-from ..client import get_global_grpc_client
+from descarteslabs.workflows.client import get_global_grpc_client, Client
+from descarteslabs.workflows.types import Proxytype
+
+from .published_graft import PublishedGraft
 from .utils import (
     pb_datetime_to_milliseconds,
     pb_milliseconds_to_datetime,
     py_log_level_to_proto_log_level,
 )
-from ..types import Function
-from ..types.widget import serialize_params, deserialize_params
 from .tile_url import tile_url
 
 
-class XYZ(object):
+class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
     """
     Stores proxy objects to be rendered by an XYZ tile server.
 
@@ -36,8 +36,7 @@ class XYZ(object):
     >>> from descarteslabs.workflows import Image, XYZ
     >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
     >>> rgb = img.pick_bands("red green blue")
-    >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
-    >>> xyz.save() # doctest: +SKIP
+    >>> xyz = XYZ(rgb, name="My RGB") # doctest: +SKIP
     >>> xyz # doctest: +SKIP
     <descarteslabs.workflows.models.xyz.XYZ object at 0x...>
     >>> xyz.id # doctest: +SKIP
@@ -53,74 +52,24 @@ class XYZ(object):
     ...        start_datetime="2017-01-01",
     ...        end_datetime="2017-12-31")
     >>> rgb = col.pick_bands("red green blue")
-    >>> xyz = XYZ.build(rgb, name="RGB")
-    >>> xyz.save() # doctest: +SKIP
+    >>> xyz = XYZ(rgb, name="RGB") # doctest: +SKIP
     >>> xyz.url() # doctest: +SKIP
     'https://workflows.descarteslabs.com/tiles-ic/xyz/bdbeb4706f3025f4ee4eeff4dec46f6f2554c583d830e5e9/{z}/{x}/{y}.png'
     """
 
-    def __init__(self, proxy_object, params, proto_message, client=None):
-        """
-        Construct a XYZ object from a proxy object and Protobuf message.
-
-        Do not use this method directly; use the `XYZ.build` and `XYZ.get`
-        classmethods instead.
-
-        Parameters
-        ----------
-        proxy_object: Proxytype
-            The proxy object to store in this XYZ
-        params: Tuple[Proxytype]
-            Parameter metadata about the arguments to `proxy_object`, if it's a Function
-        proto_message: xyz_pb2.XYZ message
-            Protobuf message for the XYZ
-        client : Compute, optional
-            Allows you to use a specific client instance with non-default
-            auth and parameters
-        """
-        if client is None:
-            client = get_global_grpc_client()
-        self._object = proxy_object
-        self._params = params
-        self._message = proto_message
-        self._client = client
-
-    @classmethod
-    def _from_proto(cls, message, client=None):
-        typespec = message.typespec
-        proxytype = deserialize_typespec(typespec)
-        params = deserialize_params(message.parameters)
-
-        if message.serialized_graft:
-            graft = json.loads(message.serialized_graft)
-            isolated = graft_client.isolate_keys(graft)
-            obj = proxytype._from_graft(
-                isolated,
-                params=() if issubclass(proxytype, Function) else params
-                # ^ TODO can this be an accurate assumption? should maybe instead be whether it's a function graft?
-            )
-        else:
-            raise AttributeError(
-                (
-                    "The serialized graft attribute does not exist or "
-                    "acces is not authorized for XYZ '{}'. To share "
-                    "objects with others, please use a Workflow instead."
-                ).format(message.id)
-            )
-
-        return cls(obj, params, message, client=client)
-
-    @classmethod
-    def build(cls, proxy_object, name="", description="", client=None):
+    def __init__(
+        self,
+        proxy_object: Proxytype,
+        name: str = "",
+        description: str = "",
+        client: Optional[Client] = None,
+    ):
         """
         Construct a new XYZ from a proxy object.
 
         If the proxy object depends on any parameters (``proxy_object.params`` is not empty),
         it's first internally converted to a `.Function` that takes those parameters
         (using `.Function.from_object`).
-
-        Note that this does not persist the `XYZ`,
-        call `save` on the returned `XYZ` to do that.
 
         Parameters
         ----------
@@ -132,58 +81,45 @@ class XYZ(object):
             Name for the new XYZ
         description: str, default ""
             Long-form description of this XYZ. Markdown is supported.
-        client : Compute, optional
+        client: `.workflows.client.Client`, optional, default None
             Allows you to use a specific client instance with non-default
             auth and parameters
 
-        Returns
-        -------
-        XYZ
-
         Example
         -------
-        >>> from descarteslabs.workflows import Image, XYZ
-        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
         >>> rgb = img.pick_bands("red green blue")
-        >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
-        >>> xyz # doctest: +SKIP
-        <descarteslabs.workflows.models.xyz.XYZ object at 0x...>
+        >>> xyz = wf.XYZ(rgb, name="My RGB") # doctest: +SKIP
+        >>> xyz.id # doctest: +SKIP
+        '24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6'
         """
-        if client is None:
-            client = get_global_grpc_client()
+        super().__init__(proxy_object, client=client)
 
-        # TODO what if you're using an actual Function, not a parametrized object?
-        # Probably will need named positional arguments to handle that (turn args into params)
-        proto_params = serialize_params(proxy_object)
-        params = proxy_object.params
-        if len(params) > 0:
-            # turn objects that depend on parameters into Functions
-            proxy_object = Function.from_object(proxy_object)
-
-        typespec = serialize_typespec(type(proxy_object))
-        graft = proxy_object.graft
-
-        message = xyz_pb2.XYZ(
-            name=name,
-            description=description,
-            serialized_graft=json.dumps(graft),
-            typespec=typespec,
-            parameters=proto_params,
-            channel=client._wf_channel,
-            client_version=__version__,
+        response_message = self._client.api["CreateXYZ"](
+            xyz_pb2.CreateXYZRequest(
+                name=name,
+                description=description,
+                serialized_graft=self._message.serialized_graft,
+                typespec=self._message.typespec,
+                parameters=self._message.parameters,
+                channel=self._message.channel,
+                client_version=self._message.client_version,
+            ),
+            timeout=self._client.DEFAULT_TIMEOUT,
         )
-        return cls(proxy_object, params, message, client=client)
+        self._message = response_message
 
     @classmethod
-    def get(cls, xyz_id, client=None):
+    def get(cls, xyz_id: str, client: Optional[Client] = None) -> XYZ:
         """
         Get an existing XYZ by id.
 
         Parameters
         ----------
-        id : string
+        id: str
             The unique id of a `XZY` object
-        client : Compute, optional
+        client: Optional[Client], default None
             Allows you to use a specific client instance with non-default
             auth and parameters
 
@@ -204,37 +140,7 @@ class XYZ(object):
         message = client.api["GetXYZ"](
             xyz_pb2.GetXYZRequest(xyz_id=xyz_id), timeout=client.DEFAULT_TIMEOUT
         )
-        return cls._from_proto(message, client)
-
-    def save(self):
-        """
-        Persist this XYZ object.
-
-        After saving, ``self.id`` will contain the new ID of the XYZ object.
-
-        Example
-        -------
-        >>> from descarteslabs.workflows import Image, XYZ
-        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
-        >>> rgb = img.pick_bands("red green blue")
-        >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
-        >>> xyz.save() # doctest: +SKIP
-        >>> xyz.id # doctest: +SKIP
-        '24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6'
-        """
-        message = self._client.api["CreateXYZ"](
-            xyz_pb2.CreateXYZRequest(
-                name=self._message.name,
-                description=self._message.description,
-                serialized_graft=self._message.serialized_graft,
-                typespec=self._message.typespec,
-                parameters=self._message.parameters,
-                channel=self._message.channel,
-                client_version=self._message.client_version,
-            ),
-            timeout=self._client.DEFAULT_TIMEOUT,
-        )
-        self._message = message
+        return cls._from_proto(message, client=client)
 
     def url(
         self,
@@ -301,9 +207,6 @@ class XYZ(object):
 
         Raises
         ------
-        ValueError
-            If the `XYZ` object has no `id` and `.save` has not been called yet.
-
         TypeError
             If the ``scales`` are of invalid type.
 
@@ -316,8 +219,7 @@ class XYZ(object):
         >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
         >>> red = img.pick_bands("red")
         >>> viz = red ** wf.parameter("exponent", wf.Float)
-        >>> xyz = wf.XYZ.build(viz, name="Red band raised to exponent")
-        >>> xyz.save() # doctest: +SKIP
+        >>> xyz = wf.XYZ(viz, name="Red band raised to exponent") # doctest: +SKIP
         >>> xyz.url("some_session", colormap="magma", scales=[(0.2, 0.8)], exponent=2.5) # doctest: +SKIP
         'https://workflows.descarteslabs.com/v0-0/xyz/0d21037edb4bdd16b735f24bb3bff6d4202a71c20404b101/
          {z}/{x}/{y}.png?session_id=some_session&colormap=magma&scales=[[0.2, 0.8]]&exponent=2.5'
@@ -328,17 +230,12 @@ class XYZ(object):
         ...        end_datetime="2017-12-31")
         >>> red = col.pick_bands("red")
         >>> viz = red ** wf.parameter("exponent", wf.Float)
-        >>> xyz = wf.XYZ.build(viz, name="Red band ImageCollection raised to exponent")
-        >>> xyz.save() # doctest: +SKIP
+        >>> xyz = wf.XYZ(viz, name="Red band ImageCollection raised to exponent") # doctest: +SKIP
         >>> xyz.url("some_session", reduction="min", exponent=2.5) # doctest: +SKIP
         'https://workflows.descarteslabs.com/v0-0/xyz/bdbeb4706f3025f4ee4eeff4dec46f6f2554c583d830e5e9/
          {z}/{x}/{y}.png?session_id=some_session&reduction=min&exponent=2.5'
         """
         url_template = self._message.url_template
-        if not url_template:
-            raise ValueError(
-                "This XYZ object has not been persisted yet; call .save() to do so."
-            )
 
         return tile_url(
             url_template,
@@ -352,7 +249,12 @@ class XYZ(object):
             **arguments,
         )
 
-    def iter_tile_logs(self, session_id, start_datetime=None, level=None):
+    def iter_tile_logs(
+        self,
+        session_id: str,
+        start_datetime: datetime.datetime = None,
+        level: int = None,
+    ) -> Iterator[xyz_pb2.XYZLogRecord]:
         """
         Iterator over log messages generated while computing tiles
 
@@ -379,7 +281,7 @@ class XYZ(object):
         >>> from descarteslabs.workflows import Image, XYZ
         >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
         >>> rgb = img.pick_bands("red green blue")
-        >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
+        >>> xyz = XYZ(rgb, name="My RGB") # doctest: +SKIP
         >>> url = xyz.url(session_id="some_session") # doctest: +SKIP
         >>> for record in xyz.iter_tile_logs("some_session", start_datetime=datetime.datetime.now()): # doctest: +SKIP
         ...     print(record.level, record.message)
@@ -393,7 +295,7 @@ class XYZ(object):
             client=self._client,
         )
 
-    def log_listener(self):
+    def log_listener(self) -> XYZLogListener:
         """An `XYZLogListener` to trigger callbacks when logs occur computing tiles.
 
         Example
@@ -401,7 +303,7 @@ class XYZ(object):
         >>> from descarteslabs.workflows import Image, XYZ
         >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
         >>> rgb = img.pick_bands("red green blue")
-        >>> xyz = XYZ.build(rgb, name="My RGB") # doctest: +SKIP
+        >>> xyz = XYZ(rgb, name="My RGB") # doctest: +SKIP
         >>> url = xyz.url(session_id="some_session") # doctest: +SKIP
         >>> listener = xyz.log_listener() # doctest: +SKIP
         >>> log = []
@@ -413,50 +315,12 @@ class XYZ(object):
         return XYZLogListener(self.id, client=self._client)
 
     @property
-    def object(self):
-        """
-        Proxytype: The proxy object of this XYZ.
-
-        Note that if the XYZ was originally constructed from an object that depended on parameters,
-        then this `object` property won't hold the same object, but rather a `.Function` which takes
-        those parameters and returns that object.
-
-        Raises ValueError if the XYZ is not compatible with the current channel.
-        """
-        if self.channel != self._client._wf_channel:
-            raise ValueError(
-                "This client is compatible with channel '{}', "
-                "but the XYZ '{}' is only defined for channel '{}'.".format(
-                    self._client._wf_channel, self.id, self.channel
-                )
-            )
-        return self._object
+    def id(self) -> str:
+        "str: The globally unique identifier for the XYZ"
+        return self._message.id
 
     @property
-    def params(self):
-        """
-        tuple: Parameter objects corresponding to the arguments to `object`, if it's a `.Function`.
-
-        These represent any parameters (including widget objects from ``wf.widgets``) that
-        `object` depended on before it became a `.Function`.
-        """
-        return self._params
-
-    @property
-    def type(self):
-        "type: The type of the proxy object."
-        return type(self._object)
-
-    @property
-    def id(self):
-        """
-        str or None: The globally unique identifier for the XYZ,
-        or None if it hasn't been saved yet.
-        """
-        return None if self._message.id == "" else self._message.id
-
-    @property
-    def created_timestamp(self):
+    def created_timestamp(self) -> datetime.datetime:
         """
         datetime.datetime or None: The UTC date this XYZ was created,
         or None if it hasn't been saved yet. Cannot be modified.
@@ -464,7 +328,7 @@ class XYZ(object):
         return pb_milliseconds_to_datetime(self._message.created_timestamp)
 
     @property
-    def updated_timestamp(self):
+    def updated_timestamp(self) -> datetime.datetime:
         """
         datetime.datetime or None: The UTC date this XYZ was most recently modified,
         or None if it hasn't been saved yet. Updated automatically.
@@ -472,27 +336,22 @@ class XYZ(object):
         return pb_milliseconds_to_datetime(self._message.updated_timestamp)
 
     @property
-    def name(self):
+    def name(self) -> str:
         "str: The name of this XYZ."
         return self._message.name
 
     @property
-    def description(self):
+    def description(self) -> str:
         "str: A long-form description of this xyz. Markdown is supported."
         return self._message.description
 
     @property
-    def channel(self):
-        "str: The channel name this XYZ is compatible with."
-        return self._message.channel
-
-    @property
-    def user(self):
-        "str: The user which created this XYZ."
+    def user(self) -> str:
+        "str: The user ID which created this XYZ."
         return self._message.user
 
     @property
-    def org(self):
+    def org(self) -> str:
         "str: The org of the user which created this XYZ."
         return self._message.org
 
@@ -507,25 +366,24 @@ class XYZLogListener(object):
     -------
     >>> from descarteslabs.workflows import Image, XYZ
     >>> img = Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-    >>> xyz = XYZ.build(img)
-    >>> xyz.save()  # doctest: +SKIP
-    >>> listener = xyz.log_listener()
+    >>> xyz = XYZ(img) # doctest: +SKIP
+    >>> listener = xyz.log_listener() # doctest: +SKIP
     >>> def callback(msg):
     ...     print(msg.level, msg.message)
-    >>> listener.add_callback(callback)
+    >>> listener.add_callback(callback) # doctest: +SKIP
     >>> listener.listen("session_id", start_datetime=datetime.datetime.now())  # doctest: +SKIP
     >>> # later
     >>> listener.stop()  # doctest: +SKIP
     """
 
-    def __init__(self, xyz_id, client=None):
+    def __init__(self, xyz_id: str, client: Optional[Client] = None):
         self.xyz_id = xyz_id
         self.callbacks = []
         self._rendezvous = None
         self._thread = None
         self._client = client if client is not None else get_global_grpc_client()
 
-    def add_callback(self, callback):
+    def add_callback(self, callback: Callable[[xyz_pb2.XYZLogRecord], Any]):
         """
         Function will be called with ``descarteslabs.common.proto.xyz_pb2.XYZLogRecord``
         on each log record.
@@ -554,7 +412,12 @@ class XYZLogListener(object):
         """
         self.callbacks.append(callback)
 
-    def listen(self, session_id, start_datetime=None, level=None):
+    def listen(
+        self,
+        session_id: str,
+        start_datetime: datetime.datetime = None,
+        level: int = None,
+    ):
         """
         Start listening for logs.
 
@@ -591,7 +454,7 @@ class XYZLogListener(object):
         self._thread.daemon = True
         self._thread.start()
 
-    def running(self):
+    def running(self) -> bool:
         """bool: whether this is an active listener
 
         Example
@@ -604,7 +467,7 @@ class XYZLogListener(object):
         """
         return self._thread and self._thread.is_alive()
 
-    def stop(self, timeout=None):
+    def stop(self, timeout: Optional[int] = None) -> bool:
         """
         Cancel and clean up the listener. Blocks up to ``timeout`` seconds, or forever if None.
 
@@ -636,7 +499,13 @@ class XYZLogListener(object):
             self.stop(0)
 
 
-def _tile_log_stream(xyz_id, session_id, start_datetime=None, level=None, client=None):
+def _tile_log_stream(
+    xyz_id: str,
+    session_id: str,
+    start_datetime: datetime.datetime = None,
+    level: int = None,
+    client: Optional[Client] = None,
+) -> Iterator[xyz_pb2.XYZLogRecord]:
     if client is None:
         client = get_global_grpc_client()
 

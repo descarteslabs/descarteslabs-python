@@ -204,24 +204,15 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             `Proxytype` instances, or ``ipywidgets.Widget`` instances.
             Names must correspond to parameters that ``imagery`` depends on.
         """
-        if not self.trait_has_value("imagery") or imagery is not self.imagery:
-            # NOTE: `==` checks don't make sense for imagery
-            # (returns another imagery of elemwise equality); checking for the same object is better.
-            # `trait_has_value` is False when the layer is first constructed;
-            # accessing `self.imagery` would cause a validation error in that case.
-
-            should_update_imagery = True
-            xyz = XYZ.build(imagery, name=self.name)
-        else:
-            should_update_imagery = False
-            xyz = self.xyz_obj
+        if not isinstance(imagery, (Image, ImageCollection)):
+            raise TypeError(f"imagery must be an Image or ImageCollection, not {imagery!r}.")
 
         # Combine the parameter dependencies from `imagery` with any overrides
         # and raise an error for any missing or unexpected parameter overrides.
         # We don't do any typechecking of parameter values here; that'll be dealt with
         # later (within `ParameterSet` when trying to actually assign the trait values).
         merged_params = {}
-        for param in xyz.params:
+        for param in imagery.params:
             name = param._name
             try:
                 merged_params[name] = parameter_overrides.pop(name)
@@ -238,18 +229,16 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         if parameter_overrides:
             raise ValueError(
                 f"Unexpected parameters {tuple(parameter_overrides)}. This layer only "
-                f"accepts the parameters {tuple(p._name for p in xyz.params)}."
+                f"accepts the parameters {tuple(p._name for p in imagery.params)}."
             )
 
         xyz_warnings = []
         with self.hold_url_updates():
-            if should_update_imagery:
-                # NOTE: we awkwardly do these sets _after_ parameter merging for nicer tracebacks.
-                # if we did them before, `hold_trait_notifications` would try to run any handlers
-                # for these changed traits before reraising the ValueErrors we raised within the
-                # contextmanager, which leads to a huge and confusing traceback for users.
+            if not self.trait_has_value("imagery") or imagery is not self.imagery:
+                # `trait_has_value` is False when the layer is first constructed;
+                # accessing `self.imagery` would cause a validation error in that case.
                 with warnings.catch_warnings(record=True) as xyz_warnings:
-                    xyz.save()
+                    xyz = XYZ(imagery, name=self.name)
                 self.set_trait("imagery", imagery)
                 self.set_trait("xyz_obj", xyz)
 
