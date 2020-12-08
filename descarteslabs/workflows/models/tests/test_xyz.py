@@ -77,9 +77,7 @@ class TestXYZ(object):
         )
 
         CreateXYZ.assert_called_once_with(
-            expected_req,
-            timeout=client.Client.DEFAULT_TIMEOUT,
-            metadata=mock.ANY,
+            expected_req, timeout=client.Client.DEFAULT_TIMEOUT, metadata=mock.ANY,
         )
 
         assert xyz._message == mock_CreateXYZ(expected_req)

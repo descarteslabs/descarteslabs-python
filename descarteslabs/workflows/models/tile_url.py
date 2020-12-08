@@ -202,7 +202,7 @@ def validate_scales(scales):
                 x is None for x in scaling
             ):
                 raise ValueError(
-                    "Invalid scales passed: one number and one None in scaling {}".format(
+                    "Invalid scales passed: one number and one None in scales[{}] {}".format(
                         i, scaling
                     )
                 )

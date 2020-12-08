@@ -130,5 +130,5 @@ def test_validate_scales():
         tile_url.validate_scales([[0.0, 1.0, 2.0]])
     with pytest.raises(ValueError, match="but length was 1"):
         tile_url.validate_scales([[0.0]])
-    with pytest.raises(ValueError, match="one number and one None in scaling"):
+    with pytest.raises(ValueError, match="one number and one None in scales"):
         tile_url.validate_scales([[None, 1.0]])
