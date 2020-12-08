@@ -1,7 +1,6 @@
 import datetime
 import json
 import logging
-from urllib.parse import urlencode, parse_qs
 
 from six.moves import queue
 
@@ -12,7 +11,6 @@ import pytest
 from descarteslabs.client.version import __version__
 from descarteslabs.common.proto.xyz import xyz_pb2
 from descarteslabs.common.proto.logging import logging_pb2
-from descarteslabs.common.graft import client as graft_client
 
 from ... import _channel, types, cereal
 from ...client import Client
@@ -203,148 +201,9 @@ class TestXYZ(object):
         with pytest.raises(ValueError, match="has not been persisted"):
             xyz.url()
 
-        xyz._message.url_template = (
-            "https://workflows.descarteslabs.com/v0-0/xyz/baz/{z}/{x}/{y}.png"
-        )
+        url_template = xyz._message.url_template = "http://base.net"
 
-        url_base = xyz._message.url_template
-        url_base_q = url_base + "?"
-
-        assert xyz.url() == url_base
-        assert xyz.url(session_id="foo") == url_base_q + urlencode(
-            {"session_id": "foo"}
-        )
-        assert xyz.url(colormap="foo") == url_base_q + urlencode({"colormap": "foo"})
-        assert xyz.url(reduction="mean") == url_base_q + urlencode(
-            {"reduction": "mean"}
-        )
-        assert xyz.url(checkerboard=True) == url_base_q + urlencode(
-            {"checkerboard": "true"}
-        )
-        assert xyz.url(checkerboard=False) == url_base
-
-        assert xyz.url(bands=["red"]) == url_base_q + urlencode({"band": "red"})
-        assert xyz.url(bands=["red", "green"]) == url_base_q + urlencode(
-            {"band": ["red", "green"]}, doseq=True
-        )
-        with pytest.raises(ValueError, match="Up to 3 bands may be specified, not 4"):
-            xyz.url(bands=["a", "b", "c", "d"])
-
-        # 1-band scales are normalized
-        assert xyz.url(scales=[0, 1]) == url_base_q + urlencode(
-            {"scales": "[[0.0, 1.0]]"}
-        )
-        # If all none scales, not included
-        assert xyz.url(scales=[None, None]) == url_base
-
-        # # Primitives are inserted directly and JSON-encoded
-        # assert xyz.url(foo=1) == url_base_q + urlencode({"foo": "1"})
-        # assert xyz.url(bar=True) == url_base_q + urlencode({"bar": "true"})
-        # assert xyz.url(baz="quz") == url_base_q + urlencode({"baz": '"quz"'})
-        # # Grafts are JSON-encoded (along with embedded JSON in grafts)
-        # assert xyz.url(foo=obj) == url_base_q + urlencode(
-        #     {"foo": json.dumps(obj.graft)}
-        # )
-
-        # test everything gets added together correctly
-        base, params = xyz.url(
-            session_id="foo", colormap="bar", bands=["red", "green"]
-        ).split("?")
-        assert base == url_base
-        query = parse_qs(params, strict_parsing=True, keep_blank_values=True)
-        assert query == {
-            # `parse_qs` returns all values wrapped in lists
-            "session_id": ["foo"],
-            "colormap": ["bar"],
-            "band": ["red", "green"],
-        }
-
-    @pytest.mark.parametrize(
-        "args",
-        [
-            {
-                "p1": 1,
-                "p2": 2.2,
-                "p3": "2021-01-20",
-            },
-            {
-                "p1": 1,
-                "p2": types.Float(1.1) + 1,
-                "p3": datetime.datetime(2020, 1, 20),
-            },
-            {
-                "p1": types.Int(1),
-                "p2": types.Float(1.1) + 1,
-                "p3": types.Datetime(2021, 1, 20),
-            },
-        ],
-    )
-    def test_url_arguments(self, stub, args):
-        p1 = types.parameter("p1", types.Int)
-        p2 = types.parameter("p2", types.Float)
-        p3 = types.parameter("p3", types.Datetime)
-
-        obj = p3 + types.Timedelta(days=p1, hours=p2)
-        xyz = XYZ.build(obj)
-        xyz._message.url_template = "http://base.net"
-
-        for bad_args in [{}, dict(args, blah="bad")]:
-            with pytest.raises(TypeError, match="Expected the required arguments"):
-                xyz.url(**bad_args)
-
-        with graft_client.consistent_guid():
-            base, params = xyz.url(**args).split("?")
-
-        assert base == xyz._message.url_template
-        query = parse_qs(params, strict_parsing=True, keep_blank_values=True)
-        assert query.keys() == args.keys()
-
-        assert query["p1"] == ["1"]
-        if isinstance(args["p2"], float):
-            assert query["p2"] == ["2.2"]
-        else:
-            assert query["p2"] == [json.dumps(args["p2"].graft)]
-
-        with graft_client.consistent_guid():
-            p3_graft = types.Datetime._promote(args["p3"]).graft
-
-        assert query["p3"] == [json.dumps(p3_graft)]
-
-    def test_validate_scales(self, stub):
-        assert XYZ._validate_scales([[0.0, 1.0], [0.0, 2.0], [-1.0, 1.0]]) == [
-            [0.0, 1.0],
-            [0.0, 2.0],
-            [-1.0, 1.0],
-        ]
-        assert XYZ._validate_scales([[0.0, 1.0]]) == [[0.0, 1.0]]
-        # ints -> floats
-        assert XYZ._validate_scales([[0, 1]]) == [[0.0, 1.0]]
-        # 1-band convenience
-        assert XYZ._validate_scales([0, 1]) == [[0.0, 1.0]]
-        # no scalings
-        assert XYZ._validate_scales(None) == []
-        assert XYZ._validate_scales([]) == []
-
-        with pytest.raises(TypeError, match="Expected a list or tuple of scales"):
-            XYZ._validate_scales(0)
-        with pytest.raises(TypeError, match="Expected a list or tuple of scales"):
-            XYZ._validate_scales("foo")
-        with pytest.raises(
-            TypeError, match="Scaling 0: expected a 2-item list or tuple"
-        ):
-            XYZ._validate_scales([1, 2, 3])
-        with pytest.raises(
-            TypeError, match="Scaling 0: items in scaling must be numbers"
-        ):
-            XYZ._validate_scales([1, "foo"])
-        with pytest.raises(ValueError, match="expected up to 3 scales, but got 4"):
-            XYZ._validate_scales([[0.0, 1.0], [0.0, 1.0], [0.0, 1.0], [0.0, 1.0]])
-        with pytest.raises(ValueError, match="but length was 3"):
-            XYZ._validate_scales([[0.0, 1.0, 2.0]])
-        with pytest.raises(ValueError, match="but length was 1"):
-            XYZ._validate_scales([[0.0]])
-        with pytest.raises(ValueError, match="one number and one None in scaling"):
-            XYZ._validate_scales([[None, 1.0]])
+        assert xyz.url() == url_template
 
 
 @mock.patch("descarteslabs.workflows.models.xyz._tile_log_stream")

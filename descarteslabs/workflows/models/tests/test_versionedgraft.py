@@ -92,3 +92,15 @@ class TestVersionedGraft(object):
 
         with pytest.raises(ValueError, match="only defined for channel 'foobar'"):
             vg.object
+
+    def test_url(self, stub):
+        obj = utils.Foo(1)
+        version = "1.0.1"
+        vg = VersionedGraft(version, obj)
+
+        with pytest.raises(ValueError, match="has not been persisted"):
+            vg.url()
+
+        url_template = vg._message.url_template = "http://base.net"
+
+        assert vg.url() == url_template

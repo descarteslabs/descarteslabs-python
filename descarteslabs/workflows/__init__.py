@@ -229,7 +229,7 @@ def _compute_mixin(self, *args, **kwargs):
 
 
 def _publish_mixin(self, id, version, *args, **kwargs):
-    return publish(id, version, obj=self, *args, **kwargs)
+    return publish(id, version, self, *args, **kwargs)
 
 
 def _inspect_mixin(self, *args, **kwargs):

@@ -94,6 +94,12 @@ message VersionedGraft {
   int64 created_timestamp = 7;
   int64 updated_timestamp = 8;
   int64 deprecated_timestamp = 9;
+
+  // Template string for XYZ tiles like
+  // "https://workflows.descarteslabs.com/v0-5/workflow/test@example.com:foo/1.0.1/{z}/{x}/{y}.png".
+  // Compatible with Leaflet, OpenLayers, Python format strings.
+  // Read-only: any value is ignored in `UpsertWorkflowRequest`.
+  string url_template = 12;
 }
 
 message Empty {}

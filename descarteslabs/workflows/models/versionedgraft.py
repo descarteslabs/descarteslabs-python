@@ -10,6 +10,8 @@ from descarteslabs.workflows.client import get_global_grpc_client
 from descarteslabs.workflows.types import Function, proxify
 from descarteslabs.workflows.types.widget import serialize_params, deserialize_params
 
+from .tile_url import tile_url
+
 
 class VersionedGraft:
     """
@@ -257,4 +259,117 @@ VersionedGraft: {self.version}
             self=self,
             type_line=type_line,
             docstring=textwrap.indent(self.docstring, "    "),
+        )
+
+    def url(
+        self,
+        colormap=None,
+        bands=None,
+        scales=None,
+        reduction="mosaic",
+        checkerboard=False,
+        **arguments,
+    ):
+        """
+        URL template for displaying this `VersionedGraft` on a web map,
+        like ``https://workflows.descarteslabs.com/v0-5/workflow/test@example.com:foo/1.0.1/{z}/{x}/{y}.png``
+
+        The returned URL uses the `XYZ/OpenStreetMap tiling scheme
+        <https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames>`_.
+
+        `object` must be an `~.geospatial.Image`, an `~.geospatial.ImageCollection`, or a `.Function`
+        that returns an `~.geospatial.Image` or `~.geospatial.ImageCollection` for the URL to work.
+
+        Parameters
+        ----------
+        colormap: str, optional, default None
+            Name of the colormap to use. If set, the displayed `~.geospatial.Image`
+            or `~.geospatial.ImageCollection` must have 1 band.
+        bands: list of str, optional, default None
+            The band names to select from the imagery. If None (default),
+            the imagery should already have 1-3 bands selected.
+        scales: list of lists, optional, default None
+            The scaling to apply to each band in the `~.geospatial.Image`.
+            If displaying an `~.geospatial.ImageCollection`, it is reduced into
+            an `~.geospatial.Image` before scaling.
+
+            If the `~.geospatial.Image` or `~.geospatial.ImageCollection` contains 3 bands,
+            ``scales`` must be a list like ``[(0, 1), (0, 1), (-1, 1)]``.
+
+            If the `~.geospatial.Image` or `~.geospatial.ImageCollection` contains 1 band,
+            ``scales`` must be a list like ``[(0, 1)]``, or just ``(0, 1)`` for convenience
+
+            If None, each 256x256 tile will be scaled independently.
+        reduction: str, optional, default "mosaic"
+            One of "mosaic", "min", "max", "mean", "median", "sum", "std", or "count".
+            If displaying an `~.geospatial.ImageCollection`, this method is used to reduce it into
+            an `~.geospatial.Image`. The reduction is performed before applying a colormap or scaling.
+            If displaying an `~.geospatial.Image`, reduction is ignored.
+        checkerboard: bool, default False
+            Whether to display a checkerboarded background for missing or masked data.
+        **arguments: Any
+            Values for all the arguments that `object` takes, if it's a `.Function`.
+            Can be given as Proxytypes, or as Python objects like numbers,
+            lists, and dicts that can be promoted to them.
+            These arguments cannot depend on any parameters.
+
+        Returns
+        -------
+        url: str
+            Tile URL containing ``{z}``, ``{x}``, and ``{y}`` as Python format string parameters,
+            and query arguments URL-quoted.
+
+        Raises
+        ------
+        ValueError
+            If `Workflow` containing this `VersionedGraft` object has not been saved yet.
+
+        TypeError
+            If the ``scales`` are of invalid type.
+
+            If the ``arguments`` names or types don't match the arguments that
+            the `object` takes. (Those required arguments are equivalent to `params`.)
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> red = img.pick_bands("red")
+        >>> viz = red ** wf.parameter("exponent", wf.Float)
+        >>> flow = viz.publish("you@example.com:s2_red", "1.0.0") # doctest: +SKIP
+        >>> vg = flow["1.0.0"] # doctest: +SKIP
+        >>> vg.url(colormap="magma", scales=[(0.2, 0.8)], exponent=2.5) # doctest: +SKIP
+        'https://workflows.descarteslabs.com/v0-0/workflow/you@example.com:s2_red/1.0.0/
+        {z}/{x}/{y}.png?colormap=magma&scales=%5B%5B0.2%2C+0.8%5D%5D&exponent=2.5'
+
+        >>> import descarteslabs.workflows as wf
+        >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
+        ...        start_datetime="2017-01-01",
+        ...        end_datetime="2017-12-31")
+        >>> red = col.pick_bands("red")
+        >>> viz = red ** wf.parameter("exponent", wf.Float)
+        >>> flow = viz.publish("you@example.com:l8_red", "1.0.0") # doctest: +SKIP
+        >>> vg = flow["1.0.0"] # doctest: +SKIP
+        >>> vg.url(reduction="min", exponent=2.5) # doctest: +SKIP
+        'https://workflows.descarteslabs.com/v0-0/workflow/you@example.com:l8_red/1.0.0/
+        {z}/{x}/{y}.png?colormap=magma&scales=%5B%5B0.2%2C+0.8%5D%5D&reduction=min&exponent=2.5'
+        """
+        url_template = self._message.url_template
+        if not url_template:
+            raise ValueError(
+                "This VersionedGraft object has not been persisted yet. "
+                "Call .save() on the Workflow that contains it, then call "
+                f".get_version({self.version!r}) on that parent Workflow to get an updated "
+                "copy of this VersionedGraft."
+            )
+
+        return tile_url(
+            url_template,
+            self.params,
+            colormap=colormap,
+            bands=bands,
+            scales=scales,
+            reduction=reduction,
+            checkerboard=checkerboard,
+            **arguments,
         )

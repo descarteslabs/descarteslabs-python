@@ -39,7 +39,7 @@ message XYZ {
 
   string user = 23;
   string org = 24;
-  // Template string like
+  // Template string for XYZ tiles like
   // "https://workflows.descarteslabs.com/v0-5/xyz/1234567/{z}/{x}/{y}.png".
   // Compatible with Leaflet, OpenLayers, Python format strings.
   string url_template = 26;
