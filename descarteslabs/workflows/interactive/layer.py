@@ -15,6 +15,7 @@ from descarteslabs.common.proto.logging import logging_pb2
 from descarteslabs.common.graft import client as graft_client
 from ..execution import arguments_to_grafts
 from ..models import XYZ
+from ..models.tile_url import validate_scales
 from ..types import Image, ImageCollection
 
 from . import parameters
@@ -543,7 +544,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         colormap = self.colormap if new_colormap is False else new_colormap
 
         if scales is not None:
-            scales = XYZ._validate_scales(scales)
+            scales = validate_scales(scales)
 
             scales_len = 1 if colormap is not None else 3
             if len(scales) != scales_len:
