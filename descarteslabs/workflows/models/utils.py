@@ -28,6 +28,13 @@ def pb_datetime_to_milliseconds(dt):
     return int(dt.timestamp() * 1000)
 
 
+def pb_timestamp_to_datetime(ts):
+    "datetme.datetime from a protobuf.Timestamp"
+    if ts is None:
+        return None
+    return ts.ToDatetime()
+
+
 def in_notebook():
     try:
         from IPython import get_ipython

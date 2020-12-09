@@ -14,6 +14,7 @@ from .published_graft import PublishedGraft
 from .utils import (
     pb_datetime_to_milliseconds,
     pb_milliseconds_to_datetime,
+    pb_timestamp_to_datetime,
     py_log_level_to_proto_log_level,
 )
 from .tile_url import tile_url
@@ -62,6 +63,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
         proxy_object: Proxytype,
         name: str = "",
         description: str = "",
+        days_to_expiration: int = None,
         client: Optional[Client] = None,
     ):
         """
@@ -81,6 +83,9 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
             Name for the new XYZ
         description: str, default ""
             Long-form description of this XYZ. Markdown is supported.
+        days_to_expiration: int, default None
+            Days until this XYZ object will expire.
+            If None defaults to 10 days.
         client: `.workflows.client.Client`, optional, default None
             Allows you to use a specific client instance with non-default
             auth and parameters
@@ -103,6 +108,9 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
                 serialized_graft=self._message.serialized_graft,
                 typespec=self._message.typespec,
                 parameters=self._message.parameters,
+                days_to_expiration=int(days_to_expiration)
+                if days_to_expiration is not None
+                else None,
                 channel=self._message.channel,
                 client_version=self._message.client_version,
             ),
@@ -334,6 +342,13 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
         or None if it hasn't been saved yet. Updated automatically.
         """
         return pb_milliseconds_to_datetime(self._message.updated_timestamp)
+
+    @property
+    def expires_timestamp(self) -> datetime.datetime:
+        """
+        datetime.datetime: The UTC date this XYZ will be expired.
+        """
+        return pb_timestamp_to_datetime(self._message.expires_timestamp)
 
     @property
     def name(self) -> str:

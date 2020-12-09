@@ -3,6 +3,7 @@ syntax = "proto3";
 
 package descarteslabs.workflows;
 
+import "google/protobuf/timestamp.proto";
 import "descarteslabs/common/proto/types/types.proto";
 import "descarteslabs/common/proto/typespec/typespec.proto";
 import "descarteslabs/common/proto/widgets/widgets.proto";
@@ -43,6 +44,7 @@ message XYZ {
   // "https://workflows.descarteslabs.com/v0-5/xyz/1234567/{z}/{x}/{y}.png".
   // Compatible with Leaflet, OpenLayers, Python format strings.
   string url_template = 26;
+  google.protobuf.Timestamp expires_timestamp = 28;
 }
 
 message CreateXYZRequest {
@@ -53,6 +55,7 @@ message CreateXYZRequest {
   repeated Parameter parameters = 7;
   string channel = 5;
   string client_version = 6;
+  uint32 days_to_expiration = 8;
 }
 
 message GetXYZRequest { string xyz_id = 1; }

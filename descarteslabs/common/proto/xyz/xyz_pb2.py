@@ -11,6 +11,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 from descarteslabs.common.proto.types import types_pb2 as descarteslabs_dot_common_dot_proto_dot_types_dot_types__pb2
 from descarteslabs.common.proto.typespec import typespec_pb2 as descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2
 from descarteslabs.common.proto.widgets import widgets_pb2 as descarteslabs_dot_common_dot_proto_dot_widgets_dot_widgets__pb2
@@ -22,9 +23,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n(descarteslabs/common/proto/xyz/xyz.proto\x12\x17\x64\x65scarteslabs.workflows\x1a,descarteslabs/common/proto/types/types.proto\x1a\x32\x64\x65scarteslabs/common/proto/typespec/typespec.proto\x1a\x30\x64\x65scarteslabs/common/proto/widgets/widgets.proto\x1a\x30\x64\x65scarteslabs/common/proto/logging/logging.proto\"\x96\x04\n\x03XYZ\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12+\n\x11\x63reated_timestamp\x18\x02 \x01(\x03R\x10\x63reatedTimestamp\x12+\n\x11updated_timestamp\x18\x03 \x01(\x03R\x10updatedTimestamp\x12\x12\n\x04name\x18\x07 \x01(\tR\x04name\x12 \n\x0b\x64\x65scription\x18\x08 \x01(\tR\x0b\x64\x65scription\x12\x37\n\x04type\x18\t \x01(\x0e\x32#.descarteslabs.workflows.ResultTypeR\x04type\x12\x18\n\x07\x63hannel\x18\n \x01(\tR\x07\x63hannel\x12%\n\x0e\x63lient_version\x18\x0b \x01(\tR\rclientVersion\x12)\n\x10serialized_graft\x18\x15 \x01(\tR\x0fserializedGraft\x12=\n\x08typespec\x18\x19 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x08typespec\x12\x42\n\nparameters\x18\x1b \x03(\x0b\x32\".descarteslabs.workflows.ParameterR\nparameters\x12\x12\n\x04user\x18\x17 \x01(\tR\x04user\x12\x10\n\x03org\x18\x18 \x01(\tR\x03org\x12!\n\x0curl_template\x18\x1a \x01(\tR\x0burlTemplate\"\xb7\x02\n\x10\x43reateXYZRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12 \n\x0b\x64\x65scription\x18\x02 \x01(\tR\x0b\x64\x65scription\x12)\n\x10serialized_graft\x18\x03 \x01(\tR\x0fserializedGraft\x12=\n\x08typespec\x18\x04 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x08typespec\x12\x42\n\nparameters\x18\x07 \x03(\x0b\x32\".descarteslabs.workflows.ParameterR\nparameters\x12\x18\n\x07\x63hannel\x18\x05 \x01(\tR\x07\x63hannel\x12%\n\x0e\x63lient_version\x18\x06 \x01(\tR\rclientVersion\"&\n\rGetXYZRequest\x12\x15\n\x06xyz_id\x18\x01 \x01(\tR\x05xyzId\"\xb9\x01\n\x18GetXYZSessionLogsRequest\x12\x15\n\x06xyz_id\x18\x01 \x01(\tR\x05xyzId\x12\x1d\n\nsession_id\x18\x02 \x01(\tR\tsessionId\x12>\n\x05level\x18\x03 \x01(\x0e\x32(.descarteslabs.workflows.LogRecord.LevelR\x05level\x12\'\n\x0fstart_timestamp\x18\x04 \x01(\x03R\x0estartTimestamp\"i\n\x0cXYZLogRecord\x12:\n\x06record\x18\x01 \x01(\x0b\x32\".descarteslabs.workflows.LogRecordR\x06record\x12\x1d\n\nsession_id\x18\x02 \x01(\tR\tsessionId2\xa5\x02\n\x06XYZAPI\x12V\n\tCreateXYZ\x12).descarteslabs.workflows.CreateXYZRequest\x1a\x1c.descarteslabs.workflows.XYZ\"\x00\x12P\n\x06GetXYZ\x12&.descarteslabs.workflows.GetXYZRequest\x1a\x1c.descarteslabs.workflows.XYZ\"\x00\x12q\n\x11GetXYZSessionLogs\x12\x31.descarteslabs.workflows.GetXYZSessionLogsRequest\x1a%.descarteslabs.workflows.XYZLogRecord\"\x00\x30\x01\x62\x06proto3'
+  serialized_pb=b'\n(descarteslabs/common/proto/xyz/xyz.proto\x12\x17\x64\x65scarteslabs.workflows\x1a\x1fgoogle/protobuf/timestamp.proto\x1a,descarteslabs/common/proto/types/types.proto\x1a\x32\x64\x65scarteslabs/common/proto/typespec/typespec.proto\x1a\x30\x64\x65scarteslabs/common/proto/widgets/widgets.proto\x1a\x30\x64\x65scarteslabs/common/proto/logging/logging.proto\"\xdf\x04\n\x03XYZ\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12+\n\x11\x63reated_timestamp\x18\x02 \x01(\x03R\x10\x63reatedTimestamp\x12+\n\x11updated_timestamp\x18\x03 \x01(\x03R\x10updatedTimestamp\x12\x12\n\x04name\x18\x07 \x01(\tR\x04name\x12 \n\x0b\x64\x65scription\x18\x08 \x01(\tR\x0b\x64\x65scription\x12\x37\n\x04type\x18\t \x01(\x0e\x32#.descarteslabs.workflows.ResultTypeR\x04type\x12\x18\n\x07\x63hannel\x18\n \x01(\tR\x07\x63hannel\x12%\n\x0e\x63lient_version\x18\x0b \x01(\tR\rclientVersion\x12)\n\x10serialized_graft\x18\x15 \x01(\tR\x0fserializedGraft\x12=\n\x08typespec\x18\x19 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x08typespec\x12\x42\n\nparameters\x18\x1b \x03(\x0b\x32\".descarteslabs.workflows.ParameterR\nparameters\x12\x12\n\x04user\x18\x17 \x01(\tR\x04user\x12\x10\n\x03org\x18\x18 \x01(\tR\x03org\x12!\n\x0curl_template\x18\x1a \x01(\tR\x0burlTemplate\x12G\n\x11\x65xpires_timestamp\x18\x1c \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x10\x65xpiresTimestamp\"\xe5\x02\n\x10\x43reateXYZRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12 \n\x0b\x64\x65scription\x18\x02 \x01(\tR\x0b\x64\x65scription\x12)\n\x10serialized_graft\x18\x03 \x01(\tR\x0fserializedGraft\x12=\n\x08typespec\x18\x04 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x08typespec\x12\x42\n\nparameters\x18\x07 \x03(\x0b\x32\".descarteslabs.workflows.ParameterR\nparameters\x12\x18\n\x07\x63hannel\x18\x05 \x01(\tR\x07\x63hannel\x12%\n\x0e\x63lient_version\x18\x06 \x01(\tR\rclientVersion\x12,\n\x12\x64\x61ys_to_expiration\x18\x08 \x01(\rR\x10\x64\x61ysToExpiration\"&\n\rGetXYZRequest\x12\x15\n\x06xyz_id\x18\x01 \x01(\tR\x05xyzId\"\xb9\x01\n\x18GetXYZSessionLogsRequest\x12\x15\n\x06xyz_id\x18\x01 \x01(\tR\x05xyzId\x12\x1d\n\nsession_id\x18\x02 \x01(\tR\tsessionId\x12>\n\x05level\x18\x03 \x01(\x0e\x32(.descarteslabs.workflows.LogRecord.LevelR\x05level\x12\'\n\x0fstart_timestamp\x18\x04 \x01(\x03R\x0estartTimestamp\"i\n\x0cXYZLogRecord\x12:\n\x06record\x18\x01 \x01(\x0b\x32\".descarteslabs.workflows.LogRecordR\x06record\x12\x1d\n\nsession_id\x18\x02 \x01(\tR\tsessionId2\xa5\x02\n\x06XYZAPI\x12V\n\tCreateXYZ\x12).descarteslabs.workflows.CreateXYZRequest\x1a\x1c.descarteslabs.workflows.XYZ\"\x00\x12P\n\x06GetXYZ\x12&.descarteslabs.workflows.GetXYZRequest\x1a\x1c.descarteslabs.workflows.XYZ\"\x00\x12q\n\x11GetXYZSessionLogs\x12\x31.descarteslabs.workflows.GetXYZSessionLogsRequest\x1a%.descarteslabs.workflows.XYZLogRecord\"\x00\x30\x01\x62\x06proto3'
   ,
-  dependencies=[descarteslabs_dot_common_dot_proto_dot_types_dot_types__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_widgets_dot_widgets__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_logging_dot_logging__pb2.DESCRIPTOR,])
+  dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_types_dot_types__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_widgets_dot_widgets__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_logging_dot_logging__pb2.DESCRIPTOR,])
 
 
 
@@ -134,6 +135,13 @@ _XYZ = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='urlTemplate', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='expires_timestamp', full_name='descarteslabs.workflows.XYZ.expires_timestamp', index=14,
+      number=28, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='expiresTimestamp', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -146,8 +154,8 @@ _XYZ = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=268,
-  serialized_end=802,
+  serialized_start=301,
+  serialized_end=908,
 )
 
 
@@ -207,6 +215,13 @@ _CREATEXYZREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='clientVersion', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='days_to_expiration', full_name='descarteslabs.workflows.CreateXYZRequest.days_to_expiration', index=7,
+      number=8, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='daysToExpiration', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -219,8 +234,8 @@ _CREATEXYZREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=805,
-  serialized_end=1116,
+  serialized_start=911,
+  serialized_end=1268,
 )
 
 
@@ -250,8 +265,8 @@ _GETXYZREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1118,
-  serialized_end=1156,
+  serialized_start=1270,
+  serialized_end=1308,
 )
 
 
@@ -302,8 +317,8 @@ _GETXYZSESSIONLOGSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1159,
-  serialized_end=1344,
+  serialized_start=1311,
+  serialized_end=1496,
 )
 
 
@@ -340,13 +355,14 @@ _XYZLOGRECORD = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1346,
-  serialized_end=1451,
+  serialized_start=1498,
+  serialized_end=1603,
 )
 
 _XYZ.fields_by_name['type'].enum_type = descarteslabs_dot_common_dot_proto_dot_types_dot_types__pb2._RESULTTYPE
 _XYZ.fields_by_name['typespec'].message_type = descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2._TYPESPEC
 _XYZ.fields_by_name['parameters'].message_type = descarteslabs_dot_common_dot_proto_dot_widgets_dot_widgets__pb2._PARAMETER
+_XYZ.fields_by_name['expires_timestamp'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
 _CREATEXYZREQUEST.fields_by_name['typespec'].message_type = descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2._TYPESPEC
 _CREATEXYZREQUEST.fields_by_name['parameters'].message_type = descarteslabs_dot_common_dot_proto_dot_widgets_dot_widgets__pb2._PARAMETER
 _GETXYZSESSIONLOGSREQUEST.fields_by_name['level'].enum_type = descarteslabs_dot_common_dot_proto_dot_logging_dot_logging__pb2._LOGRECORD_LEVEL
@@ -401,8 +417,8 @@ _XYZAPI = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=1454,
-  serialized_end=1747,
+  serialized_start=1606,
+  serialized_end=1899,
   methods=[
   _descriptor.MethodDescriptor(
     name='CreateXYZ',

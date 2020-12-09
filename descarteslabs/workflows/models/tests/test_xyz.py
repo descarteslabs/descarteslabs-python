@@ -5,6 +5,7 @@ from six.moves import queue
 
 import grpc
 import mock
+from google.protobuf.timestamp_pb2 import Timestamp
 
 from descarteslabs.common.proto.xyz import xyz_pb2
 from descarteslabs.common.proto.logging import logging_pb2
@@ -23,6 +24,8 @@ from . import utils
 
 def mock_CreateXYZ(msg: xyz_pb2.CreateXYZRequest, **kwargs) -> xyz_pb2.XYZ:
     assert isinstance(msg, xyz_pb2.CreateXYZRequest)
+    expires_timestamp = Timestamp()
+    expires_timestamp.FromJsonString("2003-01-02T04:05:06.789+00:00")
     return xyz_pb2.XYZ(
         id="mclovin",
         name=msg.name,
@@ -30,6 +33,7 @@ def mock_CreateXYZ(msg: xyz_pb2.CreateXYZRequest, **kwargs) -> xyz_pb2.XYZ:
         serialized_graft=msg.serialized_graft,
         typespec=msg.typespec,
         parameters=msg.parameters,
+        expires_timestamp=expires_timestamp,
         channel=msg.channel,
         client_version=msg.client_version,
     )
@@ -84,6 +88,7 @@ class TestXYZ(object):
 
         assert xyz.name == name
         assert xyz.description == desc
+        assert xyz.expires_timestamp == datetime.datetime(2003, 1, 2, 4, 5, 6, 789000)
 
     def test_get(self, stub):
         message = "foo"
