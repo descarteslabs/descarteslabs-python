@@ -205,7 +205,7 @@ class Any(Proxytype):
 
     # Mapping operators
     def __getitem__(self, item):
-        return self._from_apply("wf.getitem", self, item)
+        return self._from_apply("wf.get", self, item)
 
     def __getattr__(self, attr):
         if attr[0] == "_":

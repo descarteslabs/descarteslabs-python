@@ -124,7 +124,7 @@ class Tuple(GenericProxytype):
             item_type = (
                 Any if type_slice is None else Tuple[self._type_params[type_slice]]
             )
-        return item_type._from_apply("wf.getitem", self, item)
+        return item_type._from_apply("wf.get", self, item)
 
     def __len__(self):
         try:

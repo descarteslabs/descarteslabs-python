@@ -92,7 +92,7 @@ class List(GenericProxytype, CollectionMixin):
     def __getitem__(self, item):
         # TODO(gabe): cache
         return_type = self._type_params[0] if isinstance(item, Int) else type(self)
-        return return_type._from_apply("wf.getitem", self, item)
+        return return_type._from_apply("wf.get", self, item)
 
     def __iter__(self):
         raise TypeError(

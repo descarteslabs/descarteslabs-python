@@ -1479,7 +1479,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     @typecheck_promote((Int, Slice))
     def __getitem__(self, item):
         return_type = Image if isinstance(item, Int) else self
-        return return_type._from_apply("wf.getitem", self, item)
+        return return_type._from_apply("wf.get", self, item)
 
     # Binary comparators
     @typecheck_promote((Image, lambda: ImageCollection, Int, Float))

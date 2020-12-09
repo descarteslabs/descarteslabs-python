@@ -91,7 +91,7 @@ def test_getitem_roundtrip():
     for i, truth in enumerate(src):
         value = interpreter.interpret(
             tup[i].graft,
-            builtins={"wf.tuple": lambda *tuple: tuple, "wf.getitem": operator.getitem},
+            builtins={"wf.tuple": lambda *tuple: tuple, "wf.get": operator.getitem},
         )()
         assert value == truth
 

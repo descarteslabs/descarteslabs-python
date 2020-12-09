@@ -93,7 +93,7 @@ class Str(Primitive):
 
     @typecheck_promote((Int, SliceType))
     def __getitem__(self, idx):
-        return self._from_apply("wf.getitem", self, idx)
+        return self._from_apply("wf.get", self, idx)
 
     def length(self):
         """The length of the string (returns `Int`)

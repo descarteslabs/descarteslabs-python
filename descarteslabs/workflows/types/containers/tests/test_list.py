@@ -93,7 +93,7 @@ def test_getitem_roundtrip():
             tup[i].graft,
             builtins={
                 "wf.list": lambda *args: list(args),
-                "wf.getitem": operator.getitem,
+                "wf.get": operator.getitem,
             },
         )()
         assert value == truth
