@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -32,8 +33,11 @@ from ..execution import to_computable
 from ..result_types import unmarshal
 from ..types import GeoContext, ProxyTypeError, Any
 from .exceptions import error_code_to_exception, JobTimeoutError, JobCancelled
-from .utils import in_notebook, pb_milliseconds_to_datetime
-
+from .utils import (
+    in_notebook,
+    pb_milliseconds_to_datetime,
+    pb_timestamp_to_datetime,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -637,6 +641,13 @@ class Job:
         return pb_milliseconds_to_datetime(self._message.state.timestamp)
 
     @property
+    def expires_datetime(self) -> datetime.datetime:
+        """
+        datetime.datetime: The UTC date this Job will be expired.
+        """
+        return pb_timestamp_to_datetime(self._message.expires_timestamp)
+
+    @property
     def runtime(self):
         "datetime: The total time it took the Job to run."
         if self.updated_datetime is None or self.created_datetime is None:
@@ -709,10 +720,8 @@ def _draw_progress_bar(finished, total, stage, output, width=6):
     else:
         bar = "#" * int(width * percent)
 
-    progress_output = (
-        "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
-            bar=bar, width=width, finished=finished, total=total, stage=stage
-        )
+    progress_output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
+        bar=bar, width=width, finished=finished, total=total, stage=stage
     )
 
     _write_to_io_or_widget(output, "{:<79}".format(progress_output))

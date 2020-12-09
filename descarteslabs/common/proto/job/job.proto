@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package descarteslabs.workflows;
 
+import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
 import "descarteslabs/common/proto/destinations/destinations.proto";
@@ -50,6 +51,8 @@ message Job {
   int64 timestamp = 7;
   string user = 8;
   string org = 9;
+
+  google.protobuf.Timestamp expires_timestamp = 20;
 
   // State information
 

@@ -5,6 +5,7 @@ import pytest
 import responses
 
 import grpc
+from google.protobuf.timestamp_pb2 import Timestamp
 
 from descarteslabs import scenes
 from descarteslabs.workflows.client import Client
@@ -26,7 +27,7 @@ from descarteslabs.workflows import _channel
 from ... import cereal, types
 from ..exceptions import JobInvalid, JobComputeError, JobTerminated, JobTimeoutError
 from ..job import Job, download
-from ..utils import pb_milliseconds_to_datetime
+from ..utils import pb_milliseconds_to_datetime, pb_timestamp_to_datetime
 
 from . import utils
 
@@ -56,12 +57,7 @@ class TestJob:
         response_message = job_pb2.Job()
         stub.return_value.CreateJob.return_value = response_message
 
-        job = Job(
-            obj,
-            format=format,
-            destination=destination,
-            **arguments,
-        )
+        job = Job(obj, format=format, destination=destination, **arguments,)
 
         assert job._message is response_message
         assert isinstance(job._client, Client)
@@ -264,6 +260,8 @@ class TestJob:
         obj = types.Int(1)
         format = "geotiff"
         destination = {"type": "email"}
+        expires_timestamp = Timestamp()
+        expires_timestamp.FromJsonString("2003-01-02T04:05:06.789+00:00")
 
         job_state = job_pb2.Job.State(stage=job_pb2.Job.Stage.QUEUED)
 
@@ -277,6 +275,7 @@ class TestJob:
                 no_ruster=req.no_ruster,
                 channel=req.channel,
                 client_version=__version__,
+                expires_timestamp=expires_timestamp,
                 no_cache=req.no_cache,
                 trace=req.trace,
                 state=job_state,
@@ -304,6 +303,7 @@ class TestJob:
         assert job.stage == "QUEUED"
         assert job.created_datetime is None
         assert job.updated_datetime is None
+        assert job.expires_datetime == pb_timestamp_to_datetime(expires_timestamp)
         assert job.runtime is None
         assert job.error is None
         assert job.done is False
@@ -332,11 +332,7 @@ class TestJob:
         assert job.done is True
 
     @pytest.mark.parametrize(
-        "proxify",
-        [
-            False,
-            True,
-        ],
+        "proxify", [False, True],
     )
     def test_arguments(self, stub, proxify):
         x = types.parameter("x", types.Int)

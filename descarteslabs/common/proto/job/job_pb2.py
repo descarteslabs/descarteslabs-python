@@ -11,6 +11,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 from google.protobuf import wrappers_pb2 as google_dot_protobuf_dot_wrappers__pb2
 from descarteslabs.common.proto.destinations import destinations_pb2 as descarteslabs_dot_common_dot_proto_dot_destinations_dot_destinations__pb2
 from descarteslabs.common.proto.formats import formats_pb2 as descarteslabs_dot_common_dot_proto_dot_formats_dot_formats__pb2
@@ -25,9 +26,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n(descarteslabs/common/proto/job/job.proto\x12\x17\x64\x65scarteslabs.workflows\x1a\x1egoogle/protobuf/wrappers.proto\x1a:descarteslabs/common/proto/destinations/destinations.proto\x1a\x30\x64\x65scarteslabs/common/proto/formats/formats.proto\x1a,descarteslabs/common/proto/types/types.proto\x1a\x32\x64\x65scarteslabs/common/proto/typespec/typespec.proto\x1a.descarteslabs/common/proto/errors/errors.proto\"\xc0\x0b\n\x03Job\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12)\n\x10serialized_graft\x18\x02 \x01(\tR\x0fserializedGraft\x12=\n\x08typespec\x18\x03 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x08typespec\x12I\n\targuments\x18\x0f \x03(\x0b\x32+.descarteslabs.workflows.Job.ArgumentsEntryR\targuments\x12!\n\x0cgeoctx_graft\x18\x10 \x01(\tR\x0bgeoctxGraft\x12\x14\n\x05token\x18\x11 \x01(\tR\x05token\x12\x1b\n\tno_ruster\x18\x12 \x01(\x08R\x08noRuster\x12\x18\n\x07\x63hannel\x18\x06 \x01(\tR\x07\x63hannel\x12%\n\x0e\x63lient_version\x18\x0e \x01(\tR\rclientVersion\x12\x19\n\x08no_cache\x18\x05 \x01(\x08R\x07noCache\x12\x14\n\x05trace\x18\x13 \x01(\x08R\x05trace\x12\x1c\n\ttimestamp\x18\x07 \x01(\x03R\ttimestamp\x12\x12\n\x04user\x18\x08 \x01(\tR\x04user\x12\x10\n\x03org\x18\t \x01(\tR\x03org\x12\x38\n\x05state\x18\n \x01(\x0b\x32\".descarteslabs.workflows.Job.StateR\x05state\x12\x37\n\x04type\x18\x0b \x01(\x0e\x32#.descarteslabs.workflows.ResultTypeR\x04type\x12\x37\n\x06\x66ormat\x18\x0c \x01(\x0b\x32\x1f.descarteslabs.workflows.FormatR\x06\x66ormat\x12\x46\n\x0b\x64\x65stination\x18\r \x01(\x0b\x32$.descarteslabs.workflows.DestinationR\x0b\x64\x65stination\x1a<\n\x0e\x41rgumentsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x1a\xed\x01\n\rTasksProgress\x12\x36\n\x07waiting\x18\x01 \x01(\x0b\x32\x1c.google.protobuf.UInt32ValueR\x07waiting\x12\x32\n\x05ready\x18\x02 \x01(\x0b\x32\x1c.google.protobuf.UInt32ValueR\x05ready\x12\x36\n\x07running\x18\x03 \x01(\x0b\x32\x1c.google.protobuf.UInt32ValueR\x07running\x12\x38\n\x08\x66inished\x18\x04 \x01(\x0b\x32\x1c.google.protobuf.UInt32ValueR\x08\x66inished\x1aY\n\x05\x45rror\x12\x36\n\x04\x63ode\x18\x01 \x01(\x0e\x32\".descarteslabs.workflows.ErrorCodeR\x04\x63ode\x12\x18\n\x07message\x18\x02 \x01(\tR\x07message\x1a\xec\x01\n\x05State\x12\x38\n\x05stage\x18\x01 \x01(\x0e\x32\".descarteslabs.workflows.Job.StageR\x05stage\x12Q\n\x0etasks_progress\x18\x02 \x01(\x0b\x32*.descarteslabs.workflows.Job.TasksProgressR\rtasksProgress\x12\x38\n\x05\x65rror\x18\x03 \x01(\x0b\x32\".descarteslabs.workflows.Job.ErrorR\x05\x65rror\x12\x1c\n\ttimestamp\x18\x04 \x01(\x03R\ttimestamp\"v\n\x05Stage\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\n\n\x06QUEUED\x10\x01\x12\r\n\tPREPARING\x10\x02\x12\x0b\n\x07RUNNING\x10\x03\x12\n\n\x06SAVING\x10\x04\x12\n\n\x06\x46\x41ILED\x10\x05\x12\r\n\tSUCCEEDED\x10\x06\x12\r\n\tCANCELLED\x10\x07J\x04\x08\x04\x10\x05\"\x84\x05\n\x10\x43reateJobRequest\x12)\n\x10serialized_graft\x18\x01 \x01(\tR\x0fserializedGraft\x12=\n\x08typespec\x18\x02 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x08typespec\x12V\n\targuments\x18\n \x03(\x0b\x32\x38.descarteslabs.workflows.CreateJobRequest.ArgumentsEntryR\targuments\x12!\n\x0cgeoctx_graft\x18\x0b \x01(\tR\x0bgeoctxGraft\x12\x1b\n\tno_ruster\x18\x0c \x01(\x08R\x08noRuster\x12\x18\n\x07\x63hannel\x18\x05 \x01(\tR\x07\x63hannel\x12%\n\x0e\x63lient_version\x18\t \x01(\tR\rclientVersion\x12\x19\n\x08no_cache\x18\x04 \x01(\x08R\x07noCache\x12\x14\n\x05trace\x18\r \x01(\x08R\x05trace\x12\x37\n\x04type\x18\x06 \x01(\x0e\x32#.descarteslabs.workflows.ResultTypeR\x04type\x12\x37\n\x06\x66ormat\x18\x07 \x01(\x0b\x32\x1f.descarteslabs.workflows.FormatR\x06\x66ormat\x12\x46\n\x0b\x64\x65stination\x18\x08 \x01(\x0b\x32$.descarteslabs.workflows.DestinationR\x0b\x64\x65stination\x1a<\n\x0e\x41rgumentsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01J\x04\x08\x03\x10\x04\"\x1f\n\rGetJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\"\n\x10\x43\x61ncelJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\x13\n\x11\x43\x61ncelJobResponse\"!\n\x0fWatchJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"[\n\x0fListJobsRequest\x12%\n\x0estart_datetime\x18\x01 \x01(\tR\rstartDatetime\x12!\n\x0c\x65nd_datetime\x18\x02 \x01(\tR\x0b\x65ndDatetime2\xce\x03\n\x06JobAPI\x12V\n\tCreateJob\x12).descarteslabs.workflows.CreateJobRequest\x1a\x1c.descarteslabs.workflows.Job\"\x00\x12V\n\x08ListJobs\x12(.descarteslabs.workflows.ListJobsRequest\x1a\x1c.descarteslabs.workflows.Job\"\x00\x30\x01\x12P\n\x06GetJob\x12&.descarteslabs.workflows.GetJobRequest\x1a\x1c.descarteslabs.workflows.Job\"\x00\x12\x64\n\tCancelJob\x12).descarteslabs.workflows.CancelJobRequest\x1a*.descarteslabs.workflows.CancelJobResponse\"\x00\x12\\\n\x08WatchJob\x12(.descarteslabs.workflows.WatchJobRequest\x1a\".descarteslabs.workflows.Job.State\"\x00\x30\x01P\x05\x62\x06proto3'
+  serialized_pb=b'\n(descarteslabs/common/proto/job/job.proto\x12\x17\x64\x65scarteslabs.workflows\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a:descarteslabs/common/proto/destinations/destinations.proto\x1a\x30\x64\x65scarteslabs/common/proto/formats/formats.proto\x1a,descarteslabs/common/proto/types/types.proto\x1a\x32\x64\x65scarteslabs/common/proto/typespec/typespec.proto\x1a.descarteslabs/common/proto/errors/errors.proto\"\x89\x0c\n\x03Job\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12)\n\x10serialized_graft\x18\x02 \x01(\tR\x0fserializedGraft\x12=\n\x08typespec\x18\x03 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x08typespec\x12I\n\targuments\x18\x0f \x03(\x0b\x32+.descarteslabs.workflows.Job.ArgumentsEntryR\targuments\x12!\n\x0cgeoctx_graft\x18\x10 \x01(\tR\x0bgeoctxGraft\x12\x14\n\x05token\x18\x11 \x01(\tR\x05token\x12\x1b\n\tno_ruster\x18\x12 \x01(\x08R\x08noRuster\x12\x18\n\x07\x63hannel\x18\x06 \x01(\tR\x07\x63hannel\x12%\n\x0e\x63lient_version\x18\x0e \x01(\tR\rclientVersion\x12\x19\n\x08no_cache\x18\x05 \x01(\x08R\x07noCache\x12\x14\n\x05trace\x18\x13 \x01(\x08R\x05trace\x12\x1c\n\ttimestamp\x18\x07 \x01(\x03R\ttimestamp\x12\x12\n\x04user\x18\x08 \x01(\tR\x04user\x12\x10\n\x03org\x18\t \x01(\tR\x03org\x12G\n\x11\x65xpires_timestamp\x18\x14 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x10\x65xpiresTimestamp\x12\x38\n\x05state\x18\n \x01(\x0b\x32\".descarteslabs.workflows.Job.StateR\x05state\x12\x37\n\x04type\x18\x0b \x01(\x0e\x32#.descarteslabs.workflows.ResultTypeR\x04type\x12\x37\n\x06\x66ormat\x18\x0c \x01(\x0b\x32\x1f.descarteslabs.workflows.FormatR\x06\x66ormat\x12\x46\n\x0b\x64\x65stination\x18\r \x01(\x0b\x32$.descarteslabs.workflows.DestinationR\x0b\x64\x65stination\x1a<\n\x0e\x41rgumentsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x1a\xed\x01\n\rTasksProgress\x12\x36\n\x07waiting\x18\x01 \x01(\x0b\x32\x1c.google.protobuf.UInt32ValueR\x07waiting\x12\x32\n\x05ready\x18\x02 \x01(\x0b\x32\x1c.google.protobuf.UInt32ValueR\x05ready\x12\x36\n\x07running\x18\x03 \x01(\x0b\x32\x1c.google.protobuf.UInt32ValueR\x07running\x12\x38\n\x08\x66inished\x18\x04 \x01(\x0b\x32\x1c.google.protobuf.UInt32ValueR\x08\x66inished\x1aY\n\x05\x45rror\x12\x36\n\x04\x63ode\x18\x01 \x01(\x0e\x32\".descarteslabs.workflows.ErrorCodeR\x04\x63ode\x12\x18\n\x07message\x18\x02 \x01(\tR\x07message\x1a\xec\x01\n\x05State\x12\x38\n\x05stage\x18\x01 \x01(\x0e\x32\".descarteslabs.workflows.Job.StageR\x05stage\x12Q\n\x0etasks_progress\x18\x02 \x01(\x0b\x32*.descarteslabs.workflows.Job.TasksProgressR\rtasksProgress\x12\x38\n\x05\x65rror\x18\x03 \x01(\x0b\x32\".descarteslabs.workflows.Job.ErrorR\x05\x65rror\x12\x1c\n\ttimestamp\x18\x04 \x01(\x03R\ttimestamp\"v\n\x05Stage\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\n\n\x06QUEUED\x10\x01\x12\r\n\tPREPARING\x10\x02\x12\x0b\n\x07RUNNING\x10\x03\x12\n\n\x06SAVING\x10\x04\x12\n\n\x06\x46\x41ILED\x10\x05\x12\r\n\tSUCCEEDED\x10\x06\x12\r\n\tCANCELLED\x10\x07J\x04\x08\x04\x10\x05\"\x84\x05\n\x10\x43reateJobRequest\x12)\n\x10serialized_graft\x18\x01 \x01(\tR\x0fserializedGraft\x12=\n\x08typespec\x18\x02 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x08typespec\x12V\n\targuments\x18\n \x03(\x0b\x32\x38.descarteslabs.workflows.CreateJobRequest.ArgumentsEntryR\targuments\x12!\n\x0cgeoctx_graft\x18\x0b \x01(\tR\x0bgeoctxGraft\x12\x1b\n\tno_ruster\x18\x0c \x01(\x08R\x08noRuster\x12\x18\n\x07\x63hannel\x18\x05 \x01(\tR\x07\x63hannel\x12%\n\x0e\x63lient_version\x18\t \x01(\tR\rclientVersion\x12\x19\n\x08no_cache\x18\x04 \x01(\x08R\x07noCache\x12\x14\n\x05trace\x18\r \x01(\x08R\x05trace\x12\x37\n\x04type\x18\x06 \x01(\x0e\x32#.descarteslabs.workflows.ResultTypeR\x04type\x12\x37\n\x06\x66ormat\x18\x07 \x01(\x0b\x32\x1f.descarteslabs.workflows.FormatR\x06\x66ormat\x12\x46\n\x0b\x64\x65stination\x18\x08 \x01(\x0b\x32$.descarteslabs.workflows.DestinationR\x0b\x64\x65stination\x1a<\n\x0e\x41rgumentsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01J\x04\x08\x03\x10\x04\"\x1f\n\rGetJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\"\n\x10\x43\x61ncelJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\x13\n\x11\x43\x61ncelJobResponse\"!\n\x0fWatchJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"[\n\x0fListJobsRequest\x12%\n\x0estart_datetime\x18\x01 \x01(\tR\rstartDatetime\x12!\n\x0c\x65nd_datetime\x18\x02 \x01(\tR\x0b\x65ndDatetime2\xce\x03\n\x06JobAPI\x12V\n\tCreateJob\x12).descarteslabs.workflows.CreateJobRequest\x1a\x1c.descarteslabs.workflows.Job\"\x00\x12V\n\x08ListJobs\x12(.descarteslabs.workflows.ListJobsRequest\x1a\x1c.descarteslabs.workflows.Job\"\x00\x30\x01\x12P\n\x06GetJob\x12&.descarteslabs.workflows.GetJobRequest\x1a\x1c.descarteslabs.workflows.Job\"\x00\x12\x64\n\tCancelJob\x12).descarteslabs.workflows.CancelJobRequest\x1a*.descarteslabs.workflows.CancelJobResponse\"\x00\x12\\\n\x08WatchJob\x12(.descarteslabs.workflows.WatchJobRequest\x1a\".descarteslabs.workflows.Job.State\"\x00\x30\x01P\x06\x62\x06proto3'
   ,
-  dependencies=[google_dot_protobuf_dot_wrappers__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_destinations_dot_destinations__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_formats_dot_formats__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_types_dot_types__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_errors_dot_errors__pb2.DESCRIPTOR,],
+  dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,google_dot_protobuf_dot_wrappers__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_destinations_dot_destinations__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_formats_dot_formats__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_types_dot_types__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_errors_dot_errors__pb2.DESCRIPTOR,],
   public_dependencies=[descarteslabs_dot_common_dot_proto_dot_errors_dot_errors__pb2.DESCRIPTOR,])
 
 
@@ -73,8 +74,8 @@ _JOB_STAGE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1706,
-  serialized_end=1824,
+  serialized_start=1812,
+  serialized_end=1930,
 )
 _sym_db.RegisterEnumDescriptor(_JOB_STAGE)
 
@@ -112,8 +113,8 @@ _JOB_ARGUMENTSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1074,
-  serialized_end=1134,
+  serialized_start=1180,
+  serialized_end=1240,
 )
 
 _JOB_TASKSPROGRESS = _descriptor.Descriptor(
@@ -163,8 +164,8 @@ _JOB_TASKSPROGRESS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1137,
-  serialized_end=1374,
+  serialized_start=1243,
+  serialized_end=1480,
 )
 
 _JOB_ERROR = _descriptor.Descriptor(
@@ -200,8 +201,8 @@ _JOB_ERROR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1376,
-  serialized_end=1465,
+  serialized_start=1482,
+  serialized_end=1571,
 )
 
 _JOB_STATE = _descriptor.Descriptor(
@@ -251,8 +252,8 @@ _JOB_STATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1468,
-  serialized_end=1704,
+  serialized_start=1574,
+  serialized_end=1810,
 )
 
 _JOB = _descriptor.Descriptor(
@@ -361,28 +362,35 @@ _JOB = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='org', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='state', full_name='descarteslabs.workflows.Job.state', index=14,
+      name='expires_timestamp', full_name='descarteslabs.workflows.Job.expires_timestamp', index=14,
+      number=20, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='expiresTimestamp', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='state', full_name='descarteslabs.workflows.Job.state', index=15,
       number=10, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='state', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='type', full_name='descarteslabs.workflows.Job.type', index=15,
+      name='type', full_name='descarteslabs.workflows.Job.type', index=16,
       number=11, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='type', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='format', full_name='descarteslabs.workflows.Job.format', index=16,
+      name='format', full_name='descarteslabs.workflows.Job.format', index=17,
       number=12, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='format', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='destination', full_name='descarteslabs.workflows.Job.destination', index=17,
+      name='destination', full_name='descarteslabs.workflows.Job.destination', index=18,
       number=13, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -401,8 +409,8 @@ _JOB = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=358,
-  serialized_end=1830,
+  serialized_start=391,
+  serialized_end=1936,
 )
 
 
@@ -439,8 +447,8 @@ _CREATEJOBREQUEST_ARGUMENTSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1074,
-  serialized_end=1134,
+  serialized_start=1180,
+  serialized_end=1240,
 )
 
 _CREATEJOBREQUEST = _descriptor.Descriptor(
@@ -546,8 +554,8 @@ _CREATEJOBREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1833,
-  serialized_end=2477,
+  serialized_start=1939,
+  serialized_end=2583,
 )
 
 
@@ -577,8 +585,8 @@ _GETJOBREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2479,
-  serialized_end=2510,
+  serialized_start=2585,
+  serialized_end=2616,
 )
 
 
@@ -608,8 +616,8 @@ _CANCELJOBREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2512,
-  serialized_end=2546,
+  serialized_start=2618,
+  serialized_end=2652,
 )
 
 
@@ -632,8 +640,8 @@ _CANCELJOBRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2548,
-  serialized_end=2567,
+  serialized_start=2654,
+  serialized_end=2673,
 )
 
 
@@ -663,8 +671,8 @@ _WATCHJOBREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2569,
-  serialized_end=2602,
+  serialized_start=2675,
+  serialized_end=2708,
 )
 
 
@@ -701,8 +709,8 @@ _LISTJOBSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2604,
-  serialized_end=2695,
+  serialized_start=2710,
+  serialized_end=2801,
 )
 
 _JOB_ARGUMENTSENTRY.containing_type = _JOB
@@ -719,6 +727,7 @@ _JOB_STATE.fields_by_name['error'].message_type = _JOB_ERROR
 _JOB_STATE.containing_type = _JOB
 _JOB.fields_by_name['typespec'].message_type = descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2._TYPESPEC
 _JOB.fields_by_name['arguments'].message_type = _JOB_ARGUMENTSENTRY
+_JOB.fields_by_name['expires_timestamp'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
 _JOB.fields_by_name['state'].message_type = _JOB_STATE
 _JOB.fields_by_name['type'].enum_type = descarteslabs_dot_common_dot_proto_dot_types_dot_types__pb2._RESULTTYPE
 _JOB.fields_by_name['format'].message_type = descarteslabs_dot_common_dot_proto_dot_formats_dot_formats__pb2._FORMAT
@@ -838,8 +847,8 @@ _JOBAPI = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=2698,
-  serialized_end=3160,
+  serialized_start=2804,
+  serialized_end=3266,
   methods=[
   _descriptor.MethodDescriptor(
     name='CreateJob',
