@@ -1,4 +1,5 @@
 import pytest
+import mock
 
 from descarteslabs.common.proto.widgets import widgets_pb2
 
@@ -9,34 +10,48 @@ from ...containers import List
 from .. import widget
 
 
-class StrWidget(widget.Widget, Str):
-    _proto_type = widgets_pb2.StringInput
+@pytest.fixture
+def StrWidget():
+    "Fixture providing a fake Widget subclass for Str"
+    with mock.patch.dict(widget.MSG_TO_WIDGET, clear=True):
+        # Depending on the test environment, the actual `StringInput` widget from `interactive.widgets`
+        # might already be imported and registerd to `widgets_pb2.StringInput`, so creating this subclass
+        # would fail. So we clear out the widgets registry while this test is running.
+
+        class StrWidget(widget.Widget, Str):
+            _proto_type = widgets_pb2.StringInput
+            __qualname__ = "StrWidget"
+
+        yield StrWidget
 
 
 class TestBaseClass:
-    def test_subclass(self):
+    def test_subclass(self, StrWidget):
 
         assert widget.MSG_TO_WIDGET[StrWidget._proto_type] is StrWidget
 
     def test_bad_bases(self):
         with pytest.raises(AssertionError, match="must at least inherit from"):
+            with mock.patch.dict(widget.MSG_TO_WIDGET, clear=True):
 
-            class NotEnoughBases(widget.Widget):
-                _proto_type = widgets_pb2.StringInput
+                class NotEnoughBases(widget.Widget):
+                    _proto_type = widgets_pb2.StringInput
 
         with pytest.raises(
             AssertionError, match=r"Second-to-last base class of .+ must be Widget"
         ):
+            with mock.patch.dict(widget.MSG_TO_WIDGET, clear=True):
 
-            class WrongOrder(Str, widget.Widget):
-                _proto_type = widgets_pb2.StringInput
+                class WrongOrder(Str, widget.Widget):
+                    _proto_type = widgets_pb2.StringInput
 
         with pytest.raises(
             AssertionError, match=r"Last base class of .+ must be a Proxytype"
         ):
+            with mock.patch.dict(widget.MSG_TO_WIDGET, clear=True):
 
-            class NonProxy(widget.Widget, dict):
-                _proto_type = widgets_pb2.StringInput
+                class NonProxy(widget.Widget, dict):
+                    _proto_type = widgets_pb2.StringInput
 
     def test_allow_non_final_inheritence(self):
         class NonFinalSubWidget(widget.Widget):
@@ -64,7 +79,7 @@ class TestProxytypeBehavior:
         assert instance._default == default
         assert instance._label == ""
 
-    def test_promote_and_from_apply_gives_proxytype(self):
+    def test_promote_and_from_apply_gives_proxytype(self, StrWidget):
 
         promoted = StrWidget._promote("foo")
         assert type(promoted) is Str
@@ -74,7 +89,7 @@ class TestProxytypeBehavior:
         assert type(applied) is Str
         assert not isinstance(applied, widget.Widget)
 
-    def test_acts_like_proxytype(self):
+    def test_acts_like_proxytype(self, StrWidget):
         instance = StrWidget("name", "default")
 
         # not-at-all-exhaustive test---just making sure a few random methods are supported
@@ -90,7 +105,7 @@ class TestProxytypeBehavior:
         assert type(result) is List[Str]
         assert result.params == instance.params == (instance,)
 
-    def test_repr(self):
+    def test_repr(self, StrWidget):
         name = "foo"
         default = "bar"
         label = "baz"
@@ -103,7 +118,7 @@ class TestProxytypeBehavior:
 
 
 class TestSerialization:
-    def test_param_to_proto_widget(self):
+    def test_param_to_proto_widget(self, StrWidget):
         name = "foo"
         default = "bar"
         label = "baz"
@@ -133,7 +148,7 @@ class TestSerialization:
 
         assert proto.WhichOneof("widget") is None
 
-    def test_proto_to_param(self):
+    def test_proto_to_param(self, StrWidget):
         name = "foo"
         default = "bar"
         label = "baz"
@@ -173,7 +188,7 @@ class TestSerialization:
         assert param.params == (param,)
         assert param.graft["returns"] == name
 
-    def test_roundtrip_widget(self):
+    def test_roundtrip_widget(self, StrWidget):
         name = "foo"
         default = "bar"
         label = "baz"
