@@ -1,3 +1,4 @@
+from typing import Tuple
 import textwrap
 
 from descarteslabs.common.proto.workflow import workflow_pb2
@@ -472,13 +473,15 @@ class Workflow:
         return self.get_version(version)
 
     @property
-    def versions(self):
+    def versions(self) -> Tuple[VersionedGraft, ...]:
+        "tuple: Every `VersionedGraft` in this `Workflow`, in the order they were created."
         return tuple(
             VersionedGraft._from_proto(v) for v in self._message.versioned_grafts
         )
 
     @property
-    def version_names(self):
+    def version_names(self) -> Tuple[str, ...]:
+        "tuple: The names of all the versions of this `Workflow`, in the order they were created."
         return tuple(v.version for v in self._message.versioned_grafts)
 
     def duplicate(self, new_id, include_versions=True, client=None):
