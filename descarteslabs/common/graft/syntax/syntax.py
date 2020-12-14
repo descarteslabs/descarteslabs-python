@@ -1,12 +1,7 @@
 import six
 import numbers
 
-
-try:
-    # only after py3.4
-    from collections import abc
-except ImportError:
-    import collections as abc
+from collections import abc
 
 
 PRIMITIVE_TYPES = six.string_types + (numbers.Number, bool, type(None))
