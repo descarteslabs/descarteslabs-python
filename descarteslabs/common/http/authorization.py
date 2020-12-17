@@ -17,3 +17,21 @@ def remove_bearer(token):
         return token[7:]
     else:
         return token
+
+
+def add_basic(token):
+    """For use with Authorization headers, add "Basic "."""
+    if token:
+        return (u"Basic " if isinstance(token, six.text_type) else b"Basic ") + token
+    else:
+        return token
+
+
+def remove_basic(token):
+    """For use with Authorization headers, strip any "Basic "."""
+    if isinstance(token, (six.text_type, six.binary_type)) and token.lower().startswith(
+        u"basic " if isinstance(token, six.text_type) else b"basic "
+    ):
+        return token[6:]
+    else:
+        return token
