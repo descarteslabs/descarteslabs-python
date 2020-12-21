@@ -33,6 +33,7 @@ def mock_CreateXYZ(msg: xyz_pb2.CreateXYZRequest, **kwargs) -> xyz_pb2.XYZ:
         serialized_graft=msg.serialized_graft,
         typespec=msg.typespec,
         parameters=msg.parameters,
+        public=msg.public,
         expires_timestamp=expires_timestamp,
         channel=msg.channel,
         client_version=msg.client_version,
@@ -56,6 +57,7 @@ class TestXYZ(object):
         obj = utils.Bar(utils.Foo(1))
         name = "bar"
         desc = "a bar"
+        public = True
 
         # do some hackery to pull out the `self._message` produced by the superclass's `__init__`
         super_message = None
@@ -76,6 +78,7 @@ class TestXYZ(object):
             serialized_graft=super_message.serialized_graft,
             typespec=super_message.typespec,
             parameters=super_message.parameters,
+            public=public,
             channel=super_message.channel,
             client_version=super_message.client_version,
         )

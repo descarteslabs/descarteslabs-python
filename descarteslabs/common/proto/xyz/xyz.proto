@@ -3,6 +3,7 @@ syntax = "proto3";
 
 package descarteslabs.workflows;
 
+import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "descarteslabs/common/proto/types/types.proto";
 import "descarteslabs/common/proto/typespec/typespec.proto";
@@ -12,6 +13,8 @@ import "descarteslabs/common/proto/logging/logging.proto";
 service XYZAPI {
   rpc CreateXYZ(CreateXYZRequest) returns (XYZ) {}
   rpc GetXYZ(GetXYZRequest) returns (XYZ) {}
+  rpc ListXYZ(ListXYZRequest) returns (stream XYZ) {}
+  rpc DeleteXYZ(DeleteXYZRequest) returns (google.protobuf.Empty) {}
   rpc GetXYZSessionLogs(GetXYZSessionLogsRequest)
       returns (stream XYZLogRecord) {}
 }
@@ -45,6 +48,7 @@ message XYZ {
   // Compatible with Leaflet, OpenLayers, Python format strings.
   string url_template = 26;
   google.protobuf.Timestamp expires_timestamp = 28;
+  bool public = 29;
 }
 
 message CreateXYZRequest {
@@ -56,9 +60,14 @@ message CreateXYZRequest {
   string channel = 5;
   string client_version = 6;
   uint32 days_to_expiration = 8;
+  bool public = 9;
 }
 
 message GetXYZRequest { string xyz_id = 1; }
+
+message ListXYZRequest { bool public = 1; }
+
+message DeleteXYZRequest { string xyz_id = 1; }
 
 message GetXYZSessionLogsRequest {
   string xyz_id = 1;

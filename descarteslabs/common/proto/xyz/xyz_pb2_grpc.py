@@ -2,6 +2,7 @@
 import grpc
 
 from descarteslabs.common.proto.xyz import xyz_pb2 as descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
 class XYZAPIStub(object):
@@ -23,6 +24,16 @@ class XYZAPIStub(object):
         '/descarteslabs.workflows.XYZAPI/GetXYZ',
         request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
+        )
+    self.ListXYZ = channel.unary_stream(
+        '/descarteslabs.workflows.XYZAPI/ListXYZ',
+        request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.ListXYZRequest.SerializeToString,
+        response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
+        )
+    self.DeleteXYZ = channel.unary_unary(
+        '/descarteslabs.workflows.XYZAPI/DeleteXYZ',
+        request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.DeleteXYZRequest.SerializeToString,
+        response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
         )
     self.GetXYZSessionLogs = channel.unary_stream(
         '/descarteslabs.workflows.XYZAPI/GetXYZSessionLogs',
@@ -49,6 +60,20 @@ class XYZAPIServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def ListXYZ(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def DeleteXYZ(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
   def GetXYZSessionLogs(self, request, context):
     # missing associated documentation comment in .proto file
     pass
@@ -68,6 +93,16 @@ def add_XYZAPIServicer_to_server(servicer, server):
           servicer.GetXYZ,
           request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZRequest.FromString,
           response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.SerializeToString,
+      ),
+      'ListXYZ': grpc.unary_stream_rpc_method_handler(
+          servicer.ListXYZ,
+          request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.ListXYZRequest.FromString,
+          response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.SerializeToString,
+      ),
+      'DeleteXYZ': grpc.unary_unary_rpc_method_handler(
+          servicer.DeleteXYZ,
+          request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.DeleteXYZRequest.FromString,
+          response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
       ),
       'GetXYZSessionLogs': grpc.unary_stream_rpc_method_handler(
           servicer.GetXYZSessionLogs,

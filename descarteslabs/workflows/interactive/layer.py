@@ -206,7 +206,9 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             Names must correspond to parameters that ``imagery`` depends on.
         """
         if not isinstance(imagery, (Image, ImageCollection)):
-            raise TypeError(f"imagery must be an Image or ImageCollection, not {imagery!r}.")
+            raise TypeError(
+                f"imagery must be an Image or ImageCollection, not {imagery!r}."
+            )
 
         # Combine the parameter dependencies from `imagery` with any overrides
         # and raise an error for any missing or unexpected parameter overrides.
@@ -239,7 +241,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
                 # `trait_has_value` is False when the layer is first constructed;
                 # accessing `self.imagery` would cause a validation error in that case.
                 with warnings.catch_warnings(record=True) as xyz_warnings:
-                    xyz = XYZ(imagery, name=self.name)
+                    xyz = XYZ(imagery, name=self.name, public=False)
                 self.set_trait("imagery", imagery)
                 self.set_trait("xyz_obj", xyz)
 
@@ -350,8 +352,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         )
 
         self.set_trait(
-            "value",
-            self.imagery._from_graft(graft),
+            "value", self.imagery._from_graft(graft),
         )
 
     @traitlets.observe("value", "reduction")

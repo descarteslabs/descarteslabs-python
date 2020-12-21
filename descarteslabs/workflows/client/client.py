@@ -63,6 +63,8 @@ class Client(GrpcClient):
         self._add_api("Workflow", "DeleteWorkflow")
         self._add_api("XYZ", "CreateXYZ")
         self._add_api("XYZ", "GetXYZ")
+        self._add_api("XYZ", "ListXYZ")
+        self._add_api("XYZ", "DeleteXYZ")
         self._add_api("XYZ", "GetXYZSessionLogs")
         self._add_api("Job", "CreateJob")
         self._add_api("Job", "WatchJob")

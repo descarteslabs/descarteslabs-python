@@ -63,6 +63,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
         proxy_object: Proxytype,
         name: str = "",
         description: str = "",
+        public: bool = True,
         days_to_expiration: int = None,
         client: Optional[Client] = None,
     ):
@@ -83,6 +84,9 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
             Name for the new XYZ
         description: str, default ""
             Long-form description of this XYZ. Markdown is supported.
+        public: bool, default `True`
+            If ``True`` then this object is shared and accessible to all,
+            otherwise it is private.
         days_to_expiration: int, default None
             Days until this XYZ object will expire.
             If None defaults to 10 days.
@@ -108,6 +112,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
                 serialized_graft=self._message.serialized_graft,
                 typespec=self._message.typespec,
                 parameters=self._message.parameters,
+                public=public,
                 days_to_expiration=int(days_to_expiration)
                 if days_to_expiration is not None
                 else None,
@@ -149,6 +154,87 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
             xyz_pb2.GetXYZRequest(xyz_id=xyz_id), timeout=client.DEFAULT_TIMEOUT
         )
         return cls._from_proto(message, client=client)
+
+    @classmethod
+    def list(
+        cls, public: bool = False, client: Optional[Client] = None
+    ) -> Iterator[XYZ]:
+        """
+        Get all XYZ objects created by this user.
+
+        Parameters
+        ----------
+        public: bool, default False
+            If ``True`` then return public (shared) XYZ objects created by this
+            user. If ``False`` then return non-public XYZ objects created through
+            the use of workflow map widgets.
+        client: Optional[Client], default None
+            Allows you to use a specific client instance with non-default
+            auth and parameters
+
+        Returns
+        -------
+        Iterator[XYZ]
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import XYZ
+        >>> for xyz in XYZ.list(): # doctest: +SKIP
+        ...     print(xyz.id) # doctest: +SKIP
+        24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6
+        """
+        if client is None:
+            client = get_global_grpc_client()
+
+        iter = client.api["ListXYZ"](
+            xyz_pb2.ListXYZRequest(public=public), timeout=client.STREAM_TIMEOUT
+        )
+        return map(lambda xyz: cls._from_proto(xyz, client=client), iter)
+
+    @staticmethod
+    def delete_id(id, client=None):
+        """
+        Delete the `XYZ` that has the provided ID. Only the user
+        that created the `XYZ` can delete it.
+
+        **Warning:** this cannot be undone!
+
+        Parameters
+        ----------
+        id: str
+            The ID of the `XYZ` that we wish to delete.
+        client: `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters.
+        """
+        if client is None:
+            client = get_global_grpc_client()
+
+        client.api["DeleteXYZ"](
+            xyz_pb2.DeleteXYZRequest(id=id), timeout=client.DEFAULT_TIMEOUT,
+        )
+
+    def delete(self, client: Client = None) -> None:
+        """
+        Delete this XYZ object. Only the user
+        that created the `XYZ` can delete it.
+
+        Parameters
+        ----------
+        client: Client, default None
+            Allows you to use a specific client instance with non-default
+            auth and parameters
+
+        Returns
+        -------
+        None
+
+        >>> from descarteslabs.workflows import XYZ
+        >>> xyz = XYZ.get('24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6') # doctest: +SKIP
+        >>> xyz.delete() # doctest: +SKIP
+        """
+        self.delete_id(self.id, client=client)
+        self._message.Clear()
 
     def url(
         self,
@@ -369,6 +455,11 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
     def org(self) -> str:
         "str: The org of the user which created this XYZ."
         return self._message.org
+
+    @property
+    def public(self) -> bool:
+        "bool: True if xyz is shared."
+        return self._message.public
 
 
 class XYZLogListener(object):
