@@ -83,31 +83,53 @@ class Attribute(object):
 
     Parameters
     ----------
-    _mutable : bool
+    mutable : bool
         Whether this attribute can be changed.
         Set to True by default.
         If set to False, the attribute can be set once and after that can only be
         set with the same value. If set with a different value, an
         `AttributeValidationError` will be thrown.
-    _serializable : bool
+    serializable : bool
         Whether this attribute will be included during serialization.
         Set to True by default.
         If set to False, the attribute will be skipped during serialized and will
         throw an AttributeValidationError if serialized explicitly using
         `serialize_attribute_for_filter`.
-    _sticky : bool
+    sticky : bool
         Whether this attribute will be cleared when new attribute values are loaded
         from the Descartes Labs catalog.  Set fo False by default.  This is used
         specifically for attributes that are only deserialised on the Descartes Labs
         catalog (`load_only`).  These attributes will never appear in the data from
         the Descartes Labs catalog, and to allow them to persist you can set the _sticky
         parameter to True.
+    readonly : bool
+        Whether this attribute can be set.
+        Set to ``False`` by default.
+        If set to ``True``, the attribute can never be set and will raise an
+        `AttributeValidationError` it set.
     """
 
-    def __init__(self, _mutable=True, _serializable=True, _sticky=False):
-        self._mutable = _mutable
-        self._serializable = _serializable
-        self._sticky = _sticky
+    _PARAM_MUTABLE = "mutable"
+    _PARAM_SERIALIZABLE = "serializable"
+    _PARAM_STICKY = "sticky"
+    _PARAM_READONLY = "readonly"
+
+    def __init__(self, mutable=True, serializable=True, sticky=False, readonly=False):
+        self._mutable = mutable
+        self._serializable = serializable
+        self._sticky = sticky
+        self._readonly = readonly
+
+    def _get_attr_params(self, **extra_params):
+        params = {
+            self._PARAM_MUTABLE: self._mutable,
+            self._PARAM_SERIALIZABLE: self._serializable,
+            self._PARAM_STICKY: self._sticky,
+            self._PARAM_READONLY: self._readonly,
+        }
+        if extra_params is not None:
+            params.update(extra_params)
+        return params
 
     def serialize(self, value, jsonapi_format=False):
         """
@@ -138,26 +160,40 @@ class Attribute(object):
 
         return obj._attributes.get(self._attribute_name)
 
+    def _raise_if_immutable_or_readonly(self, operation, obj=None):
+        if self._readonly:
+            raise AttributeValidationError(
+                "Can't {} '{}' item because it is a readonly attribute".format(
+                    operation, self._attribute_name
+                )
+            )
+        if not self._mutable and (
+            obj is None or self._attribute_name in obj._attributes
+        ):
+            raise AttributeValidationError(
+                "Can't {} '{}' item because it is an immutable attribute".format(
+                    operation, self._attribute_name
+                )
+            )
+
     def __set__(self, obj, value, validate=True):
         """
         Sets a value for this attribute on the given model object at the
         given attribute name, deserializing it if necessary.  Optionally
         indicates whether the data should be validated.
         """
-        if (
-            not self._mutable
-            and validate
-            and self._attribute_name in obj._attributes
-            and obj._attributes[self._attribute_name] != value
-        ):
-            raise AttributeValidationError(
-                "Can't set '{}' to {} because it is an immutable attribute".format(
-                    self._attribute_name, value
-                )
-            )
+        if validate:
+            self._raise_if_immutable_or_readonly("set", obj)
 
+        # `_set_modified()` will raise exception if change is not allowed
+        obj._set_modified(self._attribute_name, validate)
         obj._attributes[self._attribute_name] = self.deserialize(value, validate)
-        obj._set_modified(self._attribute_name)
+
+    def __delete__(self, obj, validate=True):
+        if validate:
+            self._raise_if_immutable_or_readonly("delete", obj)
+
+        obj._attributes.pop(self._attribute_name, None)
 
 
 class CatalogObjectReference(Attribute):
@@ -167,20 +203,12 @@ class CatalogObjectReference(Attribute):
     plus the suffix "_id".
     """
 
-    def __init__(
-        self,
-        reference_class,
-        _mutable=True,
-        _serializable=False,
-        _allow_unsaved=False,
-        _sticky=False,
-    ):
-        super(CatalogObjectReference, self).__init__(
-            _mutable=_mutable, _serializable=_serializable, _sticky=_sticky
-        )
+    def __init__(self, reference_class, allow_unsaved=False, **kwargs):
+        kwargs[self._PARAM_SERIALIZABLE] = kwargs.pop(self._PARAM_SERIALIZABLE, False)
+        super(CatalogObjectReference, self).__init__(**kwargs)
 
         self.reference_class = reference_class
-        self._allow_unsaved = _allow_unsaved
+        self._allow_unsaved = allow_unsaved
 
     @property
     def id_field(self):
@@ -224,6 +252,9 @@ class CatalogObjectReference(Attribute):
         Sets a new referenced object. Must be a saved object of the correct
         type.
         """
+        if validate:
+            self._raise_if_immutable_or_readonly("set", model_object)
+
         if value is not None:
             if not isinstance(value, self.reference_class):
                 raise AttributeValidationError(
@@ -238,10 +269,12 @@ class CatalogObjectReference(Attribute):
                     )
                 )
 
+        # `_set_modified()` will raise exception if change is not allowed
+        model_object._set_modified(self._attribute_name, validate)
         model_object._attributes[self._attribute_name] = value
-        setattr(model_object, self.id_field, None if value is None else value.id)
-
-        model_object._set_modified(self._attribute_name)
+        # Jam in the `id`
+        model_object._set_modified(self.id_field, validate=False)
+        model_object._attributes[self.id_field] = None if value is None else value.id
 
 
 class Timestamp(Attribute):
@@ -269,14 +302,9 @@ class Timestamp(Attribute):
         return serialize_datetime(value)
 
 
-class ImmutableTimestamp(Timestamp):
-    def __init__(self):
-        super(ImmutableTimestamp, self).__init__(_mutable=False)
-
-
 class EnumAttribute(Attribute):
-    def __init__(self, enum):
-        super(EnumAttribute, self).__init__()
+    def __init__(self, enum, **kwargs):
+        super(EnumAttribute, self).__init__(**kwargs)
 
         if not (issubclass(enum, str) and issubclass(enum, Enum)):
             raise TypeError("EnumAttribute expects an 'Enum' with 'str' as mixin")
@@ -356,28 +384,35 @@ class AttributeEqualityMixin(object):
 
 
 class AttributeMeta(type):
+    _KEY_ATTR_TYPES = "_attribute_types"
+    _KEY_REF_ATTR_TYPES = "_reference_attribute_types"
+
     def __new__(cls, name, bases, attrs):
-        attrs["_attribute_types"] = {}
-        attrs["_reference_attribute_types"] = {}
+        attrs[AttributeMeta._KEY_ATTR_TYPES] = {}
+        attrs[AttributeMeta._KEY_REF_ATTR_TYPES] = {}
 
         # register all declared attributes
         for attr_name, value in attrs.items():
             if isinstance(value, Attribute):
-                attrs["_attribute_types"][attr_name] = value
+                attrs[AttributeMeta._KEY_ATTR_TYPES][attr_name] = value
                 if isinstance(value, CatalogObjectReference):
-                    attrs["_reference_attribute_types"][attr_name] = value
+                    attrs[AttributeMeta._KEY_REF_ATTR_TYPES][attr_name] = value
 
                 # register this attribute's name with the instance
                 value._attribute_name = attr_name
 
         # inherit attributes from base classes
         for b in bases:
-            if hasattr(b, "_attribute_types"):
-                attrs["_attribute_types"].update(b._attribute_types)
-            if hasattr(b, "_reference_attribute_types"):
-                attrs["_reference_attribute_types"].update(b._reference_attribute_types)
+            if hasattr(b, AttributeMeta._KEY_ATTR_TYPES):
+                for attr_name, value in b._attribute_types.items():
+                    if attr_name not in attrs[AttributeMeta._KEY_ATTR_TYPES]:
+                        attrs[AttributeMeta._KEY_ATTR_TYPES][attr_name] = value
+            if hasattr(b, AttributeMeta._KEY_REF_ATTR_TYPES):
+                for attr_name, value in b._reference_attribute_types.items():
+                    if attr_name not in attrs[AttributeMeta._KEY_REF_ATTR_TYPES]:
+                        attrs[AttributeMeta._KEY_REF_ATTR_TYPES][attr_name] = value
 
-        attrs["ATTRIBUTES"] = tuple(attrs["_attribute_types"].keys())
+        attrs["ATTRIBUTES"] = tuple(attrs[AttributeMeta._KEY_ATTR_TYPES].keys())
         return super(AttributeMeta, cls).__new__(cls, name, bases, attrs)
 
 
@@ -434,14 +469,18 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
     _attribute_name = None
 
     def __init__(self, **kwargs):
-        _sticky = kwargs.pop("_sticky", False)
-        _mutable = kwargs.pop("_mutable", True)
-        super(MappingAttribute, self).__init__(_sticky=_sticky, _mutable=_mutable)
-
         self._model_objects = {}
+        self._attributes = {}
+
+        attr_params = {
+            self._PARAM_MUTABLE: kwargs.pop(self._PARAM_MUTABLE, True),
+            self._PARAM_SERIALIZABLE: kwargs.pop(self._PARAM_SERIALIZABLE, True),
+            self._PARAM_STICKY: kwargs.pop(self._PARAM_STICKY, False),
+            self._PARAM_READONLY: kwargs.pop(self._PARAM_READONLY, False),
+        }
+        super(MappingAttribute, self).__init__(**attr_params)
 
         validate = kwargs.pop("validate", True)
-        self._attributes = {}
         for attr_name, value in iteritems(kwargs):
             attr = (
                 self.get_attribute_type(attr_name)
@@ -495,7 +534,7 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
         id_ = id(model_object)
         self._model_objects.pop(id_, None)
 
-    def _set_modified(self, attr_name=None):
+    def _set_modified(self, attr_name=None, validate=True):
         """
         Trigger modifications on all the referenced model objects.
 
@@ -504,7 +543,7 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
         references to the names of attributes on objects they're attached to.
         """
         for model_object, attr_name in itervalues(self._model_objects):
-            model_object._set_modified(attr_name)
+            model_object._set_modified(attr_name, validate)
 
     def __get__(self, model_object, objtype):
         """
@@ -519,22 +558,30 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
         Allows setting using either a dict or from an already instantiated
         MappingAttribute.
         """
-        if not self._mutable and validate:
-            raise AttributeValidationError("Cannot set {} because it is immutable.")
+        if validate:
+            self._raise_if_immutable_or_readonly("set", model_object)
 
         value = self.deserialize(value, validate=validate)
+        previous_value = model_object._attributes.pop(self._attribute_name, None)
 
-        # deregister the previous value we're replacing, if it exists
+        # `_set_modified()` will raise exception if change is not allowed
+        model_object._set_modified(self._attribute_name, validate)
+
+        # deregister the previous value and register the new one
+        if previous_value is not None:
+            previous_value._remove_model_object(model_object)
+        if value is not None:
+            value._add_model_object(model_object, self._attribute_name)
+
+        model_object._attributes[self._attribute_name] = value
+
+    def __delete__(self, model_object, validate=True):
+        if validate:
+            self._raise_if_immutable_or_readonly("delete", model_object)
+
         previous_value = model_object._attributes.pop(self._attribute_name, None)
         if previous_value is not None:
             previous_value._remove_model_object(model_object)
-
-        # register the new value with bidirectional references
-        if isinstance(value, MappingAttribute):
-            # value could be None
-            value._add_model_object(model_object, self._attribute_name)
-        model_object._attributes[self._attribute_name] = value
-        model_object._set_modified(self._attribute_name)
 
     def serialize(self, attrs, jsonapi_format=False):
         """
@@ -579,7 +626,7 @@ class MappingAttribute(Attribute, AttributeEqualityMixin):
                 )
             )
         type_ = type(self)
-        return type_(validate=validate, _mutable=self._mutable, **values)
+        return type_(validate=validate, **self._get_attr_params(**values))
 
 
 class ResolutionUnit(str, Enum):
@@ -701,31 +748,22 @@ class ListAttribute(Attribute):
     # from AttributeMeta.__new__, after it's already been instantiated
     _attribute_name = None
 
-    def __init__(self, item_cls, validate=True, items=None, _mutable=True):
-        super(ListAttribute, self).__init__(_mutable=_mutable)
-
+    def __init__(self, item_cls, validate=True, items=None, **kwargs):
         self._model_objects = {}
+        self._item_cls = item_cls
+        self._item_type = item_cls(**kwargs)
+
+        super(ListAttribute, self).__init__(**kwargs)
 
         # ensure we can deserilize data correctly
         if not issubclass(item_cls, Attribute):
             raise AttributeValidationError("expected an Attribute type")
-
-        self._item_cls = item_cls
-        self._item_type = item_cls(_mutable=_mutable)
 
         if items is None:
             items = []
         self._items = [
             self._instantiate_item(item, validate=validate) for item in items
         ]
-
-    def _raise_if_immutable(self, operation="set"):
-        if not self._mutable:
-            raise AttributeValidationError(
-                "Can't {} '{}' item because it is an immutable attribute".format(
-                    operation, self._attribute_name
-                )
-            )
 
     def _instantiate_item(self, item, validate=True, add_model=True):
         """
@@ -764,7 +802,7 @@ class ListAttribute(Attribute):
         except KeyError:
             pass
 
-    def _set_modified(self, attr_name=None):
+    def _set_modified(self, attr_name=None, validate=True):
         """
         Trigger modifications on all the referenced model objects.
 
@@ -773,25 +811,33 @@ class ListAttribute(Attribute):
         references to the names of attributes on objects they're attached to.
         """
         for model_object, attr_name in itervalues(self._model_objects):
-            model_object._set_modified(attr_name)
+            model_object._set_modified(attr_name, validate)
 
     def __set__(self, model_object, value, validate=True):
         if validate:
-            self._raise_if_immutable()
+            self._raise_if_immutable_or_readonly("set", model_object)
 
         value = self.deserialize(value, validate=validate)
+        previous_value = model_object._attributes.pop(self._attribute_name, None)
 
-        # deregister the model object from the attribute we're replacing
-        # if it exists
+        # `_set_modified()` will raise exception if change is not allowed
+        model_object._set_modified(self._attribute_name, validate)
+
+        # deregister and register
+        if previous_value is not None:
+            previous_value._remove_model_object(model_object)
+        if value is not None:
+            value._add_model_object(model_object, self._attribute_name)
+
+        model_object._attributes[self._attribute_name] = value
+
+    def __delete__(self, model_object, validate=True):
+        if validate:
+            self._raise_if_immutable_or_readonly("delete", model_object)
+
         previous_value = model_object._attributes.pop(self._attribute_name, None)
         if previous_value is not None:
             previous_value._remove_model_object(model_object)
-
-        # register the new attribute with the correct name
-        if isinstance(value, ListAttribute):
-            value._add_model_object(model_object, self._attribute_name)
-        model_object._attributes[self._attribute_name] = value
-        model_object._set_modified(self._attribute_name)
 
     def deserialize(self, values, validate=True):
         """
@@ -817,7 +863,7 @@ class ListAttribute(Attribute):
         # ensures subclasses are handled correctly
         type_ = type(self)
         return type_(
-            self._item_cls, validate=validate, items=values, _mutable=self._mutable
+            self._item_cls, validate=validate, items=values, **self._get_attr_params()
         )
 
     def serialize(self, values, jsonapi_format=False):
@@ -836,24 +882,24 @@ class ListAttribute(Attribute):
 
     def append(self, item):
         """ Append object to the end of the list. """
-        self._raise_if_immutable(operation="append")
+        self._raise_if_immutable_or_readonly(operation="append")
 
         value = self._instantiate_item(item)
 
-        self._items.append(value)
-
+        # `_set_modified()` will raise exception if change is not allowed
         self._set_modified()
+        self._items.append(value)
 
     # these two methods only appear on py3 lists
     if PY3:
 
         def clear(self):
             """Remove all items from list."""
-            self._raise_if_immutable(operation="clear")
+            self._raise_if_immutable_or_readonly(operation="clear")
 
-            del self[:]
-
+            # `_set_modified()` will raise exception if change is not allowed
             self._set_modified()
+            del self[:]
 
         def copy(self):
             """Return a shallow copy of the list."""
@@ -866,12 +912,13 @@ class ListAttribute(Attribute):
 
     def extend(self, other):
         """Extend list by appending elements from the iterable."""
-        self._raise_if_immutable(operation="extend")
+        self._raise_if_immutable_or_readonly(operation="extend")
 
         new_others = (self._instantiate_item(o) for o in other)
-        self._items.extend(new_others)
 
+        # `_set_modified()` will raise exception if change is not allowed
         self._set_modified()
+        self._items.extend(new_others)
 
     def index(self, value, *args):
         """Return first index of value.
@@ -888,12 +935,13 @@ class ListAttribute(Attribute):
 
     def insert(self, index, value):
         """Insert object before index."""
-        self._raise_if_immutable(operation="insert")
+        self._raise_if_immutable_or_readonly(operation="insert")
 
         new_value = self._instantiate_item(value)
-        self._items.insert(index, new_value)
 
+        # `_set_modified()` will raise exception if change is not allowed
         self._set_modified()
+        self._items.insert(index, new_value)
 
     def pop(self, index=-1):
         """
@@ -901,13 +949,14 @@ class ListAttribute(Attribute):
 
         Raises IndexError if list is empty or index is out of range.
         """
-        self._raise_if_immutable(operation="pop")
+        self._raise_if_immutable_or_readonly(operation="pop")
+
+        # `_set_modified()` will raise exception if change is not allowed
+        self._set_modified()
         popped = self._items.pop(index)
 
         if isinstance(popped, MappingAttribute):
             popped._remove_model_object(self)
-
-        self._set_modified()
 
         return popped
 
@@ -916,38 +965,38 @@ class ListAttribute(Attribute):
 
         Raises ValueError if the value is not present.
         """
-        self._raise_if_immutable(operation="remove")
+        self._raise_if_immutable_or_readonly(operation="remove")
         i = self.index(value)
         self.pop(index=i)  # will set_modified
 
     def reverse(self):
         """Reverse *IN PLACE*."""
-        self._raise_if_immutable(operation="reverse")
+        self._raise_if_immutable_or_readonly(operation="reverse")
 
-        self._items.reverse()
-
+        # `_set_modified()` will raise exception if change is not allowed
         self._set_modified()
+        self._items.reverse()
 
     # sort changed signatures between py2 and py3
     if PY2:
 
         def sort(self, cmp=None, key=None, reverse=False):
             """Stable sort *IN PLACE*."""
-            self._raise_if_immutable(operation="sort")
+            self._raise_if_immutable_or_readonly(operation="sort")
 
-            self._items.sort(cmp=cmp, key=key, reverse=reverse)
-
+            # `_set_modified()` will raise exception if change is not allowed
             self._set_modified()
+            self._items.sort(cmp=cmp, key=key, reverse=reverse)
 
     else:
 
         def sort(self, key=None, reverse=False):
             """Stable sort *IN PLACE*."""
-            self._raise_if_immutable(operation="sort")
+            self._raise_if_immutable_or_readonly(operation="sort")
 
-            self._items.sort(key=key, reverse=reverse)
-
+            # `_set_modified()` will raise exception if change is not allowed
             self._set_modified()
+            self._items.sort(key=key, reverse=reverse)
 
     def __getitem__(self, n):
         return self._items[n]
@@ -955,11 +1004,9 @@ class ListAttribute(Attribute):
     def __setitem__(self, n, item):
         # will throw IndexError which is what we want
         # if previous value isn't set
-        self._raise_if_immutable(operation="__setitem__")
+        self._raise_if_immutable_or_readonly(operation="__setitem__")
 
         previous_value = self._items[n]
-
-        self._raise_if_immutable
 
         # handling slice assignment
         if isinstance(n, slice):
@@ -973,6 +1020,8 @@ class ListAttribute(Attribute):
         else:
             new_item = self._instantiate_item(item)
 
+        # `_set_modified()` will raise exception if change is not allowed
+        self._set_modified()
         self._items[n] = new_item
 
         # slicing returns a list of items
@@ -983,12 +1032,10 @@ class ListAttribute(Attribute):
             if isinstance(val, MappingAttribute):
                 val._remove_model_object(self)
 
-        self._set_modified()
-
     def __delitem__(self, n):
         # will throw IndexError which is what we want
         # if previous value isn't set
-        self._raise_if_immutable(operation="__delitem__")
+        self._raise_if_immutable_or_readonly(operation="__delitem__")
         previous_value = self._items[n]
 
         # slicing returns a list of items
@@ -999,9 +1046,9 @@ class ListAttribute(Attribute):
             if isinstance(val, MappingAttribute):
                 val._remove_model_object(self)
 
-        del self._items[n]
-
+        # `_set_modified()` will raise exception if change is not allowed
         self._set_modified()
+        del self._items[n]
 
     def __len__(self):
         return len(self._items)
@@ -1027,21 +1074,21 @@ class ListAttribute(Attribute):
     def __iadd__(self, other):
         # this raises a TypeError which mimics normal list behavior when given
         # a non-iterable "other"
-        self._raise_if_immutable(operation="__iadd__")
+        self._raise_if_immutable_or_readonly(operation="__iadd__")
 
         new_other = (self._instantiate_item(o) for o in other)
-        self._items += new_other
 
+        # `_set_modified()` will raise exception if change is not allowed
         self._set_modified()
+        self._items += new_other
         return self
 
     def __imul__(self, other):
-        self._raise_if_immutable(operation="__imul__")
+        self._raise_if_immutable_or_readonly(operation="__imul__")
 
-        self._items *= other
-
+        # `_set_modified()` will raise exception if change is not allowed
         self._set_modified()
-
+        self._items *= other
         return self
 
     def __iter__(self):

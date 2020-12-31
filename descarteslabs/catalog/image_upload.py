@@ -7,7 +7,7 @@ from .attributes import (
     DocumentState,
     Attribute,
     CatalogObjectReference,
-    ImmutableTimestamp,
+    Timestamp,
     EnumAttribute,
     MappingAttribute,
     ListAttribute,
@@ -138,10 +138,10 @@ class UploadError(MappingAttribute):
         If `component` for the error is `worker` this attribute represents the `result_key` of the `Task`.
     """
 
-    stacktrace = Attribute(_mutable=False)
-    error_type = Attribute(_mutable=False)
-    component = Attribute(_mutable=False)
-    component_id = Attribute(_mutable=False)
+    stacktrace = Attribute(mutable=False)
+    error_type = Attribute(mutable=False)
+    component = Attribute(mutable=False)
+    component_id = Attribute(mutable=False)
 
 
 class ImageUpload(CatalogObject):
@@ -204,19 +204,19 @@ class ImageUpload(CatalogObject):
     _doc_type = "image_upload"
     _url = "/uploads"
 
-    product_id = Attribute(_mutable=False)
-    image_id = Attribute(_mutable=False)
+    product_id = Attribute(mutable=False)
+    image_id = Attribute(mutable=False)
     image = CatalogObjectReference(
-        Image, _allow_unsaved=True, _mutable=False, _serializable=True, _sticky=True
+        Image, allow_unsaved=True, mutable=False, serializable=True, sticky=True
     )
-    image_upload_options = ImageUploadOptions(_sticky=True)
-    resumable_urls = Attribute(_serializable=False)
+    image_upload_options = ImageUploadOptions(sticky=True)
+    resumable_urls = Attribute(serializable=False, mutable=False)
     status = EnumAttribute(ImageUploadStatus)
-    start_datetime = ImmutableTimestamp()
-    end_datetime = ImmutableTimestamp()
-    job_id = Attribute()
-    events = Attribute()
-    errors = ListAttribute(UploadError, _mutable=False)
+    start_datetime = Timestamp(readonly=True)
+    end_datetime = Timestamp(readonly=True)
+    job_id = Attribute(readonly=True)
+    events = Attribute(readonly=True)
+    errors = ListAttribute(UploadError, readonly=True)
 
     def __init__(self, **kwargs):
         if kwargs.get("id") is None:

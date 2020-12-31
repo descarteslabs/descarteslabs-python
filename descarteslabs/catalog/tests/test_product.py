@@ -26,16 +26,11 @@ from .. import properties
 class TestProduct(ClientTestCase):
     def test_constructor(self):
         p = Product(
-            id="p1",
-            name="Test Product",
-            start_datetime="2019-01-01",
-            resolution_min={"value": 10.0, "unit": "meters"},
+            id="p1", name="Test Product", start_datetime="2019-01-01", tags=["tag"]
         )
         assert p.id == "p1"
         assert p.name == "Test Product"
-
-        assert p.resolution_min.value == 10.0
-        assert p.resolution_min.unit == "meters"
+        assert p.tags == ["tag"]
         assert p.state == DocumentState.UNSAVED
 
     def test_repr_non_ascii(self):
@@ -58,12 +53,7 @@ class TestProduct(ClientTestCase):
         assert isinstance(p.resolution_min, Resolution)
         assert not p.is_modified
 
-        new_resolution = Resolution(value=15.0, unit="degrees")
-        p.resolution_min = new_resolution
-
-        assert p.resolution_min.value == new_resolution.value
-        assert p.resolution_min.unit == new_resolution.unit
-        assert p.resolution_min is new_resolution
+        p.tags = ["tag"]
         assert p.is_modified
 
     def test_resolution_new(self):

@@ -13,7 +13,7 @@ from .attributes import (
     AttributeValidationError,
     AttributeEqualityMixin,
     DocumentState,
-    ImmutableTimestamp,
+    Timestamp,
     ListAttribute,
 )
 
@@ -324,9 +324,9 @@ class CatalogObject(AttributeEqualityMixin):
         PUT = "put"
         GET = "get"
 
-    id = Attribute(_mutable=False, _serializable=False)
-    created = ImmutableTimestamp()
-    modified = ImmutableTimestamp()
+    id = Attribute(mutable=False, serializable=False)
+    created = Timestamp(readonly=True)
+    modified = Timestamp(readonly=True)
     owners = ListAttribute(Attribute)
     readers = ListAttribute(Attribute)
     writers = ListAttribute(Attribute)
@@ -350,6 +350,10 @@ class CatalogObject(AttributeEqualityMixin):
             related_objects=kwargs.pop("_related_objects", None),
             **kwargs
         )
+
+    def __del__(self):
+        for attr_type in self._attribute_types.values():
+            attr_type.__delete__(self, validate=False)
 
     def _clear_attributes(self):
         self._mapping_attribute_instances = {}
@@ -505,7 +509,22 @@ class CatalogObject(AttributeEqualityMixin):
             attribute_type = attribute_type._item_type
         return attribute_type.serialize(value)
 
-    def _set_modified(self, attr_name):
+    def _set_modified(self, attr_name, validate=True):
+        # Verify it is allowed to change
+        attr = self._get_attribute_type(attr_name)
+        if validate:
+            if attr._readonly:
+                raise AttributeValidationError(
+                    "Can't set '{}' because it is a readonly attribute".format(
+                        attr_name
+                    )
+                )
+            if not attr._mutable and attr_name in self._attributes:
+                raise AttributeValidationError(
+                    "Can't set '{}' because it is an immutable attribute".format(
+                        attr_name
+                    )
+                )
         self._modified.add(attr_name)
 
     def _serialize(self, attrs, jsonapi_format=False):

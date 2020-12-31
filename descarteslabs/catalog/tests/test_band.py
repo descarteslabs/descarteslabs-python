@@ -38,15 +38,24 @@ class TestBand(ClientTestCase):
         assert "test" == s.name
         assert "foo" == s.product_id
 
+    def test_constructor_no_name_and_product_id(self):
         s = SpectralBand()
         s.id = "foo:test"
         assert "foo:test" == s.id
         assert "test" == s.name
         assert "foo" == s.product_id
 
+    def test_constructor_bad_id(self):
         with pytest.raises(AttributeValidationError):
             s = SpectralBand()
             s.id = "foo"
+
+    def test_set_id_using_type(self):
+        s = SpectralBand()
+        s.name = "test"
+        s.product_id = "foo"
+        assert "foo:test" == s.id
+        s._get_attribute_type("id").__set__(s, "foo:test")
 
     @responses.activate
     def test_get_subtype(self):
@@ -224,9 +233,9 @@ class TestDerivedBand(ClientTestCase):
         )
         with pytest.raises(NotImplementedError):
             saved_dband.delete()
-
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(AttributeValidationError):
             saved_dband.name = "updated name"
+        with pytest.raises(NotImplementedError):
             saved_dband.save()
 
     @responses.activate

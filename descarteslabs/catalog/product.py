@@ -87,8 +87,8 @@ class Product(CatalogObject):
     revisit_period_minutes_max = Attribute()
     start_datetime = Timestamp()
     end_datetime = Timestamp()
-    resolution_min = Resolution()
-    resolution_max = Resolution()
+    resolution_min = Resolution(readonly=True)
+    resolution_max = Resolution(readonly=True)
 
     @check_deleted
     def delete_related_objects(self):

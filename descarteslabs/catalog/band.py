@@ -557,13 +557,13 @@ class DerivedBand(CatalogObject):
     _doc_type = "derived_band"
     _url = "/derived_bands"
 
-    name = Attribute()
-    description = Attribute()
-    data_type = EnumAttribute(DataType)
-    data_range = Attribute()
-    physical_range = Attribute()
-    bands = Attribute()
-    function_name = Attribute()
+    name = Attribute(readonly=True)
+    description = Attribute(readonly=True)
+    data_type = EnumAttribute(DataType, readonly=True)
+    data_range = Attribute(readonly=True)
+    physical_range = Attribute(readonly=True)
+    bands = Attribute(readonly=True)
+    function_name = Attribute(readonly=True)
 
     def save(self):
         """You cannot save a derived band.

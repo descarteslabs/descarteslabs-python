@@ -10,7 +10,6 @@ from six import PY2, PY3
 from ..catalog_base import CatalogObject
 from ..attributes import (
     Attribute,
-    ImmutableTimestamp,
     Timestamp,
     EnumAttribute,
     utc,
@@ -19,6 +18,7 @@ from ..attributes import (
     DocumentState,
     Resolution,
     File,
+    AttributeValidationError,
 )
 from ..band import BandType
 
@@ -31,7 +31,7 @@ class CountToThree(str, Enum):
 
 class Nested(MappingAttribute):
     foo = Attribute()
-    dt = ImmutableTimestamp()
+    dt = Timestamp(mutable=False)
     en = EnumAttribute(CountToThree)
 
 
@@ -48,7 +48,7 @@ class FakeCatalogObject(CatalogObject):
 
 class TestAttributes(unittest.TestCase):
     def test_immutabletimestamp(self):
-        date = ImmutableTimestamp()
+        date = Timestamp(readonly=True)
         assert date.deserialize(None) is None
 
         assert (
@@ -58,7 +58,7 @@ class TestAttributes(unittest.TestCase):
             "2019-02-01T00:00:00.0000Z", validate=False
         ) == datetime(2019, 2, 1, tzinfo=utc)
 
-        date = ImmutableTimestamp()
+        date = Timestamp(readonly=True)
         assert date.deserialize(
             datetime(2013, 12, 31, 23, 59, 59), validate=False
         ) == datetime(2013, 12, 31, 23, 59, 59, tzinfo=utc)
@@ -101,7 +101,7 @@ class TestAttributes(unittest.TestCase):
 
     def test_datetime_invalid(self):
         with pytest.raises(ValueError):
-            ImmutableTimestamp().deserialize("123439", validate=False)
+            Timestamp(readonly=True).deserialize("123439", validate=False)
 
     def test_enum_attribute(self):
         enum_attr = EnumAttribute(BandType)
@@ -117,6 +117,7 @@ class TestAttributes(unittest.TestCase):
     def test_enum_attribute_new(self):
         owner = FakeCatalogObject(id="id")
         enum_attr = EnumAttribute(BandType)
+        owner._attribute_types["something"] = enum_attr
         enum_attr._attribute_name = "something"
 
         enum_attr.__set__(owner, "foobar", False)
@@ -694,3 +695,160 @@ class TestAttributes(unittest.TestCase):
 
         with pytest.raises(AttributeError):
             r.foo = "bad"
+
+    def test_del(self):
+        class Obj(CatalogObject):
+            attr = Attribute()
+            mapping = Resolution()
+            list = ListAttribute(Attribute)
+
+        o = Obj(attr="something", mapping={"value": 5}, list=["one"])
+        assert len(o._attributes) == 3
+        del o.attr
+        del o.mapping
+        del o.list
+        assert len(o._attributes) == 0
+
+    def test_set_immutable(self):
+        class Obj(CatalogObject):
+            attr = Attribute(mutable=False)
+            mapping = Resolution(mutable=False)
+            list = ListAttribute(Attribute, mutable=False)
+
+        o = Obj()
+        o.attr = "something"
+        o.mapping = Resolution(value=5)
+        o.list = ["something"]
+
+        # Cannot reassign
+        with self.assertRaises(AttributeValidationError):
+            o.attr = "something else"
+        with self.assertRaises(AttributeValidationError):
+            o.mapping = Resolution()
+        with self.assertRaises(AttributeValidationError):
+            o.list = []
+        with self.assertRaises(AttributeValidationError):
+            o.mapping = None
+        with self.assertRaises(AttributeValidationError):
+            o.list = None
+
+        # Cannot change value of immutable mapping
+        with self.assertRaises(AttributeValidationError):
+            o.mapping.unit = "meters"
+        with self.assertRaises(AttributeValidationError):
+            o.mapping.value = 6
+        with self.assertRaises(AttributeValidationError):
+            o.list[0] = "something else"
+        with self.assertRaises(AttributeValidationError):
+            o.list.append("something else")
+
+    def test_set_mutable_and_immutable(self):
+        class Obj(CatalogObject):
+            mapping = Resolution()
+            list = ListAttribute(Attribute)
+
+        class ImmutableObj(CatalogObject):
+            mapping = Resolution(mutable=False)
+            list = ListAttribute(Attribute, mutable=False)
+
+        r = Resolution(value=5)
+        la = ListAttribute(Attribute, items=["one", "two"])
+
+        mutable = Obj(mapping=r, list=la)
+        mutable.mapping.value = 6
+        mutable.list.append("three")
+
+        mutable2 = Obj(mapping=r, list=la)
+        mutable2.mapping.value = 7
+        mutable2.list.append("four")
+
+        assert mutable.mapping.value == 7
+
+        mutable2.mapping = Resolution()
+        mutable2.mapping.value = 8
+        mutable2.list = ["six"]
+
+        # Once assigned to an immutable object, the shared attributes are immutable
+        immutable = ImmutableObj(mapping=r, list=la)
+
+        with self.assertRaises(AttributeValidationError):
+            mutable.mapping.value = 9
+        with self.assertRaises(AttributeValidationError):
+            mutable.list.append("seven")
+
+        # Can't delete immutable attributes
+        with self.assertRaises(AttributeValidationError):
+            del immutable.mapping
+        with self.assertRaises(AttributeValidationError):
+            del immutable.list
+
+        assert r == Resolution(value=7)
+        assert la == ["one", "two", "three", "four"]
+
+    def test_set_readonly(self):
+        class Obj(CatalogObject):
+            readonly_attr = Attribute(readonly=True)
+            readonly_mapping = Resolution(readonly=True)
+            readonly_list = ListAttribute(Attribute, readonly=True)
+
+        # First check simple assignment
+        o = Obj()
+        with self.assertRaises(AttributeValidationError):
+            o.readonly_attr = "something"
+        with self.assertRaises(AttributeValidationError):
+            o.readonly_mapping = Resolution()
+        with self.assertRaises(AttributeValidationError):
+            o.readonly_list = []
+        assert not o.is_modified
+
+        # Next check re-assignment
+        o = Obj(
+            readonly_attr="something",
+            readonly_mapping=Resolution(value=5, unit="meters"),
+            readonly_list=[],
+            _saved=True,
+        )
+        with self.assertRaises(AttributeValidationError):
+            o.readonly_attr = "something else"
+        with self.assertRaises(AttributeValidationError):
+            o.readonly_mapping = Resolution()
+        with self.assertRaises(AttributeValidationError):
+            o.readonly_mapping.value = 6
+        with self.assertRaises(AttributeValidationError):
+            o.readonly_list = ["something"]
+        with self.assertRaises(AttributeValidationError):
+            o.readonly_list.append("something")
+        assert not o.is_modified
+
+    def test_set_writable_and_readonly(self):
+        class Obj(CatalogObject):
+            mapping = Resolution()
+            list = ListAttribute(Attribute)
+
+        class ReadonlyObj(CatalogObject):
+            mapping = Resolution(readonly=True)
+            list = ListAttribute(Attribute, readonly=True)
+
+        r = Resolution(value=5)
+        la = ListAttribute(Attribute, items=["one", "two"])
+
+        obj = Obj(mapping=r, list=la)
+        obj.mapping.value = 6
+        obj.list.append("three")
+
+        # Once assigned to an immutable object, the shared attributes are immutable
+        readonly = ReadonlyObj(mapping=r, list=la, _saved=True)
+
+        with self.assertRaises(AttributeValidationError):
+            readonly.mapping.value = 7
+        with self.assertRaises(AttributeValidationError):
+            readonly.list.append("four")
+
+        # Can't delete readonly attributes
+        with self.assertRaises(AttributeValidationError):
+            del readonly.mapping
+        with self.assertRaises(AttributeValidationError):
+            del readonly.list
+
+        assert r == Resolution(value=6)
+        assert la == ["one", "two", "three"]

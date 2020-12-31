@@ -13,7 +13,7 @@ class NamedIdAttribute(Attribute):
     """
 
     def __init__(self):
-        super(NamedIdAttribute, self).__init__(_mutable=False, _serializable=False)
+        super(NamedIdAttribute, self).__init__(mutable=False, serializable=False)
 
     def __set__(self, obj, value, validate=True):
         last_colon = value.rfind(":")
@@ -24,46 +24,57 @@ class NamedIdAttribute(Attribute):
                 "separated by a colon, not '{}'".format(value)
             )
 
-        super(NamedIdAttribute, self).__set__(obj, value, validate=validate)
+        # Only update if it differs
+        if value != obj.id:
+            super(NamedIdAttribute, self).__set__(obj, value, validate=validate)
 
         # Some older images have colons in their names, so for existing data being
         # loaded from the service we can't make the assumption that we can recover
         # the name from the id.
         if not obj._saved:
             product_id = value[:last_colon]
-            name_part = value[last_colon + 1 :]
-            obj._get_attribute_type("product_id").__set__(
-                obj, product_id, validate=validate
-            )
-            obj._get_attribute_type("name").__set__(obj, name_part, validate=validate)
+            name = value[last_colon + 1 :]
+            # Only update if it differs
+            if product_id != obj.product_id:
+                obj._get_attribute_type("product_id").__set__(
+                    obj, product_id, validate=validate
+                )
+            if name != obj.name:
+                obj._get_attribute_type("name").__set__(obj, name, validate=validate)
 
 
 class NameAttribute(Attribute):
     """Sets the id if the `product_id` is already set."""
 
     def __init__(self):
-        super(NameAttribute, self).__init__(_mutable=False)
+        super(NameAttribute, self).__init__(mutable=False)
 
     def __set__(self, obj, value, validate=True):
-        super(NameAttribute, self).__set__(obj, value, validate=validate)
+        # Only update if it differs
+        if value != obj.name:
+            super(NameAttribute, self).__set__(obj, value, validate=validate)
         if value is not None and obj.id is None and obj.product_id:
-            obj._get_attribute_type("id").__set__(
-                obj, "{}:{}".format(obj.product_id, value), validate=validate
-            )
+            id_ = "{}:{}".format(obj.product_id, value)
+            # Only update if it differs
+            if id_ != obj.id:
+                obj._get_attribute_type("id").__set__(obj, id_, validate=validate)
 
 
 class ProductIdAttribute(Attribute):
     """Sets the id if the `name` is already set."""
 
     def __init__(self):
-        super(ProductIdAttribute, self).__init__(_mutable=False)
+        super(ProductIdAttribute, self).__init__(mutable=False)
 
     def __set__(self, obj, value, validate=True):
-        super(ProductIdAttribute, self).__set__(obj, value, validate=validate)
+        # Only update if it differs
+        if value != obj.product_id:
+            super(ProductIdAttribute, self).__set__(obj, value, validate=validate)
         if value is not None and obj.id is None and obj.name:
-            obj._get_attribute_type("id").__set__(
-                obj, "{}:{}".format(value, obj.name), validate=validate
-            )
+            id_ = "{}:{}".format(value, obj.name)
+            # Only update if it differs
+            if id_ != obj.id:
+                obj._get_attribute_type("id").__set__(obj, id_, validate=validate)
 
 
 class NamedCatalogObject(CatalogObject):
@@ -136,7 +147,7 @@ class NamedCatalogObject(CatalogObject):
     id = NamedIdAttribute()
     name = NameAttribute()
     product_id = ProductIdAttribute()
-    product = CatalogObjectReference(Product, _mutable=False, _sticky=True)
+    product = CatalogObjectReference(Product, mutable=False, sticky=True)
 
     def __new__(cls, *args, **kwargs):
         return _new_abstract_class(cls, NamedCatalogObject)

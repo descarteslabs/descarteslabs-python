@@ -272,9 +272,6 @@ class TestImageUpload(ClientTestCase):
         )
 
         assert u.errors is None
-        with pytest.raises(AttributeValidationError):
-            u.errors = [{"component": "task", "error_type": "TypeError"}]
-
         u.save()
         assert u.status == ImageUploadStatus.PENDING
         u.reload()
