@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import sys
 from typing import List, ClassVar, Type, TYPE_CHECKING
 
@@ -38,7 +36,7 @@ class Widget:
     # their base Proxytype has.
 
     _proto_type: ClassVar[Type[message.Message]]
-    widget: ipywidgets.Widget
+    widget: "ipywidgets.Widget"
     "The ipywidgets Widget instance used to display this widget"
 
     def __init_subclass__(cls, **kwargs):

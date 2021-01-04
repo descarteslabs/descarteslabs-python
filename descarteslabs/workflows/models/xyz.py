@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Optional, Iterator, Callable, Any
 import datetime
 import logging
@@ -124,7 +123,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
         self._message = response_message
 
     @classmethod
-    def get(cls, xyz_id: str, client: Optional[Client] = None) -> XYZ:
+    def get(cls, xyz_id: str, client: Optional[Client] = None) -> "XYZ":
         """
         Get an existing XYZ by id.
 
@@ -158,7 +157,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
     @classmethod
     def list(
         cls, public: bool = False, client: Optional[Client] = None
-    ) -> Iterator[XYZ]:
+    ) -> Iterator["XYZ"]:
         """
         Get all XYZ objects created by this user.
 
@@ -389,7 +388,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
             client=self._client,
         )
 
-    def log_listener(self) -> XYZLogListener:
+    def log_listener(self) -> "XYZLogListener":
         """An `XYZLogListener` to trigger callbacks when logs occur computing tiles.
 
         Example

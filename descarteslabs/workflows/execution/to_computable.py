@@ -1,7 +1,3 @@
-# prevents type annotations from being evaluated at runtime
-# https://www.python.org/dev/peps/pep-0563/#enabling-the-future-behavior-in-python-3-7
-from __future__ import annotations
-
 import typing
 
 from ..cereal import serialize_typespec, typespec_to_unmarshal_str
@@ -10,12 +6,12 @@ from ..types import proxify, Function, Proxytype
 from .arguments import arguments_to_grafts, promote_arguments
 
 if typing.TYPE_CHECKING:
-    from descarteslabs.common.proto.typespec import typespec_pb2
+    from descarteslabs.common.proto.typespec import typespec_pb2  # noqa: F401
 
 
 def to_computable(
     proxy_object: typing.Union[Proxytype, list, tuple], arguments: dict
-) -> (Proxytype, dict, typespec_pb2.Typespec, str):
+) -> (Proxytype, dict, "typespec_pb2.Typespec", str):
     """
     Shared logic to convert the proxy object and arguments into the proper form for computation
 

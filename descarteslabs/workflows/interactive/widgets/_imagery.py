@@ -1,10 +1,5 @@
 # NOTE: this filename is underscore-prefixed just so it doesn't show up
 # in tab-completion for `wf.widgets.`
-
-# prevents type annotations from being evaluated at runtime
-# https://www.python.org/dev/peps/pep-0563/#enabling-the-future-behavior-in-python-3-7
-from __future__ import annotations
-
 import typing
 
 from descarteslabs.common.proto.widgets import widgets_pb2
@@ -17,9 +12,9 @@ if typing.TYPE_CHECKING:
 
 def image(
     name: str,
-    default_layer: WorkflowsLayer = None,
+    default_layer: "WorkflowsLayer" = None,
     label: str = "",
-    map: typing.Optional[typing.Union[Map, MapApp]] = None,
+    map: typing.Optional[typing.Union["Map", "MapApp"]] = None,
 ):
     """
     A widget, which acts as an `~.geospatial.Image` parameter, to select one of the current layers on the map.
@@ -94,9 +89,9 @@ def image(
 
 def imagecollection(
     name: str,
-    default_layer: WorkflowsLayer = None,
+    default_layer: "WorkflowsLayer" = None,
     label: str = "",
-    map: typing.Union[Map, MapApp] = None,
+    map: typing.Union["Map", "MapApp"] = None,
 ):
     """
     A widget, which acts as an `~.geospatial.ImageCollection` parameter, to select one of the current layers on the map.

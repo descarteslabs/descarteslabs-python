@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Type, ClassVar, TypeVar, Optional, Tuple
 import json
 
@@ -43,9 +42,7 @@ class PublishedGraft:
         cls._message_type = message_type
 
     def __init__(
-        self,
-        proxy_object: Proxytype,
-        client: Optional[Client] = None,
+        self, proxy_object: Proxytype, client: Optional[Client] = None,
     ):
         """
         Construct a PublishedGraft object from a proxy object.
@@ -115,7 +112,7 @@ class PublishedGraft:
     @classmethod
     def _from_proto(
         cls, message: MT, client: Optional[Client] = None
-    ) -> PublishedGraft:
+    ) -> "PublishedGraft":
         """
         Low-level constructor for a `PublishedGraft` object from a Protobuf message.
 
