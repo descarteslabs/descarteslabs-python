@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Union, Dict, TYPE_CHECKING
 
 from descarteslabs.common.proto.typespec.typespec_pb2 import (
@@ -11,22 +10,22 @@ from descarteslabs.common.proto.typespec.typespec_pb2 import (
 from descarteslabs.workflows.result_types import unmarshal
 
 if TYPE_CHECKING:
-    from descarteslabs.workflows.types import Proxytype
+    from descarteslabs.workflows.types import Proxytype  # noqa: F401
 
 
 PRIMITIVES = (int, float, bool, str)
 PrimitiveType = Union[PRIMITIVES]
 
 
-types: Dict[str, Proxytype] = {}
+types: Dict[str, "Proxytype"] = {}
 
 
 def deserialize_typespec(
     spec: Typespec,
 ) -> Union[
     PrimitiveType,
-    Dict[Union[PrimitiveType, Proxytype], Union[PrimitiveType, Proxytype]],
-    Proxytype,
+    Dict[Union[PrimitiveType, "Proxytype"], Union[PrimitiveType, "Proxytype"]],
+    "Proxytype",
 ]:
     component = spec.WhichOneof("component")
     if component == "primitive":
@@ -56,8 +55,8 @@ def deserialize_typespec(
 def serialize_typespec(
     cls: Union[
         PrimitiveType,
-        Dict[Union[PrimitiveType, Proxytype], Union[PrimitiveType, Proxytype]],
-        Proxytype,
+        Dict[Union[PrimitiveType, "Proxytype"], Union[PrimitiveType, "Proxytype"]],
+        "Proxytype",
     ]
 ) -> Typespec:
     if isinstance(cls, int):
