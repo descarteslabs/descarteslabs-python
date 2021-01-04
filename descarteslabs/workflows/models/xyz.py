@@ -232,6 +232,9 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
         >>> xyz = XYZ.get('24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6') # doctest: +SKIP
         >>> xyz.delete() # doctest: +SKIP
         """
+        if client is None:
+            client = self._client
+
         self.delete_id(self.id, client=client)
         self._message.Clear()
 

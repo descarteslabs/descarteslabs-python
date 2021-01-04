@@ -257,15 +257,24 @@ class Workflow:
             workflow_pb2.DeleteWorkflowRequest(id=id), timeout=client.DEFAULT_TIMEOUT,
         )
 
-    def delete(self):
+    def delete(self, client=None):
         """
         Delete this `Workflow` and every `VersionedGraft` it contains.
 
         After deletion, all fields on ``self`` are reset.
 
         **Warning:** this cannot be undone!
+
+        Parameters
+        ----------
+        client: `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters.
         """
-        self.delete_id(self.id)
+        if client is None:
+            client = self._client
+
+        self.delete_id(self.id, client=client)
         self._message.Clear()
 
     def save(self, client=None):
