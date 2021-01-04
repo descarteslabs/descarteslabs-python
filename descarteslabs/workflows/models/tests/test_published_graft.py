@@ -1,7 +1,6 @@
 import mock
 import pytest
 import json
-from dataclasses import dataclass
 from typing import Tuple
 
 from descarteslabs.common.proto.typespec import typespec_pb2
@@ -15,13 +14,20 @@ from ..published_graft import PublishedGraft
 from . import utils
 
 
-@dataclass
 class FakeProtoMessage:
-    serialized_graft: str
-    channel: str
-    client_version: str
-    typespec: typespec_pb2.Typespec
-    parameters: Tuple[widgets_pb2.Parameter]
+    def __init__(
+        self,
+        serialized_graft: str,
+        channel: str,
+        client_version: str,
+        typespec: typespec_pb2.Typespec,
+        parameters: Tuple[widgets_pb2.Parameter],
+    ):
+        self.serialized_graft = serialized_graft
+        self.channel = channel
+        self.client_version = client_version
+        self.typespec = typespec
+        self.parameters = parameters
 
 
 class SubPublished(PublishedGraft, message_type=FakeProtoMessage):
@@ -32,9 +38,7 @@ def test_init_subclass():
     assert SubPublished._message_type is FakeProtoMessage
 
 
-@mock.patch(
-    "descarteslabs.workflows.models.published_graft.get_global_grpc_client",
-)
+@mock.patch("descarteslabs.workflows.models.published_graft.get_global_grpc_client",)
 class TestInit:
     @pytest.mark.parametrize("client", [utils.MockedClient(), None])
     def test_basic(self, mock_gggc, client):
@@ -113,9 +117,7 @@ class TestInit:
             SubPublished(outer)
 
 
-@mock.patch(
-    "descarteslabs.workflows.models.published_graft.get_global_grpc_client",
-)
+@mock.patch("descarteslabs.workflows.models.published_graft.get_global_grpc_client",)
 @pytest.mark.parametrize("client", [utils.MockedClient(), None])
 def test_from_proto(mock_gggc, client):
     class SubPublished(PublishedGraft, message_type=FakeProtoMessage):
