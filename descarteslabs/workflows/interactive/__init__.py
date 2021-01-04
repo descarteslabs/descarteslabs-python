@@ -11,17 +11,6 @@ try:
     from .inspector import PixelInspector
     from .workflow import WorkflowsBrowser
 
-    import traitlets
-
-    if not hasattr(traitlets.HasTraits, "trait_has_value"):
-        raise ImportError(
-            f"You have version {traitlets.__version__} installed of the `traitlets` library. "
-            "Workflows requires traitlets >= 5.0.5.\n"
-            "Please upgrade your version of traitlets, or better:\n"
-            "$ pip install --upgrade 'descarteslabs[complete]'\n"
-        )
-    del traitlets
-
     map = MapApp()
     """
     A single `MapApp` instance that all ``visualize`` calls are automatically

@@ -106,8 +106,7 @@ def do_setup():
                 "mercantile>=1.1.3",
                 "ipyleaflet>=0.13.1,<1",
                 "ipywidgets>=7.5.1,<8",
-                'traitlets>=5.0.5,<6;python_version>="3.7"',
-                'traitlets>=4.3.3,<5;python_version<="3.6"',
+                "traitlets>=4.3.3,<6",
                 "markdown2>=2.3.9,<3",
             ],
             "tests": [

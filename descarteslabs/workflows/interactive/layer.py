@@ -251,6 +251,14 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         for w in xyz_warnings:
             self._log(w.message)
 
+    def trait_has_value(self, name):
+        # Backport for traitlets < 5.0, to maintain py3.6 support.
+        # Remove after support for py3.6 is dropped.
+        # Copied from
+        # https://github.com/ipython/traitlets/blob/2bb2597224ca5ae485761781b11c06141770f110/traitlets/traitlets.py#L1496-L1516
+
+        return name in self._trait_values
+
     def make_url(self):
         """
         Generate the URL for this layer.
@@ -352,7 +360,8 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         )
 
         self.set_trait(
-            "value", self.imagery._from_graft(graft),
+            "value",
+            self.imagery._from_graft(graft),
         )
 
     @traitlets.observe("value", "reduction")
