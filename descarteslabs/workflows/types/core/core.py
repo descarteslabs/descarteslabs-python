@@ -157,9 +157,21 @@ class GenericProxytypeMetaclass(type):
     Override ``isinstance`` and ``issubclass`` to make them covariant
     for `GenericProxytype`s and their concrete subclasses.
 
-    Formally: ``issubclass(typA, typB) is True`` iff the generic type of ``typA``
+    Types can modify this behavior by implementing the classmethod
+    ``_issubclass(cls, other: type) -> bool``.
+    This is called on the possible supertype (second argument to ``issubclass``).
+    If both types implement ``_issubclass``, only the possible supertype's is called.
+    ``_issubclass`` is called iff both types inherit from the same generic type.
+    For example, ``Foo._issubclass`` is not called in either ``issubclass(Bar[Int], Foo[Int])``
+    or ``issubclass(int, Foo[Int])``, because the other type in question isn't also a ``Foo``.
+
+    If ``_issubclass`` is not defined on the possible supertype,
+    then the default behavior applies. Formally:
+
+    ``issubclass(typA, typB) is True`` iff the generic type of ``typA``
     is a subclass of the generic type of ``typB``, and all the type parameters of ``typA``
-    are subclasses of the equivalent type parameters of ``typB``.
+    are subclasses of---or equal to, in the case of primitive values---the equivalent
+    type parameters of ``typB``
 
     This ensures that:
 
@@ -197,6 +209,9 @@ class GenericProxytypeMetaclass(type):
 
     def __subclasscheck__(mycls, othercls):
         "Covariantly check whether ``issubclass(othercls, mycls)``"
+        if not isinstance(othercls, type):
+            raise TypeError("issubclass() arg 1 must be a class")
+
         # vanilla `issubclass`, to prevent infinite recursion into this `__subclasscheck__` method
         # (except the order of the args is reversed from `issubclass`, so call it "issuperclass" instead)
         issuperclass = type.__subclasscheck__
@@ -234,7 +249,9 @@ class GenericProxytypeMetaclass(type):
         # or the type parameters of other are all subclasses of our equivalent type parameters
         return issuperclass(my_generic_parent_type, other_generic_parent_type) and (
             mycls._type_params is None
-            or _type_params_issubclass(othercls._type_params, mycls._type_params)
+            or mycls._issubclass(othercls)
+            # NOTE: the default `_issubclass` is defined on `GenericProxytype`,
+            # but classes can override if they wish.
         )
 
     def __init__(cls, name, bases, dct, **kwargs):
@@ -254,7 +271,7 @@ class GenericProxytypeMetaclass(type):
             raise TypeError("{!r} object is not subscriptable".format(cls.__name__))
 
 
-def _type_params_issubclass(type_params, super_type_params):
+def type_params_issubclass(type_params: tuple, super_type_params: tuple) -> bool:
     """
     Whether each element in `type_params` is a subclass of the equivalent element in `super_type_params`.
 
@@ -267,14 +284,26 @@ def _type_params_issubclass(type_params, super_type_params):
     if isinstance(type_params, PRIMITIVES):
         return type_params == super_type_params
     elif isinstance(type_params, tuple):
-        return len(type_params) == len(super_type_params) and all(
-            _type_params_issubclass(cls, super_cls)
-            for cls, super_cls in zip(type_params, super_type_params)
+        return (
+            isinstance(super_type_params, tuple)
+            and len(type_params) == len(super_type_params)
+            and all(
+                type_params_issubclass(cls, super_cls)
+                for cls, super_cls in zip(type_params, super_type_params)
+            )
         )
     elif isinstance(type_params, dict):
-        return six.viewkeys(type_params) == six.viewkeys(super_type_params) and all(
-            _type_params_issubclass(cls, super_type_params[key])
-            for key, cls in six.iteritems(type_params)
+        return (
+            isinstance(super_type_params, dict)
+            and len(type_params) == len(super_type_params)
+            and all(
+                # NOTE: dict order matters!
+                type_params_issubclass(k, super_k)
+                and type_params_issubclass(v, super_v)
+                for (k, v), (super_k, super_v) in zip(
+                    type_params.items(), super_type_params.items()
+                )
+            )
         )
     else:
         return issubclass(type_params, super_type_params)
@@ -377,6 +406,11 @@ class GenericProxytype(Proxytype):
     the Python ``isinstance`` and ``issubclass`` methods will also behave covariantly for your
     custom generic type: ``issubclass(MyType[MyIntSubclass], `MyType[Int])`` will be True.
 
+    To customize the behavior of ``isinstance`` and ``issubclass`` checking, override the
+    ``_issubclass`` classmethod. By default, it checks whether corresponding elements
+    in the two class's type parameters are all subclasses, or equal. See `GenericProxytypeMetaclass`
+    for more.
+
     By implementing ``_validate_params``, you can customize the valid type parameters of a class.
     ``_validate_params`` should take a tuple of type parameters and apply appropriate validation
     to each (in most cases you will at least want to validate that each type parameter is a subclass of Proxytype).
@@ -403,8 +437,7 @@ class GenericProxytype(Proxytype):
         # and can be safely considered equivalent.
         # (`cls._concrete_subtypes` was added by the GenericProxytypeMetaclass, and is an empty dict.)
         hashable_type_params = tuple(
-            frozenset(six.iteritems(x)) if isinstance(x, dict) else x
-            for x in type_params
+            tuple(x.items()) if isinstance(x, dict) else x for x in type_params
         )
         try:
             return cls._concrete_subtypes[hashable_type_params]
@@ -421,13 +454,13 @@ class GenericProxytype(Proxytype):
                             k,
                             param.__name__ if isinstance(param, type) else repr(param),
                         )
-                        for k, param in sorted(six.iteritems(type_param))
+                        for k, param in type_param.items()
                     )
                 )
                 if isinstance(type_param, dict)
                 else type_param.__name__
                 if isinstance(type_param, type)
-                else str(type_param)
+                else repr(type_param)
                 for type_param in type_params
             )
 
@@ -455,6 +488,19 @@ class GenericProxytype(Proxytype):
 
             cls._concrete_subtypes[hashable_type_params] = ConcreteType
             return ConcreteType
+
+    @classmethod
+    def _issubclass(cls, other: type) -> bool:
+        """
+        Whether ``other`` is a subclass of the current class.
+
+        Overriding this method allows customization of ``isinstance`` and ``issubclass`` checks.
+
+        Note that ``_issubclass`` is only called when both classes are the same
+        *generic* type; i.e. inside this method for ``List[Int]``, you can assume that
+        ``other`` is also a subclass of ``List``.
+        """
+        return type_params_issubclass(other._type_params, cls._type_params)
 
     @classmethod
     def _promote(cls, obj):

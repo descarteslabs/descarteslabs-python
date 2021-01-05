@@ -1,13 +1,19 @@
-import six
+from __future__ import annotations
 import typing
+import keyword
 
-from inspect import signature
+from inspect import signature, Signature, Parameter, _get_paramkind_descr
 
 from descarteslabs.common.graft import client
 
 from ...cereal import serializable
-from ..core import Proxytype, GenericProxytype, ProxyTypeError, assert_is_proxytype
-from ..primitives import Any
+from ..core import (
+    Proxytype,
+    GenericProxytype,
+    ProxyTypeError,
+    assert_is_proxytype,
+    type_params_issubclass,
+)
 from ..identifier import identifier
 from ..proxify import proxify
 
@@ -23,52 +29,125 @@ def _promote_arg(value, arg_type, arg_name, func_name):
         )
 
 
+def _make_signature(
+    arg_types: typing.Iterable[type],
+    kwarg_types: typing.Dict[str, type],
+    return_type: typing.Optional[type] = None,
+):
+    pos_only_params = [
+        Parameter(f"implicit{i}", Parameter.POSITIONAL_ONLY, annotation=type_)
+        for i, type_ in enumerate(arg_types)
+    ]
+    kwarg_params = [
+        Parameter(name, Parameter.POSITIONAL_OR_KEYWORD, annotation=type_)
+        for name, type_ in kwarg_types.items()
+    ]
+
+    if return_type is None:
+        return_type = Parameter.empty
+
+    return Signature(pos_only_params + kwarg_params, return_annotation=return_type)
+
+
 @serializable()
 class Function(GenericProxytype):
     """
-    ``Function[arg_type, ..., {kwarg: type, ...}, return_type]``: Proxy function with args, kwargs,
-    and return values of specific types.
+    ``Function[arg_type, ..., {kwarg: type, ...}, return_type]``: Proxy function.
 
-    Can be instantiated from any Python callable or string function name.
+    You can create a `Function` from any Python function, usually using `Function.from_callable`
+    (or `.proxify`). You can also turn a Workflows object that depends on `parameters <.parameter>`
+    into a `Function` using `Function.from_object`.
+
+    Functions have positional-only arguments, named arguments, and a return value of specific types.
+    All the arguments are required. Like Python functions, the named arguments can be given positionally
+    or by name. For example, if ``func`` is a ``Function[{'x': Int, 'y': Str}, Int]``, ``func(1, "hello")``,
+    ``func(x=1, y="hello")``, and ``func(y="hello", x=1)`` are all equivalent.
+
+    If you're creating a Function yourself, you should always use named arguments---positional-only arguments
+    are primarily for internal use. Just use `Function.from_callable` or `Function.from_object` and it will take
+    care of everything for you.
+
+    ``isinstance`` and ``issubclass`` have special behavior for Functions, since unlike Python, Functions
+    are strongly typed (you know what type of arguments they take, and what type of value they return, without
+    having to run them). In general, if ``x`` and ``y`` are both Functions, ``isinstance(x, type(y))`` means that
+    you can safely use ``x`` wherever you could use ``y``---the types they accept and return are compatible.
+    Formally, `Function` is *contravariant* in its argument types and *covariant* in its return type.
+    That means that a ``Function[Number, ...]`` is considered a *subtype* of ``Function[Int, ...]``,
+    because any function that can handle a ``Number`` can also handle an `Int`. Whereas ``Function[... Int]``
+    (`Function` that returns an `Int`) is a subtype of ``Function[..., Number]``, since `Int` is a subtype
+    of ``Number``.
 
     Examples
     --------
-    >>> from descarteslabs.workflows import Bool, Int, Float, Function
-    >>> @Function.from_callable
-    ... def pow(base: Int, exp: Float) -> Float:
+    >>> import descarteslabs.workflows as wf
+    >>> @wf.Function.from_callable
+    ... def pow(base: wf.Int, exp: wf.Float) -> wf.Float:
     ...     return base ** exp
-    >>> print(pow)
-    <descarteslabs.workflows.types.function.function.Function[Int, Float, {}, Float] object at 0x...>
+    >>> pow
+    <descarteslabs.workflows.types.function.function.Function[{'base': Int, 'exp': Float}, Float] object at 0x...>
+    >>> pow(16, 0.5).inspect() # doctest: +SKIP
+    4
 
-    >>> func_type = Function[Int, {}, Int] # function with Int arg, no kwargs, returning an Int
+    >>> word = wf.parameter("word", wf.Str)
+    >>> repeats = wf.widgets.slider("repeats", min=0, max=5, step=1)
+    >>> repeated = (word + " ") * repeats
+    >>> repeat_func = wf.Function.from_object(repeated)
+    >>> repeat_func
+    <descarteslabs.workflows.types.function.function.Function[{'word': Str, 'repeats': Int}, Str] object at 0x...>
+    >>> repeat_func("hello", 3).inspect() # doctest: +SKIP
+    'hello hello hello '
+
+    >>> from descarteslabs.workflows import Int, Float, Bool
+    >>> func_type = Function[Int, {}, Int] # function with Int arg, no named args, returning an Int
     >>> func_type = Function[Int, {'x': Float}, Bool] # function with Int arg, kwarg 'x' of type Float, returning a Bool
     >>> func_type = Function[{}, Int] # zero-argument function, returning a Int
 
-    >>> from descarteslabs.workflows import Function, Int
     >>> func = Function[Int, Int, {}, Int](lambda x, y: x + y) # function taking two Ints and adding them together
     >>> func
     <descarteslabs.workflows.types.function.function.Function[Int, Int, {}, Int] object at 0x...>
-    >>> func(3, 4).compute() # doctest: +SKIP
+    >>> func(3, 4).inspect() # doctest: +SKIP
     7
     """
+
+    def __init_subclass__(cls, **kwargs):
+        "Add a ``__signature__`` to concrete subclasses"
+        super().__init_subclass__(**kwargs)
+        if cls._type_params is None:
+            return
+
+        arg_types = cls.arg_types.fget(cls)
+        kwarg_types = cls.kwarg_types.fget(cls)
+        return_type = cls.return_type.fget(cls)
+
+        cls.__signature__ = _make_signature(arg_types, kwarg_types, return_type)
+        cls.__annotations__ = {**kwarg_types, "return": return_type}
 
     def __init__(self, function):
         if self._type_params is None:
             raise TypeError(
                 "Cannot instantiate a generic Function; the parameter and return types must be specified"
             )
-        if isinstance(function, six.string_types):
+        if isinstance(function, str):
             self.graft = client.keyref_graft(function)
             self.params = ()
-        elif callable(function):
-            *arg_types, kwargs_types, return_type = self._type_params
-            if len(kwargs_types) > 0:
+        elif isinstance(function, Function):
+            # If the `function` is compatible with our types (remember, `isinstance` has fancy logic to
+            # check this for us) use its graft, otherwise error.
+            if isinstance(function, type(self)):
+                self.graft = function.graft
+                self.params = function.params
+            else:
                 raise TypeError(
-                    "Cannot create a Function with optional arguments from a Python function, "
-                    "since optional arguments or conditionals can't be represented with graft. "
-                    "You must delay Python functions into Proxtype Functions that only have positional arguments."
+                    f"Expected a {type(self).__name__}. "
+                    f"Got a {type(function).__name__}.\n"
+                    "Their signatures are incompatible:\n"
+                    f"need: {self.__signature__}\n"
+                    f"got:  {function.__signature__}"
                 )
-            result = self._delay(function, return_type, *arg_types)
+        elif callable(function):
+            result = self._delay(
+                function, self.return_type, *self.arg_types, **self.kwarg_types
+            )
             self.graft = result.graft
             self.params = result.params
         else:
@@ -78,62 +157,46 @@ class Function(GenericProxytype):
             )
 
     def __call__(self, *args, **kwargs):
-        # TODO generate signature and annotations for this based on type_params.
+        bound = self.__signature__.bind(*args, **kwargs)
+        # ^ NOTE: raises error if args are incompatible
 
-        *arg_types, kwargs_types, return_type = self._type_params
         func_name = type(self).__name__
-
-        if len(args) != len(arg_types):
-            msg = "{} takes exactly {} positional argument{} ({} given)".format(
-                func_name, len(arg_types), "s" if len(arg_types) != 1 else "", len(args)
+        promoted_args = []
+        promoted_kwargs = {}
+        for i, ((name, value), param) in enumerate(
+            zip(bound.arguments.items(), self.__signature__.parameters.values())
+        ):
+            promoted = _promote_arg(
+                value,
+                param.annotation,
+                i if param.kind is Parameter.POSITIONAL_ONLY else name,
+                func_name,
             )
-            if len(kwargs_types) > 0 and len(args) > len(arg_types):
-                msg += ". Keyword arguments must be given by name, not positionally; did you mean to do that?"
-            raise ProxyTypeError(msg)
+            if param.kind is Parameter.POSITIONAL_ONLY:
+                promoted_args.append(promoted)
+            else:
+                promoted_kwargs[name] = promoted
 
-        # NOTE(gabe): we allow missing keyword arguments, since builtin
-        # functions may support them. However, users are prevented from
-        # delaying a Python function with keyword arguments, since we can't
-        # do default argument values, so there's not really any use.
-        # The only downside is lack of named positional arguments in that case.
-
-        # TODO support named positional arguments when we have metadata about the names
-        # (`self.graft` is an actual graft, so we can introspect the `parameters` key).
-
-        unexpected_args = six.viewkeys(kwargs) - six.viewkeys(kwargs_types)
-        if len(unexpected_args) > 0:
-            raise ProxyTypeError(
-                "Unexpected keyword argument{} {} for {}".format(
-                    "s" if len(unexpected_args) > 1 else "",
-                    ", ".join(six.moves.map(repr, sorted(unexpected_args))),
-                    func_name,
-                )
-            )
-
-        promoted_args = tuple(
-            _promote_arg(value, arg_type, i, func_name)
-            for i, (value, arg_type) in enumerate(zip(args, arg_types))
-        )
-
-        promoted_kwargs = {
-            arg_name: _promote_arg(
-                arg_value, kwargs_types[arg_name], arg_name, func_name
-            )
-            for arg_name, arg_value in six.iteritems(kwargs)
-        }
-
-        return return_type._from_apply(self, *promoted_args, **promoted_kwargs)
+        return self.return_type._from_apply(self, *promoted_args, **promoted_kwargs)
 
     @property
-    def arg_types(self):
+    def arg_types(self) -> typing.Tuple[typing.Type[Proxytype]]:
+        "tuple: The types of the positional-only arguments this `Function` takes"
         return self._type_params[:-2]
 
     @property
-    def kwarg_types(self):
+    def kwarg_types(self) -> typing.Dict[str, typing.Type[Proxytype]]:
+        "dict: The names and types, in order, of the named arguments this `Function` takes"
         return self._type_params[-2]
 
     @property
-    def return_type(self):
+    def all_arg_types(self) -> typing.Tuple[typing.Type[Proxytype]]:
+        "tuple: The types of all arguments this `Function` takes, in positional order (`arg_types` + `kwarg_types`)"
+        return self.arg_types + tuple(self.kwarg_types.values())
+
+    @property
+    def return_type(self) -> typing.Type[Proxytype]:
+        "type: The Proxytype returned by this `Function`"
         return self._type_params[-1]
 
     @classmethod
@@ -143,8 +206,8 @@ class Function(GenericProxytype):
         except ValueError:
             raise ValueError(
                 "Not enough type parameters supplied to Function. Function requires 0 or more "
-                "positional argument types, a dict of keyword-argument types (which is usually empty), "
-                "and one return type. For example, `Function[Int, Float, {'x': Int}, Int']`"
+                "positional-only argument types, a dict of named-argument types (which is often empty), "
+                "and one return type. For example, `Function[Int, Float, {'x': Int}, Int]`"
             ) from None
 
         # Check arg types
@@ -161,12 +224,16 @@ class Function(GenericProxytype):
         ), "Function kwarg type parameters must be a dict, not {!r}".format(
             kwargs_types
         )
-        for name, type_param in six.iteritems(kwargs_types):
+        for name, type_param in kwargs_types.items():
             assert isinstance(
                 name, str
             ), "Keyword argument names must be strings, but '{}' is a {!r}".format(
                 name, type(name)
             )
+            assert name.isidentifier() and not keyword.iskeyword(
+                name
+            ), f"Function argument names must be valid Python identifiers; {name!r} is not."
+
             error_message = "Function kwarg type parameters must be Proxytypes, but for kwarg {}, got {!r}".format(
                 name, type_param
             )
@@ -179,6 +246,50 @@ class Function(GenericProxytype):
             )
         )
         assert_is_proxytype(return_type, error_message=error_message)
+
+    @classmethod
+    def _issubclass(cls, other: typing.Type[Function]) -> bool:
+        """
+        Check whether another `Function` could be used in place of this one.
+
+        * Considers all arguments positionally, since kwargs can be given positionally.
+        * For an argument that this function takes positionally, the other could take it by name
+          (if the positions match).
+        * For an argument that this function takes by name, the other must take it by the same name,
+          in the same position (basically, kwargs must be in the same order).
+        * Argument types are checked *contravariantly*: the other Function can take types that
+          are *supertypes* of this one.
+        """
+        our_return_type = cls.return_type.fget(cls)
+        other_return_type = other.return_type.fget(other)
+        if not issubclass(other_return_type, our_return_type):
+            # Return type is covariant: to be a subtype, `other` must return a subtype of our return type.
+            return False
+
+        our_args = cls.arg_types.fget(cls)
+        our_kwargs = cls.kwarg_types.fget(cls)
+        other_args = other.arg_types.fget(other)
+        other_kwargs = other.kwarg_types.fget(other)
+
+        all_our_types = our_args + tuple(our_kwargs.values())
+        all_other_types = other_args + tuple(other_kwargs.values())
+
+        if not type_params_issubclass(all_our_types, all_other_types):
+            # Positional contravariance: all our arguments (considered positionally) must be
+            # subtypes of their arguments. `issubclass(Function[Int], Function[SubInt])` should be
+            # True: a `Function[Int]` can accept a `SubInt` perfectly well.
+            return False
+
+        all_our_names = (None,) * len(our_args) + tuple(our_kwargs)
+        all_other_names = (None,) * len(other_args) + tuple(other_kwargs)
+
+        for our_name, other_name in zip(all_our_names, all_other_names):
+            if our_name is None:
+                continue
+            if our_name != other_name:
+                return False
+
+        return True
 
     @classmethod
     def from_object(cls, obj):
@@ -203,7 +314,7 @@ class Function(GenericProxytype):
         >>> # turn `repeated` into a Function that takes those parameters
         >>> repeat = wf.Function.from_object(repeated)
         >>> repeat
-        <descarteslabs.workflows.types.function.function.Function[Str, Int, {}, Str] object at 0x...>
+        <descarteslabs.workflows.types.function.function.Function[{'word': Str, 'repeats': Int}, Str] object at 0x...>
         >>> repeat("foo", 3).inspect() # doctest: +SKIP
         'foo foo foo '
         >>> repeat("hello", 2).inspect() # doctest: +SKIP
@@ -225,10 +336,10 @@ class Function(GenericProxytype):
                 "is like an argument to a function---not the body of the function itself."
             )
 
-        arg_types = tuple(getattr(p, "_proxytype", type(p)) for p in obj.params)
+        named_args = {p._name: getattr(p, "_proxytype", type(p)) for p in obj.params}
         # ^ if any of the params are widgets (likely), use their base Proxytype in the Function type signature:
         # a Function[Checkbox, Slider, ...] would be 1) weird and 2) not serializeable.
-        concrete_function_type = cls[arg_types + ({}, type(obj))]
+        concrete_function_type = cls[named_args, type(obj)]
 
         graft = client.function_graft(obj, *(p.graft for p in obj.params))
         # TODO we should probably store `obj.params` somewhere---that's valuable metadata maybe
@@ -240,8 +351,10 @@ class Function(GenericProxytype):
         """
         Construct a Workflows Function from a Python callable.
 
-        You must specify the types of arguments the function takes.
-        If the function has type annotations (preferable), `from_callable` can be used as a decorator::
+        You must specify the types of arguments the function takes, either through type annotations
+        (preferable) or directly in `from_callable`.
+
+        If the function has type annotations, `from_callable` can be used as a decorator::
 
             @wf.Function.from_callable
             def my_function(x: wf.Int, y: wf.Image) -> wf.ImageCollection:
@@ -251,7 +364,19 @@ class Function(GenericProxytype):
 
         Parameters
         ----------
-        func: Python callable
+        func: Python callable or Function
+            The function to convert.
+
+            A function is delayed by calling it once, passing in dummy Workflows objects and seeing
+            what operations were applied in the value it returns.
+
+            If ``func`` is already a Workflows `Function`, its argument types and return type
+            must be compatible with ``arg_types`` and ``return_type``, if they're given. Specifically:
+
+            * If ``arg_types`` are given, ``func`` must take that number of arguments, and each argument type
+              must be a superclass of the corresponding one in ``arg_types``. Otherwise, it can take any arguments.
+            * If ``return_type`` is give, ``func`` must return a subclass of ``return_type``. Otherwise, it can
+              return any type.
         *arg_types: Proxytype, optional
             For each parameter of ``func``, the type that it should accept.
             The number of argument types given much match the number of arguments ``func`` actually accepts.
@@ -269,35 +394,58 @@ class Function(GenericProxytype):
         Example
         -------
         >>> import descarteslabs.workflows as wf
-        >>> @wf.Function.from_callable  # types inferred from annotations
-        ... def string_pow(base: wf.Str, exp: wf.Float) -> wf.Float:
+        >>> def string_pow(base: wf.Str, exp: wf.Float) -> wf.Float:
         ...     return wf.Float(base) ** exp
-        >>> print(string_pow)
-        <descarteslabs.workflows.types.function.function.Function[Str, Float, {}, Float] object at 0x...>
+        >>> wf_string_pow = wf.Function.from_callable(string_pow)  # types inferred from annotations
+        >>> print(wf_string_pow)
+        <descarteslabs.workflows.types.function.function.Function[{'base': Str, 'exp': Float}, Float] object at 0x...>
+        >>> wf_string_pow("2", 2.0).inspect()  # doctest: +SKIP
+        4.0
 
         >>> # or, passing Str and Float as the argument types explicitly:
         >>> def string_pow(base, exp):
         ...     return wf.Float(base) ** exp
         >>> wf_pow = Function.from_callable(string_pow, wf.Str, wf.Float, return_type=wf.Float)
         >>> wf_pow
-        <descarteslabs.workflows.types.function.function.Function[Str, Float, {}, Float] object at 0x...>
+        <descarteslabs.workflows.types.function.function.Function[{'base': Str, 'exp': Float}, Float] object at 0x...>
         >>> wf_pow("3", 2.0).inspect()  # doctest: +SKIP
         9.0
         """
+        if cls._type_params is not None:
+            raise TypeError(
+                f"Cannot call `from_callable` on a concrete Function type ({cls.__name__}). "
+                "Instead, use the constructor directly, like:\n"
+                f"{cls.__name__}({func!r})\n\n"
+                "You should only use `from_callable` on the base Function class (`wf.Function.from_callable`).\n"
+                "If you want to restrict both the arguments and the return type that's allowed, use __init__ on a "
+                "concrete Function type as shown above (it's just easier).\n"
+                "If you want to restrict only one (or none) of those, then use `wf.Function.from_callable` and "
+                "pass `arg_types` and `return_type` accordingly."
+            )
+
         if isinstance(func, Function):
-            if len(arg_types) > 0 and func.arg_types != arg_types:
-                # TODO contravariant checking of arg types! this is a very unhelpful check.
-                raise TypeError(
-                    "Expected a Function with parameters: {}. "
-                    "Got one with parameters: {}.".format(arg_types, func.arg_types)
-                )
-            return func
+            if return_type is None:
+                return_type = func.return_type
+            if len(arg_types) == 0:
+                arg_types = func.all_arg_types
+
+            expected_cls = Function[arg_types + ({}, return_type)]
+
+            if isinstance(func, expected_cls):
+                return func
+
+            raise TypeError(
+                f"Expected a {expected_cls.__name__}. "
+                f"Got a {type(func).__name__}.\n"
+                "Their signatures are incompatible:\n"
+                f"need: {expected_cls.__signature__}\n"
+                f"got:  {func.__signature__}"
+            )
+
+        arg_names = tuple(signature(func).parameters)
 
         if len(arg_types) == 0:
             arg_types, return_type = arg_types_from_annotations(func)
-            arg_names = tuple(signature(func).parameters)
-        else:
-            arg_names = tuple(range(len(arg_types)))
 
         for arg_type, name in zip(arg_types, arg_names):
             if not issubclass(arg_type, Proxytype):
@@ -317,7 +465,7 @@ class Function(GenericProxytype):
         result = cls._delay(func, return_type, *arg_types)
         result_type = type(result)
 
-        concrete_type = cls[arg_types + ({}, result_type)]
+        concrete_type = cls[dict(zip(arg_names, arg_types)), result_type]
         instance = result._cast(concrete_type)
 
         if func.__doc__:
@@ -331,7 +479,7 @@ class Function(GenericProxytype):
     # and therefore generate a proper function graft. A context manager system that logs
     # nested scope might be a better way to go for that reason, plus common subexpressions.
     @staticmethod
-    def _delay(func, returns, *expected_arg_types):
+    def _delay(func, returns, *expected_arg_types, **expected_kwarg_types):
         """
         Turn a Python function into a Proxytype object representing its logic.
 
@@ -351,7 +499,7 @@ class Function(GenericProxytype):
         Parameters
         ----------
         func: callable
-            Python callable
+            Python callable. Must only take required positional arguments.
         returns: Proxytype or None
             The return value of the function is promoted to this type.
             If promotion fails, raises an error.
@@ -360,8 +508,9 @@ class Function(GenericProxytype):
         *expected_arg_types: Proxytype
             Types of each positional argument to ``func``.
             An instance of each is passed into ``func``.
-            If none are given, ``func`` will be called with an instance of `Any`
-            for each argument it takes.
+        *expected_kwarg_types: Proxytype
+            Types of each named argument to ``func``.
+            An instance of each is passed into ``func``.
 
         Returns
         -------
@@ -376,16 +525,40 @@ class Function(GenericProxytype):
 
         func_signature = signature(func)
 
-        if len(expected_arg_types) == 0:
-            expected_arg_types = (Any,) * len(func_signature.parameters)
+        for name, param in func_signature.parameters.items():
+            if param.kind not in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD):
+                raise TypeError(
+                    "Workflows Functions only support positional arguments. "
+                    f"Parameter kind {_get_paramkind_descr(param.kind)!r}, used for {param} in the function "
+                    f"{func.__name__}, is unsupported."
+                )
 
-        # this will raise TypeError if the expected arguments
-        # aren't compatible with the signature for `func`
-        bound_expected_args = func_signature.bind(*expected_arg_types).arguments
+            if param.default is not param.empty:
+                raise TypeError(
+                    f"Parameter {param} has a default value. Optional parameters "
+                    "(parameters with default values) are not supported in Workflows functions."
+                )
+
+        try:
+            # this will raise TypeError if the expected arguments
+            # aren't compatible with the signature for `func`
+            bound_expected_args = func_signature.bind(
+                *expected_arg_types, **expected_kwarg_types
+            ).arguments
+        except TypeError as e:
+            expected_sig = _make_signature(
+                expected_arg_types, expected_kwarg_types, returns
+            )
+            raise TypeError(
+                "Your function takes the wrong parameters.\n"
+                f"Expected signature:        {expected_sig}\n"
+                f"Your function's signature: {func_signature}.\n\n"
+                f"When trying to call your function with those {len(expected_arg_types) + len(expected_kwarg_types)} "
+                f"expected arguments, the specific error was: {e}"
+            ) from None
 
         args = {
-            name: identifier(name, type_)
-            for name, type_ in six.iteritems(bound_expected_args)
+            name: identifier(name, type_) for name, type_ in bound_expected_args.items()
         }
 
         first_guid = client.guid()
@@ -417,18 +590,6 @@ def arg_types_from_annotations(func):
 
     argtypes = []
     for name, param in sig.parameters.items():
-        if not (
-            param.kind is param.POSITIONAL_ONLY
-            or (
-                param.kind is param.POSITIONAL_OR_KEYWORD
-                and param.default is param.empty
-            )
-        ):
-            raise TypeError(
-                "Workflows functions can only have fixed positional arguments without default values. "
-                "Parameter {!r} to {!r} violates this.".format(name, func.__name__)
-            )
-
         try:
             argtype = hints[name]
         except KeyError:

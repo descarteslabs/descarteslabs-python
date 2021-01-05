@@ -3,6 +3,8 @@ import pytest
 import json
 from typing import Tuple
 
+from descarteslabs.common.graft import client as graft_client
+
 from descarteslabs.common.proto.typespec import typespec_pb2
 from descarteslabs.common.proto.widgets import widgets_pb2
 
@@ -100,21 +102,38 @@ class TestInit:
             assert type(new_p) is type(orig_p)
             assert new_p._name == orig_p._name
 
-    def test_init_higher_order_function_fails(self, mock_gggc):
-        @Function.from_callable
-        def outer(x: Int):
-            def inner(y: Int):
-                return x + y
+    @pytest.mark.parametrize(
+        "func, names",
+        [
+            (
+                Function[dict(x=Int, y=List[Int]), Int](lambda x, y: x + y[0]),
+                ["x", "y"],
+            ),
+            (Function[Int, List[Int], {}, Int](lambda x, y: x + y[0]), ["x", "y"]),
+            (Function[Int, List[Int], {}, Int]("foo"), ["implicit0", "implicit1"]),
+        ],
+    )
+    def test_func_params_generated(self, mock_gggc, func, names):
+        pub = SubPublished(func)
 
-            return inner
+        assert pub.object is func
+        assert [p._name for p in pub.params] == names
+        assert tuple(type(p) for p in pub.params) == func.all_arg_types
 
-        assert isinstance(outer, Function[Int, {}, Function[Int, {}, Int]])
+        # test proto set correctly by forcing reconstruction
+        pub._object = None
+        pub._params = None
 
-        with pytest.raises(
-            NotImplementedError,
-            match="Cannot currently publish Functions that return Functions",
-        ):
-            SubPublished(outer)
+        with graft_client.consistent_guid():
+            isolated = graft_client.isolate_keys(func.graft)
+        with graft_client.consistent_guid():
+            pub.object
+
+        assert pub.object.graft == isolated
+        assert pub.type is type(func)
+
+        assert [p._name for p in pub.params] == names
+        assert tuple(type(p) for p in pub.params) == func.all_arg_types
 
 
 @mock.patch("descarteslabs.workflows.models.published_graft.get_global_grpc_client",)

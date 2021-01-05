@@ -8,7 +8,7 @@ from descarteslabs.common.graft import client as graft_client
 from descarteslabs.workflows.cereal import deserialize_typespec, serialize_typespec
 from descarteslabs.workflows.client import get_global_grpc_client, Client
 
-from descarteslabs.workflows.types import Proxytype, Function, proxify
+from descarteslabs.workflows.types import Proxytype, Function, proxify, parameter
 from descarteslabs.workflows.types.widget import serialize_params, deserialize_params
 
 
@@ -66,35 +66,35 @@ class PublishedGraft:
 
         proxy_object = proxify(proxy_object)
 
-        proto_params = serialize_params(proxy_object)
-        params = proxy_object.params
-        if len(params) > 0:
-            # turn objects that depend on parameters into Functions
+        if len(proxy_object.params) > 0:
+            # turn objects that depend on parameters into Functions;
+            # use their current `.params` as the parameter annotations
+            params = proxy_object.params
             proxy_object = Function.from_object(proxy_object)
 
-        if (
-            isinstance(proxy_object, Function)
-            and issubclass(proxy_object.return_type, Function)
-            and len(proxy_object.return_type._type_params) > 2
-        ):
-            raise NotImplementedError(
-                f"Cannot currently publish Functions that return Functions "
-                f"which take >0 arguments ({type(proxy_object).__name__}). "
-                "Please let us know why you are trying to do this, so we can support it in the future!"
-            )
-            # Why? Because we can't tell what the parameter names are of the returned inner function,
-            # so `parameters` will be empty, even though the typespec defines a Function that takes >0 arguments.
-            # That breaks our invariant of the `parameters` field on the proto message.
-            # The actual practical implication of this is that we can't generate a graft with the
-            # appropriate argument names to call `Workflow.use`. Other users would need to receive that generated graft
-            # in order for the Workflow run under the correct version.
+        elif isinstance(proxy_object, Function):
+            # generate parameter annotations from the arguments of the Function.
+            try:
+                # try to get parameter names directly from the graft---this will work
+                # even for unnamed positional arguments in the typespec
+                names = proxy_object.graft["parameters"]
+            except KeyError:
+                # but if it's not a function graft (likely a higher-order function returned
+                # from another function), use the `__signature__` so positional-only arguments
+                # still get reasonable-ish (if inaccurate) names.
+                names = list(proxy_object.__signature__.parameters)
 
-            # We'll solve this with named positional arguments to the Function typespec. Though ideally we'd
-            # actually make widgets into types, so we can also encode any recursive widget information
-            # about the returned inner function(s).
+            params = tuple(
+                parameter(name, type_)
+                for name, type_ in zip(names, proxy_object.all_arg_types)
+            )
+
+        else:
+            params = ()
 
         typespec = serialize_typespec(type(proxy_object))
         graft = proxy_object.graft
+        proto_params = serialize_params(params)
 
         message = self._message_type(
             serialized_graft=json.dumps(graft),

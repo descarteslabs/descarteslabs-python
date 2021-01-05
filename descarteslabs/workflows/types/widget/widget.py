@@ -1,5 +1,5 @@
 import sys
-from typing import List, ClassVar, Type, TYPE_CHECKING
+from typing import List, Iterable, ClassVar, Type, TYPE_CHECKING
 
 from google.protobuf import message
 
@@ -197,8 +197,8 @@ def proto_to_param(msg: widgets_pb2.Parameter):
     return parameter(msg.name, deserialize_typespec(msg.typespec))
 
 
-def serialize_params(obj: Proxytype) -> List[widgets_pb2.Parameter]:
-    return [param_to_proto(p) for p in obj.params]
+def serialize_params(params: Iterable[Proxytype]) -> List[widgets_pb2.Parameter]:
+    return [param_to_proto(p) for p in params]
 
 
 def deserialize_params(msgs: List[widgets_pb2.Parameter]):

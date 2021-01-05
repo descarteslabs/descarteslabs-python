@@ -1,4 +1,5 @@
 import pytest
+import keyword
 
 from hypothesis import given, settings, HealthCheck
 import hypothesis.strategies as st
@@ -91,7 +92,17 @@ proxytypes = st.deferred(
         )
         | st.builds(
             Function.__class_getitem__,
-            st.tuples(st.dictionaries(strings, proxytypes, max_size=8), proxytypes),
+            st.tuples(
+                st.lists(proxytypes, max_size=8).map(tuple),
+                st.dictionaries(
+                    strings.filter(str.isidentifier).filter(
+                        lambda s: not keyword.iskeyword(s)
+                    ),
+                    proxytypes,
+                    max_size=8,
+                ),
+                proxytypes,
+            ).map(lambda t: t[0] + t[1:]),
         )
     )
 )
@@ -100,7 +111,7 @@ proxytypes = st.deferred(
 @given(proxytypes)
 @settings(suppress_health_check=[HealthCheck.too_slow])
 def test_roundtrip(cls):
-    assert deserialize_typespec(serialize_typespec(cls)) == cls
+    assert deserialize_typespec(serialize_typespec(cls)) is cls
 
 
 class TestTypespecToUnmarshalStr:

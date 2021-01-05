@@ -61,7 +61,7 @@ class TestJob:
 
         assert job._message is response_message
         assert isinstance(job._client, Client)
-        assert isinstance(job._object, types.Function[type(param), {}, type(obj)])
+        assert isinstance(job._object, types.Function[{param._name: type(param)}, type(obj)])
         assert job._arguments is None
 
         rpc = stub.return_value.CreateJob
@@ -76,7 +76,7 @@ class TestJob:
 
         assert (
             cereal.deserialize_typespec(request.typespec)
-            is types.Function[type(param), {}, type(obj)]
+            is types.Function[{param._name: type(param)}, type(obj)]
         )
 
         request_args = {name: json.loads(v) for name, v in request.arguments.items()}

@@ -1,11 +1,13 @@
 import operator
 import pytest
 import mock
+import inspect
+import typing
 
 from descarteslabs.common.graft import client, interpreter
 
 from ...core import ProxyTypeError
-from ...primitives import Any, Int, Str, Float
+from ...primitives import Any, Int, Str, Float, Number
 from ...containers import Dict, Tuple
 from ...identifier import parameter
 
@@ -13,34 +15,21 @@ from .. import Function
 
 
 class TestDelay(object):
-    def test_delay_anyargs(self):
+    @pytest.mark.parametrize("returns", [Int, None])
+    def test_delay(self, returns):
         result = []
 
-        def delayable(a, b, c):
-            assert isinstance(a, Any)
-            assert isinstance(b, Any)
-            assert isinstance(c, Any)
-            res = a + b / c
-            result.append(res)
-            return res
-
-        delayed = Function._delay(delayable, Int)
-        assert isinstance(delayed, Int)
-        assert delayed.graft == client.function_graft(result[0], "a", "b", "c")
-
-    def test_delay_fixedargs(self):
-        result = []
-
-        def delayable(a, b):
+        def delayable(x, a, b):
+            assert isinstance(x, Float)
             assert isinstance(a, Dict[Str, Int])
             assert isinstance(b, Str)
             res = a[b]
             result.append(res)
             return res
 
-        delayed = Function._delay(delayable, Int, Dict[Str, Int], Str)
+        delayed = Function._delay(delayable, returns, Float, b=Str, a=Dict[Str, Int])
         assert isinstance(delayed, Int)
-        assert delayed.graft == client.function_graft(result[0], "a", "b")
+        assert delayed.graft == client.function_graft(result[0], "x", "a", "b")
 
     def test_delay_wrongargs(self):
         def delayable(a):
@@ -48,6 +37,9 @@ class TestDelay(object):
 
         with pytest.raises(TypeError, match="too many positional arguments"):
             Function._delay(delayable, Int, Dict[Str, Int], Str)
+
+        with pytest.raises(TypeError, match="unexpected keyword argument 'foo'"):
+            Function._delay(delayable, Int, a=Str, foo=Int)
 
         def delayable(a, b, c):
             pass
@@ -81,21 +73,115 @@ class TestDelay(object):
         assert isinstance(delayed, Str)
         assert delayed.params == (p,)
 
+    def test_delay_bad_params(self):
+        def bad_params(a, b, **kwargs):
+            pass
 
-class TestFunction(object):
+        with pytest.raises(
+            TypeError, match=r"kind 'variadic keyword', used for \*\*kwargs"
+        ):
+            Function._delay(bad_params, None)
+
+        def has_defaults(a, b=1):
+            pass
+
+        with pytest.raises(TypeError, match="Parameter b=1 has a default value"):
+            Function._delay(has_defaults, None)
+
+
+class TestSubclasscheck:
+    def test_identity(self):
+        assert issubclass(Function[{}, Int], Function[{}, Int])
+        assert issubclass(Function[Str, Int, {}, Int], Function[Str, Int, {}, Int])
+        assert issubclass(
+            Function[Str, Int, dict(x=Int, y=Float), Int],
+            Function[Str, Int, dict(x=Int, y=Float), Int],
+        )
+
+    def test_positionality(self):
+        # named args treated positionally *on the subclass only*
+        assert issubclass(
+            Function[dict(x=Str, y=Int), Int],
+            Function[Str, Int, {}, Int],
+        )
+        assert issubclass(
+            Function[Str, dict(y=Int), Int],
+            Function[Str, Int, {}, Int],
+        )
+
+        # unnamed args are not subclasses of named args
+        assert not issubclass(
+            Function[Str, Int, {}, Int],
+            Function[dict(x=Str, y=Int), Int],
+        )
+        assert not issubclass(
+            Function[Str, Int, {}, Int],
+            Function[Str, dict(y=Int), Int],
+        )
+
+    def test_names(self):
+        # names must match
+        assert not issubclass(
+            Function[dict(x=Int, y=Float), Int],
+            Function[dict(a=Int, b=Float), Int],
+        )
+
+        # name order matters
+        assert not issubclass(
+            Function[dict(x=Int, y=Float), Int],
+            Function[dict(y=Float, x=Int), Int],
+        )
+
+    def test_covariant_return_type(self):
+        assert issubclass(Function[{}, Int], Function[{}, Number])
+        assert not issubclass(Function[{}, Number], Function[{}, Int])
+
+    def test_contravariant_args(self):
+        assert issubclass(Function[Number, {}, Int], Function[Int, {}, Int])
+        assert issubclass(Function[Number, {}, Int], Function[Float, {}, Int])
+        assert issubclass(
+            Function[dict(x=Str, y=Number), Int], Function[Str, Float, {}, Int]
+        )
+
+
+class TestFunction:
     def test_init_unparameterized(self):
         with pytest.raises(TypeError, match="Cannot instantiate a generic Function"):
             Function("asdf")
 
     def test_init_kwargs(self):
-        with pytest.raises(
-            TypeError, match="Cannot create a Function with optional arguments"
-        ):
+        with pytest.raises(TypeError, match="Parameter foo=1 has a default value."):
             Function[{"foo": Int}, Int](lambda foo=1: foo)
+
+        func = Function[{"foo": Int}, Int](lambda foo: foo)
+        assert client.is_delayed(func)
+        interpreted_func = interpreter.interpret(func.graft)
+        assert interpreted_func(1) == 1
+        assert interpreted_func(foo=1) == 1
 
     def test_init_str(self):
         func = Function[{}, Int]("foo")
         assert func.graft == client.keyref_graft("foo")
+        assert func.params == ()
+
+    def test_init_other_function(self):
+        ftype = Function[Int, Float, {}, Int]
+
+        f1 = ftype("bar")
+        from_f1 = ftype(f1)
+        assert from_f1.graft is f1.graft
+        assert from_f1.params is f1.params
+
+        # compatible subclasses also work
+        f2 = Function[Number, {"x": Number}, Int]("bar")
+        from_f2 = ftype(f2)
+        assert from_f2.graft is f2.graft
+        assert from_f2.params is f2.params
+
+        # incompatible subclasses don't work (different return type)
+        f3 = Function[Int, Float, {}, Str]("bar")
+        with pytest.raises(TypeError, match="signatures are incompatible"):
+            ftype(f3)
 
     def test_init_callable(self):
         func = Function[{}, Int](lambda: 1)
@@ -112,6 +198,24 @@ class TestFunction(object):
         q = parameter("q", Float)
         assert func(q).params == (p, q)
 
+    def test_has_signature(self):
+        f = Function[Int, dict(x=Str, y=Float), Str]
+        sig = inspect.signature(f)
+
+        assert list(sig.parameters) == ["implicit0", "x", "y"]
+        assert [p.kind for p in sig.parameters.values()] == [
+            inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        ]
+        assert [p.annotation for p in sig.parameters.values()] == [Int, Str, Float]
+
+        assert sig.return_annotation is Str
+
+    def test_has_annotations(self):
+        f = Function[Int, dict(x=Str, y=Float), Str]
+        assert typing.get_type_hints(f) == {"x": Str, "y": Float, "return": Str}
+
     def test_call(self):
         def delayable(a, b):
             assert isinstance(a, Int)
@@ -123,74 +227,42 @@ class TestFunction(object):
         assert isinstance(result, Int)
         assert interpreter.interpret(result.graft)() == 1
 
-    def test_call_kwargs(self):
-        builtins = {"func": lambda a, x=1, y="foo": (a, x, y)}
-        func = Function[Int, {"x": Int, "y": Str}, Tuple[Int, Int, Str]]("func")
+    @pytest.mark.parametrize(
+        "call_args, call_kwargs",
+        [
+            ((1, 2, "x"), {}),
+            ((1, 2), {"b": "x"}),
+            ((1,), {"a": 2, "b": "x"}),
+            ((1,), {"b": "x", "a": 2}),
+        ],
+    )
+    def test_call_proper_binding(self, call_args, call_kwargs):
+        func = Function[Int, dict(a=Int, b=Str), Int]("foo")
 
-        res = func(1)
-        assert interpreter.interpret(res.graft, builtins)() == (1, 1, "foo")
+        builtins = {"foo": lambda *args, **kwargs: (args, kwargs)}
+        res = func(*call_args, **call_kwargs)
+        args, kwargs = interpreter.interpret(res.graft, builtins)()
 
-        res = func(1, x=-1)
-        assert interpreter.interpret(res.graft, builtins)() == (1, -1, "foo")
-
-        res = func(1, y="bar")
-        assert interpreter.interpret(res.graft, builtins)() == (1, 1, "bar")
-
-        res = func(1, x=-1, y="bar")
-        assert interpreter.interpret(res.graft, builtins)() == (1, -1, "bar")
-
-        p = parameter("p", Int)
-        res = func(1, x=p, y="bar")
-        assert res.params == (p,)
-        assert interpreter.interpret(res.graft, dict(builtins, p=-1))() == (
-            1,
-            -1,
-            "bar",
-        )
+        # positional args should always be given positionally in the graft
+        assert args == (1,)
+        # named args should always be given by name in the graft, and in the right order,
+        # even if given positionally or in a different order in py
+        assert list(kwargs.items()) == [("a", 2), ("b", "x")]
 
     def test_call_wrong_positional_args(self):
-        func = Function[Int, Str, {}, Str]("func")
+        with pytest.raises(TypeError, match="missing a required argument: 'implicit1'"):
+            Function[Int, Str, {}, Str]("func")(1)
 
-        with pytest.raises(
-            ProxyTypeError, match=r"exactly 2 positional arguments \(1 given\)"
-        ):
-            func(1)
+        with pytest.raises(TypeError, match="too many positional arguments"):
+            Function[Int, Str, {}, Str]("func")(1, 2, 3)
 
-        with pytest.raises(
-            ProxyTypeError, match=r"exactly 2 positional arguments \(3 given\)"
-        ):
-            func(1, 2, 3)
-
-        with pytest.raises(
-            ProxyTypeError, match=r"exactly 1 positional argument \(2 given\)"
-        ):
-            Function[Int, {}, Str]("func")(1, 2)
-
-        with pytest.raises(
-            ProxyTypeError, match=r"exactly 0 positional arguments \(2 given\)"
-        ):
-            Function[{}, Str]("func")(1, 2)
-
-        with pytest.raises(
-            ProxyTypeError,
-            match=r"exactly 1 positional argument \(2 given\). Keyword arguments must be given by name",
-        ):
-            Function[Int, {"x": Int}, Str]("func")(1, 2)
-
-        with pytest.raises(ProxyTypeError, match=r"Unexpected keyword argument 'z'"):
+        with pytest.raises(TypeError, match="got an unexpected keyword argument 'z'"):
             Function[Int, {"b": Str}, Int]("func")(1, b="sdf", z="extra")
 
-        with pytest.raises(
-            ProxyTypeError, match=r"Unexpected keyword arguments 'q', 'z'"
-        ):
-            Function[Int, {"b": Str}, Int]("func")(
-                1, b="sdf", z="extra", q="more extra"
-            )
-
-        with pytest.raises(ProxyTypeError, match=r"Expected .*Str.* for argument 0"):
+        with pytest.raises(TypeError, match=r"Expected .*Str.* for argument 0"):
             Function[Str, {}, Str]("func")(1)
 
-        with pytest.raises(ProxyTypeError, match=r"Expected .*Int.* for argument 'x'"):
+        with pytest.raises(TypeError, match=r"Expected .*Int.* for argument 'x'"):
             Function[Str, {"x": Int}, Str]("func")("foo", x="not_int")
 
     def test_validate_params(self):
@@ -209,6 +281,10 @@ class TestFunction(object):
             AssertionError, match="Keyword argument names must be strings"
         ):
             Function[Int, {1: Str}, Str]
+        with pytest.raises(AssertionError, match="must be valid Python identifiers"):
+            Function[Int, {"0foo": Str}, Str]
+        with pytest.raises(AssertionError, match="must be valid Python identifiers"):
+            Function[Int, {"return": Str}, Str]
         with pytest.raises(TypeError, match="kwarg type parameters must be Proxytypes"):
             Function[Int, {"a": 1}, Str]
         with pytest.raises(
@@ -222,7 +298,7 @@ class TestFunction(object):
             return (a + b) / c
 
         func = Function.from_callable(py_func)
-        assert isinstance(func, Function[Int, Float, Int, {}, Float])
+        assert isinstance(func, Function[dict(a=Int, b=Float, c=Int), Float])
         assert func.__doc__ == "my func"
 
         result = func(7, 1.0, 4)
@@ -240,16 +316,48 @@ class TestFunction(object):
             return (a + b) / c
 
         func = Function.from_callable(py_func)
-        assert isinstance(func, Function[Int, Float, Int, {}, Float])
+        assert isinstance(func, Function[dict(a=Int, b=Float, c=Int), Float])
+
+    def test_from_callable_closure_propagates_names(self):
+        def outer(a: Int, b: Float):
+            c = Int(a / b)
+
+            def inner(y: Str, z: Str):
+                return (y + z) * c
+
+            return inner
+
+        func = Function.from_callable(outer)
+        assert isinstance(
+            func, Function[dict(a=Int, b=Float), Function[dict(y=Str, z=Str), Str]]
+        )
 
     def test_from_callable_proxyfunc(self):
         func = Function[Int, {}, Int]("foo")
+        func_named = Function[dict(x=Int), Int]("foo")
+
+        with pytest.raises(
+            TypeError, match="Cannot call `from_callable` on a concrete Function type"
+        ):
+            func.from_callable(func)
 
         assert Function.from_callable(func) is func
-        assert Function.from_callable(func, Int) is func
+        assert Function.from_callable(func_named) is func_named
 
-        with pytest.raises(TypeError, match="Expected a Function with parameters"):
+        assert Function.from_callable(func, Int) is func
+        assert Function.from_callable(func_named, Int) is func_named
+
+        class SubInt(Int):
+            pass
+
+        assert Function.from_callable(func, SubInt, return_type=Int) is func
+        assert Function.from_callable(func_named, SubInt, return_type=Int) is func_named
+
+        with pytest.raises(TypeError, match="Their signatures are incompatible"):
             Function.from_callable(func, Str)
+
+        with pytest.raises(TypeError, match="Their signatures are incompatible"):
+            Function.from_callable(func, return_type=Str)
 
     def test_from_callable_bad_annotations(self):
         def py_func(a: Int, b: int):

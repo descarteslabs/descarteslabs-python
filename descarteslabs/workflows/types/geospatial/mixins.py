@@ -221,8 +221,8 @@ class BandsMixin:
 
         self_type = type(self)
 
-        delayed_func = Function._delay(func, None, Str, self_type)
-        result_type = type(delayed_func)
+        delayed_func = Function.from_callable(func, Str, self_type)
+        result_type = delayed_func.return_type
         func = "wf.map_bands_imagery"
 
         if result_type not in (Image, ImageCollection):

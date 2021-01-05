@@ -449,16 +449,15 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         >>> type(mean_col).__name__
         'ImageCollection'
         """
-        delayed_func = Function._delay(func, None, self._element_type)
-
-        result_type = type(delayed_func)
+        func = Function.from_callable(func, self._element_type)
+        result_type = func.return_type
 
         container_type, func = (
             (type(self), "wf.map_imagery")
             if result_type is self._element_type
             else (List[result_type], "wf.map")
         )
-        return container_type._from_apply(func, self, delayed_func)
+        return container_type._from_apply(func, self, func)
 
     @typecheck_promote(None, reverse=Bool)
     def sorted(self, key, reverse=False):
@@ -542,7 +541,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         delayed_func = Function.from_callable(
             func, ImageCollection, Image, ImageCollection
         )
-        return_type = delayed_func._type_params[-1]
+        return_type = delayed_func.return_type
 
         out_type, func = (
             (ImageCollection, "wf.ImageCollection.map_window_ic")

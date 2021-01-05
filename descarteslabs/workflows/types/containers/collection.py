@@ -63,9 +63,8 @@ class CollectionMixin:
         >>> type(dates).__name__
         'List[Datetime]'
         """
-        delayed_func = Function._delay(func, None, self._element_type)
-
-        result_type = type(delayed_func)
+        func = Function.from_callable(func, self._element_type)
+        result_type = func.return_type
 
         container_type = (
             type(self)
@@ -73,8 +72,9 @@ class CollectionMixin:
             else _DelayedList()[result_type]
         )
 
-        return container_type._from_apply("wf.map", self, delayed_func)
+        return container_type._from_apply("wf.map", self, func)
 
+    @typecheck_promote(lambda self: Function[self._element_type, {}, Bool])
     def filter(self, func):
         """Filter elements from an iterable proxytype.
 
@@ -96,9 +96,7 @@ class CollectionMixin:
         >>> col = ImageCollection.from_id("sentinel-2:L1C")
         >>> filtered = col.filter(lambda img: img.properties["date"].year == 2018)
         """
-        delayed_func = Function._delay(func, Bool, self._element_type)
-
-        return self._from_apply("wf.filter", self, delayed_func)
+        return self._from_apply("wf.filter", self, func)
 
     def reduce(self, func, initial=REDUCE_INITIAL_DEFAULT):
         """Reduce a collection of elements to a single element.
@@ -133,10 +131,9 @@ class CollectionMixin:
         13
         """
         initial_type = _initial_reduce_type(initial, self._element_type)
+        func_type = Function[initial_type, self._element_type, {}, initial_type]
 
-        delayed_func = Function._delay(
-            func, initial_type, initial_type, self._element_type
-        )
+        delayed_func = func_type(func)
 
         if initial is REDUCE_INITIAL_DEFAULT:
             return initial_type._from_apply("wf.reduce", self, delayed_func)

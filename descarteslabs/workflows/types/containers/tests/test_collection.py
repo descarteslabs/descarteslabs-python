@@ -2,7 +2,6 @@ import pytest
 
 from ... import (
     Any,
-    Bool,
     CollectionMixin,
     Feature,
     FeatureCollection,
@@ -34,7 +33,11 @@ def test_map_conversion(col):
 
 @pytest.mark.parametrize("col", [FeatureCollection([]), List[Int]([0, 1, 2])])
 def test_filter(col):
-    filtered = col.filter(lambda x: Bool(True))
+    def filterer(x):
+        assert isinstance(x, col._element_type)
+        return True
+
+    filtered = col.filter(filterer)
 
     assert isinstance(filtered, type(col))
 

@@ -1,11 +1,13 @@
+from __future__ import annotations
+from typing import Type
 import pytest
 
-from ..core import _type_params_issubclass, merge_params
+from ..core import type_params_issubclass, merge_params
 from .. import Proxytype, GenericProxytype, is_generic, validate_typespec
 from ... import Struct, List, Tuple, Int, Float, Str
 
 # NOTE: we test with non-Proxytype classes for this first test to be a little more hermetic,
-# since the GenericProxytypeMetaclass messes around with `isinstance` (to recursively call `_type_params_issubclass`)
+# since the GenericProxytypeMetaclass messes around with `isinstance` (to recursively call `type_params_issubclass`)
 
 
 class Alive(object):
@@ -30,62 +32,61 @@ class Spruce(Plant):
 
 class TestTypeParamsIssubclass(object):
     def test_base_case(self):
-        assert _type_params_issubclass(Bear, Animal)
-        assert _type_params_issubclass(Bear, Alive)
-        assert _type_params_issubclass(Bear, Bear)
+        assert type_params_issubclass(Bear, Animal)
+        assert type_params_issubclass(Bear, Alive)
+        assert type_params_issubclass(Bear, Bear)
 
-        assert not _type_params_issubclass(Bear, Plant)
-        assert not _type_params_issubclass(Bear, Spruce)
-        assert not _type_params_issubclass(Plant, Spruce)
-        assert not _type_params_issubclass(Bear, int)
+        assert not type_params_issubclass(Bear, Plant)
+        assert not type_params_issubclass(Bear, Spruce)
+        assert not type_params_issubclass(Plant, Spruce)
+        assert not type_params_issubclass(Bear, int)
 
-        assert not _type_params_issubclass(Bear, (Animal,))
-        assert not _type_params_issubclass(Bear, {"x": Animal})
-        assert not _type_params_issubclass((Bear,), {"x": Animal})
+        assert not type_params_issubclass(Bear, (Animal,))
+        assert not type_params_issubclass(Bear, {"x": Animal})
+        assert not type_params_issubclass((Bear,), {"x": Animal})
 
     def test_tuples(self):
-        assert _type_params_issubclass(tuple(), tuple())
-        assert _type_params_issubclass((Bear,), (Animal,))
-        assert _type_params_issubclass((Bear, Spruce), (Animal, Plant))
+        assert type_params_issubclass(tuple(), tuple())
+        assert type_params_issubclass((Bear,), (Animal,))
+        assert type_params_issubclass((Bear, Spruce), (Animal, Plant))
 
-        assert not _type_params_issubclass((Bear, Spruce), (Animal, Animal))
-        assert not _type_params_issubclass((int, Alive), (Plant, Animal))
-        assert not _type_params_issubclass((Bear, Spruce), (Animal,))
-        assert not _type_params_issubclass((Bear,), (Animal, Plant))
+        assert not type_params_issubclass((Bear, Spruce), (Animal, Animal))
+        assert not type_params_issubclass((int, Alive), (Plant, Animal))
+        assert not type_params_issubclass((Bear, Spruce), (Animal,))
+        assert not type_params_issubclass((Bear,), (Animal, Plant))
 
     def test_dicts(self):
-        assert _type_params_issubclass({}, {})
-        assert _type_params_issubclass({"x": Spruce}, {"x": Plant})
-        assert _type_params_issubclass(
-            {"x": Spruce, "y": Bear}, {"x": Plant, "y": Bear}
-        )
+        assert type_params_issubclass({}, {})
+        assert type_params_issubclass({"x": Spruce}, {"x": Plant})
+        assert type_params_issubclass({"x": Spruce, "y": Bear}, {"x": Plant, "y": Bear})
 
-        assert not _type_params_issubclass({}, {"x": Plant})
-        assert not _type_params_issubclass({"foo": Spruce}, {"bar": Plant})
-        assert not _type_params_issubclass({"x": Spruce}, {"x": Animal})
-        assert not _type_params_issubclass(
+        assert not type_params_issubclass({}, {"x": Plant})
+        assert not type_params_issubclass({"foo": Spruce}, {"bar": Plant})
+        assert not type_params_issubclass({"x": Spruce, "y": Bear}, {"y": Bear, "x": Spruce})
+        assert not type_params_issubclass({"x": Spruce}, {"x": Animal})
+        assert not type_params_issubclass(
             {"x": Spruce, "y": Bear}, {"x": Plant, "y": Plant}
         )
 
     def test_nested(self):
-        assert _type_params_issubclass({"x": tuple()}, {"x": tuple()})
-        assert _type_params_issubclass(({},), ({},))
-        assert _type_params_issubclass(
+        assert type_params_issubclass({"x": tuple()}, {"x": tuple()})
+        assert type_params_issubclass(({},), ({},))
+        assert type_params_issubclass(
             ({"x": Bear, "y": Plant},), ({"x": Bear, "y": Alive},)
         )
-        assert _type_params_issubclass(
+        assert type_params_issubclass(
             ({"x": Bear, "y": Plant}, Spruce), ({"x": Bear, "y": Alive}, Plant)
         )
-        assert _type_params_issubclass(
+        assert type_params_issubclass(
             {"x": (Plant, (Spruce, Animal)), "y": Bear},
             {"x": (Alive, (Plant, Animal)), "y": Animal},
         )
 
-        assert not _type_params_issubclass({"x": tuple()}, {"x": (Bear,)})
-        assert not _type_params_issubclass(
+        assert not type_params_issubclass({"x": tuple()}, {"x": (Bear,)})
+        assert not type_params_issubclass(
             ({"x": Bear, "y": Plant},), ({"x": Bear, "y": Bear},)
         )
-        assert not _type_params_issubclass(
+        assert not type_params_issubclass(
             {"x": (Plant, (Spruce, Animal)), "y": Bear},
             {"x": (Alive, (Animal, Animal)), "y": Animal},
         )
@@ -145,6 +146,13 @@ def test_singleton_concrete_subtypes():
     assert Containy[1] is not OtherContainy[1]
 
 
+def test_subclasscheck_rejects_non_classes():
+    with pytest.raises(TypeError, match="arg 1 must be a class"):
+        issubclass(1, Containy[Foo])
+    with pytest.raises(TypeError, match="arg 1 must be a class"):
+        issubclass(Containy[Foo](), Containy[Foo])
+
+
 class TestCovariantSubclass(object):
     def test_basic(self):
         assert issubclass(Proxytype, Proxytype)
@@ -191,6 +199,30 @@ class TestCovariantSubclass(object):
         assert not issubclass(Containy[Bar], SubContainy[Bar])
         assert not issubclass(Containy[Bar], SubContainy[BarChild])
         assert not issubclass(Containy, SubContainy[BarChild])
+
+
+class Subclasscheck(GenericProxytype):
+    @classmethod
+    def _issubclass(cls, other: Type[Subclasscheck]) -> bool:
+        "Allow anything to be a subclass if `my_type_params[1]` is True, otherwise normal behavior"
+        my_contained, allow_any = cls._type_params
+        other_contained, _ = other._type_params
+        return issubclass(other_contained, my_contained) if not allow_any else True
+
+
+def test_custom_subclasscheck():
+    assert issubclass(Subclasscheck[Foo, False], Subclasscheck[Foo, False])
+    assert issubclass(Subclasscheck[FooChild, False], Subclasscheck[Foo, False])
+
+    # custom subclass check is being used: things pass as subclasses that shouldn't by normal logic
+    assert issubclass(Subclasscheck[Foo, True], Subclasscheck[Foo, True])
+    assert issubclass(Subclasscheck[Bar, True], Subclasscheck[Foo, True])
+    assert issubclass(Subclasscheck[Bar, False], Subclasscheck[Foo, True])
+    assert issubclass(Subclasscheck["x", False], Subclasscheck[Foo, True])
+
+    # custom subclass check not used when the generic types don't match
+    assert not issubclass(Containy["x", False], Subclasscheck[Foo, True])
+    assert not issubclass(int, Subclasscheck[Foo, True])
 
 
 class CustomizedClassGetitem(GenericProxytype):
