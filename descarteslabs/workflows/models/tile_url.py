@@ -1,12 +1,13 @@
 import json
 import urllib
 
-from ..execution import arguments_to_grafts, promote_arguments
+from descarteslabs.workflows.execution import arguments_to_grafts, promote_arguments
+from descarteslabs.workflows.types import Proxytype
 
 
 def tile_url(
     base_url_template: str,
-    params: tuple,
+    obj: Proxytype,
     session_id=None,
     colormap=None,
     bands=None,
@@ -22,9 +23,10 @@ def tile_url(
     ----------
     base_url_template: str
         Base URL template.
-    params: Tuple[Proxytype]
-        The parameters of the object you're generating a URL for.
-        ``arguments`` will be checked against and promoted to these.
+    obj: Proxytype
+        The the object you're generating a URL for.
+        If a `Function`, ``arguments`` will be checked against and promoted to these.
+        Otherwise, no ``arguments`` should be given.
     session_id: str, optional, default None
         Unique, client-generated ID that logs will be stored under.
         Since multiple users may access tiles from the same `XYZ` object,
@@ -105,7 +107,7 @@ def tile_url(
         if any(scale != [None, None] for scale in scales):
             query_args["scales"] = json.dumps(scales)
 
-    promoted_arguments = promote_arguments(arguments, params)
+    _, promoted_arguments = promote_arguments(obj, arguments)
     if promoted_arguments:
         query_args.update(
             {

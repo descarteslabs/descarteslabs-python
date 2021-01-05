@@ -15,7 +15,7 @@ def test_url():
     base = "foo"
     base_q = base + "?"
 
-    url = functools.partial(tile_url.tile_url, base, ())
+    url = functools.partial(tile_url.tile_url, base, types.Image.from_id(""))
 
     assert url() == base
     assert url(session_id="foo") == base_q + urlencode({"session_id": "foo"})
@@ -71,16 +71,16 @@ def test_url():
     ],
 )
 def test_url_arguments(args):
-    p1 = types.parameter("p1", types.Datetime)
-    p2 = types.parameter("p2", types.Float)
-    p3 = types.parameter("p3", types.Int)
-
+    func = types.Function[
+        dict(p1=types.Datetime, p2=types.Float, p3=types.Int), types.Image
+    ]("x")
     base = "http://base.net"
-    url = functools.partial(tile_url.tile_url, base, (p1, p2, p3))
+    url = functools.partial(tile_url.tile_url, base, func)
 
-    for bad_args in [{}, dict(args, blah="bad")]:
-        with pytest.raises(TypeError, match="Expected the required arguments"):
-            url(**bad_args)
+    with pytest.raises(TypeError, match="missing a required argument"):
+        url()
+    with pytest.raises(TypeError, match="got an unexpected keyword argument 'blah'"):
+        url(**args, blah="bad")
 
     with graft_client.consistent_guid():
         got_base, params = url(**args).split("?")
@@ -99,6 +99,13 @@ def test_url_arguments(args):
         assert query["p2"] == [json.dumps(args["p2"].graft)]
 
     assert query["p3"] == ["1"]
+
+
+def test_no_url_for_positional_only_function():
+    with pytest.raises(
+        TypeError, match="cannot use Functions with positional-only arguments"
+    ):
+        tile_url.tile_url("", types.Function[types.Int, {}, types.Image]("x"))
 
 
 def test_validate_scales():

@@ -251,7 +251,7 @@ VersionedGraft: {self.version}
 
         return tile_url(
             url_template,
-            self.params,
+            self.object,
             colormap=colormap,
             bands=bands,
             scales=scales,

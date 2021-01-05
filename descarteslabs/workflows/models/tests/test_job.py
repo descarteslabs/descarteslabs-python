@@ -57,7 +57,12 @@ class TestJob:
         response_message = job_pb2.Job()
         stub.return_value.CreateJob.return_value = response_message
 
-        job = Job(obj, format=format, destination=destination, **arguments,)
+        job = Job(
+            obj,
+            format=format,
+            destination=destination,
+            **arguments,
+        )
 
         assert job._message is response_message
         assert isinstance(job._client, Client)
@@ -332,7 +337,8 @@ class TestJob:
         assert job.done is True
 
     @pytest.mark.parametrize(
-        "proxify", [False, True],
+        "proxify",
+        [False, True],
     )
     def test_arguments(self, stub, proxify):
         x = types.parameter("x", types.Int)
@@ -361,7 +367,7 @@ class TestJob:
         job_args = job.arguments
         assert job_args.keys() == args.keys()
         assert job_args["x"] == 1
-        assert isinstance(job_args["lst"], types.Any)
+        assert isinstance(job_args["lst"], type(lst))
         utils.assert_graft_is_scope_isolated_equvalent(
             job_args["lst"].graft, proxy_lst.graft
         )

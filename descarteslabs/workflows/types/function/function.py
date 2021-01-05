@@ -157,6 +157,10 @@ class Function(GenericProxytype):
             )
 
     def __call__(self, *args, **kwargs):
+        promoted_args, promoted_kwargs = self._promote_arguments(*args, **kwargs)
+        return self.return_type._from_apply(self, *promoted_args, **promoted_kwargs)
+
+    def _promote_arguments(self, *args, **kwargs) -> typing.Tuple[list, dict]:
         bound = self.__signature__.bind(*args, **kwargs)
         # ^ NOTE: raises error if args are incompatible
 
@@ -177,7 +181,7 @@ class Function(GenericProxytype):
             else:
                 promoted_kwargs[name] = promoted
 
-        return self.return_type._from_apply(self, *promoted_args, **promoted_kwargs)
+        return promoted_args, promoted_kwargs
 
     @property
     def arg_types(self) -> typing.Tuple[typing.Type[Proxytype]]:

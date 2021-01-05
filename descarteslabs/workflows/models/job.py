@@ -529,13 +529,7 @@ class Job:
 
     @property
     def arguments(self):
-        "The arguments of the Job, as a dict of names to Python primitives or `.Any` objects."
-        # TODO turn args back into their correct proxytypes based on the argument types
-        # to the Job's `Function`.
-        # Even though the parameters dict we create the Job with is ordered correctly,
-        # we can't go from the named arguments proto map back to the positional arguments
-        # of the `Function` because the serialization order of proto maps is undefined and unstable.
-        # Yet another thing that has to wait for named positional arguments to Functions!
+        "The arguments of the Job, as a dict of names to Python primitives or Workflows objects."
         if self.version != __version__:
             raise NotImplementedError(
                 f"Accessing the `arguments` of a Job from a different version is not supported. "
@@ -548,6 +542,7 @@ class Job:
                 arg_grafts = {}
             else:
                 arg_grafts = {}
+                kwarg_types = self.object.kwarg_types
                 for name, json_graft in self._message.arguments.items():
                     try:
                         graft = json.loads(json_graft)
@@ -557,7 +552,7 @@ class Job:
                         )
 
                     obj = (
-                        Any._from_graft(graft_client.isolate_keys(graft))
+                        kwarg_types.get(name, Any)._from_graft(graft_client.isolate_keys(graft))
                         if not (
                             graft_syntax.is_literal(graft)
                             or graft_syntax.is_quoted_json(graft)

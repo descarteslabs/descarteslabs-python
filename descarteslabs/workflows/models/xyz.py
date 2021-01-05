@@ -335,7 +335,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
 
         return tile_url(
             url_template,
-            self.params,
+            self.object,
             session_id=session_id,
             colormap=colormap,
             bands=bands,
