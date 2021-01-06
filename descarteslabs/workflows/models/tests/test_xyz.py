@@ -174,6 +174,22 @@ class TestXYZ(object):
         url_template = xyz._message.url_template = "http://base.net"
         assert xyz.url() == url_template
 
+    def test_wmts_url(self, stub):
+        stub.return_value.CreateXYZ.side_effect = mock_CreateXYZ
+        obj = utils.Foo(1)
+        xyz = XYZ(obj)
+        wmts_url_template = (
+            xyz._message.wmts_url_template
+        ) = "http://base.net/wmts/xyz/mclovin/1.0.0/WMTSCapabilities.xml?tile_matrix_sets={TileMatrixSet}"
+
+        assert xyz.wmts_url() == wmts_url_template.format(TileMatrixSet="")
+        assert xyz.wmts_url(tile_matrix_sets="utm") == wmts_url_template.format(
+            TileMatrixSet="utm"
+        )
+        assert xyz.wmts_url(
+            tile_matrix_sets=["EPSG:4326", "EPSG:3857"]
+        ) == wmts_url_template.format(TileMatrixSet="EPSG:4326,EPSG:3857")
+
 
 @mock.patch("descarteslabs.workflows.models.xyz._tile_log_stream")
 def test_xyz_log_listener(log_stream_mock):

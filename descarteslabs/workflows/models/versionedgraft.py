@@ -259,3 +259,32 @@ VersionedGraft: {self.version}
             checkerboard=checkerboard,
             **arguments,
         )
+
+    def wmts_url(self, tile_matrix_sets=None) -> str:
+        """
+        Get the WMTS endpoint which gives access to this versioned graft.
+
+        Parameters
+        ----------
+        tile_matrix_sets: str | list(str)
+            Desired tile matrix sets. Defaults to EPSG:4326 and EPSG:3857.
+
+        Returns
+        -------
+        wmts_url: str
+            The URL for the WMTS service endpoint corresponding to this versioned graft.
+        """
+        wmts_url_template = self._message.wmts_url_template
+        if not wmts_url_template:
+            raise ValueError(
+                "This VersionedGraft object has not been persisted yet. "
+                "Call .save() on the Workflow that contains it, then call "
+                f".get_version({self.version!r}) on that parent Workflow to get an updated "
+                "copy of this VersionedGraft."
+            )
+
+        if not tile_matrix_sets:
+            tile_matrix_sets = ""
+        elif isinstance(tile_matrix_sets, (list, tuple)):
+            tile_matrix_sets = ",".join(tile_matrix_sets)
+        return wmts_url_template.format(TileMatrixSet=tile_matrix_sets)

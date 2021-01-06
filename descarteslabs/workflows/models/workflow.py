@@ -374,9 +374,7 @@ class Workflow:
 
             return version_decorator
 
-        new_vg = VersionedGraft(
-            version, obj, docstring=docstring, labels=labels
-        )
+        new_vg = VersionedGraft(version, obj, docstring=docstring, labels=labels)
 
         for v in self._message.versioned_grafts:
             if v.version == version:
@@ -622,3 +620,55 @@ Workflow: "{self.title}"
             versions=", ".join(map(repr, self.version_names)),
             description=textwrap.indent(self.description, "    "),
         )
+
+    def wmts_url(self, tile_matrix_sets=None) -> str:
+        """
+        Get the WMTS endpoint which gives access to this workflow.
+
+        Parameters
+        ----------
+        tile_matrix_sets: str | list(str)
+            Desired tile matrix sets. Defaults to EPSG:4326 and EPSG:3857.
+
+        Returns
+        -------
+        wmts_url: str
+            The URL for the WMTS service endpoint corresponding to this workflow.
+        """
+        if not tile_matrix_sets:
+            tile_matrix_sets = ""
+        elif isinstance(tile_matrix_sets, (list, tuple)):
+            tile_matrix_sets = ",".join(tile_matrix_sets)
+        return self._message.wmts_url_template.format(TileMatrixSet=tile_matrix_sets)
+
+
+def wmts_url(tile_matrix_sets=None, client=None) -> str:
+    """
+    Get the WMTS endpoint which gives access to all workflows accessible to this user.
+
+    Parameters
+    ----------
+    tile_matrix_sets: str | list(str)
+        Desired tile matrix sets. Defaults to EPSG:4326 and EPSG:3857.
+
+    client: `.workflows.client.Client`, optional
+        Allows you to use a specific client instance with non-default
+        auth and parameters.
+
+    Returns
+    -------
+    wmts_url: str
+        The URL for the WMTS service endpoint corresponding to this channel.
+    """
+    if client is None:
+        client = get_global_grpc_client()
+
+    response = client.api["GetWmtsUrlTemplate"](
+        workflow_pb2.Empty(), timeout=client.DEFAULT_TIMEOUT
+    )
+
+    if not tile_matrix_sets:
+        tile_matrix_sets = ""
+    elif isinstance(tile_matrix_sets, (list, tuple)):
+        tile_matrix_sets = ",".join(tile_matrix_sets)
+    return response.wmts_url_template.format(TileMatrixSet=tile_matrix_sets)

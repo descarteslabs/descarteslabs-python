@@ -10,6 +10,7 @@ service WorkflowAPI {
   rpc GetVersion(GetVersionRequest) returns (VersionedGraft) {}
   rpc SearchWorkflows(SearchWorkflowsRequest) returns (stream Workflow) {}
   rpc DeleteWorkflow(DeleteWorkflowRequest) returns (Empty) {}
+  rpc GetWmtsUrlTemplate(Empty) returns (WmtsUrlTemplateResponse) {}
 }
 
 message Workflow {
@@ -35,6 +36,11 @@ message Workflow {
   string org = 24;
   string email = 25;
   string name = 28;
+  // Template string for WMTS service endpoint, like
+  // "https://workflows.descarteslabs.com/v0-5/workflow/test@example.com:foo?tile_matrix_set={TileMatrixSet}".
+  // Compatible with Leaflet, OpenLayers, Python format strings.
+  // Read-only: any value is ignored in `UpsertWorkflowRequest`.
+  string wmts_url_template = 30;
 }
 
 message UpsertWorkflowRequest {
@@ -100,6 +106,16 @@ message VersionedGraft {
   // Compatible with Leaflet, OpenLayers, Python format strings.
   // Read-only: any value is ignored in `UpsertWorkflowRequest`.
   string url_template = 12;
+  // Ditto for WMTS service endpoint.
+  string wmts_url_template = 13;
+}
+
+message WmtsUrlTemplateResponse {
+  // Template string for WMTS service endpoint, like
+  // "https://workflows.descarteslabs.com/v0-5/workflow?tile_matrix_set={TileMatrixSet}".
+  // Compatible with Leaflet, OpenLayers, Python format strings.
+  // Read-only: any value is ignored in `UpsertWorkflowRequest`.
+  string wmts_url_template = 1;
 }
 
 message Empty {}

@@ -71,6 +71,7 @@ from .models import (
     compute,
     use,
     publish,
+    wmts_url,
 )
 
 from .inspect import (
@@ -170,6 +171,7 @@ __all__ = [
     # __init__
     "compute",
     "publish",
+    "wmts_url",
     # .inspect
     "inspect",
     "InspectClient",

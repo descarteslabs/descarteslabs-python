@@ -345,6 +345,26 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
             **arguments,
         )
 
+    def wmts_url(self, tile_matrix_sets=None) -> str:
+        """
+        Get the WMTS endpoint which gives access to this XYZ object.
+
+        Parameters
+        ----------
+        tile_matrix_sets: str | list(str)
+            Desired tile matrix sets. Defaults to EPSG:4326 and EPSG:3857.
+
+        Returns
+        -------
+        wmts_url: str
+            The URL for the WMTS service endpoint corresponding to this XYZ object.
+        """
+        if not tile_matrix_sets:
+            tile_matrix_sets = ""
+        elif isinstance(tile_matrix_sets, (list, tuple)):
+            tile_matrix_sets = ",".join(tile_matrix_sets)
+        return self._message.wmts_url_template.format(TileMatrixSet=tile_matrix_sets)
+
     def iter_tile_logs(
         self,
         session_id: str,

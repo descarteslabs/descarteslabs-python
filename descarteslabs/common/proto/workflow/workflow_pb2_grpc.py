@@ -39,6 +39,11 @@ class WorkflowAPIStub(object):
         request_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.DeleteWorkflowRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Empty.FromString,
         )
+    self.GetWmtsUrlTemplate = channel.unary_unary(
+        '/descarteslabs.workflows.WorkflowAPI/GetWmtsUrlTemplate',
+        request_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Empty.SerializeToString,
+        response_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.WmtsUrlTemplateResponse.FromString,
+        )
 
 
 class WorkflowAPIServicer(object):
@@ -80,6 +85,13 @@ class WorkflowAPIServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def GetWmtsUrlTemplate(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_WorkflowAPIServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -107,6 +119,11 @@ def add_WorkflowAPIServicer_to_server(servicer, server):
           servicer.DeleteWorkflow,
           request_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.DeleteWorkflowRequest.FromString,
           response_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Empty.SerializeToString,
+      ),
+      'GetWmtsUrlTemplate': grpc.unary_unary_rpc_method_handler(
+          servicer.GetWmtsUrlTemplate,
+          request_deserializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.Empty.FromString,
+          response_serializer=descarteslabs_dot_common_dot_proto_dot_workflow_dot_workflow__pb2.WmtsUrlTemplateResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

@@ -47,6 +47,8 @@ message XYZ {
   // "https://workflows.descarteslabs.com/v0-5/xyz/1234567/{z}/{x}/{y}.png".
   // Compatible with Leaflet, OpenLayers, Python format strings.
   string url_template = 26;
+  // Ditto for WMTS service endpoint.
+  string wmts_url_template = 30;
   google.protobuf.Timestamp expires_timestamp = 28;
   bool public = 29;
 }

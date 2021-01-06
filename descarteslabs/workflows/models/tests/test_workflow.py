@@ -5,7 +5,7 @@ import pytest
 from descarteslabs.common.proto.workflow import workflow_pb2
 
 from descarteslabs.workflows.client import Client
-from descarteslabs.workflows.models import Workflow
+from descarteslabs.workflows.models import Workflow, wmts_url
 from descarteslabs.workflows.models.utils import pb_milliseconds_to_datetime
 from descarteslabs.workflows.models.tests import utils
 from descarteslabs.workflows.types import Int, Function
@@ -216,3 +216,17 @@ class TestWorkflow(object):
         assert wf.name == "test"
         assert wf.created_timestamp == pb_milliseconds_to_datetime(100)
         assert wf.updated_timestamp == pb_milliseconds_to_datetime(200)
+
+    def test_wmts_url(self, stub):
+        wmts_url_template = "http://base.net/wmts/workflow/1.0.0/WMTSCapabilities.xml?tile_matrix_sets={TileMatrixSet}"
+        response = workflow_pb2.WmtsUrlTemplateResponse()
+        response.wmts_url_template = wmts_url_template
+        stub.return_value.GetWmtsUrlTemplate.return_value = response
+
+        assert wmts_url() == wmts_url_template.format(TileMatrixSet="")
+        assert wmts_url(tile_matrix_sets="utm") == wmts_url_template.format(
+            TileMatrixSet="utm"
+        )
+        assert wmts_url(
+            tile_matrix_sets=["EPSG:4326", "EPSG:3857"]
+        ) == wmts_url_template.format(TileMatrixSet="EPSG:4326,EPSG:3857")

@@ -81,3 +81,23 @@ class TestVersionedGraft(object):
         url_template = vg._message.url_template = "http://base.net"
 
         assert vg.url() == url_template
+
+    def test_wmts_url(self, stub):
+        obj = utils.Foo(1)
+        version = "1.0.1"
+        vg = VersionedGraft(version, obj)
+
+        with pytest.raises(ValueError, match="has not been persisted"):
+            vg.wmts_url()
+
+        wmts_url_template = (
+            vg._message.wmts_url_template
+        ) = "http://base.net/wmts/workflow/wid/1.0.1/1.0.0/WMTSCapabilities.xml?tile_matrix_sets={TileMatrixSet}"
+
+        assert vg.wmts_url() == wmts_url_template.format(TileMatrixSet="")
+        assert vg.wmts_url(tile_matrix_sets="utm") == wmts_url_template.format(
+            TileMatrixSet="utm"
+        )
+        assert vg.wmts_url(
+            tile_matrix_sets=["EPSG:4326", "EPSG:3857"]
+        ) == wmts_url_template.format(TileMatrixSet="EPSG:4326,EPSG:3857")

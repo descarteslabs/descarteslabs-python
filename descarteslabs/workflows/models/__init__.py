@@ -1,5 +1,5 @@
 from .exceptions import JobComputeError, JobTimeoutError
-from .workflow import Workflow
+from .workflow import Workflow, wmts_url
 from .versionedgraft import VersionedGraft
 from .job import Job
 from .xyz import XYZ, XYZLogListener
@@ -11,6 +11,7 @@ __all__ = [
     "JobTimeoutError",
     # .workflow
     "Workflow",
+    "wmts_url",
     # .versionedgraft
     "VersionedGraft",
     # .job

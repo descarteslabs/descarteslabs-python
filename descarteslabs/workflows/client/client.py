@@ -61,6 +61,7 @@ class Client(GrpcClient):
         self._add_api("Workflow", "GetVersion")
         self._add_api("Workflow", "SearchWorkflows")
         self._add_api("Workflow", "DeleteWorkflow")
+        self._add_api("Workflow", "GetWmtsUrlTemplate")
         self._add_api("XYZ", "CreateXYZ")
         self._add_api("XYZ", "GetXYZ")
         self._add_api("XYZ", "ListXYZ")
