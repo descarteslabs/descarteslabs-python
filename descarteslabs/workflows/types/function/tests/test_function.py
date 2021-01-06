@@ -78,7 +78,7 @@ class TestDelay(object):
             pass
 
         with pytest.raises(
-            TypeError, match=r"kind 'variadic keyword', used for \*\*kwargs"
+            TypeError, match=r"kind VAR_KEYWORD, used for \*\*kwargs"
         ):
             Function._delay(bad_params, None)
 

@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Type
 import pytest
 
@@ -203,7 +202,7 @@ class TestCovariantSubclass(object):
 
 class Subclasscheck(GenericProxytype):
     @classmethod
-    def _issubclass(cls, other: Type[Subclasscheck]) -> bool:
+    def _issubclass(cls, other: Type["Subclasscheck"]) -> bool:
         "Allow anything to be a subclass if `my_type_params[1]` is True, otherwise normal behavior"
         my_contained, allow_any = cls._type_params
         other_contained, _ = other._type_params

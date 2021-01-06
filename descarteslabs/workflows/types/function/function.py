@@ -1,8 +1,7 @@
-from __future__ import annotations
 import typing
 import keyword
 
-from inspect import signature, Signature, Parameter, _get_paramkind_descr
+from inspect import signature, Signature, Parameter
 
 from descarteslabs.common.graft import client
 
@@ -252,7 +251,7 @@ class Function(GenericProxytype):
         assert_is_proxytype(return_type, error_message=error_message)
 
     @classmethod
-    def _issubclass(cls, other: typing.Type[Function]) -> bool:
+    def _issubclass(cls, other: typing.Type["Function"]) -> bool:
         """
         Check whether another `Function` could be used in place of this one.
 
@@ -533,7 +532,7 @@ class Function(GenericProxytype):
             if param.kind not in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD):
                 raise TypeError(
                     "Workflows Functions only support positional arguments. "
-                    f"Parameter kind {_get_paramkind_descr(param.kind)!r}, used for {param} in the function "
+                    f"Parameter kind {param.kind!s}, used for {param} in the function "
                     f"{func.__name__}, is unsupported."
                 )
 
