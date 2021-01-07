@@ -13,7 +13,6 @@ import traitlets
 from descarteslabs.common.proto.logging import logging_pb2
 
 from descarteslabs.common.graft import client as graft_client
-from ..execution import arguments_to_grafts
 from ..models import XYZ
 from ..models.tile_url import validate_scales
 from ..types import Image, ImageCollection
@@ -121,11 +120,11 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     )
     value = traitlets.Union(
         [
-            traitlets.Instance(Image, read_only=True),
-            traitlets.Instance(ImageCollection, read_only=True),
+            traitlets.Instance(Image, read_only=True, allow_none=True),
+            traitlets.Instance(ImageCollection, read_only=True, allow_none=True),
         ]
     )
-    image_value = traitlets.Instance(Image, read_only=True)
+    image_value = traitlets.Instance(Image, read_only=True, allow_none=True)
 
     parameters = traitlets.Instance(parameters.ParameterSet, read_only=True)
     xyz_obj = traitlets.Instance(XYZ, read_only=True)
@@ -349,15 +348,21 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             # and accessing it would cause its own spew of confusing traitlets errors.
             return
 
-        graft = graft_client.apply_graft(
-            "XYZ.use",
-            self.xyz_obj.id,
-            # TODO potentially should use `promote_arguments` here?
-            # Not sure where the responsibility for typechecking / promotion falls right now.
-            # But having that stricter typechecking would probably break the LayerPicker
-            # widget when its value becomes None.
-            **arguments_to_grafts(**self.parameters.to_dict()),
-        )
+        if len(self.xyz_obj.params) > 0:
+            try:
+                # attept to promote parameters as the Function's arguments
+                args, kwargs = self.xyz_obj.object._promote_arguments(
+                    **self.parameters.to_dict()
+                )
+            except Exception:
+                # when arguments are invalid (currently, only if a LayerPicker has no layer selected),
+                # `value` is None
+                self.set_trait("value", None)
+                return
+        else:
+            args, kwargs = (), {}
+
+        graft = graft_client.apply_graft("XYZ.use", self.xyz_obj.id, *args, **kwargs)
 
         self.set_trait(
             "value",

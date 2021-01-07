@@ -298,6 +298,10 @@ class InspectorRowGenerator(traitlets.HasTraits):
         else:
             value_list = None
 
+        image = self.layer.image_value
+        if image is None:
+            value_list = ["❓"]
+
         if value_list:
             self.set_values(value_list)
         else:
@@ -305,7 +309,6 @@ class InspectorRowGenerator(traitlets.HasTraits):
             # NOTE(gabe): I don't trust traitlets or ipywidgets to be thread-safe,
             # so we pull all values out of traits here and pass them in to the thread directly
             ctx = self.marker.geoctx
-            image = self.layer.image_value
             thread = threading.Thread(
                 target=self._fetch_and_set_thread,
                 args=(image, xy_3857, ctx, cache_key),

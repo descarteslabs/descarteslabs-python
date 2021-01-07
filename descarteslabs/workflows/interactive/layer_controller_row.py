@@ -346,6 +346,9 @@ class WorkflowsLayerControllerRow(LayerControllerRow):
         legend.value = png
 
     def _autoscale(self, widget):
+        if self.layer.image_value is None:
+            return
+
         old_icon = widget.icon
         widget.icon = "spinner"
         widget.disabled = True
