@@ -55,7 +55,11 @@ def is_named_application_part(part):
 
 
 def is_params(expr):
-    return is_nonstring_sequence(expr) and all(is_key(name) for name in expr)
+    return (
+        is_nonstring_sequence(expr)
+        and all(is_key(name) for name in expr)
+        and len(set(expr)) == len(expr)
+    )
 
 
 def is_graft(expr):
