@@ -159,7 +159,8 @@ class Workflow:
             client = get_global_grpc_client()
 
         message = client.api["GetWorkflow"](
-            workflow_pb2.GetWorkflowRequest(id=id), timeout=client.DEFAULT_TIMEOUT,
+            workflow_pb2.GetWorkflowRequest(id=id),
+            timeout=client.DEFAULT_TIMEOUT,
         )
         return cls._from_proto(message, client)
 
@@ -254,7 +255,8 @@ class Workflow:
             client = get_global_grpc_client()
 
         client.api["DeleteWorkflow"](
-            workflow_pb2.DeleteWorkflowRequest(id=id), timeout=client.DEFAULT_TIMEOUT,
+            workflow_pb2.DeleteWorkflowRequest(id=id),
+            timeout=client.DEFAULT_TIMEOUT,
         )
 
     def delete(self, client=None):
@@ -287,7 +289,7 @@ class Workflow:
         set on this object. Any new versions will be added. Since VersionedGrafts are
         immutable, if a version already exists on the backend that is also set on this
         object, `save` will raise an error if the grafts of those version are different,
-        otherwise updaing that version will be a no-op if the grafts are the same.
+        otherwise updating that version will be a no-op if the grafts are the same.
 
         If the Workflow does exist, all Workflow-level metadata (title, description, labels, etc)
         will be overwritten with the values set on this object.
