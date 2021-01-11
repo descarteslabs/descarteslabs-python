@@ -452,12 +452,12 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         func = Function.from_callable(func, self._element_type)
         result_type = func.return_type
 
-        container_type, func = (
+        container_type, map_func_name = (
             (type(self), "wf.map_imagery")
             if result_type is self._element_type
             else (List[result_type], "wf.map")
         )
-        return container_type._from_apply(func, self, func)
+        return container_type._from_apply(map_func_name, self, func)
 
     @typecheck_promote(None, reverse=Bool)
     def sorted(self, key, reverse=False):
@@ -926,7 +926,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
                 return fields[0] if len(fields) == 1 else fields
 
         delayed_func = Function.from_callable(func, Image)
-        key_type = delayed_func._type_params[-1]
+        key_type = delayed_func.return_type
 
         return ImageCollectionGroupby[key_type](self, delayed_func)
 
