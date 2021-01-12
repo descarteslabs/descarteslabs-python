@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package descarteslabs.workflows;
 import "descarteslabs/common/proto/typespec/typespec.proto";
+import "descarteslabs/common/proto/visualization/visualization.proto";
 import "descarteslabs/common/proto/widgets/widgets.proto";
 
 service WorkflowAPI {
@@ -108,6 +109,8 @@ message VersionedGraft {
   string url_template = 12;
   // Ditto for WMTS service endpoint.
   string wmts_url_template = 13;
+
+  repeated VisualizationParameters visualization_parameters = 14;
 }
 
 message WmtsUrlTemplateResponse {
