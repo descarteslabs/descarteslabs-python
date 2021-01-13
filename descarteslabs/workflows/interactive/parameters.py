@@ -1,5 +1,6 @@
 import copy
 import datetime
+import contextlib
 
 import six
 import traitlets
@@ -9,41 +10,78 @@ import ipywidgets
 from .. import types
 
 
-# TODO more graceful option than this??
-class NoEqualityLink(traitlets.link):
-    """
-    Equivalent to `traitlets.link`, but checks for changes with `is` instead of `==`.
+# Copy the old implementation of `link` from traitlets 4.3.3.
+# traitlets >= 5.0.0 introduce a `!=` comparison when updating,
+# which fails on types that overload equality checking (like NumPy arrays, Images, etc.).
+# https://github.com/ipython/traitlets/blob/5.0.0/traitlets/traitlets.py#L296
 
-    This makes it work with types that overload equality checking (NumPy arrays, Images, etc.)
-    and return non-bool types.
+# For our use here, the simpler older version works fine.
+
+# BEGIN copied from
+# https://github.com/ipython/traitlets/blob/4.3.3/traitlets/traitlets.py#L243-L302
+
+
+def _validate_link(*tuples):
+    """Validate arguments for traitlet link functions"""
+    for t in tuples:
+        if not len(t) == 2:
+            raise TypeError(
+                "Each linked traitlet must be specified as (HasTraits, 'trait_name'), not %r"
+                % t
+            )
+        obj, trait_name = t
+        if not isinstance(obj, traitlets.HasTraits):
+            raise TypeError("Each object must be HasTraits, not %r" % type(obj))
+        if trait_name not in obj.traits():
+            raise TypeError("%r has no trait %r" % (obj, trait_name))
+
+
+class SimpleLink:
+    """Link traits from different objects together so they remain in sync.
+    Parameters
+    ----------
+    source : (object / attribute name) pair
+    target : (object / attribute name) pair
     """
 
-    # Copied from:
-    # https://github.com/ipython/traitlets/blob/2bb2597224ca5ae485761781b11c06141770f110/traitlets/traitlets.py#L291-L310
+    updating = False
+
+    def __init__(self, source, target):
+        _validate_link(source, target)
+        self.source, self.target = source, target
+        try:
+            setattr(target[0], target[1], getattr(source[0], source[1]))
+        finally:
+            source[0].observe(self._update_target, names=source[1])
+            target[0].observe(self._update_source, names=target[1])
+
+    @contextlib.contextmanager
+    def _busy_updating(self):
+        self.updating = True
+        try:
+            yield
+        finally:
+            self.updating = False
 
     def _update_target(self, change):
         if self.updating:
             return
         with self._busy_updating():
-            setattr(self.target[0], self.target[1], self._transform(change.new))
-            if getattr(self.source[0], self.source[1]) is not change.new:
-                # ^ CHANGED: `!=` to `is not`
-                raise traitlets.TraitError(
-                    "Broken link {}: the source value changed while updating "
-                    "the target.".format(self)
-                )
+            setattr(self.target[0], self.target[1], change.new)
 
     def _update_source(self, change):
         if self.updating:
             return
         with self._busy_updating():
-            setattr(self.source[0], self.source[1], self._transform_inv(change.new))
-            if getattr(self.target[0], self.target[1]) is not change.new:
-                # ^ CHANGED: `!=` to `is not`
-                raise traitlets.TraitError(
-                    "Broken link {}: the target value changed while updating "
-                    "the source.".format(self)
-                )
+            setattr(self.source[0], self.source[1], change.new)
+
+    def unlink(self):
+        self.source[0].unobserve(self._update_target, names=self.source[1])
+        self.target[0].unobserve(self._update_source, names=self.target[1])
+        self.source, self.target = None, None
+
+
+# END copy
 
 
 class ReadOnlyDirectionalLink(ipywidgets.dlink):
@@ -349,7 +387,7 @@ class ParameterSet(traitlets.HasTraits):
                 link_type = (
                     ReadOnlyDirectionalLink
                     if getattr(type(self), name).read_only
-                    else NoEqualityLink
+                    else SimpleLink
                 )
                 link = link_type((target, attr), (self, name))
                 self._links[name] = link
@@ -648,7 +686,7 @@ class ParameterSet(traitlets.HasTraits):
                         link_type = (
                             ReadOnlyDirectionalLink
                             if getattr(type(self), name).read_only
-                            else NoEqualityLink
+                            else SimpleLink
                         )
                         self._links[name] = link_type((value, "value"), (self, name))
                         self._notify_trait(name, getattr(self, name), value.value)
