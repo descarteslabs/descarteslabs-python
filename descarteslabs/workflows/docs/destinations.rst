@@ -151,8 +151,8 @@ Assume the product ``org:my_product_id`` already has the same bands as ``composi
 We can upload a single Catalog `~.catalog.Image`:
 
 >>> image = dl.catalog.Image(name="my_image", product_id="org:my_product_id")
->>> tile = dl.scenes.DLTle.from_latlon(35.6870, -105.9378, 10, 1024, 0)
->>> 
+>>> tile = dl.scenes.DLTile.from_latlon(35.6870, -105.9378, 10, 1024, 0)
+>>>
 >>> composite.compute(tile, destination=image)
 Job ID: 8b21474899b177431d404e42e25a958cc32302af37646f7e
 [######] | Steps: 21/21 | Stage: SUCCEEDED

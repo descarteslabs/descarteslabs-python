@@ -61,7 +61,7 @@ def _image_to_catalog_params(img: Image, **non_img_args) -> dict:
         )
     if not img.id:
         raise ValueError("Catalog Image must have 'id' field.")
-    if img.product.state != DocumentState.SAVED:
+    if img.product is None or img.product.state != DocumentState.SAVED:
         raise ValueError(
             "Product {!r} has not been saved. Please save before uploading images".format(
                 img.product_id
