@@ -56,7 +56,7 @@ except ImportError:
     pass
 
 
-descartes_auth = Auth.from_environment_or_token_json()
+descartes_auth = Auth(_suppress_warning=True)
 metadata = Metadata(auth=descartes_auth)  # noqa: F405
 places = Places(auth=descartes_auth)  # noqa: F405
 raster = Raster(auth=descartes_auth)  # noqa: F405

@@ -73,6 +73,11 @@ class Auth:
 
     ADAPTER = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=Auth.RETRY_CONFIG))
 
+    AUTHORIZATION_ERROR = (
+        "No valid authentication info found{}. "
+        "See https://docs.descarteslabs.com/authentication.html."
+    )
+
     __attrs__ = [
         "domain",
         "scope",
@@ -97,6 +102,7 @@ class Auth:
         jwt_token=None,
         refresh_token=None,
         retries=None,
+        _suppress_warning=False,
     ):
         """
         Helps retrieve JWT from a client id and refresh token for cli usage.
@@ -123,12 +129,8 @@ class Auth:
             try:
                 with open(self.token_info_path) as fp:
                     token_info = json.load(fp)
-            except (IOError, ValueError) as e:
-                warnings.warn(
-                    "unable to read token_info from {} with error {}.".format(
-                        self.token_info_path, str(e)
-                    )
-                )
+            except (IOError, ValueError):
+                pass
 
         self.client_id = next(
             (
@@ -214,6 +216,9 @@ class Auth:
 
             if client_id_changed or client_secret_changed or refresh_token_changed:
                 self._token = None
+
+        if not _suppress_warning and self.client_id is None and self._token is None:
+            warnings.warn(self.AUTHORIZATION_ERROR.format(""))
 
         self._namespace = None
         if retries is None:
@@ -339,10 +344,12 @@ class Auth:
 
     def _get_token(self, timeout=100):
         if self.client_id is None:
-            raise AuthError("Could not find client_id")
+            raise AuthError(self.AUTHORIZATION_ERROR.format(" (no client_id)"))
 
         if self.client_secret is None and self.refresh_token is None:
-            raise AuthError("Could not find client_secret or refresh token")
+            raise AuthError(
+                self.AUTHORIZATION_ERROR.format(" (no client_secret or refresh_token)")
+            )
 
         if self.client_id in [
             "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c"
@@ -373,7 +380,9 @@ class Auth:
         r = self.session.post(self.domain + "/token", json=params, timeout=timeout)
 
         if r.status_code != 200:
-            raise OauthError("%s: %s" % (r.status_code, r.text))
+            raise OauthError(
+                "Could not retrieve token: {} ({})".format(r.text, r.status_code)
+            )
 
         data = r.json()
         access_token = data.get("access_token")
@@ -384,7 +393,7 @@ class Auth:
         elif id_token is not None:
             self._token = id_token
         else:
-            raise OauthError("could not retrieve token")
+            raise OauthError("Could not retrieve token")
         token_info = {}
 
         if self.token_info_path:
@@ -393,7 +402,7 @@ class Auth:
                     token_info = json.load(fp)
             except (IOError, ValueError) as e:
                 warnings.warn(
-                    "unable to read token_info from {} with error {}.".format(
+                    "Unable to read token_info from {} with error {}.".format(
                         self.token_info_path, str(e)
                     )
                 )
@@ -411,7 +420,7 @@ class Auth:
 
                 os.chmod(self.token_info_path, stat.S_IRUSR | stat.S_IWUSR)
             except IOError as e:
-                warnings.warn("failed to save token: {}".format(e))
+                warnings.warn("Failed to save token: {}".format(e))
 
     @property
     def namespace(self):

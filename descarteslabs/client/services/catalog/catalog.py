@@ -1837,4 +1837,4 @@ class Catalog(Service):
         return False, upload_id, None
 
 
-catalog = Catalog()
+catalog = Catalog(auth=Auth(_suppress_warning=True))

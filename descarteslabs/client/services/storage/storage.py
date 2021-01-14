@@ -262,5 +262,5 @@ class Storage(Service):
                     file_obj.write(chunk)
 
 
-storage = Storage()
+storage = Storage(auth=Auth(_suppress_warning=True))
 storage_client = storage
