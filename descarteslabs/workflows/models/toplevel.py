@@ -156,6 +156,7 @@ def publish(
     tags=None,
     docstring="",
     version_labels=None,
+    viz_options=None,
     client=None,
 ):
     """
@@ -249,7 +250,11 @@ def publish(
         client=client,
     )
     vg_or_deco = workflow.set_version(
-        version, obj=obj, docstring=docstring, labels=version_labels
+        version,
+        obj=obj,
+        docstring=docstring,
+        labels=version_labels,
+        viz_options=viz_options,
     )
 
     if callable(vg_or_deco):

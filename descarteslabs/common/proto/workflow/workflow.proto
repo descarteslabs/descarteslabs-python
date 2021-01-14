@@ -110,7 +110,7 @@ message VersionedGraft {
   // Ditto for WMTS service endpoint.
   string wmts_url_template = 13;
 
-  repeated VisualizationParameters visualization_parameters = 14;
+  repeated VizOption viz_options = 14;
 }
 
 message WmtsUrlTemplateResponse {

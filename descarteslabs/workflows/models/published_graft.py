@@ -1,4 +1,4 @@
-from typing import Type, ClassVar, TypeVar, Optional, Tuple
+from typing import ClassVar, List, Optional, Sequence, Type, TypeVar, Tuple
 import json
 
 from google.protobuf import message
@@ -10,6 +10,8 @@ from descarteslabs.workflows.client import get_global_grpc_client, Client
 
 from descarteslabs.workflows.types import Proxytype, Function, proxify, parameter
 from descarteslabs.workflows.types.widget import serialize_params, deserialize_params
+
+from .visualization import VizOption
 
 
 MT = TypeVar("MessageType", bound=message.Message)
@@ -42,7 +44,10 @@ class PublishedGraft:
         cls._message_type = message_type
 
     def __init__(
-        self, proxy_object: Proxytype, client: Optional[Client] = None,
+        self,
+        proxy_object: Proxytype,
+        viz_options: Optional[Sequence[VizOption]] = None,
+        client: Optional[Client] = None,
     ):
         """
         Construct a PublishedGraft object from a proxy object.
@@ -57,6 +62,8 @@ class PublishedGraft:
             The proxy object to publish.
             If it depends on parameters, ``proxy_obj`` is first converted
             to a `.Function` that takes those parameters.
+        viz_options: list, default None
+            List of `~.models.VizOption` visualization option sets.
         client
             Allows you to use a specific client instance with non-default
             auth and parameters
@@ -103,6 +110,11 @@ class PublishedGraft:
             typespec=typespec,
             parameters=proto_params,
         )
+
+        if viz_options:
+            if not isinstance(viz_options, (list, tuple)):
+                viz_options = [viz_options]
+            message.viz_options.extend([v._message for v in viz_options])
 
         self._client = client
         self._object = proxy_object
@@ -200,6 +212,11 @@ class PublishedGraft:
     def client_version(self) -> str:
         "str: The client version the `object` was created with, and will run under."
         return self._message.client_version
+
+    @property
+    def viz_options(self) -> List[VizOption]:
+        """list: `~.models.VizOption` parameter sets for this `VersionedGraft`."""
+        return [VizOption._from_proto(p) for p in self._message.viz_options]
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):

@@ -159,8 +159,7 @@ class Workflow:
             client = get_global_grpc_client()
 
         message = client.api["GetWorkflow"](
-            workflow_pb2.GetWorkflowRequest(id=id),
-            timeout=client.DEFAULT_TIMEOUT,
+            workflow_pb2.GetWorkflowRequest(id=id), timeout=client.DEFAULT_TIMEOUT,
         )
         return cls._from_proto(message, client)
 
@@ -255,8 +254,7 @@ class Workflow:
             client = get_global_grpc_client()
 
         client.api["DeleteWorkflow"](
-            workflow_pb2.DeleteWorkflowRequest(id=id),
-            timeout=client.DEFAULT_TIMEOUT,
+            workflow_pb2.DeleteWorkflowRequest(id=id), timeout=client.DEFAULT_TIMEOUT,
         )
 
     def delete(self, client=None):
@@ -325,7 +323,9 @@ class Workflow:
         self._message = new_message
         return self
 
-    def set_version(self, version, obj=None, docstring="", labels=None):
+    def set_version(
+        self, version, obj=None, docstring="", labels=None, viz_options=None,
+    ):
         """
         Register a version to an object. Can also be used as a decorator.
 
@@ -355,6 +355,8 @@ class Workflow:
             decorated Python function.
         labels: dict, optional
             Key-value pair labels to add to the version.
+        viz_options: list, default None
+            List of `~.models.VizOption` visualization parameter sets.
 
         Returns
         -------
@@ -371,12 +373,20 @@ class Workflow:
                 docstring_ = docstring
                 if not docstring_ and py_func.__doc__:
                     docstring_ = textwrap.dedent(py_func.__doc__)
-                self.set_version(version, wf_func, docstring=docstring_, labels=labels)
+                self.set_version(
+                    version,
+                    wf_func,
+                    docstring=docstring_,
+                    labels=labels,
+                    viz_options=viz_options,
+                )
                 return wf_func  # TODO what should we return here?
 
             return version_decorator
 
-        new_vg = VersionedGraft(version, obj, docstring=docstring, labels=labels)
+        new_vg = VersionedGraft(
+            version, obj, docstring=docstring, labels=labels, viz_options=viz_options,
+        )
 
         for v in self._message.versioned_grafts:
             if v.version == version:

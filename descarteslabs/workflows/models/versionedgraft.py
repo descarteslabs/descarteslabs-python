@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence
 import textwrap
 
 from descarteslabs.common.proto.workflow import workflow_pb2
@@ -8,6 +8,7 @@ from descarteslabs.workflows.types import Proxytype
 from .published_graft import PublishedGraft
 
 from .tile_url import tile_url
+from .visualization import VizOption
 
 
 class VersionedGraft(PublishedGraft, message_type=workflow_pb2.VersionedGraft):
@@ -24,6 +25,7 @@ class VersionedGraft(PublishedGraft, message_type=workflow_pb2.VersionedGraft):
         proxy_object: Proxytype,
         docstring: str = "",
         labels: Optional[Dict[str, str]] = None,
+        viz_options: Optional[Sequence[VizOption]] = None,
         client: Optional[Client] = None,
     ):
         """
@@ -48,6 +50,8 @@ class VersionedGraft(PublishedGraft, message_type=workflow_pb2.VersionedGraft):
             Docstring for the VersionedGraft.
         labels: dict, optional
             Key-value pair labels to add to the VersionedGraft.
+        viz_options: list, default None
+            List of `~.models.VizOption` visualization parameter sets.
         client: `.workflows.client.Client`, optional
             Allows you to use a specific client instance with non-default
             auth and parameters
@@ -56,7 +60,9 @@ class VersionedGraft(PublishedGraft, message_type=workflow_pb2.VersionedGraft):
         -------
         VersionedGraft
         """
-        super().__init__(proxy_object, client=client)
+        super().__init__(
+            proxy_object, viz_options=viz_options, client=client,
+        )
         message = self._message
 
         message.version = version

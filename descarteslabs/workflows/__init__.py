@@ -63,6 +63,7 @@ from .types import (
 from .models import (
     JobComputeError,
     JobTimeoutError,
+    VizOption,
     Workflow,
     VersionedGraft,
     Job,
@@ -156,6 +157,7 @@ __all__ = [
     # .models
     "JobComputeError",
     "JobTimeoutError",
+    "VizOption",
     "Workflow",
     "VersionedGraft",
     "Job",

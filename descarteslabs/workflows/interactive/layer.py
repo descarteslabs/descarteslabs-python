@@ -13,7 +13,7 @@ import traitlets
 from descarteslabs.common.proto.logging import logging_pb2
 
 from descarteslabs.common.graft import client as graft_client
-from ..models import XYZ
+from ..models import VizOption, XYZ
 from ..models.tile_url import validate_scales
 from ..types import Image, ImageCollection
 
@@ -164,12 +164,12 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
 
         with self.hold_url_updates():
             self.set_trait("parameters", parameters.ParameterSet(self, "parameters"))
-            self.set_imagery(imagery, **parameter_overrides)
             self.set_scales(scales, new_colormap=colormap)
             if reduction is not None:
                 self.reduction = reduction
             self.checkerboard = checkerboard
             self.log_level = log_level
+            self.set_imagery(imagery, **parameter_overrides)
 
             self.set_trait("session_id", uuid.uuid4().hex)
             self.set_trait(
@@ -239,8 +239,21 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             if not self.trait_has_value("imagery") or imagery is not self.imagery:
                 # `trait_has_value` is False when the layer is first constructed;
                 # accessing `self.imagery` would cause a validation error in that case.
+                viz_options = [
+                    VizOption(
+                        id="viz1",
+                        bands=None,
+                        checkerboard=self.checkerboard,
+                        colormap=self.colormap,
+                        reduction=self.reduction,
+                        scales=self.get_scales(),
+                    ),
+                ]
+
                 with warnings.catch_warnings(record=True) as xyz_warnings:
-                    xyz = XYZ(imagery, name=self.name, public=False)
+                    xyz = XYZ(
+                        imagery, name=self.name, public=False, viz_options=viz_options,
+                    )
                 self.set_trait("imagery", imagery)
                 self.set_trait("xyz_obj", xyz)
 
@@ -365,8 +378,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         graft = graft_client.apply_graft("XYZ.use", self.xyz_obj.id, *args, **kwargs)
 
         self.set_trait(
-            "value",
-            self.imagery._from_graft(graft),
+            "value", self.imagery._from_graft(graft),
         )
 
     @traitlets.observe("value", "reduction")
@@ -599,6 +611,18 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
                     self.r_max = None
                 if new_colormap is not False:
                     self.colormap = new_colormap
+
+    def get_scales(self):
+        if self.r_min is None:
+            return None
+        if self.colormap:
+            return [[self.r_min, self.r_max]]
+        else:
+            return [
+                [self.r_min, self.r_max],
+                [self.g_min, self.g_max],
+                [self.b_min, self.b_max],
+            ]
 
     def _ipython_display_(self):
         param_set = self.parameters

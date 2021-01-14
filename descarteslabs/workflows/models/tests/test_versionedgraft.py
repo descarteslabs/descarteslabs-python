@@ -9,6 +9,7 @@ from descarteslabs.workflows.types import Int
 from descarteslabs.workflows.client import Client
 from descarteslabs.workflows.cereal import serialize_typespec
 from descarteslabs.workflows.models.versionedgraft import VersionedGraft
+from descarteslabs.workflows.models.visualization import VizOption
 from descarteslabs.workflows.models.tests import utils
 from descarteslabs.workflows import _channel
 
@@ -27,7 +28,17 @@ class TestVersionedGraft(object):
             "github_url": "http://github.com/someurl",
             "project": "some important project",
         }
-        vg = VersionedGraft(version, obj, docstring=docstring, labels=labels)
+        viz_options = [
+            VizOption(
+                id="viz1",
+                bands=["red", "green", "blue"],
+                scales=[[0, 0.4], [0, 0.4], [0, 0.4]],
+            ),
+        ]
+
+        vg = VersionedGraft(
+            version, obj, docstring=docstring, labels=labels, viz_options=viz_options,
+        )
 
         assert vg.version == version
         assert vg.object is obj
@@ -38,6 +49,7 @@ class TestVersionedGraft(object):
         assert vg.channel == _channel.__channel__
         assert vg._message.client_version == __version__
         assert vg.type == type(obj)
+        assert vg.viz_options == viz_options
 
     def test_get(self, stub):
         workflow_id = "foobar"

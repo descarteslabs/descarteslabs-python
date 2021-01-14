@@ -1,7 +1,8 @@
-from typing import Optional, Iterator, Callable, Any
+from typing import Any, Callable, Iterator, Optional, Sequence
 import datetime
 import logging
 import threading
+import warnings
 
 import grpc
 from descarteslabs.common.proto.xyz import xyz_pb2
@@ -17,6 +18,7 @@ from .utils import (
     py_log_level_to_proto_log_level,
 )
 from .tile_url import tile_url
+from .visualization import VizOption
 
 
 class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
@@ -63,6 +65,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
         name: str = "",
         description: str = "",
         public: bool = True,
+        viz_options: Optional[Sequence[VizOption]] = None,
         days_to_expiration: int = None,
         client: Optional[Client] = None,
     ):
@@ -86,6 +89,8 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
         public: bool, default `True`
             If ``True`` then this object is shared and accessible to all,
             otherwise it is private.
+        viz_options: list, default None
+            List of `~.models.VizOption` visualization parameter sets.
         days_to_expiration: int, default None
             Days until this XYZ object will expire.
             If None defaults to 10 days.
@@ -102,7 +107,15 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
         >>> xyz.id # doctest: +SKIP
         '24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6'
         """
-        super().__init__(proxy_object, client=client)
+        if public and viz_options is None:
+            warnings.warn(
+                "viz_options should be provided for public XYZ instances. "
+                "Provide an empty list if you want to override this."
+            )
+
+        super().__init__(
+            proxy_object, viz_options=viz_options, client=client,
+        )
 
         response_message = self._client.api["CreateXYZ"](
             xyz_pb2.CreateXYZRequest(
@@ -112,6 +125,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
                 typespec=self._message.typespec,
                 parameters=self._message.parameters,
                 public=public,
+                viz_options=self._message.viz_options,
                 days_to_expiration=int(days_to_expiration)
                 if days_to_expiration is not None
                 else None,
@@ -210,7 +224,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
             client = get_global_grpc_client()
 
         client.api["DeleteXYZ"](
-            xyz_pb2.DeleteXYZRequest(id=id), timeout=client.DEFAULT_TIMEOUT,
+            xyz_pb2.DeleteXYZRequest(xyz_id=id), timeout=client.DEFAULT_TIMEOUT,
         )
 
     def delete(self, client: Client = None) -> None:
@@ -432,13 +446,13 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
 
     @property
     def id(self) -> str:
-        "str: The globally unique identifier for the XYZ"
+        "str: The globally unique identifier for the `XYZ`"
         return self._message.id
 
     @property
     def created_timestamp(self) -> datetime.datetime:
         """
-        datetime.datetime or None: The UTC date this XYZ was created,
+        datetime.datetime or None: The UTC date this `XYZ` was created,
         or None if it hasn't been saved yet. Cannot be modified.
         """
         return pb_milliseconds_to_datetime(self._message.created_timestamp)
@@ -446,7 +460,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
     @property
     def updated_timestamp(self) -> datetime.datetime:
         """
-        datetime.datetime or None: The UTC date this XYZ was most recently modified,
+        datetime.datetime or None: The UTC date this `XYZ` was most recently modified,
         or None if it hasn't been saved yet. Updated automatically.
         """
         return pb_milliseconds_to_datetime(self._message.updated_timestamp)
@@ -454,7 +468,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
     @property
     def expires_timestamp(self) -> datetime.datetime:
         """
-        datetime.datetime: The UTC date this XYZ will be expired.
+        datetime.datetime: The UTC date this `XYZ` will be expired.
         """
         return pb_timestamp_to_datetime(self._message.expires_timestamp)
 
@@ -465,22 +479,22 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
 
     @property
     def description(self) -> str:
-        "str: A long-form description of this xyz. Markdown is supported."
+        "str: A long-form description of this `XYZ`. Markdown is supported."
         return self._message.description
 
     @property
     def user(self) -> str:
-        "str: The user ID which created this XYZ."
+        "str: The user ID which created this `XYZ`."
         return self._message.user
 
     @property
     def org(self) -> str:
-        "str: The org of the user which created this XYZ."
+        "str: The org of the user which created this `XYZ`."
         return self._message.org
 
     @property
     def public(self) -> bool:
-        "bool: True if xyz is shared."
+        "bool: True if this `XYZ` is shared."
         return self._message.public
 
 

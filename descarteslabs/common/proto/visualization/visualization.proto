@@ -3,7 +3,7 @@ syntax = "proto3";
 
 package descarteslabs.workflows;
 
-message VisualizationParameters {
+message VizOption {
   // name for the set of parameters, must be unique within any list.
   string id = 1;
 
@@ -15,6 +15,10 @@ message VisualizationParameters {
   string colormap = 4;
   // reduction method
   string reduction = 5;
-  // json-encoded list of list of float, item count equal to that of bands.
-  string scales_json = 6;
+  // scales as list of list of float, empty or item count equal to that of bands.
+  message Scales {
+    double min = 1;
+    double max = 2;
+  }
+  repeated Scales scales = 6;
 }

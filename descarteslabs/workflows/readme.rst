@@ -189,6 +189,7 @@ See :ref:`numpy-functions` for a full list of available functions.
   :nosignatures:
 
   ~descarteslabs.workflows.models.Workflow
+  ~descarteslabs.workflows.models.VizOption
   ~descarteslabs.workflows.models.Job
   ~descarteslabs.workflows.models.XYZ
   ~descarteslabs.workflows.models.XYZLogListener

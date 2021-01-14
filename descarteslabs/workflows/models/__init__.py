@@ -1,4 +1,5 @@
 from .exceptions import JobComputeError, JobTimeoutError
+from .visualization import VizOption
 from .workflow import Workflow, wmts_url
 from .versionedgraft import VersionedGraft
 from .job import Job
@@ -9,6 +10,8 @@ __all__ = [
     # .exceptions
     "JobComputeError",
     "JobTimeoutError",
+    # .visualization
+    "VizOption",
     # .workflow
     "Workflow",
     "wmts_url",

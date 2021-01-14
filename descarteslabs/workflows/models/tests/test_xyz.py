@@ -19,6 +19,7 @@ from ..utils import (
     pb_milliseconds_to_datetime,
     py_log_level_to_proto_log_level,
 )
+from ..visualization import VizOption
 from . import utils
 
 
@@ -34,6 +35,7 @@ def mock_CreateXYZ(msg: xyz_pb2.CreateXYZRequest, **kwargs) -> xyz_pb2.XYZ:
         typespec=msg.typespec,
         parameters=msg.parameters,
         public=msg.public,
+        viz_options=msg.viz_options,
         expires_timestamp=expires_timestamp,
         channel=msg.channel,
         client_version=msg.client_version,
@@ -58,6 +60,13 @@ class TestXYZ(object):
         name = "bar"
         desc = "a bar"
         public = True
+        viz_options = [
+            VizOption(
+                id="viz1",
+                bands=["red", "green", "blue"],
+                scales=[[0, 0.4], [0, 0.4], [0, 0.4]],
+            ),
+        ]
 
         # do some hackery to pull out the `self._message` produced by the superclass's `__init__`
         super_message = None
@@ -70,7 +79,7 @@ class TestXYZ(object):
             super_message = self._message
 
         with mock.patch.object(PublishedGraft, "__init__", patched_init):
-            xyz = XYZ(obj, name=name, description=desc)
+            xyz = XYZ(obj, name=name, description=desc, viz_options=viz_options,)
 
         expected_req = xyz_pb2.CreateXYZRequest(
             name=name,
@@ -79,6 +88,7 @@ class TestXYZ(object):
             typespec=super_message.typespec,
             parameters=super_message.parameters,
             public=public,
+            viz_options=[vp._message for vp in viz_options],
             channel=super_message.channel,
             client_version=super_message.client_version,
         )
@@ -92,6 +102,7 @@ class TestXYZ(object):
         assert xyz.name == name
         assert xyz.description == desc
         assert xyz.expires_timestamp == datetime.datetime(2003, 1, 2, 4, 5, 6, 789000)
+        assert xyz.viz_options == viz_options
 
     def test_get(self, stub):
         message = "foo"
