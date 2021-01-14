@@ -66,7 +66,9 @@ class TestJob:
 
         assert job._message is response_message
         assert isinstance(job._client, Client)
-        assert isinstance(job._object, types.Function[{param._name: type(param)}, type(obj)])
+        assert isinstance(
+            job._object, types.Function[{param._name: type(param)}, type(obj)]
+        )
         assert job._arguments is None
 
         rpc = stub.return_value.CreateJob
@@ -392,6 +394,36 @@ class TestJob:
             NotImplementedError, match="was created by client version 'foo'"
         ):
             job.resubmit()
+
+    def test_resubmit(self, stub):
+        rpc = stub.return_value.CreateJob
+        rpc.side_effect = lambda req, **kwargs: job_pb2.Job(
+            **{field: getattr(req, field) for field in req.DESCRIPTOR.fields_by_name}
+        )
+
+        obj = types.Int(1) + types.parameter("bar", types.Int)
+
+        job = Job(
+            obj,
+            bar=2,
+            format={"type": "pyarrow", "compression": "brotli"},
+            destination="email",
+            cache=False,
+            _ruster=True,
+            _trace=True,
+        )
+
+        new_job = job.resubmit()
+
+        assert new_job.object is job.object
+        assert new_job.geoctx is job.geoctx
+        assert new_job.format == job.format
+        assert new_job.destination == job.destination
+        assert new_job._client is job._client
+        assert new_job.cache_enabled == job.cache_enabled
+        assert new_job._message.no_ruster == job._message.no_ruster
+        assert new_job._message.trace == job._message.trace
+        assert new_job.arguments == job.arguments
 
     def test_wait_success(self, stub):
         id_ = "foo"

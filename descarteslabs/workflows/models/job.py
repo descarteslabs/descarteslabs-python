@@ -274,7 +274,7 @@ class Job:
             destination=self.destination,
             client=self._client,
             cache=self.cache_enabled,
-            _ruster=self._message.ruster,
+            _ruster=not self._message.no_ruster,
             _trace=self._message.trace,
             **self.arguments,
         )
