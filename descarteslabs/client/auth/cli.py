@@ -17,6 +17,8 @@ import os
 import stat
 import json
 import six
+import binascii
+
 from six.moves import input
 
 from descarteslabs.client.auth.auth import (
@@ -38,34 +40,63 @@ def auth_handler(args):
 
         print("Follow this link to login {}".format(LOGIN_URL))
 
-        s = input("...then come back here and paste the generated token: ")
-        if isinstance(s, six.text_type):
-            s = s.encode("utf-8")
+        while True:
+            try:
+                s = input(
+                    "...then come back here and paste the generated token (^C to exit): "
+                )
+            except KeyboardInterrupt:
+                print("\nExiting without logging in")
+                break
 
-        if s:
+            if isinstance(s, six.text_type):
+                s = s.encode("utf-8")
 
-            token_info = json.loads(base64url_decode(s).decode("utf-8"))
-            if (
-                "refresh_token" not in token_info
-            ):  # TODO(justin) legacy for previous IDP
-                token_info["refresh_token"] = token_info.get("client_secret")
+            if s:
+                try:
+                    json_data = base64url_decode(s).decode("utf-8")
+                except (UnicodeDecodeError, binascii.Error):
+                    print(
+                        "You entered the wrong token. Please go to {} to retrieve your token".format(
+                            LOGIN_URL
+                        )
+                    )
+                    continue
 
-            token_info_directory = os.path.dirname(DEFAULT_TOKEN_INFO_PATH)
-            makedirs_if_not_exists(token_info_directory)
+                try:
+                    token_info = json.loads(json_data)
+                except (UnicodeDecodeError, json.JSONDecodeError):
+                    print(
+                        "You entered the wrong token. Please go to {} to retrieve your token".format(
+                            LOGIN_URL
+                        )
+                    )
+                    continue
 
-            os.chmod(token_info_directory, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+                if (
+                    "refresh_token" not in token_info
+                ):  # TODO(justin) legacy for previous IDP
+                    token_info["refresh_token"] = token_info.get("client_secret")
 
-            with open(DEFAULT_TOKEN_INFO_PATH, "w+") as fp:
-                json.dump(token_info, fp)
+                token_info_directory = os.path.dirname(DEFAULT_TOKEN_INFO_PATH)
+                makedirs_if_not_exists(token_info_directory)
 
-            os.chmod(DEFAULT_TOKEN_INFO_PATH, stat.S_IRUSR | stat.S_IWUSR)
+                os.chmod(
+                    token_info_directory, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+                )
 
-            # Get a fresh Auth token
-            auth = Auth()
+                with open(DEFAULT_TOKEN_INFO_PATH, "w+") as fp:
+                    json.dump(token_info, fp)
 
-            name = auth.payload["name"]
+                os.chmod(DEFAULT_TOKEN_INFO_PATH, stat.S_IRUSR | stat.S_IWUSR)
 
-            print("Welcome, %s!" % name)
+                # Get a fresh Auth token
+                auth = Auth()
+
+                name = auth.payload["name"]
+
+                print("Welcome, %s!" % name)
+                break
 
     if args.command == "token":
         print(auth.token)
