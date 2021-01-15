@@ -110,10 +110,10 @@ class VizOption:
 
     def __repr__(self) -> str:
         return f"""VizOption(
-    id={self.id},
-    bands={self.bands},
-    checkerboard={self.checkerboard},
-    colormap={self.colormap},
-    reduction={self.reduction},
-    scales={self.scales}
+    id={self.id!r},
+    bands={self.bands!r},
+    checkerboard={self.checkerboard!r},
+    colormap={self.colormap!r},
+    reduction={self.reduction!r},
+    scales={self.scales!r}
 )"""
