@@ -412,7 +412,7 @@ class BaseArray(NumPyMixin, Proxytype):
         mask=False,
         fill_value=1e+20)
         """
-        return self._stats_return_type(axis)._from_apply("wf.median", self, axis=axis)
+        return _delayed_numpy().median(self, axis)
 
     def sum(self, axis=None):
         """ Sum along a given axis.
