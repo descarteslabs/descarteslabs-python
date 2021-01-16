@@ -61,7 +61,9 @@ class VersionedGraft(PublishedGraft, message_type=workflow_pb2.VersionedGraft):
         VersionedGraft
         """
         super().__init__(
-            proxy_object, viz_options=viz_options, client=client,
+            proxy_object,
+            viz_options=viz_options,
+            client=client,
         )
         message = self._message
 
@@ -144,12 +146,18 @@ class VersionedGraft(PublishedGraft, message_type=workflow_pb2.VersionedGraft):
         return """\
 VersionedGraft: {self.version}
     - {type_line}
-    - labels: {self.labels}
     - channel: {self.channel}
+    - labels: {self.labels}
+    - viz_options: {viz_options}
     {docstring}
 """.format(
             self=self,
             type_line=type_line,
+            viz_options=(
+                ", ".join(repr(viz_option.id) for viz_option in self.viz_options)
+                if self.viz_options
+                else "[]"
+            ),
             docstring=textwrap.indent(self.docstring, "    "),
         )
 
