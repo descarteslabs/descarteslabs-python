@@ -1,4 +1,3 @@
-import json
 import datetime
 import re
 
@@ -51,6 +50,7 @@ class VersionGraftWidget(ipywidgets.HTML):
         <h2>Version {vg.version}</h2>
         <p>{type_line}</p>
         <p><b>Labels:</b> <code>{vg.labels!r}</code></p>
+        <p><b>Viz options:</b> <code>{[vo.id for vo in vg.viz_options]!r}</code></p>
         <hr>
         <pre>
         {vg.docstring}
@@ -353,19 +353,13 @@ class WorkflowsBrowser(ipywidgets.VBox):
         The `~.Workflow` must be one of these types:
 
         * `~.geospatial.Image`
-        * `~.ImageCollection`, in which case it's mosaicked
+        * `~.ImageCollection`
         * `~.Function`, in which case it must return an `~.geospatial.Image` or `~.ImageCollection`,
           and only take `~.Int`, `~.Float`, `~.Str`, `~.Bool`, or `~.Datetime` as parameters.
           A widget will be added to the map to control the function arguments interactively.
 
-        These `~.VersionedGraft.labels` set on the version will customize the map:
-
-        * ``default_bands``: space-separated string, like ``"red green blue"``.
-          These bands will be picked from the `~.geospatial.Image` before displaying.
-        * ``colormap``: str, like ``"viridis"``.
-          This colormap will be applied to the layer.
-        * ``scales``: JSON-encoded list, like ``"[[0, 0.5], [0, 0.5], [0, 0.5]]"``.
-          This will be JSON-decoded, and used as the ``scales=`` argument to `~.Image.visualize`.
+        If the version has `~.VersionedGraft.viz_options`, the first `VizOption` will be used
+        to style the layer on the map.
 
         If ``self.map`` is None, the layer will be added to ``wf.map``, otherwise to ``self.map``.
 
@@ -411,13 +405,21 @@ class WorkflowsBrowser(ipywidgets.VBox):
             obj = obj(*vg.params)
 
         if isinstance(obj, (types.Image, types.ImageCollection)):
-            # NOTE(gabe): we LBYL for all these because accessing a missing key on the
-            # fake proto dict object inserts it (like `setdefault`, not `get`), mutating `vg.labels` :(
-            if "default_bands" in vg.labels:
-                obj = obj.pick_bands(vg.labels["default_bands"])
+            if vg.viz_options:
+                viz_option = vg.viz_options[0]
 
-            colormap = vg.labels["colormap"] if "colormap" in vg.labels else None
-            scales = json.loads(vg.labels["scales"]) if "scales" in vg.labels else None
+                if viz_option.bands:
+                    obj = obj.pick_bands(viz_option.bands)
+                visualize_kwargs = {
+                    "checkerboard": viz_option.checkerboard,
+                    "colormap": viz_option.colormap,
+                    "scales": viz_option.scales,
+                }
+                if isinstance(obj, types.ImageCollection):
+                    visualize_kwargs["reduction"] = viz_option.reduction
+
+            else:
+                visualize_kwargs = {}
 
             map_ = self.map
             if isinstance(map_, MapApp):
@@ -425,9 +427,8 @@ class WorkflowsBrowser(ipywidgets.VBox):
 
             lyr = obj.visualize(
                 flow.name + ":" + vg.version,
-                colormap=colormap,
-                scales=scales,
                 map=map_,
+                **visualize_kwargs,
                 **param_overrides,
             )
 
