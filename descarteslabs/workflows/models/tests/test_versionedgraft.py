@@ -37,7 +37,11 @@ class TestVersionedGraft(object):
         ]
 
         vg = VersionedGraft(
-            version, obj, docstring=docstring, labels=labels, viz_options=viz_options,
+            version,
+            obj,
+            docstring=docstring,
+            labels=labels,
+            viz_options=viz_options,
         )
 
         assert vg.version == version
@@ -103,13 +107,17 @@ class TestVersionedGraft(object):
             vg.wmts_url()
 
         wmts_url_template = (
-            vg._message.wmts_url_template
-        ) = "http://base.net/wmts/workflow/wid/1.0.1/1.0.0/WMTSCapabilities.xml?tile_matrix_sets={TileMatrixSet}"
-
-        assert vg.wmts_url() == wmts_url_template.format(TileMatrixSet="")
-        assert vg.wmts_url(tile_matrix_sets="utm") == wmts_url_template.format(
-            TileMatrixSet="utm"
+            "http://base.net/wmts/workflow/wid/1.0.1/1.0.0/WMTSCapabilities.xml"
         )
-        assert vg.wmts_url(
-            tile_matrix_sets=["EPSG:4326", "EPSG:3857"]
-        ) == wmts_url_template.format(TileMatrixSet="EPSG:4326,EPSG:3857")
+        vg._message.wmts_url_template = wmts_url_template
+
+        assert vg.wmts_url() == wmts_url_template
+        assert (
+            vg.wmts_url(tile_matrix_sets="utm")
+            == wmts_url_template + "?tile_matrix_sets=utm"
+        )
+        assert (
+            vg.wmts_url(tile_matrix_sets=["EPSG:4326", "EPSG:3857"])
+            == wmts_url_template
+            + "?tile_matrix_sets=EPSG%3A4326&tile_matrix_sets=EPSG%3A3857"
+        )

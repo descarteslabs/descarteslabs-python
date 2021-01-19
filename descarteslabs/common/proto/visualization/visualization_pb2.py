@@ -18,7 +18,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='descarteslabs.workflows',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n<descarteslabs/common/proto/visualization/visualization.proto\x12\x17\x64\x65scarteslabs.workflows\"\x80\x02\n\tVizOption\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n\x05\x62\x61nds\x18\x02 \x03(\tR\x05\x62\x61nds\x12\"\n\x0c\x63heckerboard\x18\x03 \x01(\x08R\x0c\x63heckerboard\x12\x1a\n\x08\x63olormap\x18\x04 \x01(\tR\x08\x63olormap\x12\x1c\n\treduction\x18\x05 \x01(\tR\treduction\x12\x41\n\x06scales\x18\x06 \x03(\x0b\x32).descarteslabs.workflows.VizOption.ScalesR\x06scales\x1a,\n\x06Scales\x12\x10\n\x03min\x18\x01 \x01(\x01R\x03min\x12\x10\n\x03max\x18\x02 \x01(\x01R\x03maxb\x06proto3'
+  serialized_pb=b'\n<descarteslabs/common/proto/visualization/visualization.proto\x12\x17\x64\x65scarteslabs.workflows\"\xa2\x02\n\tVizOption\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n\x05\x62\x61nds\x18\x02 \x03(\tR\x05\x62\x61nds\x12\"\n\x0c\x63heckerboard\x18\x03 \x01(\x08R\x0c\x63heckerboard\x12\x1a\n\x08\x63olormap\x18\x04 \x01(\tR\x08\x63olormap\x12\x1c\n\treduction\x18\x05 \x01(\tR\treduction\x12\x41\n\x06scales\x18\x06 \x03(\x0b\x32).descarteslabs.workflows.VizOption.ScalesR\x06scales\x12 \n\x0b\x64\x65scription\x18\x07 \x01(\tR\x0b\x64\x65scription\x1a,\n\x06Scales\x12\x10\n\x03min\x18\x01 \x01(\x01R\x03min\x12\x10\n\x03max\x18\x02 \x01(\x01R\x03maxb\x06proto3'
 )
 
 
@@ -57,8 +57,8 @@ _VIZOPTION_SCALES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=302,
-  serialized_end=346,
+  serialized_start=336,
+  serialized_end=380,
 )
 
 _VIZOPTION = _descriptor.Descriptor(
@@ -110,6 +110,13 @@ _VIZOPTION = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='scales', file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='description', full_name='descarteslabs.workflows.VizOption.description', index=6,
+      number=7, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='description', file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -123,7 +130,7 @@ _VIZOPTION = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=90,
-  serialized_end=346,
+  serialized_end=380,
 )
 
 _VIZOPTION_SCALES.containing_type = _VIZOPTION

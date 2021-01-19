@@ -21,4 +21,7 @@ message VizOption {
     double max = 2;
   }
   repeated Scales scales = 6;
+
+  // description for human consumption.
+  string description = 7;
 }

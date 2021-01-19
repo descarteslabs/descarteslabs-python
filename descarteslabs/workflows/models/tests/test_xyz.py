@@ -79,7 +79,12 @@ class TestXYZ(object):
             super_message = self._message
 
         with mock.patch.object(PublishedGraft, "__init__", patched_init):
-            xyz = XYZ(obj, name=name, description=desc, viz_options=viz_options,)
+            xyz = XYZ(
+                obj,
+                name=name,
+                description=desc,
+                viz_options=viz_options,
+            )
 
         expected_req = xyz_pb2.CreateXYZRequest(
             name=name,
@@ -94,7 +99,9 @@ class TestXYZ(object):
         )
 
         CreateXYZ.assert_called_once_with(
-            expected_req, timeout=client.Client.DEFAULT_TIMEOUT, metadata=mock.ANY,
+            expected_req,
+            timeout=client.Client.DEFAULT_TIMEOUT,
+            metadata=mock.ANY,
         )
 
         assert xyz._message == mock_CreateXYZ(expected_req)
@@ -190,16 +197,20 @@ class TestXYZ(object):
         obj = utils.Foo(1)
         xyz = XYZ(obj)
         wmts_url_template = (
-            xyz._message.wmts_url_template
-        ) = "http://base.net/wmts/xyz/mclovin/1.0.0/WMTSCapabilities.xml?tile_matrix_sets={TileMatrixSet}"
-
-        assert xyz.wmts_url() == wmts_url_template.format(TileMatrixSet="")
-        assert xyz.wmts_url(tile_matrix_sets="utm") == wmts_url_template.format(
-            TileMatrixSet="utm"
+            "http://base.net/wmts/xyz/mclovin/1.0.0/WMTSCapabilities.xml"
         )
-        assert xyz.wmts_url(
-            tile_matrix_sets=["EPSG:4326", "EPSG:3857"]
-        ) == wmts_url_template.format(TileMatrixSet="EPSG:4326,EPSG:3857")
+        xyz._message.wmts_url_template = wmts_url_template
+
+        assert xyz.wmts_url() == wmts_url_template
+        assert (
+            xyz.wmts_url(tile_matrix_sets="utm")
+            == wmts_url_template + "?tile_matrix_sets=utm"
+        )
+        assert (
+            xyz.wmts_url(tile_matrix_sets=["EPSG:4326", "EPSG:3857"])
+            == wmts_url_template
+            + "?tile_matrix_sets=EPSG%3A4326&tile_matrix_sets=EPSG%3A3857"
+        )
 
 
 @mock.patch("descarteslabs.workflows.models.xyz._tile_log_stream")

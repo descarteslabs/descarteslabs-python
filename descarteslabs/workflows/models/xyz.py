@@ -2,6 +2,7 @@ from typing import Any, Callable, Iterator, Optional, Sequence
 import datetime
 import logging
 import threading
+from urllib.parse import urlencode
 import warnings
 
 import grpc
@@ -114,7 +115,9 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
             )
 
         super().__init__(
-            proxy_object, viz_options=viz_options, client=client,
+            proxy_object,
+            viz_options=viz_options,
+            client=client,
         )
 
         response_message = self._client.api["CreateXYZ"](
@@ -224,7 +227,8 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
             client = get_global_grpc_client()
 
         client.api["DeleteXYZ"](
-            xyz_pb2.DeleteXYZRequest(xyz_id=id), timeout=client.DEFAULT_TIMEOUT,
+            xyz_pb2.DeleteXYZRequest(xyz_id=id),
+            timeout=client.DEFAULT_TIMEOUT,
         )
 
     def delete(self, client: Client = None) -> None:
@@ -359,25 +363,38 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
             **arguments,
         )
 
-    def wmts_url(self, tile_matrix_sets=None) -> str:
+    def wmts_url(self, tile_matrix_sets=None, dimensions=None) -> str:
         """
         Get the WMTS endpoint which gives access to this XYZ object.
 
         Parameters
         ----------
-        tile_matrix_sets: str | list(str)
+        tile_matrix_sets: str or list, optional
             Desired tile matrix sets. Defaults to EPSG:4326 and EPSG:3857.
+        dimensions: bool, optional
+            If True, then provide dimensions definitions to WMTS. If
+            False, then generate a layer for each possible dimensions
+            attribute combination. If not specified, the WMTS service itself
+            will determine how to handle dimensions (currently it does
+            not provide dimensions definitions).
 
         Returns
         -------
         wmts_url: str
             The URL for the WMTS service endpoint corresponding to this XYZ object.
         """
-        if not tile_matrix_sets:
-            tile_matrix_sets = ""
-        elif isinstance(tile_matrix_sets, (list, tuple)):
-            tile_matrix_sets = ",".join(tile_matrix_sets)
-        return self._message.wmts_url_template.format(TileMatrixSet=tile_matrix_sets)
+        url_params = {}
+
+        if tile_matrix_sets:
+            url_params["tile_matrix_sets"] = tile_matrix_sets
+        if dimensions is not None:
+            url_params["dimensions"] = "true" if dimensions else "false"
+
+        wmts_url = self._message.wmts_url_template
+        if url_params:
+            wmts_url = f"{wmts_url}?{urlencode(url_params, doseq=True)}"
+
+        return wmts_url
 
     def iter_tile_logs(
         self,

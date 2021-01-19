@@ -217,16 +217,43 @@ class TestWorkflow(object):
         assert wf.created_timestamp == pb_milliseconds_to_datetime(100)
         assert wf.updated_timestamp == pb_milliseconds_to_datetime(200)
 
+    def test_workflow_wmts_url(self, stub):
+        wf = Workflow(
+            id="bob@gmail.com:test",
+            title="test",
+            description="a test",
+            public=True,
+            labels={"foo": "bar"},
+            tags=["foo", "bar"],
+        )
+
+        wmts_url_template = "http://base.net/wmts/workflow/bob@gmail.com:test/1.0.0/WMTSCapabilities.xml"
+        wf._message.wmts_url_template = wmts_url_template
+
+        assert wf.wmts_url() == wmts_url_template
+        assert (
+            wf.wmts_url(tile_matrix_sets="utm")
+            == wmts_url_template + "?tile_matrix_sets=utm"
+        )
+        assert (
+            wf.wmts_url(tile_matrix_sets=["EPSG:4326", "EPSG:3857"])
+            == wmts_url_template
+            + "?tile_matrix_sets=EPSG%3A4326&tile_matrix_sets=EPSG%3A3857"
+        )
+
     def test_wmts_url(self, stub):
-        wmts_url_template = "http://base.net/wmts/workflow/1.0.0/WMTSCapabilities.xml?tile_matrix_sets={TileMatrixSet}"
+        wmts_url_template = "http://base.net/wmts/workflow/1.0.0/WMTSCapabilities.xml"
         response = workflow_pb2.WmtsUrlTemplateResponse()
         response.wmts_url_template = wmts_url_template
         stub.return_value.GetWmtsUrlTemplate.return_value = response
 
-        assert wmts_url() == wmts_url_template.format(TileMatrixSet="")
-        assert wmts_url(tile_matrix_sets="utm") == wmts_url_template.format(
-            TileMatrixSet="utm"
+        assert wmts_url() == wmts_url_template
+        assert (
+            wmts_url(tile_matrix_sets="utm")
+            == wmts_url_template + "?tile_matrix_sets=utm"
         )
-        assert wmts_url(
-            tile_matrix_sets=["EPSG:4326", "EPSG:3857"]
-        ) == wmts_url_template.format(TileMatrixSet="EPSG:4326,EPSG:3857")
+        assert (
+            wmts_url(tile_matrix_sets=["EPSG:4326", "EPSG:3857"])
+            == wmts_url_template
+            + "?tile_matrix_sets=EPSG%3A4326&tile_matrix_sets=EPSG%3A3857"
+        )

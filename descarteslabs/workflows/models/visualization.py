@@ -1,4 +1,4 @@
-from typing import List, Sequence, Union
+from typing import List, Optional, Sequence, Union
 
 from descarteslabs.common.proto.visualization import visualization_pb2
 
@@ -11,9 +11,10 @@ class VizOption:
         id: str,
         bands: Union[str, Sequence[str]],
         checkerboard: bool = False,
-        colormap: str = None,
+        colormap: Optional[str] = None,
         reduction: str = "mosaic",
-        scales: Sequence[Sequence[float]] = None,
+        scales: Optional[Sequence[Sequence[float]]] = None,
+        description: str = "",
     ):
         """
         Construct a VizOption instance.
@@ -25,21 +26,27 @@ class VizOption:
         bands: str or list
             List of band names to render. Can be a list of band names, or a string
             of space separated band names.
-        checkerboard: bool
+        checkerboard: bool, default False
             True if missing pixels should hold checkerboard pattern. Defaults to False.
-        colormap: str
+        colormap: str, optional
             Name of colormap to use if single band. Defaults to None.
-        reduction: str
+        reduction: str, default "mosaic".
             Name of reduction operation. Defaults to mosaic.
-        scales: list
+        scales: list, optional
             List of list of floats representing scales for rendering bands,
             must have same length as bands, or None for automatic scaling.
             Defaults to None.
+        description: str, optional
+            Description of the visualization option.
         """
         if isinstance(bands, str):
             bands = [b for b in bands.split(" ") if b]
         message = visualization_pb2.VizOption(
-            id=id, bands=bands, checkerboard=checkerboard, reduction=reduction,
+            id=id,
+            bands=bands,
+            checkerboard=checkerboard,
+            reduction=reduction,
+            description=description,
         )
         if colormap:
             # validate that it is supported
@@ -53,7 +60,10 @@ class VizOption:
         self._message = message
 
     @classmethod
-    def _from_proto(cls, message: visualization_pb2.VizOption,) -> "VizOption":
+    def _from_proto(
+        cls,
+        message: visualization_pb2.VizOption,
+    ) -> "VizOption":
         """
         Low-level constructor for a `VizOption` object from a Protobuf message.
 
@@ -105,6 +115,11 @@ class VizOption:
         scales = self._message.scales
         return [[s.min, s.max] for s in scales] if scales else None
 
+    @property
+    def description(self) -> str:
+        """Get the description of the visualization option."""
+        return self._message.description
+
     def __eq__(self, other) -> bool:
         return isinstance(other, type(self)) and self._message == other._message
 
@@ -115,5 +130,6 @@ class VizOption:
     checkerboard={self.checkerboard!r},
     colormap={self.colormap!r},
     reduction={self.reduction!r},
-    scales={self.scales!r}
+    scales={self.scales!r},
+    description={self.description!r}
 )"""

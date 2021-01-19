@@ -1,5 +1,6 @@
 from typing import Tuple
 import textwrap
+from urllib.parse import urlencode
 
 from descarteslabs.common.proto.workflow import workflow_pb2
 
@@ -159,7 +160,8 @@ class Workflow:
             client = get_global_grpc_client()
 
         message = client.api["GetWorkflow"](
-            workflow_pb2.GetWorkflowRequest(id=id), timeout=client.DEFAULT_TIMEOUT,
+            workflow_pb2.GetWorkflowRequest(id=id),
+            timeout=client.DEFAULT_TIMEOUT,
         )
         return cls._from_proto(message, client)
 
@@ -254,7 +256,8 @@ class Workflow:
             client = get_global_grpc_client()
 
         client.api["DeleteWorkflow"](
-            workflow_pb2.DeleteWorkflowRequest(id=id), timeout=client.DEFAULT_TIMEOUT,
+            workflow_pb2.DeleteWorkflowRequest(id=id),
+            timeout=client.DEFAULT_TIMEOUT,
         )
 
     def delete(self, client=None):
@@ -324,7 +327,12 @@ class Workflow:
         return self
 
     def set_version(
-        self, version, obj=None, docstring="", labels=None, viz_options=None,
+        self,
+        version,
+        obj=None,
+        docstring="",
+        labels=None,
+        viz_options=None,
     ):
         """
         Register a version to an object. Can also be used as a decorator.
@@ -385,7 +393,11 @@ class Workflow:
             return version_decorator
 
         new_vg = VersionedGraft(
-            version, obj, docstring=docstring, labels=labels, viz_options=viz_options,
+            version,
+            obj,
+            docstring=docstring,
+            labels=labels,
+            viz_options=viz_options,
         )
 
         for v in self._message.versioned_grafts:
@@ -633,36 +645,54 @@ Workflow: "{self.title}"
             description=textwrap.indent(self.description, "    "),
         )
 
-    def wmts_url(self, tile_matrix_sets=None) -> str:
+    def wmts_url(self, tile_matrix_sets=None, dimensions=None) -> str:
         """
         Get the WMTS endpoint which gives access to this workflow.
 
         Parameters
         ----------
-        tile_matrix_sets: str | list(str)
+        tile_matrix_sets: str or list, optional
             Desired tile matrix sets. Defaults to EPSG:4326 and EPSG:3857.
+        dimensions: bool, optional
+            If True, then provide dimensions definitions to WMTS. If
+            False, then generate a layer for each possible dimensions
+            attribute combination. If not specified, the WMTS service itself
+            will determine how to handle dimensions (currently it does
+            not provide dimensions definitions).
 
         Returns
         -------
         wmts_url: str
             The URL for the WMTS service endpoint corresponding to this workflow.
         """
-        if not tile_matrix_sets:
-            tile_matrix_sets = ""
-        elif isinstance(tile_matrix_sets, (list, tuple)):
-            tile_matrix_sets = ",".join(tile_matrix_sets)
-        return self._message.wmts_url_template.format(TileMatrixSet=tile_matrix_sets)
+        url_params = {}
+
+        if tile_matrix_sets:
+            url_params["tile_matrix_sets"] = tile_matrix_sets
+        if dimensions is not None:
+            url_params["dimensions"] = "true" if dimensions else "false"
+
+        wmts_url = self._message.wmts_url_template
+        if url_params:
+            wmts_url = f"{wmts_url}?{urlencode(url_params, doseq=True)}"
+
+        return wmts_url
 
 
-def wmts_url(tile_matrix_sets=None, client=None) -> str:
+def wmts_url(tile_matrix_sets=None, dimensions=None, client=None) -> str:
     """
     Get the WMTS endpoint which gives access to all workflows accessible to this user.
 
     Parameters
     ----------
-    tile_matrix_sets: str | list(str)
+    tile_matrix_sets: str or list, optional
         Desired tile matrix sets. Defaults to EPSG:4326 and EPSG:3857.
-
+    dimensions: bool, optional
+        If True, then provide dimensions definitions to WMTS. If
+        False, then generate a layer for each possible dimensions
+        attribute combination. If not specified, the WMTS service itself
+        will determine how to handle dimensions (currently it does
+        not provide dimensions definitions).
     client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
         auth and parameters.
@@ -679,8 +709,15 @@ def wmts_url(tile_matrix_sets=None, client=None) -> str:
         workflow_pb2.Empty(), timeout=client.DEFAULT_TIMEOUT
     )
 
-    if not tile_matrix_sets:
-        tile_matrix_sets = ""
-    elif isinstance(tile_matrix_sets, (list, tuple)):
-        tile_matrix_sets = ",".join(tile_matrix_sets)
-    return response.wmts_url_template.format(TileMatrixSet=tile_matrix_sets)
+    url_params = {}
+
+    if tile_matrix_sets:
+        url_params["tile_matrix_sets"] = tile_matrix_sets
+    if dimensions is not None:
+        url_params["dimensions"] = "true" if dimensions else "false"
+
+    wmts_url = response.wmts_url_template
+    if url_params:
+        wmts_url = f"{wmts_url}?{urlencode(url_params, doseq=True)}"
+
+    return wmts_url

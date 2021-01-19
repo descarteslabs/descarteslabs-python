@@ -1,5 +1,6 @@
 from typing import Dict, Optional, Sequence
 import textwrap
+from urllib.parse import urlencode
 
 from descarteslabs.common.proto.workflow import workflow_pb2
 from descarteslabs.workflows.client import get_global_grpc_client, Client
@@ -274,22 +275,28 @@ VersionedGraft: {self.version}
             **arguments,
         )
 
-    def wmts_url(self, tile_matrix_sets=None) -> str:
+    def wmts_url(self, tile_matrix_sets=None, dimensions=None) -> str:
         """
         Get the WMTS endpoint which gives access to this versioned graft.
 
         Parameters
         ----------
-        tile_matrix_sets: str | list(str)
+        tile_matrix_sets: str or list, optional
             Desired tile matrix sets. Defaults to EPSG:4326 and EPSG:3857.
+        dimensions: bool, optional
+            If True, then provide dimensions definitions to WMTS. If
+            False, then generate a layer for each possible dimensions
+            attribute combination. If not specified, the WMTS service itself
+            will determine how to handle dimensions (currently it does
+            not provide dimensions definitions).
 
         Returns
         -------
         wmts_url: str
             The URL for the WMTS service endpoint corresponding to this versioned graft.
         """
-        wmts_url_template = self._message.wmts_url_template
-        if not wmts_url_template:
+        wmts_url = self._message.wmts_url_template
+        if not wmts_url:
             raise ValueError(
                 "This VersionedGraft object has not been persisted yet. "
                 "Call .save() on the Workflow that contains it, then call "
@@ -297,8 +304,15 @@ VersionedGraft: {self.version}
                 "copy of this VersionedGraft."
             )
 
-        if not tile_matrix_sets:
-            tile_matrix_sets = ""
-        elif isinstance(tile_matrix_sets, (list, tuple)):
-            tile_matrix_sets = ",".join(tile_matrix_sets)
-        return wmts_url_template.format(TileMatrixSet=tile_matrix_sets)
+        url_params = {}
+
+        if tile_matrix_sets:
+            url_params["tile_matrix_sets"] = tile_matrix_sets
+        if dimensions is not None:
+            url_params["dimensions"] = "true" if dimensions else "false"
+
+        wmts_url = self._message.wmts_url_template
+        if url_params:
+            wmts_url = f"{wmts_url}?{urlencode(url_params, doseq=True)}"
+
+        return wmts_url
