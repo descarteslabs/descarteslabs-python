@@ -66,7 +66,7 @@ class Print:
         self.print(*args, **kwargs)
 
 
-PAYLOAD = "{'name': 'Some Body', 'groups': ['public'], 'org': 'someorg', 'email': 'some_body@someorg.com', 'email_verified': True, 'iss': 'https://descarteslabs.auth0.com/', 'sub': 'google-oauth2|202801449858648638555', 'aud': 'ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c', 'exp': 1610770917, 'iat': 1610734917, 'azp': 'ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c'}"
+PAYLOAD = "{'name': 'Some Body', 'groups': ['public'], 'org': 'someorg', 'email': 'some_body@someorg.com', 'email_verified': True, 'iss': 'https://descarteslabs.auth0.com/', 'sub': 'google-oauth2|202801449858648638555', 'aud': 'ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c', 'exp': 1610770917, 'iat': 1610734917, 'azp': 'ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c'}"  # noqa: E501
 
 
 class Open:
@@ -117,10 +117,19 @@ class TestAuth(unittest.TestCase):
         CLIENT_SECRET = "CLIENT_SECRET"
 
         if CLIENT_ID in os.environ:
+            self.client_id = os.environ["CLIENT_ID"]
             del os.environ["CLIENT_ID"]
 
         if CLIENT_SECRET in os.environ:
+            self.client_secret = os.environ["CLIENT_SECRET"]
             del os.environ["CLIENT_SECRET"]
+
+    def tearDown(self):
+        if hasattr(self, "client_id"):
+            os.environ["CLIENT_ID"] = self.client_id
+
+        if hasattr(self, "client_secret"):
+            os.environ["CLIENT_SECRET"] = self.client_secret
 
     # Test simple bad input
     @patch("descarteslabs.client.auth.cli.input", Input("foo", "foo.bar"))
