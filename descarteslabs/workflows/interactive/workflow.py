@@ -381,8 +381,10 @@ class WorkflowsBrowser(ipywidgets.VBox):
         if not (flow and vg):
             raise ValueError("No Workflow and version currently selected")
 
-        # TODO: support adding to map multiple times without reusing same param objects
-        obj = vg.object
+        params = vg._make_params()
+        # ^ NOTE(gabe): use `._make_params()` instead of `.params` so we get new params objects every time,
+        # meaning new widget instances. otherwise, if the object was added to the map multiple times,
+        # the widgets for every layer would seem to be linked (because they'd actually be the same objects).
 
         try:
             param_overrides = {
@@ -395,14 +397,15 @@ class WorkflowsBrowser(ipywidgets.VBox):
                         else {}
                     ),
                 )
-                for p in vg.params
+                for p in params
                 if not hasattr(p, "widget")
             }
         except KeyError as e:
             raise TypeError(f"Cannot create interactive control for type {e}")
 
+        obj = vg.object
         if isinstance(obj, types.Function):
-            obj = obj(*vg.params)
+            obj = obj(*params)
 
         if isinstance(obj, (types.Image, types.ImageCollection)):
             if vg.viz_options:
@@ -425,25 +428,31 @@ class WorkflowsBrowser(ipywidgets.VBox):
             if isinstance(map_, MapApp):
                 map_ = map_.map
 
+            # if layer name already exists, don't overwrite it
+            layer_name = f"{flow.name}:{vg.version}"
+            i = 2
+            while any(l.name == layer_name for l in map_.layers):
+                layer_name = f"{flow.name}:{vg.version} ({i})"
+                i += 1
+
             lyr = obj.visualize(
-                flow.name + ":" + vg.version,
+                layer_name,
                 map=map_,
                 **visualize_kwargs,
                 **param_overrides,
             )
 
-            if len(vg.params) > 0:
+            if len(params) > 0:
                 # hack to display layer params on map
                 labels = ipywidgets.VBox(
                     children=[
                         ipywidgets.Label(getattr(p, "_label", "") or p._name)
-                        for p in vg.params
+                        for p in params
                     ]
                 )
                 widgets = ipywidgets.VBox(
                     children=[
-                        param_overrides.get(p._name, None) or p.widget
-                        for p in vg.params
+                        param_overrides.get(p._name, None) or p.widget for p in params
                     ]
                 )
                 content = ipywidgets.HBox(children=[labels, widgets])

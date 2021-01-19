@@ -191,8 +191,11 @@ class PublishedGraft:
         `object` depended on before it became a `.Function`.
         """
         if self._params is None:
-            self._params = deserialize_params(self._message.parameters)
+            self._params = self._make_params()
         return self._params
+
+    def _make_params(self) -> Tuple[Proxytype]:
+        return deserialize_params(self._message.parameters)
 
     @property
     def type(self) -> Type[Proxytype]:
