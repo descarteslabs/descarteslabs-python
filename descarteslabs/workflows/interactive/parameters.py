@@ -84,24 +84,42 @@ class SimpleLink:
 # END copy
 
 
-class ReadOnlyDirectionalLink(ipywidgets.dlink):
-    "ipywidgets.dlink that forcibly sets the values of read-only traits on `target`"
+class ReadOnlyDirectionalLink:
+    "Like ipywidgets.dlink, but forcibly sets the values of read-only traits on `target`"
+    # Copied with modifications from https://github.com/ipython/traitlets/blob/5.0.5/traitlets/traitlets.py#L317-L364
+    # NOTE: we don't just subclass `ipywidgets.dlink` because the internal implementations change a bit
+    # between 4.3.3 and 5.x
 
-    def link(self):
+    updating = False
+
+    def __init__(self, source, target, transform=None):
+        self._transform = transform if transform else lambda x: x
+        _validate_link(source, target)
+        self.source, self.target = source, target
+
+        src_obj, src_trait = source
         try:
-            target, target_trait = self.target
-            target.set_trait(
-                target_trait, self._transform(getattr(self.source[0], self.source[1]))
-            )
+            self._update({"new": getattr(src_obj, src_trait)})
         finally:
-            self.source[0].observe(self._update, names=self.source[1])
+            src_obj.observe(self._update, names=src_trait)
+
+    @contextlib.contextmanager
+    def _busy_updating(self):
+        self.updating = True
+        try:
+            yield
+        finally:
+            self.updating = False
 
     def _update(self, change):
         if self.updating:
             return
         with self._busy_updating():
             target, target_trait = self.target
-            target.set_trait(target_trait, self._transform(change.new))
+            target.set_trait(target_trait, self._transform(change["new"]))
+
+    def unlink(self):
+        self.source[0].unobserve(self._update, names=self.source[1])
 
 
 class ProxytypeInstance(traitlets.Instance):
