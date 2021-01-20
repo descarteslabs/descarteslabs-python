@@ -115,9 +115,9 @@ def auth_handler(args):
 
     if args.command == "env":
         auth.token
-        print("%s=%s" % ("CLIENT_ID", auth.client_id))
-        print("%s=%s" % ("CLIENT_SECRET", auth.client_secret))
-        print("%s=%s" % ("REFRESH_TOKEN", auth.refresh_token))
+        print("%s=%s" % ("DESCARTESLABS_CLIENT_ID", auth.client_id))
+        print("%s=%s" % ("DESCARTESLABS_CLIENT_SECRET", auth.client_secret))
+        print("%s=%s" % ("DESCARTESLABS_REFRESH_TOKEN", auth.refresh_token))
 
     if args.command == "version":
         print(__version__)

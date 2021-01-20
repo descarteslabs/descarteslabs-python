@@ -24,6 +24,7 @@ from hashlib import sha1
 
 import requests
 import six
+import binascii
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -324,8 +325,16 @@ class Auth:
         else:
             token = self._token
 
-        claims = token.split(b".")[1]
-        return json.loads(base64url_decode(claims).decode("utf-8"))
+        try:
+            claims = token.split(b".")[1]
+            return json.loads(base64url_decode(claims).decode("utf-8"))
+        except (
+            IndexError,
+            UnicodeDecodeError,
+            binascii.Error,
+            json.JSONDecodeError,
+        ) as e:
+            raise AuthError("Unable to read token: {}".format(e))
 
     @property
     def session(self):

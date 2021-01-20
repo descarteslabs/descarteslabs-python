@@ -276,6 +276,18 @@ class TestAuth(unittest.TestCase):
             assert auth.client_secret == environ.get("DESCARTESLABS_REFRESH_TOKEN")
             assert auth.client_id == environ.get("CLIENT_ID")
 
+    def test_set_token(self):
+        environ = dict(DESCARTESLABS_TOKEN="token")
+
+        with patch.dict("descarteslabs.client.auth.auth.os.environ", environ):
+            with self.assertRaises(AuthError):
+                auth = Auth()
+                auth.payload
+
+        with self.assertRaises(AuthError):
+            auth = Auth(jwt_token="token")
+            auth.payload
+
 
 if __name__ == "__main__":
     unittest.main()
