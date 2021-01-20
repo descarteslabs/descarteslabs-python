@@ -8,6 +8,17 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## [1.6.0] - 2021-01-20
+
+### Python Version Support
+- Python 3.6 is now deprecated, and support will be removed in the next version.
+
+### Catalog
+- Added support to Bands for new processing levels and processing step specifications
+  to support Landsat Collection 2.
+
+### Workflows (channel `v0-18`)
+
 ## [1.5.0] - 2020-09-22
 
 ### Python Version Support
