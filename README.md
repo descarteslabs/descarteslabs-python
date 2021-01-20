@@ -17,7 +17,34 @@ Changelog
 - Added support to Bands for new processing levels and processing step specifications
   to support Landsat Collection 2.
 
-### Workflows (channel `v0-18`)
+### Workflows (channel `v0-18`) - Added
+- **`wf.widgets` lets you quickly explore data interactively.** Add widgets anywhere in your code just like normal values, and the widgets will display automatically when you call `.visualize`.
+- **View shared Workflows and XYZs in GIS applications using WMTS.** Get the URL with `wf.wmts_url()`, `XYZ.wmts_url()`, `Workflow.wmts_url()`.
+  - Create publicly-accessible tiles and WMTS endpoints with `wf.XYZ(..., public=True)`. Anyone with the URL (which is a cryptographically random ID) can view the data, no login required. Set `days_to_expiration` to control how long the URL lasts.
+  - `wf.XYZ.list()` to iterate through all XYZ objects you've created, and `XYZ.delete` to delete them.
+  - Set default vizualization options (scales, colormap, bands, etc.) in `.publish` or `wf.XYZ` with `wf.VizOption`. These `viz_options` are used when displaying the published object in a GIS application, or with `wf.flows`.
+- `ImageCollection.visualize()`: **display ImageCollections on `wf.map`**, and select the reduction operation (mean, median, mosaic, etc.) interactively
+- `Image.reduction()` and `ImageCollection.reduction()` (like `ic.reduction("median", axis="images")`) to reduce an Image/ImageCollection with an operation provided by name
+- `wf.map.controls` is accessible (you had to do `wf.map.map.controls` before)
+- Access the parameters used in a Job with `Job.arguments` and `Job.geoctx`.
+
+### Workflows - Fixed
+- Errors like `In 'or': : operand type(s) all returned NotImplemented from __array_ufunc__` when using the bitwise-or operator `|` are resolved.
+- Errors when using computed values in the `wf.Datetime` constructor (like `wf.Datetime(wf.Int(2019) + 1)`) are resolved.
+- `wf.Timedelta` can be constructed from floats, and supports all binary operations that Python does (support for `/, //, %, *` added)
+- In `.rename_bands`, prohibit renaming a band to a name that already exists in the Image/ImageCollection. Previously, this would succeed, but cause downstream errors.
+- `.bandinfo.get("bandname", {})` now works---before, providing `{}` would fail with a TypeError
+- Indexing an `Any` object (like `wf.Any({"foo": 1})["foo"]`) behaves correctly
+- `wf.Datetime`s constructed from strings containing timezone information are handled correctly
+
+### Workflows - Changed
+- `.mask(new_mask)` ignores masked pixels in `new_mask`. Previously, masked pixels in `new_mask` were considered True, not False. Note that this is opposite of NumPy's behavior.
+- If you `.publish` an object that depends on `wf.parameter`s or `wf.widgets`, it's automatically converted into a `wf.Function`.
+- **breaking** `.compute` and `.inspect` no longer accept extra arguments that aren't required for the computation. If the object doesn't depend on any `wf.parameter`s or `wf.widgets`, passing extra keyword arguments will raise an error. Similarly, *not* providing keyword arguments for all parameters the object depends on will raise an error.
+- **breaking** The `wf.XYZ` interface has changed; construct an XYZ with `wf.XYZ(...)` instead of `wf.XYZ.build(...).save()`
+- Set `days_to_expiration` on `XYZ` objects. After this many days, the object is deleted.
+- `Job` metadata is deleted after 10 days; `wf.Job.get(...)` on a job ID more than 10 days old will fail. Note that Job results have always been deleted after 10 days; now the metadata expires as well.
+- `wf.Function` has better support for named arguments. Now, `f = wf.Function[{'x': wf.Int, 'y': wf.Str}, wf.Int]` requires two arguments `x` and `y`, and they can be given positionally (`f(1, "hi")`), by name in any order(`f(x=1, y="hi")` or `f(y="hi", x=1)`), or both (`f(1, y="hi")`). `wf.Function.from_callable` will generate a Function with the same names as the Python function you decorate or pass in. Therefore, when using `@wf.publish` as a decorator, the published Function will automatically have the same argument names as your Python function.
 
 ## [1.5.0] - 2020-09-22
 
