@@ -41,16 +41,18 @@ class InspectClient(Service):
         ],
     )
 
-    def __init__(self, channel=None, url=None, auth=None, retries=None):
+    def __init__(self, channel=None, host=None, url=None, auth=None, retries=None):
         if channel is None:
             channel = _channel.__channel__
         self._channel = channel
 
-        if url is None:
-            url = os.environ.get(
-                "DESCARTESLABS_WORKFLOWS_URL_HTTP",
-                f"https://{_channel.DEFAULT_HTTP_HOST}/{channel}",
+        if host is None:
+            host = os.environ.get(
+                "DESCARTESLABS_WORKFLOWS_HOST_HTTP", _channel.DEFAULT_HTTP_HOST
             )
+
+        if url is None:
+            url = f"https://{host}/{channel}"
 
         super().__init__(
             url,
