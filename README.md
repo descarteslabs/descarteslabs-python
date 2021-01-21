@@ -18,6 +18,7 @@ Changelog
   to support Landsat Collection 2.
 
 ### Workflows (channel `v0-18`) - Added
+- The new channel `v0-18` utilizes a new and improved backend infrastructure. Any previously saved workflows and jobs from earlier channels are not accessible from the new infrastructure, so you will need to recreate and persist (e.g. publish) new versions using `v0-18`. Older releases and older channels can continue to access your originals if needed.
 - **`wf.widgets` lets you quickly explore data interactively.** Add widgets anywhere in your code just like normal values, and the widgets will display automatically when you call `.visualize`.
 - **View shared Workflows and XYZs in GIS applications using WMTS.** Get the URL with `wf.wmts_url()`, `XYZ.wmts_url()`, `Workflow.wmts_url()`.
   - Create publicly-accessible tiles and WMTS endpoints with `wf.XYZ(..., public=True)`. Anyone with the URL (which is a cryptographically random ID) can view the data, no login required. Set `days_to_expiration` to control how long the URL lasts.
