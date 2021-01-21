@@ -20,9 +20,10 @@ def test_url():
     assert url() == base
     assert url(session_id="foo") == base_q + urlencode({"session_id": "foo"})
     assert url(colormap="foo") == base_q + urlencode({"colormap": "foo"})
+    assert url(colormap="") == base_q + urlencode({"colormap": ""})
     assert url(reduction="mean") == base_q + urlencode({"reduction": "mean"})
     assert url(checkerboard=True) == base_q + urlencode({"checkerboard": "true"})
-    assert url(checkerboard=False) == base
+    assert url(checkerboard=False) == base_q + urlencode({"checkerboard": "false"})
 
     assert url(bands=["red"]) == base_q + urlencode({"band": "red"})
     assert url(bands=["red", "green"]) == base_q + urlencode(
@@ -34,7 +35,7 @@ def test_url():
     # 1-band scales are normalized
     assert url(scales=[0, 1]) == base_q + urlencode({"scales": "[[0.0, 1.0]]"})
     # If all none scales, not included
-    assert url(scales=[None, None]) == base
+    assert url(scales=[None, None]) == base_q + urlencode({"scales": "null"})
 
     # test everything gets added together correctly
     got_base, params = url(

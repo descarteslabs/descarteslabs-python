@@ -239,20 +239,11 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             if not self.trait_has_value("imagery") or imagery is not self.imagery:
                 # `trait_has_value` is False when the layer is first constructed;
                 # accessing `self.imagery` would cause a validation error in that case.
-                viz_options = [
-                    VizOption(
-                        id="viz1",
-                        bands=None,
-                        checkerboard=self.checkerboard,
-                        colormap=self.colormap,
-                        reduction=self.reduction,
-                        scales=self.get_scales(),
-                    ),
-                ]
-
                 with warnings.catch_warnings(record=True) as xyz_warnings:
                     xyz = XYZ(
-                        imagery, name=self.name, public=False, viz_options=viz_options,
+                        imagery,
+                        name=self.name,
+                        public=False,
                     )
                 self.set_trait("imagery", imagery)
                 self.set_trait("xyz_obj", xyz)
@@ -312,7 +303,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
 
         return self.xyz_obj.url(
             session_id=self.session_id,
-            colormap=self.colormap,
+            colormap=self.colormap or "",
             scales=scales,
             reduction=self.reduction,
             checkerboard=self.checkerboard,
@@ -378,7 +369,8 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         graft = graft_client.apply_graft("XYZ.use", self.xyz_obj.id, *args, **kwargs)
 
         self.set_trait(
-            "value", self.imagery._from_graft(graft),
+            "value",
+            self.imagery._from_graft(graft),
         )
 
     @traitlets.observe("value", "reduction")

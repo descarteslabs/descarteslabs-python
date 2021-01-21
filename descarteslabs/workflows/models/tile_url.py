@@ -12,8 +12,8 @@ def tile_url(
     colormap=None,
     bands=None,
     scales=None,
-    reduction="mosaic",
-    checkerboard=False,
+    reduction=None,
+    checkerboard=None,
     **arguments,
 ):
     """
@@ -49,12 +49,12 @@ def tile_url(
         ``scales`` must be a list like ``[(0, 1)]``, or just ``(0, 1)`` for convenience
 
         If None, each 256x256 tile will be scaled independently.
-    reduction: str, optional, default "mosaic"
+    reduction: str, optional, default None
         One of "mosaic", "min", "max", "mean", "median", "sum", "std", or "count".
         If displaying an `~.geospatial.ImageCollection`, this method is used to reduce it into
         an `~.geospatial.Image`. The reduction is performed before applying a colormap or scaling.
         If displaying an `~.geospatial.Image`, reduction is ignored.
-    checkerboard: bool, default False
+    checkerboard: bool, default None
         Whether to display a checkerboarded background for missing or masked data.
     **arguments: Any
         Values for all ``params``.
@@ -84,11 +84,10 @@ def tile_url(
         query_args["session_id"] = session_id
     if colormap is not None:
         query_args["colormap"] = colormap
-    if reduction != "mosaic":
-        # We don't include a reduction query arg if it's the default value
+    if reduction is not None:
         query_args["reduction"] = reduction
-    if checkerboard:
-        query_args["checkerboard"] = "true"
+    if checkerboard is not None:
+        query_args["checkerboard"] = "true" if checkerboard else "false"
 
     if bands is not None:
         try:
@@ -106,6 +105,8 @@ def tile_url(
 
         if any(scale != [None, None] for scale in scales):
             query_args["scales"] = json.dumps(scales)
+        else:
+            query_args["scales"] = "null"  # a json None
 
     _, promoted_arguments = promote_arguments(obj, arguments)
     if promoted_arguments:
