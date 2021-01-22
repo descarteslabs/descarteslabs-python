@@ -25,11 +25,11 @@ def _ufunc_result_type(obj, other=None, return_type_override=None):
         )
 
         # dtype precedence (from highest to lowest): Scalar, Float, Int, Bool
-        if obj_dtype is Scalar or other_dtype is Scalar:
+        if issubclass(obj_dtype, Scalar) or issubclass(other_dtype, Scalar):
             dtype = Scalar
-        elif obj_dtype is Float or other_dtype is Float:
+        elif issubclass(obj_dtype, Float) or issubclass(other_dtype, Float):
             dtype = Float
-        elif obj_dtype is Int or other_dtype is Int:
+        elif issubclass(obj_dtype, Int) or issubclass(other_dtype, Int):
             dtype = Int
         else:
             dtype = Bool
