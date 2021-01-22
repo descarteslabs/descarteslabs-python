@@ -546,6 +546,11 @@ class Image(ImageBase, BandsMixin):
         if cls._RESOLVED_STATS_RETURN_TYPES is None:
             cls._RESOLVED_STATS_RETURN_TYPES = _resolve_lambdas(cls._STATS_RETURN_TYPES)
 
+        if isinstance(axis, list):
+            axis = tuple(axis)
+        if isinstance(axis, tuple) and len(axis) == 1:
+            axis = axis[0]
+
         try:
             return cls._RESOLVED_STATS_RETURN_TYPES[axis]
         except KeyError:

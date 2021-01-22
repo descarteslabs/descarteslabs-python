@@ -44,8 +44,12 @@ def test_promote(from_id_wrapper):
         Image._promote("")
 
 
-def test_stats_return_type():
+@pytest.mark.parametrize("listify", [False, True])
+@pytest.mark.parametrize("singleton_tupleify", [False, True])
+def test_stats_return_type(listify, singleton_tupleify):
     for axis, return_type in six.iteritems(_resolve_lambdas(Image._STATS_RETURN_TYPES)):
+        axis = (axis,) if singleton_tupleify and not isinstance(axis, tuple) else axis
+        axis = list(axis) if listify and isinstance(axis, tuple) else axis
         assert Image._stats_return_type(axis) == return_type
 
     with pytest.raises(ValueError):
