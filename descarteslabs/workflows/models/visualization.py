@@ -4,6 +4,8 @@ from descarteslabs.common.proto.visualization import visualization_pb2
 
 from descarteslabs.workflows.types.geospatial import Image
 
+from .tile_url import validate_scales
+
 
 class VizOption:
     def __init__(
@@ -55,7 +57,10 @@ class VizOption:
             message.colormap = colormap
         if scales:
             message.scales.extend(
-                [visualization_pb2.VizOption.Scales(min=s[0], max=s[1]) for s in scales]
+                [
+                    visualization_pb2.VizOption.Scales(min=s[0], max=s[1])
+                    for s in validate_scales(scales)
+                ]
             )
         self._message = message
 
