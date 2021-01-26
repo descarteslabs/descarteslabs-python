@@ -282,7 +282,7 @@ VersionedGraft: {self.version}
         Parameters
         ----------
         tile_matrix_sets: str or list, optional
-            Desired tile matrix sets. Defaults to EPSG:4326 and EPSG:3857.
+            Desired tile matrix sets. Defaults to EPSG:3857.
         dimensions: bool, optional
             If True, then provide dimensions definitions to WMTS. If
             False, then generate a layer for each possible dimensions
