@@ -8,6 +8,17 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## [1.6.1] - 2021-01-27
+
+Fixes a few buglets which slipped through. This release continues to use the workflows channel `v0-18`.
+
+### Workflows - Fixed
+- Fixed a problem with the defaulting of the visual options when generating tile URLs, making it possible
+  to toggle the checkerboard option on a layer and see the difference.
+- Support `axis=list(...)` for `Image`.
+- Corrected the results of doing arithmetic on two widgets (e.g. adding two `IntSlider`s together should yield` an `Int`).
+- For single-band imagery `VizOption` will accept a single two-tuple for the `scales=` argument.
+
 ## [1.6.0] - 2021-01-20
 
 ### Python Version Support
