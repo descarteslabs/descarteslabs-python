@@ -851,7 +851,7 @@ class Metadata(Service):
             >>> keys.sort()
             >>> keys
             ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket',
-             'c6s_dlsr', 'cloud_fraction', 'cloud_fraction_0', 'confidence_dlsr', 'cs_code',
+             'cloud_fraction', 'cloud_fraction_0', 'confidence_dlsr', 'cs_code',
              'descartes_version', 'file_md5s', 'file_sizes', 'files', 'fill_fraction',
              'geolocation_accuracy', 'geometry', 'geotrans', 'id', 'identifier', 'key',
              'owner_type', 'processed', 'product', 'proj4', 'projcs', 'published',
