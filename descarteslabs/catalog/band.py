@@ -362,13 +362,18 @@ class Band(NamedCatalogObject):
 
     * `SpectralBand`: A band that lies somewhere on the visible/NIR/SWIR electro-optical
       wavelength spectrum. Specific attributes:
+      :attr:`~SpectralBand.physical_range`,
+      :attr:`~SpectralBand.physical_range_unit`,
       :attr:`~SpectralBand.wavelength_nm_center`,
       :attr:`~SpectralBand.wavelength_nm_min`,
       :attr:`~SpectralBand.wavelength_nm_max`,
       :attr:`~SpectralBand.wavelength_nm_fwhm`.
     * `MicrowaveBand`: A band that lies in the microwave spectrum, often from SAR or
-      passive radar sensors. Specific attributes: :attr:`~MicrowaveBand.frequency`,
-      :attr:`~MicrowaveBand.bandwidth`.
+      passive radar sensors. Specific attributes:
+      :attr:`~MicrowaveBand.frequency`,
+      :attr:`~MicrowaveBand.bandwidth`,
+      :attr:`~MicrowaveBand.physical_range`,
+      :attr:`~MicrowaveBand.physical_range_unit`.
     * `MaskBand`: A binary band where by convention a 0 means masked and 1 means
       non-masked. The :attr:`~Band.data_range` and :attr:`~Band.display_range` for
       masks is implicitly ``[0, 1]``. Specific attributes::attr:`~MaskBand.is_alpha`.
@@ -564,6 +569,8 @@ class SpectralBand(Band):
 
     _derived_type = BandType.SPECTRAL.value
 
+    physical_range = Attribute(doc=Band._DOC_PHYSICALRANGE)
+    physical_range_unit = Attribute(doc="str, optional: Unit of the physical range.")
     wavelength_nm_center = Attribute(
         doc="""float, optional: Weighted center of min/max responsiveness of the band, in nm.
 
@@ -628,6 +635,8 @@ class MicrowaveBand(Band):
         *Filterable, sortable*.
         """
     )
+    physical_range = Attribute(doc=Band._DOC_PHYSICALRANGE)
+    physical_range_unit = Attribute(doc="str, optional: Unit of the physical range.")
 
 
 class MaskBand(Band):
@@ -744,7 +753,7 @@ class GenericBand(Band):
     _derived_type = BandType.GENERIC.value
 
     physical_range = Attribute(doc=Band._DOC_PHYSICALRANGE)
-    physical_range_unit = Attribute(doc="str, optional: Unit of the physical range")
+    physical_range_unit = Attribute(doc="str, optional: Unit of the physical range.")
     colormap_name = EnumAttribute(Colormap, doc=Band._DOC_COLORMAPNAME)
     colormap = Attribute(doc=Band._DOC_COLORMAP)
 

@@ -20,10 +20,13 @@ from ..product import Product
 
 class TestBand(ClientTestCase):
     def test_create(self):
-        s = SpectralBand(name="test", product_id="foo", wavelength_nm_max=1200)
+        s = SpectralBand(
+            name="test", product_id="foo", physical_range=[0, 1], wavelength_nm_max=1200
+        )
         assert "foo:test" == s.id
         assert "spectral" == s.type
         assert 1200 == s.wavelength_nm_max
+        assert [0.0, 1.0] == s.physical_range
         with pytest.raises(AttributeError):
             s.frequency  # Attribute from a different band type
 
@@ -82,6 +85,7 @@ class TestBand(ClientTestCase):
                         "name": "blue",
                         "product_id": "p1",
                         "type": "spectral",
+                        "physical_range": [0.0, 1.0],
                         "wavelength_nm_min": 2000,
                     },
                     "type": "band",
@@ -96,6 +100,7 @@ class TestBand(ClientTestCase):
 
         b = Band.get("p1:blue", client=self.client)
         assert isinstance(b, SpectralBand)
+        assert [0.0, 1.0] == b.physical_range
         assert 2000 == b.wavelength_nm_min
         assert "P1" == b.product.name
 
@@ -313,7 +318,11 @@ class TestBand(ClientTestCase):
                 }
             ],
         }
-        b = SpectralBand(id=band_id, processing_levels=pl, _saved=True,)
+        b = SpectralBand(
+            id=band_id,
+            processing_levels=pl,
+            _saved=True,
+        )
 
         assert b.state == DocumentState.SAVED
 
@@ -370,7 +379,11 @@ class TestBand(ClientTestCase):
             },
         )
 
-        b = SpectralBand(id=band_id, processing_levels=pl, client=self.client,)
+        b = SpectralBand(
+            id=band_id,
+            processing_levels=pl,
+            client=self.client,
+        )
         assert isinstance(
             b.processing_levels["surface_reflectance"][0], ProcessingStepAttribute
         )
