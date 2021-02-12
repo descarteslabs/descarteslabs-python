@@ -34,7 +34,7 @@ LOGIN_URL = "https://iam.descarteslabs.com/auth/login?refresh_token=true&destina
 
 
 def auth_handler(args):
-    auth = Auth()
+    auth = Auth(_suppress_warning=True)
 
     if args.command == "login":
 
