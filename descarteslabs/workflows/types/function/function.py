@@ -588,6 +588,9 @@ class Function(GenericProxytype):
 
 
 def arg_types_from_annotations(func):
+    """
+    Gets argument types from type anotations
+    """
     sig = signature(func)
     hints = typing.get_type_hints(func)
 

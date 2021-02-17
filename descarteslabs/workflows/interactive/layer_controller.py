@@ -106,6 +106,11 @@ class LayerController(ipyleaflet.WidgetControl):
     Unlike other ipyleaflet controls, a `Map` must be passed in on instantiation.
     Creating a `LayerController` automatically adds it to the given Map.
 
+    Attributes
+    ----------
+    controller_list: LayerControllerList
+        The `LayerControllerList` widget displayed.
+
     Example
     -------
     >>> import descarteslabs.workflows as wf
@@ -115,11 +120,6 @@ class LayerController(ipyleaflet.WidgetControl):
     >>> my_map.add_layer(layer)  # doctest: +SKIP
     >>> ctl = wf.LayerController(my_map)  # doctest: +SKIP
     >>> my_map  # doctest: +SKIP
-
-    Attributes
-    ----------
-    controller_list: LayerControllerList
-        The `LayerControllerList` widget displayed.
     """
 
     def __init__(self, map, **kwargs):

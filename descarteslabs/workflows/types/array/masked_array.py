@@ -66,6 +66,17 @@ class MaskedArray(BaseArray):
         Returns
         -------
         ~descarteslabs.workflows.MaskedArray
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> import numpy as np
+        >>> arr = np.ma.array(data=[1, 2, 3, 4], mask=[True, False, False, True], fill_value=0)
+        >>> ma = wf.MaskedArray.from_numpy(arr)
+        >>> ma.compute() # doctest: +SKIP
+        masked_array(data=[--, 2, 3, --],
+        ...          mask=[ True, False, False,  True],
+        ...    fill_value=0)
         """
         try:
             data = np.ma.getdata(arr)
@@ -158,7 +169,12 @@ class MaskedArray(BaseArray):
         return Array._from_apply("wf.maskedarray.filled", self, fill_value)
 
     def count(self, axis=None):
-        """ Count unmasked pixels along a given axis.
+        """Count unmasked pixels along a given axis.
+
+        Parameters
+        ----------
+        axis: Int or sequence of Ints, optional, default None
+            Axis or axes to apply count over
 
         Example
         -------
@@ -180,7 +196,7 @@ class MaskedArray(BaseArray):
         return self._stats_return_type(axis)._from_apply("wf.count", self, axis)
 
     def compressed(self):
-        """ Returns all the non-masked data as a 1D `Array`.
+        """Returns all the non-masked data as a 1D `Array`.
 
         Example
         -------

@@ -235,6 +235,14 @@ class Any(Proxytype):
         -------
         Boolean
             A Boolean ProxyType
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Any
+        >>> Any([1, 2, 3]).contains(3).compute() # doctest: +SKIP
+        True
+        >>> Any([1, 2, 3]).contains(5).compute() # doctest: +SKIP
+        False
         """
         return Bool._from_apply("wf.contains", self, other)
 
@@ -245,5 +253,11 @@ class Any(Proxytype):
         -------
         Int
             An Int proxytype
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Any
+        >>> Any([5, 4, 3, 2, 1]).length().compute() # doctest: +SKIP
+        5
         """
         return Int._from_apply("wf.length", self)

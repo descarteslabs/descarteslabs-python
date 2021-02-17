@@ -91,6 +91,11 @@ class BaseArray(NumPyMixin, Proxytype):
         """
         Return ``Array`` cast to a specific type.
 
+        Parameters
+        ----------
+        dtype: Str
+            Data type to cast Array to. Can be one of `int`, `float`, or `bool` (and their variations).
+
         Example
         -------
         >>> import descarteslabs.workflows as wf
@@ -193,9 +198,7 @@ class BaseArray(NumPyMixin, Proxytype):
                 "Provided bandinfo must be a Dict, got {}".format(type(properties))
             )
 
-        return ImageCollection._from_apply(
-            "wf.to_imagery", self, properties, bandinfo
-        )
+        return ImageCollection._from_apply("wf.to_imagery", self, properties, bandinfo)
 
     def __getitem__(self, idx):
         idx = typecheck_getitem(idx)
@@ -327,7 +330,12 @@ class BaseArray(NumPyMixin, Proxytype):
         return _delayed_numpy().bitwise_not(self)
 
     def min(self, axis=None):
-        """ Minimum along a given axis.
+        """Minimum along a given axis.
+
+        Parameters
+        ----------
+        axis: Int or sequence of Ints, optional, default None
+            Axis or axes to apply minimum over
 
         Example
         -------
@@ -349,7 +357,12 @@ class BaseArray(NumPyMixin, Proxytype):
         return _delayed_numpy().min(self, axis)
 
     def max(self, axis=None):
-        """ Maximum along a given axis.
+        """Maximum along a given axis.
+
+        Parameters
+        ----------
+        axis: Int or sequence of Ints, optional, default None
+            Axis or axes to apply maximum over
 
         Example
         -------
@@ -371,7 +384,12 @@ class BaseArray(NumPyMixin, Proxytype):
         return _delayed_numpy().max(self, axis)
 
     def mean(self, axis=None):
-        """ Mean along a given axis.
+        """Mean along a given axis.
+
+        Parameters
+        ----------
+        axis : Int or sequence of Ints, optional, default None
+            Axis or axes to apply mean over
 
         Example
         -------
@@ -393,7 +411,12 @@ class BaseArray(NumPyMixin, Proxytype):
         return _delayed_numpy().mean(self, axis)
 
     def median(self, axis=None):
-        """ Median along a given axis.
+        """Median along a given axis.
+
+        Parameters
+        ----------
+        axis: Int or sequence of Ints, optional, default None
+            Axis or axes to apply median over
 
         Example
         -------
@@ -415,7 +438,12 @@ class BaseArray(NumPyMixin, Proxytype):
         return _delayed_numpy().median(self, axis)
 
     def sum(self, axis=None):
-        """ Sum along a given axis.
+        """Sum along a given axis.
+
+        Parameters
+        ----------
+        axis: Int or sequence of Ints, optional, default None
+            Axis or axes to apply sum over
 
         Example
         -------
@@ -437,7 +465,12 @@ class BaseArray(NumPyMixin, Proxytype):
         return _delayed_numpy().sum(self, axis)
 
     def std(self, axis=None):
-        """ Standard deviation along a given axis.
+        """Standard deviation along a given axis.
+
+        Parameters
+        ----------
+        axis: Int or sequence of Ints, optional, default None
+            Axis or axes to apply standard deviation over
 
         Example
         -------

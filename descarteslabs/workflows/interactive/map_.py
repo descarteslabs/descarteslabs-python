@@ -342,7 +342,9 @@ class Map(ipyleaflet.Map):
         Parameters
         ----------
         layer: ipyleaflet.Layer
-        new_index: int
+            Leaflet layer object to move
+        new_index: Int
+            Index to move layer to. Indices are one-indexed.
 
         Raises
         ------
@@ -352,12 +354,12 @@ class Map(ipyleaflet.Map):
         Example
         -------
         >>> import descarteslabs.workflows as wf
-        >>> wf.map # doctest: +SKIP
         >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1")
-        >>> red = img.pick_bands("red").visualize("red layer") # doctest: +SKIP
+        >>> red_layer = img.pick_bands("red").visualize("red layer") # doctest: +SKIP
         >>> blue = img.pick_bands("blue").visualize("blue layer") # doctest: +SKIP
         >>> wf.map.move_layer(red_layer, 2) # doctest: +SKIP
         >>> # "red layer" will now be displayed on top of "blue layer"
+        >>> wf.map # doctest: +SKIP
         """
         if layer.base:
             raise ValueError("Cannot reorder base layer {}".format(layer))
@@ -387,11 +389,10 @@ class Map(ipyleaflet.Map):
         >>> import descarteslabs.workflows as wf
         >>> wf.map # doctest: +SKIP
         >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1")
-        >>> red = img.pick_bands("red").visualize("red layer") # doctest: +SKIP
+        >>> red_layer = img.pick_bands("red").visualize("red layer") # doctest: +SKIP
         >>> blue = img.pick_bands("blue").visualize("blue layer") # doctest: +SKIP
         >>> wf.map.move_layer_up(red_layer) # doctest: +SKIP
         >>> # ^ display red_layer above blue_layer
-
         """
         if layer.base:
             raise ValueError("Cannot reorder base layer {}".format(layer))
@@ -423,7 +424,7 @@ class Map(ipyleaflet.Map):
         >>> wf.map # doctest: +SKIP
         >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1")
         >>> red = img.pick_bands("red").visualize("red layer") # doctest: +SKIP
-        >>> blue = img.pick_bands("blue").visualize("blue layer") # doctest: +SKIP
+        >>> blue_layer = img.pick_bands("blue").visualize("blue layer") # doctest: +SKIP
         >>> wf.map.move_layer_down(blue_layer) # doctest: +SKIP
         >>> # ^ display blue_layer below red_layer
         """
@@ -444,7 +445,7 @@ class Map(ipyleaflet.Map):
 
         Parameters
         ----------
-        layer_name: str or ipyleaflet.Layer
+        layer_name: Str or ipyleaflet.Layer
             Name of the layer or Layer instance to remove
 
         Example
@@ -455,7 +456,7 @@ class Map(ipyleaflet.Map):
         >>> red = img.pick_bands("red").visualize("red layer") # doctest: +SKIP
         >>> blue = img.pick_bands("blue").visualize("blue layer") # doctest: +SKIP
         >>> wf.map.remove_layer("red layer") # doctest: +SKIP
-        >>> # ^ remove "red layer" from the map
+        >>> # ^ remove "red layer" from the map (by name)
         """
         if isinstance(layer_name, ipyleaflet.Layer):
             super().remove_layer(layer_name)
@@ -528,7 +529,6 @@ class Map(ipyleaflet.Map):
         Example
         -------
         >>> import descarteslabs.workflows as wf
-        >>> wf.map # doctest: +SKIP
         >>> wf.map.geocontext() # doctest: +SKIP
         AOI(geometry=None,
             resolution=None,
@@ -545,6 +545,7 @@ class Map(ipyleaflet.Map):
             bounds=(-106.14303588867188, 35.631349127185125, -105.73276519775392, 35.7428898051826),
             bounds_crs='EPSG:4326',
             shape=(1195, 398))
+        >>> wf.map # doctest: +SKIP
 
         Returns
         -------

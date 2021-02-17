@@ -61,6 +61,13 @@ class BaseDict(GenericProxytype):
             Key to look up. Must be the same type as `key_type`.
         default:
             Value returned if `key` does not exist. Must be the same type as `value_type`.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Dict, Str, Int
+        >>> my_dict = Dict[Str, Int]({"foo": 1, "bar": 2, "baz": 3})
+        >>> my_dict.get("baz").compute() # doctest: +SKIP
+        3
         """
         return self.value_type._from_apply(
             "wf.get", self, self._promote_key(key), self._promote_default(default)
@@ -84,13 +91,34 @@ class BaseDict(GenericProxytype):
 
         Returns
         -------
-        contained: Bool
-            Whether the key was present
+        Bool
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Dict, Str, Int
+        >>> my_dict = Dict[Str, Int]({"foo": 1, "bar": 2, "baz": 3})
+        >>> my_dict.contains("foo").compute() # doctest: +SKIP
+        True
+        >>> my_dict.contains("hello").compute() # doctest: +SKIP
+        False
         """
         return Bool._from_apply("wf.contains", self, key)
 
     def length(self):
-        "The number of items in the dictionary"
+        """
+        The number of items in the dictionary
+
+        Returns
+        -------
+        Int
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Dict, Str, Int
+        >>> my_dict = Dict[Str, Int]({"foo": 1, "bar": 2, "baz": 3})
+        >>> my_dict.length().compute() # doctest: +SKIP
+        3
+        """
         return Int._from_apply("wf.length", self)
 
     def keys(self):
@@ -262,6 +290,14 @@ class Dict(BaseDict):
     def from_pairs(cls, pairs):
         """
         Construct a Dict from a list of key-value pairs.
+
+        Parameters
+        ----------
+        List[Tuple]
+
+        Returns
+        -------
+        Dict
 
         Example
         -------

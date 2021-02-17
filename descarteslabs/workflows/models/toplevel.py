@@ -24,15 +24,13 @@ def compute(
     Parameters
     ----------
     obj: Proxytype
-        Proxy object to compute, or list/tuple of proxy objects.
-        If it depends on parameters, ``obj`` is first converted
-        to a `.Function` that takes those parameters.
+        Proxy object to compute, or list/tuple of proxy objects. If it depends on parameters, ``obj``
+        is first converted to a `.Function` that takes those parameters.
     geoctx: `~.workflows.types.geospatial.GeoContext`, or None
-        The GeoContext parameter under which to run the computation.
-        Almost all computations will require a `~.workflows.types.geospatial.GeoContext`,
-        but for operations that only involve non-geospatial types,
-        this parameter is optional.
-    format: str or dict, default "pyarrow"
+        The GeoContext parameter under which to run the computation. Almost all computations will
+        require a `~.workflows.types.geospatial.GeoContext`, but for operations that only involve
+        non-geospatial types, this parameter is optional.
+    format: Str or Dict, default "pyarrow"
         The serialization format for the result.
         See the `formats
         <https://docs.descarteslabs.com/descarteslabs/workflows/docs/formats.html#output-formats>`_
@@ -45,28 +43,21 @@ def compute(
         documentation for more information.
     file: path or file-like object, optional
         If specified, writes results to the path or file instead of returning them.
-    timeout: int, optional
-        The number of seconds to wait for the result, if ``block`` is True.
-        Raises ``JobTimeoutError`` if the timeout passes.
-    block: bool, default True
-        If True (default), block until the job is completed,
-        or ``timeout`` has passed.
+    timeout: Int, optional
+        The number of seconds to wait for the result, if ``block`` is True. Raises ``JobTimeoutError``
+        if the timeout passes.
+    block: Bool, default True
+        If True (default), block until the job is completed, or ``timeout`` has passed.
         If False, immediately returns a `Job` (which has already had `~Job.execute` called).
-    progress_bar: bool, default None
-        Whether to draw the progress bar. If ``None`` (default),
-        will display a progress bar in Jupyter Notebooks, but not elsewhere.
-        Ignored if ``block==False``.
+    progress_bar: Bool, default None
+        Whether to draw the progress bar. If ``None`` (default), will display a progress bar in
+        Jupyter Notebooks, but not elsewhere. Ignored if ``block==False``.
     client: `.workflows.client.Client`, optional
-        Allows you to use a specific client instance with non-default
-        auth and parameters
-    cache: bool, default True
-        Whether to use the cache for this job.
+        Allows you to use a specific client instance with non-default auth and parameters
     **arguments: Any
-        Values for all parameters that ``obj`` depends on
-        (or arguments that ``obj`` takes, if it's a `.Function`).
-        Can be given as Proxytypes, or as Python objects like numbers,
-        lists, and dicts that can be promoted to them.
-        These arguments cannot depend on any parameters.
+        Values for all parameters that ``obj`` depends on (or arguments that ``obj`` takes,
+        if it's a `.Function`). Can be given as Proxytypes, or as Python objects like numbers, lists,
+        and dicts that can be promoted to them. These arguments cannot depend on any parameters.
 
     Returns
     -------
@@ -168,11 +159,10 @@ def publish(
 
     Parameters
     ----------
-    id: str
-        ID for the new `Workflow`. This should be of the form ``"email:workflow_name"``
-        and should be globally unique. If this ID is not of the proper format, you will
-        not be able to save the `Workflow`.
-    version: str
+    id: Str
+        ID for the new Workflow object. This should be of the form `email:workflow_name` and
+        should be globally unique. If this ID is not of the proper format, you will not be able to save the Workflow.
+    version: Str
         The version to be set, tied to the given `obj`. This should adhere
         to the semantic versioning schema.
     obj: Proxytype, optional
@@ -182,19 +172,19 @@ def publish(
 
         If not provided, it's assumed that `set_version` is being
         used as a decorator on a function.
-    title: str, default ""
+    title: Str, default ""
         User-friendly title for the `Workflow`.
     description: str, default ""
         Long-form description of this `Workflow`. Markdown is supported.
-    public: bool, default `False`
+    public: Bool, default `False`
         Whether this `Workflow` will be publicly accessible.
-    labels: dict, optional
+    labels: Dict, optional
         Key-value pair labels to add to the `Workflow`.
     tags: list, optional
         A list of strings to add as tags to the `Workflow`.
-    docstring: str, default ""
+    docstring: Str, default ""
         The docstring for this version.
-    version_labels: dict, optional
+    version_labels: Dict, optional
         Key-value pair labels to add to the version.
     client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default
@@ -276,9 +266,9 @@ def use(workflow_id, version, client=None):
 
     Parameters
     ----------
-    workflow_id: str
+    workflow_id: Str
         ID of the `Workflow` to retrieve
-    version: str
+    version: Str
         Version of the workflow to retrive
     client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default

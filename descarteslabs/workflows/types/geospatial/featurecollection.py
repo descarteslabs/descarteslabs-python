@@ -70,6 +70,19 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
         Returns
         -------
         ~descarteslabs.workflows.FeatureCollection
+
+        Example
+        -------
+        >>> from descarteslabs import vectors
+        >>> import descarteslabs.workflows as wf
+        >>> fc_vectors = vectors.FeatureCollection.create( # doctest: +SKIP
+        ...     product_id='my-vector-product-id',
+        ...     title='Awesome Product',
+        ...     description='Cool description')
+        >>> fc = wf.FeatureCollection.from_vector_id(fc_vectors.id) # doctest: +SKIP
+        >>> fc.compute().__geo_interface__ # doctest: +SKIP
+        {'type': 'FeatureCollection',
+         'features': ...}
         """
         return cls._from_apply(
             "wf.FeatureCollection.from_vector",
@@ -86,10 +99,24 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
         Parameters
         ----------
         geojson: Dict
+            A geojson FeatureCollection
 
         Returns
         -------
         ~descarteslabs.workflows.FeatureCollection
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> geojson = {'type': 'FeatureCollection', 'features': [
+        ... {'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [1, 2]}, 'properties': {}}],
+        ... 'properties' : {'name': 'Example'}}
+        >>> fc = wf.FeatureCollection.from_geojson(geojson=geojson)
+        >>> fc.features.compute() # doctest: +SKIP
+        ... [{'type': 'Feature',
+        ... 'geometry': {'type': 'Point', 'coordinates': [1, 2]},
+        ... 'properties': {}}
+        ... ]
         """
         try:
             if geojson["type"].lower() != "featurecollection":
@@ -185,6 +212,23 @@ class FeatureCollection(FeatureCollectionStruct, CollectionMixin):
         Returns
         -------
         sorted: ~.geospatial.FeatureCollection
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> fc = wf.FeatureCollection.from_geojson(geojson=
+        ...     {'type': 'FeatureCollection', 'features': [
+        ...     {'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [2, 0]}, 'properties': {}},
+        ...     {'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [1, 0]}, 'properties': {}}],
+        ...      'properties' : {'name': 'Example'}})
+        >>> # sort by first point coordinate in ascending order
+        >>> fc.sorted(key=lambda feat: feat.geometry.coordinates[0]).features.compute() # doctest: +SKIP
+        ... [{'type': 'Feature',
+        ...   'geometry': {'type': 'Point', 'coordinates': [1, 0]},
+        ...   'properties': {}},
+        ...  {'type': 'Feature',
+        ...   'geometry': {'type': 'Point', 'coordinates': [2, 0]},
+        ...   'properties': {}}]
         """
         key = self._make_sort_key(key)
         return self._from_apply("wf.sorted", self, key, reverse=reverse)

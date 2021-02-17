@@ -53,15 +53,10 @@ def input(
     -------
     >>> import descarteslabs.workflows as wf
     >>> wf.widgets.input("param_name", default="hello", label="A string parameter")  # doctest: +SKIP
-
     >>> s2 = wf.ImageCollection.from_id("sentinel-2:L1C", "2018-01-01", "2018-04-01").pick_bands("red green blue")
     >>> img = s2[wf.widgets.input("index", default=0)]
     >>> img.visualize("One S2 image", scales=[[0, 0.4], [0, 0.4], [0, 0.4]])  # doctest: +SKIP
     >>> # ^ when you call .visualize, the `input` widget will automatically show up below
-
-    Typing a different number into the input box above will cause the map to update
-    and display the `~.geospatial.Image` at that index in the `~.geospatial.ImageCollection`.
-    (If you haven't already, run ``wf.map`` in another notebook cell to see your layer.)
 
     Parameters
     ----------
@@ -77,6 +72,12 @@ def input(
     -------
     widget: Union[StringInput, IntInput, FloatInput]
         A Widget object that acts just like a Workflows `.Str`, `.Int`, or `.Float` and displays as an input box.
+
+    Notes
+    -----
+    Typing a different number into the input box above will cause the map to update
+    and display the `~.geospatial.Image` at that index in the `~.geospatial.ImageCollection`.
+    (If you haven't already, run ``wf.map`` in another notebook cell to see your layer.)
     """
     try:
         widget_cls = TYPES[type(default)]

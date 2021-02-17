@@ -60,7 +60,8 @@ class GeometryCollection(GeometryCollectionStruct, GeometryMixin, CollectionMixi
         Example
         -------
         >>> from descarteslabs.workflows import GeometryCollection
-        >>> geojson = {"type": "GeometryCollection", "geometries": [{"type": "Point", "coordinates": [1, 2]}]}
+        >>> geojson = {"type": "GeometryCollection", "geometries":
+        ... [{"type": "Point", "coordinates": [1, 2]}]}
         >>> gc = GeometryCollection.from_geojson(geojson)
         >>> gc.compute().__geo_interface__ # doctest: +SKIP
         {'type': 'GeometryCollection', 'geometries': [{'type': 'Point', 'coordinates': [1, 2]}]}

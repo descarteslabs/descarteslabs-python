@@ -40,6 +40,21 @@ class VizOption:
             Defaults to None.
         description: str, optional
             Description of the visualization option.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> v = wf.VizOption('RGB', bands='red green blue', reduction='median', description='Median RGB composite') # doctest: +SKIP
+        >>> v # doctest: +SKIP
+        VizOption(
+        ... id='RGB',
+        ... bands=['red', 'green', 'blue'],
+        ... checkerboard=False,
+        ... colormap=None,
+        ... reduction='median',
+        ... scales=None,
+        ... description='Median RGB composite'
+        )
         """
         if isinstance(bands, str):
             bands = [b for b in bands.split(" ") if b]

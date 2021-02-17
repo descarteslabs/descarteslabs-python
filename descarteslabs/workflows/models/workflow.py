@@ -70,9 +70,8 @@ class Workflow:
         Parameters
         ----------
         id: str
-            ID for the new `Workflow`. This should be of the form
-            ``"email:workflow_name"`` and should be globally unique. If this ID is not
-            of the proper format, you will not be able to save the `Workflow`.
+            ID for the new `Workflow`. This should be of the form ``"email:workflow_name"`` and should be
+            globally unique. If this ID is not of the proper format, you will not be able to save the `Workflow`.
             Cannot be changed once set.
         title: str, default ""
             User-friendly title for the `Workflow`.
@@ -251,6 +250,12 @@ class Workflow:
         client: `.workflows.client.Client`, optional
             Allows you to use a specific client instance with non-default
             auth and parameters.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> workflow = wf.Workflow.get("bob@gmail.com:cool_thing_wf") # doctest: +SKIP
+        >>> wf.Workflow.delete_id(workflow.id) # doctest: +SKIP
         """
         if client is None:
             client = get_global_grpc_client()
@@ -273,6 +278,12 @@ class Workflow:
         client: `.workflows.client.Client`, optional
             Allows you to use a specific client instance with non-default
             auth and parameters.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> workflow = wf.Workflow.get("bob@gmail.com:cool_thing_wf") # doctest: +SKIP
+        >>> workflow.delete() # doctest: +SKIP
         """
         if client is None:
             client = self._client
@@ -305,6 +316,15 @@ class Workflow:
         -------
         self: Workflow
             Same Workflow object, after its state has been updated to match the backend's state
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow
+        >>> workflow = Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> workflow.update_version("0.0.1", docstring="Runs Bob's cool model") # doctest: +SKIP
+        >>> # ^ update version 0.0.1's docstring
+        >>> workflow.save() # doctest: +SKIP
+        >>> # ^ save the updated version to the backend
         """
         if client is None:
             client = self._client
@@ -371,6 +391,19 @@ class Workflow:
         version: VersionedGraft or Function
             The version set.
             If used as a decorator, returns the `~.Function` instead.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Int, Workflow
+        >>> workflow = Workflow(id="bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> num = Int(1) + 1 # doctest: +SKIP
+        >>> workflow.set_version('0.0.1', num)  # doctest: +SKIP
+        >>> workflow.get_version('0.0.1') # doctest: +SKIP
+        VersionedGraft: 0.0.1
+            - type: Int
+            - channel: master
+            - labels: {}
+            - viz_options: []
         """
         if obj is None:
             # decorator format
@@ -431,6 +464,25 @@ class Workflow:
         -------
         version: VersionedGraft
             The updated version.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> workflow = wf.Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> workflow.get_version("0.0.1")  # doctest: +SKIP
+        VersionedGraft: 0.0.1
+            - type: Int
+            - channel: master
+            - labels: {'source_product': 'sentinel2:L1C'}
+            - viz_options: []
+        >>> workflow.update_version('0.0.1', labels={'source_product': 'usda:cdl:v1'}) # doctest: +SKIP
+        VersionedGraft: 0.0.1
+            - type: Int
+            - channel: master
+            - labels: {'source_product': 'usda:cdl:v1'}
+            - viz_options: []
+        >>> workflow.save() # doctest: +SKIP
+        >>> # ^ save the updated version to the backend
         """
         if docstring is None and labels is None:
             raise ValueError(
@@ -485,6 +537,17 @@ class Workflow:
         ------
         KeyError
             If this object doesn't contain the given version.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> workflow = wf.Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> workflow.get_version('0.0.1') # doctest: +SKIP
+        VersionedGraft: 0.0.1
+            - type: Int
+            - channel: master
+            - labels: {}
+            - viz_options: []
         """
         if not isinstance(version, str):
             raise TypeError(
@@ -505,14 +568,14 @@ class Workflow:
 
     @property
     def versions(self) -> Tuple[VersionedGraft, ...]:
-        "tuple: Every `VersionedGraft` in this `Workflow`, in the order they were created."
+        """tuple: Every `VersionedGraft` in this `Workflow`, in the order they were created."""
         return tuple(
             VersionedGraft._from_proto(v) for v in self._message.versioned_grafts
         )
 
     @property
     def version_names(self) -> Tuple[str, ...]:
-        "tuple: The names of all the versions of this `Workflow`, in the order they were created."
+        """tuple: The names of all the versions of this `Workflow`, in the order they were created."""
         return tuple(v.version for v in self._message.versioned_grafts)
 
     def duplicate(self, new_id, include_versions=True, client=None):
@@ -532,6 +595,16 @@ class Workflow:
         -------
         new_workflow: Workflow
             Copy of ``self`` with a new ID
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow
+        >>> workflow = Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> new_workflow = workflow.duplicate("bob@gmail.com:even_cooler_model") # doctest: +SKIP
+        >>> new_workflow.id # doctest: +SKIP
+        "bob@gmail.com:even_cooler_model"
+        >>> new_workflow.save() # doctest: +SKIP
+        >>> # ^ save the duplicated workflow to the backend
         """
         if client is None:
             client = self._client
@@ -664,6 +737,13 @@ Workflow: "{self.title}"
         -------
         wmts_url: str
             The URL for the WMTS service endpoint corresponding to this workflow.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow
+        >>> workflow = Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> workflow.wmts_url() # doctest: +SKIP
+        'https://workflows.prod.descarteslabs.com/master/wmts/workflow/...'
         """
         url_params = {}
 
@@ -701,6 +781,12 @@ def wmts_url(tile_matrix_sets=None, dimensions=None, client=None) -> str:
     -------
     wmts_url: str
         The URL for the WMTS service endpoint corresponding to this channel.
+
+    Example
+    -------
+    >>> import descarteslabs.workflows as wf
+    >>> wf.wmts_url() # doctest: +SKIP
+    'https://workflows.prod.descarteslabs.com/master/wmts/workflow/1.0.0/WMTSCapabilities.xml'
     """
     if client is None:
         client = get_global_grpc_client()

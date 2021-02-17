@@ -17,6 +17,25 @@ def where(condition, x, y):
     ``condition``. Depending on the number of bands in ``x`` and ``y``, <band name>
     can be taken from ``x``, ``y``, ``x_or_y``, or ``condition``.
 
+    Parameters
+    ----------
+    condition: `Image`, `ImageCollection`, `Bool`
+        A `Bool`, or a boolean `Image` or `ImageCollection`.  Where True, yield ``x``;
+        where False, yield ``y``.  If a non-boolean `Image` or `ImageCollection` is
+        provided, its values will be coerced to booleans by taking nonzeroness.
+    x: `Image`, `ImageCollection`, `Int`, `Float`
+        The true `Image`, `ImageCollection`, or scalar.  Where ``condition`` is True, we
+        yield values from ``x``.
+    y: `Image`, `ImageCollection`, `Int`, `Float`
+        The false `Image`, `ImageCollection`, or scalar.  Where ``condition`` is False, we
+        yield values from ``y``.
+
+    Returns
+    -------
+    `Image`, `ImageCollection`
+        An `Image` or `ImageCollection` with values from ``x`` where ``condition`` is
+        True, and values from ``y`` elsewhere.
+
     Example
     -------
     >>> from descarteslabs.workflows import Image, ImageCollection, where
@@ -41,24 +60,6 @@ def where(condition, x, y):
       * bandinfo: 'red_or_blue_where_red'
       * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
 
-    Parameters
-    ----------
-    condition: `Image`, `ImageCollection`, `Bool`
-        A `Bool`, or a boolean `Image` or `ImageCollection`.  Where True, yield ``x``;
-        where False, yield ``y``.  If a non-boolean `Image` or `ImageCollection` is
-        provided, its values will be coerced to booleans by taking nonzeroness.
-    x: `Image`, `ImageCollection`, `Int`, `Float`
-        The true `Image`, `ImageCollection`, or scalar.  Where ``condition`` is True, we
-        yield values from ``x``.
-    y: `Image`, `ImageCollection`, `Int`, `Float`
-        The false `Image`, `ImageCollection`, or scalar.  Where ``condition`` is False, we
-        yield values from ``y``.
-
-    Returns
-    -------
-    `Image`, `ImageCollection`
-        An `Image` or `ImageCollection` with values from ``x`` where ``condition`` is
-        True, and values from ``y`` elsewhere.
     """
     if (
         isinstance(condition, Bool)

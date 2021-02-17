@@ -406,13 +406,17 @@ class Str(Primitive):
     def replace(self, old, new, count=-1):
         """
         Return a copy with all occurrences of substring old replaced by new.
+        If the optional argument count is given, only the first count occurrences are replaced.
 
-          count
+        Parameters
+        ----------
+        old: Str
+            Substring to replace
+        new:
+            Replacement substring
+        count: Int
             Maximum number of occurrences to replace.
             -1 (the default value) means replace all occurrences.
-
-        If the optional argument count is given, only the first count occurrences are
-        replaced.
 
         Example
         -------
@@ -429,6 +433,11 @@ class Str(Primitive):
 
         Return -1 on failure.
 
+        Parameters
+        ----------
+        sub: Str
+            Substring to find
+
         Example
         -------
         >>> from descarteslabs.workflows import Str
@@ -443,6 +452,13 @@ class Str(Primitive):
         Return a right-justified string of length width.
 
         Padding is done using the specified fill character (default is a space).
+
+        Parameters
+        ----------
+        width: Int
+            Total length of resulting padded string
+        fillchar: Str
+            Character to pad string with
 
         Example
         -------
@@ -464,6 +480,11 @@ class Str(Primitive):
         If the separator is not found, returns a 3-tuple containing two empty strings
         and the original string.
 
+        Parameters
+        ----------
+        sep: Str
+            String to partition on
+
         Example
         -------
         >>> from descarteslabs.workflows import Str
@@ -479,13 +500,14 @@ class Str(Primitive):
         """
         Return a list of the words in the string, using sep as the delimiter string.
 
-          sep
+        Parameters
+        ----------
+        sep: Str
             The delimiter according which to split the string.
             None (the default value) means split according to any whitespace,
             and discard empty strings from the result.
-          maxsplit
-            Maximum number of splits to do.
-            -1 (the default value) means no limit.
+        maxsplit: Int
+            Maximum number of splits to do. -1 (the default value) means no limit.
 
         Splits are done starting at the end of the string and working to the front.
 
@@ -506,6 +528,11 @@ class Str(Primitive):
 
         If chars is given and not None, remove characters in chars instead.
 
+        Parameters
+        ----------
+        chars: Str, optional
+            Characters to remove
+
         Example
         -------
         >>> from descarteslabs.workflows import Str
@@ -519,13 +546,14 @@ class Str(Primitive):
         """
         Return a ``List[Str]`` of the words in the string, using sep as the delimiter string.
 
-          sep
+        Parameters
+        ----------
+        sep: Str, optional
             The delimiter according which to split the string.
             None (the default value) means split according to any whitespace,
             and discard empty strings from the result.
-          maxsplit
-            Maximum number of splits to do.
-            -1 (the default value) means no limit.
+        maxsplit: Int, optional
+            Maximum number of splits to do. -1 (the default value) means no limit.
 
         Example
         -------
@@ -558,6 +586,11 @@ class Str(Primitive):
         """
         Return True if S starts with the specified prefix, False otherwise.
 
+        Parameters
+        ----------
+        prefix: Str
+            Prefix string
+
         Example
         -------
         >>> from descarteslabs.workflows import Str
@@ -572,6 +605,11 @@ class Str(Primitive):
         Return a copy of the string with leading and trailing whitespaces removed.
 
         If chars is given and not None, remove characters in chars instead.
+
+        Parameters
+        ----------
+        chars: Str, optional
+            Optional characters to remove
 
         Example
         -------
@@ -626,6 +664,11 @@ class Str(Primitive):
         Pad a numeric string with zeros on the left, to fill a field of the given width.
 
         The string is never truncated.
+
+        Parameters
+        ----------
+        width: Int
+            Total length of resulting padded string
 
         Example
         -------

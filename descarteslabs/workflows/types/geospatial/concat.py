@@ -12,6 +12,14 @@ def concat(*imgs):
     must have the same number of bands with identical names. Any empty
     `Image` or `ImageCollection` objects will not be concatenated.
 
+    Parameters
+    ----------
+    *imgs: variable number of `Image` or `ImageCollection` objects
+
+    Returns
+    -------
+    concatenated: ImageCollection
+
     Example
     -------
     >>> from descarteslabs.workflows import Image, ImageCollection, concat
@@ -29,14 +37,6 @@ def concat(*imgs):
       * properties: 3 items
       * bandinfo: 'red', 'green', 'blue'
       * geocontext: 'geometry', 'key', 'resolution', 'tilesize', ...
-
-    Parameters
-    ----------
-    *imgs: variable number of `Image` or `ImageCollection` objects
-
-    Returns
-    -------
-    concatenated: ImageCollection
     """
     if len(imgs) < 2:
         raise ValueError(

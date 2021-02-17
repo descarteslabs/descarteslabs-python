@@ -42,6 +42,13 @@ def conv2d(obj, filt):
     """
     2-D spatial convolution of an `Image` or `ImageCollection`.
 
+    Parameters
+    ----------
+    obj: `Image` or `ImageCollection`
+        Object to convolve over
+    filt: `Kernel` object
+        Kernel object to convolve
+
     Example
     -------
     >>> from descarteslabs.workflows import Image, Kernel, conv2d

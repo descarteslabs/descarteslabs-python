@@ -77,9 +77,7 @@ class TestDelay(object):
         def bad_params(a, b, **kwargs):
             pass
 
-        with pytest.raises(
-            TypeError, match=r"kind VAR_KEYWORD, used for \*\*kwargs"
-        ):
+        with pytest.raises(TypeError, match=r"kind VAR_KEYWORD, used for \*\*kwargs"):
             Function._delay(bad_params, None)
 
         def has_defaults(a, b=1):

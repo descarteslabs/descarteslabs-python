@@ -155,6 +155,11 @@ class ImageCollectionGroupby(GenericProxytype):
         so that field will be merged/dropped according to normal metadata broadcasting rules (i.e. will still be present
         on an `Image` composited from a group's `ImageCollection`, since it's the same for every `Image`.)
 
+        Parameters
+        ----------
+        func: Python function
+            Function that takes an Int group number and ImageCollection
+
         Example
         -------
         >>> import descarteslabs.workflows as wf
@@ -184,6 +189,11 @@ class ImageCollectionGroupby(GenericProxytype):
     def count(self, axis=None):
         """Apply `.ImageCollection.count` to each group.
 
+        Parameters
+        ----------
+        axis: Str or Tuple[Str], optional, default: None
+            A string or tuple of strings of "pixels", "images", or "bands"
+
         Example
         -------
         >>> import descarteslabs.workflows as wf
@@ -208,6 +218,11 @@ class ImageCollectionGroupby(GenericProxytype):
 
     def sum(self, axis=None):
         """Apply `.ImageCollection.sum` to each group.
+
+        Parameters
+        ----------
+        axis: Str or Tuple[Str] or None
+            A string or tuple of strings of "pixels", "images", or "bands"
 
         Example
         -------
@@ -234,6 +249,10 @@ class ImageCollectionGroupby(GenericProxytype):
     def min(self, axis=None):
         """Apply `.ImageCollection.min` to each group.
 
+        Parameters
+        ----------
+        axis: Str or Tuple[Str] or None
+            A string or tuple strings of "pixels", "images", or "bands"
 
         Example
         -------
@@ -260,6 +279,11 @@ class ImageCollectionGroupby(GenericProxytype):
     def max(self, axis=None):
         """Apply `.ImageCollection.max` to each group.
 
+        Parameters
+        ----------
+        axis: Str or Tuple[Str] or None
+            A string or tuple of strings of "pixels", "images", or "bands"
+
         Example
         -------
         >>> import descarteslabs.workflows as wf
@@ -284,6 +308,11 @@ class ImageCollectionGroupby(GenericProxytype):
 
     def mean(self, axis=None):
         """Apply `.ImageCollection.mean` to each group.
+
+        Parameters
+        ----------
+        axis: Str or Tuple[Str] or None
+            A string or tuple of strings of "pixels", "images", or "bands"
 
         Example
         -------
@@ -310,6 +339,11 @@ class ImageCollectionGroupby(GenericProxytype):
     def median(self, axis=None):
         """Apply `.ImageCollection.median` to each group.
 
+        Parameters
+        ----------
+        axis: Str or Tuple[Str] or None
+            A string or tuple of strings of "pixels", "images", or "bands"
+
         Example
         -------
         >>> import descarteslabs.workflows as wf
@@ -334,6 +368,11 @@ class ImageCollectionGroupby(GenericProxytype):
 
     def std(self, axis=None):
         """Apply `.ImageCollection.std` to each group.
+
+        Parameters
+        ----------
+        axis: Str or Tuple[Str] or None
+            A string or tuple of strings of "pixels", "images", or "bands"
 
         Example
         -------
@@ -361,6 +400,16 @@ class ImageCollectionGroupby(GenericProxytype):
         """Apply `.ImageCollection.mosaic` to each group.
 
         Always returns an `.ImageCollection`.
+
+        Parameters
+        ----------
+        axis: Str or Tuple[Str] or None
+            A string or tuple of strings of "pixels", "images", or "bands"
+
+        Returns
+        -------
+        mosaic: ImageCollection
+            The order of mosaicing is from last to first per group, meaning the last `Image` in the group's `ImageCollection` is on top.
 
         Example
         -------

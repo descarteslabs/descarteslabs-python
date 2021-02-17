@@ -46,6 +46,23 @@ class Geometry(GeometryStruct, GeometryMixin):
         Returns
         -------
         ~descarteslabs.workflows.Geometry
+
+        Example
+        -------
+        >>> from descarteslabs import vectors
+        >>> from descarteslabs.workflows import Geometry
+        >>> polygon = { 'type': 'Polygon', 'coordinates': [[[-95, 42], [-93, 42], [-93, 40], [-95, 41], [-95, 42]]]}
+        >>> feat = vectors.Feature(geometry=polygon, properties={})
+        >>> feat.__geo_interface__ # doctest: +SKIP
+        {'type': 'Polygon',
+         'coordinates': (((-95.0, 42.0),
+           (-93.0, 42.0),
+           (-93.0, 40.0),
+           (-95.0, 41.0),
+           (-95.0, 42.0)),)}
+        >>> Geometry.from_geo_interface(feat).compute() # doctest: +SKIP
+        GeometryResult(type=Polygon, coordinates=[[[-95.0, 42.0], [-93.0, 42.0],
+        ... [-93.0, 40.0], [-95.0, 41.0], [-95.0, 42.0]]])
         """
         try:
             geo_interface = obj.__geo_interface__
@@ -72,6 +89,14 @@ class Geometry(GeometryStruct, GeometryMixin):
         Returns
         -------
         ~descarteslabs.workflows.Geometry
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Geometry
+        >>> geojson = {"type": "Point", "coordinates": [1, 2]}
+        >>> geom = Geometry.from_geojson(geojson)
+        >>> geom.compute().__geo_interface__ # doctest: +SKIP
+        {'type': 'Point', 'coordinates': [1, 2]}
         """
         try:
             return cls._from_apply(

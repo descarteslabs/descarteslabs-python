@@ -53,6 +53,18 @@ class Feature(FeatureStruct, GeometryMixin):
         Returns
         -------
         ~descarteslabs.workflows.Feature
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Feature
+        >>> geojson = {"type": "Feature",
+        ...            "geometry": {"type": "Point", "coordinates": [1, 2]},
+        ...            "properties": {"foo": "bar"}}
+        >>> feat = Feature.from_geojson(geojson)
+        >>> feat.compute().__geo_interface__ # doctest: +SKIP
+        {'type': 'Feature',
+         'geometry': {'type': 'Point', 'coordinates': [1, 2]},
+         'properties': {'foo': 'bar'}}
         """
         try:
             if geojson["type"].lower() != "feature":

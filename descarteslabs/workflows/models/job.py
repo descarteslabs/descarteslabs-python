@@ -455,6 +455,15 @@ class Job:
             Whether to cancel the job on client timeout. Default is True.
         cancel_on_interrupt: bool, optional
             Whether to cancel the job on interrupt (e.g. ctrl + c). Default is True.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> job = wf.Int(1).compute(block=False) # doctest: +SKIP
+        >>> job.wait() # doctest: +SKIP
+        >>> # ^ blocks until `job` is done
+        >>> job.result() # doctest: +SKIP
+        1
         """
         if progress_bar is None:
             progress_bar = in_notebook()
@@ -552,7 +561,9 @@ class Job:
                         )
 
                     obj = (
-                        kwarg_types.get(name, Any)._from_graft(graft_client.isolate_keys(graft))
+                        kwarg_types.get(name, Any)._from_graft(
+                            graft_client.isolate_keys(graft)
+                        )
                         if not (
                             graft_syntax.is_literal(graft)
                             or graft_syntax.is_quoted_json(graft)
@@ -567,7 +578,7 @@ class Job:
 
     @property
     def geoctx(self):
-        "The Workflows `~.geospatial.GeoContext` the Job was run within, or None"
+        """The Workflows `~.geospatial.GeoContext` the Job was run within, or None"""
         graft_json = self._message.geoctx_graft
         if not graft_json:
             return None
@@ -576,7 +587,7 @@ class Job:
 
     @property
     def type(self):
-        "type: The type of the proxy object."
+        """type: The type of the proxy object."""
         return type(self.object)
 
     @property
@@ -594,12 +605,12 @@ class Job:
 
     @property
     def channel(self):
-        "str: The channel name where this Job will execute."
+        """str: The channel name where this Job will execute."""
         return self._message.channel
 
     @property
     def version(self):
-        "str: The ``descarteslabs`` client version that constructed this Job."
+        """str: The ``descarteslabs`` client version that constructed this Job."""
         return self._message.client_version
 
     @property
@@ -612,7 +623,7 @@ class Job:
 
     @property
     def done(self):
-        "bool: Whether the Job has completed or not."
+        """bool: Whether the Job has completed or not."""
         return _is_job_done(self._message.state.stage)
 
     @property
@@ -627,12 +638,12 @@ class Job:
 
     @property
     def created_datetime(self):
-        "datetime: The time the Job was created."
+        """datetime: The time the Job was created."""
         return pb_milliseconds_to_datetime(self._message.timestamp)
 
     @property
     def updated_datetime(self):
-        "datetime: The time of the most recent Job update."
+        """datetime: The time of the most recent Job update."""
         return pb_milliseconds_to_datetime(self._message.state.timestamp)
 
     @property
@@ -644,7 +655,7 @@ class Job:
 
     @property
     def runtime(self):
-        "datetime: The total time it took the Job to run."
+        """datetime: The total time it took the Job to run."""
         if self.updated_datetime is None or self.created_datetime is None:
             return None
         else:
@@ -652,12 +663,12 @@ class Job:
 
     @property
     def format(self):
-        "The serialization format of the Job, as a dictionary."
+        """The serialization format of the Job, as a dictionary."""
         return has_proto_to_user_dict(self._message.format)
 
     @property
     def destination(self):
-        "The destination for the Job results, as a dictionary."
+        """The destination for the Job results, as a dictionary."""
         return has_proto_to_user_dict(self._message.destination)
 
     @property
@@ -675,7 +686,7 @@ class Job:
 
     @property
     def error(self):
-        "The error of the Job, or None if it finished successfully."
+        """The error of the Job, or None if it finished successfully."""
         error_code = self._message.state.error.code
         exc = error_code_to_exception(error_code)
         return exc(self) if exc is not None else None
@@ -715,8 +726,10 @@ def _draw_progress_bar(finished, total, stage, output, width=6):
     else:
         bar = "#" * int(width * percent)
 
-    progress_output = "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
-        bar=bar, width=width, finished=finished, total=total, stage=stage
+    progress_output = (
+        "\r[{bar:<{width}}] | Steps: {finished}/{total} | Stage: {stage}".format(
+            bar=bar, width=width, finished=finished, total=total, stage=stage
+        )
     )
 
     _write_to_io_or_widget(output, "{:<79}".format(progress_output))

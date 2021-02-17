@@ -226,6 +226,12 @@ class WorkflowsBrowser(ipywidgets.VBox):
         The currently-selected `~.Workflow` object, or None.
     current_vg: Optional[VersionedGraft]
         The currently-selected `~.VersionedGraft` object, or None.
+
+    Example
+    -------
+    >>> import descarteslabs.workflows as wf
+    >>> wf.flows  # doctest: +SKIP
+    >>> # displays the Workflow browser widget
     """
 
     name = traitlets.Unicode()
@@ -431,7 +437,7 @@ class WorkflowsBrowser(ipywidgets.VBox):
             # if layer name already exists, don't overwrite it
             layer_name = f"{flow.name}:{vg.version}"
             i = 2
-            while any(l.name == layer_name for l in map_.layers):
+            while any(layer.name == layer_name for layer in map_.layers):
                 layer_name = f"{flow.name}:{vg.version} ({i})"
                 i += 1
 

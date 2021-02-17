@@ -361,6 +361,11 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         is True, any missing names are dropped, and if none of the names exist,
         returns an empty `ImageCollection`.
 
+        Parameters
+        ----------
+        bands: Str or List[Str]
+            A space-separated string or list of band names
+
         Example
         -------
         >>> from descarteslabs.workflows import ImageCollection
@@ -388,14 +393,18 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         New `ImageCollection`, with bands renamed by position or name.
 
         New names can be given positionally (like ``rename_bands('new_red', 'new_green')``),
-        which renames the i-th band to the i-th argument.
-
-        Or, new names can be given by keywords (like ``rename_bands(red="new_red")``)
-        mapping from old band names to new ones.
-
-        To eliminate ambiguity, names cannot be given both ways.
+        which renames the i-th band to the i-th argument or new names can be given by keywords
+        (like ``rename_bands(red="new_red")``) mapping from old band names to new ones. To eliminate
+        ambiguity, names cannot be given both ways.
 
         If the `ImageCollection` is empty, returns the empty `ImageCollection`.
+
+        Parameters
+        ----------
+        *new_positional_names: Str
+            Positional bands to rename
+        **new_names: Str
+            Keyword bands to rename
 
         Example
         -------
@@ -709,7 +718,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
 
         Returns
         -------
-        imgs: ImageCollection
+        imgs: `ImageCollection`
 
         Example
         -------

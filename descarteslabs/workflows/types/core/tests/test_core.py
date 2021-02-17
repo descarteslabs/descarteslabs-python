@@ -61,7 +61,9 @@ class TestTypeParamsIssubclass(object):
 
         assert not type_params_issubclass({}, {"x": Plant})
         assert not type_params_issubclass({"foo": Spruce}, {"bar": Plant})
-        assert not type_params_issubclass({"x": Spruce, "y": Bear}, {"y": Bear, "x": Spruce})
+        assert not type_params_issubclass(
+            {"x": Spruce, "y": Bear}, {"y": Bear, "x": Spruce}
+        )
         assert not type_params_issubclass({"x": Spruce}, {"x": Animal})
         assert not type_params_issubclass(
             {"x": Spruce, "y": Bear}, {"x": Plant, "y": Plant}

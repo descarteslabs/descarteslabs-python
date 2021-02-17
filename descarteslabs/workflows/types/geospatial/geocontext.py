@@ -231,6 +231,24 @@ class GeoContext(GeoContextBase):
         Returns
         -------
         ~descarteslabs.workflows.GeoContext
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import GeoContext
+        >>> geoctx = GeoContext.from_dltile_key('512:0:10.0:36:-65:216')
+        >>> geoctx
+        <descarteslabs.workflows.types.geospatial.geocontext.GeoContext object at 0x...>
+        >>> geoctx.compute() # doctest: +SKIP
+        {'geometry': {'type': 'Polygon',
+                      'coordinates': (((29.964809031113013, 9.990748782946097),
+                                       (30.011460043000678, 9.991170922969406),
+                                       (30.011036444452188, 10.03741571582387),
+                                       (29.964378844777645, 10.036991583007385),
+                                       (29.964809031113013, 9.990748782946097)),)},
+         'key': '512:0:10.0:36:-65:216',
+         'resolution': 10.0,
+         'tilesize': 512,
+        ...
         """
         return cls._from_apply("wf.GeoContext.from_dltile_key", key)
 
@@ -249,6 +267,26 @@ class GeoContext(GeoContextBase):
         Returns
         -------
         ~descarteslabs.workflows.GeoContext
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import GeoContext
+        >>> geoctx = GeoContext.from_xyz_tile(1, 2, 3)
+        >>> geoctx
+        <descarteslabs.workflows.types.geospatial.geocontext.GeoContext object at 0x...>
+        >>> geoctx.compute() # doctest: +SKIP
+        {'x': 1,
+         'y': 2,
+         'z': 3,
+         'geometry': {'type': 'Polygon',
+         'coordinates': (((-90.0, 40.97989806962013),
+                          (-90.0, 66.51326044311186),
+                          (-135.0, 66.51326044311186),
+                          (-135.0, 40.97989806962013),
+                          (-90.0, 40.97989806962013)),)},
+         'tilesize': 256,
+         'crs': 'EPSG:3857',
+        ...
         """
         return cls._from_apply("wf.GeoContext.from_xyz_tile", x, y, z)
 
@@ -264,6 +302,28 @@ class GeoContext(GeoContextBase):
         Returns
         -------
         ~descarteslabs.workflows.GeoContext
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import GeoContext
+        >>> from descarteslabs import scenes
+        >>> scene = scenes.DLTile.from_latlon(10, 30, resolution=10, tilesize=512, pad=0)
+        >>> # the above scene could be passed to compute without being changed to a Workflows GeoContext
+        >>> geoctx = GeoContext.from_scenes(scene)
+        >>> geoctx
+        <descarteslabs.workflows.types.geospatial.geocontext.GeoContext object at 0x...>
+        >>> geoctx.compute() # doctest: +SKIP
+        {'geometry': {'type': 'Polygon',
+          'coordinates': (((29.964809031113013, 9.990748782946097),
+            (30.011460043000678, 9.991170922969406),
+            (30.011036444452188, 10.03741571582387),
+            (29.964378844777645, 10.036991583007385),
+            (29.964809031113013, 9.990748782946097)),)},
+         'key': '512:0:10.0:36:-65:216',
+         'resolution': 10.0,
+         'tilesize': 512,
+         'pad': 0,
+        ...
         """
         if isinstance(ctx, scenes.AOI):
             resolution = float(ctx.resolution) if ctx.resolution else None
@@ -299,6 +359,18 @@ class GeoContext(GeoContextBase):
     def index_to_coords(self, row, col):
         """
         Convert pixel coordinates (row, col) to spatial coordinates (x, y) in the GeoContext's CRS.
+
+        Parameters
+        ----------
+        row: Int
+        col: Int
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import GeoContext
+        >>> geoctx = GeoContext.from_dltile_key('512:0:10.0:36:-65:216')
+        >>> geoctx.index_to_coords(row=4, col=2).compute() # doctest: +SKIP
+        (167220.0, 1111000.0)
         """
         return Tuple[Float, Float]._from_apply(
             "wf.GeoContext.index_to_coords", self, row, col
@@ -308,5 +380,17 @@ class GeoContext(GeoContextBase):
     def coords_to_index(self, x, y):
         """
         Convert spatial coordinates (x, y) in the GeoContext's CRS to pixel coordinates (row, col).
+
+        Parameters
+        ----------
+        x: Float
+        y: Float
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import GeoContext
+        >>> geoctx = GeoContext.from_dltile_key('512:0:10.0:36:-65:216')
+        >>> geoctx.coords_to_index(x=167220.0, y=1111000.0).compute() # doctest: +SKIP
+        (4, 2)
         """
         return Tuple[Int, Int]._from_apply("wf.GeoContext.coords_to_index", self, x, y)

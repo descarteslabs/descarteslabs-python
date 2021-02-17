@@ -13,7 +13,7 @@ import traitlets
 from descarteslabs.common.proto.logging import logging_pb2
 
 from descarteslabs.common.graft import client as graft_client
-from ..models import VizOption, XYZ
+from ..models import XYZ
 from ..models.tile_url import validate_scales
 from ..types import Image, ImageCollection
 
@@ -189,7 +189,6 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
     ):
         """
         Set a new `~.geospatial.Image` or `~.geospatial.ImageCollection` object for this layer to use.
-
         You can set/override the values of any parameters the imagery depends on
         by passing them as kwargs.
 
@@ -203,6 +202,16 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
             Paramter names to values. Values can be Python types,
             `Proxytype` instances, or ``ipywidgets.Widget`` instances.
             Names must correspond to parameters that ``imagery`` depends on.
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> wf.map # doctest: +SKIP
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
+        >>> red = img.pick_bands("red") # doctest: +SKIP
+        >>> blue = img.pick_bands("blue") # doctest: +SKIP
+        >>> layer = red.visualize(name="sample visualization") # doctest: +SKIP
+        >>> layer.set_imagery(blue) # doctest: +SKIP
         """
         if not isinstance(imagery, (Image, ImageCollection)):
             raise TypeError(
@@ -492,8 +501,8 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         Example
         -------
         >>> import descarteslabs.workflows as wf
-        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
         >>> wf.map # doctest: +SKIP
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
         >>> layer = img.visualize("sample visualization") # doctest: +SKIP
         >>> # ^ will show an error for attempting to visualize more than 3 bands
         >>> layer.forget_logs() # doctest: +SKIP
@@ -510,8 +519,8 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         Example
         -------
         >>> import descarteslabs.workflows as wf
-        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
         >>> wf.map # doctest: +SKIP
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
         >>> layer = img.visualize("sample visualization") # doctest: +SKIP
         >>> # ^ will show an error for attempting to visualize more than 3 bands
         >>> layer.clear_logs() # doctest: +SKIP
@@ -554,6 +563,7 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
         Example
         -------
         >>> import descarteslabs.workflows as wf
+        >>> wf.map # doctest: +SKIP
         >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1") # doctest: +SKIP
         >>> img = img.pick_bands("red") # doctest: +SKIP
         >>> layer = img.visualize("sample visualization", colormap="viridis") # doctest: +SKIP
@@ -605,6 +615,25 @@ class WorkflowsLayer(ipyleaflet.TileLayer):
                     self.colormap = new_colormap
 
     def get_scales(self):
+        """
+        Get scales for a layer.
+
+        Returns
+        -------
+        scales: List[List[int]] or None
+            A list containing a list of scales for each band in the layer or None if the layer has no scales set.
+
+
+        Example
+        -------
+        >>> import descarteslabs.workflows as wf
+        >>> img = wf.Image.from_id("landsat:LC08:PRE:TOAR:meta_LC80330352016022_v1")
+        >>> img = img.pick_bands("red") # doctest: +SKIP
+        >>> layer = img.visualize("sample visualization") # doctest: +SKIP
+        >>> layer.set_scales((0.08, 0.3), 'viridis') # doctest: +SKIP
+        >>> layer.get_scales() # doctest: +SKIP
+        [[0.08, 0.3]]
+        """
         if self.r_min is None:
             return None
         if self.colormap:

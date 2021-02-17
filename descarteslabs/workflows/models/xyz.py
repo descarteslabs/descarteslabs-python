@@ -222,6 +222,18 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
         client: `.workflows.client.Client`, optional
             Allows you to use a specific client instance with non-default
             auth and parameters.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import XYZ
+        >>> xyz_id = '24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6'
+        >>> xyz = XYZ.get(xyz_id) # doctest: +SKIP
+        >>> xyz # doctest: +SKIP
+        <descarteslabs.workflows.models.xyz.XYZ object at 0x...>
+        >>> XYZ.delete_id(xyz_id) # doctest: +SKIP
+        >>> XYZ.get(xyz_id) # doctest: +SKIP
+        ...
+        NotFound: 404 XYZ '24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6' does not exist.
         """
         if client is None:
             client = get_global_grpc_client()
@@ -239,13 +251,16 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
         Parameters
         ----------
         client: Client, default None
-            Allows you to use a specific client instance with non-default
-            auth and parameters
+            Allows you to use a specific client instance with non-default auth and parameters
 
+        Example
+        -------
         Returns
         -------
         None
 
+        Example
+        -------
         >>> from descarteslabs.workflows import XYZ
         >>> xyz = XYZ.get('24d0e79c5c1e1f10a0b1177ef3974d7edefd5988291cf2c6') # doctest: +SKIP
         >>> xyz.delete() # doctest: +SKIP
@@ -382,6 +397,15 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
         -------
         wmts_url: str
             The URL for the WMTS service endpoint corresponding to this XYZ object.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Image, XYZ
+        >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
+        >>> rgb = img.pick_bands("red green blue")
+        >>> xyz = XYZ(rgb, name="My RGB") # doctest: +SKIP
+        >>> xyz.wmts_url() # doctest: +SKIP
+        'https://workflows.prod.descarteslabs.com/master/wmts/xyz/...'
         """
         url_params = {}
 
@@ -463,7 +487,7 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
 
     @property
     def id(self) -> str:
-        "str: The globally unique identifier for the `XYZ`"
+        """str: The globally unique identifier for the `XYZ`"""
         return self._message.id
 
     @property
@@ -491,27 +515,27 @@ class XYZ(PublishedGraft, message_type=xyz_pb2.XYZ):
 
     @property
     def name(self) -> str:
-        "str: The name of this XYZ."
+        """str: The name of this XYZ."""
         return self._message.name
 
     @property
     def description(self) -> str:
-        "str: A long-form description of this `XYZ`. Markdown is supported."
+        """str: A long-form description of this `XYZ`. Markdown is supported."""
         return self._message.description
 
     @property
     def user(self) -> str:
-        "str: The user ID which created this `XYZ`."
+        """str: The user ID which created this `XYZ`."""
         return self._message.user
 
     @property
     def org(self) -> str:
-        "str: The org of the user which created this `XYZ`."
+        """str: The org of the user which created this `XYZ`."""
         return self._message.org
 
     @property
     def public(self) -> bool:
-        "bool: True if this `XYZ` is shared."
+        """bool: True if this `XYZ` is shared."""
         return self._message.public
 
 

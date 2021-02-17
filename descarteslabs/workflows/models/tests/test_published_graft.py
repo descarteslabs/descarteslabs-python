@@ -40,7 +40,9 @@ def test_init_subclass():
     assert SubPublished._message_type is FakeProtoMessage
 
 
-@mock.patch("descarteslabs.workflows.models.published_graft.get_global_grpc_client",)
+@mock.patch(
+    "descarteslabs.workflows.models.published_graft.get_global_grpc_client",
+)
 class TestInit:
     @pytest.mark.parametrize("client", [utils.MockedClient(), None])
     def test_basic(self, mock_gggc, client):
@@ -136,7 +138,9 @@ class TestInit:
         assert tuple(type(p) for p in pub.params) == func.all_arg_types
 
 
-@mock.patch("descarteslabs.workflows.models.published_graft.get_global_grpc_client",)
+@mock.patch(
+    "descarteslabs.workflows.models.published_graft.get_global_grpc_client",
+)
 @pytest.mark.parametrize("client", [utils.MockedClient(), None])
 def test_from_proto(mock_gggc, client):
     class SubPublished(PublishedGraft, message_type=FakeProtoMessage):
