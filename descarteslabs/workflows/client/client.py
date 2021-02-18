@@ -6,6 +6,7 @@ import grpc
 from descarteslabs.common.proto.job import job_pb2_grpc
 from descarteslabs.common.proto.xyz import xyz_pb2_grpc
 from descarteslabs.common.proto.workflow import workflow_pb2_grpc
+from descarteslabs.common.proto.discover import discover_pb2_grpc
 
 from descarteslabs.client.grpc import (  # noqa: F401
     GrpcClient,
@@ -72,6 +73,16 @@ class Client(GrpcClient):
         self._add_api("Job", "GetJob")
         self._add_api("Job", "ListJobs")
         self._add_api("Job", "CancelJob")
+
+        # for the time being, the AccessGrantAPI will be implemented by the API service
+        # but this might be refactored later
+        self._add_stub("AccessGrant", discover_pb2_grpc.AccessGrantApiStub)
+        self._add_api("AccessGrant", "CreateAccessGrant")
+        # self._add_api("AccessGrant", "GetAccessGrant")
+        self._add_api("AccessGrant", "DeleteAccessGrant")
+        # self._add_api("AccessGrant", "ListAccessGrants")
+        self._add_api("AccessGrant", "ListAccessGrantsStream")
+        # self._add_api("AccessGrant", "ReplaceAccessGrant")
 
 
 class _LogWarningsInterceptor(grpc.UnaryUnaryClientInterceptor):
