@@ -169,6 +169,7 @@ service AccessGrantApi {
   rpc GetAccessGrant(GetAccessGrantRequest) returns (GetAccessGrantResponse);
   rpc DeleteAccessGrant(DeleteAccessGrantRequest) returns (DeleteAccessGrantResponse);
   rpc ListAccessGrants(ListAccessGrantsRequest) returns (ListAccessGrantsResponse);
+  rpc ListAccessGrantsStream(ListAccessGrantsStreamRequest) returns (stream ListAccessGrantsStreamResponse);
   rpc ReplaceAccessGrant(ReplaceAccessGrantRequest) returns (ReplaceAccessGrantResponse);
 
   // TODO: add bulk create endpoint
@@ -259,6 +260,14 @@ message ListAccessGrantsRequest {
 message ListAccessGrantsResponse {
   repeated AccessGrant access_grants = 1;
   string next_page = 2;
+}
+
+message ListAccessGrantsStreamRequest {
+  string asset_name = 1;
+}
+
+message ListAccessGrantsStreamResponse {
+  AccessGrant access_grant = 1;
 }
 
 // Note you can not set fields marked 
