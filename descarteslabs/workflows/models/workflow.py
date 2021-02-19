@@ -3,8 +3,15 @@ import textwrap
 from urllib.parse import urlencode
 
 from descarteslabs.common.proto.workflow import workflow_pb2
+from descarteslabs.common.proto.discover import discover_pb2
 
 from descarteslabs.workflows.client import get_global_grpc_client
+from descarteslabs.workflows.client.client import (
+    ALL_AUTHENTICATED_USERS,
+    ROLE_WORKFLOWS_VIEWER,
+    TYPE_USER_EMAIL,
+)
+
 
 from .utils import pb_milliseconds_to_datetime
 from .versionedgraft import VersionedGraft
@@ -616,6 +623,188 @@ class Workflow:
             new_message.ClearField("versioned_grafts")
         return self._from_proto(new_message, client)
 
+    def add_reader(self, user, client=None):
+        """
+        Share the workflow with another user.
+
+        The workflow must have previously been saved to the backend; to do so, call `~.save`.
+
+        Parameters
+        ----------
+        user: str
+            The user (email) with whom the workflow is to be shared.
+        client: `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow
+        >>> workflow = Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> workflow.add_reader("betty@gmail.com") # doctest: +SKIP
+        """
+        if client is None:
+            client = self._client
+
+        if self.created_timestamp is None:
+            raise ValueError("Workflow must be saved before it can be shared")
+
+        access_grant_request = discover_pb2.CreateAccessGrantRequest(
+            access_grant=discover_pb2.AccessGrant(
+                asset_name=self._access_name,
+                entity=discover_pb2.Entity(
+                    type=TYPE_USER_EMAIL,
+                    id=user,
+                ),
+                access=ROLE_WORKFLOWS_VIEWER,
+            )
+        )
+
+        client.api["CreateAccessGrant"](
+            access_grant_request, timeout=client.DEFAULT_TIMEOUT
+        )
+
+    def remove_reader(self, user, client=None):
+        """
+        Revoke sharing of the workflow with another user.
+
+        The workflow must have previously been saved to the backend; to do so, call `~.save`.
+
+        Parameters
+        ----------
+        user: str
+            The user (email) for whom premission to access the workflow is to be revoked.
+        client: `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow
+        >>> workflow = Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> workflow.remove_reader("betty@gmail.com") # doctest: +SKIP
+        """
+        if client is None:
+            client = self._client
+
+        if self.created_timestamp is None:
+            raise ValueError("Workflow must be saved before it can be shared")
+
+        delete_access_grant_request = discover_pb2.DeleteAccessGrantRequest(
+            access_grant=discover_pb2.AccessGrant(
+                asset_name=self._access_name,
+                entity=discover_pb2.Entity(
+                    type=TYPE_USER_EMAIL,
+                    id=user,
+                ),
+                access=ROLE_WORKFLOWS_VIEWER,
+            )
+        )
+
+        client.api["DeleteAccessGrant"](
+            delete_access_grant_request, timeout=client.DEFAULT_TIMEOUT
+        )
+
+    def list_readers(self, client=None):
+        """
+        Iterator over users with whom the workflow has been shared.
+
+        The workflow must have previously been saved to the backend; to do so, call `~.save`.
+
+        Parameters
+        ----------
+        client: `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters.
+
+        Yields
+        -----
+        user: str
+            User with whom the workflow has been shared for reading.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow
+        >>> workflow = Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> for user in workflow.list_readers(): # doctest: +SKIP
+        ...     print(user) # doctest: +SKIP
+        """
+        if client is None:
+            client = self._client
+
+        if self.created_timestamp is None:
+            raise ValueError("Workflow must be saved before it can be shared")
+
+        list_access_grants_request = discover_pb2.ListAccessGrantsStreamRequest(
+            asset_name=self._access_name,
+        )
+
+        for r in client.api["ListAccessGrantsStream"](
+            list_access_grants_request,
+            timeout=client.DEFAULT_TIMEOUT,
+        ):
+            yield r.access_grant.entity.id
+
+    def add_public_reader(self, client=None):
+        """
+        Share the workflow with all users.
+
+        The workflow must have previously been saved to the backend; to do so, call `~.save`.
+
+        Parameters
+        ----------
+        client: `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow
+        >>> workflow = Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> workflow.add_public_reader() # doctest: +SKIP
+        """
+        self.add_reader(ALL_AUTHENTICATED_USERS, client=client)
+
+    def remove_public_reader(self, client=None):
+        """
+        Revoke sharing of the workflow with all users.
+
+        The workflow must have previously been saved to the backend; to do so, call `~.save`.
+
+        Parameters
+        ----------
+        client: `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow
+        >>> workflow = Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> workflow.remove_public_reader() # doctest: +SKIP
+        """
+        self.remove_reader(ALL_AUTHENTICATED_USERS, client=client)
+
+    def has_public_reader(self, client=None):
+        """
+        Check if workflow is shared with all users.
+
+        The workflow must have previously been saved to the backend; to do so, call `~.save`.
+
+        Parameters
+        ----------
+        client: `.workflows.client.Client`, optional
+            Allows you to use a specific client instance with non-default
+            auth and parameters.
+
+        Example
+        -------
+        >>> from descarteslabs.workflows import Workflow
+        >>> workflow = Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
+        >>> workflow.has_public_reader() # doctest: +SKIP
+        """
+        return ALL_AUTHENTICATED_USERS in self.list_readers(client=client)
+
     @property
     def id(self):
         """
@@ -697,6 +886,10 @@ class Workflow:
     @tags.setter
     def tags(self, tags):
         self._message.tags[:] = tags
+
+    @property
+    def _access_name(self):
+        return f"asset/workflow/{self.id}"
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):

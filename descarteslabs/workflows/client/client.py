@@ -16,6 +16,12 @@ from descarteslabs.client.grpc import (  # noqa: F401
 from descarteslabs.workflows import _channel
 
 
+# For lack of a better location for these:
+ALL_AUTHENTICATED_USERS = "allAuthenticatedUsers"
+ROLE_WORKFLOWS_VIEWER = "workflows/role/viewer"
+TYPE_USER_EMAIL = "user-email"
+
+
 class Client(GrpcClient):
     """Low-level gRPC client for interacting with the Workflows backend. Not intended for users to use directly.
 
