@@ -142,7 +142,6 @@ def publish(
     obj=None,
     title="",
     description="",
-    public=False,
     labels=None,
     tags=None,
     docstring="",
@@ -176,8 +175,6 @@ def publish(
         User-friendly title for the `Workflow`.
     description: str, default ""
         Long-form description of this `Workflow`. Markdown is supported.
-    public: Bool, default `False`
-        Whether this `Workflow` will be publicly accessible.
     labels: Dict, optional
         Key-value pair labels to add to the `Workflow`.
     tags: list, optional
@@ -234,7 +231,6 @@ def publish(
         id,
         title=title,
         description=description,
-        public=public,
         labels=labels,
         tags=tags,
         client=client,

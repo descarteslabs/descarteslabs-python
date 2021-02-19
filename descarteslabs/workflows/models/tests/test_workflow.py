@@ -22,7 +22,6 @@ class TestWorkflow(object):
             id="bob@gmail.com:test",
             title="test",
             description="a test",
-            public=True,
             labels={"foo": "bar"},
             tags=["foo", "bar"],
         )
@@ -31,7 +30,6 @@ class TestWorkflow(object):
         assert msg.id == "bob@gmail.com:test"
         assert msg.title == "test"
         assert msg.description == "a test"
-        assert msg.public is True
         assert msg.labels == {"foo": "bar"}
         assert msg.tags == ["foo", "bar"]
 
@@ -76,7 +74,6 @@ class TestWorkflow(object):
             id="bob@gmail.com:test",
             title="test",
             description="a test",
-            public=True,
             labels={"foo": "bar"},
             tags=["foo", "bar"],
         )
@@ -87,7 +84,6 @@ class TestWorkflow(object):
         stub.return_value.UpsertWorkflow.assert_called_once_with(
             workflow_pb2.UpsertWorkflowRequest(
                 id=old_message.id,
-                public=old_message.public,
                 title=old_message.title,
                 description=old_message.description,
                 versioned_grafts=old_message.versioned_grafts,
@@ -194,7 +190,6 @@ class TestWorkflow(object):
             id="bob@gmail.com:test",
             title="test",
             description="a test",
-            public=True,
             labels={"foo": "bar"},
             tags=["foo", "bar"],
         )
@@ -202,7 +197,6 @@ class TestWorkflow(object):
         assert wf.id == "bob@gmail.com:test"
         assert wf.title == "test"
         assert wf.description == "a test"
-        assert wf.public is True
         assert wf.labels == {"foo": "bar"}
         assert wf.tags == ["foo", "bar"]
         assert wf.name is None
@@ -222,7 +216,6 @@ class TestWorkflow(object):
             id="bob@gmail.com:test",
             title="test",
             description="a test",
-            public=True,
             labels={"foo": "bar"},
             tags=["foo", "bar"],
         )

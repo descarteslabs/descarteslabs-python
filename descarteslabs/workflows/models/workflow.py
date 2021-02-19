@@ -28,7 +28,6 @@ class Workflow:
     ...     id="bob@gmail.com:cool_addition_model",
     ...     title="Bob's Super Cool Addition Model",
     ...     description="The result of 1 plus 1",
-    ...     public=True,
     ...     labels={"project": "arithmetic"},
     ...     tags=["test", "cool", "deep learning", "AI", "digital twin"])  # doctest: +SKIP
     >>> num = Int(1) + 1  # doctest: +SKIP
@@ -36,7 +35,6 @@ class Workflow:
     >>> workflow  # doctest: +SKIP
     Workflow: "Bob's Super Cool Addition Model"
         - id: bob@gmail.com:cool_addition_model
-        - public: True
         - labels: {'project': 'arithmetic'}
         - tags: ['test', 'cool', 'deep learning', 'AI', 'digital twin']
         - versions: '0.0.1'
@@ -54,7 +52,6 @@ class Workflow:
     >>> workflow  # doctest: +SKIP
     Workflow: "Bob's Super Cool Addition Model"
         - id: bob@gmail.com:cool_addition_model
-        - public: True
         - labels: {'project': 'arithmetic'}
         - tags: ['test', 'cool', 'deep learning', 'AI', 'digital twin']
         - versions: '0.0.1', '0.0.2'
@@ -66,7 +63,6 @@ class Workflow:
         id,
         title="",
         description="",
-        public=False,
         labels=None,
         tags=None,
         client=None,
@@ -84,8 +80,6 @@ class Workflow:
             User-friendly title for the `Workflow`.
         description: str, default ""
             Long-form description of this `Workflow`. Markdown is supported.
-        public: bool, default `False`
-            Whether this `Workflow` will be publicly accessible, or only visible to you.
         labels: dict, optional
             Key-value pair labels to add to the `Workflow`.
         tags: list, optional
@@ -105,13 +99,11 @@ class Workflow:
         ...     id="bob@gmail.com:cool_addition_model",
         ...     title="Bob's Super Cool Addition Model",
         ...     description="The result of 1 plus 1",
-        ...     public=True,
         ...     labels={"project": "arithmetic"},
         ...     tags=["test", "cool", "deep learning", "AI", "digital twin"]) # doctest: +SKIP
         >>> workflow # doctest: +SKIP
         Workflow: "Bob's Super Cool Addition Model"
             - id: bob@gmail.com:cool_addition_model
-            - public: True
             - labels: {'project': 'arithmetic'}
             - tags: ['test', 'cool', 'deep learning', 'AI', 'digital twin']
             - versions: '0.0.1', '0.0.2'
@@ -124,7 +116,6 @@ class Workflow:
             id=id,
             title=title,
             description=textwrap.dedent(description),
-            public=public,
             labels=labels,
             tags=tags,
         )
@@ -156,7 +147,6 @@ class Workflow:
         >>> workflow # doctest: +SKIP
         Workflow: "Bob's Super Cool Addition Model"
             - id: bob@gmail.com:cool_addition_model
-            - public: True
             - labels: {'project': 'arithmetic'}
             - tags: ['test', 'cool', 'deep learning', 'AI', 'digital twin']
             - versions: '0.0.1', '0.0.2'
@@ -338,7 +328,6 @@ class Workflow:
 
         update_request = workflow_pb2.UpsertWorkflowRequest(
             id=self._message.id,
-            public=self._message.public,
             title=self._message.title,
             description=self._message.description,
             versioned_grafts=self._message.versioned_grafts,
@@ -859,15 +848,6 @@ class Workflow:
         self._message.labels.update(labels)
 
     @property
-    def public(self):
-        """bool: Whether this `Workflow` is publicly accessible."""
-        return self._message.public
-
-    @public.setter
-    def public(self, public):
-        self._message.public = public
-
-    @property
     def title(self):
         """str: The user-friendly title of this `Workflow`."""
         return self._message.title
@@ -900,7 +880,6 @@ class Workflow:
         return """\
 Workflow: "{self.title}"
     - id: {self.id}
-    - public: {self.public}
     - labels: {self.labels}
     - tags: {self.tags}
     - versions: {versions}

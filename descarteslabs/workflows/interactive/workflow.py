@@ -92,7 +92,7 @@ class WorkflowWidget(ipywidgets.VBox):
             f"""
             <h2>{flow.title}</h2>
             <p><code>{flow.id}</p></code>
-            <p>{"<i class='fa fa-unlock'></i> Public" if flow.public else "<i class='fa fa-lock'></i> Private"}</p>
+            <p>{"<i class='fa fa-unlock'></i> Public" if flow.has_public_reader() else "<i class='fa fa-lock'></i> Private"}</p>  # noqa: E501
             <p><b>Labels:</b> <code>{flow.labels}</code></p>
             <p><b>Tags:</b> <code>{flow.tags}</code></p>
             """
