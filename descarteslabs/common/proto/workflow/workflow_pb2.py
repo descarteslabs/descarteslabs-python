@@ -22,7 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n2descarteslabs/common/proto/workflow/workflow.proto\x12\x17\x64\x65scarteslabs.workflows\x1a\x32\x64\x65scarteslabs/common/proto/typespec/typespec.proto\x1a<descarteslabs/common/proto/visualization/visualization.proto\x1a\x30\x64\x65scarteslabs/common/proto/widgets/widgets.proto\"\xaa\x04\n\x08Workflow\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12+\n\x11\x63reated_timestamp\x18\x02 \x01(\x03R\x10\x63reatedTimestamp\x12+\n\x11updated_timestamp\x18\x03 \x01(\x03R\x10updatedTimestamp\x12\x16\n\x06public\x18\x05 \x01(\x08R\x06public\x12\x14\n\x05title\x18\t \x01(\tR\x05title\x12 \n\x0b\x64\x65scription\x18\x08 \x01(\tR\x0b\x64\x65scription\x12R\n\x10versioned_grafts\x18\x1a \x03(\x0b\x32\'.descarteslabs.workflows.VersionedGraftR\x0fversionedGrafts\x12\x45\n\x06labels\x18\x1b \x03(\x0b\x32-.descarteslabs.workflows.Workflow.LabelsEntryR\x06labels\x12\x12\n\x04tags\x18\x1d \x03(\tR\x04tags\x12\x12\n\x04user\x18\x17 \x01(\tR\x04user\x12\x10\n\x03org\x18\x18 \x01(\tR\x03org\x12\x14\n\x05\x65mail\x18\x19 \x01(\tR\x05\x65mail\x12\x12\n\x04name\x18\x1c \x01(\tR\x04name\x12*\n\x11wmts_url_template\x18\x1e \x01(\tR\x0fwmtsUrlTemplate\x1a\x39\n\x0bLabelsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\x87\x03\n\x15UpsertWorkflowRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n\x06public\x18\x02 \x01(\x08R\x06public\x12\x14\n\x05title\x18\x03 \x01(\tR\x05title\x12 \n\x0b\x64\x65scription\x18\x04 \x01(\tR\x0b\x64\x65scription\x12R\n\x10versioned_grafts\x18\x1a \x03(\x0b\x32\'.descarteslabs.workflows.VersionedGraftR\x0fversionedGrafts\x12R\n\x06labels\x18\x1b \x03(\x0b\x32:.descarteslabs.workflows.UpsertWorkflowRequest.LabelsEntryR\x06labels\x12\x12\n\x04tags\x18\x1d \x03(\tR\x04tags\x12\x17\n\x07\x64ry_run\x18\x32 \x01(\x08R\x06\x64ryRun\x1a\x39\n\x0bLabelsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"$\n\x12GetWorkflowRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"=\n\x11GetVersionRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n\x07version\x18\x02 \x01(\tR\x07version\"\'\n\x15\x44\x65leteWorkflowRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"c\n\x16SearchWorkflowsRequest\x12\x14\n\x05\x65mail\x18\x01 \x01(\tR\x05\x65mail\x12\x1f\n\x0bname_prefix\x18\x02 \x01(\tR\nnamePrefix\x12\x12\n\x04tags\x18\x1d \x03(\tR\x04tags\"\xe0\x05\n\x0eVersionedGraft\x12\x18\n\x07version\x18\x01 \x01(\tR\x07version\x12\x1c\n\tdocstring\x18\x05 \x01(\tR\tdocstring\x12)\n\x10serialized_graft\x18\x02 \x01(\tR\x0fserializedGraft\x12=\n\x08typespec\x18\x04 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x08typespec\x12\x42\n\nparameters\x18\x0b \x03(\x0b\x32\".descarteslabs.workflows.ParameterR\nparameters\x12\x18\n\x07\x63hannel\x18\x03 \x01(\tR\x07\x63hannel\x12%\n\x0e\x63lient_version\x18\n \x01(\tR\rclientVersion\x12K\n\x06labels\x18\x06 \x03(\x0b\x32\x33.descarteslabs.workflows.VersionedGraft.LabelsEntryR\x06labels\x12+\n\x11\x63reated_timestamp\x18\x07 \x01(\x03R\x10\x63reatedTimestamp\x12+\n\x11updated_timestamp\x18\x08 \x01(\x03R\x10updatedTimestamp\x12\x31\n\x14\x64\x65precated_timestamp\x18\t \x01(\x03R\x13\x64\x65precatedTimestamp\x12!\n\x0curl_template\x18\x0c \x01(\tR\x0burlTemplate\x12*\n\x11wmts_url_template\x18\r \x01(\tR\x0fwmtsUrlTemplate\x12\x43\n\x0bviz_options\x18\x0e \x03(\x0b\x32\".descarteslabs.workflows.VizOptionR\nvizOptions\x1a\x39\n\x0bLabelsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"E\n\x17WmtsUrlTemplateResponse\x12*\n\x11wmts_url_template\x18\x01 \x01(\tR\x0fwmtsUrlTemplate\"\x07\n\x05\x45mpty2\xf3\x04\n\x0bWorkflowAPI\x12\x65\n\x0eUpsertWorkflow\x12..descarteslabs.workflows.UpsertWorkflowRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x12_\n\x0bGetWorkflow\x12+.descarteslabs.workflows.GetWorkflowRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x12\x63\n\nGetVersion\x12*.descarteslabs.workflows.GetVersionRequest\x1a\'.descarteslabs.workflows.VersionedGraft\"\x00\x12i\n\x0fSearchWorkflows\x12/.descarteslabs.workflows.SearchWorkflowsRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x30\x01\x12\x62\n\x0e\x44\x65leteWorkflow\x12..descarteslabs.workflows.DeleteWorkflowRequest\x1a\x1e.descarteslabs.workflows.Empty\"\x00\x12h\n\x12GetWmtsUrlTemplate\x12\x1e.descarteslabs.workflows.Empty\x1a\x30.descarteslabs.workflows.WmtsUrlTemplateResponse\"\x00\x62\x06proto3'
+  serialized_pb=b'\n2descarteslabs/common/proto/workflow/workflow.proto\x12\x17\x64\x65scarteslabs.workflows\x1a\x32\x64\x65scarteslabs/common/proto/typespec/typespec.proto\x1a<descarteslabs/common/proto/visualization/visualization.proto\x1a\x30\x64\x65scarteslabs/common/proto/widgets/widgets.proto\"\x92\x04\n\x08Workflow\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12+\n\x11\x63reated_timestamp\x18\x02 \x01(\x03R\x10\x63reatedTimestamp\x12+\n\x11updated_timestamp\x18\x03 \x01(\x03R\x10updatedTimestamp\x12\x14\n\x05title\x18\t \x01(\tR\x05title\x12 \n\x0b\x64\x65scription\x18\x08 \x01(\tR\x0b\x64\x65scription\x12R\n\x10versioned_grafts\x18\x1a \x03(\x0b\x32\'.descarteslabs.workflows.VersionedGraftR\x0fversionedGrafts\x12\x45\n\x06labels\x18\x1b \x03(\x0b\x32-.descarteslabs.workflows.Workflow.LabelsEntryR\x06labels\x12\x12\n\x04tags\x18\x1d \x03(\tR\x04tags\x12\x12\n\x04user\x18\x17 \x01(\tR\x04user\x12\x10\n\x03org\x18\x18 \x01(\tR\x03org\x12\x14\n\x05\x65mail\x18\x19 \x01(\tR\x05\x65mail\x12\x12\n\x04name\x18\x1c \x01(\tR\x04name\x12*\n\x11wmts_url_template\x18\x1e \x01(\tR\x0fwmtsUrlTemplate\x1a\x39\n\x0bLabelsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\xef\x02\n\x15UpsertWorkflowRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n\x05title\x18\x03 \x01(\tR\x05title\x12 \n\x0b\x64\x65scription\x18\x04 \x01(\tR\x0b\x64\x65scription\x12R\n\x10versioned_grafts\x18\x1a \x03(\x0b\x32\'.descarteslabs.workflows.VersionedGraftR\x0fversionedGrafts\x12R\n\x06labels\x18\x1b \x03(\x0b\x32:.descarteslabs.workflows.UpsertWorkflowRequest.LabelsEntryR\x06labels\x12\x12\n\x04tags\x18\x1d \x03(\tR\x04tags\x12\x17\n\x07\x64ry_run\x18\x32 \x01(\x08R\x06\x64ryRun\x1a\x39\n\x0bLabelsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"$\n\x12GetWorkflowRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"=\n\x11GetVersionRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n\x07version\x18\x02 \x01(\tR\x07version\"\'\n\x15\x44\x65leteWorkflowRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"c\n\x16SearchWorkflowsRequest\x12\x14\n\x05\x65mail\x18\x01 \x01(\tR\x05\x65mail\x12\x1f\n\x0bname_prefix\x18\x02 \x01(\tR\nnamePrefix\x12\x12\n\x04tags\x18\x1d \x03(\tR\x04tags\"\xe0\x05\n\x0eVersionedGraft\x12\x18\n\x07version\x18\x01 \x01(\tR\x07version\x12\x1c\n\tdocstring\x18\x05 \x01(\tR\tdocstring\x12)\n\x10serialized_graft\x18\x02 \x01(\tR\x0fserializedGraft\x12=\n\x08typespec\x18\x04 \x01(\x0b\x32!.descarteslabs.workflows.TypespecR\x08typespec\x12\x42\n\nparameters\x18\x0b \x03(\x0b\x32\".descarteslabs.workflows.ParameterR\nparameters\x12\x18\n\x07\x63hannel\x18\x03 \x01(\tR\x07\x63hannel\x12%\n\x0e\x63lient_version\x18\n \x01(\tR\rclientVersion\x12K\n\x06labels\x18\x06 \x03(\x0b\x32\x33.descarteslabs.workflows.VersionedGraft.LabelsEntryR\x06labels\x12+\n\x11\x63reated_timestamp\x18\x07 \x01(\x03R\x10\x63reatedTimestamp\x12+\n\x11updated_timestamp\x18\x08 \x01(\x03R\x10updatedTimestamp\x12\x31\n\x14\x64\x65precated_timestamp\x18\t \x01(\x03R\x13\x64\x65precatedTimestamp\x12!\n\x0curl_template\x18\x0c \x01(\tR\x0burlTemplate\x12*\n\x11wmts_url_template\x18\r \x01(\tR\x0fwmtsUrlTemplate\x12\x43\n\x0bviz_options\x18\x0e \x03(\x0b\x32\".descarteslabs.workflows.VizOptionR\nvizOptions\x1a\x39\n\x0bLabelsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"E\n\x17WmtsUrlTemplateResponse\x12*\n\x11wmts_url_template\x18\x01 \x01(\tR\x0fwmtsUrlTemplate\"\x07\n\x05\x45mpty2\xf3\x04\n\x0bWorkflowAPI\x12\x65\n\x0eUpsertWorkflow\x12..descarteslabs.workflows.UpsertWorkflowRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x12_\n\x0bGetWorkflow\x12+.descarteslabs.workflows.GetWorkflowRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x12\x63\n\nGetVersion\x12*.descarteslabs.workflows.GetVersionRequest\x1a\'.descarteslabs.workflows.VersionedGraft\"\x00\x12i\n\x0fSearchWorkflows\x12/.descarteslabs.workflows.SearchWorkflowsRequest\x1a!.descarteslabs.workflows.Workflow\"\x00\x30\x01\x12\x62\n\x0e\x44\x65leteWorkflow\x12..descarteslabs.workflows.DeleteWorkflowRequest\x1a\x1e.descarteslabs.workflows.Empty\"\x00\x12h\n\x12GetWmtsUrlTemplate\x12\x1e.descarteslabs.workflows.Empty\x1a\x30.descarteslabs.workflows.WmtsUrlTemplateResponse\"\x00\x62\x06proto3'
   ,
   dependencies=[descarteslabs_dot_common_dot_proto_dot_typespec_dot_typespec__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_visualization_dot_visualization__pb2.DESCRIPTOR,descarteslabs_dot_common_dot_proto_dot_widgets_dot_widgets__pb2.DESCRIPTOR,])
 
@@ -63,8 +63,8 @@ _WORKFLOW_LABELSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=741,
-  serialized_end=798,
+  serialized_start=717,
+  serialized_end=774,
 )
 
 _WORKFLOW = _descriptor.Descriptor(
@@ -97,77 +97,70 @@ _WORKFLOW = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='updatedTimestamp', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='public', full_name='descarteslabs.workflows.Workflow.public', index=3,
-      number=5, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='public', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='title', full_name='descarteslabs.workflows.Workflow.title', index=4,
+      name='title', full_name='descarteslabs.workflows.Workflow.title', index=3,
       number=9, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='title', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='description', full_name='descarteslabs.workflows.Workflow.description', index=5,
+      name='description', full_name='descarteslabs.workflows.Workflow.description', index=4,
       number=8, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='description', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='versioned_grafts', full_name='descarteslabs.workflows.Workflow.versioned_grafts', index=6,
+      name='versioned_grafts', full_name='descarteslabs.workflows.Workflow.versioned_grafts', index=5,
       number=26, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='versionedGrafts', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='labels', full_name='descarteslabs.workflows.Workflow.labels', index=7,
+      name='labels', full_name='descarteslabs.workflows.Workflow.labels', index=6,
       number=27, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='labels', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='tags', full_name='descarteslabs.workflows.Workflow.tags', index=8,
+      name='tags', full_name='descarteslabs.workflows.Workflow.tags', index=7,
       number=29, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='tags', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='user', full_name='descarteslabs.workflows.Workflow.user', index=9,
+      name='user', full_name='descarteslabs.workflows.Workflow.user', index=8,
       number=23, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='user', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='org', full_name='descarteslabs.workflows.Workflow.org', index=10,
+      name='org', full_name='descarteslabs.workflows.Workflow.org', index=9,
       number=24, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='org', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='email', full_name='descarteslabs.workflows.Workflow.email', index=11,
+      name='email', full_name='descarteslabs.workflows.Workflow.email', index=10,
       number=25, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='email', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='name', full_name='descarteslabs.workflows.Workflow.name', index=12,
+      name='name', full_name='descarteslabs.workflows.Workflow.name', index=11,
       number=28, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='name', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='wmts_url_template', full_name='descarteslabs.workflows.Workflow.wmts_url_template', index=13,
+      name='wmts_url_template', full_name='descarteslabs.workflows.Workflow.wmts_url_template', index=12,
       number=30, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -186,7 +179,7 @@ _WORKFLOW = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=244,
-  serialized_end=798,
+  serialized_end=774,
 )
 
 
@@ -224,8 +217,8 @@ _UPSERTWORKFLOWREQUEST_LABELSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=741,
-  serialized_end=798,
+  serialized_start=717,
+  serialized_end=774,
 )
 
 _UPSERTWORKFLOWREQUEST = _descriptor.Descriptor(
@@ -244,49 +237,42 @@ _UPSERTWORKFLOWREQUEST = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='id', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='public', full_name='descarteslabs.workflows.UpsertWorkflowRequest.public', index=1,
-      number=2, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='public', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='title', full_name='descarteslabs.workflows.UpsertWorkflowRequest.title', index=2,
+      name='title', full_name='descarteslabs.workflows.UpsertWorkflowRequest.title', index=1,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='title', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='description', full_name='descarteslabs.workflows.UpsertWorkflowRequest.description', index=3,
+      name='description', full_name='descarteslabs.workflows.UpsertWorkflowRequest.description', index=2,
       number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='description', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='versioned_grafts', full_name='descarteslabs.workflows.UpsertWorkflowRequest.versioned_grafts', index=4,
+      name='versioned_grafts', full_name='descarteslabs.workflows.UpsertWorkflowRequest.versioned_grafts', index=3,
       number=26, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='versionedGrafts', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='labels', full_name='descarteslabs.workflows.UpsertWorkflowRequest.labels', index=5,
+      name='labels', full_name='descarteslabs.workflows.UpsertWorkflowRequest.labels', index=4,
       number=27, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='labels', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='tags', full_name='descarteslabs.workflows.UpsertWorkflowRequest.tags', index=6,
+      name='tags', full_name='descarteslabs.workflows.UpsertWorkflowRequest.tags', index=5,
       number=29, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='tags', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='dry_run', full_name='descarteslabs.workflows.UpsertWorkflowRequest.dry_run', index=7,
+      name='dry_run', full_name='descarteslabs.workflows.UpsertWorkflowRequest.dry_run', index=6,
       number=50, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
@@ -304,8 +290,8 @@ _UPSERTWORKFLOWREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=801,
-  serialized_end=1192,
+  serialized_start=777,
+  serialized_end=1144,
 )
 
 
@@ -336,8 +322,8 @@ _GETWORKFLOWREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1194,
-  serialized_end=1230,
+  serialized_start=1146,
+  serialized_end=1182,
 )
 
 
@@ -375,8 +361,8 @@ _GETVERSIONREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1232,
-  serialized_end=1293,
+  serialized_start=1184,
+  serialized_end=1245,
 )
 
 
@@ -407,8 +393,8 @@ _DELETEWORKFLOWREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1295,
-  serialized_end=1334,
+  serialized_start=1247,
+  serialized_end=1286,
 )
 
 
@@ -453,8 +439,8 @@ _SEARCHWORKFLOWSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1336,
-  serialized_end=1435,
+  serialized_start=1288,
+  serialized_end=1387,
 )
 
 
@@ -492,8 +478,8 @@ _VERSIONEDGRAFT_LABELSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=741,
-  serialized_end=798,
+  serialized_start=717,
+  serialized_end=774,
 )
 
 _VERSIONEDGRAFT = _descriptor.Descriptor(
@@ -614,8 +600,8 @@ _VERSIONEDGRAFT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1438,
-  serialized_end=2174,
+  serialized_start=1390,
+  serialized_end=2126,
 )
 
 
@@ -646,8 +632,8 @@ _WMTSURLTEMPLATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2176,
-  serialized_end=2245,
+  serialized_start=2128,
+  serialized_end=2197,
 )
 
 
@@ -671,8 +657,8 @@ _EMPTY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2247,
-  serialized_end=2254,
+  serialized_start=2199,
+  serialized_end=2206,
 )
 
 _WORKFLOW_LABELSENTRY.containing_type = _WORKFLOW
@@ -796,8 +782,8 @@ _WORKFLOWAPI = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=2257,
-  serialized_end=2884,
+  serialized_start=2209,
+  serialized_end=2836,
   methods=[
   _descriptor.MethodDescriptor(
     name='UpsertWorkflow',

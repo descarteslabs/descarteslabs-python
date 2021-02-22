@@ -23,7 +23,7 @@ message Workflow {
   // milliseconds since the UNIX epoch (UTC)
   int64 updated_timestamp = 3;
 
-  bool public = 5;
+  // obsolete: bool public = 5;
 
   string title = 9;
   string description = 8;
@@ -47,7 +47,7 @@ message Workflow {
 message UpsertWorkflowRequest {
   string id = 1;
 
-  bool public = 2;
+  // obsolete: bool public = 2;
   string title = 3;
   string description = 4;
 
