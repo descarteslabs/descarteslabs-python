@@ -364,7 +364,7 @@ class WorkflowsBrowser(ipywidgets.VBox):
           and only take `~.Int`, `~.Float`, `~.Str`, `~.Bool`, or `~.Datetime` as parameters.
           A widget will be added to the map to control the function arguments interactively.
 
-        If the version has `~.VersionedGraft.viz_options`, the first `VizOption` will be used
+        If the version has `~.VersionedGraft.viz_options`, the first `.VizOption` will be used
         to style the layer on the map.
 
         If ``self.map`` is None, the layer will be added to ``wf.map``, otherwise to ``self.map``.

@@ -899,8 +899,6 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
         also gets the field ``"group"`` added to its `~.Image.properties`, which identifies which group
         it belongs to.
 
-        Type-theoretically: ``groupby(func: Function[Image, {}, T]) -> ImageCollectionGroupby[T]``
-
         If the `ImageCollection` is empty, or ``func`` results in empty groups,
         `ImageCollectionGroupby.groups` will return an empty `Dict`.
 
@@ -1890,7 +1888,11 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     @typecheck_promote(
         (lambda: ImageCollection, Int, Float),
         mask=Bool,
-        bandinfo=(NoneType, Dict[Str, Dict[Str, Any]]),
+        bandinfo=lambda self: (
+            NoneType,
+            Dict[Str, Dict[Str, Any]],
+            type(self.bandinfo),
+        ),
     )
     def replace_empty_with(self, fill, mask=True, bandinfo=None):
         """

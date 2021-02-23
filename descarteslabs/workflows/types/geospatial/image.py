@@ -1285,7 +1285,11 @@ class Image(ImageBase, BandsMixin):
     @typecheck_promote(
         (lambda: Image, Int, Float),
         mask=Bool,
-        bandinfo=(NoneType, Dict[Str, Dict[Str, Any]]),
+        bandinfo=lambda self: (
+            NoneType,
+            Dict[Str, Dict[Str, Any]],
+            type(self.bandinfo),
+        ),
     )
     def replace_empty_with(self, fill, mask=True, bandinfo=None):
         """

@@ -2,6 +2,8 @@
 
 Execution
 ----------
+.. autofunction:: descarteslabs.workflows.inspect
+
 .. automodule:: descarteslabs.workflows.models
   :members:
   :autosummary:

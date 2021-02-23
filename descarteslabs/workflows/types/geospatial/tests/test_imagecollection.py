@@ -88,6 +88,10 @@ def test_all_methods_nonstats():
     assert isinstance(
         col.replace_empty_with(0.1, bandinfo={"red": {}}), ImageCollection
     )
+    assert isinstance(
+        col.replace_empty_with(0.1, bandinfo=col.bandinfo), ImageCollection
+    )
+    assert isinstance(col.replace_empty_with(col), ImageCollection)
     assert isinstance(col.value_at(0.1, 0.1), List[Dict[Str, Float]])
     assert isinstance(col.index_to_coords(0, 0), Tuple[Float, Float])
     assert isinstance(col.coords_to_index(0.0, 0.0), Tuple[Int, Int])

@@ -194,6 +194,7 @@ See :ref:`numpy-functions` for a full list of available functions.
   ~descarteslabs.workflows.models.XYZ
   ~descarteslabs.workflows.models.XYZLogListener
   ~descarteslabs.workflows.models.compute
+  ~descarteslabs.workflows.inspect
   ~descarteslabs.workflows.models.publish
   ~descarteslabs.workflows.models.use
 

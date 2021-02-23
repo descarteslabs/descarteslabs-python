@@ -68,7 +68,7 @@ class InspectClient(Service):
         file=None,
         cache=True,
         _ruster=None,
-        timeout=30,
+        timeout=60,
         **arguments,
     ):
         if geoctx is not None:
@@ -150,7 +150,7 @@ def inspect(
     file=None,
     cache=True,
     _ruster=None,
-    timeout=30,
+    timeout=60,
     client=None,
     **arguments,
 ):
@@ -161,8 +161,8 @@ def inspect(
     It's quicker but less resilient, won't be retried if it fails, and has no progress updates.
 
     If you have a larger computation (longer than ~30sec), or you want to be sure the computation will succeed,
-    use `~.compute` instead. `~.compute` creates a `.Job`, which runs asynchronously, will be retried if it fails,
-    and stores its results for later retrieval.
+    use `~models.compute` instead. `~models.compute` creates a `.Job`, which runs asynchronously,
+    will be retried if it fails, and stores its results for later retrieval.
 
     Parameters
     ----------
@@ -185,7 +185,7 @@ def inspect(
         If specified, writes results to the path or file instead of returning them.
     cache: bool, default True
         Whether to use the cache for this job.
-    timeout: int, optional, default 30
+    timeout: int, optional, default 60
         The number of seconds to wait for the result.
         Raises `~descarteslabs.workflows.models.JobTimeoutError` if the timeout passes.
     client: `.workflows.inspect.InspectClient`, optional

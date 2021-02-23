@@ -221,8 +221,8 @@ class Dict(BaseDict):
             dct = dct[0]
 
         kt, vt = self._type_params
-        if isinstance(dct, Dict):
-            other_kt, other_vt = dct._type_params
+        if isinstance(dct, BaseDict):
+            other_kt, other_vt = dct.key_type, dct.value_type
             if not (issubclass(other_kt, kt) and issubclass(other_vt, vt)):
                 raise ProxyTypeError(
                     "Cannot convert {} to {}, their element types are different".format(
