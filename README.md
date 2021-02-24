@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/descarteslabs/descarteslabs-python/actions/workflows/main.yml/badge.svg)](https://github.com/descarteslabs/descarteslabs-python/actions/workflows/public-ci.yml)
+[![Build Status](https://github.com/descarteslabs/descarteslabs-python/actions/workflows/public-ci.yml/badge.svg)](https://github.com/descarteslabs/descarteslabs-python/actions/workflows/public-ci.yml)
 
 Descarteslabs
 =============
