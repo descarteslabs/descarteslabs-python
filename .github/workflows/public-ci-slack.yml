@@ -1,8 +1,8 @@
 name: Slack Notify
-on:
-  check_suite:
-    branches:
-      - master
+on: [check_suite]
+  # check_suite:
+  #   branches:
+  #     - master
 
 jobs:
   slack:
