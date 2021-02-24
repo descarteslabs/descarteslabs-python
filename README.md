@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/descarteslabs/descarteslabs-python.svg?branch=master)](https://travis-ci.org/descarteslabs/descarteslabs-python)
+[![Build Status](https://github.com/descarteslabs/descarteslabs-python/actions/workflows/main.yml/badge.svg)](https://github.com/descarteslabs/descarteslabs-python/actions/workflows/public-ci.yml)
 
 Descarteslabs
 =============
