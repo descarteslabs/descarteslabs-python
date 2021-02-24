@@ -23,14 +23,7 @@ jobs:
           pip wheel --no-deps --wheel-dir wheels -e .
           pip install -e .[complete,tests]
       - name: Test
-        if: runner.os == 'Windows'
-        run: |
-          mkdir tempdir
-          $env:TMPDIR="tempdir"
-          pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
-      - name: Test
-        if: runner.os == 'Linux'
+        env:
+          TMPDIR: tempdir
         run: |
           pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
-      - name: Install check
-        run: pip install .
