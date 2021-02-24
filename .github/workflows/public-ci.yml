@@ -29,8 +29,8 @@ jobs:
           $env:TMPDIR="tempdir"
           pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
       - name: Test
+        if: runner.os == 'Linux'
         run: |
-          export TMPDIR=tempdir
           pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
       - name: Install check
         run: pip install .
