@@ -1,0 +1,16 @@
+name: Slack Notify
+on:
+  check_suite:
+    branches:
+      - master
+
+jobs:
+  slack:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Webhook
+      if: ${{ github.event.action }} == "completed"
+      uses: distributhor/workflow-webhook
+      with:
+        url: ${{ secret.slack_webhook }}
+        json: '{ "text": "CI testing of ${{ github.event.repository.full_name }} has ${{ github.event.check_suite.conclusion }} for commit ${{ github.event.check_suite.after }} ${{ github.event.check_suite.url}}" }'
