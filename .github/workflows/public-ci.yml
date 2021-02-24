@@ -25,7 +25,7 @@ jobs:
       - name: Test
         if: runner.os == 'Windows'
         run: |
-          $env:TMPDIR=tempdir
+          $env:TMPDIR="tempdir"
           pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
       - name: Test
         run: |
