@@ -1,15 +1,15 @@
 name: Slack Notify
 on: [check_suite]
-  # check_suite:
-  #   branches:
-  #     - master
+# check_suite:
+#   branches:
+#     - master
 
 jobs:
   slack:
     runs-on: ubuntu-latest
     steps:
     - name: Webhook
-      if: ${{ github.event.action }} == "completed"
+      # if: ${{ github.event.action }} == "completed"
       uses: distributhor/workflow-webhook
       with:
         url: ${{ secrets.slack_webhook }}
