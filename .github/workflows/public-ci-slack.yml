@@ -1,8 +1,5 @@
-name: Slack Notify
+name: Slack
 on: [check_suite]
-# check_suite:
-#   branches:
-#     - master
 
 jobs:
   slack:
@@ -10,7 +7,6 @@ jobs:
     steps:
     - name: Webhook
       # if: ${{ github.event.action }} == "completed"
-      uses: distributhor/workflow-webhook
-      with:
-        url: ${{ secrets.slack_webhook }}
-        json: '{ "text": "CI testing of ${{ github.event.repository.full_name }} has ${{ github.event.check_suite.conclusion }} for commit ${{ github.event.check_suite.after }} ${{ github.event.check_suite.url}}" }'
+      run: |
+        curl -H "Content-Type: application/json" -X POST -d '{ "text": "CI testing of ${{ github.event.repository.full_name }} has ${{ github.event.check_suite.conclusion }} for commit ${{ github.event.check_suite.after }} ${{ github.event.check_suite.url}}" }' ${{ secrets.slack_webhook }}
+
