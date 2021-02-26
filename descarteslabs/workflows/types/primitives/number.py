@@ -285,3 +285,11 @@ class Float(Number):
     """
 
     _pytype = float
+
+    def __init__(self, obj):
+        # handle the special case of constructing from a native python int
+        # as a convenience to the user. This includes being able to
+        # Float._promote() from a native python int also.
+        if type(obj) is int:
+            obj = Int(obj)
+        super(Float, self).__init__(obj)

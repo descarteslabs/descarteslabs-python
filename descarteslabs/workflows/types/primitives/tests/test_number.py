@@ -22,6 +22,7 @@ class TestPromote(object):
 
     def test_primitives(self):
         assert isinstance(Int._promote(0), Int)
+        assert isinstance(Float._promote(2), Float)
         assert isinstance(Float._promote(2.2), Float)
 
     def test_proxytypes(self):
@@ -31,8 +32,6 @@ class TestPromote(object):
     def test_wrong_primitives(self):
         with pytest.raises(ProxyTypeError):
             Int._promote(2.2)
-        with pytest.raises(ProxyTypeError):
-            Float._promote(0)
 
     def test_wrong_proxytypes(self):
         with pytest.raises(
