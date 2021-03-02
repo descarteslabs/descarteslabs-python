@@ -1,4 +1,4 @@
-__channel__ = "v0-18"
+__channel__ = "v0-19"
 DEFAULT_GRPC_HOST = "workflows-api.descarteslabs.com"
 DEFAULT_HTTP_HOST = "workflows.descarteslabs.com"
 
