@@ -8,6 +8,23 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## [1.7.0] - 2021-03-02
+
+### General
+- Upgraded various dependencies: `blosc==1.10.2`, `cachetools>=3.1.1`, `grpcio>=1.35.0,<2`, `ipyleaflet>=0.13.3,<1`, `protobuf>=3.14.0,<4`, `pyarrow>=3.0.0`, `pytz>=2021.1`
+- Upgraded from using Travis to GitHub Actions for CI.
+
+### Catalog
+- Added support for the `physical_range` property on `SpectralBand` and `MicrowaveBand`.
+
+### Workflows - Added
+- Workflows sharing. Support has been added to manage sharing of `Workflow` objects with other authorized users. The `public` option for publishing workflows
+has been removed now that `Workflow.add_public_reader()` provides the equivalent capability. See the [Workflows Guide](https://docs.descarteslabs.com/guides/workflows/sharing.html#sharing-workflows).
+- Lots of improvements to [API documentation](https://docs.descarteslabs.com/descarteslabs/workflows/readme.html) and the [Workflows Guide](https://docs.descarteslabs.com/guides/workflows.html).
+
+### Workflows - Fixed
+- Allow constructing `Float` instances from literal python integers.
+
 ## [1.6.1] - 2021-01-27
 
 Fixes a few buglets which slipped through. This release continues to use the workflows channel `v0-18`.
