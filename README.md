@@ -8,7 +8,7 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## [1.7.0] - 2021-03-02
+## [1.7.1] - 2021-03-03
 
 ### General
 - Upgraded various dependencies: `blosc==1.10.2`, `cachetools>=3.1.1`, `grpcio>=1.35.0,<2`, `ipyleaflet>=0.13.3,<1`, `protobuf>=3.14.0,<4`, `pyarrow>=3.0.0`, `pytz>=2021.1`
@@ -24,6 +24,10 @@ has been removed now that `Workflow.add_public_reader()` provides the equivalent
 
 ### Workflows - Fixed
 - Allow constructing `Float` instances from literal python integers.
+
+## [1.7.0] - 2021-03-02
+
+### This release was withdrawn due to a compatibility problem
 
 ## [1.6.1] - 2021-01-27
 
