@@ -19,6 +19,7 @@ import json
 import os
 import random
 import stat
+import tempfile
 import warnings
 from hashlib import sha1
 
@@ -34,6 +35,11 @@ from descarteslabs.common.threading.local import ThreadLocalWrapper
 DEFAULT_TOKEN_INFO_PATH = os.path.join(
     os.path.expanduser("~"), ".descarteslabs", "token_info.json"
 )
+DESCARTESLABS_CLIENT_ID = "DESCARTESLABS_CLIENT_ID"
+DESCARTESLABS_CLIENT_SECRET = "DESCARTESLABS_CLIENT_SECRET"
+DESCARTESLABS_REFRESH_TOKEN = "DESCARTESLABS_REFRESH_TOKEN"
+DESCARTESLABS_TOKEN = "DESCARTESLABS_TOKEN"
+DESCARTESLABS_TOKEN_INFO_PATH = "DESCARTESLABS_TOKEN_INFO_PATH"
 
 
 def base64url_decode(input):
@@ -79,6 +85,16 @@ class Auth:
         "See https://docs.descarteslabs.com/authentication.html."
     )
 
+    KEY_CLIENT_ID = "client_id"
+    KEY_CLIENT_SECRET = "client_secret"
+    KEY_REFRESH_TOKEN = "refresh_token"
+    KEY_SCOPE = "scope"
+    KEY_GRANT_TYPE = "grant_type"
+    KEY_TARGET = "target"
+    KEY_API_TYPE = "api_type"
+    KEY_JWT_TOKEN = "jtw_token"
+    KEY_ALT_JWT_TOKEN = "JWT_TOKEN"
+
     __attrs__ = [
         "domain",
         "scope",
@@ -92,12 +108,14 @@ class Auth:
         "RETRY_CONFIG",
     ]
 
+    _default_token_info_path = object()  # Just any unique object
+
     def __init__(
         self,
         domain="https://accounts.descarteslabs.com",
         scope=None,
         leeway=500,
-        token_info_path=DEFAULT_TOKEN_INFO_PATH,
+        token_info_path=_default_token_info_path,
         client_id=None,
         client_secret=None,
         jwt_token=None,
@@ -106,41 +124,65 @@ class Auth:
         _suppress_warning=False,
     ):
         """
-        Helps retrieve JWT from a client id and refresh token for cli usage.
+        Helps retrieve a JWT token from a client id and refresh token for cli usage.
 
-        :param str domain: The endpoint for auth0
-        :type scope: list(str) or None
-        :param scope: The JWT fields to be included
-        :param int leeway: JWT expiration leeway
-        :type token_info_path: str or None
-        :param token_info_path: Path to a JSON file optionally holding auth information
-        :type client_id: str or None
-        :param client_id: JWT client id
-        :type client_secret: str or None
-        :param client_secret: JWT client secret
-        :type jwt_token: str or None
-        :param jwt_token: The JWT token, if we already have one
-        :type refresh_token: str or None
-        :param refresh_token: The refresh token
+        If the `jwt_token` is provided or set in the environment, the `token_info_path`
+        is ignored and the stored auth information, if available, is not used.
+        The `client_id` and `client_secret` are optional.
+
+        If the `client_id` and `client_secret` are provided or set in the environment,
+        the `token_info_path` is ignored and the stored auth information, if available,
+        is not used. A new jwt token will be retrieved as needed.
+
+        If neither the `jwt_token` nor the `client_id` and `client_secret` are provided
+        or set in the environment, the stored auth information is retrieved from the
+        default `token_info_path` or given `token_info_path`.
+
+        :type domain: str, optional
+        :param domain: The endpoint for auth0;
+            ``https://accounts.descarteslabs.com`` by default
+        :type scope: list(str), optional
+        :param scope: The JWT fields to be included; ``None`` by default
+        :type leeway: int, optional
+        :param leeway: JWT expiration leeway; ``500`` seconds by default
+        :type token_info_path: str, optional
+        :param token_info_path: Path to a JSON file optionally holding auth information;
+            ``~/.descarteslabs/token_info.json`` by default;
+            if set to ``None`` the logic will not search for stored auth information
+        :type client_id: str, optional
+        :param client_id: JWT client id; ``None`` by default which means it will be
+            retrieved from the environment or stored auth info if available
+        :type client_secret: str, optional
+        :param client_secret: The refresh token; ``None`` by default which means it will
+            be retrieved from the environment or the stored auth info if available
+        :type jwt_token: str, optional
+        :param jwt_token: The JWT token, if we already have one; ``None`` by default
+            which means that the token will be retrieved dynamically
+        :type refresh_token: str, optional
+        :param refresh_token: The refresh token; You can either set
+            the `client_secret` or the `refresh_token`. If both are set, they should be
+            identical'; ``None`` by default which means it will
+            be retrieved from the the environment or stored auth info if available
+        :type retries: Retry or int, optional
+        :param retries: The number of retries and backoff policy;
+            by default 5 retries with a random backoff policy between 1 and 10 seconds
         """
+        if token_info_path is Auth._default_token_info_path:
+            token_info_path = os.environ.get(
+                DESCARTESLABS_TOKEN_INFO_PATH, DEFAULT_TOKEN_INFO_PATH
+            )
+
         self.token_info_path = token_info_path
-
         token_info = {}
-        if self.token_info_path:
-            try:
-                with open(self.token_info_path) as fp:
-                    token_info = json.load(fp)
-            except (IOError, ValueError):
-                pass
 
+        # First determine if we are getting our info from the args or environment
         self.client_id = next(
             (
                 x
                 for x in (
                     client_id,
-                    os.environ.get("DESCARTESLABS_CLIENT_ID"),
+                    os.environ.get(DESCARTESLABS_CLIENT_ID),
                     os.environ.get("CLIENT_ID"),
-                    token_info.get("client_id"),
                 )
                 if x is not None
             ),
@@ -152,9 +194,8 @@ class Auth:
                 x
                 for x in (
                     client_secret,
-                    os.environ.get("DESCARTESLABS_CLIENT_SECRET"),
+                    os.environ.get(DESCARTESLABS_CLIENT_SECRET),
                     os.environ.get("CLIENT_SECRET"),
-                    token_info.get("client_secret"),
                 )
                 if x is not None
             ),
@@ -166,14 +207,62 @@ class Auth:
                 x
                 for x in (
                     refresh_token,
-                    os.environ.get("DESCARTESLABS_REFRESH_TOKEN"),
-                    token_info.get("refresh_token"),
+                    os.environ.get(DESCARTESLABS_REFRESH_TOKEN),
                 )
                 if x is not None
             ),
             None,
         )
 
+        self._token = next(
+            (
+                x
+                for x in (
+                    jwt_token,
+                    os.environ.get(DESCARTESLABS_TOKEN),
+                )
+                if x is not None
+            ),
+            None,
+        )
+
+        # Only read the stored info if the user didn't pass in any information.
+        if (
+            self.client_id is not None
+            or self.client_secret is not None
+            or self.refresh_token is not None
+            or self._token is not None
+        ):
+            # The used passed in some info; don't touch the stored info!
+            self.token_info_path = None
+        elif self.token_info_path:
+            # Info is missing; read the stored info
+            token_info = self._read_token_info(self.token_info_path, _suppress_warning)
+
+            # Fill in the missing information
+            if self.client_id is None:
+                self.client_id = token_info.get(self.KEY_CLIENT_ID)
+
+            if self.client_secret is None:
+                self.client_secret = token_info.get(self.KEY_CLIENT_SECRET)
+
+            if self.refresh_token is None:
+                self.refresh_token = token_info.get(self.KEY_REFRESH_TOKEN)
+
+            if self._token is None:
+                self._token = next(
+                    (
+                        x
+                        for x in (
+                            token_info.get(self.KEY_ALT_JWT_TOKEN),
+                            token_info.get(self.KEY_JWT_TOKEN),
+                        )
+                        if x is not None
+                    ),
+                    None,
+                )
+
+        # The refresh token and client secret should be identical if both set
         if self.client_secret != self.refresh_token:
             if self.client_secret is not None and self.refresh_token is not None:
                 warnings.warn(
@@ -181,38 +270,27 @@ class Auth:
                     "client_secret and refresh_token values must match for authentication to work correctly. "
                 )
 
+            # Make sure they're identical. Refresh token has precedence
             if self.refresh_token is not None:
                 self.client_secret = self.refresh_token
             elif self.client_secret is not None:
                 self.refresh_token = self.client_secret
 
-        self._token = next(
-            (
-                x
-                for x in (
-                    jwt_token,
-                    os.environ.get("DESCARTESLABS_TOKEN"),
-                    token_info.get("JWT_TOKEN"),
-                    token_info.get("jwt_token"),
-                )
-                if x is not None
-            ),
-            None,
-        )
-
         self.scope = next(
-            (x for x in (scope, token_info.get("scope")) if x is not None), None
+            (x for x in (scope, token_info.get(self.KEY_SCOPE)) if x is not None), None
         )
 
         if token_info:
-            # If the token was read from a path but environment variables were set, we may need
-            # to reset the token.
-            client_id_changed = token_info.get("client_id", None) != self.client_id
+            # If the token was read from a path but environment variables were set,
+            # we may need to reset the token.
+            client_id_changed = (
+                token_info.get(self.KEY_CLIENT_ID, None) != self.client_id
+            )
             client_secret_changed = (
-                token_info.get("client_secret", None) != self.client_secret
+                token_info.get(self.KEY_CLIENT_SECRET, None) != self.client_secret
             )
             refresh_token_changed = (
-                token_info.get("refresh_token", None) != self.refresh_token
+                token_info.get(self.KEY_REFRESH_TOKEN, None) != self.refresh_token
             )
 
             if client_id_changed or client_secret_changed or refresh_token_changed:
@@ -222,11 +300,13 @@ class Auth:
             warnings.warn(self.AUTHORIZATION_ERROR.format(""))
 
         self._namespace = None
+
         if retries is None:
             self._adapter = self.ADAPTER
         else:
             self.RETRY_CONFIG = retries
             self._init_adapter()
+
         self._init_session()
         self.domain = domain
         self.leeway = leeway
@@ -234,16 +314,10 @@ class Auth:
     @classmethod
     def from_environment_or_token_json(cls, **kwargs):
         """
-        Creates an Auth object from environment variables CLIENT_ID,
-        CLIENT_SECRET, JWT_TOKEN if they are set, or else from a JSON
-        file at the given path.
+        Creates an Auth object from the given arguments,
+        environment variables, or stored credentials.
 
-        :param str domain: The endpoint for auth0
-        :type scope: list(str) or None
-        :param scope: The JWT fields to be included
-        :param int leeway: JWT expiration leeway
-        :type token_info_path: str or None
-        :param token_info_path: Path to a JSON file optionally holding auth information
+        See :py:class:`Auth` for details.
         """
         return Auth(**kwargs)
 
@@ -351,6 +425,50 @@ class Auth:
         session.mount("https://", self.ADAPTER.get())
         return session
 
+    @staticmethod
+    def _read_token_info(path, suppress_warning=False):
+        try:
+            with open(path) as fp:
+                return json.load(fp)
+        except (IOError, ValueError) as e:
+            if not suppress_warning:
+                warnings.warn(
+                    "Unable to read token_info from {} with error {}.".format(
+                        path, str(e)
+                    )
+                )
+
+        return {}
+
+    @staticmethod
+    def _write_token_info(path, token_info):
+        token_info_directory = os.path.dirname(path)
+        temp_prefix = ".{}.".format(os.path.basename(path))
+        makedirs_if_not_exists(token_info_directory)
+
+        fd = None
+        temp_path = None
+
+        try:
+            fd, temp_path = tempfile.mkstemp(
+                prefix=temp_prefix, dir=token_info_directory
+            )
+
+            with os.fdopen(fd, "w+") as fp:
+                json.dump(token_info, fp)
+
+            fd = None  # Closed now
+            os.chmod(temp_path, stat.S_IRUSR | stat.S_IWUSR)
+            os.rename(temp_path, path)
+        except IOError as e:
+            warnings.warn("Failed to save token: {}".format(e))
+        finally:
+            if fd is not None:
+                os.close(fd)
+
+            if temp_path is not None and os.path.exists(temp_path):
+                os.remove(temp_path)
+
     def _get_token(self, timeout=100):
         if self.client_id is None:
             raise AuthError(self.AUTHORIZATION_ERROR.format(" (no client_id)"))
@@ -369,29 +487,27 @@ class Auth:
             else:
                 scope = self.scope
             params = {
-                "scope": " ".join(scope),
-                "client_id": self.client_id,
-                "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
-                "target": self.client_id,
-                "api_type": "app",
-                "refresh_token": self.refresh_token,
+                self.KEY_SCOPE: " ".join(scope),
+                self.KEY_CLIENT_ID: self.client_id,
+                self.KEY_GRANT_TYPE: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                self.KEY_TARGET: self.client_id,
+                self.KEY_API_TYPE: "app",
+                self.KEY_REFRESH_TOKEN: self.refresh_token,
             }
         else:
             params = {
-                "client_id": self.client_id,
-                "grant_type": "refresh_token",
-                "refresh_token": self.refresh_token,
+                self.KEY_CLIENT_ID: self.client_id,
+                self.KEY_GRANT_TYPE: "refresh_token",
+                self.KEY_REFRESH_TOKEN: self.refresh_token,
             }
 
             if self.scope is not None:
-                params["scope"] = " ".join(self.scope)
+                params[self.KEY_SCOPE] = " ".join(self.scope)
 
         r = self.session.post(self.domain + "/token", json=params, timeout=timeout)
 
         if r.status_code != 200:
-            raise OauthError(
-                "Could not retrieve token: {} ({})".format(r.text, r.status_code)
-            )
+            raise OauthError("Could not retrieve token: {}".format(r.text.strip()))
 
         data = r.json()
         access_token = data.get("access_token")
@@ -403,33 +519,21 @@ class Auth:
             self._token = id_token
         else:
             raise OauthError("Could not retrieve token")
+
         token_info = {}
 
+        # If we read the token from the token_info_path, save it again
         if self.token_info_path:
-            try:
-                with open(self.token_info_path) as fp:
-                    token_info = json.load(fp)
-            except (IOError, ValueError) as e:
-                warnings.warn(
-                    "Unable to read token_info from {} with error {}.".format(
-                        self.token_info_path, str(e)
-                    )
-                )
+            token_info = self._read_token_info(self.token_info_path)
+
+            if not token_info:
                 return
 
-        token_info["jwt_token"] = self._token
+        token_info[self.KEY_JWT_TOKEN] = self._token
+        token_info.pop(self.KEY_ALT_JWT_TOKEN, None)  # Make sure the alt key is removed
 
         if self.token_info_path:
-            token_info_directory = os.path.dirname(self.token_info_path)
-            makedirs_if_not_exists(token_info_directory)
-
-            try:
-                with open(self.token_info_path, "w+") as fp:
-                    json.dump(token_info, fp)
-
-                os.chmod(self.token_info_path, stat.S_IRUSR | stat.S_IWUSR)
-            except IOError as e:
-                warnings.warn("Failed to save token: {}".format(e))
+            self._write_token_info(self.token_info_path, token_info)
 
     @property
     def namespace(self):

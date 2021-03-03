@@ -17,7 +17,10 @@ from descarteslabs.client.scripts.cli import parser, handle
 
 
 def main():
-    handle(parser.parse_args())
+    try:
+        handle(parser.parse_args())
+    except Exception as e:
+        print("{}: {}".format(e.__class__.__name__, e))
 
 
 if __name__ == "__main__":

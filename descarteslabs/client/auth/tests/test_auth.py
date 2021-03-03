@@ -244,7 +244,9 @@ class TestAuth(unittest.TestCase):
         )
 
         # should work with direct var
-        with patch.dict("descarteslabs.client.auth.auth.os.environ", environ):
+        with patch.dict(
+            "descarteslabs.client.auth.auth.os.environ", environ, clear=True
+        ):
             auth = Auth(
                 client_id="client_id",
                 client_secret="client_secret",
@@ -255,7 +257,9 @@ class TestAuth(unittest.TestCase):
             assert auth.client_id == "client_id"
 
         # should work with namespaced env vars
-        with patch.dict("descarteslabs.client.auth.auth.os.environ", environ):
+        with patch.dict(
+            "descarteslabs.client.auth.auth.os.environ", environ, clear=True
+        ):
             auth = Auth()
             # when refresh_token and client_secret do not match,
             # the Auth implementation sets both to the value of
@@ -271,7 +275,9 @@ class TestAuth(unittest.TestCase):
         environ.pop("DESCARTESLABS_CLIENT_ID")
 
         # should fallback to legacy env vars
-        with patch.dict("descarteslabs.client.auth.auth.os.environ", environ):
+        with patch.dict(
+            "descarteslabs.client.auth.auth.os.environ", environ, clear=True
+        ):
             auth = Auth()
             assert auth.client_secret == environ.get("DESCARTESLABS_REFRESH_TOKEN")
             assert auth.client_id == environ.get("CLIENT_ID")
@@ -279,7 +285,9 @@ class TestAuth(unittest.TestCase):
     def test_set_token(self):
         environ = dict(DESCARTESLABS_TOKEN="token")
 
-        with patch.dict("descarteslabs.client.auth.auth.os.environ", environ):
+        with patch.dict(
+            "descarteslabs.client.auth.auth.os.environ", environ, clear=True
+        ):
             with self.assertRaises(AuthError):
                 auth = Auth()
                 auth.payload
@@ -287,6 +295,25 @@ class TestAuth(unittest.TestCase):
         with self.assertRaises(AuthError):
             auth = Auth(jwt_token="token")
             auth.payload
+
+    def test_set_token_info_path(self):
+        environ = dict(DESCARTESLABS_TOKEN_INFO_PATH="token_info_path")
+
+        with patch.dict(
+            "descarteslabs.client.auth.auth.os.environ", environ, clear=True
+        ):
+            with self.assertRaises(AuthError):
+                auth = Auth()
+                assert auth.token_info_path == "token_info_path"
+                auth.payload
+
+        with patch.dict(
+            "descarteslabs.client.auth.auth.os.environ", dict(), clear=True
+        ):
+            with self.assertRaises(AuthError):
+                auth = Auth(token_info_path="token_info_path")
+                assert auth.token_info_path == "token_info_path"
+                auth.payload
 
 
 if __name__ == "__main__":

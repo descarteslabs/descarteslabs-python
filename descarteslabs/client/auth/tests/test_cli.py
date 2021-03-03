@@ -108,7 +108,7 @@ class Open:
 # Note that the environment must be cleaned in order to get
 # expected behavior (i.e. no credentials present).
 #
-@patch("descarteslabs.client.auth.cli.makedirs_if_not_exists")
+@patch("descarteslabs.client.auth.auth.makedirs_if_not_exists")
 @patch("descarteslabs.client.auth.cli.os")
 class TestAuth(unittest.TestCase):
     def setUp(self):

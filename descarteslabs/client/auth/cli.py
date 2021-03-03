@@ -14,37 +14,40 @@
 
 
 import os
-import stat
 import json
 import six
 import binascii
 
 from six.moves import input
+from pprint import pprint
 
 from descarteslabs.client.auth.auth import (
     Auth,
     base64url_decode,
-    makedirs_if_not_exists,
     DEFAULT_TOKEN_INFO_PATH,
+    DESCARTESLABS_TOKEN_INFO_PATH,
+    DESCARTESLABS_CLIENT_ID,
+    DESCARTESLABS_CLIENT_SECRET,
+    DESCARTESLABS_REFRESH_TOKEN,
 )
 from descarteslabs.client.version import __version__
 
 
-LOGIN_URL = "https://iam.descarteslabs.com/auth/login?refresh_token=true&destination=/auth/refresh_token"
+LOGIN_URL = "https://iam.descarteslabs.com/auth/refresh_token"
 
 
 def auth_handler(args):
     auth = Auth(_suppress_warning=True)
 
     if args.command == "login":
-
-        print("Follow this link to login {}".format(LOGIN_URL))
+        print(f"Follow this link to login:\n\n    {LOGIN_URL}\n")
 
         while True:
             try:
-                s = input(
-                    "...then come back here and paste the generated token (^C to exit): "
-                )
+                s = input("...then come back here and paste the generated token: ")
+
+                if not s:
+                    raise KeyboardInterrupt()
             except KeyboardInterrupt:
                 print("\nExiting without logging in")
                 break
@@ -53,49 +56,43 @@ def auth_handler(args):
                 s = s.encode("utf-8")
 
             if s:
+                retry_message = f"""
+You entered the wrong token. Please go to
+
+    {LOGIN_URL}
+
+to retrieve your token"""
+
                 try:
                     json_data = base64url_decode(s).decode("utf-8")
                 except (UnicodeDecodeError, binascii.Error):
-                    print(
-                        "You entered the wrong token. Please go to {} to retrieve your token".format(
-                            LOGIN_URL
-                        )
-                    )
+                    print(retry_message)
                     continue
 
                 try:
                     token_info = json.loads(json_data)
                 except (UnicodeDecodeError, json.JSONDecodeError):
-                    print(
-                        "You entered the wrong token. Please go to {} to retrieve your token".format(
-                            LOGIN_URL
-                        )
-                    )
+                    print(retry_message)
                     continue
 
                 if (
-                    "refresh_token" not in token_info
+                    Auth.KEY_REFRESH_TOKEN not in token_info
                 ):  # TODO(justin) legacy for previous IDP
-                    token_info["refresh_token"] = token_info.get("client_secret")
+                    token_info[Auth.KEY_REFRESH_TOKEN] = token_info.get(
+                        Auth.KEY_CLIENT_SECRET
+                    )
 
-                token_info_directory = os.path.dirname(DEFAULT_TOKEN_INFO_PATH)
-                makedirs_if_not_exists(token_info_directory)
-
-                os.chmod(
-                    token_info_directory, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+                Auth._write_token_info(
+                    os.environ.get(
+                        DESCARTESLABS_TOKEN_INFO_PATH, DEFAULT_TOKEN_INFO_PATH
+                    ),
+                    token_info,
                 )
-
-                with open(DEFAULT_TOKEN_INFO_PATH, "w+") as fp:
-                    json.dump(token_info, fp)
-
-                os.chmod(DEFAULT_TOKEN_INFO_PATH, stat.S_IRUSR | stat.S_IWUSR)
 
                 # Get a fresh Auth token
                 auth = Auth()
-
                 name = auth.payload["name"]
-
-                print("Welcome, %s!" % name)
+                print(f"Welcome, {name}!")
                 break
 
     if args.command == "token":
@@ -111,13 +108,13 @@ def auth_handler(args):
 
     if args.command == "payload":
         auth.token
-        print(auth.payload)
+        pprint(auth.payload)
 
     if args.command == "env":
         auth.token
-        print("%s=%s" % ("DESCARTESLABS_CLIENT_ID", auth.client_id))
-        print("%s=%s" % ("DESCARTESLABS_CLIENT_SECRET", auth.client_secret))
-        print("%s=%s" % ("DESCARTESLABS_REFRESH_TOKEN", auth.refresh_token))
+        print(f"{DESCARTESLABS_CLIENT_ID}={auth.client_id}")
+        print(f"{DESCARTESLABS_CLIENT_SECRET}={auth.client_secret}")
+        print(f"{DESCARTESLABS_REFRESH_TOKEN}={auth.refresh_token}")
 
     if args.command == "version":
         print(__version__)
