@@ -17,7 +17,7 @@ Changelog
 ### Catalog
 - Added support for the `physical_range` property on `SpectralBand` and `MicrowaveBand`.
 
-### Workflows - Added
+### Workflows (channel `v0-19`) - Added
 - Workflows sharing. Support has been added to manage sharing of `Workflow` objects with other authorized users. The `public` option for publishing workflows
 has been removed now that `Workflow.add_public_reader()` provides the equivalent capability. See the [Workflows Guide](https://docs.descarteslabs.com/guides/workflows/sharing.html#sharing-workflows).
 - Lots of improvements to [API documentation](https://docs.descarteslabs.com/descarteslabs/workflows/readme.html) and the [Workflows Guide](https://docs.descarteslabs.com/guides/workflows.html).
