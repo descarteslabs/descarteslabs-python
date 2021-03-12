@@ -95,8 +95,8 @@ def do_setup():
             "numpy>=1.18.1",
             "pyarrow>=3.0.0",
             "pytz>=2021.1",
-            "requests[security]>=2.22.0,<3",
-            "six>=1.14.0",
+            "requests[security]>=2.25.1,<3",
+            "six>=1.15.0",
             "shapely>=1.6.3,<2",
         ],
         extras_require={
