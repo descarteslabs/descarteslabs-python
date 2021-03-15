@@ -67,7 +67,7 @@ class MapApp(widgets.VBox):
     Forwards attributes and methods to ``self.map``.
 
     Note: to change the size of the map when displayed inline in a notebook,
-    set ``wf.map.map.layout.height == "1000px"``. (``wf.map.map`` is the actual
+    set ``wf.map.map.layout.height = "1000px"``. (``wf.map.map`` is the actual
     map widget, ``wf.map`` is the container with the layer controls, which will
     resize accordingly.) Setting the height on just ``wf.map`` will also work,
     but if you use an output view, then the map won't resize itself to fit in within it.
