@@ -848,8 +848,8 @@ class Metadata(Service):
             >>> from descarteslabs.client.services import Metadata
             >>> meta = Metadata().get('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1')
             >>> keys = list(meta.keys())
-            >>> keys.sort() # doctest: +SKIP
-            >>> keys # doctest: +SKIP
+            >>> keys.sort()
+            >>> keys
             ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket',
              'cloud_fraction', 'cloud_fraction_0', 'confidence_dlsr', 'cs_code',
              'descartes_version', 'file_md5s', 'file_sizes', 'files', 'fill_fraction',
