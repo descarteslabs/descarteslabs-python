@@ -92,7 +92,7 @@ class Auth:
     KEY_GRANT_TYPE = "grant_type"
     KEY_TARGET = "target"
     KEY_API_TYPE = "api_type"
-    KEY_JWT_TOKEN = "jtw_token"
+    KEY_JWT_TOKEN = "jwt_token"
     KEY_ALT_JWT_TOKEN = "JWT_TOKEN"
 
     __attrs__ = [
