@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 ///////////
 
 service AssetApi {
+  rpc CreateAsset(CreateAssetRequest) returns (CreateAssetResponse);
   rpc GetAsset(GetAssetRequest) returns (GetAssetResponse);
   rpc ListAssets(ListAssetsRequest) returns (ListAssetsResponse);
   rpc UpdateAsset(UpdateAssetRequest) returns (UpdateAssetResponse);
@@ -64,14 +65,12 @@ message Asset {
   // we only support storage.
   oneof resource {
     Blob blob = 11;
+    Folder folder = 12;
   }
 }
   
 message CreateAssetRequest {
   Asset asset = 1;
-  oneof resource {
-    CreateBlobRequest create_blob = 2;
-  }
 }
 
 message CreateAssetResponse {
@@ -146,23 +145,22 @@ message Blob {
   uint64 size_in_bytes = 3;
 }
 
-message CreateBlobRequest {
-  string name = 1;
-}
-
-message CreateBlobResponse {
-  string name = 1;
-  string upload_url = 2;
-}
-
 message GetBlobResponse {
   string name = 1;
   string download_url = 2;
 }
 
-//////////////////
-// ACCESS GRANT //
-//////////////////
+/////////////
+// FOLDERS //
+/////////////
+
+message Folder  {
+  string name = 1;
+}
+
+///////////////////
+// ACCESS GRANTS //
+///////////////////
 
 service AccessGrantApi {
   rpc CreateAccessGrant(CreateAccessGrantRequest) returns (CreateAccessGrantResponse);

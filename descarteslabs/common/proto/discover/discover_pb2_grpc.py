@@ -14,6 +14,11 @@ class AssetApiStub(object):
     Args:
       channel: A grpc.Channel.
     """
+    self.CreateAsset = channel.unary_unary(
+        '/descarteslabs.discover.v0alpha.AssetApi/CreateAsset',
+        request_serializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.CreateAssetRequest.SerializeToString,
+        response_deserializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.CreateAssetResponse.FromString,
+        )
     self.GetAsset = channel.unary_unary(
         '/descarteslabs.discover.v0alpha.AssetApi/GetAsset',
         request_serializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.GetAssetRequest.SerializeToString,
@@ -34,6 +39,13 @@ class AssetApiStub(object):
 class AssetApiServicer(object):
   # missing associated documentation comment in .proto file
   pass
+
+  def CreateAsset(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
 
   def GetAsset(self, request, context):
     # missing associated documentation comment in .proto file
@@ -59,6 +71,11 @@ class AssetApiServicer(object):
 
 def add_AssetApiServicer_to_server(servicer, server):
   rpc_method_handlers = {
+      'CreateAsset': grpc.unary_unary_rpc_method_handler(
+          servicer.CreateAsset,
+          request_deserializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.CreateAssetRequest.FromString,
+          response_serializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.CreateAssetResponse.SerializeToString,
+      ),
       'GetAsset': grpc.unary_unary_rpc_method_handler(
           servicer.GetAsset,
           request_deserializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.GetAssetRequest.FromString,
