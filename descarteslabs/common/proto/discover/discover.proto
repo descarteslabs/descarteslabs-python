@@ -83,9 +83,6 @@ message GetAssetRequest {
 
 message GetAssetResponse {
   Asset asset = 1;
-  oneof resource {
-    GetBlobResponse get_blob_response = 2;
-  }
 }
 
 // Note that output only fields are ignored.
@@ -123,6 +120,7 @@ message DeleteAssetRequest {
   string asset_name = 1 [deprecated = true];
   oneof resource {
     Blob blob = 11;
+    Folder folder = 12;
   }
 }
 
@@ -145,17 +143,11 @@ message Blob {
   uint64 size_in_bytes = 3;
 }
 
-message GetBlobResponse {
-  string name = 1;
-  string download_url = 2;
-}
-
 /////////////
 // FOLDERS //
 /////////////
 
 message Folder  {
-  string name = 1;
 }
 
 ///////////////////

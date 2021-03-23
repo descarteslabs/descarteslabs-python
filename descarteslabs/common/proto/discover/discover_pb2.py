@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n2descarteslabs/common/proto/discover/discover.proto\x12\x1e\x64\x65scarteslabs.discover.v0alpha\x1a\x1fgoogle/protobuf/timestamp.proto\"\xad\x03\n\x05\x41sset\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n\x0bparent_name\x18\x03 \x01(\tR\nparentName\x12!\n\x0c\x64isplay_name\x18\x04 \x01(\tR\x0b\x64isplayName\x12 \n\x0b\x64\x65scription\x18\x05 \x01(\tR\x0b\x64\x65scription\x12;\n\x0b\x63reate_time\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreateTime\x12;\n\x0bupdate_time\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdateTime\x12\x16\n\x06shared\x18\n \x01(\x08R\x06shared\x12:\n\x04\x62lob\x18\x0b \x01(\x0b\x32$.descarteslabs.discover.v0alpha.BlobH\x00R\x04\x62lob\x12@\n\x06\x66older\x18\x0c \x01(\x0b\x32&.descarteslabs.discover.v0alpha.FolderH\x00R\x06\x66olderB\n\n\x08resource\"Q\n\x12\x43reateAssetRequest\x12;\n\x05\x61sset\x18\x01 \x01(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x05\x61sset\"R\n\x13\x43reateAssetResponse\x12;\n\x05\x61sset\x18\x01 \x01(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x05\x61sset\"0\n\x0fGetAssetRequest\x12\x1d\n\nasset_name\x18\x01 \x01(\tR\tassetName\"\xba\x01\n\x10GetAssetResponse\x12;\n\x05\x61sset\x18\x01 \x01(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x05\x61sset\x12]\n\x11get_blob_response\x18\x02 \x01(\x0b\x32/.descarteslabs.discover.v0alpha.GetBlobResponseH\x00R\x0fgetBlobResponseB\n\n\x08resource\"Q\n\x12UpdateAssetRequest\x12;\n\x05\x61sset\x18\x01 \x01(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x05\x61sset\"R\n\x13UpdateAssetResponse\x12;\n\x05\x61sset\x18\x01 \x01(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x05\x61sset\"\x88\x01\n\x11ListAssetsRequest\x12\x1f\n\x0bparent_name\x18\x01 \x01(\tR\nparentName\x12\x16\n\x06\x66ilter\x18\x02 \x01(\tR\x06\x66ilter\x12\x1b\n\tpage_size\x18\x03 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x04 \x01(\tR\tpageToken\"p\n\x12ListAssetsResponse\x12=\n\x06\x61ssets\x18\x01 \x03(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x06\x61ssets\x12\x1b\n\tnext_page\x18\x02 \x01(\tR\x08nextPage\"\x7f\n\x12\x44\x65leteAssetRequest\x12!\n\nasset_name\x18\x01 \x01(\tB\x02\x18\x01R\tassetName\x12:\n\x04\x62lob\x18\x0b \x01(\x0b\x32$.descarteslabs.discover.v0alpha.BlobH\x00R\x04\x62lobB\n\n\x08resource\"\x15\n\x13\x44\x65leteAssetResponse\"T\n\x04\x42lob\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n\x05owner\x18\x02 \x01(\tR\x05owner\x12\"\n\rsize_in_bytes\x18\x03 \x01(\x04R\x0bsizeInBytes\"H\n\x0fGetBlobResponse\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12!\n\x0c\x64ownload_url\x18\x02 \x01(\tR\x0b\x64ownloadUrl\"\x1c\n\x06\x46older\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\"\xe3\x02\n\x0b\x41\x63\x63\x65ssGrant\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x0e\n\x02id\x18\x02 \x01(\tR\x02id\x12\x1d\n\nasset_name\x18\x03 \x01(\tR\tassetName\x12>\n\x06\x65ntity\x18\x04 \x01(\x0b\x32&.descarteslabs.discover.v0alpha.EntityR\x06\x65ntity\x12\x16\n\x06\x61\x63\x63\x65ss\x18\x05 \x01(\tR\x06\x61\x63\x63\x65ss\x12;\n\x0b\x63reate_time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreateTime\x12;\n\x0bupdate_time\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdateTime\x12?\n\x0b\x64\x65lete_time\x18\t \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x02\x18\x01R\ndeleteTime\",\n\x06\x45ntity\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x0e\n\x02id\x18\x02 \x01(\tR\x02id\"j\n\x18\x43reateAccessGrantRequest\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant\"k\n\x19\x43reateAccessGrantResponse\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant\"+\n\x15GetAccessGrantRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\"h\n\x16GetAccessGrantResponse\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant\"j\n\x18\x44\x65leteAccessGrantRequest\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant\"5\n\x19\x44\x65leteAccessGrantResponse\x12\x18\n\x07revoked\x18\x01 \x01(\x08R\x07revoked\"t\n\x17ListAccessGrantsRequest\x12\x1d\n\nasset_name\x18\x01 \x01(\tR\tassetName\x12\x1b\n\tpage_size\x18\x02 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x03 \x01(\tR\tpageToken\"\x89\x01\n\x18ListAccessGrantsResponse\x12P\n\raccess_grants\x18\x01 \x03(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0c\x61\x63\x63\x65ssGrants\x12\x1b\n\tnext_page\x18\x02 \x01(\tR\x08nextPage\">\n\x1dListAccessGrantsStreamRequest\x12\x1d\n\nasset_name\x18\x01 \x01(\tR\tassetName\"p\n\x1eListAccessGrantsStreamResponse\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant\"\xd5\x01\n\x19ReplaceAccessGrantRequest\x12[\n\x13\x64\x65lete_access_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x11\x64\x65leteAccessGrant\x12[\n\x13\x63reate_access_grant\x18\x02 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x11\x63reateAccessGrant\"l\n\x1aReplaceAccessGrantResponse\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant2\xde\x03\n\x08\x41ssetApi\x12v\n\x0b\x43reateAsset\x12\x32.descarteslabs.discover.v0alpha.CreateAssetRequest\x1a\x33.descarteslabs.discover.v0alpha.CreateAssetResponse\x12m\n\x08GetAsset\x12/.descarteslabs.discover.v0alpha.GetAssetRequest\x1a\x30.descarteslabs.discover.v0alpha.GetAssetResponse\x12s\n\nListAssets\x12\x31.descarteslabs.discover.v0alpha.ListAssetsRequest\x1a\x32.descarteslabs.discover.v0alpha.ListAssetsResponse\x12v\n\x0bUpdateAsset\x12\x32.descarteslabs.discover.v0alpha.UpdateAssetRequest\x1a\x33.descarteslabs.discover.v0alpha.UpdateAssetResponse2\xd9\x06\n\x0e\x41\x63\x63\x65ssGrantApi\x12\x88\x01\n\x11\x43reateAccessGrant\x12\x38.descarteslabs.discover.v0alpha.CreateAccessGrantRequest\x1a\x39.descarteslabs.discover.v0alpha.CreateAccessGrantResponse\x12\x7f\n\x0eGetAccessGrant\x12\x35.descarteslabs.discover.v0alpha.GetAccessGrantRequest\x1a\x36.descarteslabs.discover.v0alpha.GetAccessGrantResponse\x12\x88\x01\n\x11\x44\x65leteAccessGrant\x12\x38.descarteslabs.discover.v0alpha.DeleteAccessGrantRequest\x1a\x39.descarteslabs.discover.v0alpha.DeleteAccessGrantResponse\x12\x85\x01\n\x10ListAccessGrants\x12\x37.descarteslabs.discover.v0alpha.ListAccessGrantsRequest\x1a\x38.descarteslabs.discover.v0alpha.ListAccessGrantsResponse\x12\x99\x01\n\x16ListAccessGrantsStream\x12=.descarteslabs.discover.v0alpha.ListAccessGrantsStreamRequest\x1a>.descarteslabs.discover.v0alpha.ListAccessGrantsStreamResponse0\x01\x12\x8b\x01\n\x12ReplaceAccessGrant\x12\x39.descarteslabs.discover.v0alpha.ReplaceAccessGrantRequest\x1a:.descarteslabs.discover.v0alpha.ReplaceAccessGrantResponseb\x06proto3'
+  serialized_pb=b'\n2descarteslabs/common/proto/discover/discover.proto\x12\x1e\x64\x65scarteslabs.discover.v0alpha\x1a\x1fgoogle/protobuf/timestamp.proto\"\xad\x03\n\x05\x41sset\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n\x0bparent_name\x18\x03 \x01(\tR\nparentName\x12!\n\x0c\x64isplay_name\x18\x04 \x01(\tR\x0b\x64isplayName\x12 \n\x0b\x64\x65scription\x18\x05 \x01(\tR\x0b\x64\x65scription\x12;\n\x0b\x63reate_time\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreateTime\x12;\n\x0bupdate_time\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdateTime\x12\x16\n\x06shared\x18\n \x01(\x08R\x06shared\x12:\n\x04\x62lob\x18\x0b \x01(\x0b\x32$.descarteslabs.discover.v0alpha.BlobH\x00R\x04\x62lob\x12@\n\x06\x66older\x18\x0c \x01(\x0b\x32&.descarteslabs.discover.v0alpha.FolderH\x00R\x06\x66olderB\n\n\x08resource\"Q\n\x12\x43reateAssetRequest\x12;\n\x05\x61sset\x18\x01 \x01(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x05\x61sset\"R\n\x13\x43reateAssetResponse\x12;\n\x05\x61sset\x18\x01 \x01(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x05\x61sset\"0\n\x0fGetAssetRequest\x12\x1d\n\nasset_name\x18\x01 \x01(\tR\tassetName\"O\n\x10GetAssetResponse\x12;\n\x05\x61sset\x18\x01 \x01(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x05\x61sset\"Q\n\x12UpdateAssetRequest\x12;\n\x05\x61sset\x18\x01 \x01(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x05\x61sset\"R\n\x13UpdateAssetResponse\x12;\n\x05\x61sset\x18\x01 \x01(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x05\x61sset\"\x88\x01\n\x11ListAssetsRequest\x12\x1f\n\x0bparent_name\x18\x01 \x01(\tR\nparentName\x12\x16\n\x06\x66ilter\x18\x02 \x01(\tR\x06\x66ilter\x12\x1b\n\tpage_size\x18\x03 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x04 \x01(\tR\tpageToken\"p\n\x12ListAssetsResponse\x12=\n\x06\x61ssets\x18\x01 \x03(\x0b\x32%.descarteslabs.discover.v0alpha.AssetR\x06\x61ssets\x12\x1b\n\tnext_page\x18\x02 \x01(\tR\x08nextPage\"\xc1\x01\n\x12\x44\x65leteAssetRequest\x12!\n\nasset_name\x18\x01 \x01(\tB\x02\x18\x01R\tassetName\x12:\n\x04\x62lob\x18\x0b \x01(\x0b\x32$.descarteslabs.discover.v0alpha.BlobH\x00R\x04\x62lob\x12@\n\x06\x66older\x18\x0c \x01(\x0b\x32&.descarteslabs.discover.v0alpha.FolderH\x00R\x06\x66olderB\n\n\x08resource\"\x15\n\x13\x44\x65leteAssetResponse\"T\n\x04\x42lob\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n\x05owner\x18\x02 \x01(\tR\x05owner\x12\"\n\rsize_in_bytes\x18\x03 \x01(\x04R\x0bsizeInBytes\"\x08\n\x06\x46older\"\xe3\x02\n\x0b\x41\x63\x63\x65ssGrant\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x0e\n\x02id\x18\x02 \x01(\tR\x02id\x12\x1d\n\nasset_name\x18\x03 \x01(\tR\tassetName\x12>\n\x06\x65ntity\x18\x04 \x01(\x0b\x32&.descarteslabs.discover.v0alpha.EntityR\x06\x65ntity\x12\x16\n\x06\x61\x63\x63\x65ss\x18\x05 \x01(\tR\x06\x61\x63\x63\x65ss\x12;\n\x0b\x63reate_time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreateTime\x12;\n\x0bupdate_time\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdateTime\x12?\n\x0b\x64\x65lete_time\x18\t \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x02\x18\x01R\ndeleteTime\",\n\x06\x45ntity\x12\x12\n\x04type\x18\x01 \x01(\tR\x04type\x12\x0e\n\x02id\x18\x02 \x01(\tR\x02id\"j\n\x18\x43reateAccessGrantRequest\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant\"k\n\x19\x43reateAccessGrantResponse\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant\"+\n\x15GetAccessGrantRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\"h\n\x16GetAccessGrantResponse\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant\"j\n\x18\x44\x65leteAccessGrantRequest\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant\"5\n\x19\x44\x65leteAccessGrantResponse\x12\x18\n\x07revoked\x18\x01 \x01(\x08R\x07revoked\"t\n\x17ListAccessGrantsRequest\x12\x1d\n\nasset_name\x18\x01 \x01(\tR\tassetName\x12\x1b\n\tpage_size\x18\x02 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x03 \x01(\tR\tpageToken\"\x89\x01\n\x18ListAccessGrantsResponse\x12P\n\raccess_grants\x18\x01 \x03(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0c\x61\x63\x63\x65ssGrants\x12\x1b\n\tnext_page\x18\x02 \x01(\tR\x08nextPage\">\n\x1dListAccessGrantsStreamRequest\x12\x1d\n\nasset_name\x18\x01 \x01(\tR\tassetName\"p\n\x1eListAccessGrantsStreamResponse\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant\"\xd5\x01\n\x19ReplaceAccessGrantRequest\x12[\n\x13\x64\x65lete_access_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x11\x64\x65leteAccessGrant\x12[\n\x13\x63reate_access_grant\x18\x02 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x11\x63reateAccessGrant\"l\n\x1aReplaceAccessGrantResponse\x12N\n\x0c\x61\x63\x63\x65ss_grant\x18\x01 \x01(\x0b\x32+.descarteslabs.discover.v0alpha.AccessGrantR\x0b\x61\x63\x63\x65ssGrant2\xde\x03\n\x08\x41ssetApi\x12v\n\x0b\x43reateAsset\x12\x32.descarteslabs.discover.v0alpha.CreateAssetRequest\x1a\x33.descarteslabs.discover.v0alpha.CreateAssetResponse\x12m\n\x08GetAsset\x12/.descarteslabs.discover.v0alpha.GetAssetRequest\x1a\x30.descarteslabs.discover.v0alpha.GetAssetResponse\x12s\n\nListAssets\x12\x31.descarteslabs.discover.v0alpha.ListAssetsRequest\x1a\x32.descarteslabs.discover.v0alpha.ListAssetsResponse\x12v\n\x0bUpdateAsset\x12\x32.descarteslabs.discover.v0alpha.UpdateAssetRequest\x1a\x33.descarteslabs.discover.v0alpha.UpdateAssetResponse2\xd9\x06\n\x0e\x41\x63\x63\x65ssGrantApi\x12\x88\x01\n\x11\x43reateAccessGrant\x12\x38.descarteslabs.discover.v0alpha.CreateAccessGrantRequest\x1a\x39.descarteslabs.discover.v0alpha.CreateAccessGrantResponse\x12\x7f\n\x0eGetAccessGrant\x12\x35.descarteslabs.discover.v0alpha.GetAccessGrantRequest\x1a\x36.descarteslabs.discover.v0alpha.GetAccessGrantResponse\x12\x88\x01\n\x11\x44\x65leteAccessGrant\x12\x38.descarteslabs.discover.v0alpha.DeleteAccessGrantRequest\x1a\x39.descarteslabs.discover.v0alpha.DeleteAccessGrantResponse\x12\x85\x01\n\x10ListAccessGrants\x12\x37.descarteslabs.discover.v0alpha.ListAccessGrantsRequest\x1a\x38.descarteslabs.discover.v0alpha.ListAccessGrantsResponse\x12\x99\x01\n\x16ListAccessGrantsStream\x12=.descarteslabs.discover.v0alpha.ListAccessGrantsStreamRequest\x1a>.descarteslabs.discover.v0alpha.ListAccessGrantsStreamResponse0\x01\x12\x8b\x01\n\x12ReplaceAccessGrant\x12\x39.descarteslabs.discover.v0alpha.ReplaceAccessGrantRequest\x1a:.descarteslabs.discover.v0alpha.ReplaceAccessGrantResponseb\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,])
 
@@ -238,13 +238,6 @@ _GETASSETRESPONSE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='asset', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='get_blob_response', full_name='descarteslabs.discover.v0alpha.GetAssetResponse.get_blob_response', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='getBlobResponse', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -256,14 +249,9 @@ _GETASSETRESPONSE = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
-    _descriptor.OneofDescriptor(
-      name='resource', full_name='descarteslabs.discover.v0alpha.GetAssetResponse.resource',
-      index=0, containing_type=None,
-      create_key=_descriptor._internal_create_key,
-    fields=[]),
   ],
-  serialized_start=769,
-  serialized_end=955,
+  serialized_start=768,
+  serialized_end=847,
 )
 
 
@@ -294,8 +282,8 @@ _UPDATEASSETREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=957,
-  serialized_end=1038,
+  serialized_start=849,
+  serialized_end=930,
 )
 
 
@@ -326,8 +314,8 @@ _UPDATEASSETRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1040,
-  serialized_end=1122,
+  serialized_start=932,
+  serialized_end=1014,
 )
 
 
@@ -379,8 +367,8 @@ _LISTASSETSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1125,
-  serialized_end=1261,
+  serialized_start=1017,
+  serialized_end=1153,
 )
 
 
@@ -418,8 +406,8 @@ _LISTASSETSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1263,
-  serialized_end=1375,
+  serialized_start=1155,
+  serialized_end=1267,
 )
 
 
@@ -445,6 +433,13 @@ _DELETEASSETREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='blob', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='folder', full_name='descarteslabs.discover.v0alpha.DeleteAssetRequest.folder', index=2,
+      number=12, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='folder', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -462,8 +457,8 @@ _DELETEASSETREQUEST = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=1377,
-  serialized_end=1504,
+  serialized_start=1270,
+  serialized_end=1463,
 )
 
 
@@ -487,8 +482,8 @@ _DELETEASSETRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1506,
-  serialized_end=1527,
+  serialized_start=1465,
+  serialized_end=1486,
 )
 
 
@@ -533,47 +528,8 @@ _BLOB = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1529,
-  serialized_end=1613,
-)
-
-
-_GETBLOBRESPONSE = _descriptor.Descriptor(
-  name='GetBlobResponse',
-  full_name='descarteslabs.discover.v0alpha.GetBlobResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='name', full_name='descarteslabs.discover.v0alpha.GetBlobResponse.name', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='name', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='download_url', full_name='descarteslabs.discover.v0alpha.GetBlobResponse.download_url', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='downloadUrl', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1615,
-  serialized_end=1687,
+  serialized_start=1488,
+  serialized_end=1572,
 )
 
 
@@ -585,13 +541,6 @@ _FOLDER = _descriptor.Descriptor(
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
-    _descriptor.FieldDescriptor(
-      name='name', full_name='descarteslabs.discover.v0alpha.Folder.name', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='name', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -604,8 +553,8 @@ _FOLDER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1689,
-  serialized_end=1717,
+  serialized_start=1574,
+  serialized_end=1582,
 )
 
 
@@ -685,8 +634,8 @@ _ACCESSGRANT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1720,
-  serialized_end=2075,
+  serialized_start=1585,
+  serialized_end=1940,
 )
 
 
@@ -724,8 +673,8 @@ _ENTITY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2077,
-  serialized_end=2121,
+  serialized_start=1942,
+  serialized_end=1986,
 )
 
 
@@ -756,8 +705,8 @@ _CREATEACCESSGRANTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2123,
-  serialized_end=2229,
+  serialized_start=1988,
+  serialized_end=2094,
 )
 
 
@@ -788,8 +737,8 @@ _CREATEACCESSGRANTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2231,
-  serialized_end=2338,
+  serialized_start=2096,
+  serialized_end=2203,
 )
 
 
@@ -820,8 +769,8 @@ _GETACCESSGRANTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2340,
-  serialized_end=2383,
+  serialized_start=2205,
+  serialized_end=2248,
 )
 
 
@@ -852,8 +801,8 @@ _GETACCESSGRANTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2385,
-  serialized_end=2489,
+  serialized_start=2250,
+  serialized_end=2354,
 )
 
 
@@ -884,8 +833,8 @@ _DELETEACCESSGRANTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2491,
-  serialized_end=2597,
+  serialized_start=2356,
+  serialized_end=2462,
 )
 
 
@@ -916,8 +865,8 @@ _DELETEACCESSGRANTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2599,
-  serialized_end=2652,
+  serialized_start=2464,
+  serialized_end=2517,
 )
 
 
@@ -962,8 +911,8 @@ _LISTACCESSGRANTSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2654,
-  serialized_end=2770,
+  serialized_start=2519,
+  serialized_end=2635,
 )
 
 
@@ -1001,8 +950,8 @@ _LISTACCESSGRANTSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2773,
-  serialized_end=2910,
+  serialized_start=2638,
+  serialized_end=2775,
 )
 
 
@@ -1033,8 +982,8 @@ _LISTACCESSGRANTSSTREAMREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2912,
-  serialized_end=2974,
+  serialized_start=2777,
+  serialized_end=2839,
 )
 
 
@@ -1065,8 +1014,8 @@ _LISTACCESSGRANTSSTREAMRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2976,
-  serialized_end=3088,
+  serialized_start=2841,
+  serialized_end=2953,
 )
 
 
@@ -1104,8 +1053,8 @@ _REPLACEACCESSGRANTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3091,
-  serialized_end=3304,
+  serialized_start=2956,
+  serialized_end=3169,
 )
 
 
@@ -1136,8 +1085,8 @@ _REPLACEACCESSGRANTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3306,
-  serialized_end=3414,
+  serialized_start=3171,
+  serialized_end=3279,
 )
 
 _ASSET.fields_by_name['create_time'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
@@ -1153,17 +1102,17 @@ _ASSET.fields_by_name['folder'].containing_oneof = _ASSET.oneofs_by_name['resour
 _CREATEASSETREQUEST.fields_by_name['asset'].message_type = _ASSET
 _CREATEASSETRESPONSE.fields_by_name['asset'].message_type = _ASSET
 _GETASSETRESPONSE.fields_by_name['asset'].message_type = _ASSET
-_GETASSETRESPONSE.fields_by_name['get_blob_response'].message_type = _GETBLOBRESPONSE
-_GETASSETRESPONSE.oneofs_by_name['resource'].fields.append(
-  _GETASSETRESPONSE.fields_by_name['get_blob_response'])
-_GETASSETRESPONSE.fields_by_name['get_blob_response'].containing_oneof = _GETASSETRESPONSE.oneofs_by_name['resource']
 _UPDATEASSETREQUEST.fields_by_name['asset'].message_type = _ASSET
 _UPDATEASSETRESPONSE.fields_by_name['asset'].message_type = _ASSET
 _LISTASSETSRESPONSE.fields_by_name['assets'].message_type = _ASSET
 _DELETEASSETREQUEST.fields_by_name['blob'].message_type = _BLOB
+_DELETEASSETREQUEST.fields_by_name['folder'].message_type = _FOLDER
 _DELETEASSETREQUEST.oneofs_by_name['resource'].fields.append(
   _DELETEASSETREQUEST.fields_by_name['blob'])
 _DELETEASSETREQUEST.fields_by_name['blob'].containing_oneof = _DELETEASSETREQUEST.oneofs_by_name['resource']
+_DELETEASSETREQUEST.oneofs_by_name['resource'].fields.append(
+  _DELETEASSETREQUEST.fields_by_name['folder'])
+_DELETEASSETREQUEST.fields_by_name['folder'].containing_oneof = _DELETEASSETREQUEST.oneofs_by_name['resource']
 _ACCESSGRANT.fields_by_name['entity'].message_type = _ENTITY
 _ACCESSGRANT.fields_by_name['create_time'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
 _ACCESSGRANT.fields_by_name['update_time'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
@@ -1189,7 +1138,6 @@ DESCRIPTOR.message_types_by_name['ListAssetsResponse'] = _LISTASSETSRESPONSE
 DESCRIPTOR.message_types_by_name['DeleteAssetRequest'] = _DELETEASSETREQUEST
 DESCRIPTOR.message_types_by_name['DeleteAssetResponse'] = _DELETEASSETRESPONSE
 DESCRIPTOR.message_types_by_name['Blob'] = _BLOB
-DESCRIPTOR.message_types_by_name['GetBlobResponse'] = _GETBLOBRESPONSE
 DESCRIPTOR.message_types_by_name['Folder'] = _FOLDER
 DESCRIPTOR.message_types_by_name['AccessGrant'] = _ACCESSGRANT
 DESCRIPTOR.message_types_by_name['Entity'] = _ENTITY
@@ -1290,13 +1238,6 @@ Blob = _reflection.GeneratedProtocolMessageType('Blob', (_message.Message,), {
   # @@protoc_insertion_point(class_scope:descarteslabs.discover.v0alpha.Blob)
   })
 _sym_db.RegisterMessage(Blob)
-
-GetBlobResponse = _reflection.GeneratedProtocolMessageType('GetBlobResponse', (_message.Message,), {
-  'DESCRIPTOR' : _GETBLOBRESPONSE,
-  '__module__' : 'descarteslabs.common.proto.discover.discover_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.discover.v0alpha.GetBlobResponse)
-  })
-_sym_db.RegisterMessage(GetBlobResponse)
 
 Folder = _reflection.GeneratedProtocolMessageType('Folder', (_message.Message,), {
   'DESCRIPTOR' : _FOLDER,
@@ -1414,8 +1355,8 @@ _ASSETAPI = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=3417,
-  serialized_end=3895,
+  serialized_start=3282,
+  serialized_end=3760,
   methods=[
   _descriptor.MethodDescriptor(
     name='CreateAsset',
@@ -1470,8 +1411,8 @@ _ACCESSGRANTAPI = _descriptor.ServiceDescriptor(
   index=1,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=3898,
-  serialized_end=4755,
+  serialized_start=3763,
+  serialized_end=4620,
   methods=[
   _descriptor.MethodDescriptor(
     name='CreateAccessGrant',
