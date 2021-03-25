@@ -1,9 +1,19 @@
 [![Build Status](https://github.com/descarteslabs/descarteslabs-python/actions/workflows/public-ci.yml/badge.svg)](https://github.com/descarteslabs/descarteslabs-python/actions/workflows/public-ci.yml)
 
-Descarteslabs
-=============
+Descartes Labs Platform
+=======================
 
-The documentation for the latest release can be found at [https://docs.descarteslabs.com](https://docs.descarteslabs.com)
+The Descartes Labs Platform is designed to answer some of the world’s most complex and pressing geospatial analytics questions. Our customers use the platform to build algorithms and models that transform their businesses quickly, efficiently, and cost-effectively.
+
+By giving data scientists and their line-of-business colleagues the best geospatial data and modeling tools in one package, we help turn AI into a core competency.
+
+Data science teams can use our scaling infrastructure to design models faster than ever, using our massive data archive or their own.
+
+Please visit [https://descarteslabs.com](https://descarteslabs.com) for more information about the Descartes Labs Platform and to request access.
+
+The `descarteslabs` python package, available at [https://pypi.org/project/descarteslabs/](https://pypi.org/project/descarteslabs/), provides client-side access to the Descartes Labs Platform for our customers. You must be a registered customer with access to the platform before you can make use of this package.
+
+The documentation for the latest release can be found at [https://docs.descarteslabs.com](https://docs.descarteslabs.com). For any issues please request Customer Support at [https://support.descarteslabs.com](https://support.descarteslabs.com).
 
 Changelog
 =========
