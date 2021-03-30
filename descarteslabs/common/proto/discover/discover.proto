@@ -176,10 +176,6 @@ message AccessGrant {
   // Output Only
   string name = 1;
 
-  // A UUID or similar unique string that identifies this access_grant.
-  // Output Only
-  string id = 2;
-
   // the thing you are sharing
   string asset_name = 3;
 
