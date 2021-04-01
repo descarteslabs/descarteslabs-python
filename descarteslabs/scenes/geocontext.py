@@ -567,6 +567,39 @@ class DLTile(GeoContext):
     DLTiles allow you to define a grid of arbitrary spacing, resolution,
     and overlap that can cover the globe.
     DLTiles are always in a UTM projection.
+
+    Example
+    -------
+    >>> import descarteslabs as dl
+    >>> from descarteslabs.scenes import DLTile
+    >>> tile = DLTile.from_latlon(
+    ...    lat=35.691,
+    ...    lon=-105.944,
+    ...    tilesize=512,
+    ...    resolution=10,
+    ...    pad=0
+    ... )
+    >>> scenes, ctx = dl.scenes.search(tile, "landsat:LC08:PRE:TOAR")  # doctest: +SKIP
+    >>> Scenes  # doctest: +SKIP
+        SceneCollection of 93 scenes
+          * Dates: Apr 19, 2013 to Apr 14, 2017
+          * Products: landsat:LC08:PRE:TOAR: 93
+    >>> ctx     # doctest: +SKIP
+    DLTile(key='512:0:10.0:13:-17:771',
+       resolution=10.0,
+       tilesize=512,
+       pad=0,
+       crs='EPSG:32613',
+       bounds=(412960.0, 3947520.0, 418080.0, 3952640.0),
+       bounds_crs='EPSG:32613',
+       geometry=<shapely.geom...x7f121488c890>,
+       zone=13,
+       ti=-17,
+       tj=771,
+       geotrans=[
+      412960.0,...  0,
+      -10.0
+    ], ...
     """
 
     __slots__ = (
@@ -641,6 +674,24 @@ class DLTile(GeoContext):
         Returns
         -------
         tile : DLTile
+
+        Example
+        -------
+        >>> from descarteslabs.scenes import DLTile
+        >>> # make a tile with total size 100, centered on lat, lon
+        >>> # total tilesize == tilesize + 2 * pad
+        >>> params = {
+        ...    "lat": 30.0131,
+        ...    "lon": 31.2089,
+        ...    "resolution": 10,
+        ...    "tilesize": 2,
+        ...    "pad": 49,
+        ... }
+        >>> tile = DLTile.from_latlon(**params)
+        >>> tile.key
+        '2:49:10.0:36:-8637:166079'
+        >>> tile.geometry.centroid.xy  # doctest: +SKIP
+        (array('d', [31.20899205942612]), array('d', [30.013121672688087]))
         """
 
         if raster_client is None:
@@ -673,6 +724,30 @@ class DLTile(GeoContext):
         Returns
         -------
         tiles : List[DLTile]
+
+        Example
+        -------
+        >>> from descarteslabs.scenes import DLTile
+        >>> shape = {
+        ... "type":"Feature",
+        ... "geometry":{
+        ...     "type":"Polygon",
+        ...     "coordinates":[[
+        ...            [-122.51140471760839,37.77130087547876],
+        ...            [-122.45475646845254,37.77475476721895],
+        ...            [-122.45303985468301,37.76657207194229],
+        ...            [-122.51057242081689,37.763446782666094],
+        ...            [-122.51140471760839,37.77130087547876]]]
+        ...    },"properties": None
+        ... }
+        >>> tiles = DLTile.from_shape(
+        ...    shape=shape,
+        ...    resolution=1,
+        ...    tilesize=500,
+        ...    pad=0,
+        ... )
+        >>> len(tiles)
+        31
         """
 
         if raster_client is None:
@@ -702,6 +777,25 @@ class DLTile(GeoContext):
         Returns
         -------
         tile: DLTile
+
+        Example
+        -------
+        >>> from descarteslabs.scenes import DLTile
+        >>> tile = DLTile.from_key("2048:16:30.0:15:3:80")
+        >>> tile            # doctest: +SKIP
+        DLTile(key='2048:16:30.0:15:3:80',
+               resolution=30.0,
+               tilesize=2048,
+               pad=16,
+               crs='EPSG:32615',
+               bounds=(683840.0, 4914720.0, 746240.0, 4977120.0),
+               bounds_crs='EPSG:32615',
+               geometry=<shapely.geom...>,
+               zone=15,
+               ti=3,
+               tj=80,
+               geotrans=[
+        ...
         """
 
         if raster_client is None:
@@ -715,7 +809,7 @@ class DLTile(GeoContext):
 
         Returns
         -------
-        new : `DLTile`
+        tile : `DLTile`
         """
 
         key = self._key.split(":")
@@ -733,7 +827,7 @@ class DLTile(GeoContext):
 
     @property
     def resolution(self):
-        "float: Distance, in meters, that the edge of each pixel represents on the ground"
+        """float: Distance, in meters, that the edge of each pixel represents on the ground"""
 
         return self._resolution
 
@@ -742,7 +836,7 @@ class DLTile(GeoContext):
         """
         int: Length of each side of the tile, in pixels.
         Note that the total number of pixels along each side of an image is
-        ``tile_size + 2*padding``
+        ``tile_size + 2 * padding``
         """
 
         return self._tilesize
@@ -795,19 +889,19 @@ class DLTile(GeoContext):
 
     @property
     def zone(self):
-        "int: The UTM zone of this tile"
+        """int: The UTM zone of this tile"""
 
         return self._zone
 
     @property
     def ti(self):
-        "int: The y-index of this tile in its grid"
+        """int: The y-index of this tile in its grid"""
 
         return self._ti
 
     @property
     def tj(self):
-        "int: The x-index of this tile in its grid"
+        """int: The x-index of this tile in its grid"""
 
         return self._tj
 
@@ -849,19 +943,19 @@ class DLTile(GeoContext):
 
     @property
     def proj4(self):
-        "str: PROJ.4 definition for this DLTile's coordinate reference system"
+        """str: PROJ.4 definition for this DLTile's coordinate reference system"""
 
         return self._proj4
 
     @property
     def wkt(self):
-        "str: OGC Well-Known Text definition for this DLTile's coordinate reference system"
+        """str: OGC Well-Known Text definition for this DLTile's coordinate reference system"""
 
         return self._wkt
 
     @property
     def __geo_interface__(self):
-        "dict: `geometry` as a GeoJSON Polygon"
+        """dict: `geometry` as a GeoJSON Polygon"""
 
         with self._geometry_lock_:
             # see comment in `GeoContext.__init__` for why we need to prevent
