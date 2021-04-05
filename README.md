@@ -29,6 +29,7 @@ Changelog
 - Tiling using `from_shape` may return a different number of tiles compared to previous versions under certain conditions. These tiles are usually found in overlapping areas between UTM zones and should not affect the overall coverage.
 - Geospatial transformations are guaranteed to be within eight decimal points of the past implementation.
 - DLTile errors now come from the `dltile` library and error messages should now be more informative.
+- When specifying output bounds in a spatial reference system different from the underlying raster, a densified representation of the bounding box is used internally to ensure that the returned image fully covers the bounds. For certain methods (like `mosaic`) this may change the returned image dimensions, depending on the SRSs involved.
 
 ## [1.7.1] - 2021-03-03
 
