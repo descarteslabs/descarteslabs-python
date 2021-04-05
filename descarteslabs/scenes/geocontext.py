@@ -48,10 +48,12 @@ import math
 from six.moves import reprlib
 
 from descarteslabs.client.addons import mercantile
-from descarteslabs.client.services.raster import Raster
 from descarteslabs.common import shapely_support
+from descarteslabs.common.dltile import Tile, Grid
 
 from . import _helpers
+
+EARTH_CIRCUMFERENCE_WGS84 = 2 * math.pi * 6378137
 
 
 class GeoContext(object):
@@ -621,14 +623,18 @@ class DLTile(GeoContext):
 
     def __init__(self, dltile_dict):
         """
-        ``__init__`` instantiates a DLTile from a dict returned by `Raster.dltile`.
-
-        It's preferred to use the `DLTile.from_latlon`, `DLTile.from_shape`,
+        Constructs a DLTile from a parameter dictionary.
+        It is preferred to use the `DLTile.from_latlon`, `DLTile.from_shape`,
         or `DLTile.from_key` class methods to construct a DLTile GeoContext.
         """
 
         super(DLTile, self).__init__()
-        self._geometry = shapely.geometry.shape(dltile_dict["geometry"])
+
+        if isinstance(dltile_dict["geometry"], shapely.geometry.polygon.Polygon):
+            self._geometry = dltile_dict["geometry"]
+        else:
+            self._geometry = shapely.geometry.shape(dltile_dict["geometry"])
+
         properties = dltile_dict["properties"]
         self._key = properties["key"]
         self._resolution = properties["resolution"]
@@ -647,7 +653,7 @@ class DLTile(GeoContext):
         self._wkt = properties.get("wkt", None)
 
     @classmethod
-    def from_latlon(cls, lat, lon, resolution, tilesize, pad, raster_client=None):
+    def from_latlon(cls, lat, lon, resolution, tilesize, pad):
         """
         Return a DLTile GeoContext that covers a latitude/longitude.
 
@@ -667,9 +673,6 @@ class DLTile(GeoContext):
         pad : int
             Number of extra pixels by which each side of the tile is buffered.
             This determines the number of pixels by which two tiles overlap.
-        raster_client : descarteslabs.client.services.Raster, optional, default None
-            Unneeded in general use; lets you use a specific client instance
-            with non-default auth and parameters.
 
         Returns
         -------
@@ -694,14 +697,16 @@ class DLTile(GeoContext):
         (array('d', [31.20899205942612]), array('d', [30.013121672688087]))
         """
 
-        if raster_client is None:
-            raster_client = Raster()
-        tile = raster_client.dltile_from_latlon(lat, lon, resolution, tilesize, pad)
-        return cls(tile)
+        grid = Grid(
+            resolution=resolution,
+            tilesize=tilesize,
+            pad=pad
+        )
+        tile = grid.tile_from_lonlat(lat=lat, lon=lon)
+        return cls(tile.geocontext)
 
     @classmethod
-    def from_shape(cls, shape, resolution, tilesize, pad, raster_client=None):
-        # TODO : non-overlapping tiles across UTM zones
+    def from_shape(cls, shape, resolution, tilesize, pad):
         """
         Return a list of DLTiles that intersect the given geometry.
 
@@ -717,9 +722,6 @@ class DLTile(GeoContext):
         pad : int
             Number of extra pixels by which each side of the tile is buffered.
             This determines the number of pixels by which two tiles overlap.
-        raster_client : `Raster`, optional, default :const:`None`.
-            Unneeded in general use; lets you use a specific client instance
-            with non-default auth and parameters.
 
         Returns
         -------
@@ -750,19 +752,16 @@ class DLTile(GeoContext):
         31
         """
 
-        if raster_client is None:
-            raster_client = Raster()
-
-        if hasattr(shape, "__geo_interface__"):
-            shape = shape.__geo_interface__
-
-        tiles_fc = raster_client.dltiles_from_shape(
-            resolution=resolution, tilesize=tilesize, pad=pad, shape=shape
+        grid = Grid(
+            resolution=resolution,
+            tilesize=tilesize,
+            pad=pad
         )
-        return [cls(tile) for tile in tiles_fc["features"]]
+        tiles = grid.tiles_from_shape(shape=shape, keys_only=False)
+        return [cls(tile.geocontext) for tile in tiles]
 
     @classmethod
-    def from_key(cls, dltile_key, raster_client=None):
+    def from_key(cls, dltile_key):
         """
         Return a DLTile GeoContext from a DLTile key.
 
@@ -770,9 +769,6 @@ class DLTile(GeoContext):
         ----------
         dltile_key : str
             DLTile key, e.g. '128:16:960.0:15:-1:37'
-        raster_client : `Raster`, optional, default :const:`None`.
-            Unneeded in general use; lets you use a specific client instance
-            with non-default auth and parameters.
 
         Returns
         -------
@@ -798,12 +794,10 @@ class DLTile(GeoContext):
         ...
         """
 
-        if raster_client is None:
-            raster_client = Raster()
-        tile = raster_client.dltile(dltile_key)
-        return cls(tile)
+        tile = Tile.from_key(dltile_key)
+        return cls(tile.geocontext)
 
-    def assign(self, pad, raster_client=None):
+    def assign(self, pad):
         """
         Return a copy of the DLTile with the pad value modified.
 
@@ -822,9 +816,8 @@ class DLTile(GeoContext):
         123
         """
 
-        key = self._key.split(":")
-        key[1] = str(int(pad))
-        return self.from_key(":".join(key), raster_client=raster_client)
+        tile = Tile.from_key(self.key).assign(pad=pad)
+        return DLTile(tile.geocontext)
 
     @property
     def key(self):
@@ -971,10 +964,6 @@ class DLTile(GeoContext):
             # see comment in `GeoContext.__init__` for why we need to prevent
             # parallel access to `self._geometry.__geo_interface__`
             return self._geometry.__geo_interface__
-
-
-EARTH_CIRCUMFERENCE_WGS84 = 2 * math.pi * 6378137
-"Circumference of the earth, in meters, on the WGS84 ellipsoid"
 
 
 class XYZTile(GeoContext):

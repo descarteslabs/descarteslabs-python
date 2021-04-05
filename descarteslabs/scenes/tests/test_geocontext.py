@@ -1,12 +1,12 @@
 import pytest
 import unittest
-import mock
 import multiprocessing
 import concurrent.futures
 import copy
 import warnings
 
 from descarteslabs.scenes import geocontext
+from descarteslabs.scenes.geocontext import EARTH_CIRCUMFERENCE_WGS84
 import shapely.geometry
 
 
@@ -293,73 +293,10 @@ class TestDLTIle(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.key = "128:16:960.0:15:-1:37"
-        cls.dltile_dict = {
-            "geometry": {
-                "coordinates": [
-                    [
-                        [-94.64171754779824, 40.9202359006794],
-                        [-92.81755164322226, 40.93177944075989],
-                        [-92.81360932958779, 42.31528732533928],
-                        [-94.6771717075502, 42.303172487087394],
-                        [-94.64171754779824, 40.9202359006794],
-                    ]
-                ],
-                "type": "Polygon",
-            },
-            "properties": {
-                "cs_code": "EPSG:32615",
-                "key": "128:16:960.0:15:-1:37",
-                "outputBounds": [361760.0, 4531200.0, 515360.0, 4684800.0],
-                "pad": 16,
-                "resolution": 960.0,
-                "ti": -1,
-                "tilesize": 128,
-                "tj": 37,
-                "zone": 15,
-                "geotrans": [361760.0, 960.0, 0, 4684800.0, 0, -960.0],
-                "proj4": "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs ",
-                "wkt": 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]',  # noqa
-            },
-            "type": "Feature",
-        }
         cls.key2 = "128:8:960.0:15:-1:37"
-        cls.dltile2_dict = {
-            "geometry": {
-                "coordinates": [
-                    [
-                        [-94.55216325894683, 40.99065655298372],
-                        [-92.90868033200002, 41.00107128418895],
-                        [-92.90690635754177, 42.246233215798036],
-                        [-94.58230042864014, 42.235355721757024],
-                        [-94.55216325894683, 40.99065655298372],
-                    ]
-                ],
-                "type": "Polygon",
-            },
-            "properties": {
-                "cs_code": "EPSG:32615",
-                "geotrans": [369440.0, 960.0, 0, 4677120.0, 0, -960.0],
-                "key": "128:8:960.0:15:-1:37",
-                "outputBounds": [369440.0, 4538880.0, 507680.0, 4677120.0],
-                "pad": 8,
-                "proj4": "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs ",
-                "resolution": 960.0,
-                "ti": -1,
-                "tilesize": 128,
-                "tj": 37,
-                "wkt": 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]',  # noqa
-                "zone": 15,
-            },
-            "type": "Feature",
-        }
 
-    @mock.patch("descarteslabs.scenes.geocontext.Raster")
-    def test_from_key(self, mock_raster):
-        mock_raster_instance = mock_raster.return_value
-        mock_raster_instance.dltile.return_value = self.dltile_dict
-
+    def test_from_key(self):
         tile = geocontext.DLTile.from_key(self.key)
-        mock_raster_instance.dltile.assert_called_with(self.key)
 
         assert tile.key == self.key
         assert tile.resolution == 960
@@ -376,18 +313,9 @@ class TestDLTIle(unittest.TestCase):
             == 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]'  # noqa
         )
 
-    @mock.patch("descarteslabs.scenes.geocontext.Raster")
-    def test_assign(self, mock_raster):
-        mock_raster_instance = mock_raster.return_value
-        mock_raster_instance.dltile.return_value = self.dltile_dict
-
-        tile = geocontext.DLTile.from_key(self.key)
-        mock_raster_instance.dltile.assert_called_with(self.key)
-
-        mock_raster_instance.dltile.return_value = self.dltile2_dict
-
+    def test_assign(self):
+        tile = geocontext.DLTile.from_key(self.key2)
         tile = tile.assign(8)
-        mock_raster_instance.dltile.assert_called_with(self.key2)
 
         assert tile.key == self.key2
         assert tile.resolution == 960
@@ -416,7 +344,7 @@ class TestXYZTile(unittest.TestCase):
 
     def test_resolution(self):
         tile = geocontext.XYZTile(1, 1, 0)
-        assert tile.resolution == geocontext.EARTH_CIRCUMFERENCE_WGS84 / tile.tilesize
+        assert tile.resolution == EARTH_CIRCUMFERENCE_WGS84 / tile.tilesize
         # resolution at zoom 0 is just the Earth's circumfrence divided by tilesize
 
         assert geocontext.XYZTile(1, 1, 2).resolution == (

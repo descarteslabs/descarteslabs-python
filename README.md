@@ -18,6 +18,18 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+### General
+
+- Added a new `common.dltile` library that performs geospatial transforms and tiling operations.
+
+### Scenes - Changed
+
+- Scenes now uses the client-side `dltile` library to make DLTiles. This improves performance when creating a large number of DLTile objects.
+- **breaking** Removed the dependence on `Raster` for tiling. The `raster_client` parameter has been removed from the `from_latlon`, `from_key`, `from_shape`, and `assign`DLTile methods.
+- Tiling using `from_shape` may return a different number of tiles compared to previous versions under certain conditions. These tiles are usually found in overlapping areas between UTM zones and should not affect the overall coverage.
+- Geospatial transformations are guaranteed to be within eight decimal points of the past implementation.
+- DLTile errors now come from the `dltile` library and error messages should now be more informative.
+
 ## [1.7.1] - 2021-03-03
 
 ### General
