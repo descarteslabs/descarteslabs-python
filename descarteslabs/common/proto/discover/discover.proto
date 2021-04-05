@@ -117,11 +117,7 @@ message ListAssetsResponse {
 }
 
 message DeleteAssetRequest {
-  string asset_name = 1 [deprecated = true];
-  oneof resource {
-    Blob blob = 11;
-    Folder folder = 12;
-  }
+  string asset_name = 1;
 }
 
 message DeleteAssetResponse {}
