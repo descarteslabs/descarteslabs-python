@@ -809,7 +809,17 @@ class DLTile(GeoContext):
 
         Returns
         -------
-        tile : `DLTile`
+        tile : DLTile
+
+        Example:
+        --------
+        >>> from descarteslabs.scenes import DLTile
+        >>> tile = DLTile.from_key("2048:16:30.0:15:3:80")
+        >>> tile.pad
+        16
+        >>> tile = tile.assign(123)
+        >>> tile.pad
+        123
         """
 
         key = self._key.split(":")
