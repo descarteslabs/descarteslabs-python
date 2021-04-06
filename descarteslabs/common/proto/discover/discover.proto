@@ -12,6 +12,7 @@ service AssetApi {
   rpc GetAsset(GetAssetRequest) returns (GetAssetResponse);
   rpc ListAssets(ListAssetsRequest) returns (ListAssetsResponse);
   rpc UpdateAsset(UpdateAssetRequest) returns (UpdateAssetResponse);
+  rpc DeleteAsset(DeleteAssetRequest) returns (DeleteAssetResponse);
 }
   
 message Asset {
