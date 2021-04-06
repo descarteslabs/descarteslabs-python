@@ -26,6 +26,7 @@ from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.service.service import Service
 from descarteslabs.client.exceptions import ServerError
+from descarteslabs.client.deprecation import deprecate_func
 from descarteslabs.common.dotdict import DotDict
 from descarteslabs.common.shapely_support import shapely_to_geojson
 
@@ -214,6 +215,10 @@ class Raster(Service):
             else:
                 break
 
+    @deprecate_func(
+        "dltiles_from_shape is deprecated and will be removed in a future version, "
+        "use descarteslabs.scenes.DLTile.from_shape instead"
+    )
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
         Return a feature collection of DLTile GeoJSONs that intersect
@@ -298,6 +303,10 @@ class Raster(Service):
             ),
         )
 
+    @deprecate_func(
+        "dltiles_from_latlon is deprecated and will be removed in a future version, "
+        "use descarteslabs.scenes.DLTile.from_latlon instead"
+    )
     def dltile_from_latlon(self, lat, lon, resolution, tilesize, pad):
         """
         Return a DLTile GeoJSON Feature that covers a latitude/longitude
@@ -357,6 +366,10 @@ class Raster(Service):
 
         return DotDict(r.json())
 
+    @deprecate_func(
+        "dltile is deprecated and will be removed in a future version, "
+        "use descarteslabs.scenes.DLTile.from_key instead"
+    )
     def dltile(self, key):
         """
         Given a DLTile key, return a DLTile GeoJSON Feature

@@ -45,6 +45,26 @@ def check_deprecated_kwargs(kwargs, renames):
             warnings.warn(msg, FutureWarning)
 
 
+def deprecate_func(message=None):
+    """
+    This decorator emits a deprecation warning for a function with a custom
+    message, if applicable.
+    """
+    def wrapper(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            if message:
+                msg = message
+            else:
+                msg = "{} is deprecated and will be removed competely in a future version".format(f.__name__)
+            warnings.warn(msg, FutureWarning)
+            return f(*args, **kwargs)
+
+        return wrapped
+
+    return wrapper
+
+
 def deprecate(required=None, renames=None):
     """
     This decorator helps support a deprecation cycle for function parameters, and does
