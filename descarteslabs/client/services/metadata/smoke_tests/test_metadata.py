@@ -135,6 +135,21 @@ class TestMetadata(unittest.TestCase):
         assert "bytes" in r
         assert r["count"] > 0
 
+    def test_summary_dltile(self):
+        dltile = "256:16:30.0:15:-11:591"
+        r = self.instance.summary(
+            start_datetime="2016-07-06",
+            end_datetime="2016-07-07",
+            products=["landsat:LC08:PRE:TOAR"],
+            dltile=dltile,
+            pixels=True,
+        )
+        assert "products" in r
+        assert "count" in r
+        assert "pixels" in r
+        assert "bytes" in r
+        assert r["count"] > 0
+
     def test_summary_part(self):
         r = self.instance.summary(
             start_datetime="2016-07-06",

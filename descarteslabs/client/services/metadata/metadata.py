@@ -20,12 +20,12 @@ from descarteslabs.client.services.service import Service
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.deprecation import check_deprecated_kwargs
-from descarteslabs.client.services.raster import Raster
 from descarteslabs.common.property_filtering.filtering import (
     AndExpression,
     GenericProperties,
 )
 from descarteslabs.common.dotdict import DotDict, DotList
+from descarteslabs.common.dltile import Tile
 from descarteslabs.common.shapely_support import shapely_to_geojson
 
 
@@ -63,7 +63,6 @@ class Metadata(Service):
             )
 
         super(Metadata, self).__init__(url, auth=auth, retries=retries)
-        self._raster = Raster(auth=self.auth)
 
     def bands(
         self,
@@ -328,7 +327,7 @@ class Metadata(Service):
 
         if dltile is not None:
             if isinstance(dltile, string_types):
-                dltile = self._raster.dltile(dltile)
+                geom = Tile.from_key(dltile).geometry
             if isinstance(dltile, dict):
                 geom = dltile["geometry"]
 
@@ -465,7 +464,7 @@ class Metadata(Service):
 
         if dltile is not None:
             if isinstance(dltile, string_types):
-                dltile = self._raster.dltile(dltile)
+                geom = Tile.from_key(dltile).geometry
             if isinstance(dltile, dict):
                 geom = dltile["geometry"]
 

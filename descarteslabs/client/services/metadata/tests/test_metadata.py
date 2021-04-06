@@ -21,7 +21,6 @@ import json
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.metadata import Metadata
-from descarteslabs.client.services.raster import Raster
 
 from shapely.geometry import shape
 
@@ -34,7 +33,6 @@ class MetadataTest(unittest.TestCase):
         self.instance = Metadata(
             url=self.url, auth=Auth(jwt_token=public_token, token_info_path=None)
         )
-        self.instance._raster = Raster(url=self.url, auth=self.instance.auth)
         self.match_url = re.compile(self.url)
 
     def mock_response(self, method, json, status=200, **kwargs):
