@@ -34,6 +34,11 @@ class AssetApiStub(object):
         request_serializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.UpdateAssetRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.UpdateAssetResponse.FromString,
         )
+    self.DeleteAsset = channel.unary_unary(
+        '/descarteslabs.discover.v0alpha.AssetApi/DeleteAsset',
+        request_serializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.DeleteAssetRequest.SerializeToString,
+        response_deserializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.DeleteAssetResponse.FromString,
+        )
 
 
 class AssetApiServicer(object):
@@ -68,6 +73,13 @@ class AssetApiServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def DeleteAsset(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_AssetApiServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -91,6 +103,11 @@ def add_AssetApiServicer_to_server(servicer, server):
           request_deserializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.UpdateAssetRequest.FromString,
           response_serializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.UpdateAssetResponse.SerializeToString,
       ),
+      'DeleteAsset': grpc.unary_unary_rpc_method_handler(
+          servicer.DeleteAsset,
+          request_deserializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.DeleteAssetRequest.FromString,
+          response_serializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.DeleteAssetResponse.SerializeToString,
+      ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
       'descarteslabs.discover.v0alpha.AssetApi', rpc_method_handlers)
@@ -111,11 +128,6 @@ class AccessGrantApiStub(object):
         '/descarteslabs.discover.v0alpha.AccessGrantApi/CreateAccessGrant',
         request_serializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.CreateAccessGrantRequest.SerializeToString,
         response_deserializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.CreateAccessGrantResponse.FromString,
-        )
-    self.GetAccessGrant = channel.unary_unary(
-        '/descarteslabs.discover.v0alpha.AccessGrantApi/GetAccessGrant',
-        request_serializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.GetAccessGrantRequest.SerializeToString,
-        response_deserializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.GetAccessGrantResponse.FromString,
         )
     self.DeleteAccessGrant = channel.unary_unary(
         '/descarteslabs.discover.v0alpha.AccessGrantApi/DeleteAccessGrant',
@@ -144,13 +156,6 @@ class AccessGrantApiServicer(object):
   pass
 
   def CreateAccessGrant(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def GetAccessGrant(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -192,11 +197,6 @@ def add_AccessGrantApiServicer_to_server(servicer, server):
           servicer.CreateAccessGrant,
           request_deserializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.CreateAccessGrantRequest.FromString,
           response_serializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.CreateAccessGrantResponse.SerializeToString,
-      ),
-      'GetAccessGrant': grpc.unary_unary_rpc_method_handler(
-          servicer.GetAccessGrant,
-          request_deserializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.GetAccessGrantRequest.FromString,
-          response_serializer=descarteslabs_dot_common_dot_proto_dot_discover_dot_discover__pb2.GetAccessGrantResponse.SerializeToString,
       ),
       'DeleteAccessGrant': grpc.unary_unary_rpc_method_handler(
           servicer.DeleteAccessGrant,
