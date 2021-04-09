@@ -227,7 +227,7 @@ class Workflow:
             workflow_pb2.SearchWorkflowsRequest(
                 email=email, name_prefix=name, tags=tags
             ),
-            timeout=client.DEFAULT_TIMEOUT,
+            timeout=client.STREAM_TIMEOUT,
         )
 
         for message in stream:
