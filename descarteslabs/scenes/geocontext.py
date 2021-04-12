@@ -706,7 +706,7 @@ class DLTile(GeoContext):
         return cls(tile.geocontext)
 
     @classmethod
-    def from_shape(cls, shape, resolution, tilesize, pad):
+    def from_shape(cls, shape, resolution, tilesize, pad, keys_only=False):
         """
         Return a list of DLTiles that intersect the given geometry.
 
@@ -722,10 +722,13 @@ class DLTile(GeoContext):
         pad : int
             Number of extra pixels by which each side of the tile is buffered.
             This determines the number of pixels by which two tiles overlap.
+        keys_only : bool, default False
+            Whether to return DLTile objects or only DLTile keys. Set to True when
+            returning a large number of tiles and you do not need the full objects.
 
         Returns
         -------
-        tiles : List[DLTile]
+        tiles : List[DLTile] or List[Str]
 
         Example
         -------
@@ -757,8 +760,83 @@ class DLTile(GeoContext):
             tilesize=tilesize,
             pad=pad
         )
-        tiles = grid.tiles_from_shape(shape=shape, keys_only=False)
-        return [cls(tile.geocontext) for tile in tiles]
+
+        if grid._estimate_ntiles_from_shape(shape) > 50000:
+            warnings.warn(
+                "DLTile.from_shape will return a large number of tiles. "
+                "Consider using DLTile.iter_from_shape instead."
+            )
+
+        tiles = grid.tiles_from_shape(shape=shape, keys_only=keys_only)
+        if keys_only:
+            result = [tile for tile in tiles]
+        else:
+            result = [cls(tile.geocontext) for tile in tiles]
+        return result
+
+    @classmethod
+    def iter_from_shape(cls, shape, resolution, tilesize, pad, keys_only=False):
+        """
+        Return a iterator for DLTiles that intersect the given geometry.
+
+        Parameters
+        ----------
+        shape : GeoJSON-like
+            A GeoJSON dict, or object with a ``__geo_interface__``. Must be in
+            :const:`EPSG:4326` (WGS84 lat-lon) projection.
+        resolution : float
+            Distance, in meters, that the edge of each pixel represents on the ground.
+        tilesize : int
+            Length of each side of the tile, in pixels.
+        pad : int
+            Number of extra pixels by which each side of the tile is buffered.
+            This determines the number of pixels by which two tiles overlap.
+        keys_only : bool, default False
+            Whether to return DLTile objects or only DLTile keys. Set to True when
+            returning a large number of tiles and you do not need the full objects.
+
+        Returns
+        -------
+        Iterator of DLTiles or str
+
+        Example
+        -------
+        >>> from descarteslabs.scenes import DLTile
+        >>> shape = {
+        ... "type":"Feature",
+        ... "geometry":{
+        ...     "type":"Polygon",
+        ...     "coordinates":[[
+        ...            [-122.51140471760839,37.77130087547876],
+        ...            [-122.45475646845254,37.77475476721895],
+        ...            [-122.45303985468301,37.76657207194229],
+        ...            [-122.51057242081689,37.763446782666094],
+        ...            [-122.51140471760839,37.77130087547876]]]
+        ...    },"properties": None
+        ... }
+        >>> gen = DLTile.from_shape(
+        ...    shape=shape,
+        ...    resolution=1,
+        ...    tilesize=500,
+        ...    pad=0,
+        ...    keys_only=True
+        ... )
+        >>> tiles = [tile for tile in gen]  # doctest: +SKIP
+        >>> tiles[0]                        # doctest: +SKIP
+        '500:0:1.0:10:94:8359'
+        """
+
+        grid = Grid(
+            resolution=resolution,
+            tilesize=tilesize,
+            pad=pad
+        )
+        tiles = grid.tiles_from_shape(shape=shape, keys_only=keys_only)
+        for tile in tiles:
+            if keys_only:
+                yield tile
+            else:
+                yield cls(tile.geocontext)
 
     @classmethod
     def from_key(cls, dltile_key):
@@ -797,9 +875,129 @@ class DLTile(GeoContext):
         tile = Tile.from_key(dltile_key)
         return cls(tile.geocontext)
 
+    def subtile(self, subdivide, resolution=None, pad=None, keys_only=False):
+        """
+        Return an iterator for new DLTiles that subdivide this tile.
+
+        The DLtile will be sub-divided into subdivide^2 total sub-tiles each with a side length
+        of tile_size / subdivide. The resulting sub-tile size must be an integer.
+        Each sub-tile will by default inherit the same resolution and pad as the orginal tile.
+
+        Parameters
+        ----------
+        subdivide : int
+            The value to subdivide the tile. The total number of sub-tiles will be the
+            square of this value. This value must evenly divide the original tilesize.
+        resolution : None, float
+            A new resolution for the sub-tiles. None defaults to the original DLTile resolution.
+            The new resolution must evenly divide the the original tilesize divided by
+            the subdivide ratio.
+        pad : None, int
+            A new pad value for the sub-tiles. None defaults to the original DLTile pad value.
+        keys_only : bool, default False
+            Whether to return DLTile objects or only DLTile keys. Set to True when returning a large number of tiles
+            and you do not need the full objects.
+
+        Returns
+        -------
+        Iterator over DLTiles or str
+
+        Example:
+        -------
+        >>> from descarteslabs.scenes import DLTile
+        >>> tile = DLTile.from_key("2048:0:30.0:15:3:80")
+        >>> tiles = [tile for tile in tile.subtile(8)]
+        >>> len(tiles)
+        64
+        >>> tiles[0].tilesize
+        256
+        """
+
+        subtiles = Tile.from_key(self.key).subtile(
+            subdivide=subdivide,
+            new_resolution=resolution,
+            new_pad=pad,
+        )
+
+        for tile in subtiles:
+            if keys_only:
+                yield tile.key
+            else:
+                yield DLTile(tile.geocontext)
+
+    def rowcol_to_latlon(self, row, col):
+        """
+        Convert pixel coordinates to lat, lon coordinates
+
+        Parameters
+        ----------
+        row : int or List[int]
+            Pixel row coordinate or coordinates
+        col : int or List[int]
+            Pixel column coordinate or coordinates
+
+        Returns
+        -------
+        coords : List[Tuple[float], Tuple[float]]
+            List with the first element the latitude values and the second element longitude values
+
+        Example
+        -------
+        >>> from descarteslabs.scenes import DLTile
+        >>> tile = DLTile.from_key("2048:0:30.0:15:3:80")
+        >>> tile.rowcol_to_latlon(row=56, col=1111)
+        [(44.89479253978484,), (-90.24352536949974,)]
+        """
+
+        lonlat = Tile.from_key(self.key).rowcol_to_lonlat(row=row, col=col)
+        lonlat = lonlat.tolist()
+        if isinstance(lonlat[0], (int, float)):
+            result = [(lonlat[1],), (lonlat[0],)]
+        else:
+            result = list(zip(*lonlat))
+            result[0], result[1] = result[1], result[0]
+        return result
+
+    def latlon_to_rowcol(self, lat, lon):
+        """
+        Convert lat, lon coordinates to pixel coordinates
+
+        Parameters
+        ----------
+        lat: float or List[float]
+            Latitude coordinate or coordinates
+        lon: float or List[float]
+            Longitude coordinate or coordinates
+
+        Returns
+        -------
+        coords: List[Tuple[int] Tuple[int]]
+            Tuple with the first element the row values and the second element column values
+
+        Example
+        -------
+        >>> from descarteslabs.scenes import DLTile
+        >>> tile = DLTile.from_key("2048:0:30.0:15:3:80")
+        >>> tile.latlon_to_rowcol(lat=44.8, lon=-90.2)
+        [(403,), (1238,)]
+        """
+
+        rowcol = Tile.from_key(self.key).lonlat_to_rowcol(lat=lat, lon=lon)
+        rowcol = rowcol.tolist()
+        if isinstance(rowcol[0], (int, float)):
+            result = [(rowcol[0],), (rowcol[1],)]
+        else:
+            result = list(zip(*rowcol))
+        return result
+
     def assign(self, pad):
         """
         Return a copy of the DLTile with the pad value modified.
+
+        Parameters
+        ----------
+        pad : int
+            New pad value
 
         Returns
         -------
@@ -843,6 +1041,15 @@ class DLTile(GeoContext):
         """
 
         return self._tilesize
+
+    @property
+    def tile_extent(self):
+        """
+        int: total extent of geocontext length in pixels, including pad.
+        Size is ``tile_size + 2 * pad``.
+        """
+
+        return self._tilesize + 2 * self._pad
 
     @property
     def pad(self):

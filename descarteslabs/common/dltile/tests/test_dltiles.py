@@ -50,17 +50,65 @@ class TileTest(TestCase):
     def test_dlkeys_subtile(self):
         params = {
             "resolution": 1,
-            "tilesize": 6789,
+            "tilesize": 1024,
             "pad": 0,
         }
-        sub = 10
+        sub = 8
         lat, lon = 35.691544, -105.944183
 
         tile = Grid(**params).tile_from_lonlat(lon, lat)
         tiles = [t for t in tile.subtile(sub)]
         assert len(tiles) == sub * sub
         for t in tiles:
-            assert t.tilesize == round(params["tilesize"] / sub)
+            assert t.tilesize == params["tilesize"] // sub
+
+    def test_dlkeys_subtile_with_params(self):
+        params = {
+            "resolution": 1,
+            "tilesize": 1024,
+            "pad": 0,
+        }
+        new_resolution = 2
+        new_pad = 13
+        sub = 4
+        lat, lon = 35.691544, -105.944183
+
+        tile = Grid(**params).tile_from_lonlat(lon, lat)
+        tiles = [t for t in tile.subtile(sub, new_resolution=new_resolution, new_pad=new_pad)]
+        assert len(tiles) == sub * sub
+        for t in tiles:
+            assert np.allclose(
+                t.tilesize * new_resolution * sub,
+                params["tilesize"] * params["resolution"]
+            )
+            assert t.pad == new_pad
+            assert t.resolution == new_resolution
+
+    def test_dlkeys_subtile_error_1(self):
+        params = {
+            "resolution": 1,
+            "tilesize": 1024,
+            "pad": 0,
+        }
+        sub = 11        # does not evenly divide tilesize
+        lat, lon = 35.691544, -105.944183
+
+        tile = Grid(**params).tile_from_lonlat(lon, lat)
+        with pytest.raises(InvalidTileError):
+            [t for t in tile.subtile(sub)]
+
+    def test_dlkeys_subtile_error_2(self):
+        params = {
+            "resolution": 1,
+            "tilesize": 1024,
+            "pad": 0,
+        }
+        sub = 8
+        lat, lon = 35.691544, -105.944183
+
+        tile = Grid(**params).tile_from_lonlat(lon, lat)
+        with pytest.raises(InvalidTileError):
+            [t for t in tile.subtile(sub, new_resolution=13)]   # does not divide
 
     def test_rowcol_conversions(self):
         # get a polar tile

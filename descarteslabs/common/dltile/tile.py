@@ -463,12 +463,12 @@ class Tile:
             utm_coordinates = lonlat_to_utm(
                 np.stack((lon, lat), axis=-1), zone=self.zone
             )
-            return np.round(utm_to_rowcol(utm_coordinates, tile=self))
+            return np.round(utm_to_rowcol(utm_coordinates, tile=self)).astype(int)
         else:
             utm_coordinates = lonlat_to_utm(
                 np.array([(lon, lat)]), zone=self.zone
             )
-            return np.round(utm_to_rowcol(utm_coordinates, tile=self)[0])
+            return np.round(utm_to_rowcol(utm_coordinates, tile=self)[0]).astype(int)
 
     def rowcol_to_lonlat(
         self,
@@ -522,17 +522,23 @@ class Tile:
         if new_pad is None:
             new_pad = self.pad
 
-        if (subdivide * self.resolution / new_resolution) % 1.0 != 0.0:
+        if not np.allclose(subdivide % 1, 0.0):
+            raise InvalidTileError("subdivide ratio must be an integer")
+        subdivide = int(subdivide)
+
+        if not np.allclose(self.tilesize % subdivide, 0):
             raise InvalidTileError(
-                "The tile can only be subdivided if resolution * tilesize is"
-                "evenly divisible by new_resolution * new_tilesize."
+                "The subdivide ratio must evenly divide the original tilesize"
             )
 
-        new_tilesize = int(
-            np.round(
-                new_resolution * self.tilesize / (subdivide * self.resolution)
+        new_tilesize = (self.resolution * self.tilesize) / (subdivide * new_resolution)
+
+        if not np.allclose(new_tilesize % 1, 0.0):
+            raise InvalidTileError(
+                "The tile can only be subdivided if the subdivide * new tilesize * new resolution is "
+                "equal to the original tilesize * original resolution"
             )
-        )
+        new_tilesize = int(new_tilesize)
 
         grid = Grid(
             resolution=new_resolution, tilesize=new_tilesize, pad=new_pad

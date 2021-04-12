@@ -332,6 +332,44 @@ class TestDLTIle(unittest.TestCase):
             == 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]'  # noqa
         )
 
+    def latlon_conversions(self):
+        tile = geocontext.DLTile.from_key(self.key)
+        latlons = tile.rowcol_to_latlon(row=5, col=23)
+        rowcols = tile.latlon_to_rowcol(lat=latlons[0], lon=latlons[1])
+        assert rowcols[0] == 5
+        assert rowcols[1] == 23
+
+    def test_iter_from_shape(self):
+        params = {
+            "resolution": 1.5,
+            "tilesize": 512,
+            "pad": 0,
+            "keys_only": True
+        }
+        shape = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[
+                   [-122.51140471760839, 37.77130087547876],
+                   [-122.45475646845254, 37.77475476721895],
+                   [-122.45303985468301, 37.76657207194229],
+                   [-122.51057242081689, 37.763446782666094],
+                   [-122.51140471760839, 37.77130087547876]]]
+               }, "properties": None
+        }
+        dltiles1 = [tile for tile in geocontext.DLTile.iter_from_shape(shape, **params)]
+        dltiles2 = geocontext.DLTile.from_shape(shape, **params)
+        assert type(dltiles1[0]) == str
+        assert type(dltiles1[1]) == str
+        assert len(dltiles1) == len(dltiles2)
+
+    def test_subtile(self):
+        tile = geocontext.DLTile.from_key("2048:0:30.0:15:3:80")
+        tiles = [t for t in tile.subtile(8, keys_only=True)]
+        assert len(tiles) == 64
+        assert type(tiles[0]) == str
+
 
 class TestXYZTile(unittest.TestCase):
     def test_bounds(self):
