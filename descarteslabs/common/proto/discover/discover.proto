@@ -67,6 +67,7 @@ message Asset {
   oneof resource {
     Blob blob = 11;
     Folder folder = 12;
+    Namespace namespace = 13;
   }
 }
   
@@ -145,6 +146,13 @@ message Blob {
 /////////////
 
 message Folder  {
+}
+
+////////////////
+// NAMESPACES //
+////////////////
+
+message Namespace {
 }
 
 ///////////////////
