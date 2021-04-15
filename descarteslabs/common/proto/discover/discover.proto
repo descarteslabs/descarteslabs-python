@@ -11,6 +11,7 @@ service AssetApi {
   rpc CreateAsset(CreateAssetRequest) returns (CreateAssetResponse);
   rpc GetAsset(GetAssetRequest) returns (GetAssetResponse);
   rpc ListAssets(ListAssetsRequest) returns (ListAssetsResponse);
+  rpc MoveAsset(MoveAssetRequest) returns (MoveAssetResponse);
   rpc UpdateAsset(UpdateAssetRequest) returns (UpdateAssetResponse);
   rpc DeleteAsset(DeleteAssetRequest) returns (DeleteAssetResponse);
 }
@@ -117,6 +118,15 @@ message ListAssetsResponse {
   repeated Asset assets = 1;
   string next_page = 2;
 }
+
+message MoveAssetRequest {
+    // name of the asset to move.
+    string asset_name = 1;
+    // name of the new parent asset.
+    string destination_parent_name = 2;
+}
+
+message MoveAssetResponse {}
 
 message DeleteAssetRequest {
   string asset_name = 1;
