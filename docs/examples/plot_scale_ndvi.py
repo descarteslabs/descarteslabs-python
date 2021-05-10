@@ -32,7 +32,7 @@ aoi = {
 # fetch scene from the MODIS product
 scenes, ctx = dl.scenes.search(
     aoi,
-    products=["modis:09:CREFL"],
+    products=["modis:09:v2"],
     start_datetime="2017-05-01",
     end_datetime="2017-05-15",
     limit=1,
