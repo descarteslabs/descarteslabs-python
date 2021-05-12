@@ -70,6 +70,7 @@ message Asset {
     Folder folder = 12;
     Namespace namespace = 13;
     ShareMount share_mount = 14;
+    SymLink sym_link = 15;
   }
 }
   
@@ -171,6 +172,16 @@ message Namespace {
 /////////////////
 
 message ShareMount {
+}
+
+/////////////////
+// SYMLINK //
+/////////////////
+
+message SymLink {
+  // Name (asset name that is) of the referenced (target) asset. 
+  // Output only.
+  string target_name = 1;
 }
 
 ///////////////////
