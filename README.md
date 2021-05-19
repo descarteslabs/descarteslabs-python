@@ -22,6 +22,13 @@ Changelog
 
 - Added a new `common.dltile` library that performs geospatial transforms and tiling operations.
 
+### Metadata/Catalog V1 - Changed
+
+- **breaking** Image (Scene) metadata now accepts and returns the `bucket` and `directory` fields as lists of strings, of a length equal to that
+  of the `files` fields. This allows the file assets making up an image to live in different locations. When creating new images,
+  a simple string can still be provided for these fields. It will automatically be converted to a list of (duplicated) strings as
+  necessary.
+
 ### Scenes - Changed
 
 - Scenes now uses the client-side `dltile` library to make DLTiles. This improves performance when creating a large number of DLTile objects.

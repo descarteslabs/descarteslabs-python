@@ -1112,7 +1112,9 @@ class Catalog(Service):
                         bright_fraction:        Fraction of the image that has
                                                 reflectance greater than .4 in
                                                 the blue band.
-                        bucket:                 Name of Google Cloud Bucket.
+                        bucket:                 Name of Google Cloud Bucket(s).
+                                                May be a string or a list of strings
+                                                of length equal to that of files.
                         cirrus_fraction:        Fraction of pixel which are
                                                 distorted by cirrus clouds.
                         cloud_fraction:         Fraction of pixels which are
@@ -1128,7 +1130,9 @@ class Catalog(Service):
                         degraded_fraction_0:    Applicable only to Sentinel-2,
                                                 DEGRADED_MSI_DATA_PERCENTAGE.
                         descartes_version:      Processing pipeline version number.
-                        directory:              Subdirectory location.
+                        directory:              Subdirectory location. Optional,
+                                                may be a string or a list of strings
+                                                equal in length to that of files.
                         duration:               Duration of the scan in seconds.
                         earth_sun_distance:     Earth sun distance at time of
                                                 image capture.
@@ -1227,7 +1231,8 @@ class Catalog(Service):
         :param float azimuth_angle: Satellite azimuth angle in degrees.
         :param list(float) bits_per_pixel: Average bits of data per pixel per band.
         :param float bright_fraction: Fraction of the image that has reflectance greater than .4 in the blue band.
-        :param str bucket: Name of Google Cloud Bucket. Must be public bucket or Descartes Labs user bucket.
+        :param list(str) bucket: Name of Google Cloud Bucket. Must be public bucket or Descartes Labs user bucket.
+            May be a string or a list of strings equal in length to that of files.
         :param float cirrus_fraction: Fraction of pixel which are distorted by cirrus clouds.
         :param float cloud_fraction: Fraction of pixels which are obscured by clouds.
         :param float cloud_fraction_0: Fraction of pixels which are obscured by clouds.
@@ -1235,7 +1240,8 @@ class Catalog(Service):
         :param str datastrip_id: ID of the data strip this image was taken in.
         :param float degraded_fraction_0: Applicable only to Sentinel-2, DEGRADED_MSI_DATA_PERCENTAGE.
         :param str descartes_version: Processing pipeline version number.
-        :param str directory: Subdirectory location.
+        :param list(str) directory: Subdirectory location. Optional, may be a string or a list
+            of strings equal in length to that of files.
         :param float duration: duration of the scan in seconds
         :param float earth_sun_distance: Earth sun distance at time of image capture.
         :param list(str) files: Names of the files this image is stored in.
