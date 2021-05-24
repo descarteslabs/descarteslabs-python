@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n4descarteslabs/common/proto/vektorius/vektorius.proto\x12\x1a\x64\x65scarteslabs.vektorius.v1\x1a*descarteslabs/common/proto/ibis/ibis.proto\"J\n\rSchemaRequest\x12\x1d\n\ntable_name\x18\x01 \x01(\tR\ttableName\x12\x1a\n\x08\x64\x61tabase\x18\x02 \x01(\tR\x08\x64\x61tabase\"c\n\x0eSchemaResponse\x12\x32\n\x06schema\x18\x01 \x01(\x0b\x32\x1a.descarteslabs.ibis.SchemaR\x06schema\x12\x1d\n\ntable_name\x18\x02 \x01(\tR\ttableName\"\xa6\x01\n\x03Job\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12>\n\x06status\x18\x02 \x01(\x0e\x32&.descarteslabs.vektorius.v1.Job.STATUSR\x06status\"H\n\x06STATUS\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07PENDING\x10\x01\x12\x0b\n\x07RUNNING\x10\x02\x12\x08\n\x04\x44ONE\x10\x03\x12\r\n\tCANCELLED\x10\x04\"<\n\x10RecordBatchSlice\x12\x12\n\x04\x64\x61ta\x18\x01 \x01(\x0cR\x04\x64\x61ta\x12\x14\n\x05\x66inal\x18\x02 \x01(\x08R\x05\x66inal\"!\n\x05\x45rror\x12\x18\n\x07message\x18\x01 \x01(\tR\x07message\"\xbc\x01\n\x0cSearchStatus\x12\x31\n\x03job\x18\x01 \x01(\x0b\x32\x1f.descarteslabs.vektorius.v1.JobR\x03job\x12+\n\x11results_available\x18\x02 \x01(\x08R\x10resultsAvailable\x12\x1d\n\ntotal_rows\x18\x03 \x01(\x04R\ttotalRows\x12-\n\x12\x63ontinuation_token\x18\x04 \x01(\tR\x11\x63ontinuationToken\"@\n\rSearchRequest\x12/\n\x05query\x18\x01 \x01(\x0b\x32\x19.descarteslabs.ibis.QueryR\x05query\"R\n\x0eSearchResponse\x12@\n\x06status\x18\x01 \x01(\x0b\x32(.descarteslabs.vektorius.v1.SearchStatusR\x06status\"D\n\x13SearchStatusRequest\x12-\n\x12\x63ontinuation_token\x18\x01 \x01(\tR\x11\x63ontinuationToken\"X\n\x14SearchStatusResponse\x12@\n\x06status\x18\x01 \x01(\x0b\x32(.descarteslabs.vektorius.v1.SearchStatusR\x06status\"]\n\x14SearchResultsRequest\x12-\n\x12\x63ontinuation_token\x18\x01 \x01(\tR\x11\x63ontinuationToken\x12\x16\n\x06offset\x18\x02 \x01(\x04R\x06offset\"\xaa\x01\n\x15SearchResultsResponse\x12\x42\n\x06status\x18\x01 \x01(\x0b\x32(.descarteslabs.vektorius.v1.SearchStatusH\x00R\x06status\x12\x44\n\x05slice\x18\x02 \x01(\x0b\x32,.descarteslabs.vektorius.v1.RecordBatchSliceH\x00R\x05sliceB\x07\n\x05\x62lock2\xbb\x03\n\tVektorius\x12\x62\n\tGetSchema\x12).descarteslabs.vektorius.v1.SchemaRequest\x1a*.descarteslabs.vektorius.v1.SchemaResponse\x12_\n\x06Search\x12).descarteslabs.vektorius.v1.SearchRequest\x1a*.descarteslabs.vektorius.v1.SearchResponse\x12q\n\x0cSearchStatus\x12/.descarteslabs.vektorius.v1.SearchStatusRequest\x1a\x30.descarteslabs.vektorius.v1.SearchStatusResponse\x12v\n\rSearchResults\x12\x30.descarteslabs.vektorius.v1.SearchResultsRequest\x1a\x31.descarteslabs.vektorius.v1.SearchResultsResponse0\x01\x62\x06proto3'
+  serialized_pb=b'\n4descarteslabs/common/proto/vektorius/vektorius.proto\x12\x1a\x64\x65scarteslabs.vektorius.v1\x1a*descarteslabs/common/proto/ibis/ibis.proto\"J\n\rSchemaRequest\x12\x1d\n\ntable_name\x18\x01 \x01(\tR\ttableName\x12\x1a\n\x08\x64\x61tabase\x18\x02 \x01(\tR\x08\x64\x61tabase\"c\n\x0eSchemaResponse\x12\x32\n\x06schema\x18\x01 \x01(\x0b\x32\x1a.descarteslabs.ibis.SchemaR\x06schema\x12\x1d\n\ntable_name\x18\x02 \x01(\tR\ttableName\"\xa6\x01\n\x03Job\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12>\n\x06status\x18\x02 \x01(\x0e\x32&.descarteslabs.vektorius.v1.Job.STATUSR\x06status\"H\n\x06STATUS\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07PENDING\x10\x01\x12\x0b\n\x07RUNNING\x10\x02\x12\x08\n\x04\x44ONE\x10\x03\x12\r\n\tCANCELLED\x10\x04\"<\n\x10RecordBatchSlice\x12\x12\n\x04\x64\x61ta\x18\x01 \x01(\x0cR\x04\x64\x61ta\x12\x14\n\x05\x66inal\x18\x02 \x01(\x08R\x05\x66inal\"!\n\x05\x45rror\x12\x18\n\x07message\x18\x01 \x01(\tR\x07message\"\xbc\x01\n\x0cSearchStatus\x12\x31\n\x03job\x18\x01 \x01(\x0b\x32\x1f.descarteslabs.vektorius.v1.JobR\x03job\x12+\n\x11results_available\x18\x02 \x01(\x08R\x10resultsAvailable\x12\x1d\n\ntotal_rows\x18\x03 \x01(\x04R\ttotalRows\x12-\n\x12\x63ontinuation_token\x18\x04 \x01(\tR\x11\x63ontinuationToken\"@\n\rSearchRequest\x12/\n\x05query\x18\x01 \x01(\x0b\x32\x19.descarteslabs.ibis.QueryR\x05query\"\xa3\x01\n\x0eSearchResponse\x12\x42\n\x06status\x18\x01 \x01(\x0b\x32(.descarteslabs.vektorius.v1.SearchStatusH\x00R\x06status\x12\x44\n\x05slice\x18\x02 \x01(\x0b\x32,.descarteslabs.vektorius.v1.RecordBatchSliceH\x00R\x05sliceB\x07\n\x05\x62lock\"D\n\x13SearchStatusRequest\x12-\n\x12\x63ontinuation_token\x18\x01 \x01(\tR\x11\x63ontinuationToken\"X\n\x14SearchStatusResponse\x12@\n\x06status\x18\x01 \x01(\x0b\x32(.descarteslabs.vektorius.v1.SearchStatusR\x06status\"]\n\x14SearchResultsRequest\x12-\n\x12\x63ontinuation_token\x18\x01 \x01(\tR\x11\x63ontinuationToken\x12\x16\n\x06offset\x18\x02 \x01(\x04R\x06offset\"\xaa\x01\n\x15SearchResultsResponse\x12\x42\n\x06status\x18\x01 \x01(\x0b\x32(.descarteslabs.vektorius.v1.SearchStatusH\x00R\x06status\x12\x44\n\x05slice\x18\x02 \x01(\x0b\x32,.descarteslabs.vektorius.v1.RecordBatchSliceH\x00R\x05sliceB\x07\n\x05\x62lock2\xbd\x03\n\tVektorius\x12\x62\n\tGetSchema\x12).descarteslabs.vektorius.v1.SchemaRequest\x1a*.descarteslabs.vektorius.v1.SchemaResponse\x12\x61\n\x06Search\x12).descarteslabs.vektorius.v1.SearchRequest\x1a*.descarteslabs.vektorius.v1.SearchResponse0\x01\x12q\n\x0cSearchStatus\x12/.descarteslabs.vektorius.v1.SearchStatusRequest\x1a\x30.descarteslabs.vektorius.v1.SearchStatusResponse\x12v\n\rSearchResults\x12\x30.descarteslabs.vektorius.v1.SearchResultsRequest\x1a\x31.descarteslabs.vektorius.v1.SearchResultsResponse0\x01\x62\x06proto3'
   ,
   dependencies=[descarteslabs_dot_common_dot_proto_dot_ibis_dot_ibis__pb2.DESCRIPTOR,])
 
@@ -356,6 +356,13 @@ _SEARCHRESPONSE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='status', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='slice', full_name='descarteslabs.vektorius.v1.SearchResponse.slice', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='slice', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -367,9 +374,14 @@ _SEARCHRESPONSE = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
+    _descriptor.OneofDescriptor(
+      name='block', full_name='descarteslabs.vektorius.v1.SearchResponse.block',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
   ],
-  serialized_start=828,
-  serialized_end=910,
+  serialized_start=829,
+  serialized_end=992,
 )
 
 
@@ -400,8 +412,8 @@ _SEARCHSTATUSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=912,
-  serialized_end=980,
+  serialized_start=994,
+  serialized_end=1062,
 )
 
 
@@ -432,8 +444,8 @@ _SEARCHSTATUSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=982,
-  serialized_end=1070,
+  serialized_start=1064,
+  serialized_end=1152,
 )
 
 
@@ -471,8 +483,8 @@ _SEARCHRESULTSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1072,
-  serialized_end=1165,
+  serialized_start=1154,
+  serialized_end=1247,
 )
 
 
@@ -515,8 +527,8 @@ _SEARCHRESULTSRESPONSE = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=1168,
-  serialized_end=1338,
+  serialized_start=1250,
+  serialized_end=1420,
 )
 
 _SCHEMARESPONSE.fields_by_name['schema'].message_type = descarteslabs_dot_common_dot_proto_dot_ibis_dot_ibis__pb2._SCHEMA
@@ -525,6 +537,13 @@ _JOB_STATUS.containing_type = _JOB
 _SEARCHSTATUS.fields_by_name['job'].message_type = _JOB
 _SEARCHREQUEST.fields_by_name['query'].message_type = descarteslabs_dot_common_dot_proto_dot_ibis_dot_ibis__pb2._QUERY
 _SEARCHRESPONSE.fields_by_name['status'].message_type = _SEARCHSTATUS
+_SEARCHRESPONSE.fields_by_name['slice'].message_type = _RECORDBATCHSLICE
+_SEARCHRESPONSE.oneofs_by_name['block'].fields.append(
+  _SEARCHRESPONSE.fields_by_name['status'])
+_SEARCHRESPONSE.fields_by_name['status'].containing_oneof = _SEARCHRESPONSE.oneofs_by_name['block']
+_SEARCHRESPONSE.oneofs_by_name['block'].fields.append(
+  _SEARCHRESPONSE.fields_by_name['slice'])
+_SEARCHRESPONSE.fields_by_name['slice'].containing_oneof = _SEARCHRESPONSE.oneofs_by_name['block']
 _SEARCHSTATUSRESPONSE.fields_by_name['status'].message_type = _SEARCHSTATUS
 _SEARCHRESULTSRESPONSE.fields_by_name['status'].message_type = _SEARCHSTATUS
 _SEARCHRESULTSRESPONSE.fields_by_name['slice'].message_type = _RECORDBATCHSLICE
@@ -641,8 +660,8 @@ _VEKTORIUS = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1341,
-  serialized_end=1784,
+  serialized_start=1423,
+  serialized_end=1868,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetSchema',

@@ -36,7 +36,6 @@ message Job {
     CANCELLED = 4;
   }
 
-  // TODO should be an enum
   STATUS status = 2;
 }
 
@@ -84,8 +83,13 @@ message SearchRequest {
 // A response that contains the status information for the search.
 message SearchResponse {
 
-  // Search status for the search;
-  SearchStatus status = 1;
+  oneof block {
+    // Search status for the search;
+    SearchStatus status = 1;
+
+    // Byte-slice of Arrow RecordBatch data.
+    RecordBatchSlice slice = 2;
+  }
 }
 
 // A request to get the status of a search Job.
@@ -132,7 +136,7 @@ service Vektorius {
   rpc GetSchema(SchemaRequest) returns (SchemaResponse);
 
   // Initiate a search Job.
-  rpc Search(SearchRequest) returns (SearchResponse);
+  rpc Search(SearchRequest) returns (stream SearchResponse);
 
   // Get the status of a search Job.
   rpc SearchStatus(SearchStatusRequest) returns (SearchStatusResponse);

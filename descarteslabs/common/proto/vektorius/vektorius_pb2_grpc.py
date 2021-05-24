@@ -19,7 +19,7 @@ class VektoriusStub(object):
                 request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SchemaRequest.SerializeToString,
                 response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SchemaResponse.FromString,
                 )
-        self.Search = channel.unary_unary(
+        self.Search = channel.unary_stream(
                 '/descarteslabs.vektorius.v1.Vektorius/Search',
                 request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchRequest.SerializeToString,
                 response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchResponse.FromString,
@@ -71,7 +71,7 @@ def add_VektoriusServicer_to_server(servicer, server):
                     request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SchemaRequest.FromString,
                     response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SchemaResponse.SerializeToString,
             ),
-            'Search': grpc.unary_unary_rpc_method_handler(
+            'Search': grpc.unary_stream_rpc_method_handler(
                     servicer.Search,
                     request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchRequest.FromString,
                     response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchResponse.SerializeToString,
@@ -124,7 +124,7 @@ class Vektorius(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/descarteslabs.vektorius.v1.Vektorius/Search',
+        return grpc.experimental.unary_stream(request, target, '/descarteslabs.vektorius.v1.Vektorius/Search',
             descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchRequest.SerializeToString,
             descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SearchResponse.FromString,
             options, channel_credentials,
