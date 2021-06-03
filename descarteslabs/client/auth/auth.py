@@ -459,7 +459,13 @@ class Auth:
 
             fd = None  # Closed now
             os.chmod(temp_path, stat.S_IRUSR | stat.S_IWUSR)
-            os.rename(temp_path, path)
+
+            try:
+                os.rename(temp_path, path)
+            except FileExistsError:
+                # On windows remove the file first
+                os.remove(path)
+                os.rename(temp_path, path)
         except IOError as e:
             warnings.warn("Failed to save token: {}".format(e))
         finally:
