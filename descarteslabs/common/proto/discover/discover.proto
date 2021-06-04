@@ -61,6 +61,9 @@ message Asset {
 
   // Whether or not a resource has been shared with another user
   bool shared = 10;
+
+  // list of users who have owner access to this asset
+  repeated string owners = 16;
   
   // Resource this asset is representing to unicat
   // Note in the future this set would grow, currently
@@ -143,7 +146,8 @@ message Blob {
 
   // This will always be the uploader of the blob
   // Output Only
-  string owner = 2;
+  // DEPRECATED. this field will be removed
+  string owner = 2 [deprecated=true];
 
   // Output Only 
   uint64 size_in_bytes = 3;
