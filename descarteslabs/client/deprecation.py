@@ -57,7 +57,7 @@ def deprecate_func(message=None):
                 msg = message
             else:
                 msg = "{} is deprecated and will be removed competely in a future version".format(f.__name__)
-            warnings.warn(msg, FutureWarning)
+            warnings.warn(msg, FutureWarning, stacklevel=2)
             return f(*args, **kwargs)
 
         return wrapped

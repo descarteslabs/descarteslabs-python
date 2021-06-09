@@ -38,6 +38,7 @@ except ImportError:
     pass
 
 from descarteslabs.client.auth import Auth
+from descarteslabs.client.deprecation import deprecate_func
 from descarteslabs.client.exceptions import ConflictError
 from descarteslabs.client.services.service import Service, ThirdPartyService
 from descarteslabs.common.dotdict import DotDict, DotList
@@ -78,6 +79,9 @@ PICKLE_DEPRECATION_MESSAGE = (
 
 
 class GroupTerminalException(Exception):
+    """
+    Raised when waiting on a task group that stopped accepting tasks.
+    """
     pass
 
 
@@ -105,7 +109,7 @@ class Tasks(Service):
 
     def __init__(self, url=None, auth=None, retries=None):
         """
-        :param str url: A HTTP URL pointing to a version of the storage service
+        :param str url: An HTTP URL pointing to a version of the storage service
             (defaults to current version)
         :param Auth auth: A custom user authentication (defaults to the user
             authenticated locally by token information on disk or by environment
@@ -140,15 +144,18 @@ class Tasks(Service):
         r = self.session.post("/namespaces/secrets/auth", json=data)
         return r.status_code == 201
 
+    @deprecate_func(CREATE_NAMESPACE_DEPRECATION_MESSAGE)
     def create_namespace(self):
         """
+        **This method has been deprecated.**  Manually creating a namespace is no
+        longer required.
+
         Creates a namespace for the user and sets up authentication within it
         from the current client id and secret. Must be called once per user
         before creating any tasks.
 
         :return: `True` if successful, `False` otherwise.
         """
-        warn(CREATE_NAMESPACE_DEPRECATION_MESSAGE, FutureWarning)
         return self._create_namespace()
 
     def new_group(
@@ -271,6 +278,7 @@ class Tasks(Service):
                     raise
 
                 r = self.session.post("/groups", json=payload)
+
             group = r.json()
 
             if bundle_path is not None:
@@ -941,8 +949,12 @@ class Tasks(Service):
         group = self.get_group(group_id)
         return CloudFunction(group.id, name=group.name, client=self)
 
+    @deprecate_func(GET_FUNCTION_DEPRECATION_MESSAGE)
     def get_function(self, name):
         """
+        **This method has been deprecated.**  Please use :py:meth:`get_function_by_id`
+        instead.
+
         Gets an asynchronous function by name (the last function created with that
         name).
 
@@ -952,14 +964,13 @@ class Tasks(Service):
             given name exists.
         :rtype: :class:`CloudFunction`
         """
-        warn(GET_FUNCTION_DEPRECATION_MESSAGE, FutureWarning)
-
         group_info = self.get_group_by_name(name)
         if group_info is None:
             return None
 
         return CloudFunction(group_info.id, name=name, client=self)
 
+    @deprecate_func(CREATE_OR_GET_DEPRECATION_MESSAGE)
     def create_or_get_function(
         self,
         f,
@@ -976,6 +987,9 @@ class Tasks(Service):
         **kwargs
     ):
         """
+        **This method has been deprecated.**  Please use :py:meth:`create_function`
+        or :py:meth:`get_function_by_id` instead.
+
         Creates or gets an asynchronous function. If a task group with the given
         name exists, returns an asynchronous function for the newest existing
         group with that. Otherwise creates a new task group.
@@ -1018,8 +1032,6 @@ class Tasks(Service):
         :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
             the supplied parameters are invalid.
         """
-
-        warn(CREATE_OR_GET_DEPRECATION_MESSAGE, FutureWarning)
 
         if name:
             cached = self.get_function(name)

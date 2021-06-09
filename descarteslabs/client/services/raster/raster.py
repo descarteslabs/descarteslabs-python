@@ -221,6 +221,10 @@ class Raster(Service):
     )
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
+        **This method has been deprecated.**  Please use
+        :py:meth:`descarteslabs.scenes.DLTile.from_shape()
+        <descarteslabs.scenes.geocontext.DLTile.from_shape>` instead.
+
         Return a feature collection of DLTile GeoJSONs that intersect
         a GeoJSON geometry ``shape`` or a Shapely shape object.
 
@@ -309,6 +313,10 @@ class Raster(Service):
     )
     def dltile_from_latlon(self, lat, lon, resolution, tilesize, pad):
         """
+        **This method has been deprecated.**  Please use
+        :py:meth:`descarteslabs.scenes.DLTile.from_latlon()
+        <descarteslabs.scenes.geocontext.DLTile.from_latlon>` instead.
+
         Return a DLTile GeoJSON Feature that covers a latitude/longitude
 
         :param float lat: Requested latitude
@@ -372,6 +380,10 @@ class Raster(Service):
     )
     def dltile(self, key):
         """
+        **This method has been deprecated.**  Please use
+        :py:meth:`descarteslabs.scenes.DLTile.from_key()
+        <descarteslabs.scenes.geocontext.DLTile.from_key>` instead.
+
         Given a DLTile key, return a DLTile GeoJSON Feature
 
         :param str key: A DLTile key that identifies a DLTile
