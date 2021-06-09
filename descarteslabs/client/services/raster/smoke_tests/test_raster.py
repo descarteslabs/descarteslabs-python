@@ -241,7 +241,7 @@ class TestRaster(unittest.TestCase):
             bounds_srs="EPSG:4326",
             bands=["red", "green", "blue", "alpha"],
         )
-        assert stack.shape == (2, 80, 84, 4)
+        assert stack.shape == (2, 84, 84, 4)
         assert stack.dtype == np.uint16
 
     def test_cutline_dict(self):
