@@ -14,6 +14,7 @@ from ..band import (
     GenericBand,
     MicrowaveBand,
     ProcessingStepAttribute,
+    DerivedParamsAttribute,
 )
 from ..product import Product
 
@@ -392,6 +393,122 @@ class TestBand(ClientTestCase):
             b.processing_levels["surface_reflectance"][0], ProcessingStepAttribute
         )
         assert self.get_request_body(0)["data"]["attributes"]["processing_levels"] == pl
+
+    def test_derived_params_create(self):
+        band_id = "some_product_id:band"
+
+        b = SpectralBand(id=band_id)
+        self.assertIsNone(b.derived_params)
+
+        b = SpectralBand(id=band_id, derived_params=None)
+        self.assertIsNone(b.derived_params)
+
+        b = SpectralBand(
+            id=band_id, derived_params={"function": "function", "bands": ["band"]}
+        )
+        self.assertEqual(
+            b.derived_params,
+            DerivedParamsAttribute(function="function", bands=["band"]),
+        )
+
+        b = SpectralBand(
+            id=band_id,
+            derived_params={
+                "function": "function",
+                "bands": ["band"],
+                "source_type": "UInt16",
+            },
+        )
+        self.assertEqual(
+            b.derived_params,
+            DerivedParamsAttribute(
+                function="function", bands=["band"], source_type="UInt16"
+            ),
+        )
+
+        with pytest.raises(AttributeValidationError):
+            SpectralBand(id=band_id, derived_params={})
+
+        with pytest.raises(AttributeValidationError):
+            SpectralBand(id=band_id, derived_params={"function": 1, "bands": ["band"]})
+
+        with pytest.raises(AttributeValidationError):
+            SpectralBand(
+                id=band_id, derived_params={"function": "function", "bands": [1]}
+            )
+
+        with pytest.raises(AttributeValidationError):
+            SpectralBand(
+                id=band_id,
+                derived_params={
+                    "function": "function",
+                    "bands": ["band"],
+                    "source_type": "not a data type",
+                },
+            )
+
+    def test_derived_params_modified(self):
+        band_id = "some_product_id:band"
+        dp = {
+            "function": "function",
+            "bands": ["band"],
+            "source_type": "UInt16",
+        }
+        b = SpectralBand(id=band_id, derived_params=dp, _saved=True,)
+
+        assert b.state == DocumentState.SAVED
+
+        b.derived_params.source_type = "UInt32"
+        assert b.state == DocumentState.MODIFIED
+
+        # reset modified state
+        b._modified = set()
+        assert b.state == DocumentState.SAVED
+
+        b.derived_params.bands.append("band2")
+        assert b.state == DocumentState.MODIFIED
+
+    @responses.activate
+    def test_derived_params_io(self):
+        band_id = "some_product_id:band"
+        dp = {
+            "function": "function",
+            "bands": ["band"],
+            "source_type": "UInt16",
+        }
+
+        self.mock_response(
+            responses.POST,
+            {
+                "data": {
+                    "attributes": {
+                        "readers": [],
+                        "writers": [],
+                        "owners": ["org:descarteslabs"],
+                        "modified": "2019-06-11T23:31:33.714883Z",
+                        "created": "2019-06-11T23:31:33.714883Z",
+                        "name": "band",
+                        "product_id": "some_product_id",
+                        "type": "spectral",
+                        "derived_params": dp,
+                    },
+                    "type": "band",
+                    "id": "p1:blue",
+                },
+                "links": {
+                    "self": "https://www.example.com/catalog/v2/bands/{}".format(
+                        band_id
+                    )
+                },
+                "jsonapi": {"version": "1.0"},
+            },
+        )
+
+        b = SpectralBand(id=band_id, derived_params=dp, client=self.client,)
+        assert isinstance(b.derived_params, DerivedParamsAttribute)
+        b.save()
+        assert isinstance(b.derived_params, DerivedParamsAttribute)
+        assert self.get_request_body(0)["data"]["attributes"]["derived_params"] == dp
 
 
 class TestDerivedBand(ClientTestCase):

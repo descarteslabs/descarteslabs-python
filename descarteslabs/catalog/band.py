@@ -136,7 +136,7 @@ class Colormap(str, Enum):
 
 
 class ProcessingStepAttribute(MappingAttribute):
-    """File definition for an Image.
+    """Processing Levels Step.
 
     Attributes
     ----------
@@ -334,6 +334,58 @@ class ProcessingLevelsAttribute(ModelAttribute, MutableMapping):
         return len(self._items)
 
 
+class DerivedParamsAttribute(MappingAttribute):
+    """Derived Band Parameters Attribute.
+
+    Attributes
+    ----------
+    function : str
+        Name of the function to apply. Required.
+    bands : list(str)
+        Names of the bands used as input to the function. Required.
+    source_type : int
+        Optional index into the named parameter (an array) for the band.
+    """
+
+    function = TypedAttribute(str)
+    bands = ListAttribute(TypedAttribute(str), validate=True)
+    source_type = EnumAttribute(
+        DataType,
+        doc="str or DataType: The datatype for extracting pixels from the source bands.",
+    )
+
+    def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        See :meth:`Attribute.deserialize`.
+
+        Parameters
+        ----------
+        values : dict or MappingAttribute
+            The values to use to initialize a new MappingAttribute.
+
+        Returns
+        -------
+        DerivedParamsAttribute
+            A `DerivedParamsAttribute` instance with the given values.
+
+        Raises
+        ------
+        AttributeValidationError
+            If the value is not a `DerivedParamsAttribute` or a mapping with
+            a `function`, `bands`, and (optionally) `source_type key.
+        """
+        result = super(DerivedParamsAttribute, self).deserialize(value, validate)
+
+        if result:
+            if not result.function:
+                raise AttributeValidationError("'function' field required.")
+            if not result.bands:
+                raise AttributeValidationError("'bands' field required.")
+
+        return result
+
+
 class Band(NamedCatalogObject):
     """A data band in images of a specific product.
 
@@ -504,6 +556,7 @@ class Band(NamedCatalogObject):
         """,
     )
     processing_levels = ProcessingLevelsAttribute()
+    derived_params = DerivedParamsAttribute()
 
     def __new__(cls, *args, **kwargs):
         return _new_abstract_class(cls, Band)
