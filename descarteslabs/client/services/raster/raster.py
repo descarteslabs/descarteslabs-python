@@ -30,7 +30,6 @@ from descarteslabs.client.services.service.service import Service
 from descarteslabs.client.exceptions import ServerError
 from descarteslabs.common.threading.local import ThreadLocalWrapper
 from descarteslabs.common.dltile import Tile
-from descarteslabs.client.deprecation import deprecate_func
 
 from .geotiff_utils import make_geotiff
 
@@ -370,8 +369,11 @@ class Raster(Service):
             raise ValueError("output_format must be one of GTiff, JPEG, PNG")
         ext = file_ext[output_format]
 
+        if "id" not in metadata:
+            metadata["id"] = inputs[0]
+
         if output_format == "GTiff":
-            make_geotiff(outfile_basename + ext, chunk_iter, metadata, blosc_meta, "LZMA")
+            make_geotiff(outfile_basename + ext, chunk_iter, metadata, blosc_meta, None)
         elif output_format == "JPEG":
             make_geotiff(outfile_basename + ext, chunk_iter, metadata, blosc_meta, "JPEG")
         elif output_format == "PNG":

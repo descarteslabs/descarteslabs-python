@@ -65,18 +65,18 @@ class ProjLinearUnitsGeoKey(Enum):
 
 def make_geotiff_profile(metadata, blosc_meta):
     dtype = {
-        'uint16': np.uint16,
-        'uint8': np.uint8,
-        'int16': np.int16,
-        'uint32': np.uint32,
-        'float32': np.float32,
-        'float64': np.float64,
+        "uint16": np.uint16,
+        "uint8": np.uint8,
+        "int16": np.int16,
+        "uint32": np.uint32,
+        "float32": np.float32,
+        "float64": np.float64,
     }
 
-    if blosc_meta['dtype'] not in dtype:
-        raise ValueError("Unknown data type {} returned".format(blosc_meta['dtype']))
+    if blosc_meta["dtype"] not in dtype:
+        raise ValueError("Unknown data type {} returned".format(blosc_meta["dtype"]))
 
-    gt = metadata['geoTransform']
+    gt = metadata["geoTransform"]
     transform = Affine.from_gdal(*gt)
 
     geotiff_profile = dict(
@@ -84,7 +84,7 @@ def make_geotiff_profile(metadata, blosc_meta):
         count=blosc_meta["shape"][0],
         height=blosc_meta["shape"][1],
         width=blosc_meta["shape"][2],
-        dtype=dtype[blosc_meta['dtype']],
+        dtype=dtype[blosc_meta["dtype"]],
         tiled=True,
         transform=transform,
         blockxsize=512,
@@ -188,28 +188,30 @@ def parse_projection(metadata) -> Tuple[GeoKeyDirectory, str, str]:
         gkd, projcs, geogcs
     """
 
-    if 'PROJCS' in metadata["metadata"]:
-        projcs = metadata["metadata"]["PROJCS"] + '|'
+    if "PROJCS" in metadata["metadata"]:
+        projcs = metadata["metadata"]["PROJCS"] + "|"
     else:
         projcs = "unknown|"
 
-    if 'epsg' in metadata['coordinateSystem']:
-        epsg_code = metadata['coordinateSystem']['epsg']
-        if 'GEOGCS' in metadata["metadata"]:
+    if "epsg" in metadata["coordinateSystem"]:
+        epsg_code = metadata["coordinateSystem"]["epsg"]
+        if "GEOGCS" in metadata["metadata"]:
             geogcs = "{}|".format(metadata["metadata"]["GEOGCS"])
         else:
             geogcs = "unknown|"
     else:
-        epsg_code = 32767    # designated user-defined srs code
+        epsg_code = 32767  # designated user-defined srs code
 
-        if 'GEOGCS' in metadata["metadata"]:
+        if "GEOGCS" in metadata["metadata"]:
             geogcs = "GCS Name = {}|".format(metadata["metadata"]["GEOGCS"])
 
-            if 'GEOGCS|DATUM' in metadata["metadata"]:
+            if "GEOGCS|DATUM" in metadata["metadata"]:
                 geogcs += "Datum = {}|".format(metadata["metadata"]["GEOGCS|DATUM"])
-            if 'GEOGCS|SPHEROID' in metadata["metadata"]:
-                geogcs += "Ellipsoid = {}|".format(metadata["metadata"]["GEOGCS|SPHEROID"])
-            if 'GEOGCS|PRIMEM' in metadata["metadata"]:
+            if "GEOGCS|SPHEROID" in metadata["metadata"]:
+                geogcs += "Ellipsoid = {}|".format(
+                    metadata["metadata"]["GEOGCS|SPHEROID"]
+                )
+            if "GEOGCS|PRIMEM" in metadata["metadata"]:
                 geogcs += "Primem = {}||".format(metadata["metadata"]["GEOGCS|PRIMEM"])
         else:
             geogcs = "unknown|"
@@ -243,12 +245,28 @@ def parse_transform(transform) -> Tuple[ModelTiePoint, ModelPixelScale]:
     return mtp, mps
 
 
+def make_gdalinfo(metadata):
+    info = "<GDALMetadata>\n"
+    info += '  <Item name="id">{}</Item>\n'.format(metadata["id"])
+
+    c = 0
+    for b in metadata["bands"]:
+        if "colorInterpretation" in b:
+            info += '  <Item name="COLORINTERP" sample="{}" role="colorinterp">{}</Item>\n'.format(
+                c, b["colorInterpretation"]
+            )
+        c += 1
+    info += "</GDALMetadata>"
+    return info
+
+
 def convert_to_geotiff_tags(
     gkd: GeoKeyDirectory,
     mtp: ModelTiePoint,
     mps: ModelPixelScale,
     projcs: str,
     geogcs: str,
+    gdalinfo: str,
 ) -> List[Tuple]:
     """Creates the bare minimum geotiff tags to match typical GDAL output.
 
@@ -266,6 +284,8 @@ def convert_to_geotiff_tags(
         (34735, 3, len(gkd), gkd, False),
         # GeoAsciiParamsTag:
         (34737, 2, len(projdesc), projdesc, False),
+        # GDAL Info
+        (42112, 2, len(gdalinfo), gdalinfo, False),
         # NoData value
         (42113, 2, 1, "0", False),
     ]
@@ -274,29 +294,28 @@ def convert_to_geotiff_tags(
 def make_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress):
     geotiff_profile = make_geotiff_profile(metadata, blosc_meta)
     gkd, projcs, geogcs = parse_projection(metadata)
-    mtp, mps = parse_transform(geotiff_profile['transform'])
-    extra_tags = convert_to_geotiff_tags(gkd, mtp, mps, projcs, geogcs)
+    mtp, mps = parse_transform(geotiff_profile["transform"])
+    gdalinfo = make_gdalinfo(metadata)
+    extra_tags = convert_to_geotiff_tags(gkd, mtp, mps, projcs, geogcs, gdalinfo)
 
-    nbands = blosc_meta["shape"][0]
+    nbands, height, width = blosc_meta["shape"]
 
     if compress == "JPEG":
         if nbands == 2 or nbands > 3:
             raise ValueError(
-                "JPEG output format does not allow {} bands:".format(nbands) +
-                "must be 1 (gray) or 3 (rgb) bands"
+                "JPEG output format does not allow {} bands:".format(nbands)
+                + "must be 1 (gray) or 3 (rgb) bands"
             )
     elif compress == "PNG":
         compress = None
         if nbands == 2 or nbands > 4:
             raise ValueError(
-                "PNG output format does not allow {} bands:".format(nbands) +
-                "must be 1 (gray), 3 (rgb), or 4 (rgba) bands"
+                "PNG output format does not allow {} bands:".format(nbands)
+                + "must be 1 (gray), 3 (rgb), or 4 (rgba) bands"
             )
 
-    if blosc_meta["shape"][1] < 1 or blosc_meta["shape"][2] < 1:
-        raise ValueError(
-            "Height or width less than one pixel in dimension"
-        )
+    if height < 1 or width < 1:
+        raise ValueError("Height or width less than one pixel in dimension")
 
     with TiffWriter(outfile) as tif:
         if nbands > 1:
@@ -308,16 +327,13 @@ def make_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress):
             )
         else:
             pconfig = None
-            shape = (
-                geotiff_profile["height"],
-                geotiff_profile["width"]
-            )
+            shape = (geotiff_profile["height"], geotiff_profile["width"])
 
         tif.write(
             data=chunk_iter,
             tile=(
+                geotiff_profile["blockxsize"],
                 geotiff_profile["blockysize"],
-                geotiff_profile["blockxsize"]
             ),
             shape=shape,
             dtype=geotiff_profile["dtype"],
@@ -325,4 +341,5 @@ def make_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress):
             extratags=extra_tags,
             compression=compress,
             planarconfig=pconfig,
+            description=metadata["id"],
         )
