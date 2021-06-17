@@ -478,30 +478,9 @@ class SceneCollection(Collection):
                 if drop_alpha:
                     arr = arr[:-1]
                     bands.pop(-1)
-
-            mask = np.zeros_like(arr, dtype=bool)
-
-            if mask_nodata:
-                # collect all possible nodata values per band,
-                # in case different products have different nodata values for the same-named band
-                # QUESTION: is this overkill?
-                band_nodata_values = collections.defaultdict(set)
-                for scene in self:
-                    scene_bands = scene.properties["bands"]
-                    for bandname in bands:
-                        band_nodata_values[bandname].add(
-                            scene_bands[bandname].get("nodata")
-                        )
-
-                for i, bandname in enumerate(bands):
-                    for nodata in band_nodata_values[bandname]:
-                        if nodata is not None:
-                            mask[i] |= arr[i] == nodata
-
-            if mask_alpha:
-                mask |= alpha == 0
-
-            arr = np.ma.MaskedArray(arr, mask, copy=False)
+                arr.mask = ~alpha.astype(bool)
+        else:
+            arr = arr.data
 
         if bands_axis != 0:
             arr = np.moveaxis(arr, 0, bands_axis)
@@ -826,6 +805,8 @@ class SceneCollection(Collection):
         scales, data_type = _scaling.multiproduct_scaling_parameters(
             self._product_band_properties(), bands, scaling, data_type
         )
+
+        print(self.each.properties["id"].combine())
 
         return _download._download(
             inputs=self.each.properties["id"].combine(),

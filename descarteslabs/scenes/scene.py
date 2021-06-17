@@ -518,6 +518,7 @@ class Scene(object):
 
         try:
             arr, info = raster_client.ndarray(**full_raster_args)
+
         except NotFoundError:
             six.raise_from(
                 NotFoundError(
@@ -547,19 +548,9 @@ class Scene(object):
                 if drop_alpha:
                     arr = arr[:-1]
                     bands.pop(-1)
-
-            mask = np.zeros_like(arr, dtype=bool)
-
-            if mask_nodata:
-                for i, bandname in enumerate(bands):
-                    nodata = self_bands[bandname].get("nodata")
-                    if nodata is not None:
-                        mask[i] = arr[i] == nodata
-
-            if mask_alpha:
-                mask |= alpha == 0
-
-            arr = np.ma.MaskedArray(arr, mask, copy=False)
+                arr.mask = ~alpha.astype(bool)
+        else:
+            arr = arr.data
 
         if bands_axis != 0:
             arr = np.moveaxis(arr, 0, bands_axis)

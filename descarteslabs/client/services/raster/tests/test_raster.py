@@ -61,154 +61,51 @@ class RasterTest(unittest.TestCase):
         responses.add(method, self.match_url, json=json, status=status, **kwargs)
 
     def create_blosc_response(self, metadata, array):
-        array_meta = {"shape": array.shape, "dtype": array.dtype.name, "chunks": [1]}
+        array_meta = {"shape": array.shape, "dtype": array.dtype.name, "chunks": 1}
+        chunk_meta = {"offset": [0, 0, 0], "shape": list(array.shape)}
+
         array_ptr = array.__array_interface__["data"][0]
         blosc_data = blosc.compress_ptr(
             array_ptr, array.size, array.dtype.itemsize
         ).decode("utf-8")
-        return "\n".join([json.dumps(metadata), json.dumps(array_meta), blosc_data])
 
-    @responses.activate
-    def test_dltiles_from_shape(self):
-        self.mock_response(
-            responses.POST,
-            {
-                "features": [
-                    {"type": "Feature", "properties": {"count": 1}},
-                    {"type": "Feature", "properties": {"count": 2}},
-                ]
-            },
-        )
-        tiles = self.raster.dltiles_from_shape(30.0, 2048, 16, a_geometry)
-        assert [1, 2] == [t.properties.count for t in tiles.features]
+        mask = np.zeros(array.shape[1:]).astype(bool)
+        mask_ptr = mask.__array_interface__["data"][0]
+        mask_data = blosc.compress_ptr(
+            mask_ptr, mask.size, mask.dtype.itemsize
+        ).decode("utf-8")
 
-    @responses.activate
-    def test_dltiles_from_shapely_shape(self):
-        self.mock_response(
-            responses.POST,
-            {
-                "features": [
-                    {"type": "Feature", "properties": {"count": 1}},
-                    {"type": "Feature", "properties": {"count": 2}},
-                ]
-            },
-        )
-        tiles = self.raster.dltiles_from_shape(30.0, 2048, 16, shape(a_geometry))
-        assert [1, 2] == [t.properties.count for t in tiles.features]
+        return "\n".join([
+            json.dumps(metadata),
+            json.dumps(array_meta),
+            json.dumps(chunk_meta),
+            blosc_data + mask_data,
+        ])
 
-    @responses.activate
-    def test_iter_dltiles_from_shape(self):
-        self.mock_response(
-            responses.POST,
-            {
-                "features": [{"type": "Feature", "properties": {"count": 1}}],
-                "iterstate": {"start_zone": None, "start_ti": None, "start_tj": None},
-            },
-        )
-        self.mock_response(
-            responses.POST,
-            {"features": [{"type": "Feature", "properties": {"count": 2}}]},
-        )
-        tiles = self.raster.dltiles_from_shape(30.0, 2048, 16, a_geometry)
-        assert [1, 2] == [t.properties.count for t in tiles.features]
-
-    @responses.activate
-    def test_iter_dltiles_from_shapely_shape(self):
-        self.mock_response(
-            responses.POST,
-            {
-                "features": [{"type": "Feature", "properties": {"count": 1}}],
-                "iterstate": {"start_zone": None, "start_ti": None, "start_tj": None},
-            },
-        )
-        self.mock_response(
-            responses.POST,
-            {"features": [{"type": "Feature", "properties": {"count": 2}}]},
-        )
-        tiles = self.raster.dltiles_from_shape(30.0, 2048, 16, shape(a_geometry))
-        assert [1, 2] == [t.properties.count for t in tiles.features]
-
-    def test_dltile_invalid(self):
-        with pytest.raises(ValueError):
-            self.raster.dltile(None)
-        with pytest.raises(ValueError):
-            self.raster.dltile("")
-
-    @responses.activate
-    def test_raster(self):
-        raster_meta = {"files": 1, "metadata": {"foo": "bar"}}
-        file_meta = {"name": "mosaic.tiff", "length": 42}
-        file_data = "o" * 42
-        response = "\n".join(
-            [json.dumps(raster_meta), json.dumps(file_meta), file_data]
-        )
-        self.mock_response(responses.POST, json=None, body=response)
-        raster = self.raster.raster(["fakeid"])
-        assert file_data.encode("utf-8") == raster["files"]["mosaic.tiff"]
-        assert raster_meta["metadata"] == raster["metadata"]
-
-    @responses.activate
-    def test_raster_save(self):
-        raster_meta = {"files": 1, "metadata": {}}
-        file_meta = {"name": "mosaic.tiff", "length": 42}
-        file_data = "o" * 42
-        response = "\n".join(
-            [json.dumps(raster_meta), json.dumps(file_meta), file_data]
-        )
-        self.mock_response(responses.POST, json=None, body=response)
-
-        with tempfile.NamedTemporaryFile(suffix=".tiff") as temp:
-            temp.close()  # For Windows compatibility
-            raster = self.raster.raster(
-                ["fakeid"], outfile_basename=os.path.splitext(temp.name)[0], save=True
-            )
-            assert file_data.encode("utf-8") == raster["files"][temp.name]
-            with open(temp.name) as data:
-                assert file_data == data.read()
-
-    @responses.activate
-    @mock.patch.object(
-        descarteslabs.client.services.raster.raster, "blosc", ThirdParty("blosc")
-    )
-    def test_ndarray_no_blosc(self):
-        expected_array = np.zeros((2, 2))
-        expected_metadata = {"foo": "bar"}
-        content = io.BytesIO()
-        np.savez(
-            content,
-            data=expected_array,
-            metadata=json.dumps(expected_metadata).encode("utf-8"),
-        )
-        self.mock_response(responses.POST, json=None, body=content.getvalue())
-        array, meta = self.raster.ndarray(["fakeid"])
-        assert expected_metadata == meta
-        np.testing.assert_array_equal(expected_array, array)
-
-    @unittest.skipIf(sys.platform.startswith("win"), "no blosc on Windows")
     @responses.activate
     def test_ndarray_blosc(self):
         expected_metadata = {"foo": "bar"}
-        expected_array = np.zeros((2, 2))
+        expected_array = np.zeros((1, 2, 2))
         content = self.create_blosc_response(expected_metadata, expected_array)
         self.mock_response(responses.POST, json=None, body=content, stream=True)
         array, meta = self.raster.ndarray(["fakeid"])
         assert expected_metadata == meta
-        np.testing.assert_array_equal(expected_array, array)
+        np.testing.assert_array_equal(expected_array.transpose((1, 2, 0)), array)
 
     @responses.activate
     def do_stack(self, **stack_args):
         expected_metadata = {"foo": "bar"}
-        expected_array = np.zeros((2, 2, 1))
+        expected_array = np.zeros((1, 2, 2))
         content = self.create_blosc_response(expected_metadata, expected_array)
         self.mock_response(responses.POST, json=None, body=content, stream=True)
         stack, meta = self.raster.stack(
             [["fakeid"], ["fakeid2"]], order="gdal", **stack_args
         )
+
         np.testing.assert_array_equal(expected_array, stack[0, :])
         np.testing.assert_array_equal(expected_array, stack[1, :])
         assert [expected_metadata] * 2 == meta
 
-    @unittest.skipIf(sys.platform.startswith("win"), "no blosc on Windows")
     @mock.patch.object(
         descarteslabs.client.services.raster.raster,
         "concurrent",
@@ -222,7 +119,6 @@ class RasterTest(unittest.TestCase):
             bands=["red"],
         )
 
-    @unittest.skipIf(sys.platform.startswith("win"), "no blosc on Windows")
     def test_stack_threaded_blosc(self):
         self.do_stack(
             resolution=60,
@@ -231,7 +127,6 @@ class RasterTest(unittest.TestCase):
             bands=["red"],
         )
 
-    @unittest.skipIf(sys.platform.startswith("win"), "no blosc on Windows")
     def test_stack_dltile_blosc(self):
         self.do_stack(dltile="128:16:960.0:15:-2:37", bands=["red"])
 

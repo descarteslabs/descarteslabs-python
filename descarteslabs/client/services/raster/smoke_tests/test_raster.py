@@ -15,17 +15,11 @@
 import os
 import tempfile
 import shutil
-import pytest
 import unittest
 import json
-import mock
 
-import descarteslabs.client.addons as addons
 from descarteslabs.client.addons import numpy as np
 from descarteslabs.client.services.raster import Raster
-import descarteslabs.client.services.raster.raster
-
-from descarteslabs.client.services.raster.smoke_tests.iowa_geometry import iowa_geom
 
 
 class TestRaster(unittest.TestCase):
@@ -37,47 +31,28 @@ class TestRaster(unittest.TestCase):
         cls.raster = Raster()
 
     def test_raster(self):
-        # TODO: Remove key test once keys are deprecated and removed.
-        # test with scene key
-        r = self.raster.raster(
+        filename, metadata = self.raster.raster(
             inputs=["landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"],
             bands=["red", "green", "blue", "alpha"],
             resolution=960,
         )
-        assert "metadata" in r
-        assert "files" in r
-        assert (
-            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif"
-            in r["files"]
-        )
+        assert os.path.exists(filename)
+        try:
+            assert metadata is not None
+        finally:
+            os.unlink(filename)
 
-        # test with scene id
-        r = self.raster.raster(
-            inputs=["landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"],
-            bands=["red", "green", "blue", "alpha"],
-            resolution=960,
-        )
-        assert "metadata" in r
-        assert "files" in r
-        assert (
-            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.tif"
-            in r["files"]
-        )
-
-    def test_raster_save(self):
+    def test_raster_basename(self):
         tmpdir = tempfile.mkdtemp()
         try:
-            response = self.raster.raster(
+            filename, metadata = self.raster.raster(
                 inputs=["landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"],
                 bands=["red", "green", "blue", "alpha"],
                 resolution=960,
-                save=True,
                 outfile_basename="{}/my-raster".format(tmpdir),
             )
-            with open("{}/my-raster.tif".format(tmpdir), "rb") as f:
-                f.seek(0, os.SEEK_END)
-                length = f.tell()
-            assert length == len(response["files"]["{}/my-raster.tif".format(tmpdir)])
+            assert filename == "{}/my-raster.tif".format(tmpdir)
+            assert os.path.exists(filename)
         finally:
             shutil.rmtree(tmpdir)
 
@@ -97,28 +72,9 @@ class TestRaster(unittest.TestCase):
             bands=["red"],
             resolution=960,
         )
-        assert data.shape == (249, 245)
+        assert data.shape == (249, 245, 1)
         assert data.dtype == np.uint16
         assert len(metadata["bands"]) == 1
-
-    def test_ndarray_no_blosc(self):
-        args = dict(
-            inputs=["landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"],
-            bands=["red", "green", "blue", "alpha"],
-            resolution=960,
-            align_pixels=True,
-        )
-        r, meta = self.raster.ndarray(**args)
-
-        with mock.patch.object(
-            descarteslabs.client.services.raster.raster,
-            "blosc",
-            addons.ThirdParty("blosc"),
-        ):
-            r2, meta2 = self.raster.ndarray(**args)
-
-        np.testing.assert_array_equal(r, r2)
-        assert meta == meta2
 
     def test_stack_dltile(self):
         dltile = "128:16:960.0:15:-2:37"
@@ -266,7 +222,7 @@ class TestRaster(unittest.TestCase):
                 resolution=960,
                 cutline=shape,
             )
-            assert data.shape == (245, 238)
+            assert data.shape == (245, 238, 1)
             assert data.dtype == np.uint16
             assert len(metadata["bands"]) == 1
         except ImportError:
@@ -294,14 +250,14 @@ class TestRaster(unittest.TestCase):
                 resolution=960,
                 cutline=json.dumps(shape),
             )
-            assert data.shape == (245, 238)
+            assert data.shape == (245, 238, 1)
             assert data.dtype == np.uint16
             assert len(metadata["bands"]) == 1
         except ImportError:
             pass
 
     def test_thumbnail(self):
-        r = self.raster.raster(
+        filename, metadata = self.raster.raster(
             inputs=["landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"],
             bands=["red", "green", "blue", "alpha"],
             dimensions=[256, 256],
@@ -309,62 +265,11 @@ class TestRaster(unittest.TestCase):
             output_format="PNG",
             data_type="Byte",
         )
-        assert "metadata" in r
-        assert "files" in r
-        assert (
-            r["files"][
-                "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue-alpha.png"
-            ]
-            is not None
-        )
-
-    def test_iter_dltiles_from_place(self):
-        n = 0
-        for tile in self.raster.iter_dltiles_from_shape(
-            30.0, 2048, 16, iowa_geom, maxtiles=4
-        ):
-            n += 1
-        assert n == 58
-
-    def test_dltiles_from_place(self):
-        dltiles_feature_collection = self.raster.dltiles_from_shape(
-            30.0, 2048, 16, iowa_geom
-        )
-        assert len(dltiles_feature_collection["features"]) == 58
-
-    def test_dltiles_from_latlon(self):
-        dltile_feature = self.raster.dltile_from_latlon(45.0, -90.0, 30.0, 2048, 16)
-        assert dltile_feature["properties"]["key"] == "2048:16:30.0:16:-4:81"
-
-    def test_dltile(self):
-        with pytest.raises(ValueError):
-            self.raster.dltile(None)
-        with pytest.raises(ValueError):
-            self.raster.dltile("")
-        dltile_feature = self.raster.dltile("2048:16:30.0:16:-4:81")
-        assert dltile_feature["properties"]["key"] == "2048:16:30.0:16:-4:81"
-
-    def test_raster_dltile(self):
-        dltile_feature = self.raster.dltile_from_latlon(41.0, -94.0, 30.0, 256, 16)
-        arr, meta = self.raster.ndarray(
-            inputs=["landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"],
-            bands=["red", "green", "blue", "alpha"],
-            dltile=dltile_feature["properties"]["key"],
-        )
-        assert arr.shape[0] == 256 + 2 * 16
-        assert arr.shape[1] == 256 + 2 * 16
-        assert arr.shape[2] == 4
-
-    def test_raster_dltile_dict(self):
-        dltile_feature = self.raster.dltile_from_latlon(41.0, -94.0, 30.0, 256, 16)
-        arr, meta = self.raster.ndarray(
-            inputs=["landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"],
-            bands=["red", "green", "blue", "alpha"],
-            dltile=dltile_feature,
-        )
-        assert arr.shape[0] == 256 + 2 * 16
-        assert arr.shape[1] == 256 + 2 * 16
-        assert arr.shape[2] == 4
+        assert os.path.exists(filename)
+        try:
+            assert metadata is not None
+        finally:
+            os.unlink(filename)
 
 
 if __name__ == "__main__":

@@ -212,4 +212,9 @@ def _raster_ndarray(self, **kwargs):
             sort_keys=True,
         )
     ]
-    return a, DotDict(json.loads(meta))
+
+    if not np.ma.is_masked(a):
+        mask = np.zeros(a.shape)
+        a = np.ma.array(a, mask=mask)
+
+    return a, json.loads(meta)

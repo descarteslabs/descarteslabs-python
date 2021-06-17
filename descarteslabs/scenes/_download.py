@@ -85,12 +85,12 @@ def _download(
         resampler=resampler,
         processing_level=processing_level,
         output_format=format,
-        save=False,
+        outfile_basename=os.path.splitext(dest)[0],
         **raster_params
     )
 
     try:
-        result = raster_client.raster(**full_raster_args)
+        raster_client.raster(**full_raster_args)
     except NotFoundError:
         if len(inputs) == 1:
             msg = "'{}' does not exist in the Descartes catalog".format(inputs[0])
@@ -108,31 +108,7 @@ def _download(
         )
         msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))
         six.raise_from(BadRequestError(msg), None)
+    except ValueError as e:
+        raise e
 
-    # `result["files"]` should be a dict mapping {default_filename: bytestring}
-    filenames = list(result["files"].keys())
-    if len(filenames) == 0:
-        raise RuntimeError("Unexpected missing results from raster call")
-    elif len(filenames) > 1:
-        raise RuntimeError(
-            "Unexpected multiple files returned from single raster call: {}".format(
-                filenames
-            )
-        )
-    else:
-        file = result["files"][filenames[0]]
-
-    if _is_path_like(dest):
-        with open(dest, "wb") as f:
-            f.write(file)
-        return dest
-    else:
-        # `dest` is a file-like object
-        try:
-            dest.write(file)
-        except Exception as e:
-            raise TypeError(
-                "Unable to write to the file-like object {} provided as `dest`:\n{}".format(
-                    dest, e
-                )
-            )
+    return dest

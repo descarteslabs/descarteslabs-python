@@ -63,7 +63,6 @@ class TestDownload(unittest.TestCase):
         mock_raster.assert_called_once()
         called_format = mock_raster.call_args[1]["output_format"]
         assert called_format == "JPEG"
-        mock_open.assert_called_once_with(dest, "wb")
 
     def test_different_format_and_ext(self, mock_raster, mock_makedirs, mock_open):
         dest = "foo.tif"
@@ -71,18 +70,11 @@ class TestDownload(unittest.TestCase):
         mock_raster.assert_called_once()
         called_format = mock_raster.call_args[1]["output_format"]
         assert called_format == "GTiff"
-        mock_open.assert_called_once_with(dest, "wb")
 
     def test_to_file(self, mock_raster, mock_makedirs, mock_open):
         file = six.BytesIO()
-        result = self.download(file, format="jpg")
-        assert result is None
-        assert file.getvalue() == b"i'm a geotiff!"
-        mock_open.assert_not_called()
-        mock_makedirs.assert_not_called()
-        mock_raster.assert_called_once()
-        called_format = mock_raster.call_args[1]["output_format"]
-        assert called_format == "JPEG"
+        with pytest.raises(TypeError):
+            self.download(file, format="jpg")
 
     def test_to_file_invalid_format(self, mock_raster, mock_makedirs, mock_open):
         file = six.BytesIO()
@@ -93,14 +85,11 @@ class TestDownload(unittest.TestCase):
         path = "foo/bar.tif"
         result = self.download(path)
         assert result == path
-        mock_open.assert_called_once_with(path, "wb")
-        mock_open().write.assert_called_once_with(b"i'm a geotiff!")
         mock_makedirs.assert_called_once_with("foo")
 
     def test_to_existing_path(self, mock_raster, mock_makedirs, mock_open):
         path = "../bar.tif"
         self.download(path)
-        mock_open.assert_called_once_with(path, "wb")
         mock_makedirs.assert_not_called()
 
     def test_default_filename_single_scene(self, mock_raster, mock_makedirs, mock_open):
@@ -129,20 +118,7 @@ class TestDownload(unittest.TestCase):
 
         path = pathlib.Path("foo/bar.tif")
         self.download(path)
-        mock_open.assert_called_once_with(path, "wb")
         mock_makedirs.assert_called_once_with("foo")
-        mock_open().write.assert_called_once_with(b"i'm a geotiff!")
-
-    def test_weird_response(self, mock_raster, mock_makedirs, mock_open):
-        mock_raster.side_effect = lambda *args, **kwargs: {
-            "files": {"file1": "", "file2": ""}
-        }
-        with pytest.raises(RuntimeError, match="multiple files"):
-            self.download("file.tif")
-
-        mock_raster.side_effect = lambda *args, **kwargs: {"files": {}}
-        with pytest.raises(RuntimeError, match="missing results"):
-            self.download("file.tif")
 
     def test_raster_not_found(self, mock_raster, mock_makedirs, mock_open):
         mock_raster.side_effect = NotFoundError("there is no foo")
