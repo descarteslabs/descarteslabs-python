@@ -370,7 +370,7 @@ class Raster(Service):
         ext = file_ext[output_format]
 
         if "id" not in metadata:
-            metadata["id"] = inputs[0]
+            metadata["id"] = params['ids'][0]
 
         if output_format == "GTiff":
             make_geotiff(outfile_basename + ext, chunk_iter, metadata, blosc_meta, None)
