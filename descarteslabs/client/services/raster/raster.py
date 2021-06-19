@@ -13,12 +13,14 @@
 # limitations under the License.
 
 import json
-import os
-import struct
 import logging
+import os
 import random
+import struct
+import time
 
 from tqdm import tqdm
+from urllib3.exceptions import ProtocolError
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 from PIL import Image
@@ -128,37 +130,6 @@ def read_tiled_blosc_array(metadata, data, progress=None):
     return output
 
 
-def read_blosc_array(metadata, data):
-    output = np.empty(metadata["shape"], dtype=np.dtype(metadata["dtype"]))
-    ptr = output.__array_interface__["data"][0]
-
-    for _ in metadata["chunks"]:
-        raw_size, buffer = read_blosc_buffer(data)
-        blosc.decompress_ptr(buffer, ptr)
-        ptr += raw_size
-
-    bytes_received = ptr - output.__array_interface__["data"][0]
-
-    if bytes_received != output.nbytes:
-        raise ServerError(
-            "Did not receive complete array (got {}, expected {})".format(
-                bytes_received, output.nbytes
-            )
-        )
-
-    return output
-
-
-def read_blosc_string(metadata, data):
-    output = b""
-
-    for _ in metadata["chunks"]:
-        _, buffer = read_blosc_buffer(data)
-        output += blosc.decompress(buffer)
-
-    return output
-
-
 def yield_chunks(metadata, data, progress):
     dtype = np.dtype(metadata["dtype"])
     chunk_iter = range(metadata["chunks"])
@@ -207,6 +178,43 @@ def yield_chunks(metadata, data, progress):
             yield np.transpose(chunk, [1, 2, 0])
 
 
+def _retry(req, headers=None):
+    DELAY = 0.5
+    MULTIPLIER = 2
+    JITTER = 1.0
+    MAX_DELAY = 30.0
+    MAX_RETRIES = 8
+
+    retry_count = 0
+
+    # Should always be present outside of tests
+    if headers is None:
+        headers = {}
+
+    while True:
+        headers["x-retry-count"] = str(retry_count)
+
+        try:
+            return req(headers=headers)
+        except ProtocolError:
+            # generally an incomplete read, perhaps a timeout
+            if retry_count == MAX_RETRIES:
+                raise
+        except ServerError:
+            # can also arise from incomplete reads, or from server-side
+            # error while streaming, or the usual bad status
+            if retry_count == MAX_RETRIES:
+                raise
+
+        if retry_count:
+            # see https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+            # this is a variation on "Full Jitter" with JITTER as a tuning parameter.
+            delay = min(DELAY * MULTIPLIER ** (retry_count - 1), MAX_DELAY)
+            delay = random.uniform(1.0 - JITTER, 1.0) * delay
+            time.sleep(delay)
+        retry_count += 1
+
+
 class Raster(Service):
     """
     The Raster API retrieves data from the Descartes Labs Catalog. Direct use of
@@ -219,6 +227,7 @@ class Raster(Service):
 
     TIMEOUT = (CONNECT_TIMEOUT, READ_TIMEOUT)
 
+    # override the usual Service retry behavior, as calls will be wrapped by the _retry method.
     RETRY_CONFIG = Retry(
         total=10,
         # NOTE: multiplied by 2 ** num_retries, only used for >=2nd retry (first has no delay)
@@ -228,7 +237,7 @@ class Raster(Service):
         method_whitelist=frozenset(
             ["HEAD", "TRACE", "GET", "POST", "PUT", "OPTIONS", "DELETE"]
         ),
-        # Don't retry here on bad status codes - see _retried_ndarray in LazyRaster
+        # Don't retry here on bad status codes
         status=0,
     )
 
@@ -272,6 +281,7 @@ class Raster(Service):
         outfile_basename=None,
         headers=None,
         progress=None,
+        _retry=_retry,
         **pass_through_params,
     ):
         """Given a list of :class:`Metadata <descarteslabs.services.Metadata>` identifiers,
@@ -350,14 +360,8 @@ class Raster(Service):
             pass_through_params=pass_through_params,
         )
 
-        r = self.session.post("/npz", headers=headers or {}, json=params, stream=True)
-        metadata = json.loads(r.raw.readline().decode("utf-8").strip())
-        blosc_meta = json.loads(r.raw.readline().decode("utf-8").strip())
-
         if outfile_basename is None:
-            outfile_basename = params['ids'][0]
-
-        chunk_iter = yield_chunks(blosc_meta, r.raw, progress)
+            outfile_basename = params["ids"][0]
 
         file_ext = {
             "GTiff": ".tif",
@@ -369,26 +373,45 @@ class Raster(Service):
             raise ValueError("output_format must be one of GTiff, JPEG, PNG")
         ext = file_ext[output_format]
 
-        if "id" not in metadata:
-            metadata["id"] = params['ids'][0]
+        outfile = outfile_basename + ext
 
-        if output_format == "GTiff":
-            make_geotiff(outfile_basename + ext, chunk_iter, metadata, blosc_meta, None)
-        elif output_format == "JPEG":
-            make_geotiff(outfile_basename + ext, chunk_iter, metadata, blosc_meta, "JPEG")
-        elif output_format == "PNG":
+        def retry_req(headers):
+            r = self.session.post(
+                "/npz", headers=headers or {}, json=params, stream=True
+            )
+            metadata = json.loads(r.raw.readline().decode("utf-8").strip())
+            blosc_meta = json.loads(r.raw.readline().decode("utf-8").strip())
+
+            chunk_iter = yield_chunks(blosc_meta, r.raw, progress)
+
+            if "id" not in metadata:
+                metadata["id"] = inputs[0]
+
             try:
-                tif_out = outfile_basename + '.tif'
-                make_geotiff(tif_out, chunk_iter, metadata, blosc_meta, "PNG")
-                im = Image.open(tif_out)
-                im.save(outfile_basename + '.png')
+                if output_format == "GTiff":
+                    make_geotiff(outfile, chunk_iter, metadata, blosc_meta, None)
+                elif output_format == "JPEG":
+                    make_geotiff(outfile, chunk_iter, metadata, blosc_meta, "JPEG")
+                elif output_format == "PNG":
+                    tif_out = outfile_basename + ".tif"
+                    try:
+                        make_geotiff(tif_out, chunk_iter, metadata, blosc_meta, "PNG")
+                        try:
+                            im = Image.open(tif_out)
+                            im.save(outfile)
+                        except Exception:
+                            raise RuntimeError("Cannot save PNG image")
+                    finally:
+                        if os.path.isfile(tif_out):
+                            os.remove(tif_out)
             except Exception:
-                raise RuntimeError("Cannot save PNG image")
-            finally:
-                if os.path.isfile(tif_out):
-                    os.remove(tif_out)
+                if os.path.isfile(outfile):
+                    os.remove(outfile)
+                raise
 
-        return (outfile_basename + ext, metadata)
+            return (outfile, metadata)
+
+        return _retry(retry_req, headers=headers)
 
     def ndarray(
         self,
@@ -412,6 +435,7 @@ class Raster(Service):
         headers=None,
         progress=None,
         masked=True,
+        _retry=_retry,
         **pass_through_params,
     ):
         """Retrieve a raster as a NumPy array.
@@ -491,10 +515,16 @@ class Raster(Service):
             pass_through_params=pass_through_params,
         )
 
-        r = self.session.post("/npz", headers=headers or {}, json=params, stream=True)
-        metadata = json.loads(r.raw.readline().decode("utf-8").strip())
-        array_meta = json.loads(r.raw.readline().decode("utf-8").strip())
-        array = read_tiled_blosc_array(array_meta, r.raw, progress=progress)
+        def retry_req(headers):
+            r = self.session.post(
+                "/npz", headers=headers or {}, json=params, stream=True
+            )
+            metadata = json.loads(r.raw.readline().decode("utf-8").strip())
+            array_meta = json.loads(r.raw.readline().decode("utf-8").strip())
+            array = read_tiled_blosc_array(array_meta, r.raw, progress=progress)
+            return array, metadata
+
+        array, metadata = _retry(retry_req, headers=headers)
 
         if not masked:
             array = array.data
