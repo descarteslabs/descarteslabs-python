@@ -286,8 +286,6 @@ def convert_to_geotiff_tags(
         (34737, 2, len(projdesc), projdesc, False),
         # GDAL Info
         (42112, 2, len(gdalinfo), gdalinfo, False),
-        # NoData value
-        (42113, 2, 1, "0", False),
     ]
 
 
@@ -329,17 +327,21 @@ def make_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress):
             pconfig = None
             shape = (geotiff_profile["height"], geotiff_profile["width"])
 
-        tif.write(
-            data=chunk_iter,
-            tile=(
+        if height < geotiff_profile["blockxsize"] and width < geotiff_profile["blockysize"]:
+            tile = None
+        else:
+            tile = (
                 geotiff_profile["blockxsize"],
                 geotiff_profile["blockysize"],
-            ),
+            )
+
+        tif.write(
+            data=chunk_iter,
+            tile=tile,
             shape=shape,
             dtype=geotiff_profile["dtype"],
             software="descarteslabs",
             extratags=extra_tags,
             compression=compress,
             planarconfig=pconfig,
-            description=metadata["id"],
         )

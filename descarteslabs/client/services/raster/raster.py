@@ -125,7 +125,6 @@ def read_tiled_blosc_array(metadata, data, progress=None):
 
     if progbar is not None:
         progbar.close()
-    # FIXME - ensure chunks cover the whole array?
 
     return output
 
@@ -155,22 +154,8 @@ def yield_chunks(metadata, data, progress):
             )
         blosc.decompress_ptr(buffer, chunk.__array_interface__["data"][0])
 
-        # read mask chunk
-        mask_chunk = np.empty(chunk_metadata["shape"], dtype=bool)
-        raw_size, buffer = read_blosc_buffer(data)
-
-        if raw_size != mask_chunk.nbytes:
-            raise ServerError(
-                "Did not receive complete chunk (got {}, expected {})".format(
-                    raw_size, mask_chunk.nbytes
-                )
-            )
-
-        blosc.decompress_ptr(buffer, mask_chunk.__array_interface__["data"][0])
-
-        # form the output chunk
-        chunk.mask = mask_chunk
-        chunk = np.ma.filled(chunk, fill_value=0)
+        # read mask chunk off response but don't do anything
+        _ = read_blosc_buffer(data)
 
         if chunk.shape[0] == 1:
             yield np.squeeze(chunk, axis=0)
