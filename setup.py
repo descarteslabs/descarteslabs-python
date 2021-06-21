@@ -90,6 +90,7 @@ def do_setup():
             "cachetools>=3.1.1",
             "cloudpickle==0.4.0;python_version<'3.8'",
             "cloudpickle==1.6.0;python_version>='3.8'",
+            "dataclasses>=0.8;python_version<'3.7'",
             "geojson>=2.5.0",
             "grpcio>=1.35.0,<2",
             "imagecodecs>=2020.5.30;python_version<'3.7'",
