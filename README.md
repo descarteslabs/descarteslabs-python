@@ -22,6 +22,10 @@ Changelog
 
 - Added a new `common.dltile` library that performs geospatial transforms and tiling operations.
 
+### Discover (alpha) - Added
+
+- Added an **alpha** Discover client. Discover allows users to organize and share assets with other users. As an alpha release, we reserve the right to modify the Discover client API without any guarantees about backwards compatibility. See the [Discover API documentation](https://docs.descarteslabs.com/descarteslabs/discover/readme.html) for more details.
+
 ### Metadata/Catalog V1 - Changed
 
 - **breaking** Image (Scene) metadata now accepts and returns the `bucket` and `directory` fields as lists of strings, of a length equal to that
