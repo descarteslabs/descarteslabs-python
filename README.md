@@ -17,10 +17,12 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
+## [1.8.1] - 2021-06-22
 
 ### General
 
 - Added a new `common.dltile` library that performs geospatial transforms and tiling operations.
+- Upgraded various dependencies: `requests[security]>=2.25.1,<3`,`six>=1.15.0`,`blosc==1.10.2`,` mercantile>=1.1.3`,`Pillow>=8.1.1`,`protobuf>=3.14.0,<4`,`shapely>=1.7.1,<2`,`tqdm>=4.32.1`,`traitlets>=4.3.3,<6;python_version<'3.7'`,`traitlets==5.0.5,<6;python_version>='3.7'`,`markdown2>=2.4.0,<3`,`responses==0.12.1`,`freezegun==0.3.12`,`imagecodecs>=2020.5.30;python_version<'3.7'`,`imagecodecs>=2021.5.20;python_version>='3.7'`,`tifffile==2020.9.3;python_version<'3.7'`,`tifffile==2021.4.8;python_version>='3.7'`
 
 ### Discover (alpha) - Added
 
@@ -36,15 +38,23 @@ Changelog
 ### Scenes - Changed
 
 - Scenes now uses the client-side `dltile` library to make DLTiles. This improves performance when creating a large number of DLTile objects.
-- Scenes DLTile `from_shape` now has a parameter to return tile keys only instead of full tile objects.
-- Scenes DLTile now has new methods: `iter_from_shape` that takes the same arguments as `from_shape` but returns an iterator, `subtile` that adds the ability to subdivide tiles, and `rowcol_to_latlon` and `latlon_to_rowcol` which converts pixel coordinates to spatial coordinates and vice versa. 
-- Scenes DLTile now has a new parameter `tile_extent` which is the total size of the tile in pixels including padding. 
+- Scenes DLTile `from_shape` now has a parameter to return tile keys only instead of full tile objects. Usage details can be found [in the docs](https://docs.descarteslabs.com/descarteslabs/scenes/docs/geocontext.html#descarteslabs.scenes.geocontext.DLTile.from_shape).
+- Scenes DLTile now has new methods: `iter_from_shape` that takes the same arguments as `from_shape` but returns an iterator ([from_shape docs](https://docs.descarteslabs.com/descarteslabs/scenes/docs/geocontext.html#descarteslabs.scenes.geocontext.DLTile.iter_from_shape)), `subtile` that adds the ability to subdivide tiles ([subtile docs](https://docs.descarteslabs.com/descarteslabs/scenes/docs/geocontext.html#descarteslabs.scenes.geocontext.DLTile.subtile)), and `rowcol_to_latlon` and `latlon_to_rowcol` which converts pixel coordinates to spatial coordinates and vice versa ([rowcol_to_latlon docs](https://docs.descarteslabs.com/descarteslabs/scenes/docs/geocontext.html#descarteslabs.scenes.geocontext.DLTile.rowcol_to_latlon) and [latlon_to_rowcol docs](https://docs.descarteslabs.com/descarteslabs/scenes/docs/geocontext.html#descarteslabs.scenes.geocontext.DLTile.latlon_to_rowcol)). 
+- Scenes DLTile now has a new parameter `tile_extent` which is the total size of the tile in pixels including padding. Usage details can be found [in the docs](https://docs.descarteslabs.com/descarteslabs/scenes/docs/geocontext.html#descarteslabs.scenes.geocontext.DLTile.tile_extent).
 - **breaking** Removed the dependence on `Raster` for tiling. The `raster_client` parameter has been removed from the `from_latlon`, `from_key`, `from_shape`, and `assign`DLTile methods.
 - Tiling using `from_shape` may return a different number of tiles compared to previous versions under certain conditions. These tiles are usually found in overlapping areas between UTM zones and should not affect the overall coverage.
 - DLTile geospatial transformations are guaranteed to be within eight decimal points of the past implementation.
 - DLTile errors now come from the `dltile` library and error messages should now be more informative.
 - When specifying output bounds in a spatial reference system different from the underlying raster, a densified representation of the bounding box is used internally to ensure that the returned image fully covers the bounds. For certain methods (like `mosaic`) this may change the returned image dimensions, depending on the SRSs involved.
 - **breaking** As with the Metadata v1 client changes, the `bucket` and `directory` fields of the Scene properties are now multi-valued lists.
+- Scenes does not support writing GeoTiffs to file-like objects
+
+### Raster - Changed
+- `dltiles_from_shape`, `dltiles_from_latlon`, and `dltile` have been removed. **It is
+  strongly recommended to test any existing code which uses the Raster API when upgrading to this
+  release.**
+- Fully masked arrays are now supported. Usage details can be found [in the docs](https://docs.descarteslabs.com/descarteslabs/client/services/raster/readme.html#descarteslabs.client.services.raster.Raster.ndarray)
+- Added support to draw progress bar. Usage details can be found [in the docs](https://docs.stage.descarteslabs.com/descarteslabs/client/services/raster/readme.html).
 
 ## [1.7.1] - 2021-03-03
 
