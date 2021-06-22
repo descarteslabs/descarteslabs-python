@@ -33,7 +33,12 @@ Changelog
 - **breaking** Image (Scene) metadata now accepts and returns the `bucket` and `directory` fields as lists of strings, of a length equal to that
   of the `files` fields. This allows the file assets making up an image to live in different locations. When creating new images,
   a simple string can still be provided for these fields. It will automatically be converted to a list of (duplicated) strings as
-  necessary.
+  necessary. As most users will never interact with these fields, the change should not affect user code.
+
+### Metadata/Catalog V1/Catalog V2 - Changed
+
+- `derived_params` field for Image (scene) metadata now supported for product-specific service-implemented "native derived bands" which may
+  only be created for core products.
 
 ### Scenes - Changed
 
@@ -47,14 +52,22 @@ Changelog
 - DLTile errors now come from the `dltile` library and error messages should now be more informative.
 - When specifying output bounds in a spatial reference system different from the underlying raster, a densified representation of the bounding box is used internally to ensure that the returned image fully covers the bounds. For certain methods (like `mosaic`) this may change the returned image dimensions, depending on the SRSs involved.
 - **breaking** As with the Metadata v1 client changes, the `bucket` and `directory` fields of the Scene properties are now multi-valued lists.
-- Scenes does not support writing GeoTiffs to file-like objects
+- Scenes does not support writing GeoTiffs to file-like objects. Non-JPEG GeoTiffs are always uncompressed.
 
 ### Raster - Changed
 - `dltiles_from_shape`, `dltiles_from_latlon`, and `dltile` have been removed. **It is
   strongly recommended to test any existing code which uses the Raster API when upgrading to this
   release.**
-- Fully masked arrays are now supported. Usage details can be found [in the docs](https://docs.descarteslabs.com/descarteslabs/client/services/raster/readme.html#descarteslabs.client.services.raster.Raster.ndarray)
+- Fully masked arrays are now supported and are the default. Usage details can be found [in the docs](https://docs.descarteslabs.com/descarteslabs/client/services/raster/readme.html#descarteslabs.client.services.raster.Raster.ndarray)
 - Added support to draw progress bar. Usage details can be found [in the docs](https://docs.stage.descarteslabs.com/descarteslabs/client/services/raster/readme.html).
+- The signature and return value of `Raster.raster()` have changed. The `save=` parameter has been removed as the resulting download is always saved
+  to disk, to a file named by the `outfile_basename=` parameter. The method returns a tuple containing the name of the resulting file and the metadata
+  for the retrieval, which is now an ordinary Python dictionary.
+- As with Scenes, when specifying output bounds in a spatial reference system different from the underlying raster, a densified representation of the bounding box is used internally to ensure that the returned image fully covers the bounds. For certain methods (like `mosaic`) this may change the returned image dimensions, depending on the SRSs involved.
+
+## [1.8.0] - 2021-06-08
+
+Internal release only. See 1.8.1 above.
 
 ## [1.7.1] - 2021-03-03
 
