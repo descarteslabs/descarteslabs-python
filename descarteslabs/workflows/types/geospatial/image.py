@@ -180,9 +180,8 @@ class Image(ImageBase, BandsMixin):
             Possible values are ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicspline``,
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         processing_level : Str, optional
-            Reflectance processing level. Possible values are ``'toa'`` (top of atmosphere)
-            and ``'surface'``. For products that support it, ``'surface'`` applies
-            Descartes Labs' general surface reflectance algorithm to the output.
+            Image processing level. Possible values depend on the particular product and bands. Some
+            examples include ``'toa'``, ``'surface'``, ``'toa_refectance'``, ``'toa_radiance'``.
 
         Returns
         -------
@@ -211,14 +210,6 @@ class Image(ImageBase, BandsMixin):
             "q3",
         ]:
             raise ValueError(f"Unknown resampler type: {resampler.literal_value!r}")
-        if (
-            processing_level.literal_value is not None
-            and processing_level.literal_value not in ("toa", "surface")
-        ):
-            raise ValueError(
-                f"Unknown processing level: {processing_level.literal_value!r}. "
-                "Must be None, 'toa', or 'surface'."
-            )
         return cls._from_apply(
             "wf.Image.load",
             image_id,

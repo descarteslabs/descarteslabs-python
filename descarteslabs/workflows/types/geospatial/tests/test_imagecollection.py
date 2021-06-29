@@ -50,8 +50,6 @@ def test_from_id():
 
     with pytest.raises(ValueError, match="Unknown resampler type: 'foo'"):
         ImageCollection.from_id("foo", resampler="foo")
-    with pytest.raises(ValueError, match="Unknown processing level: 'foo'"):
-        ImageCollection.from_id("foo", processing_level="foo")
 
 
 def test_stats_return_type():

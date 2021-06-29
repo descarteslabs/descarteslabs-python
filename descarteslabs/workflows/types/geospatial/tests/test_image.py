@@ -25,8 +25,6 @@ def test_from_id():
 
     with pytest.raises(ValueError, match="Unknown resampler type: 'foo'"):
         Image.from_id("foo", resampler="foo")
-    with pytest.raises(ValueError, match="Unknown processing level: 'foo'"):
-        Image.from_id("foo", processing_level="foo")
 
 
 @mock.patch.object(Image, "from_id", wraps=Image.from_id)

@@ -214,11 +214,8 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             Possible values are ``near`` (nearest-neighbor), ``bilinear``, ``cubic``, ``cubicspline``,
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         processing_level : Str, optional
-            Reflectance processing level. Possible values are ``'toa'`` (top of atmosphere)
-            and ``'surface'``. For products that support it, ``'surface'`` applies
-            Descartes Labs' general surface reflectance algorithm to the output.
-            Any Images that have not been processed for surface reflectance are filtered out.
-            If no Images support surface reflectance, returns an empty `ImageCollection`.
+            Image processing level. Possible values depend on the particular product and bands. Some
+            examples include ``'toa'``, ``'surface'``, ``'toa_refectance'``, ``'toa_radiance'``.
 
         Returns
         -------
@@ -248,14 +245,6 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             "q3",
         ]:
             raise ValueError(f"Unknown resampler type: {resampler.literal_value!r}")
-        if (
-            processing_level.literal_value is not None
-            and processing_level.literal_value not in ("toa", "surface")
-        ):
-            raise ValueError(
-                f"Unknown processing level: {processing_level.literal_value!r}. "
-                f"Must be None, 'toa', or 'surface'."
-            )
         return cls._from_apply(
             "wf.ImageCollection.from_id",
             product_id,
