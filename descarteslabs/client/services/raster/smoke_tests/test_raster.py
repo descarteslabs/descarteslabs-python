@@ -17,6 +17,7 @@ import tempfile
 import shutil
 import unittest
 import json
+import hashlib
 
 from descarteslabs.client.addons import numpy as np
 from descarteslabs.client.services.raster import Raster
@@ -270,6 +271,152 @@ class TestRaster(unittest.TestCase):
             assert metadata is not None
         finally:
             os.unlink(filename)
+
+    def test_geotiff_simple(self):
+
+        input_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
+
+        filename, metadata = self.raster.raster(
+            inputs=[input_id],
+            bands=["red"],
+            resolution=960,
+            output_format="GTiff",
+        )
+
+        assert os.path.exists(filename)
+
+        try:
+            # Note that this checksum will change if we make any alterations to
+            # .tif files; need to manually inspect them before updating the
+            # checksum
+            with open(filename, "rb") as f:
+                d = f.read()
+                checksum = hashlib.md5(d).hexdigest()
+                assert checksum == "9cb9e1e363ca996bf9e7bc682d94c538"
+
+            # check geotiff metadata
+
+            # filename should just be input + output type (tif in this case)
+            self.assertEqual(filename, input_id + ".tif")
+
+            # ensure the bands metadata is generated properly
+            expected_band_metadata = [
+                {
+                    "band": 1,
+                    "block": [128, 128],
+                    "colorInterpretation": "Red",
+                    "description": {
+                        "color": "Red",
+                        "data_range": [0.0, 10000.0],
+                        "dtype": "UInt16",
+                        "jpx_layer": 0,
+                        "name": "red",
+                        "res_factor": 1,
+                        "srcband": 1,
+                        "srcfile": 0,
+                        "tags": ["spectral", "red", "15m", "landsat"],
+                        "type": "spectral",
+                        "vendor_order": 4,
+                    },
+                    "metadata": {},
+                    "overviews": [
+                        {"size": [7848, 7980]},
+                        {"size": [3924, 3990]},
+                        {"size": [1962, 1995]},
+                        {"size": [981, 998]},
+                        {"size": [490, 499]},
+                        {"size": [245, 250]},
+                        {"size": [122, 125]},
+                    ],
+                    "type": "UInt16",
+                }
+            ]
+
+            self.assertEqual(metadata["bands"], expected_band_metadata)
+
+            # check other misc metadata
+            self.assertEqual(input_id, metadata["id"])
+            self.assertEqual(metadata["driverLongName"], "Virtual Raster")
+            self.assertEqual(metadata["driverShortName"], "VRT")
+            self.assertEqual(
+                metadata["geoTransform"], [258292.5, 960, 0, 4743307.5, 0, -960]
+            )
+            self.assertEqual(
+                metadata["metadata"],
+                {
+                    "GEOGCS": "WGS 84",
+                    "GEOGCS|DATUM": "WGS_1984",
+                    "GEOGCS|PRIMEM": "Greenwich",
+                    "GEOGCS|SPHEROID": "WGS 84",
+                    "PROJCS": "WGS 84 / UTM zone 15N",
+                },
+            )
+            self.assertEqual(metadata["size"], [15696, 15960])
+            self.assertEqual(
+                metadata["wgs84Extent"],
+                {
+                    "coordinates": [
+                        [
+                            [-95.9559596, 42.8041728],
+                            [-95.858773, 40.650654],
+                            [-93.0741722, 40.6860344],
+                            [-93.0766981, 42.8423173],
+                            [-95.9559596, 42.8041728],
+                        ]
+                    ],
+                    "type": "Polygon",
+                },
+            )
+        finally:
+            os.unlink(filename)
+
+    def test_geotiff_multiband(self):
+        input_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
+
+        filename, metadata = self.raster.raster(
+            inputs=[input_id],
+            bands=["red", "green", "blue", "alpha"],
+            resolution=960,
+            output_format="GTiff",
+        )
+
+        # filename should just be input + output type (tif in this case)
+        self.assertEqual(filename, input_id + ".tif")
+
+        self.assertEqual(len(metadata["bands"]), 4)
+
+        try:
+            # Note that this checksum will change if we make any alterations to
+            # .tif files; need to manually inspect them before updating the
+            # checksum
+            with open(filename, "rb") as f:
+                d = f.read()
+                checksum = hashlib.md5(d).hexdigest()
+                assert checksum == "cef7578ffa255aa8a1fdafc58b6ba803"
+        finally:
+            os.unlink(filename)
+
+    # see #9000
+    # https://github.com/descarteslabs/monorepo/pull/9000
+    def test_adjacent_mosiac(self):
+        scene_ids = [
+            "landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_191031_20180130_20180130_01_RT_v1",
+            "landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_190031_20180123_20180123_01_RT_v1",
+        ]
+
+        mosiac, metadata = self.raster.ndarray(
+            scene_ids,
+            resolution=150,
+            bands=["alpha"],
+        )
+
+        # note: ndarray returns a noncontiguous MaskedArray which we can't
+        # compute a checksum on. need to clone it before calculating the
+        # checksum
+        self.assertEqual(
+            hashlib.md5(np.ascontiguousarray(mosiac)).hexdigest(),
+            "691e464eab5bb80eb746a4ccfe05332f",
+        )
 
 
 if __name__ == "__main__":
