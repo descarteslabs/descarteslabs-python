@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package descarteslabs.currier.v1;
+
+// Request to invoke a model with a set of parameters.
+message InvokeRequest {}
+
+// Response from an invocation a model with a set of parameters.
+message InvokeResponse {}
+
+// Request to register a new model.
+message RegisterRequest {}
+
+// Response from a registration of a new model.
+message RegisterResponse {}
+
+// Request to get the status of a model invocation.
+message GetStatusRequest {}
+
+// Response from getting the status of a model invocation.
+message GetStatusResponse {}
+
+// The Currier service definition.
+service Currier {
+
+  // Invoke a model with a set of parameters
+  rpc Invoke(InvokeRequest) returns (InvokeResponse);
+
+  // Register a new model.
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  // Get the status of model invocation. 
+  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse);
+}
