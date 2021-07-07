@@ -164,6 +164,23 @@ class TestBand(ClientTestCase):
         assert isinstance(results[0], SpectralBand)
         assert isinstance(results[1], MaskBand)
 
+    def test_vendor_band_name(self):
+        s = SpectralBand(
+            name="test",
+            product_id="foo",
+        )
+        assert s.vendor_band_name is None
+
+        s = SpectralBand(
+            name="test",
+            product_id="foo",
+            vendor_band_name=None,
+        )
+        assert s.vendor_band_name is None
+
+        s = SpectralBand(name="test", product_id="foo", vendor_band_name="some_band")
+        assert "some_band" == s.vendor_band_name
+
     def test_search(self):
         search = Band.search()
         assert search._filter_properties is None
@@ -454,7 +471,11 @@ class TestBand(ClientTestCase):
             "bands": ["band"],
             "source_type": "UInt16",
         }
-        b = SpectralBand(id=band_id, derived_params=dp, _saved=True,)
+        b = SpectralBand(
+            id=band_id,
+            derived_params=dp,
+            _saved=True,
+        )
 
         assert b.state == DocumentState.SAVED
 
@@ -504,7 +525,11 @@ class TestBand(ClientTestCase):
             },
         )
 
-        b = SpectralBand(id=band_id, derived_params=dp, client=self.client,)
+        b = SpectralBand(
+            id=band_id,
+            derived_params=dp,
+            client=self.client,
+        )
         assert isinstance(b.derived_params, DerivedParamsAttribute)
         b.save()
         assert isinstance(b.derived_params, DerivedParamsAttribute)

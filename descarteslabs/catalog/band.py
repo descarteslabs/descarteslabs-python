@@ -503,9 +503,8 @@ class Band(NamedCatalogObject):
     vendor_order = TypedAttribute(
         int,
         doc="""int, optional: A number defining the ordering of bands within a product
-        as defined by the data vendor. 1-based. Used for indexing ``c6s_dlsr``,
-        ``brightness_temperature_k1_k2``, ``radiance_gain_bias``, ``reflectance_gain_bias``,
-        and ``temperature_gain_bias``. Generally only used internally by certain core products.
+        as defined by the data vendor. 1-based. Used for indexing ``c6s_dlsr``.
+        Generally only used internally by certain core products.
 
         *Sortable*.
         """,
@@ -553,6 +552,13 @@ class Band(NamedCatalogObject):
         doc="""int, optional: The 0-based layer index if the source data is JPEG2000 with layers.
 
         Defaults to 0.
+        """,
+    )
+    vendor_band_name = TypedAttribute(
+        str,
+        doc="""str, optional: The name of the band in the source file.
+
+        Some source file types require that the band be indexed by name rather than by the ``band_index``.
         """,
     )
     processing_levels = ProcessingLevelsAttribute()
