@@ -311,6 +311,7 @@ class TestRaster(unittest.TestCase):
                         "dtype": "UInt16",
                         "jpx_layer": 0,
                         "name": "red",
+                        "name_vendor": "B4",
                         "res_factor": 1,
                         "srcband": 1,
                         "srcfile": 0,
