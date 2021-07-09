@@ -2,33 +2,149 @@ syntax = "proto3";
 
 package descarteslabs.currier.v1;
 
-// Request to invoke a model with a set of parameters.
-message InvokeRequest {}
-
-// Response from an invocation a model with a set of parameters.
-message InvokeResponse {}
-
-// Request to register a new model.
-message RegisterRequest {}
-
-// Response from a registration of a new model.
-message RegisterResponse {}
-
-// Request to get the status of a model invocation.
-message GetStatusRequest {}
-
-// Response from getting the status of a model invocation.
-message GetStatusResponse {}
-
-// The Currier service definition.
-service Currier {
-
+// Service for invoking models and queying work status.
+service CurrierInvoke {
   // Invoke a model with a set of parameters
   rpc Invoke(InvokeRequest) returns (InvokeResponse);
 
-  // Register a new model.
-  rpc Register(RegisterRequest) returns (RegisterResponse);
-
-  // Get the status of model invocation. 
-  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse);
+  // Get the status of an invocation
+  rpc GetWorkStatus(GetWorkStatusRequest) returns (GetWorkStatusResponse);
 }
+
+// Request to invoke a model with a set of parameters.
+message InvokeRequest {
+  // Name of the model the called is invoking.
+  string model_name = 1;
+
+  // Map of named input parameters
+  map<string, ParameterValue> parameters = 2;
+}
+
+// Response from an invocation request with a set of parameters.
+message InvokeResponse {
+  // work id associated with _this_ invocation. 
+  // Used for checking the status of the work.
+  string work_id = 1;
+}
+
+// Parameter value for executing a model
+// Note: ArgType must to be kept in sync 
+// with ParameterValue types.
+message ParameterValue {
+  oneof value {
+    string string = 1;
+    int64 int64 = 2; 
+    double double = 3;
+    bool bool = 4;
+    bytes geom = 5; // WKB encoded
+  }
+}
+
+// Request to get the status of a model invocation.
+message GetWorkStatusRequest {
+  string work_id = 1;
+}
+
+// Response from getting the status of a model invocation.
+message GetWorkStatusResponse {
+  float percentage_pending = 1;
+  float percentage_running = 2;
+  float percentage_canceled = 3;
+  float percentage_success = 4;
+  float percentage_failed = 5;
+}
+
+
+// Service for registering models
+service CurrierRegister {
+  // Register a new model.
+  rpc Register(RegisterModelRequest) returns (RegisterModelResponse);
+}
+
+// Request to register a new model.
+message RegisterModelRequest {
+  // String identifier for model. Used in `InvokeRequest` calls.
+  string name = 1;
+
+  // Model display name
+  string display_name = 2;  
+  
+  // Model description
+  string description = 3;
+
+  // Specify the operation, or worker, which will process Invoke requests.
+  string operation = 4;
+
+  // Set of possible model argument types.
+  // Note: ArgType must to be kept in sync 
+  // with ParameterValue types.
+  enum ArgType {
+    // Note `UNSPECIFIED` should not be used, 
+    // but covers the default "zero" value for this
+    // type.
+    UNSPECIFIED = 0;
+    STR = 1;
+    INT64 = 2;
+    DOUBLE = 3;
+    BOOL = 4;
+    GEOM = 5; // WKB encoded
+  }
+
+
+  // Input argument
+  message ModelArg {
+    // Documentation for this value, ie, any contraints on the 
+    // value, etc.
+    string description = 1;
+    // Type of the arg
+    ArgType type = 2;
+  }
+  
+  // Map of named input arguments
+  map<string, ModelArg> input_arguments = 5;
+
+
+  // Yaas input argument
+  message YaasArg {
+    ModelArg arg = 1;
+    ParameterValue default_value = 2;
+  }
+
+  // Map of named inpurt arguments for yaas
+  map<string, YaasArg> yaas_arguments = 6;
+
+
+  message Transform {
+    // Name of the input source parameter
+    string source_arg_name = 1;
+    // name of the transform function
+    string func_name = 2;
+ 
+    // Named input arguments used to call the transform function.
+    // Note: Transform args can either be literal values (fixed_value)
+    // or arguments supplied at invoke time.
+    message TransformArg {
+      oneof arg {
+        // Literal value the transform will be called with
+        ParameterValue fixed_value = 1;
+
+        // Parameter derived from invoke input.
+        // This must match the name of an argument 
+        // as specified in the `input_arguments` field.
+        string input_argument_name = 2;
+      }
+    }
+
+    // Map of named transfor arguments
+    map<string, TransformArg> args = 3;
+  }
+}
+
+// Response from a registration of a new model.
+message RegisterModelResponse {
+  string model_name = 1;
+}
+
+
+
+

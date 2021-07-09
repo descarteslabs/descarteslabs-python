@@ -5,7 +5,7 @@ import grpc
 from descarteslabs.common.proto.currier import currier_pb2 as descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2
 
 
-class CurrierStub(object):
+class CurrierInvokeStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,23 +15,18 @@ class CurrierStub(object):
             channel: A grpc.Channel.
         """
         self.Invoke = channel.unary_unary(
-                '/descarteslabs.currier.v1.Currier/Invoke',
+                '/descarteslabs.currier.v1.CurrierInvoke/Invoke',
                 request_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.InvokeRequest.SerializeToString,
                 response_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.InvokeResponse.FromString,
                 )
-        self.Register = channel.unary_unary(
-                '/descarteslabs.currier.v1.Currier/Register',
-                request_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterRequest.SerializeToString,
-                response_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterResponse.FromString,
-                )
-        self.GetStatus = channel.unary_unary(
-                '/descarteslabs.currier.v1.Currier/GetStatus',
-                request_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetStatusRequest.SerializeToString,
-                response_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetStatusResponse.FromString,
+        self.GetWorkStatus = channel.unary_unary(
+                '/descarteslabs.currier.v1.CurrierInvoke/GetWorkStatus',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetWorkStatusRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetWorkStatusResponse.FromString,
                 )
 
 
-class CurrierServicer(object):
+class CurrierInvokeServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Invoke(self, request, context):
@@ -40,44 +35,33 @@ class CurrierServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Register(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetStatus(self, request, context):
+    def GetWorkStatus(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
 
-def add_CurrierServicer_to_server(servicer, server):
+def add_CurrierInvokeServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Invoke': grpc.unary_unary_rpc_method_handler(
                     servicer.Invoke,
                     request_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.InvokeRequest.FromString,
                     response_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.InvokeResponse.SerializeToString,
             ),
-            'Register': grpc.unary_unary_rpc_method_handler(
-                    servicer.Register,
-                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterRequest.FromString,
-                    response_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterResponse.SerializeToString,
-            ),
-            'GetStatus': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetStatus,
-                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetStatusRequest.FromString,
-                    response_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetStatusResponse.SerializeToString,
+            'GetWorkStatus': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetWorkStatus,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetWorkStatusRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetWorkStatusResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'descarteslabs.currier.v1.Currier', rpc_method_handlers)
+            'descarteslabs.currier.v1.CurrierInvoke', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class Currier(object):
+class CurrierInvoke(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -91,11 +75,72 @@ class Currier(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/descarteslabs.currier.v1.Currier/Invoke',
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.currier.v1.CurrierInvoke/Invoke',
             descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.InvokeRequest.SerializeToString,
             descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.InvokeResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetWorkStatus(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.currier.v1.CurrierInvoke/GetWorkStatus',
+            descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetWorkStatusRequest.SerializeToString,
+            descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetWorkStatusResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+
+class CurrierRegisterStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.Register = channel.unary_unary(
+                '/descarteslabs.currier.v1.CurrierRegister/Register',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelResponse.FromString,
+                )
+
+
+class CurrierRegisterServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def Register(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_CurrierRegisterServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'Register': grpc.unary_unary_rpc_method_handler(
+                    servicer.Register,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'descarteslabs.currier.v1.CurrierRegister', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+
+
+ # This class is part of an EXPERIMENTAL API.
+class CurrierRegister(object):
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def Register(request,
@@ -108,25 +153,8 @@ class Currier(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/descarteslabs.currier.v1.Currier/Register',
-            descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterRequest.SerializeToString,
-            descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetStatus(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/descarteslabs.currier.v1.Currier/GetStatus',
-            descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetStatusRequest.SerializeToString,
-            descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetStatusResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.currier.v1.CurrierRegister/Register',
+            descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelRequest.SerializeToString,
+            descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

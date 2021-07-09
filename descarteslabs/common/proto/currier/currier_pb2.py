@@ -19,11 +19,94 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n0descarteslabs/common/proto/currier/currier.proto\x12\x18\x64\x65scarteslabs.currier.v1\"\x0f\n\rInvokeRequest\"\x10\n\x0eInvokeResponse\"\x11\n\x0fRegisterRequest\"\x12\n\x10RegisterResponse\"\x12\n\x10GetStatusRequest\"\x13\n\x11GetStatusResponse2\xaf\x02\n\x07\x43urrier\x12[\n\x06Invoke\x12\'.descarteslabs.currier.v1.InvokeRequest\x1a(.descarteslabs.currier.v1.InvokeResponse\x12\x61\n\x08Register\x12).descarteslabs.currier.v1.RegisterRequest\x1a*.descarteslabs.currier.v1.RegisterResponse\x12\x64\n\tGetStatus\x12*.descarteslabs.currier.v1.GetStatusRequest\x1a+.descarteslabs.currier.v1.GetStatusResponseb\x06proto3'
+  serialized_pb=b'\n0descarteslabs/common/proto/currier/currier.proto\x12\x18\x64\x65scarteslabs.currier.v1\"\xf0\x01\n\rInvokeRequest\x12\x1d\n\nmodel_name\x18\x01 \x01(\tR\tmodelName\x12W\n\nparameters\x18\x02 \x03(\x0b\x32\x37.descarteslabs.currier.v1.InvokeRequest.ParametersEntryR\nparameters\x1ag\n\x0fParametersEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12>\n\x05value\x18\x02 \x01(\x0b\x32(.descarteslabs.currier.v1.ParameterValueR\x05value:\x02\x38\x01\")\n\x0eInvokeResponse\x12\x17\n\x07work_id\x18\x01 \x01(\tR\x06workId\"\x91\x01\n\x0eParameterValue\x12\x18\n\x06string\x18\x01 \x01(\tH\x00R\x06string\x12\x16\n\x05int64\x18\x02 \x01(\x03H\x00R\x05int64\x12\x18\n\x06\x64ouble\x18\x03 \x01(\x01H\x00R\x06\x64ouble\x12\x14\n\x04\x62ool\x18\x04 \x01(\x08H\x00R\x04\x62ool\x12\x14\n\x04geom\x18\x05 \x01(\x0cH\x00R\x04geomB\x07\n\x05value\"/\n\x14GetWorkStatusRequest\x12\x17\n\x07work_id\x18\x01 \x01(\tR\x06workId\"\x82\x02\n\x15GetWorkStatusResponse\x12-\n\x12percentage_pending\x18\x01 \x01(\x02R\x11percentagePending\x12-\n\x12percentage_running\x18\x02 \x01(\x02R\x11percentageRunning\x12/\n\x13percentage_canceled\x18\x03 \x01(\x02R\x12percentageCanceled\x12-\n\x12percentage_success\x18\x04 \x01(\x02R\x11percentageSuccess\x12+\n\x11percentage_failed\x18\x05 \x01(\x02R\x10percentageFailed\"\x8c\x0b\n\x14RegisterModelRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12!\n\x0c\x64isplay_name\x18\x02 \x01(\tR\x0b\x64isplayName\x12 \n\x0b\x64\x65scription\x18\x03 \x01(\tR\x0b\x64\x65scription\x12\x1c\n\toperation\x18\x04 \x01(\tR\toperation\x12k\n\x0finput_arguments\x18\x05 \x03(\x0b\x32\x42.descarteslabs.currier.v1.RegisterModelRequest.InputArgumentsEntryR\x0einputArguments\x12h\n\x0eyaas_arguments\x18\x06 \x03(\x0b\x32\x41.descarteslabs.currier.v1.RegisterModelRequest.YaasArgumentsEntryR\ryaasArguments\x1ax\n\x08ModelArg\x12 \n\x0b\x64\x65scription\x18\x01 \x01(\tR\x0b\x64\x65scription\x12J\n\x04type\x18\x02 \x01(\x0e\x32\x36.descarteslabs.currier.v1.RegisterModelRequest.ArgTypeR\x04type\x1az\n\x13InputArgumentsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12M\n\x05value\x18\x02 \x01(\x0b\x32\x37.descarteslabs.currier.v1.RegisterModelRequest.ModelArgR\x05value:\x02\x38\x01\x1a\xa3\x01\n\x07YaasArg\x12I\n\x03\x61rg\x18\x01 \x01(\x0b\x32\x37.descarteslabs.currier.v1.RegisterModelRequest.ModelArgR\x03\x61rg\x12M\n\rdefault_value\x18\x02 \x01(\x0b\x32(.descarteslabs.currier.v1.ParameterValueR\x0c\x64\x65\x66\x61ultValue\x1ax\n\x12YaasArgumentsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12L\n\x05value\x18\x02 \x01(\x0b\x32\x36.descarteslabs.currier.v1.RegisterModelRequest.YaasArgR\x05value:\x02\x38\x01\x1a\xbf\x03\n\tTransform\x12&\n\x0fsource_arg_name\x18\x01 \x01(\tR\rsourceArgName\x12\x1b\n\tfunc_name\x18\x02 \x01(\tR\x08\x66uncName\x12V\n\x04\x61rgs\x18\x03 \x03(\x0b\x32\x42.descarteslabs.currier.v1.RegisterModelRequest.Transform.ArgsEntryR\x04\x61rgs\x1a\x94\x01\n\x0cTransformArg\x12K\n\x0b\x66ixed_value\x18\x01 \x01(\x0b\x32(.descarteslabs.currier.v1.ParameterValueH\x00R\nfixedValue\x12\x30\n\x13input_argument_name\x18\x02 \x01(\tH\x00R\x11inputArgumentNameB\x05\n\x03\x61rg\x1a~\n\tArgsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12[\n\x05value\x18\x02 \x01(\x0b\x32\x45.descarteslabs.currier.v1.RegisterModelRequest.Transform.TransformArgR\x05value:\x02\x38\x01\"N\n\x07\x41rgType\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x07\n\x03STR\x10\x01\x12\t\n\x05INT64\x10\x02\x12\n\n\x06\x44OUBLE\x10\x03\x12\x08\n\x04\x42OOL\x10\x04\x12\x08\n\x04GEOM\x10\x05\"6\n\x15RegisterModelResponse\x12\x1d\n\nmodel_name\x18\x01 \x01(\tR\tmodelName2\xde\x01\n\rCurrierInvoke\x12[\n\x06Invoke\x12\'.descarteslabs.currier.v1.InvokeRequest\x1a(.descarteslabs.currier.v1.InvokeResponse\x12p\n\rGetWorkStatus\x12..descarteslabs.currier.v1.GetWorkStatusRequest\x1a/.descarteslabs.currier.v1.GetWorkStatusResponse2~\n\x0f\x43urrierRegister\x12k\n\x08Register\x12..descarteslabs.currier.v1.RegisterModelRequest\x1a/.descarteslabs.currier.v1.RegisterModelResponseb\x06proto3'
 )
 
 
 
+_REGISTERMODELREQUEST_ARGTYPE = _descriptor.EnumDescriptor(
+  name='ArgType',
+  full_name='descarteslabs.currier.v1.RegisterModelRequest.ArgType',
+  filename=None,
+  file=DESCRIPTOR,
+  create_key=_descriptor._internal_create_key,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='UNSPECIFIED', index=0, number=0,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='STR', index=1, number=1,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='INT64', index=2, number=2,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='DOUBLE', index=3, number=3,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='BOOL', index=4, number=4,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='GEOM', index=5, number=5,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=2165,
+  serialized_end=2243,
+)
+_sym_db.RegisterEnumDescriptor(_REGISTERMODELREQUEST_ARGTYPE)
+
+
+_INVOKEREQUEST_PARAMETERSENTRY = _descriptor.Descriptor(
+  name='ParametersEntry',
+  full_name='descarteslabs.currier.v1.InvokeRequest.ParametersEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='descarteslabs.currier.v1.InvokeRequest.ParametersEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='key', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='descarteslabs.currier.v1.InvokeRequest.ParametersEntry.value', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='value', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=b'8\001',
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=216,
+  serialized_end=319,
+)
 
 _INVOKEREQUEST = _descriptor.Descriptor(
   name='InvokeRequest',
@@ -33,10 +116,24 @@ _INVOKEREQUEST = _descriptor.Descriptor(
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='model_name', full_name='descarteslabs.currier.v1.InvokeRequest.model_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='modelName', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='parameters', full_name='descarteslabs.currier.v1.InvokeRequest.parameters', index=1,
+      number=2, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='parameters', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
-  nested_types=[],
+  nested_types=[_INVOKEREQUEST_PARAMETERSENTRY, ],
   enum_types=[
   ],
   serialized_options=None,
@@ -45,8 +142,8 @@ _INVOKEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=78,
-  serialized_end=93,
+  serialized_start=79,
+  serialized_end=319,
 )
 
 
@@ -58,6 +155,13 @@ _INVOKERESPONSE = _descriptor.Descriptor(
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='work_id', full_name='descarteslabs.currier.v1.InvokeResponse.work_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='workId', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -70,19 +174,54 @@ _INVOKERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=95,
-  serialized_end=111,
+  serialized_start=321,
+  serialized_end=362,
 )
 
 
-_REGISTERREQUEST = _descriptor.Descriptor(
-  name='RegisterRequest',
-  full_name='descarteslabs.currier.v1.RegisterRequest',
+_PARAMETERVALUE = _descriptor.Descriptor(
+  name='ParameterValue',
+  full_name='descarteslabs.currier.v1.ParameterValue',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='string', full_name='descarteslabs.currier.v1.ParameterValue.string', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='string', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='int64', full_name='descarteslabs.currier.v1.ParameterValue.int64', index=1,
+      number=2, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='int64', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='double', full_name='descarteslabs.currier.v1.ParameterValue.double', index=2,
+      number=3, type=1, cpp_type=5, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='double', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='bool', full_name='descarteslabs.currier.v1.ParameterValue.bool', index=3,
+      number=4, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='bool', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='geom', full_name='descarteslabs.currier.v1.ParameterValue.geom', index=4,
+      number=5, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='geom', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -94,20 +233,32 @@ _REGISTERREQUEST = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
+    _descriptor.OneofDescriptor(
+      name='value', full_name='descarteslabs.currier.v1.ParameterValue.value',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
   ],
-  serialized_start=113,
-  serialized_end=130,
+  serialized_start=365,
+  serialized_end=510,
 )
 
 
-_REGISTERRESPONSE = _descriptor.Descriptor(
-  name='RegisterResponse',
-  full_name='descarteslabs.currier.v1.RegisterResponse',
+_GETWORKSTATUSREQUEST = _descriptor.Descriptor(
+  name='GetWorkStatusRequest',
+  full_name='descarteslabs.currier.v1.GetWorkStatusRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='work_id', full_name='descarteslabs.currier.v1.GetWorkStatusRequest.work_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='workId', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -120,19 +271,54 @@ _REGISTERRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=132,
-  serialized_end=150,
+  serialized_start=512,
+  serialized_end=559,
 )
 
 
-_GETSTATUSREQUEST = _descriptor.Descriptor(
-  name='GetStatusRequest',
-  full_name='descarteslabs.currier.v1.GetStatusRequest',
+_GETWORKSTATUSRESPONSE = _descriptor.Descriptor(
+  name='GetWorkStatusResponse',
+  full_name='descarteslabs.currier.v1.GetWorkStatusResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='percentage_pending', full_name='descarteslabs.currier.v1.GetWorkStatusResponse.percentage_pending', index=0,
+      number=1, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='percentagePending', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='percentage_running', full_name='descarteslabs.currier.v1.GetWorkStatusResponse.percentage_running', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='percentageRunning', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='percentage_canceled', full_name='descarteslabs.currier.v1.GetWorkStatusResponse.percentage_canceled', index=2,
+      number=3, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='percentageCanceled', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='percentage_success', full_name='descarteslabs.currier.v1.GetWorkStatusResponse.percentage_success', index=3,
+      number=4, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='percentageSuccess', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='percentage_failed', full_name='descarteslabs.currier.v1.GetWorkStatusResponse.percentage_failed', index=4,
+      number=5, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='percentageFailed', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -145,19 +331,33 @@ _GETSTATUSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=152,
-  serialized_end=170,
+  serialized_start=562,
+  serialized_end=820,
 )
 
 
-_GETSTATUSRESPONSE = _descriptor.Descriptor(
-  name='GetStatusResponse',
-  full_name='descarteslabs.currier.v1.GetStatusResponse',
+_REGISTERMODELREQUEST_MODELARG = _descriptor.Descriptor(
+  name='ModelArg',
+  full_name='descarteslabs.currier.v1.RegisterModelRequest.ModelArg',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='description', full_name='descarteslabs.currier.v1.RegisterModelRequest.ModelArg.description', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='description', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='type', full_name='descarteslabs.currier.v1.RegisterModelRequest.ModelArg.type', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='type', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -170,24 +370,414 @@ _GETSTATUSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=172,
-  serialized_end=191,
+  serialized_start=1181,
+  serialized_end=1301,
 )
 
+_REGISTERMODELREQUEST_INPUTARGUMENTSENTRY = _descriptor.Descriptor(
+  name='InputArgumentsEntry',
+  full_name='descarteslabs.currier.v1.RegisterModelRequest.InputArgumentsEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='descarteslabs.currier.v1.RegisterModelRequest.InputArgumentsEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='key', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='descarteslabs.currier.v1.RegisterModelRequest.InputArgumentsEntry.value', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='value', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=b'8\001',
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1303,
+  serialized_end=1425,
+)
+
+_REGISTERMODELREQUEST_YAASARG = _descriptor.Descriptor(
+  name='YaasArg',
+  full_name='descarteslabs.currier.v1.RegisterModelRequest.YaasArg',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='arg', full_name='descarteslabs.currier.v1.RegisterModelRequest.YaasArg.arg', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='arg', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='default_value', full_name='descarteslabs.currier.v1.RegisterModelRequest.YaasArg.default_value', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='defaultValue', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1428,
+  serialized_end=1591,
+)
+
+_REGISTERMODELREQUEST_YAASARGUMENTSENTRY = _descriptor.Descriptor(
+  name='YaasArgumentsEntry',
+  full_name='descarteslabs.currier.v1.RegisterModelRequest.YaasArgumentsEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='descarteslabs.currier.v1.RegisterModelRequest.YaasArgumentsEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='key', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='descarteslabs.currier.v1.RegisterModelRequest.YaasArgumentsEntry.value', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='value', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=b'8\001',
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1593,
+  serialized_end=1713,
+)
+
+_REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG = _descriptor.Descriptor(
+  name='TransformArg',
+  full_name='descarteslabs.currier.v1.RegisterModelRequest.Transform.TransformArg',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='fixed_value', full_name='descarteslabs.currier.v1.RegisterModelRequest.Transform.TransformArg.fixed_value', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='fixedValue', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='input_argument_name', full_name='descarteslabs.currier.v1.RegisterModelRequest.Transform.TransformArg.input_argument_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='inputArgumentName', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='arg', full_name='descarteslabs.currier.v1.RegisterModelRequest.Transform.TransformArg.arg',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
+  ],
+  serialized_start=1887,
+  serialized_end=2035,
+)
+
+_REGISTERMODELREQUEST_TRANSFORM_ARGSENTRY = _descriptor.Descriptor(
+  name='ArgsEntry',
+  full_name='descarteslabs.currier.v1.RegisterModelRequest.Transform.ArgsEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='descarteslabs.currier.v1.RegisterModelRequest.Transform.ArgsEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='key', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='descarteslabs.currier.v1.RegisterModelRequest.Transform.ArgsEntry.value', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='value', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=b'8\001',
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2037,
+  serialized_end=2163,
+)
+
+_REGISTERMODELREQUEST_TRANSFORM = _descriptor.Descriptor(
+  name='Transform',
+  full_name='descarteslabs.currier.v1.RegisterModelRequest.Transform',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='source_arg_name', full_name='descarteslabs.currier.v1.RegisterModelRequest.Transform.source_arg_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='sourceArgName', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='func_name', full_name='descarteslabs.currier.v1.RegisterModelRequest.Transform.func_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='funcName', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='args', full_name='descarteslabs.currier.v1.RegisterModelRequest.Transform.args', index=2,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='args', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[_REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG, _REGISTERMODELREQUEST_TRANSFORM_ARGSENTRY, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1716,
+  serialized_end=2163,
+)
+
+_REGISTERMODELREQUEST = _descriptor.Descriptor(
+  name='RegisterModelRequest',
+  full_name='descarteslabs.currier.v1.RegisterModelRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='descarteslabs.currier.v1.RegisterModelRequest.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='name', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='display_name', full_name='descarteslabs.currier.v1.RegisterModelRequest.display_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='displayName', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='description', full_name='descarteslabs.currier.v1.RegisterModelRequest.description', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='description', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='operation', full_name='descarteslabs.currier.v1.RegisterModelRequest.operation', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='operation', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='input_arguments', full_name='descarteslabs.currier.v1.RegisterModelRequest.input_arguments', index=4,
+      number=5, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='inputArguments', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='yaas_arguments', full_name='descarteslabs.currier.v1.RegisterModelRequest.yaas_arguments', index=5,
+      number=6, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='yaasArguments', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[_REGISTERMODELREQUEST_MODELARG, _REGISTERMODELREQUEST_INPUTARGUMENTSENTRY, _REGISTERMODELREQUEST_YAASARG, _REGISTERMODELREQUEST_YAASARGUMENTSENTRY, _REGISTERMODELREQUEST_TRANSFORM, ],
+  enum_types=[
+    _REGISTERMODELREQUEST_ARGTYPE,
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=823,
+  serialized_end=2243,
+)
+
+
+_REGISTERMODELRESPONSE = _descriptor.Descriptor(
+  name='RegisterModelResponse',
+  full_name='descarteslabs.currier.v1.RegisterModelResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='model_name', full_name='descarteslabs.currier.v1.RegisterModelResponse.model_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='modelName', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2245,
+  serialized_end=2299,
+)
+
+_INVOKEREQUEST_PARAMETERSENTRY.fields_by_name['value'].message_type = _PARAMETERVALUE
+_INVOKEREQUEST_PARAMETERSENTRY.containing_type = _INVOKEREQUEST
+_INVOKEREQUEST.fields_by_name['parameters'].message_type = _INVOKEREQUEST_PARAMETERSENTRY
+_PARAMETERVALUE.oneofs_by_name['value'].fields.append(
+  _PARAMETERVALUE.fields_by_name['string'])
+_PARAMETERVALUE.fields_by_name['string'].containing_oneof = _PARAMETERVALUE.oneofs_by_name['value']
+_PARAMETERVALUE.oneofs_by_name['value'].fields.append(
+  _PARAMETERVALUE.fields_by_name['int64'])
+_PARAMETERVALUE.fields_by_name['int64'].containing_oneof = _PARAMETERVALUE.oneofs_by_name['value']
+_PARAMETERVALUE.oneofs_by_name['value'].fields.append(
+  _PARAMETERVALUE.fields_by_name['double'])
+_PARAMETERVALUE.fields_by_name['double'].containing_oneof = _PARAMETERVALUE.oneofs_by_name['value']
+_PARAMETERVALUE.oneofs_by_name['value'].fields.append(
+  _PARAMETERVALUE.fields_by_name['bool'])
+_PARAMETERVALUE.fields_by_name['bool'].containing_oneof = _PARAMETERVALUE.oneofs_by_name['value']
+_PARAMETERVALUE.oneofs_by_name['value'].fields.append(
+  _PARAMETERVALUE.fields_by_name['geom'])
+_PARAMETERVALUE.fields_by_name['geom'].containing_oneof = _PARAMETERVALUE.oneofs_by_name['value']
+_REGISTERMODELREQUEST_MODELARG.fields_by_name['type'].enum_type = _REGISTERMODELREQUEST_ARGTYPE
+_REGISTERMODELREQUEST_MODELARG.containing_type = _REGISTERMODELREQUEST
+_REGISTERMODELREQUEST_INPUTARGUMENTSENTRY.fields_by_name['value'].message_type = _REGISTERMODELREQUEST_MODELARG
+_REGISTERMODELREQUEST_INPUTARGUMENTSENTRY.containing_type = _REGISTERMODELREQUEST
+_REGISTERMODELREQUEST_YAASARG.fields_by_name['arg'].message_type = _REGISTERMODELREQUEST_MODELARG
+_REGISTERMODELREQUEST_YAASARG.fields_by_name['default_value'].message_type = _PARAMETERVALUE
+_REGISTERMODELREQUEST_YAASARG.containing_type = _REGISTERMODELREQUEST
+_REGISTERMODELREQUEST_YAASARGUMENTSENTRY.fields_by_name['value'].message_type = _REGISTERMODELREQUEST_YAASARG
+_REGISTERMODELREQUEST_YAASARGUMENTSENTRY.containing_type = _REGISTERMODELREQUEST
+_REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG.fields_by_name['fixed_value'].message_type = _PARAMETERVALUE
+_REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG.containing_type = _REGISTERMODELREQUEST_TRANSFORM
+_REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG.oneofs_by_name['arg'].fields.append(
+  _REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG.fields_by_name['fixed_value'])
+_REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG.fields_by_name['fixed_value'].containing_oneof = _REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG.oneofs_by_name['arg']
+_REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG.oneofs_by_name['arg'].fields.append(
+  _REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG.fields_by_name['input_argument_name'])
+_REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG.fields_by_name['input_argument_name'].containing_oneof = _REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG.oneofs_by_name['arg']
+_REGISTERMODELREQUEST_TRANSFORM_ARGSENTRY.fields_by_name['value'].message_type = _REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG
+_REGISTERMODELREQUEST_TRANSFORM_ARGSENTRY.containing_type = _REGISTERMODELREQUEST_TRANSFORM
+_REGISTERMODELREQUEST_TRANSFORM.fields_by_name['args'].message_type = _REGISTERMODELREQUEST_TRANSFORM_ARGSENTRY
+_REGISTERMODELREQUEST_TRANSFORM.containing_type = _REGISTERMODELREQUEST
+_REGISTERMODELREQUEST.fields_by_name['input_arguments'].message_type = _REGISTERMODELREQUEST_INPUTARGUMENTSENTRY
+_REGISTERMODELREQUEST.fields_by_name['yaas_arguments'].message_type = _REGISTERMODELREQUEST_YAASARGUMENTSENTRY
+_REGISTERMODELREQUEST_ARGTYPE.containing_type = _REGISTERMODELREQUEST
 DESCRIPTOR.message_types_by_name['InvokeRequest'] = _INVOKEREQUEST
 DESCRIPTOR.message_types_by_name['InvokeResponse'] = _INVOKERESPONSE
-DESCRIPTOR.message_types_by_name['RegisterRequest'] = _REGISTERREQUEST
-DESCRIPTOR.message_types_by_name['RegisterResponse'] = _REGISTERRESPONSE
-DESCRIPTOR.message_types_by_name['GetStatusRequest'] = _GETSTATUSREQUEST
-DESCRIPTOR.message_types_by_name['GetStatusResponse'] = _GETSTATUSRESPONSE
+DESCRIPTOR.message_types_by_name['ParameterValue'] = _PARAMETERVALUE
+DESCRIPTOR.message_types_by_name['GetWorkStatusRequest'] = _GETWORKSTATUSREQUEST
+DESCRIPTOR.message_types_by_name['GetWorkStatusResponse'] = _GETWORKSTATUSRESPONSE
+DESCRIPTOR.message_types_by_name['RegisterModelRequest'] = _REGISTERMODELREQUEST
+DESCRIPTOR.message_types_by_name['RegisterModelResponse'] = _REGISTERMODELRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 InvokeRequest = _reflection.GeneratedProtocolMessageType('InvokeRequest', (_message.Message,), {
+
+  'ParametersEntry' : _reflection.GeneratedProtocolMessageType('ParametersEntry', (_message.Message,), {
+    'DESCRIPTOR' : _INVOKEREQUEST_PARAMETERSENTRY,
+    '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
+    # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.InvokeRequest.ParametersEntry)
+    })
+  ,
   'DESCRIPTOR' : _INVOKEREQUEST,
   '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
   # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.InvokeRequest)
   })
 _sym_db.RegisterMessage(InvokeRequest)
+_sym_db.RegisterMessage(InvokeRequest.ParametersEntry)
 
 InvokeResponse = _reflection.GeneratedProtocolMessageType('InvokeResponse', (_message.Message,), {
   'DESCRIPTOR' : _INVOKERESPONSE,
@@ -196,49 +786,116 @@ InvokeResponse = _reflection.GeneratedProtocolMessageType('InvokeResponse', (_me
   })
 _sym_db.RegisterMessage(InvokeResponse)
 
-RegisterRequest = _reflection.GeneratedProtocolMessageType('RegisterRequest', (_message.Message,), {
-  'DESCRIPTOR' : _REGISTERREQUEST,
+ParameterValue = _reflection.GeneratedProtocolMessageType('ParameterValue', (_message.Message,), {
+  'DESCRIPTOR' : _PARAMETERVALUE,
   '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.RegisterRequest)
+  # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.ParameterValue)
   })
-_sym_db.RegisterMessage(RegisterRequest)
+_sym_db.RegisterMessage(ParameterValue)
 
-RegisterResponse = _reflection.GeneratedProtocolMessageType('RegisterResponse', (_message.Message,), {
-  'DESCRIPTOR' : _REGISTERRESPONSE,
+GetWorkStatusRequest = _reflection.GeneratedProtocolMessageType('GetWorkStatusRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETWORKSTATUSREQUEST,
   '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.RegisterResponse)
+  # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.GetWorkStatusRequest)
   })
-_sym_db.RegisterMessage(RegisterResponse)
+_sym_db.RegisterMessage(GetWorkStatusRequest)
 
-GetStatusRequest = _reflection.GeneratedProtocolMessageType('GetStatusRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETSTATUSREQUEST,
+GetWorkStatusResponse = _reflection.GeneratedProtocolMessageType('GetWorkStatusResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETWORKSTATUSRESPONSE,
   '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.GetStatusRequest)
+  # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.GetWorkStatusResponse)
   })
-_sym_db.RegisterMessage(GetStatusRequest)
+_sym_db.RegisterMessage(GetWorkStatusResponse)
 
-GetStatusResponse = _reflection.GeneratedProtocolMessageType('GetStatusResponse', (_message.Message,), {
-  'DESCRIPTOR' : _GETSTATUSRESPONSE,
+RegisterModelRequest = _reflection.GeneratedProtocolMessageType('RegisterModelRequest', (_message.Message,), {
+
+  'ModelArg' : _reflection.GeneratedProtocolMessageType('ModelArg', (_message.Message,), {
+    'DESCRIPTOR' : _REGISTERMODELREQUEST_MODELARG,
+    '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
+    # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.RegisterModelRequest.ModelArg)
+    })
+  ,
+
+  'InputArgumentsEntry' : _reflection.GeneratedProtocolMessageType('InputArgumentsEntry', (_message.Message,), {
+    'DESCRIPTOR' : _REGISTERMODELREQUEST_INPUTARGUMENTSENTRY,
+    '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
+    # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.RegisterModelRequest.InputArgumentsEntry)
+    })
+  ,
+
+  'YaasArg' : _reflection.GeneratedProtocolMessageType('YaasArg', (_message.Message,), {
+    'DESCRIPTOR' : _REGISTERMODELREQUEST_YAASARG,
+    '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
+    # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.RegisterModelRequest.YaasArg)
+    })
+  ,
+
+  'YaasArgumentsEntry' : _reflection.GeneratedProtocolMessageType('YaasArgumentsEntry', (_message.Message,), {
+    'DESCRIPTOR' : _REGISTERMODELREQUEST_YAASARGUMENTSENTRY,
+    '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
+    # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.RegisterModelRequest.YaasArgumentsEntry)
+    })
+  ,
+
+  'Transform' : _reflection.GeneratedProtocolMessageType('Transform', (_message.Message,), {
+
+    'TransformArg' : _reflection.GeneratedProtocolMessageType('TransformArg', (_message.Message,), {
+      'DESCRIPTOR' : _REGISTERMODELREQUEST_TRANSFORM_TRANSFORMARG,
+      '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
+      # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.RegisterModelRequest.Transform.TransformArg)
+      })
+    ,
+
+    'ArgsEntry' : _reflection.GeneratedProtocolMessageType('ArgsEntry', (_message.Message,), {
+      'DESCRIPTOR' : _REGISTERMODELREQUEST_TRANSFORM_ARGSENTRY,
+      '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
+      # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.RegisterModelRequest.Transform.ArgsEntry)
+      })
+    ,
+    'DESCRIPTOR' : _REGISTERMODELREQUEST_TRANSFORM,
+    '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
+    # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.RegisterModelRequest.Transform)
+    })
+  ,
+  'DESCRIPTOR' : _REGISTERMODELREQUEST,
   '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
-  # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.GetStatusResponse)
+  # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.RegisterModelRequest)
   })
-_sym_db.RegisterMessage(GetStatusResponse)
+_sym_db.RegisterMessage(RegisterModelRequest)
+_sym_db.RegisterMessage(RegisterModelRequest.ModelArg)
+_sym_db.RegisterMessage(RegisterModelRequest.InputArgumentsEntry)
+_sym_db.RegisterMessage(RegisterModelRequest.YaasArg)
+_sym_db.RegisterMessage(RegisterModelRequest.YaasArgumentsEntry)
+_sym_db.RegisterMessage(RegisterModelRequest.Transform)
+_sym_db.RegisterMessage(RegisterModelRequest.Transform.TransformArg)
+_sym_db.RegisterMessage(RegisterModelRequest.Transform.ArgsEntry)
+
+RegisterModelResponse = _reflection.GeneratedProtocolMessageType('RegisterModelResponse', (_message.Message,), {
+  'DESCRIPTOR' : _REGISTERMODELRESPONSE,
+  '__module__' : 'descarteslabs.common.proto.currier.currier_pb2'
+  # @@protoc_insertion_point(class_scope:descarteslabs.currier.v1.RegisterModelResponse)
+  })
+_sym_db.RegisterMessage(RegisterModelResponse)
 
 
+_INVOKEREQUEST_PARAMETERSENTRY._options = None
+_REGISTERMODELREQUEST_INPUTARGUMENTSENTRY._options = None
+_REGISTERMODELREQUEST_YAASARGUMENTSENTRY._options = None
+_REGISTERMODELREQUEST_TRANSFORM_ARGSENTRY._options = None
 
-_CURRIER = _descriptor.ServiceDescriptor(
-  name='Currier',
-  full_name='descarteslabs.currier.v1.Currier',
+_CURRIERINVOKE = _descriptor.ServiceDescriptor(
+  name='CurrierInvoke',
+  full_name='descarteslabs.currier.v1.CurrierInvoke',
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=194,
-  serialized_end=497,
+  serialized_start=2302,
+  serialized_end=2524,
   methods=[
   _descriptor.MethodDescriptor(
     name='Invoke',
-    full_name='descarteslabs.currier.v1.Currier.Invoke',
+    full_name='descarteslabs.currier.v1.CurrierInvoke.Invoke',
     index=0,
     containing_service=None,
     input_type=_INVOKEREQUEST,
@@ -247,28 +904,44 @@ _CURRIER = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='Register',
-    full_name='descarteslabs.currier.v1.Currier.Register',
+    name='GetWorkStatus',
+    full_name='descarteslabs.currier.v1.CurrierInvoke.GetWorkStatus',
     index=1,
     containing_service=None,
-    input_type=_REGISTERREQUEST,
-    output_type=_REGISTERRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='GetStatus',
-    full_name='descarteslabs.currier.v1.Currier.GetStatus',
-    index=2,
-    containing_service=None,
-    input_type=_GETSTATUSREQUEST,
-    output_type=_GETSTATUSRESPONSE,
+    input_type=_GETWORKSTATUSREQUEST,
+    output_type=_GETWORKSTATUSRESPONSE,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),
 ])
-_sym_db.RegisterServiceDescriptor(_CURRIER)
+_sym_db.RegisterServiceDescriptor(_CURRIERINVOKE)
 
-DESCRIPTOR.services_by_name['Currier'] = _CURRIER
+DESCRIPTOR.services_by_name['CurrierInvoke'] = _CURRIERINVOKE
+
+
+_CURRIERREGISTER = _descriptor.ServiceDescriptor(
+  name='CurrierRegister',
+  full_name='descarteslabs.currier.v1.CurrierRegister',
+  file=DESCRIPTOR,
+  index=1,
+  serialized_options=None,
+  create_key=_descriptor._internal_create_key,
+  serialized_start=2526,
+  serialized_end=2652,
+  methods=[
+  _descriptor.MethodDescriptor(
+    name='Register',
+    full_name='descarteslabs.currier.v1.CurrierRegister.Register',
+    index=0,
+    containing_service=None,
+    input_type=_REGISTERMODELREQUEST,
+    output_type=_REGISTERMODELRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+])
+_sym_db.RegisterServiceDescriptor(_CURRIERREGISTER)
+
+DESCRIPTOR.services_by_name['CurrierRegister'] = _CURRIERREGISTER
 
 # @@protoc_insertion_point(module_scope)
