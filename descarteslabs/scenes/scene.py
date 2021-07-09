@@ -476,14 +476,20 @@ class Scene(object):
             self_bands, bands, scaling, data_type
         )
 
+        mask_nodata = bool(mask_nodata)
+
         alpha_band_name = "alpha"
         if isinstance(mask_alpha, six.string_types):
             alpha_band_name = mask_alpha
+            mask_alpha = True
         elif mask_alpha is None:
             # if user does not set mask_alpha, only attempt to mask_alpha if
             # alpha band is exists in the scene.
             mask_alpha = self.has_alpha(alpha_band_name)
+        elif type(mask_alpha) is not bool:
+            raise ValueError("'mask_alpha' must be None, a band name, or a bool.")
 
+        drop_alpha = False
         if mask_alpha:
             if not self.has_alpha(alpha_band_name):
                 raise ValueError(
@@ -502,7 +508,6 @@ class Scene(object):
                     raise ValueError(
                         "Alpha must be the last band in order to reduce rasterization errors"
                     )
-                drop_alpha = False
 
         raster_params = ctx.raster_params
         full_raster_args = dict(
@@ -513,6 +518,10 @@ class Scene(object):
             data_type=dtype,
             resampler=resampler,
             processing_level=processing_level,
+            masked=mask_nodata or mask_alpha,
+            mask_nodata=mask_nodata,
+            mask_alpha=mask_alpha,
+            drop_alpha=drop_alpha,
             **raster_params
         )
 
@@ -541,16 +550,6 @@ class Scene(object):
         if len(arr.shape) == 2:
             # if only 1 band requested, still return a 3d array
             arr = arr[np.newaxis]
-
-        if mask_nodata or mask_alpha:
-            if mask_alpha:
-                alpha = arr[-1]
-                if drop_alpha:
-                    arr = arr[:-1]
-                    bands.pop(-1)
-                arr.mask = ~alpha.astype(bool)
-        else:
-            arr = arr.data
 
         if bands_axis != 0:
             arr = np.moveaxis(arr, 0, bands_axis)

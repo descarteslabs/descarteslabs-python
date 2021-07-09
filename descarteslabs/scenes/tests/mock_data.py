@@ -213,8 +213,17 @@ def _raster_ndarray(self, **kwargs):
         )
     ]
 
-    if not np.ma.is_masked(a):
-        mask = np.zeros(a.shape)
-        a = np.ma.array(a, mask=mask)
+    if kwargs.get("masked", True):
+        if not np.ma.is_masked(a):
+            mask = np.zeros(a.shape)
+            if kwargs.get("mask_alpha") and kwargs["bands"][-1] == "alpha":
+                mask[:] = ~(a[-1].astype(bool))
+            a = np.ma.array(a, mask=mask)
+    else:
+        if np.ma.is_masked(a):
+            a = a.data
+
+    if kwargs.get("drop_alpha", False):
+        a = a[:-1]
 
     return a, json.loads(meta)

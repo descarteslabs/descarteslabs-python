@@ -435,6 +435,7 @@ class SceneCollection(Collection):
         (bands, scaling, mask_alpha, drop_alpha) = self._mask_alpha_if_applicable(
             bands, mask_alpha=mask_alpha, scaling=scaling
         )
+        mask_nodata = bool(mask_nodata)
 
         scales, data_type = _scaling.multiproduct_scaling_parameters(
             self._product_band_properties(), bands, scaling, data_type
@@ -448,6 +449,10 @@ class SceneCollection(Collection):
             data_type=data_type,
             resampler=resampler,
             processing_level=processing_level,
+            mask_nodata=mask_nodata,
+            mask_alpha=mask_alpha,
+            drop_alpha=drop_alpha,
+            masked=mask_nodata or mask_alpha,
             **raster_params
         )
         try:
@@ -471,16 +476,6 @@ class SceneCollection(Collection):
         if len(arr.shape) == 2:
             # if only 1 band requested, still return a 3d array
             arr = arr[np.newaxis]
-
-        if mask_nodata or mask_alpha:
-            if mask_alpha:
-                alpha = arr[-1]
-                if drop_alpha:
-                    arr = arr[:-1]
-                    bands.pop(-1)
-                arr.mask = ~alpha.astype(bool)
-        else:
-            arr = arr.data
 
         if bands_axis != 0:
             arr = np.moveaxis(arr, 0, bands_axis)
@@ -915,8 +910,11 @@ class SceneCollection(Collection):
         alpha_band_name = "alpha"
         if isinstance(mask_alpha, str):
             alpha_band_name = mask_alpha
+            mask_alpha = True
         elif mask_alpha is None:
             mask_alpha = self._collection_has_alpha(alpha_band_name)
+        elif type(mask_alpha) is not bool:
+            raise ValueError("'mask_alpha' must be None, a band name, or a bool.")
 
         drop_alpha = False
         if mask_alpha:
