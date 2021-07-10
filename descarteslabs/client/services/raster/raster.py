@@ -783,17 +783,7 @@ class Raster(Service):
 
     def dltile(self, key):
         """
-        Given a DLTile key, return a DLTile GeoJSON Feature.
-        Deprecated for descarteslabs.scenes.DLTile.from_key.
-
-        :param str key: A DLTile key that identifies a DLTile
-
-        :return: A DLTile GeoJSON Feature
-        :rtype: DotDict
-
-        :raises descarteslabs.client.exceptions.BadRequestError: if the given key
-            is not a valid DLTile key
-
+        This method has been removed and is no longer included in the documentation.
         """
         raise NotImplementedError(
             "dltile is removed, use descarteslabs.scenes.DLTile.from_key instead"
@@ -801,17 +791,7 @@ class Raster(Service):
 
     def dltile_from_latlon(self, lat, lon, resolution, tilesize, pad):
         """
-        Return a DLTile GeoJSON Feature that covers a latitude/longitude.
-        Deprecated for descarteslabs.scenes.DLTile.from_latlon.
-
-        :param float lat: Requested latitude
-        :param float lon: Requested longitude
-        :param float resolution: Resolution of DLTile
-        :param int tilesize: Number of valid pixels per DLTile
-        :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
-
-        :return: A DLTile GeoJSON Feature
-        :rtype: DotDict
+        This method has been removed and is no longer included in the documentation.
         """
         raise NotImplementedError(
             "dltile_from_latlon is removed, use descarteslabs.scenes.DLTile.from_latlon instead"
@@ -819,19 +799,7 @@ class Raster(Service):
 
     def dltiles_from_shape(self, resolution, tilesize, pad, shape):
         """
-        Iterates over all DLTiles as GeoJSONs features that intersect the
-        GeoJSON geometry ``shape`` or Shapely shape object.
-        Deprecated for descarteslabs.scenes.DLTile.from_shape.
-
-        :param float resolution: Resolution of DLTile
-        :param int tilesize: Number of valid pixels per DLTile
-        :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
-        :param str shape: A GeoJSON geometry or Shapely shape specifying a shape over
-            which to intersect DLTiles.
-
-        :return: An iterator over GeoJSON features representing
-            intersecting DLTiles
-        :rtype: generator(DotDict)
+        This method has been removed and is no longer included in the documentation.
         """
         raise NotImplementedError(
             "dltiles_from_shape is removed, use descarteslabs.scenes.DLTile.from_shape instead"
@@ -839,22 +807,7 @@ class Raster(Service):
 
     def iter_tiles_from_shape(self, resolution, tilesize, pad, shape):
         """
-        Return a feature collection of DLTile GeoJSONs that intersect
-        a GeoJSON geometry ``shape`` or a Shapely shape object.
-        Deprecated for descarteslabs.scenes.DLTile.iter_from_shape.
-
-        :param float resolution: Resolution of DLTile
-        :param int tilesize: Number of valid pixels per DLTile
-        :param int pad: Number of ghost pixels per DLTile (overlap among tiles)
-        :param str shape: A GeoJSON geometry specifying a shape over
-            which to intersect DLTiles
-
-        :return: GeoJSON FeatureCollection of intersecting DLTile geometries.
-        :rtype: DotDict
-
-        :raises descarteslabs.client.exceptions.BadRequestError: if the given
-            parameters would generate too many tiles - use
-            :meth:`Raster.iter_dltiles_from_shape` to iterate over more
+        This method has been removed and is no longer included in the documentation.
         """
         raise NotImplementedError(
             "iter_tiles_from_shape is removed, use descarteslabs.scenes.DLTile.iter_from_shape instead"
