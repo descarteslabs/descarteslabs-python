@@ -82,6 +82,7 @@ class GroupTerminalException(Exception):
     """
     Raised when waiting on a task group that stopped accepting tasks.
     """
+
     pass
 
 
@@ -173,7 +174,7 @@ class Tasks(Service):
         include_modules=None,
         include_data=None,
         requirements=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Creates a new task group.
@@ -194,7 +195,7 @@ class Tasks(Service):
             (e.g. `"4Gi"`, `"500MB"`). If no unit is specified it is assumed to be
             in bytes. Default: 2Gi. Maximum: 96Gi.
         :param int maximum_concurrency: The maximum number of tasks to run in
-            parallel. Default: 500. Maximum: 500. If you need higher concurrency
+            parallel. Default: 5. Maximum: 500. If you need higher concurrency
             contact your Descartes Labs customer success representative.
         :param int minimum_concurrency: The minimum number of tasks to run right
             away in parallel. Concurrency is usually scaled up slowly when
@@ -418,6 +419,88 @@ class Tasks(Service):
         for g in groups:
             if g.name == name:
                 return g
+
+    def update_group(
+        self,
+        group_id,
+        container_image=None,
+        name=None,
+        cpus=None,
+        gpus=None,
+        memory=None,
+        maximum_concurrency=None,
+        minimum_concurrency=None,
+        minimum_seconds=None,
+        task_timeout=None,
+        **kwargs,
+    ):
+        """
+        Update attributes of a group.
+
+        :param str group_id: The group id.
+        :param str container_image: The optional new location of a docker image
+            to be used for the environment in which the function is executed.
+        :param str name: An optional new name used to later help identify the function.
+        :param int cpus: The optional new number of CPUs requested for a single task. A task
+            might be throttled if it uses more CPU. Maximum: 16.
+        :param int gpus: The optional new number of GPUs requested for a single task. As of
+            right now, a maximum of 1 GPU is supported. Maximum: 1. May not
+            be changed from zero to non-zero or non-zero to zero.
+        :param str memory: The optional new maximum memory requirement for a single task.
+            If a task uses substantially more memory it will be killed. The value
+            should be a string and can use postfixes such as Mi, Gi, MB, GB, etc
+            (e.g. `"4Gi"`, `"500MB"`). If no unit is specified it is assumed to be
+            in bytes.Maximum: 96Gi.
+        :param int maximum_concurrency: The optional new maximum number of tasks to run in
+            parallel. Maximum: 500. If you need higher concurrency
+            contact your Descartes Labs customer success representative.
+        :param int minimum_concurrency: The optional new minimum number of tasks to run right
+            away in parallel. Concurrency is usually scaled up slowly when
+            submitting new tasks. Setting this can mean more immediate processing
+            of this many newly submitted tasks. Note that setting this means the
+            equivalent resources of this many permanently running tasks will be
+            charged to your account while this group is active. Maximum: 4.
+        :param int minimum_seconds: The optional new number of seconds to wait for new tasks
+            before scaling down concurrency, after a task is finished. Maximum: 600.
+        :param int task_timeout: The optional new maximum runtime for a single task in seconds. A
+            task will be killed if it exceeds this limit. Minimum: 10 seconds. Maximum: 24 hours.
+
+        :return: A dictionary representing the updated task group.
+        :rtype: DotDict
+
+        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+            task group cannot be found.
+        """
+
+        payload = {}
+        if container_image is not None:
+            payload["image"] = container_image
+        if name is not None:
+            payload["name"] = name
+        if cpus is not None:
+            payload["cpus"] = cpus
+        if gpus is not None:
+            payload["gpus"] = gpus
+        if memory is not None:
+            payload["mem"] = str(memory)
+        if maximum_concurrency is not None:
+            payload["maximum_concurrency"] = maximum_concurrency
+        if minimum_concurrency is not None:
+            payload["minimum_concurrency"] = minimum_concurrency
+        if minimum_seconds is not None:
+            payload["minimum_seconds"] = minimum_seconds
+        if task_timeout is not None:
+            payload["worker_timeout"] = task_timeout
+
+        payload.update(kwargs)
+
+        print(f"payload={payload}")
+        r = self.session.patch(
+            "/groups/{}".format(group_id),
+            json=payload,
+        )
+        r.raise_for_status()
+        return DotDict(r.json())
 
     def terminate_group(self, group_id):
         """
@@ -856,7 +939,7 @@ class Tasks(Service):
         include_modules=None,
         include_data=None,
         requirements=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Creates a new task group from a function and returns an asynchronous
@@ -876,7 +959,7 @@ class Tasks(Service):
             (e.g. `"4Gi"`, `"500MB"`). If no unit is specified it is assumed to be
             in bytes. Default: 2Gi. Maximum: 96Gi.
         :param int maximum_concurrency: The maximum number of tasks to run in
-            parallel. Default: 500. Maximum: 500. If you need higher concurrency
+            parallel. Default: 5. Maximum: 500. If you need higher concurrency
             contact your Descartes Labs customer success representative.
         :param int minimum_concurrency: The minimum number of tasks to run right
             away in parallel. Concurrency is usually scaled up slowly when
@@ -923,7 +1006,7 @@ class Tasks(Service):
             include_modules=include_modules,
             include_data=include_data,
             requirements=requirements,
-            **kwargs
+            **kwargs,
         )
 
         return CloudFunction(
@@ -984,7 +1067,7 @@ class Tasks(Service):
         minimum_seconds=None,
         task_timeout=1800,
         retry_count=0,
-        **kwargs
+        **kwargs,
     ):
         """
         **This method has been deprecated.**  Please use :py:meth:`create_function`
@@ -1008,7 +1091,7 @@ class Tasks(Service):
             (e.g. `"4Gi"`, `"500MB"`). If no unit is specified it is assumed to be
             in bytes. Default: 2Gi. Maximum: 96Gi.
         :param int maximum_concurrency: The maximum number of tasks to run in
-            parallel. Default: 500. Maximum: 500. If you need higher concurrency
+            parallel. Default: 5. Maximum: 500. If you need higher concurrency
             contact your Descartes Labs customer success representative.
         :param int minimum_concurrency: The minimum number of tasks to run right
             away in parallel. Concurrency is usually scaled up slowly when
@@ -1049,7 +1132,7 @@ class Tasks(Service):
             minimum_seconds=minimum_seconds,
             task_timeout=task_timeout,
             retry_count=retry_count,
-            **kwargs
+            **kwargs,
         )
 
     def create_webhook(

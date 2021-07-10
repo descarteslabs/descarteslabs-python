@@ -102,6 +102,20 @@ class TasksTest(ClientTestCase):
         sys.version_info >= (3, 8), reason="requires python3.7 or lower"
     )
     @responses.activate
+    def test_update_group(self):
+        self.mock_response(
+            responses.PATCH,
+            {"id": "foo", "maximum_concurrency": 10},
+        )
+
+        r = self.client.update_group("foo", maximum_concurrency=10)
+        assert r.id == "foo"
+        assert r.maximum_concurrency == 10
+
+    @pytest.mark.skipif(
+        sys.version_info >= (3, 8), reason="requires python3.7 or lower"
+    )
+    @responses.activate
     @mock.patch.object(sys.modules.get("cloudpickle", {}), "__version__", None)
     def test_cloudpickle_not_found(self):
         def f():
@@ -325,7 +339,8 @@ class TasksPackagingTest(ClientTestCase):
             "os.remove"
         ):  # Don't delete bundle so we can read it back below
             self.client.new_group(
-                foo, "task-image",
+                foo,
+                "task-image",
             )
 
         body = responses.calls[0].request.body.decode(
@@ -479,7 +494,9 @@ class TasksPackagingTest(ClientTestCase):
 
     def test_build_bundle_with_named_function(self):
         zf = self.client._build_bundle(
-            self.TEST_MODULE + ".func_foo", [self.DATA_FILE_PATH], [self.TEST_MODULE],
+            self.TEST_MODULE + ".func_foo",
+            [self.DATA_FILE_PATH],
+            [self.TEST_MODULE],
         )
 
         try:
@@ -506,7 +523,9 @@ class TasksPackagingTest(ClientTestCase):
     def test_build_bundle_with_named_function_bad(self):
         with pytest.raises(NameError):
             zf = self.client._build_bundle(
-                "func.func_foo", [self.DATA_FILE_PATH], [self.TEST_MODULE],
+                "func.func_foo",
+                [self.DATA_FILE_PATH],
+                [self.TEST_MODULE],
             )
 
         zf = self.client._build_bundle(
