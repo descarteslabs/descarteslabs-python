@@ -5,5 +5,6 @@ Scene
 
 .. default-role:: any
 
-.. automodule:: descarteslabs.scenes.scene
+.. autoclass:: descarteslabs.scenes.scene.Scene
+  :autosummary:
   :members:

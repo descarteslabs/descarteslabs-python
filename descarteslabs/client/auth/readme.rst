@@ -3,4 +3,5 @@
 Authentication
 --------------
 .. automodule:: descarteslabs.client.auth
+   :autosummary:
    :members:

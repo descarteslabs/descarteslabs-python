@@ -178,7 +178,8 @@ class AOI(GeoContext):
         geometry: GeoJSON-like dict, object with ``__geo_interface__``; optional
             Clip scenes to this geometry.
             Coordinates must be WGS84 (lat-lon).
-            If :const:`None`, scenes will just be clipped to `bounds`.
+            If :const:`None`, scenes will just be clipped to
+            :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds`.
         resolution: float, optional
             Distance, in units of the CRS, that the edge of each pixel
             represents on the ground.
@@ -204,11 +205,15 @@ class AOI(GeoContext):
             native resolution and projection.
         bounds: 4-tuple, optional
             Clip scenes to these ``(min_x, min_y, max_x, max_y)`` bounds,
-            expressed in `bounds_crs` (which defaults to WGS84 lat-lon).
-            `bounds` are automatically computed from `geometry` if not specified.
-            Otherwise, `bounds` are required.
+            expressed in :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds_crs`
+            (which defaults to WGS84 lat-lon).
+            :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds`
+            are automatically computed from `geometry` if not specified.
+            Otherwise,
+            :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds` are required.
         bounds_crs: str, optional, default "EPSG:4326"
-            The Coordinate Reference System of the `bounds`,
+            The Coordinate Reference System of the
+            :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds`,
             given as an EPSG code (like :const:`EPSG:4326`), a PROJ.4 definition,
             or an OGC CRS Well-Known Text string.
         shape: 2-tuple, optional
@@ -231,7 +236,8 @@ class AOI(GeoContext):
         """
         shapely geometry: Clip scenes to this geometry
         Coordinates must be WGS84 (lat-lon).
-        If :const:`None`, scenes will just be clipped to `bounds`.
+        If :const:`None`, scenes will just be clipped to
+        :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds`.
         """
 
         return self._geometry
@@ -281,7 +287,8 @@ class AOI(GeoContext):
     def bounds(self):
         """
         tuple: Clip scenes to these ``(min_x, min_y, max_x, max_y)`` bounds,
-        expressed in the coordinate reference system in `bounds_crs`.
+        expressed in the coordinate reference system in
+        :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds_crs`.
         """
 
         return self._bounds
@@ -289,7 +296,8 @@ class AOI(GeoContext):
     @property
     def bounds_crs(self):
         """
-        str: The coordinate reference system of the `bounds`,
+        str: The coordinate reference system of the
+        :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds`,
         given as an EPSG code (like :const:`EPSG:4326`), a PROJ.4 definition,
         or an OGC CRS Well-Known Text string.
         """
@@ -313,7 +321,9 @@ class AOI(GeoContext):
         :class:`~descarteslabs.client.services.raster.raster.Raster.ndarray` or
         :class:`~descarteslabs.client.services.raster.raster.Raster.raster`.
 
-        Raises ValueError if `bounds`, `crs`, `bounds_crs`,
+        Raises ValueError if
+        :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds`, `crs`,
+        :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds_crs`,
         `resolution`, or `align_pixels` is :const:`None`.
         """
 
@@ -355,8 +365,13 @@ class AOI(GeoContext):
     def __geo_interface__(self):
         """
         dict: `self.geometry` as a GeoJSON Geometry dict,
-        otherwise `bounds` as a GeoJSON Polygon dict if `geometry` is
-        :const:`None` and `bounds_crs` is :const:`EPSG:4326`, otherwise
+        otherwise
+        :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds`
+        as a GeoJSON Polygon dict if
+        :py:attr:`~descarteslabs.scenes.geocontext.AOI.geometry` is
+        :const:`None` and
+        :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds_crs`
+        is :const:`EPSG:4326`, otherwise
         raises :exc:`RuntimeError`.
         """
 
@@ -389,12 +404,16 @@ class AOI(GeoContext):
         Note
         ----
             If you are assigning a new geometry and want bounds to updated as
-            well, use ``bounds="update"``. This will also change `bounds_crs`
+            well, use ``bounds="update"``. This will also change
+            :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds_crs`
             to :const:`EPSG:4326`, since the geometry's coordinates are in WGS84
             decimal degrees, so the new bounds determined from those coordinates
             must be in that CRS as well.
 
-            If you assign `geometry` without changing `bounds`,
+            If you assign
+            :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds`
+            without changing
+            :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds`,
             the new AOI GeoContext will produce rasters with the same
             shape and covering the same spatial area as the old one, just with
             pixels masked out that fall outside your new geometry.
@@ -1073,7 +1092,8 @@ class DLTile(GeoContext):
     def bounds(self):
         """
         tuple: The ``(min_x, min_y, max_x, max_y)`` of the area covered by
-        this DLTile, in the UTM coordinate reference system given in `bounds_crs`.
+        this DLTile, in the UTM coordinate reference system given in
+        :py:attr:`~descarteslabs.scenes.geocontext.DLTile.bounds_crs`.
         """
 
         return self._bounds
@@ -1081,7 +1101,8 @@ class DLTile(GeoContext):
     @property
     def bounds_crs(self):
         """
-        str: The coordinate reference system of the `bounds`,
+        str: The coordinate reference system of the
+        :py:attr:`~descarteslabs.scenes.geocontext.DLTile.bounds`,
         given as an EPSG code (like :const:`EPSG:32615`).
         A DLTile's CRS is always UTM.
         """
@@ -1165,7 +1186,7 @@ class DLTile(GeoContext):
 
     @property
     def __geo_interface__(self):
-        """dict: `geometry` as a GeoJSON Polygon"""
+        """dict: :py:attr:`~descarteslabs.scenes.geocontext.DLTile.bounds` as a GeoJSON Polygon"""
 
         with self._geometry_lock_:
             # see comment in `GeoContext.__init__` for why we need to prevent
@@ -1262,7 +1283,8 @@ class XYZTile(GeoContext):
     @property
     def bounds_crs(self):
         """
-        str: The coordinate reference system of the `bounds`.
+        str: The coordinate reference system of the
+        :py:attr:`~descarteslabs.scenes.geocontext.XYZTile.bounds`.
         Always :const:`EPSG:3857` (spherical Mercator, aka "Web Mercator")
         """
 
@@ -1287,7 +1309,7 @@ class XYZTile(GeoContext):
 
     @property
     def __geo_interface__(self):
-        "dict: `geometry` as a GeoJSON Polygon"
+        "dict: :py:attr:`~descarteslabs.scenes.geocontext.XYZTile.bounds` as a GeoJSON Polygon"
 
         return self.geometry.__geo_interface__
 

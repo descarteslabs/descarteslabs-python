@@ -1,5 +1,6 @@
 Catalog (deprecated)
 --------------------
-.. automodule:: descarteslabs.client.services.catalog
+.. autoclass:: descarteslabs.client.services.catalog.Catalog
+   :autosummary:
    :members:
    :undoc-members:

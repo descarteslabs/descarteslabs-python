@@ -5,6 +5,7 @@ SceneCollection
 
 .. default-role:: any
 
-.. automodule:: descarteslabs.scenes.scenecollection
+.. autoclass:: descarteslabs.scenes.scenecollection.SceneCollection
+  :autosummary:
   :members:
   :inherited-members:

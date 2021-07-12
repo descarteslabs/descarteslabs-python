@@ -1,5 +1,6 @@
 Places
 --------------
-.. automodule:: descarteslabs.client.services.places
+.. autoclass:: descarteslabs.client.services.places.Places
+   :autosummary:
    :members:
    :undoc-members:

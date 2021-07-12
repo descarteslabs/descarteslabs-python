@@ -5,6 +5,7 @@ ExportTask
 
 .. default-role:: any
 
-.. automodule:: descarteslabs.common.tasks.exporttask
+.. autoclass:: descarteslabs.common.tasks.exporttask.ExportTask
+   :autosummary:
    :members:
    :inherited-members:

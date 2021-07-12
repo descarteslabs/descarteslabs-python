@@ -5,6 +5,7 @@ UploadTask
 
 .. default-role:: any
 
-.. automodule:: descarteslabs.common.tasks.uploadtask
+.. autoclass:: descarteslabs.common.tasks.uploadtask.UploadTask
+   :autosummary:
    :members:
    :inherited-members:

@@ -1,6 +1,7 @@
 Storage
 -------
 
-.. automodule:: descarteslabs.client.services.storage
+.. autoclass:: descarteslabs.client.services.storage.Storage
+    :autosummary:
     :members:
     :undoc-members:

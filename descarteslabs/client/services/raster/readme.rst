@@ -1,7 +1,5 @@
 Raster
 ------
-.. automodule:: descarteslabs.client.services.raster
-    :members:
 
 .. autoclass:: descarteslabs.client.services.raster.Raster
     :autosummary:

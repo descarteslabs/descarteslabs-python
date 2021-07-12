@@ -7,5 +7,6 @@ Feature
 
 .. default-role:: vectors
 
-.. automodule:: descarteslabs.vectors.feature
+.. autoclass:: descarteslabs.vectors.feature.Feature
+  :autosummary:
   :members:

@@ -7,6 +7,7 @@ FeatureCollection
 
 .. default-role:: vectors
 
-.. automodule:: descarteslabs.vectors.featurecollection
+.. autoclass:: descarteslabs.vectors.featurecollection.FeatureCollection
+  :autosummary:
   :members:
   :inherited-members:

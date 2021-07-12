@@ -1,5 +1,6 @@
 Vector
 --------------
-.. automodule:: descarteslabs.client.services.vector
+.. autoclass:: descarteslabs.client.services.vector.Vector
+   :autosummary:
    :members:
    :undoc-members:

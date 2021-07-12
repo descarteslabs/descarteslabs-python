@@ -4,7 +4,8 @@ Vectors
 .. Use single ticks to auto-reference for cleaner docstrings
 .. default-role:: any
 
-.. Hide the toctree, as the docstring in __init__ provides the equivalent
+.. This is to make sure all docs are included in the toc tree (but hidden)
+.. --> Make sure to add the actual references to __init__.py <--
 .. toctree::
   :hidden:
   :maxdepth: 3

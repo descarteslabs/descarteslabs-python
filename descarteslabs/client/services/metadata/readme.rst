@@ -1,8 +1,10 @@
 Metadata (deprecated)
 ---------------------
 
-.. automodule:: descarteslabs.client.services.metadata
-    :members:
+.. autoclass:: descarteslabs.client.services.metadata.Metadata
+   :autosummary:
+   :members:
+   :undoc-members:
 
 
 Filtering

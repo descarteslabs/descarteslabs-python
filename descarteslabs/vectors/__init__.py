@@ -7,6 +7,9 @@ that easily fit in memory, working directly with a GeoJSON file or similar may b
 
 * :doc:`Feature <docs/feature>`: an object following the GeoJSON format
 * :doc:`FeatureCollection <docs/featurecollection>`: a convenient helper class for working with millions of features
+* :doc:`AsyncJob <docs/async_job>`: a convenient helper class that represents a delete job or copy job
+* :doc:`UploadTask <docs/uploadtask>`: an object that represents an upload job
+* :doc:`ExportTask <docs/exporttask>`: an object that represents an export job
 
 It's available under ``descarteslabs.vectors``.
 """
