@@ -17,7 +17,26 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
+## [1.8.2] - 2021-07-12
+
+### General
+
+- Workflows client no longer validates `processing_level` parameter values, as these have been enhanced to support new products
+  and can only be validated server side.
+- Catalog V2 bands now support the `vendor_band_name` field (known as `name_vendor` in Metadata/Catalog V1).
+- Scenes support for masking in version 1.8.1 had some regressions which have been fixed. For this reason, version
+  1.8.1 has been pulled from PyPI.
+- New task groups now default to a `maximum_concurrency` value of 5, rather than the previous 500. This avoids the common
+  problem of deploying a task group with newly developed code, and having it scale up and turning small problems into
+  big problems! You may still set values as large as 500.
+- The Tasks client now provides an `update_group()` method which can be used to update many properties of an existing
+  task group, including but not limited to `name`, `image`, `minimum_concurrency`, and `maximum_concurrency`.
+- Improved testing across several sub-packages.
+- Various documentation fixes.
+
 ## [1.8.1] - 2021-06-22
+
+** Version Deprecated ** Due to some regressions in the Scenes API, this version has been removed from PyPI.
 
 ### General
 
