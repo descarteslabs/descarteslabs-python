@@ -33,11 +33,11 @@ AOI(geometry=None,
 datetime.datetime(2016, 7, 6, 16, 59, 42, 753476)
 >>> scene.properties.bands.red.resolution  # doctest: +SKIP
 15
->>> arr = scene.ndarray("red green blue", ctx)  # doctest: +SKIP
+>>> arr = scene.ndarray("red green blue", ctx.assign(resolution=120.))  # doctest: +SKIP
 >>> type(arr)  # doctest: +SKIP
 <class 'numpy.ma.core.MaskedArray'>
 >>> arr.shape  # doctest: +SKIP
-(3, 15960, 15696)
+(3, 1995, 1962)
 """
 
 from __future__ import division
@@ -441,11 +441,11 @@ class Scene(object):
         -------
         >>> import descarteslabs as dl
         >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")  # doctest: +SKIP
-        >>> arr = scene.ndarray("red green blue", ctx)  # doctest: +SKIP
+        >>> arr = scene.ndarray("red green blue", ctx.assign(resolution=120.))  # doctest: +SKIP
         >>> type(arr)  # doctest: +SKIP
         <class 'numpy.ma.core.MaskedArray'>
         >>> arr.shape  # doctest: +SKIP
-        (3, 15960, 15696)
+        (3, 1995, 1962)
         >>> red_band = arr[0]  # doctest: +SKIP
 
         Raises
@@ -634,7 +634,7 @@ class Scene(object):
         -------
         >>> import descarteslabs as dl
         >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")  # doctest: +SKIP
-        >>> scene.download("red green blue", ctx)  # doctest: +SKIP
+        >>> scene.download("red green blue", ctx.assign(resolution=120.))  # doctest: +SKIP
         "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue.tif"
         >>> import os
         >>> os.listdir(".")  # doctest: +SKIP
