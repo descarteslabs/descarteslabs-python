@@ -574,7 +574,7 @@ class Scene(object):
         raster_client=None,
     ):
         """
-        Save bands from this scene as a GeoTIFF, PNG, or JPEG, writing to a path or file-like object.
+        Save bands from this scene as a GeoTIFF, PNG, or JPEG, writing to a path.
 
         Parameters
         ----------
@@ -585,7 +585,7 @@ class Scene(object):
             Names must be keys in ``self.properties.bands``.
         ctx : :class:`~descarteslabs.scenes.geocontext.GeoContext`
             A :class:`~descarteslabs.scenes.geocontext.GeoContext` to use when loading this Scene
-        dest : str, path-like object, or file-like object, default None
+        dest : str or path-like object, default None
             Where to write the image file.
 
             * If None (default), it's written to an image file of the given ``format``
@@ -599,9 +599,8 @@ class Scene(object):
 
               Note that path-like objects (such as pathlib.Path) are only supported
               in Python 3.6 or later.
-            * If a file-like object, it's written into that file.
         format : str, default "tif"
-            If a file-like object or None is given as ``dest``: one of "tif", "png", or "jpg".
+            If None is given as ``dest``: one of "tif", "png", or "jpg".
 
             If a str or path-like object is given as ``dest``, ``format`` is ignored
             and determined from the extension on the path (one of ".tif", ".png", or ".jpg").
@@ -646,8 +645,6 @@ class Scene(object):
         ...     "rasters/{ctx.resolution}-{scene.properties.id}.jpg".format(ctx=ctx, scene=scene)
         ... )  # doctest: +SKIP
         "rasters/15-landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1.tif"
-        >>> with open("another_raster.jpg", "wb") as f:
-        ...     scene.download("swir2", ctx, dest=f, format="jpg")  # doctest: +SKIP
 
         Raises
         ------

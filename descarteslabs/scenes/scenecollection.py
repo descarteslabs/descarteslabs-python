@@ -715,7 +715,7 @@ class SceneCollection(Collection):
             or a sequence of band names (``["red", "green", "blue"]``).
         ctx : :class:`~descarteslabs.scenes.geocontext.GeoContext`
             A :class:`~descarteslabs.scenes.geocontext.GeoContext` to use when loading the Scenes
-        dest : str, path-like object, or file-like object, default None
+        dest : str or path-like object, default None
             Where to write the image file.
 
             * If None (default), it's written to an image file of the given ``format``
@@ -729,9 +729,8 @@ class SceneCollection(Collection):
 
               Note that path-like objects (such as pathlib.Path) are only supported
               in Python 3.6 or later.
-            * If a file-like object, it's written into that file.
         format : str, default "tif"
-            If a file-like object or None is given as ``dest``: one of "tif", "png", or "jpg".
+            If None is given as ``dest``: one of "tif", "png", or "jpg".
 
             If a str or path-like object is given as ``dest``, ``format`` is ignored
             and determined from the extension on the path (one of ".tif", ".png", or ".jpg").
@@ -773,8 +772,6 @@ class SceneCollection(Collection):
         'mosaic-nir-red.jpg'
         >>> scenes.download_mosaic("nir red", tile, dest="mosaics/{}.png".format(tile.key))  # doctest: +SKIP
         'mosaics/256:0:75.0:15:-5:230.png'
-        >>> with open("another_mosaic.jpg", "wb") as f:
-        ...     scenes.download_mosaic("swir2", tile, dest=f, format="jpg")  # doctest: +SKIP
 
 
         Raises
