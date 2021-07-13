@@ -5,6 +5,7 @@ Tasks
    :members:
    :undoc-members:
    :inherited-members:
+   :exclude-members: AsyncTasks
 
 .. automodule:: descarteslabs.common.tasks.futuretask
    :autosummary:
