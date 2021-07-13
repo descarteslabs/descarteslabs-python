@@ -9,3 +9,4 @@ GeoContext
   :autosummary:
   :members:
   :inherited-members:
+  :special-members: __geo_interface__

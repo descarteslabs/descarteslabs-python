@@ -364,7 +364,7 @@ class AOI(GeoContext):
     @property
     def __geo_interface__(self):
         """
-        dict: `self.geometry` as a GeoJSON Geometry dict,
+        dict: :py:attr:`~descarteslabs.scenes.geocontext.AOI.geometry` as a GeoJSON Geometry dict,
         otherwise
         :py:attr:`~descarteslabs.scenes.geocontext.AOI.bounds`
         as a GeoJSON Polygon dict if
@@ -1186,7 +1186,7 @@ class DLTile(GeoContext):
 
     @property
     def __geo_interface__(self):
-        """dict: :py:attr:`~descarteslabs.scenes.geocontext.DLTile.bounds` as a GeoJSON Polygon"""
+        """dict: :py:attr:`~descarteslabs.scenes.geocontext.DLTile.geometry` as a GeoJSON Polygon"""
 
         with self._geometry_lock_:
             # see comment in `GeoContext.__init__` for why we need to prevent
@@ -1309,7 +1309,7 @@ class XYZTile(GeoContext):
 
     @property
     def __geo_interface__(self):
-        "dict: :py:attr:`~descarteslabs.scenes.geocontext.XYZTile.bounds` as a GeoJSON Polygon"
+        "dict: :py:attr:`~descarteslabs.scenes.geocontext.XYZTile.geometry` as a GeoJSON Polygon"
 
         return self.geometry.__geo_interface__
 
