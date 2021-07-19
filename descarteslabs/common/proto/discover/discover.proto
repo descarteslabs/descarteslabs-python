@@ -73,6 +73,7 @@ message Asset {
     Folder folder = 12;
     Namespace namespace = 13;
     SymLink sym_link = 15;
+    StsModel sts_model = 17;
   }
 }
   
@@ -135,11 +136,7 @@ message DeleteAssetRequest {
 
 message DeleteAssetResponse {}
 
-
-///////////
-// BLOBS //
-///////////
-
+// Asset Types
 message Blob {
   // Blob name, globally unique, has the form: '<user_namespace_sha>:~/<key>'.
   string name = 1;
@@ -153,23 +150,9 @@ message Blob {
   uint64 size_in_bytes = 3;
 }
 
-/////////////
-// FOLDERS //
-/////////////
+message Folder  {}
 
-message Folder  {
-}
-
-////////////////
-// NAMESPACES //
-////////////////
-
-message Namespace {
-}
-
-/////////////
-// SYMLINK //
-/////////////
+message Namespace {}
 
 message SymLink {
   // Name (asset name that is) of the referenced (target) asset. 
@@ -178,6 +161,10 @@ message SymLink {
   repeated string target_owners = 2;
   string target_display_name = 3;
   string target_description = 4;
+}
+
+message StsModel {
+  string model_name = 1;
 }
 
 ///////////////////
