@@ -31,12 +31,13 @@ message InvokeResponse {
 // Note: ArgType must to be kept in sync 
 // with ParameterValue types.
 message ParameterValue {
+  bool is_set = 1;
   oneof value {
-    string string = 1;
-    int64 int64 = 2; 
-    double double = 3;
-    bool bool = 4;
-    bytes geom = 5; // WKB encoded
+    string string = 2;
+    int64 int64 = 3; 
+    double double = 4;
+    bool boolean = 5;
+    bytes geometry = 6; // WKB encoded
   }
 }
 
@@ -61,8 +62,64 @@ service CurrierRegister {
   rpc Register(RegisterModelRequest) returns (RegisterModelResponse);
 }
 
-// Request to register a new model.
-message RegisterModelRequest {
+// Set of possible model argument types.
+// Note: ArgType must to be kept in sync 
+// with ParameterValue types.
+enum ArgType {
+  // Note `UNSPECIFIED` should not be used, 
+  // but covers the default "zero" value for this
+  // type.
+  UNSPECIFIED = 0;
+  STRING = 1;
+  INT64 = 2;
+  DOUBLE = 3;
+  BOOLEAN = 4;
+  GEOMETRY = 5; // WKB encoded
+}
+
+// Input argument
+message Arg {
+  string name = 1;
+  // Documentation for this value, ie, any contraints on the 
+  // value, etc.
+  string description = 2;
+
+  // Type of the arg
+  ArgType data_type = 3;
+
+  // Default value, used for yaas_arguments only.
+  ParameterValue value = 4;
+}
+
+// Named input arguments used to call the transform function.
+// Note: Transform args can either be literal values (fixed_value)
+// or arguments supplied at invoke time.
+message TransformArg {
+  oneof arg {
+    // Literal value the transform will be called with
+    ParameterValue fixed_value = 1;
+
+    // Parameter derived from invoke input.
+    // This must match the name of an argument 
+    // as specified in the `input_arguments` field.
+    string input_argument_name = 2;
+  }
+}
+
+message Transform {
+  // Name of the target parameter
+  string target_arg_name = 1;
+  // Name of the input parameter
+  string source_arg_name = 2;
+  // name of the transform function
+  string function_name = 3;
+  // Map of named transform arguments
+  map<string, TransformArg> args = 4;
+}
+
+
+// A Model specification
+message ModelSpec {
   // String identifier for model. Used in `InvokeRequest` calls.
   string name = 1;
 
@@ -75,69 +132,19 @@ message RegisterModelRequest {
   // Specify the operation, or worker, which will process Invoke requests.
   string operation = 4;
 
-  // Set of possible model argument types.
-  // Note: ArgType must to be kept in sync 
-  // with ParameterValue types.
-  enum ArgType {
-    // Note `UNSPECIFIED` should not be used, 
-    // but covers the default "zero" value for this
-    // type.
-    UNSPECIFIED = 0;
-    STR = 1;
-    INT64 = 2;
-    DOUBLE = 3;
-    BOOL = 4;
-    GEOM = 5; // WKB encoded
-  }
-
-
-  // Input argument
-  message ModelArg {
-    // Documentation for this value, ie, any contraints on the 
-    // value, etc.
-    string description = 1;
-    // Type of the arg
-    ArgType type = 2;
-  }
-  
   // Map of named input arguments
-  map<string, ModelArg> input_arguments = 5;
-
-
-  // Yaas input argument
-  message YaasArg {
-    ModelArg arg = 1;
-    ParameterValue default_value = 2;
-  }
+  repeated Arg input_arguments = 5;
 
   // Map of named inpurt arguments for yaas
-  map<string, YaasArg> yaas_arguments = 6;
+  repeated Arg yaas_arguments = 6;
 
+  // Array of transformations from input_arguments to yaas_arguments
+  repeated Transform mapping_arguments = 7;
+}
 
-  message Transform {
-    // Name of the input source parameter
-    string source_arg_name = 1;
-    // name of the transform function
-    string func_name = 2;
- 
-    // Named input arguments used to call the transform function.
-    // Note: Transform args can either be literal values (fixed_value)
-    // or arguments supplied at invoke time.
-    message TransformArg {
-      oneof arg {
-        // Literal value the transform will be called with
-        ParameterValue fixed_value = 1;
-
-        // Parameter derived from invoke input.
-        // This must match the name of an argument 
-        // as specified in the `input_arguments` field.
-        string input_argument_name = 2;
-      }
-    }
-
-    // Map of named transfor arguments
-    map<string, TransformArg> args = 3;
-  }
+// Request to register a new model.
+message RegisterModelRequest {
+    ModelSpec model_spec = 1;
 }
 
 // Response from a registration of a new model.
