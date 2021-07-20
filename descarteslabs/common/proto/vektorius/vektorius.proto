@@ -129,8 +129,96 @@ message SearchResultsResponse {
   }
 }
 
+message CreateTableRequest {
+  // The name of the table.
+  string table_name = 1;
+
+  // Table schema for all but the geometry column.
+  map<string, string> properties_schema = 2;
+
+  // Geometry type for postgis geometry column
+  string geometry_type = 3;
+
+  // SRID for postgis geometry
+  int32 srid = 4;
+
+  // Field name of a unique
+  string primary_key = 5;
+}
+
+message CreateTableResponse {
+  // Status, did the table creation succeed?
+  bool status = 1;
+
+  // Message explaining the status.
+  string message = 2;
+}
+
+message ListTablesRequest {}
+
+message ListTablesResponse {
+  // List of owned tables
+  repeated string owned_tables = 1;
+
+  // List of writable tables
+  repeated string writable_tables = 2;
+
+  // List of readable tables
+  repeated string readable_tables = 3;
+}
+
+message CreateIngestJobRequest {
+  // key
+  string key = 1;
+
+  // storage_type
+  string storage_type = 2;
+
+  // table_name
+  string table_name = 3;
+}
+
+message CreateIngestJobResponse {
+  // job id
+  string job_id = 1;
+}
+
+message IngestJobStatusRequest {
+  // job id
+  string job_id = 1;
+}
+
+enum JobStatus {
+  REGISTERED = 0;
+  PENDING = 1;
+  RUNNING = 2;
+  CANCELLED = 3;
+  SUCCESS = 4;
+  FAILURE = 5;
+}
+
+message IngestJobStatusResponse {
+  // The status of the async job.
+  JobStatus status = 1;
+
+  // Message explaining the status.
+  string message = 2;
+}
+
 // The Vektorius service definition.
 service Vektorius {
+
+  // Create a table.
+  rpc CreateTable(CreateTableRequest) returns (CreateTableResponse);
+
+  // List available tables.
+  rpc ListTables(ListTablesRequest) returns (ListTablesResponse);
+
+  // Initiate an ingest job.
+  rpc CreateIngestJob(CreateIngestJobRequest) returns (CreateIngestJobResponse);
+
+  // Get the ingest job status.
+  rpc IngestJobStatus(IngestJobStatusRequest) returns (IngestJobStatusResponse);
 
   // Get the schema for a table.
   rpc GetSchema(SchemaRequest) returns (SchemaResponse);

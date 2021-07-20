@@ -14,6 +14,26 @@ class VektoriusStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.CreateTable = channel.unary_unary(
+                '/descarteslabs.vektorius.v1.Vektorius/CreateTable',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableResponse.FromString,
+                )
+        self.ListTables = channel.unary_unary(
+                '/descarteslabs.vektorius.v1.Vektorius/ListTables',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.ListTablesRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.ListTablesResponse.FromString,
+                )
+        self.CreateIngestJob = channel.unary_unary(
+                '/descarteslabs.vektorius.v1.Vektorius/CreateIngestJob',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateIngestJobRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateIngestJobResponse.FromString,
+                )
+        self.IngestJobStatus = channel.unary_unary(
+                '/descarteslabs.vektorius.v1.Vektorius/IngestJobStatus',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusResponse.FromString,
+                )
         self.GetSchema = channel.unary_unary(
                 '/descarteslabs.vektorius.v1.Vektorius/GetSchema',
                 request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SchemaRequest.SerializeToString,
@@ -38,6 +58,30 @@ class VektoriusStub(object):
 
 class VektoriusServicer(object):
     """Missing associated documentation comment in .proto file."""
+
+    def CreateTable(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListTables(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateIngestJob(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def IngestJobStatus(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def GetSchema(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -66,6 +110,26 @@ class VektoriusServicer(object):
 
 def add_VektoriusServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'CreateTable': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateTable,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableResponse.SerializeToString,
+            ),
+            'ListTables': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListTables,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.ListTablesRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.ListTablesResponse.SerializeToString,
+            ),
+            'CreateIngestJob': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateIngestJob,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateIngestJobRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateIngestJobResponse.SerializeToString,
+            ),
+            'IngestJobStatus': grpc.unary_unary_rpc_method_handler(
+                    servicer.IngestJobStatus,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusResponse.SerializeToString,
+            ),
             'GetSchema': grpc.unary_unary_rpc_method_handler(
                     servicer.GetSchema,
                     request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SchemaRequest.FromString,
@@ -95,6 +159,74 @@ def add_VektoriusServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class Vektorius(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def CreateTable(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.vektorius.v1.Vektorius/CreateTable',
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableRequest.SerializeToString,
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ListTables(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.vektorius.v1.Vektorius/ListTables',
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.ListTablesRequest.SerializeToString,
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.ListTablesResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CreateIngestJob(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.vektorius.v1.Vektorius/CreateIngestJob',
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateIngestJobRequest.SerializeToString,
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateIngestJobResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def IngestJobStatus(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.vektorius.v1.Vektorius/IngestJobStatus',
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusRequest.SerializeToString,
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def GetSchema(request,
