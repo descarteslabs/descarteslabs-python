@@ -134,10 +134,7 @@ class TestDotDict(unittest.TestCase):
     def test_items(self):
         d = DotDict({"a": 1, "subdict": {"x": 0, "z": -1}, "sublist": [{"y": "foo"}]})
         items = d.items()
-        if six.PY2:
-            assert isinstance(items, list)
-        elif six.PY3:
-            assert isinstance(items, DotDict_items)
+        assert isinstance(items, DotDict_items)
         for k, v in items:
             if isinstance(v, dict):
                 assert isinstance(v, DotDict)
@@ -188,10 +185,7 @@ class TestDotDict(unittest.TestCase):
     def test_values(self):
         d = DotDict({"subdictA": {"x": 0}, "subdictB": {"x": 1}})
         values = d.values()
-        if six.PY2:
-            assert isinstance(values, list)
-        elif six.PY3:
-            assert isinstance(values, DotDict_values)
+        assert isinstance(values, DotDict_values)
         for v in values:
             assert isinstance(v.x, int)
             v.foo = "bar"

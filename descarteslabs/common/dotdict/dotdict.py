@@ -1,5 +1,4 @@
-import six
-from six.moves import reprlib
+import reprlib
 from itertools import islice
 
 
@@ -56,7 +55,7 @@ class DotDict(dict):
         try:
             v = dict.__getitem__(self, key)
         except KeyError:
-            six.raise_from(KeyError(key), None)
+            raise KeyError(key) from None
 
         v = self._box(v)
         self[key] = v
@@ -73,7 +72,7 @@ class DotDict(dict):
             try:
                 return object.__getattribute__(self, attr)
             except AttributeError:
-                six.raise_from(AttributeError(attr), None)
+                raise AttributeError(attr) from None
 
     def __setattr__(self, attr, val):
         "self.attr = x <==> self[attr] = x"
@@ -84,7 +83,7 @@ class DotDict(dict):
         try:
             del self[attr]
         except KeyError:
-            six.raise_from(AttributeError(attr), None)
+            raise AttributeError(attr) from None
 
     def __dir__(self):
         return list(self.keys()) + dir(dict)
@@ -97,54 +96,17 @@ class DotDict(dict):
 
     def items(self):
         """
-        Equivalent to dict.items in this Python version.
+        Equivalent to dict.items.
         Values that are plain dicts or lists are returned as DotDicts or DotLists.
         """
-        if six.PY2:
-            return list(six.iteritems(self))
-        else:
-            return DotDict_items(self)
-
-    def iteritems(self):
-        """
-        D.iteritems() -> an iterator over the (key, value) items of D
-        Values that are dicts or lists are cast to DotDicts and DotLists.
-        Only implemented in Python 2.
-        """
-        if six.PY2:
-            for k, v in dict.iteritems(self):
-                boxed = self._box(v)
-                if boxed is not v:
-                    self[k] = boxed
-                yield (k, boxed)
-        else:
-            raise AttributeError(
-                "'iteritems' is only implemented in Python 2; use .items()"
-            )
+        return DotDict_items(self)
 
     def values(self):
         """
-        Equivalent to dict.values in this Python version.
+        Equivalent to dict.values.
         Values that are plain dicts or lists are returned as DotDicts or DotLists.
         """
-        if six.PY2:
-            return list(self.itervalues())
-        else:
-            return DotDict_values(self)
-
-    def itervalues(self):
-        """
-        D.itervalues() -> an iterator over the values of D
-        Values that are dicts or lists are cast to DotDicts and DotLists.
-        Only implemented in Python 2.
-        """
-        if six.PY2:
-            for k, v in self.iteritems():
-                yield v
-        else:
-            raise AttributeError(
-                "'itervalues' is only implemented in Python 2; use .values()"
-            )
+        return DotDict_values(self)
 
     def get(self, key, default=None):
         """
@@ -193,16 +155,17 @@ class DotDict(dict):
         """
         # TODO: does not handle recursive structures
 
-        # note: we're assuming here that any plain dict/list doesn't contain Dot-types within it.
-        # this is safe for normal usage of DotDict: any assignment to a DotDict will cause all the levels
-        # in the hierarchy to be converted to Dot-types
-        # However, if someone creates a plain dict, assigns DotDicts as its values, then assigns
-        # *that* plain dict to a value in a DotDict, the asdict of the containing DotDict will stop when
-        # it hits the plain dict.
-        # The most probable case here is assigning Dot-types as values in a dictionary or list comprehension.
+        # note: we're assuming here that any plain dict/list doesn't contain Dot-types
+        # within it.  this is safe for normal usage of DotDict: any assignment to a
+        # DotDict will cause all the levels in the hierarchy to be converted to
+        # Dot-types However, if someone creates a plain dict, assigns DotDicts as its
+        # values, then assigns *that* plain dict to a value in a DotDict, the asdict
+        # of the containing DotDict will stop when it hits the plain dict.  The most
+        # probable case here is assigning Dot-types as values in a dictionary or list
+        # comprehension.
 
         unboxed = {}
-        iterator = dict.iteritems if six.PY2 else dict.items
+        iterator = dict.items
         for k, v in iterator(self):
             if isinstance(v, DotDict):
                 v = v.asdict()
@@ -330,7 +293,7 @@ class DotList(list):
         try:
             item = list.__getitem__(self, i)
         except IndexError:
-            six.raise_from(IndexError("list index out of range"), None)
+            raise IndexError("list index out of range") from None
 
         item = DotDict._box(item)
         self[i] = item
