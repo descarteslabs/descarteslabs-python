@@ -151,7 +151,3 @@ message RegisterModelRequest {
 message RegisterModelResponse {
   string model_name = 1;
 }
-
-
-
-
