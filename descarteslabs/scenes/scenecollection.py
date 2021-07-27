@@ -210,7 +210,7 @@ class SceneCollection(Collection):
         NotFoundError
             If a Scene's ID cannot be found in the Descartes Labs catalog
         BadRequestError
-            If the Descartes Labs platform is given unrecognized parameters
+            If the Descartes Labs Platform is given unrecognized parameters
         """
         if len(self) == 0:
             raise ValueError("This SceneCollection is empty")
@@ -419,7 +419,7 @@ class SceneCollection(Collection):
         NotFoundError
             If a Scene's ID cannot be found in the Descartes Labs catalog
         BadRequestError
-            If the Descartes Labs platform is given unrecognized parameters
+            If the Descartes Labs Platform is given unrecognized parameters
         """
         if len(self) == 0:
             raise ValueError("This SceneCollection is empty")
@@ -595,7 +595,7 @@ class SceneCollection(Collection):
         NotFoundError
             If a Scene's ID cannot be found in the Descartes Labs catalog
         BadRequestError
-            If the Descartes Labs platform is given unrecognized parameters
+            If the Descartes Labs Platform is given unrecognized parameters
         """
         if len(self) == 0:
             raise ValueError("This SceneCollection is empty")
@@ -785,7 +785,7 @@ class SceneCollection(Collection):
         NotFoundError
             If a Scene's ID cannot be found in the Descartes Labs catalog
         BadRequestError
-            If the Descartes Labs platform is given unrecognized parameters
+            If the Descartes Labs Platform is given unrecognized parameters
         """
         if len(self) == 0:
             raise ValueError("This SceneCollection is empty")

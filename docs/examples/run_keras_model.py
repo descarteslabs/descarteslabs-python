@@ -3,7 +3,7 @@
 Deploying a Keras model
 ==================================================
 
-This example integrates many components of the Descartes Labs platform.
+This example integrates many components of the Descartes Labs Platform.
 We run a trained neural net built in to Keras over an area of interest (state of New Mexico).
 
 First we break our AOI up into tiles that the neural net can consume. This net we are using

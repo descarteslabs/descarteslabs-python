@@ -736,7 +736,9 @@ class Workflow:
 
     def add_public_reader(self, client=None):
         """
-        Share the workflow with all users.
+        Share the workflow with all users of the Descartes Labs Platform.
+        Additional permissions are required to share a workflow publicly.
+        Please contact Descartes Labs if you have a need to do so.
 
         The workflow must have previously been saved to the backend; to do so, call `~.save`.
 

@@ -1181,7 +1181,7 @@ class Catalog(Service):
                                                 scan gaps.
                         storage_state:          A string indicating whether data
                                                 for the image is stored on the
-                                                Descartes Labs platform. Allowed
+                                                Descartes Labs Platform. Allowed
                                                 values are "available" and "remote".
                                                 If "remote", entry may not include
                                                 the fields bucket, directory,

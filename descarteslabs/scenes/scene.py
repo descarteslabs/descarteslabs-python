@@ -457,7 +457,7 @@ class Scene(object):
         NotFoundError
             If a Scene's ID cannot be found in the Descartes Labs catalog
         BadRequestError
-            If the Descartes Labs platform is given invalid parameters
+            If the Descartes Labs Platform is given invalid parameters
         """
         if raster_client is None:
             raster_client = Raster()
@@ -656,7 +656,7 @@ class Scene(object):
         NotFoundError
             If a Scene's ID cannot be found in the Descartes Labs catalog
         BadRequestError
-            If the Descartes Labs platform is given invalid parameters
+            If the Descartes Labs Platform is given invalid parameters
         """
         bands = self._bands_to_list(bands)
         scales, dtype = _scaling.scaling_parameters(

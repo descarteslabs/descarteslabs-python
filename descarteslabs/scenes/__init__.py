@@ -1,6 +1,6 @@
 """
 The Scenes submodule provides a higher-level, object-based
-interface to the Descartes Labs platform catalog of imagery and
+interface to the Descartes Labs Platform catalog of imagery and
 raster services that makes most interactions easier.
 
 * :doc:`Collection <docs/collection>`: convenience methods for mapping and filtering
