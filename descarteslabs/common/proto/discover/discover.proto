@@ -74,6 +74,7 @@ message Asset {
     Namespace namespace = 13;
     SymLink sym_link = 15;
     StsModel sts_model = 17;
+    Vector vector = 18;
   }
 }
   
@@ -165,6 +166,10 @@ message SymLink {
 
 message StsModel {
   string model_name = 1;
+}
+
+message Vector {
+  string table_name = 1;
 }
 
 ///////////////////
