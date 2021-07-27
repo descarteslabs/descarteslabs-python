@@ -31,13 +31,12 @@ message InvokeResponse {
 // Note: ArgType must to be kept in sync 
 // with ParameterValue types.
 message ParameterValue {
-  bool is_set = 1;
   oneof value {
-    string string = 2;
-    int64 int64 = 3; 
-    double double = 4;
-    bool boolean = 5;
-    bytes geometry = 6; // WKB encoded
+    string string = 1;
+    int64 int64 = 2; 
+    double double = 3;
+    bool boolean = 4;
+    bytes geometry = 5; // WKB encoded
   }
 }
 

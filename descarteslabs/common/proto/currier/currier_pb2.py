@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n0descarteslabs/common/proto/currier/currier.proto\x12\x18\x64\x65scarteslabs.currier.v1\"\xf0\x01\n\rInvokeRequest\x12\x1d\n\nmodel_name\x18\x01 \x01(\tR\tmodelName\x12W\n\nparameters\x18\x02 \x03(\x0b\x32\x37.descarteslabs.currier.v1.InvokeRequest.ParametersEntryR\nparameters\x1ag\n\x0fParametersEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12>\n\x05value\x18\x02 \x01(\x0b\x32(.descarteslabs.currier.v1.ParameterValueR\x05value:\x02\x38\x01\")\n\x0eInvokeResponse\x12\x17\n\x07work_id\x18\x01 \x01(\tR\x06workId\"\xb6\x01\n\x0eParameterValue\x12\x15\n\x06is_set\x18\x01 \x01(\x08R\x05isSet\x12\x18\n\x06string\x18\x02 \x01(\tH\x00R\x06string\x12\x16\n\x05int64\x18\x03 \x01(\x03H\x00R\x05int64\x12\x18\n\x06\x64ouble\x18\x04 \x01(\x01H\x00R\x06\x64ouble\x12\x1a\n\x07\x62oolean\x18\x05 \x01(\x08H\x00R\x07\x62oolean\x12\x1c\n\x08geometry\x18\x06 \x01(\x0cH\x00R\x08geometryB\x07\n\x05value\"/\n\x14GetWorkStatusRequest\x12\x17\n\x07work_id\x18\x01 \x01(\tR\x06workId\"\x82\x02\n\x15GetWorkStatusResponse\x12-\n\x12percentage_pending\x18\x01 \x01(\x02R\x11percentagePending\x12-\n\x12percentage_running\x18\x02 \x01(\x02R\x11percentageRunning\x12/\n\x13percentage_canceled\x18\x03 \x01(\x02R\x12percentageCanceled\x12-\n\x12percentage_success\x18\x04 \x01(\x02R\x11percentageSuccess\x12+\n\x11percentage_failed\x18\x05 \x01(\x02R\x10percentageFailed\"\xbb\x01\n\x03\x41rg\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12 \n\x0b\x64\x65scription\x18\x02 \x01(\tR\x0b\x64\x65scription\x12>\n\tdata_type\x18\x03 \x01(\x0e\x32!.descarteslabs.currier.v1.ArgTypeR\x08\x64\x61taType\x12>\n\x05value\x18\x04 \x01(\x0b\x32(.descarteslabs.currier.v1.ParameterValueR\x05value\"\x94\x01\n\x0cTransformArg\x12K\n\x0b\x66ixed_value\x18\x01 \x01(\x0b\x32(.descarteslabs.currier.v1.ParameterValueH\x00R\nfixedValue\x12\x30\n\x13input_argument_name\x18\x02 \x01(\tH\x00R\x11inputArgumentNameB\x05\n\x03\x61rg\"\xa4\x02\n\tTransform\x12&\n\x0ftarget_arg_name\x18\x01 \x01(\tR\rtargetArgName\x12&\n\x0fsource_arg_name\x18\x02 \x01(\tR\rsourceArgName\x12#\n\rfunction_name\x18\x03 \x01(\tR\x0c\x66unctionName\x12\x41\n\x04\x61rgs\x18\x04 \x03(\x0b\x32-.descarteslabs.currier.v1.Transform.ArgsEntryR\x04\x61rgs\x1a_\n\tArgsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12<\n\x05value\x18\x02 \x01(\x0b\x32&.descarteslabs.currier.v1.TransformArgR\x05value:\x02\x38\x01\"\xe2\x02\n\tModelSpec\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12!\n\x0c\x64isplay_name\x18\x02 \x01(\tR\x0b\x64isplayName\x12 \n\x0b\x64\x65scription\x18\x03 \x01(\tR\x0b\x64\x65scription\x12\x1c\n\toperation\x18\x04 \x01(\tR\toperation\x12\x46\n\x0finput_arguments\x18\x05 \x03(\x0b\x32\x1d.descarteslabs.currier.v1.ArgR\x0einputArguments\x12\x44\n\x0eyaas_arguments\x18\x06 \x03(\x0b\x32\x1d.descarteslabs.currier.v1.ArgR\ryaasArguments\x12P\n\x11mapping_arguments\x18\x07 \x03(\x0b\x32#.descarteslabs.currier.v1.TransformR\x10mappingArguments\"Z\n\x14RegisterModelRequest\x12\x42\n\nmodel_spec\x18\x01 \x01(\x0b\x32#.descarteslabs.currier.v1.ModelSpecR\tmodelSpec\"6\n\x15RegisterModelResponse\x12\x1d\n\nmodel_name\x18\x01 \x01(\tR\tmodelName*X\n\x07\x41rgType\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\n\n\x06STRING\x10\x01\x12\t\n\x05INT64\x10\x02\x12\n\n\x06\x44OUBLE\x10\x03\x12\x0b\n\x07\x42OOLEAN\x10\x04\x12\x0c\n\x08GEOMETRY\x10\x05\x32\xde\x01\n\rCurrierInvoke\x12[\n\x06Invoke\x12\'.descarteslabs.currier.v1.InvokeRequest\x1a(.descarteslabs.currier.v1.InvokeResponse\x12p\n\rGetWorkStatus\x12..descarteslabs.currier.v1.GetWorkStatusRequest\x1a/.descarteslabs.currier.v1.GetWorkStatusResponse2~\n\x0f\x43urrierRegister\x12k\n\x08Register\x12..descarteslabs.currier.v1.RegisterModelRequest\x1a/.descarteslabs.currier.v1.RegisterModelResponseb\x06proto3'
+  serialized_pb=b'\n0descarteslabs/common/proto/currier/currier.proto\x12\x18\x64\x65scarteslabs.currier.v1\"\xf0\x01\n\rInvokeRequest\x12\x1d\n\nmodel_name\x18\x01 \x01(\tR\tmodelName\x12W\n\nparameters\x18\x02 \x03(\x0b\x32\x37.descarteslabs.currier.v1.InvokeRequest.ParametersEntryR\nparameters\x1ag\n\x0fParametersEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12>\n\x05value\x18\x02 \x01(\x0b\x32(.descarteslabs.currier.v1.ParameterValueR\x05value:\x02\x38\x01\")\n\x0eInvokeResponse\x12\x17\n\x07work_id\x18\x01 \x01(\tR\x06workId\"\x9f\x01\n\x0eParameterValue\x12\x18\n\x06string\x18\x01 \x01(\tH\x00R\x06string\x12\x16\n\x05int64\x18\x02 \x01(\x03H\x00R\x05int64\x12\x18\n\x06\x64ouble\x18\x03 \x01(\x01H\x00R\x06\x64ouble\x12\x1a\n\x07\x62oolean\x18\x04 \x01(\x08H\x00R\x07\x62oolean\x12\x1c\n\x08geometry\x18\x05 \x01(\x0cH\x00R\x08geometryB\x07\n\x05value\"/\n\x14GetWorkStatusRequest\x12\x17\n\x07work_id\x18\x01 \x01(\tR\x06workId\"\x82\x02\n\x15GetWorkStatusResponse\x12-\n\x12percentage_pending\x18\x01 \x01(\x02R\x11percentagePending\x12-\n\x12percentage_running\x18\x02 \x01(\x02R\x11percentageRunning\x12/\n\x13percentage_canceled\x18\x03 \x01(\x02R\x12percentageCanceled\x12-\n\x12percentage_success\x18\x04 \x01(\x02R\x11percentageSuccess\x12+\n\x11percentage_failed\x18\x05 \x01(\x02R\x10percentageFailed\"\xbb\x01\n\x03\x41rg\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12 \n\x0b\x64\x65scription\x18\x02 \x01(\tR\x0b\x64\x65scription\x12>\n\tdata_type\x18\x03 \x01(\x0e\x32!.descarteslabs.currier.v1.ArgTypeR\x08\x64\x61taType\x12>\n\x05value\x18\x04 \x01(\x0b\x32(.descarteslabs.currier.v1.ParameterValueR\x05value\"\x94\x01\n\x0cTransformArg\x12K\n\x0b\x66ixed_value\x18\x01 \x01(\x0b\x32(.descarteslabs.currier.v1.ParameterValueH\x00R\nfixedValue\x12\x30\n\x13input_argument_name\x18\x02 \x01(\tH\x00R\x11inputArgumentNameB\x05\n\x03\x61rg\"\xa4\x02\n\tTransform\x12&\n\x0ftarget_arg_name\x18\x01 \x01(\tR\rtargetArgName\x12&\n\x0fsource_arg_name\x18\x02 \x01(\tR\rsourceArgName\x12#\n\rfunction_name\x18\x03 \x01(\tR\x0c\x66unctionName\x12\x41\n\x04\x61rgs\x18\x04 \x03(\x0b\x32-.descarteslabs.currier.v1.Transform.ArgsEntryR\x04\x61rgs\x1a_\n\tArgsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12<\n\x05value\x18\x02 \x01(\x0b\x32&.descarteslabs.currier.v1.TransformArgR\x05value:\x02\x38\x01\"\xe2\x02\n\tModelSpec\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12!\n\x0c\x64isplay_name\x18\x02 \x01(\tR\x0b\x64isplayName\x12 \n\x0b\x64\x65scription\x18\x03 \x01(\tR\x0b\x64\x65scription\x12\x1c\n\toperation\x18\x04 \x01(\tR\toperation\x12\x46\n\x0finput_arguments\x18\x05 \x03(\x0b\x32\x1d.descarteslabs.currier.v1.ArgR\x0einputArguments\x12\x44\n\x0eyaas_arguments\x18\x06 \x03(\x0b\x32\x1d.descarteslabs.currier.v1.ArgR\ryaasArguments\x12P\n\x11mapping_arguments\x18\x07 \x03(\x0b\x32#.descarteslabs.currier.v1.TransformR\x10mappingArguments\"Z\n\x14RegisterModelRequest\x12\x42\n\nmodel_spec\x18\x01 \x01(\x0b\x32#.descarteslabs.currier.v1.ModelSpecR\tmodelSpec\"6\n\x15RegisterModelResponse\x12\x1d\n\nmodel_name\x18\x01 \x01(\tR\tmodelName*X\n\x07\x41rgType\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\n\n\x06STRING\x10\x01\x12\t\n\x05INT64\x10\x02\x12\n\n\x06\x44OUBLE\x10\x03\x12\x0b\n\x07\x42OOLEAN\x10\x04\x12\x0c\n\x08GEOMETRY\x10\x05\x32\xde\x01\n\rCurrierInvoke\x12[\n\x06Invoke\x12\'.descarteslabs.currier.v1.InvokeRequest\x1a(.descarteslabs.currier.v1.InvokeResponse\x12p\n\rGetWorkStatus\x12..descarteslabs.currier.v1.GetWorkStatusRequest\x1a/.descarteslabs.currier.v1.GetWorkStatusResponse2~\n\x0f\x43urrierRegister\x12k\n\x08Register\x12..descarteslabs.currier.v1.RegisterModelRequest\x1a/.descarteslabs.currier.v1.RegisterModelResponseb\x06proto3'
 )
 
 _ARGTYPE = _descriptor.EnumDescriptor(
@@ -63,8 +63,8 @@ _ARGTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=2000,
-  serialized_end=2088,
+  serialized_start=1977,
+  serialized_end=2065,
 )
 _sym_db.RegisterEnumDescriptor(_ARGTYPE)
 
@@ -196,43 +196,36 @@ _PARAMETERVALUE = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='is_set', full_name='descarteslabs.currier.v1.ParameterValue.is_set', index=0,
-      number=1, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='isSet', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='string', full_name='descarteslabs.currier.v1.ParameterValue.string', index=1,
-      number=2, type=9, cpp_type=9, label=1,
+      name='string', full_name='descarteslabs.currier.v1.ParameterValue.string', index=0,
+      number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='string', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='int64', full_name='descarteslabs.currier.v1.ParameterValue.int64', index=2,
-      number=3, type=3, cpp_type=2, label=1,
+      name='int64', full_name='descarteslabs.currier.v1.ParameterValue.int64', index=1,
+      number=2, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='int64', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='double', full_name='descarteslabs.currier.v1.ParameterValue.double', index=3,
-      number=4, type=1, cpp_type=5, label=1,
+      name='double', full_name='descarteslabs.currier.v1.ParameterValue.double', index=2,
+      number=3, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='double', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='boolean', full_name='descarteslabs.currier.v1.ParameterValue.boolean', index=4,
-      number=5, type=8, cpp_type=7, label=1,
+      name='boolean', full_name='descarteslabs.currier.v1.ParameterValue.boolean', index=3,
+      number=4, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='boolean', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='geometry', full_name='descarteslabs.currier.v1.ParameterValue.geometry', index=5,
-      number=6, type=12, cpp_type=9, label=1,
+      name='geometry', full_name='descarteslabs.currier.v1.ParameterValue.geometry', index=4,
+      number=5, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=b"",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -255,7 +248,7 @@ _PARAMETERVALUE = _descriptor.Descriptor(
     fields=[]),
   ],
   serialized_start=365,
-  serialized_end=547,
+  serialized_end=524,
 )
 
 
@@ -286,8 +279,8 @@ _GETWORKSTATUSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=549,
-  serialized_end=596,
+  serialized_start=526,
+  serialized_end=573,
 )
 
 
@@ -346,8 +339,8 @@ _GETWORKSTATUSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=599,
-  serialized_end=857,
+  serialized_start=576,
+  serialized_end=834,
 )
 
 
@@ -399,8 +392,8 @@ _ARG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=860,
-  serialized_end=1047,
+  serialized_start=837,
+  serialized_end=1024,
 )
 
 
@@ -443,8 +436,8 @@ _TRANSFORMARG = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=1050,
-  serialized_end=1198,
+  serialized_start=1027,
+  serialized_end=1175,
 )
 
 
@@ -482,8 +475,8 @@ _TRANSFORM_ARGSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1398,
-  serialized_end=1493,
+  serialized_start=1375,
+  serialized_end=1470,
 )
 
 _TRANSFORM = _descriptor.Descriptor(
@@ -534,8 +527,8 @@ _TRANSFORM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1201,
-  serialized_end=1493,
+  serialized_start=1178,
+  serialized_end=1470,
 )
 
 
@@ -608,8 +601,8 @@ _MODELSPEC = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1496,
-  serialized_end=1850,
+  serialized_start=1473,
+  serialized_end=1827,
 )
 
 
@@ -640,8 +633,8 @@ _REGISTERMODELREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1852,
-  serialized_end=1942,
+  serialized_start=1829,
+  serialized_end=1919,
 )
 
 
@@ -672,8 +665,8 @@ _REGISTERMODELRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1944,
-  serialized_end=1998,
+  serialized_start=1921,
+  serialized_end=1975,
 )
 
 _INVOKEREQUEST_PARAMETERSENTRY.fields_by_name['value'].message_type = _PARAMETERVALUE
@@ -828,8 +821,8 @@ _CURRIERINVOKE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=2091,
-  serialized_end=2313,
+  serialized_start=2068,
+  serialized_end=2290,
   methods=[
   _descriptor.MethodDescriptor(
     name='Invoke',
@@ -864,8 +857,8 @@ _CURRIERREGISTER = _descriptor.ServiceDescriptor(
   index=1,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=2315,
-  serialized_end=2441,
+  serialized_start=2292,
+  serialized_end=2418,
   methods=[
   _descriptor.MethodDescriptor(
     name='Register',
