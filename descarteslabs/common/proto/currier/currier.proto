@@ -59,6 +59,7 @@ message GetWorkStatusResponse {
 service CurrierRegister {
   // Register a new model.
   rpc Register(RegisterModelRequest) returns (RegisterModelResponse);
+  rpc GetModel(GetModelRequest) returns (GetModelResponse);
 }
 
 // Set of possible model argument types.
@@ -143,10 +144,20 @@ message ModelSpec {
 
 // Request to register a new model.
 message RegisterModelRequest {
-    ModelSpec model_spec = 1;
+  ModelSpec model_spec = 1;
 }
 
 // Response from a registration of a new model.
 message RegisterModelResponse {
   string model_name = 1;
+}
+
+// Request to get a model.
+message GetModelRequest {
+  string model_name = 1;
+}
+
+// Response from getting a model.
+message GetModelResponse {
+  ModelSpec model_spec = 1;
 }

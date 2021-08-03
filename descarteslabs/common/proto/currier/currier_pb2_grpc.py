@@ -113,12 +113,23 @@ class CurrierRegisterStub(object):
                 request_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelRequest.SerializeToString,
                 response_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelResponse.FromString,
                 )
+        self.GetModel = channel.unary_unary(
+                '/descarteslabs.currier.v1.CurrierRegister/GetModel',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetModelRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetModelResponse.FromString,
+                )
 
 
 class CurrierRegisterServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Register(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetModel(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -131,6 +142,11 @@ def add_CurrierRegisterServicer_to_server(servicer, server):
                     servicer.Register,
                     request_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelRequest.FromString,
                     response_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelResponse.SerializeToString,
+            ),
+            'GetModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetModel,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetModelRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetModelResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -156,5 +172,22 @@ class CurrierRegister(object):
         return grpc.experimental.unary_unary(request, target, '/descarteslabs.currier.v1.CurrierRegister/Register',
             descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelRequest.SerializeToString,
             descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.RegisterModelResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetModel(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.currier.v1.CurrierRegister/GetModel',
+            descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetModelRequest.SerializeToString,
+            descarteslabs_dot_common_dot_proto_dot_currier_dot_currier__pb2.GetModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
