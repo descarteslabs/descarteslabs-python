@@ -327,7 +327,11 @@ def make_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress):
             pconfig = None
             shape = (geotiff_profile["height"], geotiff_profile["width"])
 
-        if height < geotiff_profile["blockxsize"] and width < geotiff_profile["blockysize"]:
+        if (
+            height < geotiff_profile["blockxsize"]
+            and width < geotiff_profile["blockysize"]
+            and compress != "JPEG"
+        ):
             tile = None
         else:
             tile = (
