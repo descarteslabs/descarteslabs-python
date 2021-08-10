@@ -154,19 +154,6 @@ message CreateTableResponse {
   string message = 2;
 }
 
-message ListTablesRequest {}
-
-message ListTablesResponse {
-  // List of owned tables
-  repeated string owned_tables = 1;
-
-  // List of writable tables
-  repeated string writable_tables = 2;
-
-  // List of readable tables
-  repeated string readable_tables = 3;
-}
-
 message CreateIngestJobRequest {
   // key
   string key = 1;
@@ -210,9 +197,6 @@ service Vektorius {
 
   // Create a table.
   rpc CreateTable(CreateTableRequest) returns (CreateTableResponse);
-
-  // List available tables.
-  rpc ListTables(ListTablesRequest) returns (ListTablesResponse);
 
   // Initiate an ingest job.
   rpc CreateIngestJob(CreateIngestJobRequest) returns (CreateIngestJobResponse);
