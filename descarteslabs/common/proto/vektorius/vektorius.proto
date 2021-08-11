@@ -166,13 +166,13 @@ message CreateIngestJobRequest {
 }
 
 message CreateIngestJobResponse {
-  // job id
-  string job_id = 1;
+  // yaas job id
+  int64 job_id = 1;
 }
 
 message IngestJobStatusRequest {
-  // job id
-  string job_id = 1;
+  // yaas job id
+  int64 job_id = 1;
 }
 
 enum JobStatus {
