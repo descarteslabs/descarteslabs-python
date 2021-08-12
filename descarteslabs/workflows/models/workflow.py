@@ -292,7 +292,8 @@ class Workflow:
         """
         Save the current state of this Workflow and its VersionedGrafts.
 
-        If the Workflow doesn't exist yet, it will be created.
+        If the Workflow doesn't exist yet, it will be created. You can save up to
+        1000 workflows; saving more will cause a ``ResourceExhausted`` exception.
 
         If it does exist, it'll attempt to update the VersionedGrafts with the ones
         set on this object. Any new versions will be added. Since VersionedGrafts are
@@ -313,6 +314,14 @@ class Workflow:
         -------
         self: Workflow
             Same Workflow object, after its state has been updated to match the backend's state
+
+        Raises
+        ------
+        ~descarteslabs.common.retry.RetryError
+            Within `RetryError.exceptions <descarteslabs.common.retry.RetryError.exceptions>`
+            there will be `~descarteslabs.client.grpc.exceptions.ResourceExhausted`
+            exceptions.
+            You reached your maximum number (1000) of saved workflows
 
         Example
         -------

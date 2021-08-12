@@ -13,6 +13,9 @@
 # limitations under the License.
 
 
+"""Exceptions raised by HTTP clients."""
+
+
 class ClientError(Exception):
     """ Base class for all client exceptions."""
 

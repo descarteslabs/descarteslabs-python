@@ -474,7 +474,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
 
         Raises
         ------
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
@@ -578,7 +578,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
         NotFoundError
             If any of the requested objects do not exist in the Descartes Labs catalog
             and `ignore_missing` is ``False``.
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
@@ -642,7 +642,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
 
         Raises
         ------
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
@@ -725,7 +725,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
             If any of the attribute values are invalid.
         DeletedObjectError
             If this catalog object was deleted.
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -805,7 +805,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
             If the catalog object is not in the ``SAVED`` state.
         DeletedObjectError
             If this catalog object was deleted.
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -875,7 +875,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
         ------
         ConflictError
             If the object has related objects (bands, images) that exist.
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -905,7 +905,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
             If this catalog object was already deleted.
         UnsavedObjectError
             If this catalog object is being deleted without having been saved.
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """

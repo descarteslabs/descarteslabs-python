@@ -174,7 +174,7 @@ class Session(requests.Session):
             A 429 HTTP response status code was encountered.
         GatewayTimeoutError
             A 504 HTTP response status code was encountered.
-        ServerError
+        ~descarteslabs.client.exceptions.ServerError
             Any HTTP response status code larger than 400 that was not covered above
             is returned as a ServerError.  The original HTTP response status code
             can be found in the attribute :py:attr:`original_status`.
@@ -571,7 +571,7 @@ class JsonApiSession(Session):
             A 429 HTTP response status code was encountered.
         GatewayTimeoutError
             A 504 HTTP response status code was encountered.
-        ServerError
+        ~descarteslabs.client.exceptions.ServerError
             Any HTTP response status code larger than 400 that was not covered above
             is returned as a ServerError.  The original HTTP response status code
             can be found in the attribute :py:attr:`original_status`.

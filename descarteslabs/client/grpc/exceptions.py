@@ -16,7 +16,7 @@
 # limitations under the License.
 
 
-"""Exceptions raised by clients."""
+"""Exceptions raised by gRPC clients."""
 
 import http.client as http_client
 import grpc

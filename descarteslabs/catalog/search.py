@@ -216,7 +216,7 @@ class Search(object):
         ------
         BadRequestError
             If any of the query parameters or filters are invalid
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -247,7 +247,7 @@ class Search(object):
         ------
         BadRequestError
             If any of the query parameters or filters are invalid
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -419,7 +419,7 @@ class ImageSearch(Search):
 
         Raises
         ------
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -482,7 +482,7 @@ class ImageSearch(Search):
 
         Raises
         ------
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 

@@ -252,7 +252,7 @@ class Product(CatalogObject):
             If a deletion process is already in progress.
         DeletedObjectError
             If this product was deleted.
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
@@ -281,7 +281,7 @@ class Product(CatalogObject):
         ------
         DeletedObjectError
             If this product was deleted.
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
@@ -336,7 +336,7 @@ class Product(CatalogObject):
             If an update task is already in progress.
         DeletedObjectError
             If this product was deleted.
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
@@ -380,7 +380,7 @@ class Product(CatalogObject):
         ------
         DeletedObjectError
             If this product was deleted.
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -605,7 +605,7 @@ class TaskStatus(object):
 
         Raises
         ------
-        ClientError or ServerError
+        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
