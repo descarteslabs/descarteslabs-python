@@ -154,6 +154,19 @@ message CreateTableResponse {
   string message = 2;
 }
 
+message DeleteTableRequest {
+  // The name of the table.
+  string table_name = 1;
+}
+
+message DeleteTableResponse {
+  // Status, did the table deletion succeed?
+  bool status = 1;
+
+  // Message explaining the status.
+  string message = 2;
+}
+
 message CreateIngestJobRequest {
   // key
   string key = 1;
@@ -197,6 +210,9 @@ service Vektorius {
 
   // Create a table.
   rpc CreateTable(CreateTableRequest) returns (CreateTableResponse);
+
+  // Delete a table.
+  rpc DeleteTable(DeleteTableRequest) returns (DeleteTableResponse);
 
   // Initiate an ingest job.
   rpc CreateIngestJob(CreateIngestJobRequest) returns (CreateIngestJobResponse);

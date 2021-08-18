@@ -19,6 +19,11 @@ class VektoriusStub(object):
                 request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableRequest.SerializeToString,
                 response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableResponse.FromString,
                 )
+        self.DeleteTable = channel.unary_unary(
+                '/descarteslabs.vektorius.v1.Vektorius/DeleteTable',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.DeleteTableRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.DeleteTableResponse.FromString,
+                )
         self.CreateIngestJob = channel.unary_unary(
                 '/descarteslabs.vektorius.v1.Vektorius/CreateIngestJob',
                 request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateIngestJobRequest.SerializeToString,
@@ -55,6 +60,12 @@ class VektoriusServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def CreateTable(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteTable(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -103,6 +114,11 @@ def add_VektoriusServicer_to_server(servicer, server):
                     servicer.CreateTable,
                     request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableRequest.FromString,
                     response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableResponse.SerializeToString,
+            ),
+            'DeleteTable': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteTable,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.DeleteTableRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.DeleteTableResponse.SerializeToString,
             ),
             'CreateIngestJob': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateIngestJob,
@@ -158,6 +174,23 @@ class Vektorius(object):
         return grpc.experimental.unary_unary(request, target, '/descarteslabs.vektorius.v1.Vektorius/CreateTable',
             descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableRequest.SerializeToString,
             descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateTableResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def DeleteTable(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.vektorius.v1.Vektorius/DeleteTable',
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.DeleteTableRequest.SerializeToString,
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.DeleteTableResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
