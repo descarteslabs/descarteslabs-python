@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import List, Tuple, Union
 from enum import Enum
 import numpy as np
 from affine import Affine
@@ -255,6 +255,10 @@ def make_gdalinfo(metadata):
             info += '  <Item name="COLORINTERP" sample="{}" role="colorinterp">{}</Item>\n'.format(
                 c, b["colorInterpretation"]
             )
+        if "description" in b:
+            info += '  <Item name="DESCRIPTION" sample="{}" role="description">{}</Item>\n'.format(
+                c, b["description"]
+            )
         c += 1
     info += "</GDALMetadata>"
     return info
@@ -267,6 +271,7 @@ def convert_to_geotiff_tags(
     projcs: str,
     geogcs: str,
     gdalinfo: str,
+    nodata: Union[int, float, complex, np.number, str, None],
 ) -> List[Tuple]:
     """Creates the bare minimum geotiff tags to match typical GDAL output.
 
@@ -275,7 +280,7 @@ def convert_to_geotiff_tags(
         Tifffile.write(extra_tags=convert_to_geotiff_tags(...))
     """
     projdesc = projcs + geogcs
-    return [
+    tags = [
         # ModelPixelScaleTag:
         (33550, 12, 3, mps, False),
         # ModelTiePointTag:
@@ -287,14 +292,20 @@ def convert_to_geotiff_tags(
         # GDAL Info
         (42112, 2, len(gdalinfo), gdalinfo, False),
     ]
+    if nodata is not None:
+        nodata_str = str(nodata)
+        tags.append((42113, 2, len(nodata_str), nodata_str, False))
+    return tags
 
 
-def make_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress):
+def make_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress, nodata):
     geotiff_profile = make_geotiff_profile(metadata, blosc_meta)
     gkd, projcs, geogcs = parse_projection(metadata)
     mtp, mps = parse_transform(geotiff_profile["transform"])
     gdalinfo = make_gdalinfo(metadata)
-    extra_tags = convert_to_geotiff_tags(gkd, mtp, mps, projcs, geogcs, gdalinfo)
+    extra_tags = convert_to_geotiff_tags(
+        gkd, mtp, mps, projcs, geogcs, gdalinfo, nodata
+    )
 
     nbands, height, width = blosc_meta["shape"]
 

@@ -129,7 +129,7 @@ def read_tiled_blosc_array(metadata, data, progress=None):
     return output
 
 
-def yield_chunks(metadata, data, progress):
+def yield_chunks(metadata, data, progress, nodata):
     dtype = np.dtype(metadata["dtype"])
     chunk_iter = range(metadata["chunks"])
     if progress:
@@ -154,8 +154,17 @@ def yield_chunks(metadata, data, progress):
             )
         blosc.decompress_ptr(buffer, chunk.__array_interface__["data"][0])
 
-        # read mask chunk off response but don't do anything
-        _ = read_blosc_buffer(data)
+        mask_raw_size, mask_buffer = read_blosc_buffer(data)
+        if nodata is not None:
+            mask_chunk = np.ma.empty(chunk_metadata["shape"], dtype=np.bool)
+            if mask_raw_size != mask_chunk.nbytes:
+                raise ServerError(
+                    "Did not receive complete mask chunk (got {}, expected {})".format(
+                        raw_size, chunk.nbytes
+                    )
+                )
+            blosc.decompress_ptr(mask_buffer, mask_chunk.__array_interface__["data"][0])
+            chunk[mask_chunk] = nodata
 
         if chunk.shape[0] == 1:
             yield np.squeeze(chunk, axis=0)
@@ -266,6 +275,7 @@ class Raster(Service):
         outfile_basename=None,
         headers=None,
         progress=None,
+        nodata=None,
         _retry=_retry,
         **pass_through_params,
     ):
@@ -318,6 +328,8 @@ class Raster(Service):
             reflectance algorithm to the output.
         :param str outfile_basename: Overrides default filename using this string as a base.
         :param bool progress: Display a progress bar.
+        :param None or number: A nodata value to use in the file where pixels are masked.
+            Only used for non-JPEG geotiff files.
 
         :return: A tuple of (`filename`, ``metadata`` dictionary).
             The dictionary contains details about the raster operation that happened.
@@ -367,20 +379,26 @@ class Raster(Service):
             metadata = json.loads(r.raw.readline().decode("utf-8").strip())
             blosc_meta = json.loads(r.raw.readline().decode("utf-8").strip())
 
-            chunk_iter = yield_chunks(blosc_meta, r.raw, progress)
+            chunk_iter = yield_chunks(blosc_meta, r.raw, progress, nodata)
 
             if "id" not in metadata:
                 metadata["id"] = inputs[0]
 
             try:
                 if output_format == "GTiff":
-                    make_geotiff(outfile, chunk_iter, metadata, blosc_meta, None)
+                    make_geotiff(
+                        outfile, chunk_iter, metadata, blosc_meta, None, nodata
+                    )
                 elif output_format == "JPEG":
-                    make_geotiff(outfile, chunk_iter, metadata, blosc_meta, "JPEG")
+                    make_geotiff(
+                        outfile, chunk_iter, metadata, blosc_meta, "JPEG", None
+                    )
                 elif output_format == "PNG":
                     tif_out = outfile_basename + ".tif"
                     try:
-                        make_geotiff(tif_out, chunk_iter, metadata, blosc_meta, "PNG")
+                        make_geotiff(
+                            tif_out, chunk_iter, metadata, blosc_meta, "PNG", None
+                        )
                         try:
                             im = Image.open(tif_out)
                             im.save(outfile)

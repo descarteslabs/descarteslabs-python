@@ -701,6 +701,7 @@ class SceneCollection(Collection):
         scaling=None,
         data_type=None,
         mask_alpha=None,
+        nodata=None,
     ):
         """
         Download all scenes as a single image file.
@@ -756,6 +757,8 @@ class SceneCollection(Collection):
             If the alpha band is available for all scenes in the collection and
             ``mask_alpha`` is None, ``mask_alpha`` is set to True. If not,
             mask_alpha is set to False.
+        nodata : None, number
+            NODATA value for a geotiff file. Will be assigned to any masked pixels.
 
         Returns
         -------
@@ -798,8 +801,6 @@ class SceneCollection(Collection):
             self._product_band_properties(), bands, scaling, data_type
         )
 
-        print(self.each.properties["id"].combine())
-
         return _download._download(
             inputs=self.each.properties["id"].combine(),
             bands_list=bands,
@@ -810,6 +811,7 @@ class SceneCollection(Collection):
             format=format,
             resampler=resampler,
             processing_level=processing_level,
+            nodata=nodata,
             raster_client=self._raster_client,
         )
 

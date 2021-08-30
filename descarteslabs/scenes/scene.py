@@ -571,6 +571,7 @@ class Scene(object):
         processing_level=None,
         scaling=None,
         data_type=None,
+        nodata=None,
         raster_client=None,
     ):
         """
@@ -620,6 +621,8 @@ class Scene(object):
         data_type : None, str
             Output data type. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
+        nodata : None, number
+            NODATA value for a geotiff file. Will be assigned to any masked pixels.
         raster_client : Raster, optional
             Unneeded in general use; lets you use a specific client instance
             with non-default auth and parameters.
@@ -673,6 +676,7 @@ class Scene(object):
             resampler=resampler,
             processing_level=processing_level,
             scales=scales,
+            nodata=nodata,
             raster_client=raster_client,
         )
 
