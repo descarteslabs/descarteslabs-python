@@ -288,12 +288,12 @@ def make_band_scale(name, properties, value):
             return NoBandScale(name, properties, mode)
         else:
             return AutomaticBandScale(name, properties, mode)
-    elif isinstance(value, tuple):
+    elif isinstance(value, (list, tuple)):
         if len(value) not in (0, 2, 4):
             raise ValueError(
                 "Invalid scaling tuple {} for band '{}'".format(value, name)
             )
-        return TupleBandScale(name, properties, value)
+        return TupleBandScale(name, properties, tuple(value))
 
 
 def parse_scaling(properties, bands, scaling):
@@ -563,8 +563,10 @@ def multiproduct_scaling_parameters(properties, bands, scaling, data_type):
     for band in bands:
         for product in properties:
             if band not in properties[product]:
-                message = "Invalid bands: band '{}' is not available in product '{}'".format(
-                    band, product
+                message = (
+                    "Invalid bands: band '{}' is not available in product '{}'".format(
+                        band, product
+                    )
                 )
                 if "derived:{}".format(band) in properties[product]:
                     message += ", did you mean 'derived:{}'?".format(band)
