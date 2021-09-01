@@ -292,7 +292,7 @@ class TestRaster(unittest.TestCase):
             with open(filename, "rb") as f:
                 d = f.read()
                 checksum = hashlib.md5(d).hexdigest()
-                assert checksum == "9cb9e1e363ca996bf9e7bc682d94c538"
+                assert checksum == "93534fe93ca3b0da1ca95ec60edd6bc3"
 
             # check geotiff metadata
 
@@ -393,7 +393,7 @@ class TestRaster(unittest.TestCase):
             with open(filename, "rb") as f:
                 d = f.read()
                 checksum = hashlib.md5(d).hexdigest()
-                assert checksum == "cef7578ffa255aa8a1fdafc58b6ba803"
+                assert checksum == "7e480ee328b4afcead376dbc1ee68706"
         finally:
             os.unlink(filename)
 
