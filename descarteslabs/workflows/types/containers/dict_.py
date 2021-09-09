@@ -182,6 +182,9 @@ class Dict(BaseDict):
 
     Can be instantiated from a Python mapping and/or keyword arguments.
 
+    NOTE: Proxy types are not hashable and thus can not be used inside regular old Python dicts. In general,
+    prefer the `Dict.from_pairs` constructor when dealing with proxy types directly.
+
     Examples
     --------
     >>> from descarteslabs.workflows import Dict, List, Str, Int, Float
