@@ -15,8 +15,11 @@ DISCOVER_EDITOR = "discover/role/editor"
 DISCOVER_VIEWER = "discover/role/viewer"
 STORAGE_EDITOR = "storage/role/editor"
 STORAGE_VIEWER = "storage/role/viewer"
+VECTOR_EDITOR = "vektorius/role/editor"
+VECTOR_VIEWER = "vektorius/role/viewer"
 ALLOWABLE_FOLDER_ROLES = {DISCOVER_VIEWER, DISCOVER_EDITOR}
 ALLOWABLE_BLOB_ROLES = {STORAGE_VIEWER, STORAGE_EDITOR}
+ALLOWABLE_VECTOR_ROLES = {VECTOR_VIEWER, VECTOR_EDITOR}
 
 
 @dataclass
@@ -195,14 +198,16 @@ class _DiscoverRequestBuilder(ABC):
         )
         """
 
-        if (self._type() == "folder" and as_.lower() in ALLOWABLE_FOLDER_ROLES) or (
-            self._type() == "blob" and as_.lower() in ALLOWABLE_BLOB_ROLES
+        if (
+            (self._type() == "folder" and as_.lower() in ALLOWABLE_FOLDER_ROLES)
+            or (self._type() == "blob" and as_.lower() in ALLOWABLE_BLOB_ROLES)
+            or (self._type() == "vector" and as_.lower() in ALLOWABLE_VECTOR_ROLES)
         ):
             return self.discover.add_access_grant(self.asset_name, with_, as_)
         else:
             raise ValueError(
                 f"The role '{as_}' is invalid. Roles must be of type viewer or editor, "
-                "and you can only assign access grants to blobs and folders."
+                "and you can only assign access grants to blobs, vectors, and folders."
             )
 
     def revoke(self, from_: str, as_: str):
@@ -297,8 +302,10 @@ class _DiscoverRequestBuilder(ABC):
         )
         """
 
-        if (self._type() == "folder" and to_role.lower() in ALLOWABLE_FOLDER_ROLES) or (
-            self._type() == "blob" and to_role.lower() in ALLOWABLE_BLOB_ROLES
+        if (
+            (self._type() == "folder" and to_role.lower() in ALLOWABLE_FOLDER_ROLES)
+            or (self._type() == "blob" and to_role.lower() in ALLOWABLE_BLOB_ROLES)
+            or (self._type() == "vector" and to_role.lower() in ALLOWABLE_VECTOR_ROLES)
         ):
             return self.discover.replace_access_grant(
                 self.asset_name, user, from_role, to_role
@@ -306,7 +313,7 @@ class _DiscoverRequestBuilder(ABC):
         else:
             raise ValueError(
                 f"The role '{to_role}' is invalid. Roles must be of type viewer or editor, "
-                "and you can only assign access grants to blobs and folders."
+                "and you can only assign access grants to blobs, vectors, and folders."
             )
 
     def list_shares(self) -> List[AccessGrant]:
@@ -559,6 +566,30 @@ def _role_to_storage_role(role: str) -> str:
     else:
         storage_role = role
     return storage_role
+
+
+def _role_to_vector_role(role: str) -> str:
+    """
+    Converts shortcut role to the corresponding Vector role.
+
+    Parameters
+    ----------
+    role : str
+        Role given by user.
+
+    Returns
+    -------
+    storage_role : str
+        Fully-resolved Vector role if given "viewer" or "editor".
+    """
+
+    if role.lower() == "viewer":
+        vector_role = VECTOR_VIEWER
+    elif role.lower() == "editor":
+        vector_role = VECTOR_EDITOR
+    else:
+        vector_role = role
+    return vector_role
 
 
 def _role_to_discover_role(_as: str) -> str:
@@ -858,6 +889,152 @@ class Folder(_DiscoverRequestBuilder):
         )
 
 
+class Vector(_DiscoverRequestBuilder):
+    """A Vector is a pointer to a table."""
+
+    def _resolve_name(self, asset_name: str):
+        """
+        Resolves the asset_name to the correct format for vectors.
+
+        Parameters
+        ----------
+        asset_name : str
+            Path of the asset being resolved.
+        """
+        type_ = self._type()
+        parts = asset_name.split(NAME_SEPARATOR)
+        namespace = None
+        vector_name = None
+
+        # Case 1: User only provides file name (asset name will be length 1)
+        # foo.txt, myfolder/foo.txt
+        if len(parts) == 1:
+            vector_name = parts[0].strip("~/")
+            namespace = self.discover._discover_client.auth.namespace
+
+        # Case 2: User provides a user_sha and file name (asset name will be length 2)
+        # 3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt, blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt
+        elif len(parts) == 2:
+            first_part = parts[0]
+            # if there are more than three items in parts (asset / blob / namespace)
+            if first_part.count(PATH_SEPARATOR) > 2:
+                raise _bad_asset_shape_error(asset_name, type_)
+
+            # if there are only two items and the first item is "asset", raise (not specific enough)
+            # asset/ed8a928b209284e63295aeaa69383bf0f29837e8:~/foo.txt, asset/blob:~/foo.txt
+            elif (
+                first_part.count(PATH_SEPARATOR) == 1
+                and first_part.split(PATH_SEPARATOR, 1)[0] == "asset"
+            ):
+                raise _bad_asset_shape_error(asset_name, type_)
+            # otherwise take the rightmost item in the first part (we will check it later)
+            else:
+                *_, namespace = first_part.rsplit(PATH_SEPARATOR, 1)
+            vector_name = parts[1]
+
+        # Case 3: More than one :~/
+        # 12345:~/myfolder:~/myfile
+        else:
+            raise _bad_asset_shape_error(asset_name, type_)
+
+        if not _is_valid_uuid(namespace, 40):
+            raise _bad_asset_shape_error(asset_name, type_)
+
+        return f"asset/{type_}/{namespace}{NAME_SEPARATOR}{vector_name}"
+
+    def share(self, with_: str, as_: str) -> AccessGrant:
+        """
+        Adds access grant for an asset by specifying who to share with and as what role.
+
+        Parameters
+        ----------
+        with_ : str
+            Email of the group or user to give access to.
+        as_ : str
+            Type of access the group or user should be given.
+
+        Returns
+        -------
+        access_grant : AccessGrant
+            Access grant that was added.
+
+        Example
+        -------
+        >>> discover.vector("table").share(
+        ...     with_="colleague@company.com",
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name="table",
+            user_id='colleague@company.com',
+            access='viewer'
+        )
+        """
+
+        return super().share(with_=with_, as_=_role_to_vector_role(as_))
+
+    def revoke(self, from_: str, as_: str):
+        """
+        Removes access grant for an asset by specifying who to revoke from and what role is being removed.
+        If the role does not exist, revoke does nothing.
+
+        Parameters
+        ----------
+        from_ : str
+            Email of the group or user to remove access from.
+        as_ : str
+            Type of access that should be removed from the group or user.
+
+        Example
+        -------
+        >>> discover.vector("table").revoke(
+        ...     from_="colleague@company.com",
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+        """
+
+        super().revoke(from_=from_, as_=_role_to_vector_role(as_))
+
+    def replace_shares(self, user: str, from_role: str, to_role: str) -> AccessGrant:
+        """
+        Replaces access grant for an asset by specifying the group or user,
+        what role the user has and what role the user should be given.
+
+        Parameters
+        ----------
+        user : str
+            Email of the group or user to replace access for.
+        from_role : str
+            Type of access the user currently has.
+        to_role : str
+            Type of access that should replace the current role.
+
+        Returns
+        -------
+        access_grant : AccessGrant
+            Access grant that the previous access grant was replaced with.
+
+        Example
+        -------
+        >>> discover.vector("table").replace_shares(
+        ...     user="colleague@company.com",
+        ...     from_role="viewer",
+        ...     to_role="editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name="table",
+            user_id='colleague@company.com',
+            access='editor'
+        )
+        """
+
+        return super().replace_shares(
+            user=user,
+            from_role=_role_to_vector_role(from_role),
+            to_role=_role_to_vector_role(to_role),
+        )
+
+
 class Discover:
     """Discover is a client for interacting with assets such as Blobs and Folders."""
 
@@ -903,6 +1080,23 @@ class Discover:
             A Discover request builder for requests involving Discover assets.
         """
         return Folder(self, asset_name)
+
+    def vector(self, asset_name: str) -> Vector:
+        """
+        Constructs a `Vector` request builder.
+        This is a helper that simplifies construction of Discover requests that involve Vector assets.
+
+        Parameters
+        ----------
+        asset_name : str
+            Asset ID of the vector.
+
+        Returns
+        -------
+        vector : Vector
+            A Discover request builder for requests involving Vector assets.
+        """
+        return Vector(self, asset_name)
 
     def add_access_grant(
         self, asset_name: str, group_or_user: str, role: str
