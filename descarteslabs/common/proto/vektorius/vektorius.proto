@@ -11,6 +11,8 @@ message SchemaRequest {
   string table_name = 1;
   // The database scope for the name.
   string database = 2;
+  // The table owner.
+  string owner = 3;
 }
 
 // A response that contains a table schema.
@@ -176,6 +178,9 @@ message CreateIngestJobRequest {
 
   // table_name
   string table_name = 3;
+
+  // owner 
+  string owner = 4;
 }
 
 message CreateIngestJobResponse {
