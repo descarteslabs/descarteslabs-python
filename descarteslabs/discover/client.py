@@ -511,6 +511,11 @@ def _bad_asset_shape_error(asset_name: str, asset_type: str) -> ValueError:
             "A well-formed path should include a user ID, as well as a colon and a tilda separator, eg. "
             f"asset/blob/b1a1d1c20e655402691582723261a02caa693834{NAME_SEPARATOR}my_blob"
         )
+    elif asset_type == "vector":
+        error_english = (
+            "A well-formed path should include a user ID, as well as a colon and a tilda separator, eg. "
+            f"asset/vector/b1a1d1c20e655402691582723261a02caa693834{NAME_SEPARATOR}my_vector"
+        )
     elif asset_type == "folder":
         error_english = (
             "A well-formed folder name must include a folder ID, eg. "
