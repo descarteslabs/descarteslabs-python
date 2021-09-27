@@ -159,6 +159,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
 
         self._attributes = {}
         self._modified = set()
+        self._deleted = False
 
         self._initialize(
             id=kwargs.pop("id", None),

@@ -11,21 +11,24 @@ from .band import (
     Colormap,
     DataType,
     DerivedBand,
+    DerivedParamsAttribute,
     GenericBand,
     MaskBand,
     MicrowaveBand,
+    ProcessingLevelsAttribute,
+    ProcessingStepAttribute,
     SpectralBand,
 )
 from .image import Image, StorageState
 from .image_upload import (
     ImageUpload,
+    ImageUploadEvent,
+    ImageUploadEventSeverity,
+    ImageUploadEventType,
     ImageUploadOptions,
     ImageUploadStatus,
     ImageUploadType,
     OverviewResampler,
-    ImageUploadEvent,
-    ImageUploadEventType,
-    ImageUploadEventSeverity,
 )
 from .search import ImageSearch, Search, Interval, AggregateDateField, SummaryResult
 from .catalog_base import (
@@ -38,9 +41,9 @@ from .named_catalog_base import NamedCatalogObject
 from .attributes import (
     AttributeValidationError,
     DocumentState,
+    File,
     Resolution,
     ResolutionUnit,
-    File,
 )
 
 from descarteslabs.common.property_filtering import GenericProperties
@@ -60,6 +63,7 @@ __all__ = [
     "DeletedObjectError",
     "DeletionTaskStatus",
     "DerivedBand",
+    "DerivedParamsAttribute",
     "DocumentState",
     "File",
     "GenericBand",
@@ -77,6 +81,8 @@ __all__ = [
     "MicrowaveBand",
     "NamedCatalogObject",
     "OverviewResampler",
+    "ProcessingLevelsAttribute",
+    "ProcessingStepAttribute",
     "Product",
     "properties",
     "Resolution",

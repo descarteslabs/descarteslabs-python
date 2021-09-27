@@ -12,6 +12,9 @@ Types
   ~descarteslabs.catalog.DataType
   ~descarteslabs.catalog.BandType
   ~descarteslabs.catalog.Colormap
+  ~descarteslabs.catalog.ProcessingStepAttribute
+  ~descarteslabs.catalog.ProcessingLevelsAttribute
+  ~descarteslabs.catalog.DerivedParamsAttribute
   ~descarteslabs.catalog.Resolution
   ~descarteslabs.catalog.ResolutionUnit
   ~descarteslabs.catalog.File
@@ -37,6 +40,12 @@ Types
 .. autoclass:: descarteslabs.catalog.BandType
 
 .. autoclass:: descarteslabs.catalog.Colormap
+
+.. autoclass:: descarteslabs.catalog.ProcessingStepAttribute
+
+.. autoclass:: descarteslabs.catalog.ProcessingLevelsAttribute
+
+.. autoclass:: descarteslabs.catalog.DerivedParamsAttribute
 
 .. autoclass:: descarteslabs.catalog.Resolution
 

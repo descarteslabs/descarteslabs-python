@@ -25,8 +25,8 @@ Bands
   :exclude-members: ATTRIBUTES, band_index, created, data_range, data_type, description,
     display_range, extra_properties, file_index, id, is_modified, jpx_layer_index,
     modified, name, nodata, owners, product, product_id, readers, resolution,
-    sort_order, state, tags, type, vendor_order, writers, reload, save, serialize, update,
-    get_or_create
+    sort_order, state, tags, type, vendor_order, processing_levels, derived_params,
+    vendor_band_name, writers, reload, save, serialize, update, get_or_create
 
 .. autoclass:: descarteslabs.catalog.SpectralBand
   :autosummary:
@@ -39,18 +39,21 @@ Bands
   :members:
   :inherited-members:
   :undoc-members:
+  :exclude-members: processing_levels, derived_params,
 
 .. autoclass:: descarteslabs.catalog.MaskBand
   :autosummary:
   :members:
   :inherited-members:
   :undoc-members:
+  :exclude-members: processing_levels, derived_params,
 
 .. autoclass:: descarteslabs.catalog.ClassBand
   :autosummary:
   :members:
   :inherited-members:
   :undoc-members:
+  :exclude-members: processing_levels, derived_params,
 
 .. autoclass:: descarteslabs.catalog.GenericBand
   :autosummary:
@@ -63,3 +66,4 @@ Bands
   :members:
   :inherited-members:
   :undoc-members:
+  :exclude-members: processing_levels, derived_params,

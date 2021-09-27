@@ -382,7 +382,7 @@ class CatalogObjectReference(Attribute):
         corresponding id field are modified.
         """
         if obj is None:
-            return super(CatalogObjectReference, self).__get__(self, obj, objtype)
+            return super(CatalogObjectReference, self).__get__(obj, objtype)
 
         cached_value = obj._attributes.get(self._attribute_name)
         reference_id = getattr(obj, self.id_field)

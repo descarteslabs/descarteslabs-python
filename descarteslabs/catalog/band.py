@@ -159,8 +159,8 @@ class ProcessingLevelsAttribute(ModelAttribute, MutableMapping):
 
     Can be set using a dictionary of items or any `Mapping`, or an instance of this
     attribute.  All keys must be string and values can be string or an iterable
-    of ProcessingStepAttributes (or compatible mapping).
-    ProcessingLevelsAttribute behaves similar to dictionaries.
+    of `ProcessingStepAttribute` items (or compatible mapping).
+    `ProcessingLevelsAttribute` behaves similar to dictionaries.
     """
 
     # this value is ONLY used for for instances of the attribute that
@@ -197,10 +197,11 @@ class ProcessingLevelsAttribute(ModelAttribute, MutableMapping):
     def validate_key_and_value(self, key, value):
         """Validate the key and value.
 
-        The key must be a string, and the value either a string or an iterable of ProcessingStepAttributes
-        or a compatible mapping.
+        The key must be a string, and the value either a string or an iterable of
+        `ProcessingStepAttribute` items or a compatible mapping.
 
-        Returns a fully formed value (a string or a ListAttribute of ProcessingStepAttributes)
+        Returns a fully formed value (a string or a ListAttribute of
+        `ProcessingStepAttribute` items)
         """
         if not isinstance(key, str):
             raise AttributeValidationError(
@@ -266,8 +267,8 @@ class ProcessingLevelsAttribute(ModelAttribute, MutableMapping):
 
         Parameters
         ----------
-        value : dict or ProcessingLevelsAttribute
-            A set of values to use to initialize a new ProcessingLevelsAttribute
+        value : dict or `ProcessingLevelsAttribute`
+            A set of values to use to initialize a new `ProcessingLevelsAttribute`
             instance.  All keys must be strings, and values can be strings or numbers.
 
         Returns
@@ -409,6 +410,7 @@ class Band(NamedCatalogObject):
     :attr:`~descarteslabs.catalog.GenericBand.band_index`,
     :attr:`~descarteslabs.catalog.GenericBand.file_index`,
     :attr:`~descarteslabs.catalog.GenericBand.jpx_layer_index`.
+    :attr:`~descarteslabs.catalog.GenericBand.vendor_band_name`.
 
     To create a new band instantiate one of those specialized classes:
 
@@ -419,7 +421,9 @@ class Band(NamedCatalogObject):
       :attr:`~SpectralBand.wavelength_nm_center`,
       :attr:`~SpectralBand.wavelength_nm_min`,
       :attr:`~SpectralBand.wavelength_nm_max`,
-      :attr:`~SpectralBand.wavelength_nm_fwhm`.
+      :attr:`~SpectralBand.wavelength_nm_fwhm`,
+      :attr:`~descarteslabs.catalog.GenericBand.processing_levels`,
+      :attr:`~descarteslabs.catalog.GenericBand.derived_params`.
     * `MicrowaveBand`: A band that lies in the microwave spectrum, often from SAR or
       passive radar sensors. Specific attributes:
       :attr:`~MicrowaveBand.frequency`,
@@ -428,7 +432,8 @@ class Band(NamedCatalogObject):
       :attr:`~MicrowaveBand.physical_range_unit`.
     * `MaskBand`: A binary band where by convention a 0 means masked and 1 means
       non-masked. The :attr:`~Band.data_range` and :attr:`~Band.display_range` for
-      masks is implicitly ``[0, 1]``. Specific attributes::attr:`~MaskBand.is_alpha`.
+      masks is implicitly ``[0, 1]``. Specific attributes:
+      :attr:`~MaskBand.is_alpha`.
     * `ClassBand`: A band that maps a finite set of values that may not be continuous to
       classification categories (e.g. a land use classification). A visualization with
       straight pixel values is typically not useful, so commonly a
@@ -437,8 +442,13 @@ class Band(NamedCatalogObject):
       :attr:`~ClassBand.class_labels`.
     * `GenericBand`: A generic type for bands that are not represented by the other band
       types, e.g., mapping physical values like temperature or angles. Specific
-      attributes: :attr:`~GenericBand.colormap`, :attr:`~GenericBand.colormap_name`,
-      :attr:`~GenericBand.physical_range`, :attr:`~GenericBand.physical_range_unit`.
+      attributes:
+      :attr:`~GenericBand.colormap`,
+      :attr:`~GenericBand.colormap_name`,
+      :attr:`~GenericBand.physical_range`,
+      :attr:`~GenericBand.physical_range_unit`,
+      :attr:`~descarteslabs.catalog.GenericBand.processing_levels`,
+      :attr:`~descarteslabs.catalog.GenericBand.derived_params`.
     """
 
     _DOC_DESCRIPTION = """A description with further details on the band.
