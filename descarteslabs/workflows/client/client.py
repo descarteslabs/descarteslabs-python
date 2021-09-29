@@ -1,8 +1,11 @@
 import os
+import random
+import time
 import warnings
 
 import grpc
 
+from descarteslabs.common.retry import Retry, _name_of_func
 from descarteslabs.common.proto.job import job_pb2_grpc
 from descarteslabs.common.proto.xyz import xyz_pb2_grpc
 from descarteslabs.common.proto.workflow import workflow_pb2_grpc
@@ -22,6 +25,40 @@ ROLE_WORKFLOWS_VIEWER = "workflows/role/viewer"
 TYPE_USER_EMAIL = "user-email"
 
 
+class PushbackHonoringRetry(Retry):
+    """
+    In most cases, we want to use a single delay generator (eg. truncated exponential backoff w/ jitter). But sometimes
+    we want to combine our standard retry strategy with special handling for certain exceptions (eg. a 429 with a
+    specified pushback / retry-after). A `PushbackHonoringRetry` accommodates exactly this situation.
+    """
+    def _retry(self, func, delay_generator):
+        deadline = self._deadline_datetime(self._deadline)
+        retries = self._retries
+        previous_exceptions = []
+
+        for delay in delay_generator:
+            try:
+                return func()
+            except Exception as e:
+                self._handle_exception(e, previous_exceptions)
+
+                if e.code() == grpc.StatusCode.RESOURCE_EXHAUSTED:
+                    trailing_metadata = dict(e.trailing_metadata())
+                    pushback_delay = trailing_metadata.get("grpc-retry-pushback-ms")
+                    if pushback_delay is not None:
+                        pushback_delay = int(pushback_delay)
+                        delay = (pushback_delay / 1000) + random.uniform(*self._jitter)
+
+            # will raise RetryError if deadline or retries exceeded
+            retries = self._check_retries(
+                retries, _name_of_func(func), deadline, previous_exceptions
+            )
+
+            time.sleep(delay)
+        else:
+            raise ValueError("Bad delay generator")
+
+
 class Client(GrpcClient):
     """Low-level gRPC client for interacting with the Workflows backend. Not intended for users to use directly.
 
@@ -34,7 +71,6 @@ class Client(GrpcClient):
     >>> Int(1).publish("One", client=my_client) # doctest: +SKIP
     <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
     """
-
     def __init__(self, host=None, auth=None, certificate=None, port=None, channel=None):
         if host is None:
             host = os.environ.get(
@@ -74,7 +110,9 @@ class Client(GrpcClient):
         self._add_api("XYZ", "ListXYZ")
         self._add_api("XYZ", "DeleteXYZ")
         self._add_api("XYZ", "GetXYZSessionLogs")
-        self._add_api("Job", "CreateJob")
+
+        createJobRetryConfig = PushbackHonoringRetry(predicate=default_grpc_retry_predicate, retries=5)
+        self._add_api("Job", "CreateJob", default_retry=createJobRetryConfig)
         self._add_api("Job", "WatchJob")
         self._add_api("Job", "GetJob")
         self._add_api("Job", "ListJobs")
