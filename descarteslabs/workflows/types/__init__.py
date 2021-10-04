@@ -26,7 +26,6 @@ from .geospatial import (
     ImageCollection,
     load_geojson,
     load_geojson_file,
-    #    PCA,
     where,
 )
 from .math import (
@@ -101,7 +100,6 @@ __all__ = [
     "ImageCollection",
     "load_geojson",
     "load_geojson_file",
-    #    "PCA",
     "where",
     # .math
     "arctan2",
