@@ -21,6 +21,8 @@ def compute(
     """
     Compute a proxy object and wait for its result.
 
+    If the caller has too many outstanding compute jobs, this will raise a ``ResourceExhausted`` exception.
+
     Parameters
     ----------
     obj: Proxytype
@@ -66,6 +68,14 @@ def compute(
         the result, either as a plain Python type, or object from `descarteslabs.workflows.result_types`.
         For other formats, returns raw bytes. Consider using `file` in that case to save the results to a file.
         If the destination doesn't support retrieving results (like "email"), returns None.
+
+    Raises
+    ------
+    ~descarteslabs.common.retry.RetryError
+        Raised if there are too many failed retries. Inspect
+        `RetryError.exceptions <descarteslabs.common.retry.RetryError.exceptions>` to determine the ultimate cause
+        of the error. If you reach your maximum number of outstanding compute jobs, there will be
+        one or more `~descarteslabs.client.grpc.exceptions.ResourceExhausted` exceptions.
 
     Examples
     --------
