@@ -135,13 +135,9 @@ class Attribute(object):
 
     def __get__(self, obj, objtype):
         """Gets the value for this attribute on the given object."""
-        # Attributes cannot be used as class properties
         if obj is None:
-            raise AttributeError(
-                "type object '{}' has no attribute '{}'".format(
-                    objtype, self._attribute_name
-                )
-            )
+            # Class attribute; different from the actual value!
+            return self
 
         return obj._attributes.get(self._attribute_name)
 
