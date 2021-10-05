@@ -1047,9 +1047,10 @@ class Discover:
         self,
         host: str = "platform.descarteslabs.com",
         discover_client: DiscoverGrpcClient = None,
+        auth=None,
     ):
         if discover_client is None:
-            discover_client = DiscoverGrpcClient(host)
+            discover_client = DiscoverGrpcClient(host, auth)
         self._discover_client = discover_client
 
     def blob(self, asset_name: str) -> Blob:
