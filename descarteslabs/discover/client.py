@@ -545,7 +545,13 @@ def _is_valid_uuid(uuid: str, num_chars: int) -> bool:
     bool
         Returns True if the uuid is `num_chars` characters long and contains all valid hex characters, otherwise False.
     """
-    NAMESPACE_PATTERN = re.compile(fr"[0-9a-f]{{{num_chars}}}")
+    # Don't use double brackets or sphinx will fail when viewing the source code
+    left_curly_bracket = "{"
+    right_curly_bracket = "}"
+
+    NAMESPACE_PATTERN = re.compile(
+        fr"[0-9a-f]{left_curly_bracket}{num_chars}{right_curly_bracket}"
+    )
     return len(uuid) == num_chars and NAMESPACE_PATTERN.match(uuid)
 
 
