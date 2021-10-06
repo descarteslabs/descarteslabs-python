@@ -22,6 +22,7 @@ from descarteslabs.client.services.metadata import Metadata
 from .scene import Scene
 from .scenecollection import SceneCollection
 from . import geocontext
+from ._helpers import cached_bands_by_product
 
 
 def search(
@@ -159,7 +160,9 @@ def search(
         products = {meta["properties"]["product"] for meta in metadata["features"]}
 
     product_bands = {
-        product: Scene._scenes_bands_dict(metadata_client.get_bands_by_product(product))
+        product: Scene._scenes_bands_dict(
+            cached_bands_by_product(product, metadata_client)
+        )
         for product in products
     }
 

@@ -5,7 +5,7 @@ from descarteslabs.scenes import geocontext, search
 from shapely.geometry import shape
 
 import mock
-from .mock_data import _metadata_search, _metadata_get_bands_by_product
+from .mock_data import _metadata_search, _cached_bands_by_product
 
 
 class TestScenesSearch(unittest.TestCase):
@@ -24,8 +24,8 @@ class TestScenesSearch(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
-        "descarteslabs.scenes._search.Metadata.get_bands_by_product",
-        _metadata_get_bands_by_product,
+        "descarteslabs.scenes._search.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     def test_search_geom(self):
         sc, ctx = search(self.geom, products="landsat:LC08:PRE:TOAR", limit=4)
@@ -44,8 +44,8 @@ class TestScenesSearch(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
-        "descarteslabs.scenes._search.Metadata.get_bands_by_product",
-        _metadata_get_bands_by_product,
+        "descarteslabs.scenes._search.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     def test_search_shapely(self):
         sc, ctx = search(shape(self.geom), products="landsat:LC08:PRE:TOAR", limit=4)
@@ -63,8 +63,8 @@ class TestScenesSearch(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
-        "descarteslabs.scenes._search.Metadata.get_bands_by_product",
-        _metadata_get_bands_by_product,
+        "descarteslabs.scenes._search.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     def test_search_AOI(self):
         aoi = geocontext.AOI(self.geom, resolution=5)
@@ -77,8 +77,8 @@ class TestScenesSearch(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
-        "descarteslabs.scenes._search.Metadata.get_bands_by_product",
-        _metadata_get_bands_by_product,
+        "descarteslabs.scenes._search.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     def test_search_AOI_with_shape(self):
         aoi = geocontext.AOI(self.geom, shape=(100, 100))
@@ -92,8 +92,8 @@ class TestScenesSearch(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
-        "descarteslabs.scenes._search.Metadata.get_bands_by_product",
-        _metadata_get_bands_by_product,
+        "descarteslabs.scenes._search.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     def test_search_dltile(self):
         tile = geocontext.DLTile(
@@ -130,8 +130,8 @@ class TestScenesSearch(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
-        "descarteslabs.scenes._search.Metadata.get_bands_by_product",
-        _metadata_get_bands_by_product,
+        "descarteslabs.scenes._search.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     def test_search_no_products(self):
         sc, ctx = search(self.geom, limit=4)
@@ -140,8 +140,8 @@ class TestScenesSearch(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
     @mock.patch(
-        "descarteslabs.scenes._search.Metadata.get_bands_by_product",
-        _metadata_get_bands_by_product,
+        "descarteslabs.scenes._search.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     def test_search_datetime(self):
         start_datetime = datetime.datetime(2016, 7, 6)

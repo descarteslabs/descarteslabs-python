@@ -1,5 +1,7 @@
 import six
 
+import cachetools
+
 
 def polygon_from_bounds(bounds):
     "Return a GeoJSON Polygon dict from a (minx, miny, maxx, maxy) tuple"
@@ -60,3 +62,8 @@ def is_wgs84_crs(crs):
         or lower_crs.startswith('geodcrs["wgs 84"')
         or lower_crs.startswith('geodeticcrs["wgs 84"')
     )
+
+
+@cachetools.cached(cachetools.TTLCache(maxsize=256, ttl=600), key=lambda p, c: p)
+def cached_bands_by_product(product_id, metadata_client):
+    return metadata_client.get_bands_by_product(product_id)

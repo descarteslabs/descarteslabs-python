@@ -9,7 +9,7 @@ from descarteslabs.client.addons import ThirdParty
 from descarteslabs.scenes import Scene, SceneCollection, geocontext
 
 from .test_scene import MockScene
-from .mock_data import _metadata_get, _metadata_get_bands, _raster_ndarray
+from .mock_data import _metadata_get, _cached_bands_by_product, _raster_ndarray
 
 
 class TestSceneCollection(unittest.TestCase):
@@ -96,7 +96,8 @@ class TestSceneCollection(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_stack(self):
@@ -134,7 +135,7 @@ class TestSceneCollection(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+        "descarteslabs.scenes.scene.cached_bands_by_product", _cached_bands_by_product
     )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_stack_scaling(self):
@@ -162,7 +163,7 @@ class TestSceneCollection(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+        "descarteslabs.scenes.scene.cached_bands_by_product", _cached_bands_by_product
     )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_stack_flatten(self):
@@ -200,7 +201,7 @@ class TestSceneCollection(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+        "descarteslabs.scenes.scene.cached_bands_by_product", _cached_bands_by_product
     )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     @mock.patch(
@@ -222,7 +223,7 @@ class TestSceneCollection(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+        "descarteslabs.scenes.scene.cached_bands_by_product", _cached_bands_by_product
     )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_mosaic(self):
@@ -272,7 +273,7 @@ class TestSceneCollection(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+        "descarteslabs.scenes.scene.cached_bands_by_product", _cached_bands_by_product
     )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_mosaic_scaling(self):
@@ -300,7 +301,7 @@ class TestSceneCollection(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+        "descarteslabs.scenes.scene.cached_bands_by_product", _cached_bands_by_product
     )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_mosaic_no_alpha(self):
@@ -331,7 +332,7 @@ class TestSceneCollection(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.scenes.scene.Metadata.get_bands_by_id", _metadata_get_bands
+        "descarteslabs.scenes.scene.cached_bands_by_product", _cached_bands_by_product
     )
     @mock.patch("descarteslabs.scenes.scenecollection.Raster.ndarray", _raster_ndarray)
     def test_incompatible_dtypes(self):

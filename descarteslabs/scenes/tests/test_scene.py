@@ -14,7 +14,7 @@ from descarteslabs.scenes.scene import _strptime_helper
 
 from descarteslabs.client.services.metadata import Metadata
 
-from .mock_data import _metadata_get, _metadata_get_bands, _raster_ndarray
+from .mock_data import _metadata_get, _cached_bands_by_product, _raster_ndarray
 
 metadata_client = Metadata()
 
@@ -60,13 +60,13 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     def test_init(self):
         scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
         metadata = metadata_client.get(scene_id)
-        bands = metadata_client.get_bands_by_id(scene_id)
+        bands = _cached_bands_by_product(metadata["product"], metadata_client)
         # Scene constructor expects Feature (as returned by metadata.search)
         metadata = {
             "type": "Feature",
@@ -132,8 +132,9 @@ class TestScene(unittest.TestCase):
                 },
             ).default_ctx()
             warning = w[0]
-            assert "The GeoContext will *not* return this Scene's original data" in \
-                str(warning.message)
+            assert "The GeoContext will *not* return this Scene's original data" in str(
+                warning.message
+            )
         assert ctx.resolution == 2
 
         # north-up geotrans - bounds
@@ -168,15 +169,16 @@ class TestScene(unittest.TestCase):
                 },
             ).default_ctx()
             warning = w[0]
-            assert "The GeoContext will *not* return this Scene's original data" in \
-                str(warning.message)
+            assert "The GeoContext will *not* return this Scene's original data" in str(
+                warning.message
+            )
         diagonal = np.sqrt(2 ** 2 + 2 ** 2)
         assert ctx.bounds == (0, -diagonal / 2, diagonal, diagonal / 2)
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     def test_from_id(self):
         scene_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
@@ -188,8 +190,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_one_band(self):
@@ -206,8 +208,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     def test_nonexistent_band_fails(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
@@ -216,8 +218,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_different_band_dtypes(self):
@@ -230,8 +232,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_multiband(self):
@@ -244,8 +246,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_multiband_axis_last(self):
@@ -269,8 +271,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_load_nomask(self):
@@ -287,8 +289,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_auto_mask_alpha_false(self):
@@ -306,8 +308,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_mask_alpha_string(self):
@@ -326,8 +328,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_mask_missing_alpha(self):
@@ -344,8 +346,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_mask_missing_band(self):
@@ -362,8 +364,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def test_auto_mask_alpha_true(self):
@@ -377,8 +379,8 @@ class TestScene(unittest.TestCase):
 
     @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
     @mock.patch(
-        "descarteslabs.client.services.metadata.Metadata.get_bands_by_id",
-        _metadata_get_bands,
+        "descarteslabs.scenes.scene.cached_bands_by_product",
+        _cached_bands_by_product,
     )
     @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
     def with_alpha(self):
@@ -438,12 +440,16 @@ class TestScene(unittest.TestCase):
         # alpha ignored from common datatype
         assert s.scaling_parameters(["one", "alpha"], scaling=None)[1] == "UInt16"
         assert s.scaling_parameters(["alpha"], scaling=None)[1] == "Byte"
-        assert s.scaling_parameters(
+        assert (
+            s.scaling_parameters(
                 ["one", "two", "derived:three", "derived:one"], scaling=None
-            )[1] == \
-            "UInt16"
+            )[1]
+            == "UInt16"
+        )
         assert s.scaling_parameters(["one", "its_a_byte"], scaling=None)[1] == "UInt16"
-        assert s.scaling_parameters(["signed", "its_a_byte"], scaling=None)[1] == "Int16"
+        assert (
+            s.scaling_parameters(["signed", "its_a_byte"], scaling=None)[1] == "Int16"
+        )
         assert s.scaling_parameters(["one", "signed"], scaling=None)[1] == "Int32"
 
         with pytest.raises(ValueError, match="is not available"):
@@ -467,7 +473,9 @@ class TestScene(unittest.TestCase):
         scene = Scene(dict(id="foo", geometry=scene_geometry, properties={}), {})
 
         # same geometry (as a GeoJSON)
-        assert scene.coverage(scene_geometry.__geo_interface__) == pytest.approx(1.0, abs=1e-6)
+        assert scene.coverage(scene_geometry.__geo_interface__) == pytest.approx(
+            1.0, abs=1e-6
+        )
 
         # geom is larger
         geom_larger = shapely.geometry.Point(0.0, 0.0).buffer(2)

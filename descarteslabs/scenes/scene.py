@@ -59,6 +59,7 @@ from descarteslabs.common import shapely_support
 
 from . import geocontext
 from . import _download
+from ._helpers import cached_bands_by_product
 from . import _scaling
 
 
@@ -232,7 +233,9 @@ class Scene(object):
             "properties": metadata,
         }
 
-        bands = metadata_client.get_bands_by_id(scene_id)
+        bands = cached_bands_by_product(
+            metadata["properties"]["product"], metadata_client
+        )
         scene = cls(metadata, bands)
 
         return scene, scene.default_ctx()
