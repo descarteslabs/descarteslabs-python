@@ -409,7 +409,8 @@ class ImageCollectionGroupby(GenericProxytype):
         Returns
         -------
         mosaic: ImageCollection
-            The order of mosaicing is from last to first per group, meaning the last `Image` in the group's `ImageCollection` is on top.
+            The order of mosaicing is from last to first per group, meaning
+            the last `Image` in the group's `ImageCollection` is on top.
 
         Example
         -------

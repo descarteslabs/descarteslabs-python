@@ -12,15 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
 import json
-import os
 import re
-import sys
-import tempfile
 import pytest
 import unittest
-from shapely.geometry import shape
 
 from descarteslabs.client.addons import blosc, numpy as np, ThirdParty
 from descarteslabs.client.auth import Auth

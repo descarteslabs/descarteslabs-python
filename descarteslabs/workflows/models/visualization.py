@@ -55,7 +55,7 @@ class VizOption:
         ... scales=None,
         ... description='Median RGB composite'
         )
-        """
+        """  # noqa: E501
         if isinstance(bands, str):
             bands = [b for b in bands.split(" ") if b]
         message = visualization_pb2.VizOption(

@@ -186,6 +186,6 @@ def test_object_bad_channel():
 
     with pytest.raises(
         ValueError,
-        match=f"compatible with channel 'foo', but the SubPublished is only defined for channel 'bar'",
+        match="compatible with channel 'foo', but the SubPublished is only defined for channel 'bar'",
     ):
         pub.object
