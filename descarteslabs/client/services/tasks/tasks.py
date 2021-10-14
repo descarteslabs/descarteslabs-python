@@ -20,12 +20,10 @@ import importlib
 import inspect
 import io
 import itertools
-import json
 import logging
 import os
 import re
 import six
-from six.moves import zip_longest
 import sys
 import time
 from warnings import warn
@@ -39,7 +37,7 @@ except ImportError:
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.deprecation import deprecate_func
-from descarteslabs.client.exceptions import ConflictError
+from descarteslabs.client.exceptions import AuthError
 from descarteslabs.client.services.service import Service, ThirdPartyService
 from descarteslabs.common.dotdict import DotDict, DotList
 from descarteslabs.common.services.tasks.constants import (
@@ -159,6 +157,20 @@ class Tasks(Service):
         """
         return self._create_namespace()
 
+    def update_credentials(self):
+        """
+        Updates the credentials for the tasks run by this user. It updates the
+        authentication within the user's tasks namespace. If the user invalidates
+        existing credentials and needs to update them with new credentials, you
+        should call this method.
+
+        Note that when you create a new task group, your credentials are
+        automatically updated.
+
+        :return: `True` if successful, `False` otherwise.
+        """
+        return self._create_namespace()
+
     def new_group(
         self,
         function,
@@ -268,18 +280,10 @@ class Tasks(Service):
                 )
                 warn(PICKLE_DEPRECATION_MESSAGE.format(e), FutureWarning)
 
-            try:
-                r = self.session.post("/groups", json=payload)
-            except ConflictError as e:
-                error_message = json.loads(str(e))["message"]
-                if error_message != "namespace is missing authentication":
-                    raise
+            if not self._create_namespace():
+                raise AuthError("Cannot install credentials for task group")
 
-                if not self._create_namespace():
-                    raise
-
-                r = self.session.post("/groups", json=payload)
-
+            r = self.session.post("/groups", json=payload)
             group = r.json()
 
             if bundle_path is not None:
@@ -622,7 +626,7 @@ class Tasks(Service):
         )
         list_of_labels = list_of_labels if list_of_labels is not None else [None]
         msgs = []
-        for args, kwargs, labels in zip_longest(
+        for args, kwargs, labels in itertools.zip_longest(
             list_of_arguments, list_of_parameters, list_of_labels, fillvalue=None
         ):
             args = args or []
@@ -1649,7 +1653,7 @@ class CloudFunction(object):
         :return: A list of all submitted tasks.
         :rtype: list(descarteslabs.client.services.tasks.FutureTask)
         """
-        arguments = zip_longest(args, *iterargs)
+        arguments = itertools.zip_longest(args, *iterargs)
 
         futures = []
         batch = list(itertools.islice(arguments, self.TASK_SUBMIT_SIZE))

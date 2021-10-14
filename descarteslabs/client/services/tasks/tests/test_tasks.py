@@ -85,11 +85,6 @@ class TasksTest(ClientTestCase):
             # force pickling
             return sys.version_info
 
-        self.mock_response(
-            responses.POST,
-            {"error": 409, "message": "namespace is missing authentication"},
-            status=409,
-        )
         self.mock_response(responses.POST, {}, status=201)
         self.mock_response(responses.POST, {"id": "foo"})
         with warnings.catch_warnings(record=True) as w:
@@ -301,6 +296,7 @@ class TasksPackagingTest(ClientTestCase):
 
         upload_url = "https://storage.google.com/upload/b/dl-pex-storage/o/12345343"
         resp_json = {"id": 12345343, "upload_url": upload_url}
+        self.mock_response(responses.POST, status=201, json={})  # _create_namespace()
         self.mock_response(responses.POST, status=201, json=resp_json)
         responses.add(responses.PUT, upload_url, status=200)
         with mock.patch(
@@ -313,11 +309,11 @@ class TasksPackagingTest(ClientTestCase):
                 include_modules=[self.TEST_MODULE],
             )
 
-        body = responses.calls[0].request.body.decode(
+        body = responses.calls[1].request.body.decode(
             "utf-8"
         )  # prior to 3.6, json does not accept bytes
         call_args = json.loads(body)
-        bundle = responses.calls[1].request.body
+        bundle = responses.calls[2].request.body
         try:
             with ZipFile(bundle.name, mode="r") as zf:
                 assert len(zf.namelist()) > 0
@@ -333,6 +329,7 @@ class TasksPackagingTest(ClientTestCase):
 
         upload_url = "https://storage.google.com/upload/b/dl-pex-storage/o/12345343"
         resp_json = {"id": 12345343, "upload_url": upload_url}
+        self.mock_response(responses.POST, status=201, json={})  # _create_namespace()
         self.mock_response(responses.POST, status=201, json=resp_json)
         responses.add(responses.PUT, upload_url, status=200)
         with mock.patch(
@@ -343,11 +340,11 @@ class TasksPackagingTest(ClientTestCase):
                 "task-image",
             )
 
-        body = responses.calls[0].request.body.decode(
+        body = responses.calls[1].request.body.decode(
             "utf-8"
         )  # prior to 3.6, json does not accept bytes
         call_args = json.loads(body)
-        bundle = responses.calls[1].request.body
+        bundle = responses.calls[2].request.body
         try:
             with ZipFile(bundle.name, mode="r") as zf:
                 assert len(zf.namelist()) > 0
