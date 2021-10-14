@@ -38,10 +38,6 @@ message Asset {
   // Output only.
   string name = 2; 
   
-  // A UUID or similar unique string that identifies this asset.
-  // Output only.
-  string id = 1;
-
   // Relative name of the parent asset if it exsists, else "-".
   // See above note reguarding assets with no parents.
   //
