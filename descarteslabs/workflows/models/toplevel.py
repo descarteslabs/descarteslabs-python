@@ -16,6 +16,7 @@ def compute(
     _ruster=None,
     _trace=False,
     client=None,
+    num_retries=None,
     **arguments,
 ):
     """
@@ -56,6 +57,13 @@ def compute(
         Jupyter Notebooks, but not elsewhere. Ignored if ``block==False``.
     client: `.workflows.client.Client`, optional
         Allows you to use a specific client instance with non-default auth and parameters
+    num_retries: Int, optional
+        The number of retries to make in the event of a request failure. If you are making numerous long-running
+        asynchronous requests, you can use this parameter as a way to indicate that you are comfortable waiting
+        and retrying in response to RESOURCE EXHAUSTED errors. By default, most failures will trigger a small number
+        of retries, but if you have reached your outstanding job limit, by default, the client will not retry. This
+        parameter is unnecessary when making synchronous `compute` requests (ie. block=True, the default).
+        See the `compute section of the Workflows Guide </guides/workflows/compute.html>` for more information.
     **arguments: Any
         Values for all parameters that ``obj`` depends on (or arguments that ``obj`` takes,
         if it's a `.Function`). Can be given as Proxytypes, or as Python objects like numbers, lists,
@@ -131,6 +139,7 @@ def compute(
         _ruster=_ruster,
         _trace=_trace,
         client=client,
+        num_retries=num_retries,
         **arguments,
     )
     if block:
