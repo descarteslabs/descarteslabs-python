@@ -228,6 +228,45 @@ class GridTest(TestCase):
         assert len(tiles) > (est_ntiles // 2)
         assert len(tiles) < (est_ntiles * 2)
 
+    def test_tiles_from_shape_3(self):
+        params = {
+            "resolution": 1,
+            "tilesize": 128,
+            "pad": 8,
+        }
+        feature = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[
+                    [-122.51140471760839, 37.77130087547876],
+                    [-122.45475646845254, 37.77475476721895],
+                    [-122.45303985468301, 37.76657207194229],
+                    [-122.51057242081689, 37.763446782666094],
+                    [-122.51140471760839, 37.77130087547876]]
+                ]},
+            "properties": None
+        }
+
+        # Any object with a __geo_interface__ property
+        # e.g. wf.map.geocontext()
+        class MockWfContext(object):
+            @property
+            def __geo_interface__(self):
+                return feature
+
+        mock_context = MockWfContext()
+
+        grid = Grid(**params)
+        gen = Grid(**params).tiles_from_shape(mock_context)
+        tiles = [tile for tile in gen]
+        assert len(tiles) == len(set(tiles))
+        assert len(tiles) == 325
+
+        est_ntiles = grid._estimate_ntiles_from_shape(mock_context)
+        assert len(tiles) > (est_ntiles // 2)
+        assert len(tiles) < (est_ntiles * 2)
+
     def test_dlkeys_from_invalid_shape(self):
         params = {
             "resolution": 30,

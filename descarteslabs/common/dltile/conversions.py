@@ -16,14 +16,14 @@ AnyPoints = Union[List[geo.Point], geo.Point, dict, str, np.ndarray]
 def normalize_polygons(shape_or_shapes: AnyShapes) -> List[geo.base.BaseGeometry]:
     """ Given a collection of shapes in some format, try to make it into a
     list of shapely polygons. """
+    if isinstance(shape_or_shapes, str):
+        shape_or_shapes = json.loads(shape_or_shapes)
+
     if isinstance(shape_or_shapes, list):
         out = list()
         for item in shape_or_shapes:
             out.extend(normalize_polygons(item))
         return out
-
-    if isinstance(shape_or_shapes, str):
-        shape_or_shapes = json.loads(shape_or_shapes)
 
     if isinstance(shape_or_shapes, dict):
         if "geometry" in shape_or_shapes:
@@ -42,6 +42,14 @@ def normalize_polygons(shape_or_shapes: AnyShapes) -> List[geo.base.BaseGeometry
 
     elif isinstance(shape_or_shapes, geo.Polygon):
         return [shape_or_shapes]
+
+    elif isinstance(shape_or_shapes, geo.base.BaseGeometry):
+        raise InvalidShapeError(
+            "Geometries must be polygon or multipolygon, got %s" % type(shape_or_shapes)
+        )
+
+    elif hasattr(shape_or_shapes, "__geo_interface__"):
+        return normalize_polygons(shape_or_shapes.__geo_interface__)
 
     raise InvalidShapeError(
         "Could not normalize shape or shapes of type %s"
