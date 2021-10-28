@@ -20,7 +20,7 @@ import struct
 import time
 
 from tqdm import tqdm
-from urllib3.exceptions import ProtocolError
+from urllib3.exceptions import ProtocolError, IncompleteRead
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 from PIL import Image
@@ -190,13 +190,11 @@ def _retry(req, headers=None):
 
         try:
             return req(headers=headers)
-        except ProtocolError:
-            # generally an incomplete read, perhaps a timeout
-            if retry_count == MAX_RETRIES:
-                raise
-        except ServerError:
-            # can also arise from incomplete reads, or from server-side
-            # error while streaming, or the usual bad status
+        except (IncompleteRead, ProtocolError, ServerError):
+            # IncompleteRead: Response length doesn’t match expected Content-Length
+            # ProtocolError: Something unexpected happened mid-request/response
+            # ServerError: can also arise from incomplete reads, or from server-side
+            #   error while streaming, or the usual bad status
             if retry_count == MAX_RETRIES:
                 raise
 
