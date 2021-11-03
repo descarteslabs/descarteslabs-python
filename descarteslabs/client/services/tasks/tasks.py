@@ -482,9 +482,9 @@ class Tasks(Service):
         if name is not None:
             payload["name"] = name
         if cpus is not None:
-            payload["cpus"] = cpus
+            payload["cpu"] = cpus
         if gpus is not None:
-            payload["gpus"] = gpus
+            payload["gpu"] = gpus
         if memory is not None:
             payload["mem"] = str(memory)
         if maximum_concurrency is not None:
@@ -498,7 +498,6 @@ class Tasks(Service):
 
         payload.update(kwargs)
 
-        print(f"payload={payload}")
         r = self.session.patch(
             "/groups/{}".format(group_id),
             json=payload,
