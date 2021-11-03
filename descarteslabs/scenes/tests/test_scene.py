@@ -479,11 +479,11 @@ class TestScene(unittest.TestCase):
 
         # geom is larger
         geom_larger = shapely.geometry.Point(0.0, 0.0).buffer(2)
-        assert scene.coverage(geom_larger) == 0.25
+        assert scene.coverage(geom_larger) == pytest.approx(0.25, abs=1e-6)
 
         # geom is smaller
         geom_smaller = shapely.geometry.Point(0.0, 0.0).buffer(0.5)
-        assert scene.coverage(geom_smaller) == 1.0
+        assert scene.coverage(geom_smaller) == pytest.approx(1.0, abs=1e-6)
 
     @mock.patch("descarteslabs.scenes.scene._download._download")
     def test_download(self, mock_geotiff):
