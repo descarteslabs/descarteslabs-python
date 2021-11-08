@@ -17,20 +17,47 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
+## [Unreleased]
+
+## [1.9.0] - 2021-11-09
+
+### Catalog
+
+- Allow retrieving Attribute as a class attribute. It used to raise an exception.
+
+### Scenes
+
+- Fixed a bug preventing the user from writing JPEG files with smaller than 256x256 tiles.
+- Allow specifying a `NoData` value for non-JPEG GeoTIFF files.
+- Include band description metadata in created GeoTIFF files.
+- Support scaling parameters as lists as well as tuples.
+- Add caching of band metadata to drastically reduce the number of metadata queries when creating `SceneCollections`.
+- `DLTiles.from_shape` was failing to handle shape objects implementing the `__geo_interface__` API, most notably several of the Workflows `GeoContext` types. These now work as expected.
+- Certain kinds of network issues could read to rastering operations raising an `IncompleteRead` exception. This is now correctly caught and retried within the client library.
+
+### Tasks
+
+- Users can now use `descarteslabs.tasks.update_credentials()` to update their task credentials in case they became outdated.
+
+### Workflows
+
+- We have introduced a hard limit of 120 as the number of outstanding Workflows compute jobs that a single user can have. This limit exists to minimize situations in which a user is unable to complete jobs in a timely manner by ensuring resources cannot be monopolized by any individual user. The API that backs the calls to `compute` will return a `descarteslabs.client.grpc.exceptions.ResourceExhausted` error if the caller has too many outstanding jobs. Prior to this release (1.9.0), these failures would be retried up to some small retry limit. With the latest client release however, the client will fail without retrying on an HTTP 429 (rate limit exceeded) error. For users with large (non-interactive) workloads who don’t mind waiting, we added a new `num_retries` parameter to the `compute` function; when specified, the client will handle any 429 errors and retry up to `num_retries` times. 
+- Workflows is currently optimized for interactive use cases. If you are submitting large numbers of long-running Workflows compute jobs with `block=False`, you should consider using Tasks and Scenes rather than the Workflows API.
+- Removed `ResourceExhausted` exceptions from the list of exceptions we automatically catch and retry on for `compute` calls.
+
+### Documentation
+
+- Lots of improvements, additions, and clarifications in the API documentation.
+
 ## [1.8.2] - 2021-07-12
 
 ### General
 
-- Workflows client no longer validates `processing_level` parameter values, as these have been enhanced to support new products
-  and can only be validated server side.
+- Workflows client no longer validates `processing_level` parameter values, as these have been enhanced to support new products and can only be validated server side.
 - Catalog V2 bands now support the `vendor_band_name` field (known as `name_vendor` in Metadata/Catalog V1).
-- Scenes support for masking in version 1.8.1 had some regressions which have been fixed. For this reason, version
-  1.8.1 has been pulled from PyPI.
-- New task groups now default to a `maximum_concurrency` value of 5, rather than the previous 500. This avoids the common
-  problem of deploying a task group with newly developed code, and having it scale up and turning small problems into
-  big problems! You may still set values as large as 500.
-- The Tasks client now provides an `update_group()` method which can be used to update many properties of an existing
-  task group, including but not limited to `name`, `image`, `minimum_concurrency`, and `maximum_concurrency`.
+- Scenes support for masking in version 1.8.1 had some regressions which have been fixed. For this reason, version 1.8.1 has been pulled from PyPI.
+- New task groups now default to a `maximum_concurrency` value of 5, rather than the previous 500. This avoids the common problem of deploying a task group with newly developed code, and having it scale up and turning small problems into big problems! You may still set values as large as 500.
+- The Tasks client now provides an `update_group()` method which can be used to update many properties of an existing task group, including but not limited to `name`, `image`, `minimum_concurrency`, and `maximum_concurrency`.
 - Improved testing across several sub-packages.
 - Various documentation fixes.
 
