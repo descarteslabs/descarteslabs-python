@@ -199,10 +199,9 @@ message AccessGrant {
 } 
 
 // Entity holding access to an asset
-// Currently we only support "user-email" and "user-id".
 message Entity {
-  // Type of entity holding the permission, at present, only
-  // valid option is `user-email`.
+  // Type of entity holding the permission. 
+  // Valid options are `user-email` and `organization`.
   //
   // In the future we might also support 
   // * `group-id`
