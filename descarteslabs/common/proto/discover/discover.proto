@@ -209,8 +209,9 @@ message Entity {
   // * `allUsers`
   string type = 1;
 
-  // name of the entity, currently only an email address is valid 
-  // for example: some_user@gmail.com
+  // Name of the entity.
+  // Currently either an email address or an org name is valid.
+  // For example, `some_user@gmail.com` or `descarteslabs`
   string id = 2;
 }
 
