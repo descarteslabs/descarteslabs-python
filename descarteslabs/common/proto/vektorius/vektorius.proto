@@ -144,8 +144,8 @@ message CreateTableRequest {
   // SRID for postgis geometry
   int32 srid = 4;
 
-  // Field name of a unique
-  string primary_key = 5;
+  // Field name of unique key(s)
+  repeated string primary_key = 5;
 }
 
 message CreateTableResponse {

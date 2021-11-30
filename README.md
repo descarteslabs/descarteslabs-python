@@ -19,6 +19,10 @@ Changelog
 =========
 ## [Unreleased]
 
+### Tables
+
+- Allow multiple columns to be used as a composite key when creating a table.
+
 ## [1.9.0] - 2021-11-09
 
 ### Catalog
