@@ -95,6 +95,7 @@ def do_setup():
             "grpcio>=1.35.0,<2",
             "imagecodecs>=2020.5.30;python_version<'3.7'",
             "imagecodecs>=2021.5.20;python_version>='3.7'",
+            "lazy_object_proxy>=1.4.1",
             "mercantile>=1.1.3",
             "numpy>=1.18.1",
             "Pillow>=8.1.1",

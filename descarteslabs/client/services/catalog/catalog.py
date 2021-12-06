@@ -5,12 +5,15 @@ import io
 from tempfile import NamedTemporaryFile
 from requests.exceptions import RequestException
 
+import lazy_object_proxy
+
 from descarteslabs.client.addons import numpy as np
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.deprecation import check_deprecated_kwargs
 from descarteslabs.client.exceptions import ServerError, NotFoundError
 from descarteslabs.client.services.metadata import Metadata
 from descarteslabs.client.services.service import Service, ThirdPartyService
+from descarteslabs.client.deprecation import deprecate_func
 
 
 class Catalog(Service):
@@ -39,6 +42,7 @@ class Catalog(Service):
     ]
     TIMEOUT = (9.5, 30)
 
+    @deprecate_func("REST-style Catalog client is deprecated, please use Object-Oriented Catalog instead.")
     def __init__(self, url=None, auth=None, metadata=None, retries=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
@@ -1843,4 +1847,7 @@ class Catalog(Service):
         return False, upload_id, None
 
 
-catalog = Catalog(auth=Auth(_suppress_warning=True))
+# Don't warn until called by user
+catalog = lazy_object_proxy.Proxy(
+    lambda: Catalog(auth=Auth())
+)
