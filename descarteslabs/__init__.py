@@ -39,6 +39,7 @@ from .client.auth import Auth
 from .client.services import *  # noqa: F403
 from .client.version import __version__
 from .common.property_filtering import GenericProperties
+import lazy_object_proxy
 
 try:
     from . import scenes
@@ -62,7 +63,8 @@ places = Places(auth=descartes_auth)  # noqa: F405
 raster = Raster(auth=descartes_auth)  # noqa: F405
 storage = Storage(auth=descartes_auth)  # noqa: F405
 tasks = Tasks(auth=descartes_auth)  # noqa: F405
-vector = Vector(auth=descartes_auth)  # noqa: F405
+# proxy object to suppress warnings
+vector = lazy_object_proxy.Proxy(lambda: Vector(auth=descartes_auth))  # noqa: F405
 properties = GenericProperties()
 
 __all__ = [

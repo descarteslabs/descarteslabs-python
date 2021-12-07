@@ -9,6 +9,7 @@ from descarteslabs.client.services.service import JsonApiService, ThirdPartyServ
 from descarteslabs.client.auth import Auth
 from descarteslabs.common.dotdict import DotDict
 from descarteslabs.common.shapely_support import shapely_to_geojson
+from descarteslabs.client.deprecation import deprecate_func
 
 
 class _SearchFeaturesIterator(object):
@@ -93,6 +94,7 @@ class Vector(JsonApiService):
     SEARCH_PAGE_SIZE = 1000
     properties = GenericProperties()
 
+    @deprecate_func("Vector is deprecated, please use Tables instead")
     def __init__(self, url=None, auth=None):
         """
         :param str url: A HTTP URL pointing to a version of the storage service
