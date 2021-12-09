@@ -21,7 +21,7 @@ from descarteslabs.common.ibis.serialization.compiler import (
     make_query,
 )
 
-from ..compiler import (
+from descarteslabs.common.ibis.deserialization.compiler import (
     all_equal,
     Deserializer,
     LiteralDeserializer,
@@ -32,7 +32,11 @@ from ..compiler import (
     QueryDeserializer,
     AstDeserializer,
 )
-from ..exceptions import LiteralDeserializationError, OperationError, DataTypeError
+from descarteslabs.common.ibis.deserialization.exceptions import (
+    LiteralDeserializationError,
+    OperationError,
+    DataTypeError,
+)
 
 
 def test_expr():

@@ -8,7 +8,7 @@ import ibis.expr.schema as sch
 import ibis.expr.types as ir
 import ibis.client
 
-from ..compiler import AstDeserializer
+from descarteslabs.common.ibis.deserialization.compiler import AstDeserializer
 from descarteslabs.common.ibis.serialization.compiler import AstSerializer, make_query
 
 
