@@ -121,6 +121,7 @@ def do_setup():
                 "markdown2>=2.4.0,<3",
             ],
             "tests": [
+                "geopandas>=0.10.2",
                 "hypothesis[numpy]==5.7.0",
                 "mock",
                 "pytest==6.0.0",
