@@ -11,7 +11,7 @@ import ibis.util as util
 # in order to support both a pinned master commit of ibis-framework
 # and the official 1.4.0 tag we need some conditional imports due to
 # refactors done between the pinned commit and the 1.4.0 release
-# TODO: refactor so that we no longer rely on pinned commit:
+# TODO: refactor so that we no longer have to rely on pinned commit:
 # b46c60bbb4ee5e9b809a9c83cf4da79a0856b025
 try:
     # 1.4.0
