@@ -199,7 +199,7 @@ class Tables(object):
 
         return schema, srid
 
-    def create_table(self, table_name, schema, srid, primary_key=None):
+    def create_table(self, table_name, schema, srid, primary_key):
         """
         :param str table_name: name of table
         :param str schema: schema mapping
@@ -210,7 +210,7 @@ class Tables(object):
         :rtype: str
         """
 
-        if primary_key and not isinstance(primary_key, list):
+        if not isinstance(primary_key, list):
             primary_key = [primary_key]
 
         # TODO can we avoid reaching into the `ibis` serializer
