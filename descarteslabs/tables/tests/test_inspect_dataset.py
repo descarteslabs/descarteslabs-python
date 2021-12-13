@@ -2,7 +2,11 @@ import json
 import sys
 
 import pytest
-import geopandas as gpd
+
+try:
+    import geopandas as gpd
+except ImportError:
+    gpd = None
 
 from descarteslabs.tables.client import Tables
 
@@ -52,7 +56,11 @@ def df():
             },
         ],
     }
-    df = gpd.GeoDataFrame.from_features(collection)
+    if gpd:
+        df = gpd.GeoDataFrame.from_features(collection)
+    else:
+        return
+
     return df.astype(
         {
             "timestamp": "datetime64[ns]",
@@ -65,65 +73,67 @@ def df():
 
 
 def test_inspect_dataset_df(t, df):
-    schema, srid = t.inspect_dataset(df)
+    if df is not None:
+        schema, srid = t.inspect_dataset(df)
 
-    # Caveats:
-    # There's no reliable way to determine if a column with dtype(object)
-    # is a string, a list or a dict without iterating through the data.
-    # We have to default to string/text, otherwise strings could be misinterpretted
-    # as lists of chars. Instead, JSON objects get misinterpreted as strings, a lesser evil.
-    # This is why we should always manually confirm the schema before creating table!!
+        # Caveats:
+        # There's no reliable way to determine if a column with dtype(object)
+        # is a string, a list or a dict without iterating through the data.
+        # We have to default to string/text, otherwise strings could be misinterpretted
+        # as lists of chars. Instead, JSON objects get misinterpreted as strings, a lesser evil.
+        # This is why we should always manually confirm the schema before creating table!!
 
-    expected_schema = {
-        "properties": {
-            "id": "int",
-            "ele": "float",
-            "name": "text",
-            "timestamp": "datetime",
-            # TODO:
-            # known limitations of running inspect_dataset on pandas dataframes
-            # date should be a date-only (not a full precision datetime)
-            "date": "datetime",
-            # dicts and lists should be json but can't tell based on dtype alone
-            "metadata": "text",  # json
-            "array": "text",  # json
-        },
-        "geometry": "Point",
-    }
+        expected_schema = {
+            "properties": {
+                "id": "int",
+                "ele": "float",
+                "name": "text",
+                "timestamp": "datetime",
+                # TODO:
+                # known limitations of running inspect_dataset on pandas dataframes
+                # date should be a date-only (not a full precision datetime)
+                "date": "datetime",
+                # dicts and lists should be json but can't tell based on dtype alone
+                "metadata": "text",  # json
+                "array": "text",  # json
+            },
+            "geometry": "Point",
+        }
 
-    # TODO, crs for dataframes is not reported correctly, resulting in srid=0
-    # assert srid == 4326
+        # TODO, crs for dataframes is not reported correctly, resulting in srid=0
+        # assert srid == 4326
 
-    assert schema == expected_schema
+        assert schema == expected_schema
 
 
 def test_inspect_dataset_file(t, df):
-    # Create a geojson file
-    # Hacks for timestamp
-    df = df.astype({"date": "str", "timestamp": "str"})
-    path = "/tmp/test.geojson"
-    with open(path, mode="w") as fh:
-        fh.write(json.dumps(df.__geo_interface__))
+    if df is not None:
+        # Create a geojson file
+        # Hacks for timestamp
+        df = df.astype({"date": "str", "timestamp": "str"})
+        path = "/tmp/test.geojson"
+        with open(path, mode="w") as fh:
+            fh.write(json.dumps(df.__geo_interface__))
 
-    schema, srid = t.inspect_dataset(path)
-    expected_schema = {
-        "properties": {
-            "id": "int",
-            "ele": "float",
-            "name": "str",
-            "date": "date",
-            "timestamp": "datetime",
-            # TODO:
-            # Bug in fiona: properties with dicts are reported as str
-            # Note, because this comes from fiona, we accept 'str' as an alias for 'text'
-            "metadata": "str",
-            # Bug in fiona: properties with lists are dropped from the schema
-            # "array": "json",
-        },
-        "geometry": "Point",
-    }
-    assert srid == 4326
-    assert schema == expected_schema
+        schema, srid = t.inspect_dataset(path)
+        expected_schema = {
+            "properties": {
+                "id": "int",
+                "ele": "float",
+                "name": "str",
+                "date": "date",
+                "timestamp": "datetime",
+                # TODO:
+                # Bug in fiona: properties with dicts are reported as str
+                # Note, because this comes from fiona, we accept 'str' as an alias for 'text'
+                "metadata": "str",
+                # Bug in fiona: properties with lists are dropped from the schema
+                # "array": "json",
+            },
+            "geometry": "Point",
+        }
+        assert srid == 4326
+        assert schema == expected_schema
 
 
 def test_inspect_dataset_no_geo(t, df):
