@@ -1,5 +1,4 @@
 import json
-import sys
 
 import pytest
 
@@ -16,64 +15,64 @@ def t():
     return Tables()
 
 
-@pytest.fixture
-def df():
+# We want to only want to test on systems that do  have geopandas (linux)
+# and skip these tests on systems that don't (windows). The tests will pass through
+# but until the user also installs Tables they won't get the dependencies.
+if gpd:
 
-    collection = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "properties": {
-                    "id": 123,
-                    "ele": 12.3,
-                    "name": "Cave",
-                    "metadata": {"type": "cave_entrance"},
-                    "date": "2020-12-02",
-                    "timestamp": "2021-09-16T18:24:48Z",
-                    "array": [1, 2, 3],
-                },
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [-0.01943, 5.881694],
-                },
-            },
-            {
-                "type": "Feature",
-                "properties": {
-                    "id": 124,
-                    "ele": 12.4,
-                    "name": "Cave2",
-                    "metadata": {},
-                    "date": "2020-12-02",
-                    "timestamp": "2021-09-16T18:24:48Z",
-                    "array": [],
-                },
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [-0.01993, 5.81137],
-                },
-            },
-        ],
-    }
-    if gpd:
-        df = gpd.GeoDataFrame.from_features(collection)
-    else:
-        return
+    @pytest.fixture
+    def df():
 
-    return df.astype(
-        {
-            "timestamp": "datetime64[ns]",
-            "date": "datetime64",
-            "name": "str",
-            "array": "object",
-            "metadata": "object",
+        collection = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "id": 123,
+                        "ele": 12.3,
+                        "name": "Cave",
+                        "metadata": {"type": "cave_entrance"},
+                        "date": "2020-12-02",
+                        "timestamp": "2021-09-16T18:24:48Z",
+                        "array": [1, 2, 3],
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-0.01943, 5.881694],
+                    },
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "id": 124,
+                        "ele": 12.4,
+                        "name": "Cave2",
+                        "metadata": {},
+                        "date": "2020-12-02",
+                        "timestamp": "2021-09-16T18:24:48Z",
+                        "array": [],
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-0.01993, 5.81137],
+                    },
+                },
+            ],
         }
-    )
+        df = gpd.GeoDataFrame.from_features(collection)
 
+        return df.astype(
+            {
+                "timestamp": "datetime64[ns]",
+                "date": "datetime64",
+                "name": "str",
+                "array": "object",
+                "metadata": "object",
+            }
+        )
 
-def test_inspect_dataset_df(t, df):
-    if df is not None:
+    def test_inspect_dataset_df(t, df):
         schema, srid = t.inspect_dataset(df)
 
         # Caveats:
@@ -105,9 +104,7 @@ def test_inspect_dataset_df(t, df):
 
         assert schema == expected_schema
 
-
-def test_inspect_dataset_file(t, df):
-    if df is not None:
+    def test_inspect_dataset_file(t, df):
         # Create a geojson file
         # Hacks for timestamp
         df = df.astype({"date": "str", "timestamp": "str"})
@@ -134,9 +131,3 @@ def test_inspect_dataset_file(t, df):
         }
         assert srid == 4326
         assert schema == expected_schema
-
-
-def test_inspect_dataset_no_geo(t, df):
-    sys.modules["fiona"] = None
-    with pytest.raises(ImportError):
-        t.inspect_dataset(df)
