@@ -2,13 +2,16 @@ from abc import ABC, abstractmethod
 
 from dataclasses import dataclass
 import re
-from typing import List, Optional, Generator
+from typing import Generator, List, NewType, Optional, Union
 import warnings
 
 from descarteslabs.common.discover import DiscoverGrpcClient
 from descarteslabs.common.proto.discover import discover_pb2
 
-ENTITY_TYPE = "user-email"
+ENTITY_TYPE_USER_EMAIL = "user-email"
+USER_EMAIL_PREFIX = "email:"
+ENTITY_TYPE_ORGANIZATION = "organization"
+ORG_PREFIX = "org:"
 NAME_SEPARATOR = ":~/"
 PATH_SEPARATOR = "/"
 DISCOVER_EDITOR = "discover/role/editor"
@@ -22,6 +25,58 @@ ALLOWABLE_BLOB_ROLES = {STORAGE_VIEWER, STORAGE_EDITOR}
 ALLOWABLE_VECTOR_ROLES = {VECTOR_VIEWER, VECTOR_EDITOR}
 
 
+_UserEmail = NewType("UserEmail", str)
+_Organization = NewType("Organization", str)
+
+
+# Ensures that the email is always prefixed with "email:"
+def UserEmail(email: str) -> _UserEmail:
+    email = email.lower()
+    return (
+        f"{USER_EMAIL_PREFIX}{email}"
+        if not email.startswith(USER_EMAIL_PREFIX)
+        else email
+    )
+
+
+# Ensures that the Organization is always prefixed with "org:"
+# NOTE: While user emails are not case-sensitive, Organizations are.
+def Organization(organization: str) -> _Organization:
+    return (
+        f"{ORG_PREFIX}{organization}"
+        if not organization.startswith(ORG_PREFIX)
+        else organization
+    )
+
+
+# ShareTargets can either be emails in string format,
+# or users can explicitly indicate intended type with UserEmail and Organization helpers
+ShareTarget = Union[str, _UserEmail, _Organization]
+
+
+# if the entity starts with anything other than `org:`, assume user-email.
+def _get_entity_type(target: ShareTarget) -> str:
+    return (
+        ENTITY_TYPE_ORGANIZATION
+        if target.startswith(ORG_PREFIX)
+        else ENTITY_TYPE_USER_EMAIL
+    )
+
+
+# removes prefix from entity
+def _strip_entity(target: str) -> str:
+    parts = target.split(":")
+    if len(parts) == 1:
+        return target
+    elif len(parts) == 2:
+        return parts[1]
+    else:
+        raise ValueError(
+            f"Invalid share target specified: {target}."
+            'Some examples of acceptable targets: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")'
+        )
+
+
 @dataclass
 class AccessGrant:
     """
@@ -32,14 +87,14 @@ class AccessGrant:
     ----------
     asset_name
         The asset the access grant is for
-    user_id
-        The group/user to give access to
+    target_id
+        The user or organization to give access to
     access
-        The role the user should have
+        The role the user or organization should have
     """
 
     asset_name: str
-    user_id: str
+    target_id: str
     access: str
 
     @classmethod
@@ -59,7 +114,7 @@ class AccessGrant:
         """
         return cls(
             asset_name=response.access_grant.asset_name,
-            user_id=response.access_grant.entity.id,
+            target_id=response.access_grant.entity.id,
             access=response.access_grant.access,
         )
 
@@ -159,16 +214,18 @@ class _DiscoverRequestBuilder(ABC):
     def _resolve_name(self, asset_name: str) -> str:
         raise NotImplementedError()
 
-    def share(self, with_: str, as_: str) -> AccessGrant:
+    def share(self, with_: ShareTarget, as_: str) -> AccessGrant:
         """
         Adds access grant for an asset by specifying who to share with and as what role.
 
         Parameters
         ----------
-        with_ : str
-            Email of the group or user to give access to.
+        with_ : ShareTarget
+            Email or Organization to give access to.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
-            Type of access the group or user should be given.
+            Type of access the user or organization should be given.
 
         Returns
         -------
@@ -183,7 +240,17 @@ class _DiscoverRequestBuilder(ABC):
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data.json',
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
+            access='storage/role/editor'
+        )
+
+        >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data.json").share(
+        ...     with_=Organization("myorg"),
+        ...     as_="editor" # or "viewer"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data.json',
+            target_id='myorg',
             access='storage/role/editor'
         )
 
@@ -193,7 +260,7 @@ class _DiscoverRequestBuilder(ABC):
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name='asset/folder/ec1fa4ec361494e0e3f80feed065fc2f',
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
             access='discover/role/viewer'
         )
         """
@@ -210,27 +277,34 @@ class _DiscoverRequestBuilder(ABC):
                 "and you can only assign access grants to blobs, vectors, and folders."
             )
 
-    def revoke(self, from_: str, as_: str):
+    def revoke(self, from_: ShareTarget, as_: str):
         """
         Removes access grant for an asset by specifying who to revoke from and what role is being removed.
         If the role does not exist, revoke does nothing.
 
         Parameters
         ----------
-        from_ : str
-            Email of the group or user to remove access from.
+        from_ : ShareTarget
+            Email or Organization to remove access from.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
-            Type of access that should be removed from the group or user.
+            Type of access that should be removed from the user or organization.
 
         Examples
         --------
         >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data.json").revoke(
-        ...     from_="colleague@company.com",
+        ...     from_=UserEmail("colleague@company.com"),
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
 
         >>> discover.folder("asset/folder/ec1fa4ec361494e0e3f80feed065fc2f").revoke(
         ...     from_="colleague@company.com",
+        ...     as_="editor" # or "viewer"
+        ... ) # doctest: +SKIP
+
+        >>> discover.folder("asset/folder/ec1fa4ec361494e0e3f80feed065fc2f").revoke(
+        ...     from_=Organization("myorg"),
         ...     as_="editor" # or "viewer"
         ... ) # doctest: +SKIP
         """
@@ -258,17 +332,21 @@ class _DiscoverRequestBuilder(ABC):
 
         self.discover.remove_access_grant(self.asset_name, from_, as_)
 
-    def replace_shares(self, user: str, from_role: str, to_role: str) -> AccessGrant:
+    def replace_shares(
+        self, user: ShareTarget, from_role: str, to_role: str
+    ) -> AccessGrant:
         """
         Replaces access grant for an asset by specifying the group or user,
         what role the user has and what role the user should be given.
 
         Parameters
         ----------
-        user : str
-            Email of the group or user to replace access for.
+        user : ShareTarget
+            Email or Organization to replace access for.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         from_role : str
-            Type of access the user currently has.
+            Type of access the user or organization currently has.
         to_role : str
             Type of access that should replace the current role.
 
@@ -280,13 +358,13 @@ class _DiscoverRequestBuilder(ABC):
         Examples
         --------
         >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data.json").replace_shares(
-        ...     user="colleague@company.com",
+        ...     user=UserEmail("colleague@company.com"),
         ...     from_role="viewer",
         ...     to_role="editor"
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data.json',
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
             access='storage/role/editor'
         )
 
@@ -297,7 +375,7 @@ class _DiscoverRequestBuilder(ABC):
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name='asset/folder/ec1fa4ec361494e0e3f80feed065fc2f',
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
             access='discover/role/editor'
         )
         """
@@ -313,7 +391,7 @@ class _DiscoverRequestBuilder(ABC):
         else:
             raise ValueError(
                 f"The role '{to_role}' is invalid. Roles must be of type viewer or editor, "
-                "and you can only assign access grants to blobs, vectors, and folders."
+                "and you can only assign access grants to blobs, vectors and folders."
             )
 
     def list_shares(self) -> List[AccessGrant]:
@@ -333,17 +411,17 @@ class _DiscoverRequestBuilder(ABC):
         [
             AccessGrant(
                 asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.geojson',
-                user_id='user1@company.com',
+                target_id='user1@company.com',
                 access='storage/role/owner'
             ),
             AccessGrant(
                 asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.geojson',
-                user_id='user2@company.com',
+                target_id='user2@company.com',
                 access='storage/role/viewer'
             ),
             AccessGrant(
                 asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.geojson',
-                user_id='user3@company.com',
+                target_id='user3@company.com',
                 access='storage/role/viewer'
             )
         ]
@@ -354,22 +432,22 @@ class _DiscoverRequestBuilder(ABC):
         [
             AccessGrant(
                 asset_name='asset/folder/ec1fa4ec361494e0e3f80feed065fc2f',
-                user_id='user1@company.com',
+                target_id='user1@company.com',
                 access='discover/role/owner'
             ),
             AccessGrant(
                 asset_name='asset/folder/ec1fa4ec361494e0e3f80feed065fc2f',
-                user_id='user2@company.com',
+                target_id='user2@company.com',
                 access='discover/role/viewer'
             ),
             AccessGrant(
                 asset_name='asset/folder/ec1fa4ec361494e0e3f80feed065fc2f',
-                user_id='user3@company.com',
+                target_id='user3@company.com',
                 access='discover/role/viewer'
             )
         ]
-
         """
+
         return self.discover.list_access_grants(self.asset_name)
 
     def get(self) -> Asset:
@@ -403,6 +481,7 @@ class _DiscoverRequestBuilder(ABC):
             parent_asset_name='asset/namespace/4ec36180feed065fc2f494e0e3fec1fa'
         )
         """
+
         return self.discover.get_asset(self.asset_name)
 
     def update(
@@ -446,6 +525,7 @@ class _DiscoverRequestBuilder(ABC):
             parent_asset_name='asset/namespace/4ec36180feed065fc2f494e0e3fec1fa'
         )
         """
+
         return self.discover.update_asset(self.asset_name, display_name, description)
 
     def move(self, to: Optional["Folder"] = None) -> Asset:
@@ -483,6 +563,7 @@ class _DiscoverRequestBuilder(ABC):
             parent_asset_name='asset/folder/ec1fa4ec361494e0e3f80feed065fc2f'
         )
         """
+
         new_parent = None
         if to is not None:
             new_parent = to.asset_name
@@ -506,6 +587,7 @@ def _bad_asset_shape_error(asset_name: str, asset_type: str) -> ValueError:
     ValueError
         Error that explains what a good path looks like for the given asset.
     """
+
     if asset_type == "blob":
         error_english = (
             "A well-formed path should include a user ID, as well as a colon and a tilda separator, eg. "
@@ -545,6 +627,7 @@ def _is_valid_uuid(uuid: str, num_chars: int) -> bool:
     bool
         Returns True if the uuid is `num_chars` characters long and contains all valid hex characters, otherwise False.
     """
+
     # Don't use double brackets or sphinx will fail when viewing the source code
     left_curly_bracket = "{"
     right_curly_bracket = "}"
@@ -639,6 +722,7 @@ class Blob(_DiscoverRequestBuilder):
         asset_name : str
             Path of the asset being resolved.
         """
+
         type_ = self._type()
         parts = asset_name.split(NAME_SEPARATOR)
         namespace = None
@@ -687,24 +771,44 @@ class Blob(_DiscoverRequestBuilder):
         Parameters
         ----------
         with_ : str
-            Email of the group or user to give access to.
+            UserEmail or Organization to give access to.
         as_ : str
-            Type of access the group or user should be given.
+            Type of access the user or organization should be given.
 
         Returns
         -------
         access_grant : AccessGrant
             Access grant that was added.
 
-        Example
-        -------
+        Examples
+        --------
         >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json").share(
         ...     with_="colleague@company.com",
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name="asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json",
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
+            access='storage/role/viewer'
+        )
+
+        >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json").share(
+        ...     with_=UserEmail("colleague@company.com"),
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name="asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json",
+            target_id='colleague@company.com',
+            access='storage/role/viewer'
+        )
+
+        >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json").share(
+        ...     with_=Organization("myorg"),
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name="asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json",
+            target_id='myorg',
             access='storage/role/viewer'
         )
         """
@@ -719,14 +823,24 @@ class Blob(_DiscoverRequestBuilder):
         Parameters
         ----------
         from_ : str
-            Email of the group or user to remove access from.
+            UserEmail or Organization to remove access from.
         as_ : str
-            Type of access that should be removed from the group or user.
+            Type of access that should be removed from the user or organization.
 
-        Example
-        -------
+        Examples
+        --------
         >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json").revoke(
         ...     from_="colleague@company.com",
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+
+        >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json").revoke(
+        ...     from_=UserEmail("colleague@company.com"),
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+
+        >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json").revoke(
+        ...     from_=Organization("colleague@company.com"),
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
         """
@@ -735,15 +849,15 @@ class Blob(_DiscoverRequestBuilder):
 
     def replace_shares(self, user: str, from_role: str, to_role: str) -> AccessGrant:
         """
-        Replaces access grant for an asset by specifying the group or user,
-        what role the user has and what role the user should be given.
+        Replaces access grant for an asset by specifying the user or organization,
+        what role the user or org has and what role the user or org should be given.
 
         Parameters
         ----------
         user : str
-            Email of the group or user to replace access for.
+            UserEmail or Organization to replace access for.
         from_role : str
-            Type of access the user currently has.
+            Type of access the user or organization currently has.
         to_role : str
             Type of access that should replace the current role.
 
@@ -752,8 +866,8 @@ class Blob(_DiscoverRequestBuilder):
         access_grant : AccessGrant
             Access grant that the previous access grant was replaced with.
 
-        Example
-        -------
+        Examples
+        --------
         >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json").replace_shares(
         ...     user="colleague@company.com",
         ...     from_role="viewer",
@@ -761,7 +875,29 @@ class Blob(_DiscoverRequestBuilder):
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json',
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
+            access='storage/role/editor'
+        )
+
+        >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json").replace_shares(
+        ...     user=UserEmail("colleague@company.com"),
+        ...     from_role="viewer",
+        ...     to_role="editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json',
+            target_id='colleague@company.com',
+            access='storage/role/editor'
+        )
+
+        >>> discover.blob("asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json").replace_shares(
+        ...     user=Organization("myorg"),
+        ...     from_role="viewer",
+        ...     to_role="editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json',
+            target_id='myorg',
             access='storage/role/editor'
         )
         """
@@ -785,6 +921,7 @@ class Folder(_DiscoverRequestBuilder):
         asset_name : str
             Path of the asset being resolved.
         """
+
         type_ = self._type()
         parts = asset_name.split(PATH_SEPARATOR)
 
@@ -814,24 +951,44 @@ class Folder(_DiscoverRequestBuilder):
         Parameters
         ----------
         with_ : str
-            Email of the group or user to give access to.
+            UserEmail or Organization to give access to.
         as_ : str
-            Type of access the group or user should be given.
+            Type of access the user or organization should be given.
 
         Returns
         -------
         access_grant : AccessGrant
             Access grant that was added.
 
-        Example
-        -------
+        Examples
+        --------
         >>> discover.folder("asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f").share(
         ...     with_="colleague@company.com",
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name='asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f',
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
+            access='discover/role/viewer'
+        )
+
+        >>> discover.folder("asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f").share(
+        ...     with_=UserEmail("colleague@company.com"),
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name='asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f',
+            target_id='colleague@company.com',
+            access='discover/role/viewer'
+        )
+
+        >>> discover.folder("asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f").share(
+        ...     with_=Organization("myorg"),
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name='asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f',
+            target_id='myorg',
             access='discover/role/viewer'
         )
         """
@@ -846,14 +1003,24 @@ class Folder(_DiscoverRequestBuilder):
         Parameters
         ----------
         from_ : str
-            Email of the group or user to remove access from.
+            UserEmail or Organization to remove access from.
         as_ : str
-            Type of access that should be removed from the group or user.
+            Type of access that should be removed from the user or organization.
 
-        Example
-        -------
+        Examples
+        --------
         >>> discover.folder("asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f").revoke(
         ...     from_="colleague@company.com",
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+
+        >>> discover.folder("asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f").revoke(
+        ...     from_=UserEmail("colleague@company.com"),
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+
+        >>> discover.folder("asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f").revoke(
+        ...     from_=Organization("myorg"),
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
         """
@@ -862,15 +1029,15 @@ class Folder(_DiscoverRequestBuilder):
 
     def replace_shares(self, user: str, from_role: str, to_role: str) -> AccessGrant:
         """
-        Replaces access grant for an asset by specifying the group or user,
-        what role the user has and what role the user should be given.
+        Replaces access grant for an asset by specifying the user or organization,
+        what role the user or org has and what role the user or org should be given.
 
         Parameters
         ----------
         user : str
-            Email of the group or user to replace access for.
+            UserEmail or Organization to replace access for.
         from_role : str
-            Type of access the user currently has.
+            Type of access the user or organization currently has.
         to_role : str
             Type of access that should replace the current role.
 
@@ -879,8 +1046,8 @@ class Folder(_DiscoverRequestBuilder):
         access_grant : AccessGrant
             Access grant that the previous access grant was replaced with.
 
-        Example
-        -------
+        Examples
+        --------
         >>> discover.folder("asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f").replace_shares(
         ...     user="colleague@company.com",
         ...     from_role="viewer",
@@ -888,7 +1055,29 @@ class Folder(_DiscoverRequestBuilder):
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name='asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f',
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
+            access='discover/role/editor'
+        )
+
+        >>> discover.folder("asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f").replace_shares(
+        ...     user=UserEmail("colleague@company.com"),
+        ...     from_role="viewer",
+        ...     to_role="editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name='asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f',
+            target_id='colleague@company.com',
+            access='discover/role/editor'
+        )
+
+        >>> discover.folder("asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f").replace_shares(
+        ...     user=Organization("myorg"),
+        ...     from_role="viewer",
+        ...     to_role="editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name='asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f',
+            target_id='myorg',
             access='discover/role/editor'
         )
         """
@@ -960,24 +1149,44 @@ class Vector(_DiscoverRequestBuilder):
         Parameters
         ----------
         with_ : str
-            Email of the group or user to give access to.
+            UserEmail or Organization to give access to.
         as_ : str
-            Type of access the group or user should be given.
+            Type of access the user or organization should be given.
 
         Returns
         -------
         access_grant : AccessGrant
             Access grant that was added.
 
-        Example
-        -------
+        Examples
+        --------
         >>> discover.vector("table").share(
         ...     with_="colleague@company.com",
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name="table",
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
+            access='viewer'
+        )
+
+        >>> discover.vector("table").share(
+        ...     with_=UserEmail("colleague@company.com"),
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name="table",
+            target_id='colleague@company.com',
+            access='viewer'
+        )
+
+        >>> discover.vector("table").share(
+        ...     with_=Organization("myorg"),
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name="table",
+            target_id='myorg',
             access='viewer'
         )
         """
@@ -992,14 +1201,24 @@ class Vector(_DiscoverRequestBuilder):
         Parameters
         ----------
         from_ : str
-            Email of the group or user to remove access from.
+            User or Organization to remove access from.
         as_ : str
-            Type of access that should be removed from the group or user.
+            Type of access that should be removed from the user or organization.
 
-        Example
-        -------
+        Examples
+        --------
         >>> discover.vector("table").revoke(
         ...     from_="colleague@company.com",
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+
+        >>> discover.vector("table").revoke(
+        ...     from_=UserEmail("colleague@company.com"),
+        ...     as_="viewer" # or "editor"
+        ... ) # doctest: +SKIP
+
+        >>> discover.vector("table").revoke(
+        ...     from_=Organization("myorg"),
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
         """
@@ -1008,15 +1227,15 @@ class Vector(_DiscoverRequestBuilder):
 
     def replace_shares(self, user: str, from_role: str, to_role: str) -> AccessGrant:
         """
-        Replaces access grant for an asset by specifying the group or user,
-        what role the user has and what role the user should be given.
+        Replaces access grant for an asset by specifying the user or organization,
+        what role the user or org has and what role the user or org should be given.
 
         Parameters
         ----------
         user : str
-            Email of the group or user to replace access for.
+            UserEmail or Organization to replace access for.
         from_role : str
-            Type of access the user currently has.
+            Type of access the user or organization currently has.
         to_role : str
             Type of access that should replace the current role.
 
@@ -1025,8 +1244,8 @@ class Vector(_DiscoverRequestBuilder):
         access_grant : AccessGrant
             Access grant that the previous access grant was replaced with.
 
-        Example
-        -------
+        Examples
+        --------
         >>> discover.vector("table").replace_shares(
         ...     user="colleague@company.com",
         ...     from_role="viewer",
@@ -1034,7 +1253,29 @@ class Vector(_DiscoverRequestBuilder):
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name="table",
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
+            access='editor'
+        )
+
+        >>> discover.vector("table").replace_shares(
+        ...     user=UserEmail("colleague@company.com"),
+        ...     from_role="viewer",
+        ...     to_role="editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name="table",
+            target_id='colleague@company.com',
+            access='editor'
+        )
+
+        >>> discover.vector("table").replace_shares(
+        ...     user=Organization("myorg"),
+        ...     from_role="viewer",
+        ...     to_role="editor"
+        ... ) # doctest: +SKIP
+        AccessGrant(
+            asset_name="table",
+            target_id='myorg',
             access='editor'
         )
         """
@@ -1074,6 +1315,7 @@ class Discover:
         blob : Blob
             A Discover request builder for requests involving storage assets.
         """
+
         return Blob(self, asset_name)
 
     def folder(self, asset_name: str) -> Folder:
@@ -1091,6 +1333,7 @@ class Discover:
         folder : Folder
             A Discover request builder for requests involving Discover assets.
         """
+
         return Folder(self, asset_name)
 
     def vector(self, asset_name: str) -> Vector:
@@ -1108,6 +1351,7 @@ class Discover:
         vector : Vector
             A Discover request builder for requests involving Vector assets.
         """
+
         return Vector(self, asset_name)
 
     def add_access_grant(
@@ -1139,7 +1383,7 @@ class Discover:
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json',
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
             access='storage/role/viewer'
         )
 
@@ -1150,14 +1394,18 @@ class Discover:
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name='asset/folder/c361494e0e3f8ec1fa4e0feed065fc2f',
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
             access='discover/role/editor'
         )
         """
+
         add_request = discover_pb2.CreateAccessGrantRequest(
             access_grant=discover_pb2.AccessGrant(
                 asset_name=asset_name,
-                entity=discover_pb2.Entity(type=ENTITY_TYPE, id=group_or_user),
+                entity=discover_pb2.Entity(
+                    type=_get_entity_type(group_or_user),
+                    id=_strip_entity(group_or_user),
+                ),
                 access=role,
             )
         )
@@ -1194,10 +1442,14 @@ class Discover:
         ...     role="editor" # or "viewer"
         ... ) # doctest: +SKIP
         """
+
         remove_request = discover_pb2.DeleteAccessGrantRequest(
             access_grant=discover_pb2.AccessGrant(
                 asset_name=asset_name,
-                entity=discover_pb2.Entity(type=ENTITY_TYPE, id=group_or_user),
+                entity=discover_pb2.Entity(
+                    type=_get_entity_type(group_or_user),
+                    id=_strip_entity(group_or_user),
+                ),
                 access=role,
             )
         )
@@ -1239,7 +1491,7 @@ class Discover:
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json',
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
             access='storage/role/editor'
         )
 
@@ -1251,19 +1503,26 @@ class Discover:
         ... ) # doctest: +SKIP
         AccessGrant(
             asset_name='asset/folder/ec1fa4ec361494e0e3f80feed065fc2f',
-            user_id='colleague@company.com',
+            target_id='colleague@company.com',
             access='discover/role/viewer'
         )
         """
+
+        target_id = _strip_entity(group_or_user)
+
         replace_request = discover_pb2.ReplaceAccessGrantRequest(
             delete_access_grant=discover_pb2.AccessGrant(
                 asset_name=asset_name,
-                entity=discover_pb2.Entity(type=ENTITY_TYPE, id=group_or_user),
+                entity=discover_pb2.Entity(
+                    type=_get_entity_type(group_or_user), id=target_id
+                ),
                 access=role_from,
             ),
             create_access_grant=discover_pb2.AccessGrant(
                 asset_name=asset_name,
-                entity=discover_pb2.Entity(type=ENTITY_TYPE, id=group_or_user),
+                entity=discover_pb2.Entity(
+                    type=_get_entity_type(group_or_user), id=target_id
+                ),
                 access=role_to,
             ),
         )
@@ -1295,17 +1554,17 @@ class Discover:
         [
             AccessGrant(
                 asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json',
-                user_id='user1@company.com',
+                target_id='user1@company.com',
                 access='storage/role/owner'
             ),
             AccessGrant(
                 asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json',
-                user_id='user2@company.com',
+                target_id='user2@company.com',
                 access='storage/role/viewer'
             ),
             AccessGrant(
                 asset_name='asset/blob/ec1fa4ec361494e0e3f80feed065fc2f:~/data_file.json',
-                user_id='user3@company.com',
+                target_id='user3@company.com',
                 access='storage/role/editor'
             )
         ]
@@ -1316,21 +1575,22 @@ class Discover:
         [
             AccessGrant(
                 asset_name='asset/folder/ec1fa4ec361494e0e3f80feed065fc2f',
-                user_id='user1@company.com',
+                target_id='user1@company.com',
                 access='discover/role/owner'
             ),
             AccessGrant(
                 asset_name='asset/folder/ec1fa4ec361494e0e3f80feed065fc2f',
-                user_id='user2@company.com',
+                target_id='user2@company.com',
                 access='discover/role/viewer'
             ),
             AccessGrant(
                 asset_name='asset/folder/ec1fa4ec361494e0e3f80feed065fc2f',
-                user_id='user3@company.com',
+                target_id='user3@company.com',
                 access='discover/role/editor'
             )
         ]
         """
+
         access_grants = []  # type: List[AccessGrant]
         next_page = None
 
@@ -1391,6 +1651,7 @@ class Discover:
             parent_asset_name='asset/folder/86c100d9ffa3c95f5c9236aa9a59d1dc'
         )
         """
+
         if display_name is None or display_name == "":
             raise ValueError("display_name cannot be missing or empty")
 
@@ -1429,6 +1690,7 @@ class Discover:
         ...     asset_name="asset/folder/dd9ffa336aa9a59d1d95f5c9286c100c"
         ... ) # doctest: +SKIP
         """
+
         if asset_name is None or asset_name == "":
             raise ValueError("asset_name cannot be missing or empty")
 
@@ -1476,6 +1738,7 @@ class Discover:
             parent_asset_name='asset/namespace/f276fc038b3f49b4eed8c89338cac25a47a73397'
         )
         """
+
         asset = Asset._from_proto(
             self._discover_client.GetAsset(
                 discover_pb2.GetAssetRequest(asset_name=asset_name)
@@ -1537,6 +1800,7 @@ class Discover:
             parent_asset_name='asset/namespace/f276fc038b3f49b4eed8c89338cac25a47a73397'
         )
         """
+
         asset = self.get_asset(asset_name)
 
         # if display name is not set, set it to the current value
@@ -1607,6 +1871,7 @@ class Discover:
             parent_asset_name='asset/folder/dd9ffa336aa9a59d1d95f5c9286c100c'
         )
         """
+
         move_request = discover_pb2.MoveAssetRequest(
             asset_name=asset_name,
             destination_parent_name=new_parent_asset_name,
@@ -1625,6 +1890,7 @@ class Discover:
         asset_name : str
             Asset name of the folder to list from.
         """
+
         next_page = None
         while True:
             list_request = discover_pb2.ListAssetsRequest(

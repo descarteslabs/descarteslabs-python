@@ -2,11 +2,11 @@ import pytest
 
 from descarteslabs.common.proto.discover import discover_pb2
 from descarteslabs.discover.client import (
+    AccessGrant,
     Asset,
     Discover,
     DiscoverGrpcClient,
-    AccessGrant,
-    ENTITY_TYPE,
+    UserEmail,
 )
 from descarteslabs.client.grpc.exceptions import BadRequest
 from unittest.mock import Mock
@@ -55,12 +55,12 @@ def test_add_access_grant(discover_grpc_client):
     client = Discover(discover_client=discover_grpc_client)
     res = client.add_access_grant(
         "asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        "name@fake.com",
+        UserEmail("name@fake.com"),
         "storage/role/viewer",
     )
     assert res == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="name@fake.com",
+        target_id="name@fake.com",
         access="storage/role/viewer",
     )
 
@@ -73,7 +73,7 @@ def test_add_access_grant_error(discover_grpc_client):
     with pytest.raises(BadRequest):
         client.add_access_grant(
             "asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-            "name@fake.com",
+            UserEmail("name@fake.com"),
             "storage/role/viewer",
         )
 
@@ -122,7 +122,7 @@ def test_replace_access_grant(discover_grpc_client):
     )
     assert res == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="name@fake.com",
+        target_id="name@fake.com",
         access="storage/role/editor",
     )
 
@@ -147,22 +147,22 @@ def test_list_access_grants(discover_grpc_client):
             access_grants=[
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test1@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test1@fake.com"),
                     access="storage/role/editor",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test2@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test2@fake.com"),
                     access="storage/role/viewer",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test3@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test3@fake.com"),
                     access="storage/role/editor",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test4@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test4@fake.com"),
                     access="storage/role/viewer",
                 ),
             ]
@@ -176,22 +176,22 @@ def test_list_access_grants(discover_grpc_client):
     assert len(res) == 4
     assert res[0] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test1@fake.com",
+        target_id="test1@fake.com",
         access="storage/role/editor",
     )
     assert res[1] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test2@fake.com",
+        target_id="test2@fake.com",
         access="storage/role/viewer",
     )
     assert res[2] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test3@fake.com",
+        target_id="test3@fake.com",
         access="storage/role/editor",
     )
     assert res[3] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test4@fake.com",
+        target_id="test4@fake.com",
         access="storage/role/viewer",
     )
 
@@ -202,12 +202,12 @@ def test_list_access_grants_paging(discover_grpc_client):
             access_grants=[
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test1@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test1@fake.com"),
                     access="storage/role/editor",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test2@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test2@fake.com"),
                     access="storage/role/viewer",
                 ),
             ],
@@ -217,12 +217,12 @@ def test_list_access_grants_paging(discover_grpc_client):
             access_grants=[
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test3@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test3@fake.com"),
                     access="storage/role/editor",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test4@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test4@fake.com"),
                     access="storage/role/viewer",
                 ),
             ],
@@ -235,22 +235,22 @@ def test_list_access_grants_paging(discover_grpc_client):
     assert len(res) == 4
     assert res[0] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test1@fake.com",
+        target_id="test1@fake.com",
         access="storage/role/editor",
     )
     assert res[1] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test2@fake.com",
+        target_id="test2@fake.com",
         access="storage/role/viewer",
     )
     assert res[2] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test3@fake.com",
+        target_id="test3@fake.com",
         access="storage/role/editor",
     )
     assert res[3] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test4@fake.com",
+        target_id="test4@fake.com",
         access="storage/role/viewer",
     )
 
@@ -272,22 +272,22 @@ def test_list_access_grants_paging_error(discover_grpc_client):
             access_grants=[
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test1@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test1@fake.com"),
                     access="storage/role/editor",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test2@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test2@fake.com"),
                     access="storage/role/viewer",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test3@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test3@fake.com"),
                     access="storage/role/editor",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test4@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test4@fake.com"),
                     access="storage/role/viewer",
                 ),
             ],
@@ -437,7 +437,7 @@ def test_request_builder_share_blob(discover_grpc_client):
 
     assert res == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="name@fake.com",
+        target_id="name@fake.com",
         access="storage/role/viewer",
     )
 
@@ -477,7 +477,7 @@ def test_request_builder_replace_blob(discover_grpc_client):
     )
     assert res == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="name@fake.com",
+        target_id="name@fake.com",
         access="storage/role/editor",
     )
 
@@ -488,22 +488,22 @@ def test_request_builder_list_blob(discover_grpc_client):
             access_grants=[
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test1@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test1@fake.com"),
                     access="storage/role/editor",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test2@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test2@fake.com"),
                     access="storage/role/viewer",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test3@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test3@fake.com"),
                     access="storage/role/editor",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test4@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test4@fake.com"),
                     access="storage/role/viewer",
                 ),
             ]
@@ -518,22 +518,22 @@ def test_request_builder_list_blob(discover_grpc_client):
     assert len(res) == 4
     assert res[0] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test1@fake.com",
+        target_id="test1@fake.com",
         access="storage/role/editor",
     )
     assert res[1] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test2@fake.com",
+        target_id="test2@fake.com",
         access="storage/role/viewer",
     )
     assert res[2] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test3@fake.com",
+        target_id="test3@fake.com",
         access="storage/role/editor",
     )
     assert res[3] == AccessGrant(
         asset_name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
-        user_id="test4@fake.com",
+        target_id="test4@fake.com",
         access="storage/role/viewer",
     )
 
@@ -554,7 +554,7 @@ def test_request_builder_share_folder(discover_grpc_client):
 
     assert res == AccessGrant(
         asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-        user_id="name@fake.com",
+        target_id="name@fake.com",
         access="discover/role/viewer",
     )
 
@@ -588,7 +588,7 @@ def test_request_builder_replace_folder(discover_grpc_client):
     )
     assert res == AccessGrant(
         asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-        user_id="name@fake.com",
+        target_id="name@fake.com",
         access="discover/role/editor",
     )
 
@@ -599,22 +599,22 @@ def test_request_builder_list_folder(discover_grpc_client):
             access_grants=[
                 discover_pb2.AccessGrant(
                     asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test1@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test1@fake.com"),
                     access="discover/role/editor",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test2@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test2@fake.com"),
                     access="discover/role/viewer",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test3@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test3@fake.com"),
                     access="discover/role/editor",
                 ),
                 discover_pb2.AccessGrant(
                     asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-                    entity=discover_pb2.Entity(type=ENTITY_TYPE, id="test4@fake.com"),
+                    entity=discover_pb2.Entity(type="user-email", id="test4@fake.com"),
                     access="discover/role/viewer",
                 ),
             ]
@@ -626,22 +626,22 @@ def test_request_builder_list_folder(discover_grpc_client):
     assert len(res) == 4
     assert res[0] == AccessGrant(
         asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-        user_id="test1@fake.com",
+        target_id="test1@fake.com",
         access="discover/role/editor",
     )
     assert res[1] == AccessGrant(
         asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-        user_id="test2@fake.com",
+        target_id="test2@fake.com",
         access="discover/role/viewer",
     )
     assert res[2] == AccessGrant(
         asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-        user_id="test3@fake.com",
+        target_id="test3@fake.com",
         access="discover/role/editor",
     )
     assert res[3] == AccessGrant(
         asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-        user_id="test4@fake.com",
+        target_id="test4@fake.com",
         access="discover/role/viewer",
     )
 
@@ -891,7 +891,7 @@ def test_symlink_assets_have_target_asset_name_and_display_name(discover_grpc_cl
         shared=True,
         sym_link=discover_pb2.SymLink(
             target_name="asset/blob/5d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea2:~/20210603.A_STAGE_FILE.txt",
-            target_display_name="A Stage File"
+            target_display_name="A Stage File",
         ),
         description="symlink 1 desc",
         parent_name=parent_name,
@@ -914,7 +914,10 @@ def test_symlink_assets_have_target_asset_name_and_display_name(discover_grpc_cl
     assert symlink.sym_link.target_asset_name == exp_asset.sym_link.target_name
     assert symlink.description == exp_asset.description
     assert symlink.parent_asset_name == exp_asset.parent_name
-    assert symlink.sym_link.target_asset_display_name == exp_asset.sym_link.target_display_name
+    assert (
+        symlink.sym_link.target_asset_display_name
+        == exp_asset.sym_link.target_display_name
+    )
 
     assert discover_grpc_client.ListAssets.call_count == 2
 
@@ -935,7 +938,7 @@ def test_share_folder_with_shortcut_roles(discover_grpc_client):
 
     assert res == AccessGrant(
         asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-        user_id="name@fake.com",
+        target_id="name@fake.com",
         access="discover/role/viewer",
     )
 
@@ -977,7 +980,7 @@ def test_replace_folder_with_shortcut_roles(discover_grpc_client):
     )
     assert res == AccessGrant(
         asset_name="asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de",
-        user_id="name@fake.com",
+        target_id="name@fake.com",
         access="discover/role/editor",
     )
 

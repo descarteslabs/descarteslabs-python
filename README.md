@@ -19,6 +19,10 @@ Changelog
 =========
 ## [Unreleased]
 
+### Discover
+
+- Added support for organizational sharing in the Python Client. 
+
 ### Tables
 
 - Allow multiple columns to be used as a composite key when creating a table.
