@@ -122,6 +122,8 @@ class Tables(object):
 
     def table(self, name, owner=None):
         """
+        Retrieve a table by name
+
         :param str name: name of table
         :param str owner: table owner, defaults to the user's email.
 
@@ -202,6 +204,8 @@ class Tables(object):
 
     def create_table(self, table_name, schema, srid, primary_key):
         """
+        Create a table
+
         :param str table_name: name of table
         :param str schema: schema mapping
         :param int srid: spatial reference identifier
@@ -234,6 +238,8 @@ class Tables(object):
 
     def list_tables(self):
         """
+        Return a list of tables
+
         :return: list of tables owned by the authenticated user organized by schema
         :rtype: Dict(str, Dict(str, List(str)))
         """
@@ -319,6 +325,8 @@ class Tables(object):
 
     def delete_table(self, table_name):
         """
+        Delete a table by name
+
         :param str table_name: name of table to delete
         """
         response = self.connection.client._client.api["DeleteTable"](
@@ -443,6 +451,8 @@ class Tables(object):
 
     def insert_rows(self, obj, table_name, owner=None):
         """
+        Add features to an existing table
+
         :param object obj: Python object representing GeoJSON-like features.
             This can be an object with __geo_interface__ method (e.g. GeoDataFrame),
             a GeoJSON-like FeatureCollection mapping, or
@@ -512,6 +522,8 @@ class Tables(object):
 
     def check_status(self, jobid):
         """
+        Returns the status of a job
+
         :param int jobid: Job identifier
 
         :return: Tuple; completed, message
@@ -524,6 +536,8 @@ class Tables(object):
 
     def wait_until_completion(self, jobid, raise_on_failure=True, poll_interval=5.0):
         """
+        Returns the status of the job, blocking until the job is completed
+
         :param int jobid: Job identifier
         :param bool raise_on_failure: Raise an exception if the service reports
           an asyncronous failure.

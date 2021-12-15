@@ -42,17 +42,22 @@ from .common.property_filtering import GenericProperties
 import lazy_object_proxy
 
 try:
+    from . import catalog
+except ImportError:
+    pass
+
+try:
     from . import scenes
 except ImportError:
     pass
 
 try:
-    from . import vectors
+    from . import tables
 except ImportError:
     pass
 
 try:
-    from . import catalog
+    from . import vectors
 except ImportError:
     pass
 
@@ -68,21 +73,22 @@ vector = lazy_object_proxy.Proxy(lambda: Vector(auth=descartes_auth))  # noqa: F
 properties = GenericProperties()
 
 __all__ = [
-    "descartes_auth",
-    "scenes",
-    "vectors",
+    "__version__",
+    "Auth",
     "catalog",
+    "descartes_auth",
+    "exceptions",
     "metadata",
     "places",
+    "properties",
     "raster",
+    "scenes",
+    "services",
     "storage",
+    "tables",
     "tasks",
     "vector",
-    "services",
-    "properties",
-    "Auth",
-    "exceptions",
-    "__version__",
+    "vectors",
 ]
 __all__ += services.__all__
 
