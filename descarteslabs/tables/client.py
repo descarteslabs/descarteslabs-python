@@ -69,6 +69,7 @@ from descarteslabs.client.exceptions import BadRequestError
 from descarteslabs.client.services.storage import Storage
 from descarteslabs.common.ibis.client import api as serializer
 from descarteslabs.common.proto.vektorius import vektorius_pb2
+from descarteslabs.client.deprecation import deprecate_func
 
 
 def _default_json_serializer(obj):
@@ -440,7 +441,7 @@ class Tables(object):
         )
         return response.job_id
 
-    def insert_features(self, obj, table_name, owner=None):
+    def insert_rows(self, obj, table_name, owner=None):
         """
         :param object obj: Python object representing GeoJSON-like features.
             This can be an object with __geo_interface__ method (e.g. GeoDataFrame),
@@ -492,6 +493,22 @@ class Tables(object):
             )
         )
         return response.job_id
+
+    @deprecate_func("insert_features is deprecated. Please use insert_rows instead.")
+    def insert_features(self, obj, table_name, owner=None):
+        """
+        :param object obj: Python object representing GeoJSON-like features.
+            This can be an object with __geo_interface__ method (e.g. GeoDataFrame),
+            a GeoJSON-like FeatureCollection mapping, or
+            a single GeoJSON-like Feature mapping, or
+            an iterable of GeoJSON-like Feature mappings
+        :param str table_name: name of vector table
+        :param str owner: table owner, defaults to the user's email.
+
+        :return: Job identifier
+        :rtype: str
+        """
+        return self.insert_rows(obj, table_name, owner)
 
     def check_status(self, jobid):
         """
