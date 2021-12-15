@@ -21,7 +21,8 @@ Changelog
 
 ### Discover
 
-- Added support for organizational sharing in the Python Client. 
+- Added support for organizational sharing.
+- Allow user to list their organization's namespace.  
 
 ### Tables
 

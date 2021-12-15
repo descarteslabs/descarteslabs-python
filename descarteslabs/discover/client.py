@@ -49,6 +49,10 @@ def Organization(organization: str) -> _Organization:
     )
 
 
+def _organization_namespace_asset_name(organization: _Organization) -> str:
+    return f"asset/namespace/{organization}"
+
+
 # ShareTargets can either be emails in string format,
 # or users can explicitly indicate intended type with UserEmail and Organization helpers
 ShareTarget = Union[str, _UserEmail, _Organization]
@@ -66,6 +70,7 @@ def _get_entity_type(target: ShareTarget) -> str:
 # removes prefix from entity
 def _strip_entity(target: str) -> str:
     parts = target.split(":")
+
     if len(parts) == 1:
         return target
     elif len(parts) == 2:
@@ -90,7 +95,7 @@ class AccessGrant:
     target_id
         The user or organization to give access to
     access
-        The role the user or organization should have
+        The role the share target should have
     """
 
     asset_name: str
@@ -112,6 +117,7 @@ class AccessGrant:
         AccessGrant
             AccessGrant with fields from the protobuf response.
         """
+
         return cls(
             asset_name=response.access_grant.asset_name,
             target_id=response.access_grant.entity.id,
@@ -169,6 +175,7 @@ class Asset:
     @classmethod
     def _from_proto_asset(cls, asset: discover_pb2.Asset) -> "Asset":
         symlink = None
+
         if "sym_link" in asset.name:
             symlink = SymLink(
                 target_asset_name=asset.sym_link.target_name,
@@ -199,6 +206,7 @@ class Asset:
         Asset
             Asset with fields from the protobuf response
         """
+
         return cls._from_proto_asset(response.asset)
 
 
@@ -225,7 +233,7 @@ class _DiscoverRequestBuilder(ABC):
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
-            Type of access the user or organization should be given.
+            Type of access the share target should be granted.
 
         Returns
         -------
@@ -289,7 +297,7 @@ class _DiscoverRequestBuilder(ABC):
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
-            Type of access that should be removed from the user or organization.
+            Type of access that should be revoked from the share target.
 
         Examples
         --------
@@ -336,8 +344,8 @@ class _DiscoverRequestBuilder(ABC):
         self, user: ShareTarget, from_role: str, to_role: str
     ) -> AccessGrant:
         """
-        Replaces access grant for an asset by specifying the group or user,
-        what role the user has and what role the user should be given.
+        Replaces access grant for an asset by specifying the share target,
+        what role the target has and what role the target should be given.
 
         Parameters
         ----------
@@ -346,7 +354,7 @@ class _DiscoverRequestBuilder(ABC):
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         from_role : str
-            Type of access the user or organization currently has.
+            Type of access the share target currently has.
         to_role : str
             Type of access that should replace the current role.
 
@@ -565,6 +573,7 @@ class _DiscoverRequestBuilder(ABC):
         """
 
         new_parent = None
+
         if to is not None:
             new_parent = to.asset_name
 
@@ -764,16 +773,18 @@ class Blob(_DiscoverRequestBuilder):
 
         return f"asset/{type_}/{namespace}{NAME_SEPARATOR}{blob_name}"
 
-    def share(self, with_: str, as_: str) -> AccessGrant:
+    def share(self, with_: ShareTarget, as_: str) -> AccessGrant:
         """
         Adds access grant for an asset by specifying who to share with and as what role.
 
         Parameters
         ----------
-        with_ : str
-            UserEmail or Organization to give access to.
+        with_ : ShareTarget
+            Email or Organization to give access to.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
-            Type of access the user or organization should be given.
+            Type of access the share target should be granted.
 
         Returns
         -------
@@ -815,17 +826,19 @@ class Blob(_DiscoverRequestBuilder):
 
         return super().share(with_=with_, as_=_role_to_storage_role(as_))
 
-    def revoke(self, from_: str, as_: str):
+    def revoke(self, from_: ShareTarget, as_: str):
         """
         Removes access grant for an asset by specifying who to revoke from and what role is being removed.
         If the role does not exist, revoke does nothing.
 
         Parameters
         ----------
-        from_ : str
-            UserEmail or Organization to remove access from.
+        from_ : ShareTarget
+            Email or Organization to revoke access from.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
-            Type of access that should be removed from the user or organization.
+            Type of access that should be revoked from the share target.
 
         Examples
         --------
@@ -847,17 +860,21 @@ class Blob(_DiscoverRequestBuilder):
 
         super().revoke(from_=from_, as_=_role_to_storage_role(as_))
 
-    def replace_shares(self, user: str, from_role: str, to_role: str) -> AccessGrant:
+    def replace_shares(
+        self, user: ShareTarget, from_role: str, to_role: str
+    ) -> AccessGrant:
         """
-        Replaces access grant for an asset by specifying the user or organization,
-        what role the user or org has and what role the user or org should be given.
+        Replaces access grant for an asset by specifying the share target,
+        what role the target has and what role the target should be given.
 
         Parameters
         ----------
-        user : str
-            UserEmail or Organization to replace access for.
+        user : ShareTarget
+            Email or Organization to replace access for.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         from_role : str
-            Type of access the user or organization currently has.
+            Type of access the share target currently has.
         to_role : str
             Type of access that should replace the current role.
 
@@ -942,18 +959,21 @@ class Folder(_DiscoverRequestBuilder):
 
     def list(self) -> List[Asset]:
         """List the child assets of the Folder."""
+
         return self.discover.list_assets(self.asset_name)
 
-    def share(self, with_: str, as_: str) -> AccessGrant:
+    def share(self, with_: ShareTarget, as_: str) -> AccessGrant:
         """
         Adds access grant for an asset by specifying who to share with and as what role.
 
         Parameters
         ----------
-        with_ : str
-            UserEmail or Organization to give access to.
+        with_ : ShareTarget
+            Email or Organization to give access to.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
-            Type of access the user or organization should be given.
+            Type of access the share target should be granted.
 
         Returns
         -------
@@ -995,17 +1015,19 @@ class Folder(_DiscoverRequestBuilder):
 
         return super().share(with_=with_, as_=_role_to_discover_role(as_))
 
-    def revoke(self, from_: str, as_: str):
+    def revoke(self, from_: ShareTarget, as_: str):
         """
         Removes access grant for an asset by specifying who to revoke from and what role is being removed.
         If the role does not exist, revoke does nothing.
 
         Parameters
         ----------
-        from_ : str
-            UserEmail or Organization to remove access from.
+        from_ : ShareTarget
+            Email or Organization to revoke access from.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
-            Type of access that should be removed from the user or organization.
+            Type of access that should be revoked from the share target.
 
         Examples
         --------
@@ -1027,17 +1049,21 @@ class Folder(_DiscoverRequestBuilder):
 
         super().revoke(from_=from_, as_=_role_to_discover_role(as_))
 
-    def replace_shares(self, user: str, from_role: str, to_role: str) -> AccessGrant:
+    def replace_shares(
+        self, user: ShareTarget, from_role: str, to_role: str
+    ) -> AccessGrant:
         """
-        Replaces access grant for an asset by specifying the user or organization,
-        what role the user or org has and what role the user or org should be given.
+        Replaces access grant for an asset by specifying the share target,
+        what role the target has and what role the target should be given.
 
         Parameters
         ----------
-        user : str
-            UserEmail or Organization to replace access for.
+        user : ShareTarget
+            Email or Organization to replace access for.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         from_role : str
-            Type of access the user or organization currently has.
+            Type of access the share target currently has.
         to_role : str
             Type of access that should replace the current role.
 
@@ -1101,6 +1127,7 @@ class Vector(_DiscoverRequestBuilder):
         asset_name : str
             Path of the asset being resolved.
         """
+
         type_ = self._type()
         parts = asset_name.split(NAME_SEPARATOR)
         namespace = None
@@ -1142,16 +1169,18 @@ class Vector(_DiscoverRequestBuilder):
 
         return f"asset/{type_}/{namespace}{NAME_SEPARATOR}{vector_name}"
 
-    def share(self, with_: str, as_: str) -> AccessGrant:
+    def share(self, with_: ShareTarget, as_: str) -> AccessGrant:
         """
         Adds access grant for an asset by specifying who to share with and as what role.
 
         Parameters
         ----------
-        with_ : str
-            UserEmail or Organization to give access to.
+        with_ : ShareTarget
+            Email or Organization to give access to.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
-            Type of access the user or organization should be given.
+            Type of access the share target should be granted.
 
         Returns
         -------
@@ -1193,17 +1222,19 @@ class Vector(_DiscoverRequestBuilder):
 
         return super().share(with_=with_, as_=_role_to_vector_role(as_))
 
-    def revoke(self, from_: str, as_: str):
+    def revoke(self, from_: ShareTarget, as_: str):
         """
         Removes access grant for an asset by specifying who to revoke from and what role is being removed.
         If the role does not exist, revoke does nothing.
 
         Parameters
         ----------
-        from_ : str
-            User or Organization to remove access from.
+        from_ : ShareTarget
+            Email or Organization to revoke access from.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
-            Type of access that should be removed from the user or organization.
+            Type of access that should be revoked from the share target.
 
         Examples
         --------
@@ -1225,17 +1256,21 @@ class Vector(_DiscoverRequestBuilder):
 
         super().revoke(from_=from_, as_=_role_to_vector_role(as_))
 
-    def replace_shares(self, user: str, from_role: str, to_role: str) -> AccessGrant:
+    def replace_shares(
+        self, user: ShareTarget, from_role: str, to_role: str
+    ) -> AccessGrant:
         """
-        Replaces access grant for an asset by specifying the user or organization,
-        what role the user or org has and what role the user or org should be given.
+        Replaces access grant for an asset by specifying the share target,
+        what role the target has and what role the target should be given.
 
         Parameters
         ----------
-        user : str
-            UserEmail or Organization to replace access for.
+        user : ShareTarget
+            Email or Organization to replace access for.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         from_role : str
-            Type of access the user or organization currently has.
+            Type of access the share target currently has.
         to_role : str
             Type of access that should replace the current role.
 
@@ -1355,7 +1390,7 @@ class Discover:
         return Vector(self, asset_name)
 
     def add_access_grant(
-        self, asset_name: str, group_or_user: str, role: str
+        self, asset_name: str, group_or_user: ShareTarget, role: str
     ) -> AccessGrant:
         """
         Adds access grant for specified asset, group/user and role.
@@ -1364,10 +1399,12 @@ class Discover:
         ----------
         asset_name : str
             Path of the file or folder to give access to.
-        group_or_user : str
-            Email of the group or user to give access to.
+        group_or_user : ShareTarget
+            Email or Organization to grant access for.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         role : str
-            Type of access the group or user should be given.
+            Type of access the share target should be granted.
 
         Returns
         -------
@@ -1415,7 +1452,9 @@ class Discover:
 
         return access_grant
 
-    def remove_access_grant(self, asset_name: str, group_or_user: str, role: str):
+    def remove_access_grant(
+        self, asset_name: str, group_or_user: ShareTarget, role: str
+    ):
         """
         Removes access grant for specified asset, group/user and role.
 
@@ -1423,10 +1462,12 @@ class Discover:
         ----------
         asset_name : str
             Path of the file or folder to remove access from.
-        group_or_user : str
-            Email of the group or user to remove access for.
+        group_or_user : ShareTarget
+            Email or Organization to revoke access from.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         role : str
-            Type of access that should be removed from the group or user.
+            Type of access that should be revoked from the share target.
 
         Examples
         --------
@@ -1458,7 +1499,7 @@ class Discover:
     def replace_access_grant(
         self,
         asset_name: str,
-        group_or_user: str,
+        group_or_user: ShareTarget,
         role_from: str,
         role_to: str,
     ) -> AccessGrant:
@@ -1469,10 +1510,12 @@ class Discover:
         ----------
         asset_name : str
             Path of the file or folder to replace access to.
-        group_or_user : str
-            Email of the group or user to replace access for.
+        group_or_user : ShareTarget
+            Email or Organization to replace access for.
+            If just a plain string is passed, it is assumed to be an email address.
+            Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         role_from : str
-            Type of access the group or user currently has.
+            Type of access the share target currently has.
         role_to : str
             Type of access that should replace the current role.
 
@@ -1600,11 +1643,13 @@ class Discover:
             list_request = discover_pb2.ListAccessGrantsRequest(
                 asset_name=asset_name, page_token=next_page
             )
+
             response = self._discover_client.ListAccessGrants(list_request)
             for grant in response.access_grants:
                 access_grants.append(
                     AccessGrant(grant.asset_name, grant.entity.id, grant.access)
                 )
+
             next_page = response.next_page
             if not next_page:
                 break
@@ -1663,6 +1708,7 @@ class Discover:
                 folder=discover_pb2.Folder(),
             )
         )
+
         response = self._discover_client.CreateAsset(create_request)
         asset = Asset._from_proto(response)
 
@@ -1912,8 +1958,8 @@ class Discover:
 
         Parameters
         ----------
-        asset_name : Optional[str]
-            Asset name of the folder to list from.
+        asset_name : Optional[str, _Organization]
+            Asset name of the folder or namespace to list from.
 
         Returns
         -------
@@ -1973,8 +2019,33 @@ class Discover:
                 parent_asset_name='asset/folder/7578f8fa89cb58507d1b6543143a6f91'
             )
         ]
+
+        >>> discover.list_assets(Organization("descarteslabs")) # doctest: +SKIP
+        [
+            Asset(
+                asset_name='asset/folder/b585077278f8fa89cd1b6543143a6f91',
+                display_name='A Great Folder',
+                is_shared=False,
+                sym_link=None,
+                description="There is important data in here",
+                parent_asset_name='asset/namespace/org:descarteslabs'
+            ),
+            Asset(
+                asset_name='asset/folder/b585077278f8fa89cd1b6543143a6f91',
+                display_name='Another Great Folder',
+                is_shared=False,
+                sym_link=None,
+                description="There is important data in here too",
+                parent_asset_name='asset/namespace/org:descarteslabs'
+            )
+        ]
+
         """
+
         if asset_name is None:
             asset_name = ""
+
+        if asset_name.startswith("org:"):
+            asset_name = _organization_namespace_asset_name(asset_name)
 
         return list(self._page_list(asset_name))
