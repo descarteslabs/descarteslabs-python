@@ -121,7 +121,7 @@ def do_setup():
                 "markdown2>=2.4.0,<3",
             ],
             "tests": [
-                "geopandas>=0.10.2; 'linux' in sys_platform",
+                "geopandas>=0.10.2;'linux' in sys_platform",
                 "hypothesis[numpy]==5.7.0",
                 "mock",
                 "pytest==6.0.0",
@@ -129,7 +129,7 @@ def do_setup():
                 "freezegun==0.3.12",
             ],
             "tables": [
-                "geopandas>=0.10.2; 'linux' in sys_platform",
+                "geopandas>=0.10.2;'linux' in sys_platform",
             ],
         },
         data_files=[("docs/descarteslabs", ["README.md"])],

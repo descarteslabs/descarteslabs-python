@@ -11,7 +11,6 @@ import pyarrow as pa
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
-from geopandas import GeoDataFrame
 from shapely.geometry import Point
 
 import grpc
@@ -423,9 +422,14 @@ class ClientTestCase(unittest.TestCase):
         schema = sch.schema([["id", dt.int32]])
         df = _maybe_to_geodataframe(df, schema)
 
-        assert not isinstance(df, GeoDataFrame)
+        assert isinstance(df, pd.DataFrame)
 
+    @pytest.mark.skipif(
+        "geopandas" not in sys.modules, reason="requires the geopandas library"
+    )
     def test_maybe_to_geodataframe_geo(self):
+        import geopandas as gpd
+
         pa_schema = pa.schema([pa.field("geom", pa.string())])
 
         geoms = pa.array(["POINT(0 0)", "POINT(1 1)"], type=pa_schema[0].type)
@@ -436,11 +440,16 @@ class ClientTestCase(unittest.TestCase):
         schema = sch.schema([["geom", dt.GeoSpatial()]])
         df = _maybe_to_geodataframe(df, schema)
 
-        assert isinstance(df, GeoDataFrame)
+        assert isinstance(df, gpd.GeoDataFrame)
         assert df.iloc[0]["geom"] == Point(0, 0)
         assert df.iloc[1]["geom"] == Point(1, 1)
 
+    @pytest.mark.skipif(
+        "geopandas" not in sys.modules, reason="requires the geopandas library"
+    )
     def test_maybe_to_geodataframe_multiple_geo(self):
+        import geopandas as gpd
+
         pa_schema = pa.schema(
             [pa.field("geom1", pa.string()), pa.field("geom2", pa.string())]
         )
@@ -454,7 +463,7 @@ class ClientTestCase(unittest.TestCase):
         schema = sch.schema([["geom1", dt.GeoSpatial()], ["geom2", dt.GeoSpatial()]])
         df = _maybe_to_geodataframe(df, schema)
 
-        assert isinstance(df, GeoDataFrame)
+        assert isinstance(df, gpd.GeoDataFrame)
         assert df.geometry.name == "geom1"
         assert df.iloc[0]["geom1"] == Point(0, 0)
         assert df.iloc[0]["geom2"] == Point(2, 2)
@@ -476,7 +485,7 @@ class ClientTestCase(unittest.TestCase):
         df = _maybe_to_geodataframe(df, schema)
 
         # won't index array-like geospatial columns
-        assert not isinstance(df, GeoDataFrame)
+        assert isinstance(df, pd.DataFrame)
         assert df.iloc[0]["geom"][0] == Point(0, 0)
         assert df.iloc[0]["geom"][1] == Point(1, 1)
         assert df.iloc[1]["geom"][0] == Point(2, 2)
@@ -501,7 +510,7 @@ class ClientTestCase(unittest.TestCase):
         df = _maybe_to_geodataframe(df, schema)
 
         # won't index array-like geospatial columns
-        assert not isinstance(df, GeoDataFrame)
+        assert isinstance(df, pd.DataFrame)
         assert df.iloc[0]["geom"]["value"] == Point(0, 0)
         assert df.iloc[1]["geom"]["value"] == Point(1, 1)
 
@@ -525,7 +534,7 @@ class ClientTestCase(unittest.TestCase):
         df = _maybe_to_geodataframe(df, schema)
 
         # won't index array-like geospatial columns
-        assert not isinstance(df, GeoDataFrame)
+        assert isinstance(df, pd.DataFrame)
         assert df.iloc[0]["geom"][0]["value"] == Point(0, 0)
         assert df.iloc[0]["geom"][1]["value"] == Point(1, 1)
         assert df.iloc[1]["geom"][0]["value"] == Point(2, 2)
@@ -601,7 +610,7 @@ class ClientTestCase(unittest.TestCase):
         df = _maybe_to_geodataframe(df, schema)
 
         # won't index array-like geospatial columns
-        assert not isinstance(df, GeoDataFrame)
+        assert isinstance(df, pd.DataFrame)
         df.iloc[0]["geom"]["array"][0]["value"] == Point(0, 0)
         df.iloc[0]["geom"]["array"][1]["value"] == Point(1, 1)
         df.iloc[1]["geom"]["array"][0]["value"] == Point(2, 2)
@@ -719,10 +728,9 @@ class ClientTestCase(unittest.TestCase):
 
         schema = sch.schema([["id", dt.int32]])
 
-        sys.modules["geopandas"] = None
-        df = _maybe_to_geodataframe(df, schema)
+        with patch.dict("sys.modules", geopandas=None):
+            df = _maybe_to_geodataframe(df, schema)
 
-        assert not isinstance(df, GeoDataFrame)
         assert isinstance(df, pd.DataFrame)
         assert df.iloc[2]["id"] == 3
 
@@ -734,11 +742,10 @@ class ClientTestCase(unittest.TestCase):
 
         df = batch.to_pandas()
 
-        sys.modules["geopandas"] = None
         schema = sch.schema([["geom", dt.GeoSpatial()]])
-        df = _maybe_to_geodataframe(df, schema)
+        with patch.dict("sys.modules", geopandas=None):
+            df = _maybe_to_geodataframe(df, schema)
 
-        assert not isinstance(df, GeoDataFrame)
         assert isinstance(df, pd.DataFrame)
         assert df.iloc[0]["geom"] == Point(0, 0)
         assert df.iloc[1]["geom"] == Point(1, 1)
@@ -753,10 +760,10 @@ class ClientTestCase(unittest.TestCase):
         batch = pa.RecordBatch.from_arrays([geoms1, geoms2], schema=pa_schema)
 
         df = batch.to_pandas()
-
-        sys.modules["geopandas"] = None
         schema = sch.schema([["geom1", dt.GeoSpatial()], ["geom2", dt.GeoSpatial()]])
-        df = _maybe_to_geodataframe(df, schema)
+
+        with patch.dict("sys.modules", geopandas=None):
+            df = _maybe_to_geodataframe(df, schema)
 
         assert isinstance(df, pd.DataFrame)
         assert df.iloc[0]["geom1"] == Point(0, 0)

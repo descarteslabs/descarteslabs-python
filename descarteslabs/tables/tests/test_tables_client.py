@@ -1,13 +1,9 @@
 import datetime
 import json
+import sys
 
 import pytest
 import pandas as pd
-
-try:
-    import geopandas as gpd
-except ImportError:
-    gpd = None
 
 from descarteslabs.tables.client import Tables
 from descarteslabs.client.exceptions import BadRequestError
@@ -60,19 +56,21 @@ def test_normalize_features(tables_client, feature):
     assert features[0] == feature
 
 
+@pytest.mark.skipif(
+    "geopandas" not in sys.modules, reason="requires the geopandas library"
+)
 def test_normalize_features_gdf(tables_client, feature):
     # Include the geometry, geopandas dataframe
-    if gpd:
-        gdf = gpd.GeoDataFrame.from_features([feature])
-        features = list(tables_client._normalize_features(gdf))
-        res = features[0]
-        # gpd adds these, we strip them out when serializing to JSON
-        del res["bbox"]
-        del res["id"]
-        # ensure they serialize to the same thing
-        assert json.dumps(res) == json.dumps(feature)
-    else:
-        assert True
+    import geopandas as gpd
+
+    gdf = gpd.GeoDataFrame.from_features([feature])
+    features = list(tables_client._normalize_features(gdf))
+    res = features[0]
+    # gpd adds these, we strip them out when serializing to JSON
+    del res["bbox"]
+    del res["id"]
+    # ensure they serialize to the same thing
+    assert json.dumps(res) == json.dumps(feature)
 
 
 def test_normalize_features_df(tables_client, feature):
