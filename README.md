@@ -21,8 +21,12 @@ Changelog
 
 ### Discover
 
-- Added support for organizational sharing.
-- Allow user to list their organization's namespace.  
+- Added support for organizational sharing. You can now share using the `Organization` type:
+  - `asset.share(with_=Organization("some_org"), as_="Viewer")`
+- Allow user to list their organization's namespace.
+  - `Discover().list_asset("asset/namespace/org:some_org")`
+- Allow user to list their organization's users.
+  - `Discover().list_org_users()`
 
 ### Tables
 
@@ -50,7 +54,7 @@ Changelog
 
 ### Workflows
 
-- We have introduced a hard limit of 120 as the number of outstanding Workflows compute jobs that a single user can have. This limit exists to minimize situations in which a user is unable to complete jobs in a timely manner by ensuring resources cannot be monopolized by any individual user. The API that backs the calls to `compute` will return a `descarteslabs.client.grpc.exceptions.ResourceExhausted` error if the caller has too many outstanding jobs. Prior to this release (1.9.0), these failures would be retried up to some small retry limit. With the latest client release however, the client will fail without retrying on an HTTP 429 (rate limit exceeded) error. For users with large (non-interactive) workloads who don’t mind waiting, we added a new `num_retries` parameter to the `compute` function; when specified, the client will handle any 429 errors and retry up to `num_retries` times. 
+- We have introduced a hard limit of 120 as the number of outstanding Workflows compute jobs that a single user can have. This limit exists to minimize situations in which a user is unable to complete jobs in a timely manner by ensuring resources cannot be monopolized by any individual user. The API that backs the calls to `compute` will return a `descarteslabs.client.grpc.exceptions.ResourceExhausted` error if the caller has too many outstanding jobs. Prior to this release (1.9.0), these failures would be retried up to some small retry limit. With the latest client release however, the client will fail without retrying on an HTTP 429 (rate limit exceeded) error. For users with large (non-interactive) workloads who don’t mind waiting, we added a new `num_retries` parameter to the `compute` function; when specified, the client will handle any 429 errors and retry up to `num_retries` times.
 - Workflows is currently optimized for interactive use cases. If you are submitting large numbers of long-running Workflows compute jobs with `block=False`, you should consider using Tasks and Scenes rather than the Workflows API.
 - Removed `ResourceExhausted` exceptions from the list of exceptions we automatically catch and retry on for `compute` calls.
 

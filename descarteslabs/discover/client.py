@@ -2,9 +2,12 @@ from abc import ABC, abstractmethod
 
 from dataclasses import dataclass
 import re
+import os
 from typing import Generator, List, NewType, Optional, Union
 import warnings
 
+from descarteslabs.client.auth import Auth
+from descarteslabs.client.services.service import Service
 from descarteslabs.common.discover import DiscoverGrpcClient
 from descarteslabs.common.proto.discover import discover_pb2
 
@@ -2049,3 +2052,91 @@ class Discover:
             asset_name = _organization_namespace_asset_name(asset_name)
 
         return list(self._page_list(asset_name))
+
+    def list_org_users(self, search=None):
+        """
+        List the users in your organization.
+
+        If you're part of an organization, this will list all the users in your
+        organization. If you provide a search string, only those users matching
+        the search string in their email or name using a case-insensitive match,
+        will be returned.
+
+        Parameters
+        ----------
+        search : str, optional
+            A search string that will be matched using a case-insensitive match against
+            each user's email and name, and only the matched entries will be returned.
+
+        Returns
+        -------
+        list(dict)
+            A list containing a dictionary for each user with two entries:
+
+            - email: the email of the user;
+            - name: the name of the user.
+
+            The list will be empty if you're not part of an organization or if no
+            matches are found.
+
+        Raises
+        ------
+        AuthError
+            If you don't have proper authorization.
+        """
+
+        return _IamClient.get_default_client().list_org_users(search)
+
+
+class _IamClient(Service):
+    _instance = None
+
+    def __init__(self, url=None, auth=None, retries=None):
+        if auth is None:
+            auth = Auth()
+
+        if url is None:
+            url = os.environ.get(
+                "DESCARTESLABS_IAM_URL",
+                "https://iam.descarteslabs.com",
+            )
+
+        super().__init__(url, auth=auth, retries=retries)
+
+    @property
+    def session(self):
+        # IAM for now only authenticates through cookies, so we bolt that on
+        session = super().session
+        cookie_value = "JWT=%s" % self.token
+
+        if session.headers.get("Cookie") != cookie_value:
+            session.headers["Cookie"] = cookie_value
+
+        return session
+
+    @classmethod
+    def get_default_client(cls):
+        """Retrieve the default IAM client."""
+
+        if cls._instance is None:
+            cls._instance = _IamClient()
+
+        return cls._instance
+
+    @classmethod
+    def set_default_client(cls, client):
+        """Change the default IAM client to the given IAM client."""
+
+        if not isinstance(client, cls):
+            raise TypeError(f"You must use a {cls.__name__} instance")
+
+        cls._instance = client
+
+    def list_org_users(self, search=None):
+        url = "/org/self"
+
+        if search:
+            url += f"?q={search}"
+
+        response = self.session.get(url)
+        return response.json()

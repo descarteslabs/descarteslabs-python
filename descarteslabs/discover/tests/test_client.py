@@ -1,4 +1,5 @@
 import pytest
+from descarteslabs.client.exceptions import ServerError
 
 from descarteslabs.common.proto.discover import discover_pb2
 from descarteslabs.discover.client import (
@@ -7,10 +8,15 @@ from descarteslabs.discover.client import (
     Discover,
     DiscoverGrpcClient,
     UserEmail,
+    _IamClient,
 )
 from descarteslabs.client.grpc.exceptions import BadRequest
+from descarteslabs.client.auth import Auth
 from unittest.mock import Mock
 import warnings
+import unittest
+import re
+import responses
 
 
 @pytest.fixture
@@ -1035,3 +1041,62 @@ def test_revoke_folder_fails_with_wrong_shortcut_role(discover_grpc_client):
         )
         assert len(w) == 1
         assert issubclass(w[-1].category, UserWarning)
+
+
+class TestListOrgUsers(unittest.TestCase):
+    public_token = "header.e30.signature"
+    url = "https://foo.com"
+    url_match = re.compile(url)
+
+    def setUp(self):
+        _IamClient.set_default_client(
+            _IamClient(
+                url=self.url,
+                auth=Auth(jwt_token=self.public_token, token_info_path=None),
+            )
+        )
+
+    @responses.activate
+    def test_list_org_users_empty(self):
+        responses.add(responses.GET, self.url_match, json=[], status=200)
+        users = Discover().list_org_users()
+        assert users == []
+
+    @responses.activate
+    def test_list_org_users(self):
+        json = [
+            {"name": "Foo", "email": "foo@bar.com"},
+            {"name": "Bar", "email": "fubar@fubar.com"},
+            {"name": "Else", "email": "else@else.com"},
+        ]
+        responses.add(
+            responses.GET,
+            self.url_match,
+            json=json,
+            status=200,
+        )
+        users = Discover().list_org_users()
+        assert users == json
+
+    @responses.activate
+    def test_list_org_users_search(self):
+        responses.add(
+            responses.GET,
+            self.url_match,
+            json=[],
+            status=200,
+        )
+        Discover().list_org_users(search="bar")
+        assert responses.calls[0].request.url.endswith("q=bar")
+
+    @responses.activate
+    def test_list_org_users_unauthorized(self):
+        responses.add(
+            responses.GET,
+            self.url_match,
+            status=401,
+        )
+
+        with self.assertRaises(ServerError) as e:
+            Discover().list_org_users()
+            assert e.original_status == 401
