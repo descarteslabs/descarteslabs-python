@@ -1,3 +1,23 @@
-from .client import Discover, AccessGrant, Asset, Blob, Folder, SymLink
+from .client import (
+    AccessGrant,
+    Asset,
+    Blob,
+    Discover,
+    Folder,
+    Organization,
+    SymLink,
+    UserEmail,
+    Vector,
+)
 
-__all__ = ["Discover", "AccessGrant", "Asset", "Blob", "Folder", "SymLink"]
+__all__ = [
+    "AccessGrant",
+    "Asset",
+    "Blob",
+    "Discover",
+    "Folder",
+    "Organization",
+    "SymLink",
+    "UserEmail",
+    "Vector",
+]
