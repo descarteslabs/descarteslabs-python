@@ -21,11 +21,11 @@ DISCOVER_EDITOR = "discover/role/editor"
 DISCOVER_VIEWER = "discover/role/viewer"
 STORAGE_EDITOR = "storage/role/editor"
 STORAGE_VIEWER = "storage/role/viewer"
-VECTOR_EDITOR = "vektorius/role/editor"
-VECTOR_VIEWER = "vektorius/role/viewer"
+TABLE_EDITOR = "vektorius/role/editor"
+TABLE_VIEWER = "vektorius/role/viewer"
 ALLOWABLE_FOLDER_ROLES = {DISCOVER_VIEWER, DISCOVER_EDITOR}
 ALLOWABLE_BLOB_ROLES = {STORAGE_VIEWER, STORAGE_EDITOR}
-ALLOWABLE_VECTOR_ROLES = {VECTOR_VIEWER, VECTOR_EDITOR}
+ALLOWABLE_TABLE_ROLES = {TABLE_VIEWER, TABLE_EDITOR}
 
 
 _UserEmail = NewType("UserEmail", str)
@@ -279,13 +279,13 @@ class _DiscoverRequestBuilder(ABC):
         if (
             (self._type() == "folder" and as_.lower() in ALLOWABLE_FOLDER_ROLES)
             or (self._type() == "blob" and as_.lower() in ALLOWABLE_BLOB_ROLES)
-            or (self._type() == "vector" and as_.lower() in ALLOWABLE_VECTOR_ROLES)
+            or (self._type() == "table" and as_.lower() in ALLOWABLE_TABLE_ROLES)
         ):
             return self.discover.add_access_grant(self.asset_name, with_, as_)
         else:
             raise ValueError(
                 f"The role '{as_}' is invalid. Roles must be of type viewer or editor, "
-                "and you can only assign access grants to blobs, vectors, and folders."
+                "and you can only assign access grants to blobs, tables, and folders."
             )
 
     def revoke(self, from_: ShareTarget, as_: str):
@@ -394,7 +394,7 @@ class _DiscoverRequestBuilder(ABC):
         if (
             (self._type() == "folder" and to_role.lower() in ALLOWABLE_FOLDER_ROLES)
             or (self._type() == "blob" and to_role.lower() in ALLOWABLE_BLOB_ROLES)
-            or (self._type() == "vector" and to_role.lower() in ALLOWABLE_VECTOR_ROLES)
+            or (self._type() == "table" and to_role.lower() in ALLOWABLE_TABLE_ROLES)
         ):
             return self.discover.replace_access_grant(
                 self.asset_name, user, from_role, to_role
@@ -402,7 +402,7 @@ class _DiscoverRequestBuilder(ABC):
         else:
             raise ValueError(
                 f"The role '{to_role}' is invalid. Roles must be of type viewer or editor, "
-                "and you can only assign access grants to blobs, vectors and folders."
+                "and you can only assign access grants to blobs, tables and folders."
             )
 
     def list_shares(self) -> List[AccessGrant]:
@@ -605,10 +605,10 @@ def _bad_asset_shape_error(asset_name: str, asset_type: str) -> ValueError:
             "A well-formed path should include a user ID, as well as a colon and a tilda separator, eg. "
             f"asset/blob/b1a1d1c20e655402691582723261a02caa693834{NAME_SEPARATOR}my_blob"
         )
-    elif asset_type == "vector":
+    elif asset_type == "table":
         error_english = (
             "A well-formed path should include a user ID, as well as a colon and a tilda separator, eg. "
-            f"asset/vector/b1a1d1c20e655402691582723261a02caa693834{NAME_SEPARATOR}my_vector"
+            f"asset/vector/b1a1d1c20e655402691582723261a02caa693834{NAME_SEPARATOR}my_table"
         )
     elif asset_type == "folder":
         error_english = (
@@ -674,9 +674,9 @@ def _role_to_storage_role(role: str) -> str:
     return storage_role
 
 
-def _role_to_vector_role(role: str) -> str:
+def _role_to_table_role(role: str) -> str:
     """
-    Converts shortcut role to the corresponding Vector role.
+    Converts shortcut role to the corresponding Table role.
 
     Parameters
     ----------
@@ -686,16 +686,16 @@ def _role_to_vector_role(role: str) -> str:
     Returns
     -------
     storage_role : str
-        Fully-resolved Vector role if given "viewer" or "editor".
+        Fully-resolved Table role if given "viewer" or "editor".
     """
 
     if role.lower() == "viewer":
-        vector_role = VECTOR_VIEWER
+        table_role = TABLE_VIEWER
     elif role.lower() == "editor":
-        vector_role = VECTOR_EDITOR
+        table_role = TABLE_EDITOR
     else:
-        vector_role = role
-    return vector_role
+        table_role = role
+    return table_role
 
 
 def _role_to_discover_role(_as: str) -> str:
@@ -1118,12 +1118,15 @@ class Folder(_DiscoverRequestBuilder):
         )
 
 
-class Vector(_DiscoverRequestBuilder):
-    """A Vector is a pointer to a table."""
+class Table(_DiscoverRequestBuilder):
+    """A Table is a pointer to a table."""
+
+    def _type(self) -> str:
+        return "vector"
 
     def _resolve_name(self, asset_name: str):
         """
-        Resolves the asset_name to the correct format for vectors.
+        Resolves the asset_name to the correct format for tables.
 
         Parameters
         ----------
@@ -1134,12 +1137,12 @@ class Vector(_DiscoverRequestBuilder):
         type_ = self._type()
         parts = asset_name.split(NAME_SEPARATOR)
         namespace = None
-        vector_name = None
+        table_name = None
 
         # Case 1: User only provides file name (asset name will be length 1)
         # foo.txt, myfolder/foo.txt
         if len(parts) == 1:
-            vector_name = parts[0].strip("~/")
+            table_name = parts[0].strip("~/")
             namespace = self.discover._discover_client.auth.namespace
 
         # Case 2: User provides a user_sha and file name (asset name will be length 2)
@@ -1160,7 +1163,7 @@ class Vector(_DiscoverRequestBuilder):
             # otherwise take the rightmost item in the first part (we will check it later)
             else:
                 *_, namespace = first_part.rsplit(PATH_SEPARATOR, 1)
-            vector_name = parts[1]
+            table_name = parts[1]
 
         # Case 3: More than one :~/
         # 12345:~/myfolder:~/myfile
@@ -1170,7 +1173,7 @@ class Vector(_DiscoverRequestBuilder):
         if not _is_valid_uuid(namespace, 40):
             raise _bad_asset_shape_error(asset_name, type_)
 
-        return f"asset/{type_}/{namespace}{NAME_SEPARATOR}{vector_name}"
+        return f"asset/{type_}/{namespace}{NAME_SEPARATOR}{table_name}"
 
     def share(self, with_: ShareTarget, as_: str) -> AccessGrant:
         """
@@ -1192,7 +1195,7 @@ class Vector(_DiscoverRequestBuilder):
 
         Examples
         --------
-        >>> discover.vector("table").share(
+        >>> discover.table("table").share(
         ...     with_="colleague@company.com",
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
@@ -1202,7 +1205,7 @@ class Vector(_DiscoverRequestBuilder):
             access='viewer'
         )
 
-        >>> discover.vector("table").share(
+        >>> discover.table("table").share(
         ...     with_=UserEmail("colleague@company.com"),
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
@@ -1212,7 +1215,7 @@ class Vector(_DiscoverRequestBuilder):
             access='viewer'
         )
 
-        >>> discover.vector("table").share(
+        >>> discover.table("table").share(
         ...     with_=Organization("myorg"),
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
@@ -1223,7 +1226,7 @@ class Vector(_DiscoverRequestBuilder):
         )
         """
 
-        return super().share(with_=with_, as_=_role_to_vector_role(as_))
+        return super().share(with_=with_, as_=_role_to_table_role(as_))
 
     def revoke(self, from_: ShareTarget, as_: str):
         """
@@ -1241,23 +1244,23 @@ class Vector(_DiscoverRequestBuilder):
 
         Examples
         --------
-        >>> discover.vector("table").revoke(
+        >>> discover.table("table").revoke(
         ...     from_="colleague@company.com",
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
 
-        >>> discover.vector("table").revoke(
+        >>> discover.table("table").revoke(
         ...     from_=UserEmail("colleague@company.com"),
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
 
-        >>> discover.vector("table").revoke(
+        >>> discover.table("table").revoke(
         ...     from_=Organization("myorg"),
         ...     as_="viewer" # or "editor"
         ... ) # doctest: +SKIP
         """
 
-        super().revoke(from_=from_, as_=_role_to_vector_role(as_))
+        super().revoke(from_=from_, as_=_role_to_table_role(as_))
 
     def replace_shares(
         self, user: ShareTarget, from_role: str, to_role: str
@@ -1284,7 +1287,7 @@ class Vector(_DiscoverRequestBuilder):
 
         Examples
         --------
-        >>> discover.vector("table").replace_shares(
+        >>> discover.table("table").replace_shares(
         ...     user="colleague@company.com",
         ...     from_role="viewer",
         ...     to_role="editor"
@@ -1295,7 +1298,7 @@ class Vector(_DiscoverRequestBuilder):
             access='editor'
         )
 
-        >>> discover.vector("table").replace_shares(
+        >>> discover.table("table").replace_shares(
         ...     user=UserEmail("colleague@company.com"),
         ...     from_role="viewer",
         ...     to_role="editor"
@@ -1306,7 +1309,7 @@ class Vector(_DiscoverRequestBuilder):
             access='editor'
         )
 
-        >>> discover.vector("table").replace_shares(
+        >>> discover.table("table").replace_shares(
         ...     user=Organization("myorg"),
         ...     from_role="viewer",
         ...     to_role="editor"
@@ -1320,8 +1323,8 @@ class Vector(_DiscoverRequestBuilder):
 
         return super().replace_shares(
             user=user,
-            from_role=_role_to_vector_role(from_role),
-            to_role=_role_to_vector_role(to_role),
+            from_role=_role_to_table_role(from_role),
+            to_role=_role_to_table_role(to_role),
         )
 
 
@@ -1374,23 +1377,23 @@ class Discover:
 
         return Folder(self, asset_name)
 
-    def vector(self, asset_name: str) -> Vector:
+    def table(self, asset_name: str) -> Table:
         """
-        Constructs a `Vector` request builder.
-        This is a helper that simplifies construction of Discover requests that involve Vector assets.
+        Constructs a `Table` request builder.
+        This is a helper that simplifies construction of Discover requests that involve Table assets.
 
         Parameters
         ----------
         asset_name : str
-            Asset ID of the vector.
+            Asset ID of the table.
 
         Returns
         -------
-        vector : Vector
-            A Discover request builder for requests involving Vector assets.
+        table : Table
+            A Discover request builder for requests involving Table assets.
         """
 
-        return Vector(self, asset_name)
+        return Table(self, asset_name)
 
     def add_access_grant(
         self, asset_name: str, group_or_user: ShareTarget, role: str

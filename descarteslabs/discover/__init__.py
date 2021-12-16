@@ -7,7 +7,7 @@ from .client import (
     Organization,
     SymLink,
     UserEmail,
-    Vector,
+    Table,
 )
 
 __all__ = [
@@ -19,5 +19,5 @@ __all__ = [
     "Organization",
     "SymLink",
     "UserEmail",
-    "Vector",
+    "Table",
 ]
