@@ -291,9 +291,9 @@ class Tables(object):
                 # figure out the asset owner
                 owner_id = next(
                     (g for g in grants if "owner" in g.access), None
-                ).user_id
+                ).target_id
 
-                if grant.user_id == self.auth.payload["email"]:
+                if grant.target_id == self.auth.payload["email"]:
                     perm = grant.access.split("/")[2]
                     # note that we do NOT display owner_id for owner tables
                     if perm == "owner":
