@@ -21,8 +21,6 @@ import time
 
 from tqdm import tqdm
 from urllib3.exceptions import ProtocolError, IncompleteRead
-from urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
 from PIL import Image
 
 from descarteslabs.client.addons import blosc, concurrent, numpy as np
@@ -30,7 +28,6 @@ from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.service.service import Service
 from descarteslabs.client.exceptions import ServerError
-from descarteslabs.common.threading.local import ThreadLocalWrapper
 from descarteslabs.common.dltile import Tile
 
 from .geotiff_utils import make_geotiff
@@ -173,6 +170,7 @@ def yield_chunks(metadata, data, progress, nodata):
 
 
 def _retry(req, headers=None):
+    # this provides a nominal 60 seconds of retry
     DELAY = 0.5
     MULTIPLIER = 2
     JITTER = 1.0
@@ -193,10 +191,11 @@ def _retry(req, headers=None):
         except (IncompleteRead, ProtocolError, ServerError):
             # IncompleteRead: Response length doesn’t match expected Content-Length
             # ProtocolError: Something unexpected happened mid-request/response
-            # ServerError: can also arise from incomplete reads, or from server-side
-            #   error while streaming, or the usual bad status
+            # ServerError: the usual retryable bad status >= 500. Normally won't
+            # occur thanks to the client Retry configuration.
             if retry_count == MAX_RETRIES:
                 raise
+        # MaxRetry and all other ClientError types will be raised to our caller
 
         if retry_count:
             # see https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
@@ -218,23 +217,6 @@ class Raster(Service):
     READ_TIMEOUT = 300
 
     TIMEOUT = (CONNECT_TIMEOUT, READ_TIMEOUT)
-
-    # override the usual Service retry behavior, as calls will be wrapped by the _retry method.
-    RETRY_CONFIG = Retry(
-        total=10,
-        # NOTE: multiplied by 2 ** num_retries, only used for >=2nd retry (first has no delay)
-        # https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html#urllib3.util.retry.Retry
-        backoff_factor=random.uniform(1, 3),
-        # By default, POST requests are not retried
-        method_whitelist=frozenset(
-            ["HEAD", "TRACE", "GET", "POST", "PUT", "OPTIONS", "DELETE"]
-        ),
-        # Don't retry here on bad status codes
-        status=0,
-    )
-
-    # without this, the service would keep using the base Service.RETRY_CONFIG
-    ADAPTER = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=Raster.RETRY_CONFIG))
 
     def __init__(self, url=None, auth=None):
         """The parent Service class implements authentication and exponential

@@ -32,6 +32,10 @@ Changelog
 
 - Allow multiple columns to be used as a composite key when creating a table.
 
+### Raster
+
+- Fixed a bug preventing retry-able errors (such as a 429) from being retried.
+
 ## [1.9.0] - 2021-11-09
 
 ### Catalog
