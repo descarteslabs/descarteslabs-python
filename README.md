@@ -17,7 +17,11 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
-## [Unreleased]
+## [1.9.1] - 2021-12-20
+
+### Raster
+
+- Fixed a bug preventing retry-able errors (such as a 429) from being retried.
 
 ## [1.9.0] - 2021-11-09
 

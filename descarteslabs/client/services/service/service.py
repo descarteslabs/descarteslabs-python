@@ -270,7 +270,10 @@ class Service(object):
     a connection, 2 for reading a response, and 2 for unexpected HTTP status codes.
     The backoff_factor is a random number between 1 and 3, but will never be more
     than 2 minutes.  The unexpected HTTP status codes that will be retried are ``500``,
-    ``502``, ``503``, and ``504`` for any of the HTTP requests.
+    ``502``, ``503``, and ``504`` for any of the HTTP requests. Note that 429s are
+    retried automatically according to their retry-after headers without us
+    specifying anything here (see the source for urllib3.util.Retry as the API
+    documentation doesn't make this clear).
 
     Parameters
     ----------
@@ -310,7 +313,7 @@ class Service(object):
         read=2,
         status=2,
         backoff_factor=random.uniform(1, 3),
-        method_whitelist=frozenset(
+        allowed_methods=frozenset(
             [
                 HttpRequestMethod.HEAD,
                 HttpRequestMethod.TRACE,
@@ -932,7 +935,9 @@ class ThirdPartyService(object):
     establishing a connection.  The backoff_factor is a random number between 1 and
     3, but will never be more than 2 minutes.  The unexpected HTTP status codes that
     will be retried are ``429``, ``500``, ``502``, ``503``, and ``504`` for any of the
-    HTTP requests.
+    HTTP requests. Here we specify 429s explicitly (unlike for the Service class)
+    because we have no guarantee that third party services are consistent about
+    providing a retry-after header.
 
     Parameters
     ----------
@@ -958,7 +963,7 @@ class ThirdPartyService(object):
         total=10,
         read=2,
         backoff_factor=random.uniform(1, 3),
-        method_whitelist=frozenset(
+        allowed_methods=frozenset(
             [
                 HttpRequestMethod.HEAD,
                 HttpRequestMethod.TRACE,
