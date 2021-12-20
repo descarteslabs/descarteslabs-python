@@ -39,6 +39,7 @@ class InspectClient(Service):
             HttpStatusCode.ServiceUnavailable,
             HttpStatusCode.GatewayTimeout,
         ],
+        remove_headers_on_redirect=[],
     )
 
     def __init__(self, channel=None, host=None, url=None, auth=None, retries=None):

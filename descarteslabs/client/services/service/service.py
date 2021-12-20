@@ -331,6 +331,7 @@ class Service(object):
             HttpStatusCode.ServiceUnavailable,
             HttpStatusCode.GatewayTimeout,
         ],
+        remove_headers_on_redirect=[],
     )
 
     # We share an adapter (one per thread/process) among all clients to take advantage
