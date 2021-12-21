@@ -279,7 +279,7 @@ class _DiscoverRequestBuilder(ABC):
         if (
             (self._type() == "folder" and as_.lower() in ALLOWABLE_FOLDER_ROLES)
             or (self._type() == "blob" and as_.lower() in ALLOWABLE_BLOB_ROLES)
-            or (self._type() == "table" and as_.lower() in ALLOWABLE_TABLE_ROLES)
+            or (self._type() == "vector" and as_.lower() in ALLOWABLE_TABLE_ROLES)
         ):
             return self.discover.add_access_grant(self.asset_name, with_, as_)
         else:
@@ -336,8 +336,10 @@ class _DiscoverRequestBuilder(ABC):
 
         warnings.formatwarning = warning_on_one_line
 
-        if (self._type() == "folder" and as_ in ALLOWABLE_BLOB_ROLES) or (
-            self._type() == "blob" and as_ in ALLOWABLE_FOLDER_ROLES
+        if (
+            (self._type() == "folder" and as_ not in ALLOWABLE_FOLDER_ROLES)
+            or (self._type() == "blob" and as_ not in ALLOWABLE_BLOB_ROLES)
+            or (self._type() == "vector" and as_ not in ALLOWABLE_TABLE_ROLES)
         ):
             warnings.warn(message=WARNING)
 
@@ -394,7 +396,7 @@ class _DiscoverRequestBuilder(ABC):
         if (
             (self._type() == "folder" and to_role.lower() in ALLOWABLE_FOLDER_ROLES)
             or (self._type() == "blob" and to_role.lower() in ALLOWABLE_BLOB_ROLES)
-            or (self._type() == "table" and to_role.lower() in ALLOWABLE_TABLE_ROLES)
+            or (self._type() == "vector" and to_role.lower() in ALLOWABLE_TABLE_ROLES)
         ):
             return self.discover.replace_access_grant(
                 self.asset_name, user, from_role, to_role
