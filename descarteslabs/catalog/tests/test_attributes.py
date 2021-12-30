@@ -8,6 +8,7 @@ from enum import Enum
 from ..catalog_base import CatalogObject
 from ..attributes import (
     Attribute,
+    TypedAttribute,
     Timestamp,
     EnumAttribute,
     utc,
@@ -43,6 +44,7 @@ class FakeCatalogObject(CatalogObject):
     mapping = Mapping()
     listmapping = ListAttribute(Mapping)
     listattribute = ListAttribute(Attribute)
+    typedlistattribute = ListAttribute(TypedAttribute(str))
 
 
 class TestAttributes(unittest.TestCase):
@@ -299,6 +301,16 @@ class TestAttributes(unittest.TestCase):
                 foo: zip]"""
 
         assert m_repr.strip("\n") == textwrap.dedent(match_str)
+
+    def test_typed_list_attributes(self):
+        model_object = FakeCatalogObject(id="id", typedlistattribute=["string"])
+
+        assert model_object.typedlistattribute[0] == "string"
+
+        with pytest.raises(AttributeValidationError):
+            FakeCatalogObject(
+                id="id", typedlistattribute=[12],
+            )
 
     def test_listattribute_change_tracking(self):
         nested1 = Nested(foo="zap", dt="2019-02-01T00:00:00.0000Z", validate=False)

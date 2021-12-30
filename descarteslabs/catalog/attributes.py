@@ -286,6 +286,37 @@ class TypedAttribute(Attribute):
         self.attribute_type = attribute_type
         self.coerce = coerce
 
+    def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        Deserializes a value for this attribute from a plain python type, possibly
+        generated through JSONAPI deserialization as it comes from the Descartes Labs
+        catalog.  Optionally indicates whether the data should be validated.
+
+        Parameters
+        ----------
+        value : object
+            Any Python object
+        validate : bool
+            Whether or not the value should be validated.  This value is ``True`` be
+            default, and this method can raise an `AttributeValidationError` in that
+            case.
+
+        Returns
+        -------
+        object
+            Any Python object.
+
+        Raises
+        ------
+        AttributeValidationError
+            When `validate` is ``True`` and a validation error was encountered.
+        """
+        if validate:
+            value = self.validate_value(value)
+
+        return super(TypedAttribute, self).deserialize(value, validate=validate)
+
     def __set__(self, obj, value, validate=True):
         """Assign the given value to the attribute.
 
@@ -294,6 +325,12 @@ class TypedAttribute(Attribute):
         AttributeValidationError
             If a coercion failed or if the value is not of the given type.
         """
+        if validate:
+            value = self.validate_value(value)
+
+        super(TypedAttribute, self).__set__(obj, value, validate)
+
+    def validate_value(self, value):
         if self.attribute_type and value is not None:
             if self.coerce:
                 try:
@@ -307,7 +344,7 @@ class TypedAttribute(Attribute):
                     )
                 )
 
-        super(TypedAttribute, self).__set__(obj, value, validate)
+        return value
 
 
 class CatalogObjectReference(Attribute):
@@ -1159,6 +1196,8 @@ class ListAttribute(ModelAttribute, MutableSequence):
                     self.__class__.__name__
                 )
             )
+        # give the attribute_type our own name for meaningful error messages
+        self._attribute_type._attribute_name = self._attribute_name
         self._items = []
 
         super(ListAttribute, self).__init__(**kwargs)
