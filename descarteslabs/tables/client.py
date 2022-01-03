@@ -58,6 +58,7 @@ import json
 import os
 import time
 import datetime
+import uuid
 
 import numpy as np
 import requests
@@ -489,8 +490,8 @@ class Tables(object):
         """
         # Determine key name; add a timestamp prefix to ensure uniqueness
         # note file extension; .ndgeojson is handled differently on ingest
-        timestamp = time.strftime("%Y%m%d-%H%M%s")
-        key = f"{timestamp}-features.geojsonl"
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        key = f"{timestamp}-{uuid.uuid4()}-features.geojsonl"
 
         if owner is None:
             owner = self.auth.payload["email"]

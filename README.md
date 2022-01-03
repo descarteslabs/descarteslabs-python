@@ -36,6 +36,7 @@ Changelog
 ### Tables
 
 - Allow multiple columns to be used as a composite key when creating a table.
+- Fixed a bug that led to rows being dropped when inserting data asynchronously.
 - Added "auto" datatype to schemas as an auto incrementing counter.
 
 ### Scenes
