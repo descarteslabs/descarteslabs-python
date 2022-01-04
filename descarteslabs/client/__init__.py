@@ -15,7 +15,7 @@
 import sys
 import warnings
 
-if sys.version_info < (3, 6):
+if sys.version_info < (3, 7):
     msg = "Python version {}.{} not supported by descarteslabs.client".format(
         sys.version_info.major, sys.version_info.minor
     )
@@ -27,7 +27,7 @@ if sys.version_info < (3, 7):
     )
     warnings.warn(msg, FutureWarning)
 
-if sys.version_info >= (3, 9):
+if sys.version_info >= (3, 10):
     msg = "Python version {}.{} is not supported yet. You may encounter unexpected errors.".format(
         sys.version_info.major, sys.version_info.minor
     )
