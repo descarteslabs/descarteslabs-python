@@ -5,9 +5,8 @@ import sys
 import pytest
 import pandas as pd
 
-from descarteslabs.tables.client import Tables
+from descarteslabs.tables.client import Tables, JobStatus
 from descarteslabs.client.exceptions import BadRequestError
-from descarteslabs.common.proto.vektorius import vektorius_pb2
 
 
 @pytest.fixture
@@ -117,7 +116,15 @@ def test_encode_feature_error(tables_client, feature):
 
 
 def test_wait_until_completion(tables_client):
-    status = vektorius_pb2.JobStatus.SUCCESS
-    tables_client.check_status = lambda x: (status, "test")
-    (status, msg) = tables_client.wait_until_completion("1234", poll_interval=0.0)
-    assert status
+    tables_client.check_status = lambda _: (JobStatus.SUCCESS, "test message")
+    (status, msg) = tables_client.wait_until_completion(1234, poll_interval=0.0)
+    assert status == JobStatus.SUCCESS
+
+
+def test_wait_until_completion_fail(tables_client):
+    tables_client.check_status = lambda _: (JobStatus.FAILURE, "test message")
+
+    with pytest.raises(RuntimeError):
+        tables_client.wait_until_completion(
+            1234, poll_interval=0.0, raise_on_failure=True
+        )

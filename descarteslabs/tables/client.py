@@ -59,6 +59,7 @@ import os
 import time
 import datetime
 import uuid
+from enum import Enum
 
 import numpy as np
 import requests
@@ -86,6 +87,16 @@ def _default_json_serializer(obj):
         raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
 
+class JobStatus(str, Enum):
+    _s = vektorius_pb2.JobStatus
+    REGISTERED = _s.Name(_s.REGISTERED)
+    PENDING = _s.Name(_s.PENDING)
+    RUNNING = _s.Name(_s.RUNNING)
+    CANCELLED = _s.Name(_s.CANCELLED)
+    SUCCESS = _s.Name(_s.SUCCESS)
+    FAILURE = _s.Name(_s.FAILURE)
+
+
 class Tables(object):
     def __init__(
         self,
@@ -96,6 +107,8 @@ class Tables(object):
         **grpc_client_kwargs,
     ):
         """
+        Tables client for interacting with tabular data.
+
         :param str host: Service hostname.
         :param int port: Service port.
         :param Auth auth: A custom user authentication (defaults to the user
@@ -553,10 +566,12 @@ class Tables(object):
         :return: Tuple; completed, message
         :rtype: (JobStatus, str)
         """
-        response = self.connection.client._client.api["IngestJobStatus"](
-            vektorius_pb2.IngestJobStatusRequest(job_id=jobid)
+        response = self.connection.client._client.api["GetJobStatus"](
+            vektorius_pb2.JobStatusRequest(job_id=jobid)
         )
-        return response.status, response.message
+
+        status = vektorius_pb2.JobStatus.Name(response.status)
+        return JobStatus(status), response.message
 
     def wait_until_completion(self, jobid, raise_on_failure=True, poll_interval=5.0):
         """
@@ -569,23 +584,23 @@ class Tables(object):
 
         :return: Tuple; completed, message
         :rtype: (JobStatus, str)
+
+        :raises RuntimeError: In case the service reports an asynchronous failure
+        and the `raise_on_failure` is set to ``True``.
         """
-        s = vektorius_pb2.JobStatus
-        status_done = set([s.SUCCESS, s.CANCELLED, s.FAILURE])
+        status_done = [JobStatus.SUCCESS, JobStatus.CANCELLED, JobStatus.FAILURE]
 
         completed = False
         while not completed:
             (status, message) = self.check_status(jobid)
-            # print(s.Name(status), message)
             if status in status_done:
                 completed = True
                 break
             time.sleep(poll_interval)
 
-        status_failed = set([s.CANCELLED, s.FAILURE])
+        status_failed = [JobStatus.CANCELLED, JobStatus.FAILURE]
         if status in status_failed:
             if raise_on_failure:
-                raise RuntimeError(f"{s.Name(status)} {message}")
-            # else:
-            # logger.error("{status} {message}")
-        return (s.Name(status), message)
+                raise RuntimeError(f"{status.value} {message}")
+
+        return (status, message)

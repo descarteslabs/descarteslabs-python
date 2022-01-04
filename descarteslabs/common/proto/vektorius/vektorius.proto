@@ -188,7 +188,7 @@ message CreateIngestJobResponse {
   int64 job_id = 1;
 }
 
-message IngestJobStatusRequest {
+message JobStatusRequest {
   // yaas job id
   int64 job_id = 1;
 }
@@ -202,7 +202,7 @@ enum JobStatus {
   FAILURE = 5;
 }
 
-message IngestJobStatusResponse {
+message JobStatusResponse {
   // The status of the async job.
   JobStatus status = 1;
 
@@ -222,8 +222,8 @@ service Vektorius {
   // Initiate an ingest job.
   rpc CreateIngestJob(CreateIngestJobRequest) returns (CreateIngestJobResponse);
 
-  // Get the ingest job status.
-  rpc IngestJobStatus(IngestJobStatusRequest) returns (IngestJobStatusResponse);
+  // Get the job status for ingest or delete rows requests.
+  rpc GetJobStatus(JobStatusRequest) returns (JobStatusResponse);
 
   // Get the schema for a table.
   rpc GetSchema(SchemaRequest) returns (SchemaResponse);

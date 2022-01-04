@@ -17,3 +17,9 @@ Tables (Pre-Alpha)
   :members:
   :inherited-members:
   :undoc-members:
+
+
+.. autoclass:: descarteslabs.tables.JobStatus
+  :autosummary:
+  :members:
+  :undoc-members:

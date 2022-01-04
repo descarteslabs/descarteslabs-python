@@ -29,10 +29,10 @@ class VektoriusStub(object):
                 request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateIngestJobRequest.SerializeToString,
                 response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateIngestJobResponse.FromString,
                 )
-        self.IngestJobStatus = channel.unary_unary(
-                '/descarteslabs.vektorius.v1.Vektorius/IngestJobStatus',
-                request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusRequest.SerializeToString,
-                response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusResponse.FromString,
+        self.GetJobStatus = channel.unary_unary(
+                '/descarteslabs.vektorius.v1.Vektorius/GetJobStatus',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusResponse.FromString,
                 )
         self.GetSchema = channel.unary_unary(
                 '/descarteslabs.vektorius.v1.Vektorius/GetSchema',
@@ -77,7 +77,7 @@ class VektoriusServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def IngestJobStatus(self, request, context):
+    def GetJobStatus(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -125,10 +125,10 @@ def add_VektoriusServicer_to_server(servicer, server):
                     request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateIngestJobRequest.FromString,
                     response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateIngestJobResponse.SerializeToString,
             ),
-            'IngestJobStatus': grpc.unary_unary_rpc_method_handler(
-                    servicer.IngestJobStatus,
-                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusRequest.FromString,
-                    response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusResponse.SerializeToString,
+            'GetJobStatus': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetJobStatus,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusResponse.SerializeToString,
             ),
             'GetSchema': grpc.unary_unary_rpc_method_handler(
                     servicer.GetSchema,
@@ -212,7 +212,7 @@ class Vektorius(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def IngestJobStatus(request,
+    def GetJobStatus(request,
             target,
             options=(),
             channel_credentials=None,
@@ -222,9 +222,9 @@ class Vektorius(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/descarteslabs.vektorius.v1.Vektorius/IngestJobStatus',
-            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusRequest.SerializeToString,
-            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.IngestJobStatusResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.vektorius.v1.Vektorius/GetJobStatus',
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusRequest.SerializeToString,
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
