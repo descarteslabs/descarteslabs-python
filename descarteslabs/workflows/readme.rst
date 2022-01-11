@@ -207,6 +207,7 @@ See :ref:`numpy-functions` for a full list of available functions.
 
   ~descarteslabs.workflows.models.UserEmail
   ~descarteslabs.workflows.models.Organization
+  ~descarteslabs.workflows.models.AllAuthenticatedUsers
 
 :workflow_api_nontoc_heading:`Output Formats`
 

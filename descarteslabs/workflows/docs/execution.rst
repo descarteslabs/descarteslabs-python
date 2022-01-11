@@ -19,6 +19,7 @@ Classes:
   ~descarteslabs.workflows.models.VizOption
   ~descarteslabs.workflows.models.UserEmail
   ~descarteslabs.workflows.models.Organization
+  ~descarteslabs.workflows.models.AllAuthenticatedUsers
   ~descarteslabs.workflows.models.Workflow
   ~descarteslabs.workflows.models.VersionedGraft
   ~descarteslabs.workflows.models.Job

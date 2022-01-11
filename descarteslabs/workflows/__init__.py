@@ -60,6 +60,7 @@ from .types import (
 )
 
 from .models import (
+    AllAuthenticatedUsers,
     JobComputeError,
     JobTimeoutError,
     VizOption,
@@ -160,6 +161,7 @@ __all__ = [
     "VizOption",
     "Organization",
     "UserEmail",
+    "AllAuthenticatedUsers",
     "Workflow",
     "VersionedGraft",
     "Job",

@@ -1,5 +1,6 @@
 from typing import Tuple
 import textwrap
+import re
 from urllib.parse import urlencode
 
 from descarteslabs.common.proto.workflow import workflow_pb2
@@ -11,10 +12,31 @@ from descarteslabs.workflows.client.client import (
     ROLE_WORKFLOWS_VIEWER,
 )
 
-from descarteslabs.discover.client import UserEmail, Organization, _convert_target
+from descarteslabs.discover.client import (
+    _convert_target,
+    Organization,
+    TargetBase,
+    UserEmail,
+)
 
 from .utils import pb_milliseconds_to_datetime
 from .versionedgraft import VersionedGraft
+
+
+class AllAuthenticatedUsers(TargetBase):
+    entityType = "user-email"
+    _prefix = ""
+    _error_msg = "AllAuthenticatedUsers doesn't take any value"
+    _compiled_re = re.compile(ALL_AUTHENTICATED_USERS)
+
+    """Share to the public"""
+
+    def __new__(cls) -> "AllAuthenticatedUsers":
+        return super().__new__(cls, ALL_AUTHENTICATED_USERS)
+
+    # For documentation purposes
+    def __init__(self):
+        pass
 
 
 class Workflow:
@@ -650,7 +672,10 @@ class Workflow:
         if self.created_timestamp is None:
             raise ValueError("Workflow must be saved before it can be shared")
 
-        target = _convert_target(target)
+        if target == ALL_AUTHENTICATED_USERS:
+            target = AllAuthenticatedUsers()
+        else:
+            target = _convert_target(target)
 
         access_grant_request = discover_pb2.CreateAccessGrantRequest(
             access_grant=discover_pb2.AccessGrant(
@@ -695,7 +720,10 @@ class Workflow:
         if self.created_timestamp is None:
             raise ValueError("Workflow must be saved before it can be shared")
 
-        target = _convert_target(target)
+        if target == ALL_AUTHENTICATED_USERS:
+            target = AllAuthenticatedUsers()
+        else:
+            target = _convert_target(target)
 
         delete_access_grant_request = discover_pb2.DeleteAccessGrantRequest(
             access_grant=discover_pb2.AccessGrant(
