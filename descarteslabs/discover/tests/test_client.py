@@ -8,6 +8,7 @@ from descarteslabs.discover.client import (
     Discover,
     DiscoverGrpcClient,
     UserEmail,
+    Organization,
     _IamClient,
 )
 from descarteslabs.client.grpc.exceptions import BadRequest
@@ -1100,3 +1101,46 @@ class TestListOrgUsers(unittest.TestCase):
         with self.assertRaises(ServerError) as e:
             Discover().list_org_users()
             assert e.original_status == 401
+
+
+class TestOrgUsers(unittest.TestCase):
+    def test_email_and_org(self):
+        assert "test@foo.bar" == UserEmail("test@foo.bar")
+        assert "email:test@foo.bar" == UserEmail("test@foo.bar")
+        assert "test@foo.bar" == UserEmail("email:test@foo.bar")
+        assert "email:test@foo.bar" == UserEmail("email:test@foo.bar")
+
+        assert "myorg" == Organization("myorg")
+        assert "org:myorg" == Organization("myorg")
+        assert "myorg" == Organization("org:myorg")
+        assert "org:myorg" == Organization("org:myorg")
+
+        with self.assertRaises(ValueError):
+            UserEmail("test@")
+        with self.assertRaises(ValueError):
+            UserEmail("test@.")
+        with self.assertRaises(ValueError):
+            UserEmail("foo.bar")
+        with self.assertRaises(ValueError):
+            UserEmail("@foo.bar")
+        with self.assertRaises(ValueError):
+            UserEmail("test")
+
+        with self.assertRaises(ValueError):
+            Organization("x@y.z")
+        with self.assertRaises(ValueError):
+            Organization("SomeOrg")
+
+        a = Organization("aaa")
+        b = Organization("bbb")
+
+        assert not (a == b)
+        assert a != b
+        assert not (a > b)
+        assert not (a >= b)
+        assert a < b
+        assert a <= b
+        assert a >= a
+        assert a <= a
+        assert not ("aaa" > b)
+        assert "aaa" >= a

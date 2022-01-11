@@ -1,6 +1,7 @@
 from .exceptions import JobComputeError, JobTimeoutError
 from .visualization import VizOption
 from .workflow import Workflow, wmts_url
+from descarteslabs.discover import UserEmail, Organization
 from .versionedgraft import VersionedGraft
 from .job import Job
 from .xyz import XYZ, XYZLogListener
@@ -13,6 +14,8 @@ __all__ = [
     # .visualization
     "VizOption",
     # .workflow
+    "UserEmail",
+    "Organization",
     "Workflow",
     "wmts_url",
     # .versionedgraft

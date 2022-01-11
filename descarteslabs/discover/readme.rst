@@ -5,7 +5,7 @@ Discover (Alpha)
 
 .. warning::
 
-    Discover is in an Alpha release. 
+    Discover is in an Alpha release.
     We reserve the right to modify this API without any guarantees about backwards compatibility.
 
 .. default-role:: py:obj
@@ -19,6 +19,9 @@ Discover (Alpha)
   ~descarteslabs.discover.Discover
   ~descarteslabs.discover.Folder
   ~descarteslabs.discover.SymLink
+
+  ~descarteslabs.discover.UserEmail
+  ~descarteslabs.discover.Organization
 
 -----
 
@@ -44,7 +47,6 @@ Discover (Alpha)
 .. autoclass:: descarteslabs.discover.Discover
   :autosummary:
   :members:
-  :inherited-members:
   :undoc-members:
 
 .. autoclass:: descarteslabs.discover.Folder
@@ -59,3 +61,12 @@ Discover (Alpha)
   :inherited-members:
   :undoc-members:
   :exclude-members: target_asset_name, target_asset_display_name
+
+.. autoclass:: descarteslabs.discover.UserEmail
+  :autosummary:
+  :members:
+
+.. autoclass:: descarteslabs.discover.Organization
+  :autosummary:
+  :members:
+

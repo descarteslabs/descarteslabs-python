@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import re
 import os
-from typing import Generator, List, NewType, Optional, Union
+from typing import Generator, List, Optional, Union
 import warnings
 
 from descarteslabs.client.auth import Auth
@@ -11,10 +11,6 @@ from descarteslabs.client.services.service import Service
 from descarteslabs.common.discover import DiscoverGrpcClient
 from descarteslabs.common.proto.discover import discover_pb2
 
-ENTITY_TYPE_USER_EMAIL = "user-email"
-USER_EMAIL_PREFIX = "email:"
-ENTITY_TYPE_ORGANIZATION = "organization"
-ORG_PREFIX = "org:"
 NAME_SEPARATOR = ":~/"
 PATH_SEPARATOR = "/"
 DISCOVER_EDITOR = "discover/role/editor"
@@ -28,61 +24,111 @@ ALLOWABLE_BLOB_ROLES = {STORAGE_VIEWER, STORAGE_EDITOR}
 ALLOWABLE_TABLE_ROLES = {TABLE_VIEWER, TABLE_EDITOR}
 
 
-_UserEmail = NewType("UserEmail", str)
-_Organization = NewType("Organization", str)
+class TargetBase(str):
+    # Derived classes must define these class vars
+    entityType = None  # Public
+    _prefix = None
+    _compiled_re = None
+    _error_msg = None
+
+    def __new__(cls, value: object) -> "TargetBase":
+        # Allow the prefix, but strip it
+        if value.startswith(cls._prefix):
+            value = value[len(cls._prefix) :]
+
+        if not cls._compiled_re.fullmatch(value):
+            raise ValueError(cls._error_msg.format(value))
+
+        return super().__new__(cls, f"{value}")
+
+    def __eq__(self, other: object) -> bool:
+        # Strip the prefix for other if present
+        if other.startswith(self._prefix):
+            other = other[len(self._prefix) :]
+
+        return super().__eq__(other)
+
+    def __ge__(self, other: object) -> bool:
+        # Strip the prefix for other if present
+        if other.startswith(self._prefix):
+            other = other[len(self._prefix) :]
+
+        return super().__ge__(other)
 
 
-# Ensures that the email is always prefixed with "email:"
-def UserEmail(email: str) -> _UserEmail:
-    email = email.lower()
-    return (
-        f"{USER_EMAIL_PREFIX}{email}"
-        if not email.startswith(USER_EMAIL_PREFIX)
-        else email
+class UserEmail(TargetBase):
+    """The given string is interpreted as a user email"""
+
+    entityType = "user-email"
+    _prefix = "email:"
+    _error_msg = "This is not a valid email: {}"
+
+    # Identical to the check made by the service.
+    # following the advice of w3:
+    # https://www.w3.org/TR/2016/REC-html51-20161101/sec-forms.html#email-state-typeemail
+    # also see:
+    # https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
+    _compiled_re = re.compile(
+        r"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@"
+        r"[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?"
+        r"(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*"
     )
 
+    # For documentation purposes
+    def __init__(self, email):
+        """
+        Parameters
+        ----------
+        email: str
+            The user email to use.
+        """
+        pass
 
-# Ensures that the Organization is always prefixed with "org:"
-# NOTE: While user emails are not case-sensitive, Organizations are.
-def Organization(organization: str) -> _Organization:
-    return (
-        f"{ORG_PREFIX}{organization}"
-        if not organization.startswith(ORG_PREFIX)
-        else organization
-    )
 
+class Organization(TargetBase):
+    """The given string is interpreted as an organization"""
 
-def _organization_namespace_asset_name(organization: _Organization) -> str:
-    return f"asset/namespace/{organization}"
+    entityType = "organization"
+    _prefix = "org:"
+    _error_msg = "This is not a valid organization: {}"
+
+    # Let's keep org's simple for now; all lowercase
+    _compiled_re = re.compile(r"[a-z][a-z0-9_-]+")
+
+    # For documentation purposes
+    def __init__(self, org):
+        """
+        Parameters
+        ----------
+        org: str
+            The name of the organization to use. You can only share with your own
+            organization (visit https://iam.descarteslabs.com to see your
+            organization's name).  An organization name is always all lowercase and
+            only contains ascii characters, the `-` character and/or the `_`
+            character.
+        """
+        pass
 
 
 # ShareTargets can either be emails in string format,
 # or users can explicitly indicate intended type with UserEmail and Organization helpers
-ShareTarget = Union[str, _UserEmail, _Organization]
+ShareTarget = Union[str, UserEmail, Organization]
 
 
-# if the entity starts with anything other than `org:`, assume user-email.
-def _get_entity_type(target: ShareTarget) -> str:
-    return (
-        ENTITY_TYPE_ORGANIZATION
-        if target.startswith(ORG_PREFIX)
-        else ENTITY_TYPE_USER_EMAIL
-    )
-
-
-# removes prefix from entity
-def _strip_entity(target: str) -> str:
-    parts = target.split(":")
-
-    if len(parts) == 1:
+def _convert_target(target: ShareTarget):
+    # Convert the given target, which can be a str, a UserEmail or an Organization
+    # into a UserEmail or Organization
+    if isinstance(target, (UserEmail, Organization)):
         return target
-    elif len(parts) == 2:
-        return parts[1]
+
+    if target.startswith(Organization._prefix):
+        return Organization(target)
     else:
-        raise ValueError(
-            f"Invalid share target specified: {target}."
-            'Some examples of acceptable targets: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")'
-        )
+        return UserEmail(target)
+
+
+def _organization_namespace_asset_name(organization: Organization) -> str:
+    return f"asset/namespace/{organization}"
 
 
 @dataclass
@@ -232,7 +278,7 @@ class _DiscoverRequestBuilder(ABC):
         Parameters
         ----------
         with_ : ShareTarget
-            Email or Organization to give access to.
+            `UserEmail` or `Organization` to give access to.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
@@ -296,7 +342,7 @@ class _DiscoverRequestBuilder(ABC):
         Parameters
         ----------
         from_ : ShareTarget
-            Email or Organization to remove access from.
+            `UserEmail` or `Organization` to remove access from.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
@@ -320,9 +366,10 @@ class _DiscoverRequestBuilder(ABC):
         ... ) # doctest: +SKIP
         """
 
-        # This warning is here for the security of our users. In the case that they are revoking access,
-        # if they accidentally revoke with the wrong kind of access for their asset (but a valid fully-resolved role),
-        # we will warn them that their revoke was likely not successful.
+        # This warning is here for the security of our users. In the case that they are
+        # revoking access, if they accidentally revoke with the wrong kind of access for
+        # their asset (but a valid fully-resolved role), we will warn them that their
+        # revoke was likely not successful.
         WARNING = (
             " The revoke you are trying to perform has likely not taken place."
             f" The asset you are trying to revoke access on is a '{self._type()}' and you used a role '{as_}',"
@@ -355,7 +402,7 @@ class _DiscoverRequestBuilder(ABC):
         Parameters
         ----------
         user : ShareTarget
-            Email or Organization to replace access for.
+            `UserEmail` or `Organization` to replace access for.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         from_role : str
@@ -785,7 +832,7 @@ class Blob(_DiscoverRequestBuilder):
         Parameters
         ----------
         with_ : ShareTarget
-            Email or Organization to give access to.
+            `UserEmail` or `Organization` to give access to.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
@@ -839,7 +886,7 @@ class Blob(_DiscoverRequestBuilder):
         Parameters
         ----------
         from_ : ShareTarget
-            Email or Organization to revoke access from.
+            `UserEmail` or `Organization` to revoke access from.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
@@ -875,7 +922,7 @@ class Blob(_DiscoverRequestBuilder):
         Parameters
         ----------
         user : ShareTarget
-            Email or Organization to replace access for.
+            `UserEmail` or `Organization` to replace access for.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         from_role : str
@@ -974,7 +1021,7 @@ class Folder(_DiscoverRequestBuilder):
         Parameters
         ----------
         with_ : ShareTarget
-            Email or Organization to give access to.
+            `UserEmail` or `Organization` to give access to.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
@@ -1028,7 +1075,7 @@ class Folder(_DiscoverRequestBuilder):
         Parameters
         ----------
         from_ : ShareTarget
-            Email or Organization to revoke access from.
+            `UserEmail` or `Organization` to revoke access from.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
@@ -1064,7 +1111,7 @@ class Folder(_DiscoverRequestBuilder):
         Parameters
         ----------
         user : ShareTarget
-            Email or Organization to replace access for.
+            `UserEmail` or `Organization` to replace access for.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         from_role : str
@@ -1184,7 +1231,7 @@ class Table(_DiscoverRequestBuilder):
         Parameters
         ----------
         with_ : ShareTarget
-            Email or Organization to give access to.
+            `UserEmail` or `Organization` to give access to.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
@@ -1238,7 +1285,7 @@ class Table(_DiscoverRequestBuilder):
         Parameters
         ----------
         from_ : ShareTarget
-            Email or Organization to revoke access from.
+            `UserEmail` or `Organization` to revoke access from.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         as_ : str
@@ -1274,7 +1321,7 @@ class Table(_DiscoverRequestBuilder):
         Parameters
         ----------
         user : ShareTarget
-            Email or Organization to replace access for.
+            `UserEmail` or `Organization` to replace access for.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         from_role : str
@@ -1408,7 +1455,7 @@ class Discover:
         asset_name : str
             Path of the file or folder to give access to.
         group_or_user : ShareTarget
-            Email or Organization to grant access for.
+            `UserEmail` or `Organization` to grant access for.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         role : str
@@ -1444,12 +1491,14 @@ class Discover:
         )
         """
 
+        group_or_user = _convert_target(group_or_user)
+
         add_request = discover_pb2.CreateAccessGrantRequest(
             access_grant=discover_pb2.AccessGrant(
                 asset_name=asset_name,
                 entity=discover_pb2.Entity(
-                    type=_get_entity_type(group_or_user),
-                    id=_strip_entity(group_or_user),
+                    type=group_or_user.entityType,
+                    id=group_or_user,
                 ),
                 access=role,
             )
@@ -1471,7 +1520,7 @@ class Discover:
         asset_name : str
             Path of the file or folder to remove access from.
         group_or_user : ShareTarget
-            Email or Organization to revoke access from.
+            `UserEmail` or `Organization` to revoke access from.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         role : str
@@ -1492,12 +1541,14 @@ class Discover:
         ... ) # doctest: +SKIP
         """
 
+        group_or_user = _convert_target(group_or_user)
+
         remove_request = discover_pb2.DeleteAccessGrantRequest(
             access_grant=discover_pb2.AccessGrant(
                 asset_name=asset_name,
                 entity=discover_pb2.Entity(
-                    type=_get_entity_type(group_or_user),
-                    id=_strip_entity(group_or_user),
+                    type=group_or_user.entityType,
+                    id=group_or_user,
                 ),
                 access=role,
             )
@@ -1519,7 +1570,7 @@ class Discover:
         asset_name : str
             Path of the file or folder to replace access to.
         group_or_user : ShareTarget
-            Email or Organization to replace access for.
+            `UserEmail` or `Organization` to replace access for.
             If just a plain string is passed, it is assumed to be an email address.
             Acceptable ShareTarget formats: "foo@bar.com", UserEmail("foo@bar.com") or Organization("foobar")
         role_from : str
@@ -1559,20 +1610,20 @@ class Discover:
         )
         """
 
-        target_id = _strip_entity(group_or_user)
+        group_or_user = _convert_target(group_or_user)
 
         replace_request = discover_pb2.ReplaceAccessGrantRequest(
             delete_access_grant=discover_pb2.AccessGrant(
                 asset_name=asset_name,
                 entity=discover_pb2.Entity(
-                    type=_get_entity_type(group_or_user), id=target_id
+                    type=group_or_user.entityType, id=group_or_user
                 ),
                 access=role_from,
             ),
             create_access_grant=discover_pb2.AccessGrant(
                 asset_name=asset_name,
                 entity=discover_pb2.Entity(
-                    type=_get_entity_type(group_or_user), id=target_id
+                    type=group_or_user.entityType, id=group_or_user
                 ),
                 access=role_to,
             ),
@@ -1960,13 +2011,15 @@ class Discover:
             yield from (Asset._from_proto_asset(elem) for elem in resp.assets)
             next_page = resp.next_page
 
-    def list_assets(self, asset_name: Optional[str] = None) -> List[Asset]:
+    def list_assets(
+        self, asset_name: Optional[Union[str, Organization]] = None
+    ) -> List[Asset]:
         """
         List child assets of the provided asset.
 
         Parameters
         ----------
-        asset_name : Optional[str, _Organization]
+        asset_name : Optional[Union[str, Organization]]
             Asset name of the folder or namespace to list from.
 
         Returns
@@ -2053,7 +2106,10 @@ class Discover:
         if asset_name is None:
             asset_name = ""
 
-        if asset_name.startswith("org:"):
+        if isinstance(asset_name, Organization):
+            asset_name = f"{Organization._prefix}{asset_name}"
+
+        if asset_name.startswith(Organization._prefix):
             asset_name = _organization_namespace_asset_name(asset_name)
 
         return list(self._page_list(asset_name))

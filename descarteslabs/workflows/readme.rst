@@ -189,14 +189,24 @@ See :ref:`numpy-functions` for a full list of available functions.
   :nosignatures:
 
   ~descarteslabs.workflows.models.Workflow
+  ~descarteslabs.workflows.models.VersionedGraft
   ~descarteslabs.workflows.models.VizOption
   ~descarteslabs.workflows.models.Job
   ~descarteslabs.workflows.models.XYZ
   ~descarteslabs.workflows.models.XYZLogListener
-  ~descarteslabs.workflows.models.compute
   ~descarteslabs.workflows.inspect
+  ~descarteslabs.workflows.models.compute
   ~descarteslabs.workflows.models.publish
   ~descarteslabs.workflows.models.use
+  ~descarteslabs.workflows.models.wmts_url
+
+:workflow_api_nontoc_heading:`Sharing`
+
+.. autosummary::
+  :nosignatures:
+
+  ~descarteslabs.workflows.models.UserEmail
+  ~descarteslabs.workflows.models.Organization
 
 :workflow_api_nontoc_heading:`Output Formats`
 

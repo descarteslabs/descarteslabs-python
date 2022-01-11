@@ -24,6 +24,10 @@ Changelog
 - Added support for Python 3.9.
 - Removed support for Python 3.6 which is now officially End Of Life.
 
+### Workflows
+- Added support for organizational sharing. You can now share using the `Organization` type:
+  - `workflows.add_reader(Organization("some_org"))`
+
 ### Discover
 
 - Added support for organizational sharing. You can now share using the `Organization` type:

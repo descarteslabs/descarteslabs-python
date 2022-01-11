@@ -9,9 +9,9 @@ from descarteslabs.workflows.client import get_global_grpc_client
 from descarteslabs.workflows.client.client import (
     ALL_AUTHENTICATED_USERS,
     ROLE_WORKFLOWS_VIEWER,
-    TYPE_USER_EMAIL,
 )
 
+from descarteslabs.discover.client import UserEmail, Organization, _convert_target
 
 from .utils import pb_milliseconds_to_datetime
 from .versionedgraft import VersionedGraft
@@ -621,25 +621,28 @@ class Workflow:
             new_message.ClearField("versioned_grafts")
         return self._from_proto(new_message, client)
 
-    def add_reader(self, user, client=None):
+    def add_reader(self, target, client=None):
         """
-        Share the workflow with another user.
+        Share the workflow with another user or organization.
 
-        The workflow must have previously been saved to the backend; to do so, call `~.save`.
+        The workflow must have previously been saved to the backend;
+        to do so, call `~.save`.
 
         Parameters
         ----------
-        user: str
-            The user (email) with whom the workflow is to be shared.
+        target: str, UserEmail, Organization
+            The `UserEmail` or `Organization` with whom the workflow is to be shared.
+            You can only share with your own organization.
         client: `.workflows.client.Client`, optional
             Allows you to use a specific client instance with non-default
             auth and parameters.
 
         Example
         -------
-        >>> from descarteslabs.workflows import Workflow
+        >>> from descarteslabs.workflows import Workflow, UserEmail, Organization
         >>> workflow = Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
-        >>> workflow.add_reader("betty@gmail.com") # doctest: +SKIP
+        >>> workflow.add_reader(UserEmail("betty@gmail.com")) # doctest: +SKIP
+        >>> workflow.add_reader(Organization("myorg")) # doctest: +SKIP
         """
         if client is None:
             client = self._client
@@ -647,12 +650,14 @@ class Workflow:
         if self.created_timestamp is None:
             raise ValueError("Workflow must be saved before it can be shared")
 
+        target = _convert_target(target)
+
         access_grant_request = discover_pb2.CreateAccessGrantRequest(
             access_grant=discover_pb2.AccessGrant(
-                asset_name=self._access_name,
+                asset_name=self._asset_name,
                 entity=discover_pb2.Entity(
-                    type=TYPE_USER_EMAIL,
-                    id=user,
+                    type=target.entityType,
+                    id=target,
                 ),
                 access=ROLE_WORKFLOWS_VIEWER,
             )
@@ -662,25 +667,27 @@ class Workflow:
             access_grant_request, timeout=client.DEFAULT_TIMEOUT
         )
 
-    def remove_reader(self, user, client=None):
+    def remove_reader(self, target, client=None):
         """
-        Revoke sharing of the workflow with another user.
+        Revoke sharing of the workflow with another user or organization.
 
         The workflow must have previously been saved to the backend; to do so, call `~.save`.
 
         Parameters
         ----------
         user: str
-            The user (email) for whom premission to access the workflow is to be revoked.
+            The `UserEmail` or `Organization` for whom premission to access the workflow
+            is to be revoked.
         client: `.workflows.client.Client`, optional
             Allows you to use a specific client instance with non-default
             auth and parameters.
 
         Example
         -------
-        >>> from descarteslabs.workflows import Workflow
+        >>> from descarteslabs.workflows import Workflow, UserEmail, Organization
         >>> workflow = Workflow.get("bob@gmail.com:cool_model") # doctest: +SKIP
-        >>> workflow.remove_reader("betty@gmail.com") # doctest: +SKIP
+        >>> workflow.remove_reader(UserEmail("betty@gmail.com")) # doctest: +SKIP
+        >>> workflow.remove_reader(Organization("myorg")) # doctest: +SKIP
         """
         if client is None:
             client = self._client
@@ -688,12 +695,14 @@ class Workflow:
         if self.created_timestamp is None:
             raise ValueError("Workflow must be saved before it can be shared")
 
+        target = _convert_target(target)
+
         delete_access_grant_request = discover_pb2.DeleteAccessGrantRequest(
             access_grant=discover_pb2.AccessGrant(
-                asset_name=self._access_name,
+                asset_name=self._asset_name,
                 entity=discover_pb2.Entity(
-                    type=TYPE_USER_EMAIL,
-                    id=user,
+                    type=target.entityType,
+                    id=target,
                 ),
                 access=ROLE_WORKFLOWS_VIEWER,
             )
@@ -717,8 +726,9 @@ class Workflow:
 
         Yields
         -----
-        user: str
-            User with whom the workflow has been shared for reading.
+        user: UserEmail or Organization
+            `UserEmail` or `Organization` with whom the workflow has been shared
+            for reading.
 
         Example
         -------
@@ -734,14 +744,17 @@ class Workflow:
             raise ValueError("Workflow must be saved before it can be shared")
 
         list_access_grants_request = discover_pb2.ListAccessGrantsStreamRequest(
-            asset_name=self._access_name,
+            asset_name=self._asset_name,
         )
 
         for r in client.api["ListAccessGrantsStream"](
             list_access_grants_request,
             timeout=client.DEFAULT_TIMEOUT,
         ):
-            yield r.access_grant.entity.id
+            if r.access_grant.entity.type == Organization.entityType:
+                yield Organization(r.access_grant.entity.id)
+            else:
+                yield UserEmail(r.access_grant.entity.id)
 
     def add_public_reader(self, client=None):
         """
@@ -879,7 +892,7 @@ class Workflow:
         self._message.tags[:] = tags
 
     @property
-    def _access_name(self):
+    def _asset_name(self):
         return f"asset/workflow/{self.id}"
 
     def __eq__(self, other):

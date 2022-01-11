@@ -28,7 +28,6 @@ from descarteslabs.workflows import _channel
 # For lack of a better location for these:
 ALL_AUTHENTICATED_USERS = "allAuthenticatedUsers"
 ROLE_WORKFLOWS_VIEWER = "workflows/role/viewer"
-TYPE_USER_EMAIL = "user-email"
 
 
 def _do_retry(exception, retry_on_429s):
