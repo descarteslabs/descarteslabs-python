@@ -67,7 +67,7 @@ import pandas as pd
 
 import warnings
 
-import descarteslabs.discover as discover
+import descarteslabs.discover as disco
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.exceptions import BadRequestError
 from descarteslabs.client.services.storage import Storage
@@ -103,6 +103,7 @@ class Tables(object):
         host="platform.descarteslabs.com",
         port=443,
         auth=None,
+        discover_client=None,
         database=None,
         **grpc_client_kwargs,
     ):
@@ -116,9 +117,6 @@ class Tables(object):
             variables)
         :param database: Backend database
         """
-        if auth is None:
-            auth = Auth()
-
         self.connection = serializer.connect(
             host=host, port=port, auth=auth, **grpc_client_kwargs
         )
@@ -128,9 +126,8 @@ class Tables(object):
 
         self.database = database
 
-        self.auth = auth
-
-        self.discover_client = discover.Discover(host, auth=auth)
+        self.auth = auth or Auth()
+        self.discover_client = discover_client or disco.Discover(host, auth=auth)
 
     @property
     def dialect(self):
