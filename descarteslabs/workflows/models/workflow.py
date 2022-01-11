@@ -781,6 +781,8 @@ class Workflow:
         ):
             if r.access_grant.entity.type == Organization.entityType:
                 yield Organization(r.access_grant.entity.id)
+            elif r.access_grant.entity.id == ALL_AUTHENTICATED_USERS:
+                yield AllAuthenticatedUsers()
             else:
                 yield UserEmail(r.access_grant.entity.id)
 
