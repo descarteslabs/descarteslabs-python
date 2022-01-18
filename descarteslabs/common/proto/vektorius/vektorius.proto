@@ -193,6 +193,25 @@ message JobStatusRequest {
   int64 job_id = 1;
 }
 
+message CreateDeleteRowsJobRequest {
+  // ids, string dump
+  string ids = 1;
+
+  // table_name
+  string table_name = 2;
+
+  // primary key order
+  repeated string pk_order = 3;
+
+  // owner
+  string owner = 4;
+}
+
+message CreateDeleteRowsJobResponse {
+  // yaas job id
+  int64 job_id = 1;
+}
+
 enum JobStatus {
   REGISTERED = 0;
   PENDING = 1;
@@ -224,6 +243,9 @@ service Vektorius {
 
   // Get the job status for ingest or delete rows requests.
   rpc GetJobStatus(JobStatusRequest) returns (JobStatusResponse);
+
+  // Initiate a delete rows job.
+  rpc CreateDeleteRowsJob(CreateDeleteRowsJobRequest) returns (CreateDeleteRowsJobResponse);
 
   // Get the schema for a table.
   rpc GetSchema(SchemaRequest) returns (SchemaResponse);

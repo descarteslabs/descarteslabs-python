@@ -485,7 +485,7 @@ class Tables(object):
 
     def insert_rows(self, obj, table_name, owner=None):
         """
-        Add features to an existing table
+        Add rows to an existing table
 
         :param object obj: Python object representing GeoJSON-like features.
             This can be an object with __geo_interface__ method (e.g. GeoDataFrame),
@@ -533,6 +533,45 @@ class Tables(object):
                 key=key,
                 storage_type=self.storage_type,
                 table_name=table_name,
+                owner=owner,
+            )
+        )
+        return response.job_id
+
+    def delete_rows(self, ids, table_name, pk_order=None, owner=None):
+        """
+        Deletes rows from an existing table
+
+        :param list, pd.Series: Iterable of ids to delete. These ids must match
+            the primary key or keys of the table. Ids may be either elements
+            by themselves or list/tuples of elements in the case of composite primary keys.
+        :param str table_name: name of table
+        :param str owner: table owner, defaults to the user's email.
+        :param list pk_order: Required when deleting rows from tables with
+            composite primary keys. Specify the column order for each element in ids.
+        :return: Job identifier
+        :rtype: str
+        """
+        if owner is None:
+            owner = self.auth.payload["email"]
+
+        if isinstance(ids, pd.Series):
+            ids = ids.tolist()
+
+        def json_hander(obj):
+            # custom handler for special objects since date, datetime objects
+            # can be primary keys
+            if isinstance(obj, (datetime.date, datetime.datetime)):
+                return obj.isoformat()
+
+        # try jsoning ids
+        ids_string = json.dumps(ids, default=json_hander)
+
+        response = self.connection.client._client.api["CreateDeleteRowsJob"](
+            vektorius_pb2.CreateDeleteRowsJobRequest(
+                ids=ids_string,
+                table_name=table_name,
+                pk_order=pk_order,
                 owner=owner,
             )
         )

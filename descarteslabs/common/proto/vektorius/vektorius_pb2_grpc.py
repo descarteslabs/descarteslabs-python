@@ -34,6 +34,11 @@ class VektoriusStub(object):
                 request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusRequest.SerializeToString,
                 response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusResponse.FromString,
                 )
+        self.CreateDeleteRowsJob = channel.unary_unary(
+                '/descarteslabs.vektorius.v1.Vektorius/CreateDeleteRowsJob',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateDeleteRowsJobRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateDeleteRowsJobResponse.FromString,
+                )
         self.GetSchema = channel.unary_unary(
                 '/descarteslabs.vektorius.v1.Vektorius/GetSchema',
                 request_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.SchemaRequest.SerializeToString,
@@ -78,6 +83,12 @@ class VektoriusServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def GetJobStatus(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateDeleteRowsJob(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -129,6 +140,11 @@ def add_VektoriusServicer_to_server(servicer, server):
                     servicer.GetJobStatus,
                     request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusRequest.FromString,
                     response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusResponse.SerializeToString,
+            ),
+            'CreateDeleteRowsJob': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateDeleteRowsJob,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateDeleteRowsJobRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateDeleteRowsJobResponse.SerializeToString,
             ),
             'GetSchema': grpc.unary_unary_rpc_method_handler(
                     servicer.GetSchema,
@@ -225,6 +241,23 @@ class Vektorius(object):
         return grpc.experimental.unary_unary(request, target, '/descarteslabs.vektorius.v1.Vektorius/GetJobStatus',
             descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusRequest.SerializeToString,
             descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.JobStatusResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CreateDeleteRowsJob(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.vektorius.v1.Vektorius/CreateDeleteRowsJob',
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateDeleteRowsJobRequest.SerializeToString,
+            descarteslabs_dot_common_dot_proto_dot_vektorius_dot_vektorius__pb2.CreateDeleteRowsJobResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

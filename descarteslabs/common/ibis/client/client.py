@@ -45,6 +45,7 @@ class VektoriusGrpcClient(GrpcClient):
         self._add_api("Vektorius", "GetSchema")
         self._add_api("Vektorius", "Search")
         self._add_api("Vektorius", "SearchResults")
+        self._add_api("Vektorius", "CreateDeleteRowsJob")
 
 
 class _Client(object):
