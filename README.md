@@ -19,6 +19,8 @@ Changelog
 =========
 ## [Unreleased]
 
+## [1.10.0] - 2022-01-18
+
 ### Python Versions Supported
 
 - Added support for Python 3.9.
@@ -37,11 +39,8 @@ Changelog
 - Allow user to list their organization's users.
   - `Discover().list_org_users()`
 
-### Tables
-
-- Allow multiple columns to be used as a composite key when creating a table.
-- Fixed a bug that led to rows being dropped when inserting data asynchronously.
-- Added "auto" datatype to schemas as an auto incrementing counter.
+### Tables - Added
+- Added an **alpha** Tables client. The Tables module lets you organize, upload, and query tabular data and vector geometries. As an alpha release, we reserve the right to modify the Tables client API without any guarantees about backwards compatibility. See the [Tables API](https://docs.descarteslabs.com/descarteslabs/tables/readme.html) and [Tables Guide](https://docs.descarteslabs.com/guides/tables.html) documentation for more details.
 
 ### Scenes
 - Added the `progress=` parameter to the various rastering methods such as `Scene.ndarray`,
