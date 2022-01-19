@@ -6,6 +6,8 @@ Tables
     The Tables client is in an Alpha release. Descartes Labs reserves the right to
     modify this API without any guarantees about backwards compatibility.
 
+|
+
 .. automodule:: descarteslabs.tables
 
 .. default-role:: py:obj
