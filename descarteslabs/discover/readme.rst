@@ -1,12 +1,12 @@
-Discover (Alpha)
-----------------
-
-.. automodule:: descarteslabs.discover
+Discover
+--------
 
 .. warning::
 
-    Discover is in an Alpha release.
-    We reserve the right to modify this API without any guarantees about backwards compatibility.
+    The Discover client is in an Alpha release. Descartes Labs reserves the right to
+    modify this API without any guarantees about backwards compatibility.
+
+.. automodule:: descarteslabs.discover
 
 .. default-role:: py:obj
 

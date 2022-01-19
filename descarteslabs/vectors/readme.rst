@@ -1,6 +1,13 @@
 Vectors
 -------
 
+.. warning::
+
+   **This client has been deprecated in favor of the newer**
+   :doc:`Tables client </descarteslabs/tables/readme>`.
+
+|
+
 .. Use single ticks to auto-reference for cleaner docstrings
 .. default-role:: any
 
