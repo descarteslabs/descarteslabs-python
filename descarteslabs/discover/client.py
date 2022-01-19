@@ -231,8 +231,6 @@ class Asset:
                 target_asset_display_name=asset.sym_link.target_display_name,
             )
 
-        print(asset)
-
         return cls(
             asset_name=asset.name,
             display_name=asset.display_name,
