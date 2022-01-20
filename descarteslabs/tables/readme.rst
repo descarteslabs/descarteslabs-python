@@ -10,6 +10,14 @@ Tables
 
 .. default-role:: py:obj
 
+.. autosummary::
+  :nosignatures:
+
+  ~descarteslabs.tables.Tables
+  ~descarteslabs.tables.JobStatus
+
+-----
+
 .. autoclass:: descarteslabs.tables.Tables
   :autosummary:
   :members:

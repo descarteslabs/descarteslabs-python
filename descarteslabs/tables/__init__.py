@@ -1,3 +1,3 @@
-from .client import Tables
+from .client import Tables, JobStatus
 
-__all__ = ["Tables"]
+__all__ = ["Tables", "JobStatus"]
