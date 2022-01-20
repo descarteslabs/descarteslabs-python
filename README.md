@@ -48,6 +48,11 @@ Changelog
   and `SceneCollection.download_mosaic`. This can be used to enable or disable the display
   of progress bars.
 
+### Tasks images
+- Support for Python 3.9 images has been added, and support for Python 3.6 images has been removed.
+- Many of the add on packages have been upgraded to more recently released versions. In particular, `tensorflow` was updated from version 2.3 to version 2.7.
+- GPU support was bumped up from CUDA 10 to CUDA 11.2
+
 ## [1.9.1] - 2021-12-20
 
 ### Raster
