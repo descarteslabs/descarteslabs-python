@@ -50,13 +50,16 @@ def deprecate_func(message=None):
     This decorator emits a deprecation warning for a function with a custom
     message, if applicable.
     """
+
     def wrapper(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
             if message:
                 msg = message
             else:
-                msg = "{} is deprecated and will be removed competely in a future version".format(f.__name__)
+                msg = "{} has been deprecated and will be removed competely in a future version".format(
+                    f.__name__
+                )
             warnings.warn(msg, FutureWarning, stacklevel=2)
             return f(*args, **kwargs)
 
@@ -153,7 +156,7 @@ def deprecate(required=None, renames=None):
 
                 if new is None:
                     msg = (
-                        "Parameter `{old}` is deprecated and will be removed completely "
+                        "Parameter `{old}` has been deprecated and will be removed completely "
                         "in future versions."
                     ).format(old=old)
                     kwargs.pop(old)

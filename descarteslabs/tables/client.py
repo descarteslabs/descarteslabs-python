@@ -577,7 +577,9 @@ class Tables(object):
         )
         return response.job_id
 
-    @deprecate_func("insert_features is deprecated. Please use insert_rows instead.")
+    @deprecate_func(
+        "insert_features has been deprecated. Please use insert_rows instead."
+    )
     def insert_features(self, obj, table_name, owner=None):
         """
         :param object obj: Python object representing GeoJSON-like features.

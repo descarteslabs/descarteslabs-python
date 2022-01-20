@@ -915,7 +915,7 @@ method no longer accepts the `continuation_token` parameter.
 - Scrolling support for large metadata searches
 
 ### Changes
-- Offset keyword argument in metadata.search is deprecated. Please use the
+- Offset keyword argument in metadata.search has been deprecated. Please use the
 metadata.features for iterating over large search results
 
 ## [0.4.7] - 2017-10-09

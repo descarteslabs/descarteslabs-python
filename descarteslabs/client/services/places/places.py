@@ -217,22 +217,19 @@ class Places(Service):
         return DotDict(r.json())
 
     def sources(self):
-        """Get a list of sources
-        """
+        """Get a list of sources"""
         r = self.session.get("/sources", timeout=self.TIMEOUT)
 
         return DotList(r.json())
 
     def categories(self):
-        """Get a list of categories
-        """
+        """Get a list of categories"""
         r = self.session.get("/categories", timeout=self.TIMEOUT)
 
         return DotList(r.json())
 
     def metrics(self):
-        """Get a list of metrics
-        """
+        """Get a list of metrics"""
         r = self.session.get("/metrics", timeout=self.TIMEOUT)
 
         return DotList(r.json())

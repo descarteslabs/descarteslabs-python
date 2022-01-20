@@ -42,7 +42,9 @@ class Catalog(Service):
     ]
     TIMEOUT = (9.5, 30)
 
-    @deprecate_func("REST-style Catalog client is deprecated, please use Object-Oriented Catalog instead.")
+    @deprecate_func(
+        "REST-style Catalog client has been deprecated, please use Object-Oriented Catalog instead."
+    )
     def __init__(self, url=None, auth=None, metadata=None, retries=None):
         """The parent Service class implements authentication and exponential
         backoff/retry. Override the url parameter to use a different instance
@@ -1848,6 +1850,4 @@ class Catalog(Service):
 
 
 # Don't warn until called by user
-catalog = lazy_object_proxy.Proxy(
-    lambda: Catalog(auth=Auth())
-)
+catalog = lazy_object_proxy.Proxy(lambda: Catalog(auth=Auth()))

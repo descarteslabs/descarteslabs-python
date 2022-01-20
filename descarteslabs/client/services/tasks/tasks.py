@@ -61,7 +61,7 @@ CREATE_OR_GET_DEPRECATION_MESSAGE = (
 )
 
 GET_FUNCTION_DEPRECATION_MESSAGE = (
-    "The behavior of `get_function` is deprecated and will be changed in "
+    "The behavior of `get_function` has been deprecated and will be changed in "
     "future versions to get function by group `id` and not `name`."
 )
 

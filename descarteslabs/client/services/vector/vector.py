@@ -94,7 +94,7 @@ class Vector(JsonApiService):
     SEARCH_PAGE_SIZE = 1000
     properties = GenericProperties()
 
-    @deprecate_func("Vector is deprecated, please use Tables instead")
+    @deprecate_func("Vector has been deprecated, please use Tables instead")
     def __init__(self, url=None, auth=None):
         """
         :param str url: A HTTP URL pointing to a version of the storage service
