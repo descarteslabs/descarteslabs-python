@@ -20,21 +20,21 @@ from descarteslabs.client.services.storage import Storage
 from descarteslabs.client.services.catalog import Catalog
 from descarteslabs.client.services.tasks import (
     AsyncTasks,
-    Tasks,
-    FutureTask,
     CloudFunction,
+    FutureTask,
+    Tasks,
 )
 from descarteslabs.client.services.vector import Vector
 
 __all__ = [
-    "Raster",
+    "AsyncTasks",
+    "Catalog",
+    "CloudFunction",
+    "FutureTask",
     "Metadata",
     "Places",
+    "Raster",
     "Storage",
-    "Catalog",
-    "AsyncTasks",
     "Tasks",
-    "FutureTask",
-    "CloudFunction",
     "Vector",
 ]

@@ -19,18 +19,24 @@
 
 Documentation is available at https://docs.descarteslabs.com.
 
-Source code and version information is at https://github.com/descarteslabs/descarteslabs-python.
+Source code and version information is at
+https://github.com/descarteslabs/descarteslabs-python.
 
-The Descartes Labs Platform simplifies analysis of **global-scale raster data** by providing:
+The Descartes Labs Platform simplifies analysis of **global-scale raster data**
+by providing:
 
   * Access to a catalog of petabytes of disparate geospatial data,
     all normalized and interoperable through one **common interface**
-  * **Infrastructure** to parallelize any code across thousands of machines co-located with that data
-  * The ability to **add new data to that catalog**-whether the output of analysis on existing data,
-    or from a proprietary source-which can then be used as an input for more analysis
+  * **Infrastructure** to parallelize any code across thousands of machines
+    co-located with that data
+  * The ability to **add new data to that catalog**-whether the output of
+    analysis on existing data, or from a proprietary source-which can then
+    be used as an input for more analysis
+  * Organize, upload, and query tabular data and vector geometries using
+    the tables interface (alpha release)
   * A Python client library to access these systems
-  * Web interfaces to `browse this catalog <https://catalog.descarteslabs.com/>`_
-    and `view imagery <https://viewer.descarteslabs.com/>`_, including your data you create
+  * Web interfaces to `browse this catalog <https://catalog.descarteslabs.com/>`_ and
+    `view imagery <https://viewer.descarteslabs.com/>`_, including your data you create
 """
 
 from .client import exceptions
@@ -41,36 +47,26 @@ from .client.version import __version__
 from .common.property_filtering import GenericProperties
 import lazy_object_proxy
 
-try:
-    from . import catalog
-except ImportError:
-    pass
+# Object-oriented clients
+from . import catalog
+from . import scenes
+from . import tables
+from . import vectors
 
-try:
-    from . import scenes
-except ImportError:
-    pass
+# Delay potential authentication errors
+descartes_auth = lazy_object_proxy.Proxy(lambda: Auth())
 
-try:
-    from . import tables
-except ImportError:
-    pass
-
-try:
-    from . import vectors
-except ImportError:
-    pass
-
-
-descartes_auth = Auth(_suppress_warning=True)
-metadata = Metadata(auth=descartes_auth)  # noqa: F405
-places = Places(auth=descartes_auth)  # noqa: F405
 raster = Raster(auth=descartes_auth)  # noqa: F405
 storage = Storage(auth=descartes_auth)  # noqa: F405
 tasks = Tasks(auth=descartes_auth)  # noqa: F405
-# proxy object to suppress warnings
-vector = lazy_object_proxy.Proxy(lambda: Vector(auth=descartes_auth))  # noqa: F405
 properties = GenericProperties()
+
+# Semi-deprecated client
+metadata = Metadata(auth=descartes_auth)  # noqa: F405
+
+# Deprecated clients
+places = lazy_object_proxy.Proxy(lambda: Places(auth=descartes_auth))  # noqa: F405
+vector = lazy_object_proxy.Proxy(lambda: Vector(auth=descartes_auth))  # noqa: F405
 
 __all__ = [
     "__version__",

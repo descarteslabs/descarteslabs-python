@@ -25,6 +25,7 @@ from PIL import Image
 
 from descarteslabs.client.addons import blosc, concurrent, numpy as np
 from descarteslabs.client.auth import Auth
+from descarteslabs.client.deprecation import deprecate
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.services.service.service import Service
 from descarteslabs.client.exceptions import ServerError
@@ -234,6 +235,7 @@ class Raster(Service):
 
         super(Raster, self).__init__(url, auth=auth)
 
+    @deprecate(renames={"place": None})
     def raster(
         self,
         inputs,
@@ -396,6 +398,7 @@ class Raster(Service):
 
         return _retry(retry_req, headers=headers)
 
+    @deprecate(renames={"place": None})
     def ndarray(
         self,
         inputs,
@@ -556,6 +559,7 @@ class Raster(Service):
                 arr, meta = future.result()
                 yield i, arr, meta
 
+    @deprecate(renames={"place": None})
     def stack(
         self,
         inputs,
@@ -666,7 +670,9 @@ class Raster(Service):
                 raise ValueError("Must set `bounds`")
 
         if place is not None:
-            shape = Places(auth=self.auth).shape(place, geom="low")
+            shape = Places(auth=self.auth, _suppress_warning=True).shape(
+                place, geom="low"
+            )
             cutline = json.dumps(shape["geometry"])
 
         params = dict(
@@ -741,7 +747,9 @@ class Raster(Service):
         cutline = as_json_string(cutline)
 
         if place is not None:
-            shape = Places(auth=self.auth).shape(place, geom="low")
+            shape = Places(auth=self.auth, _suppress_warning=True).shape(
+                place, geom="low"
+            )
             cutline = json.dumps(shape["geometry"])
 
         if type(inputs) is str:

@@ -19,7 +19,7 @@ from six import string_types
 from descarteslabs.client.services.service import Service
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.auth import Auth
-from descarteslabs.client.deprecation import check_deprecated_kwargs
+from descarteslabs.client.deprecation import check_deprecated_kwargs, deprecate
 from descarteslabs.common.property_filtering.filtering import (
     AndExpression,
     GenericProperties,
@@ -210,6 +210,7 @@ class Metadata(Service):
 
         return DotList(r.json())
 
+    @deprecate(renames={"place": None})
     def summary(
         self,
         products=None,
@@ -327,7 +328,7 @@ class Metadata(Service):
         )
 
         if place:
-            places = Places()
+            places = Places(_suppress_warning=True)
             places.auth = self.auth
             shape = places.shape(place, geom="low")
             geom = json.dumps(shape["geometry"])
@@ -392,6 +393,7 @@ class Metadata(Service):
         r = self.session.post("/summary", json=kwargs)
         return DotDict(r.json())
 
+    @deprecate(renames={"place": None})
     def paged_search(
         self,
         products=None,
@@ -464,7 +466,7 @@ class Metadata(Service):
         )
 
         if place:
-            places = Places()
+            places = Places(_suppress_warning=True)
             places.auth = self.auth
             shape = places.shape(place, geom="low")
             geom = json.dumps(shape["geometry"])
@@ -543,6 +545,7 @@ class Metadata(Service):
 
         return DotDict(fc)
 
+    @deprecate(renames={"place": None})
     def search(
         self,
         products=None,
@@ -653,6 +656,7 @@ class Metadata(Service):
         limited_features = itertools.islice(features_iter, limit)
         return DotDict(type="FeatureCollection", features=DotList(limited_features))
 
+    @deprecate(renames={"place": None})
     def ids(
         self,
         products=None,
@@ -757,6 +761,7 @@ class Metadata(Service):
 
         return DotList(feature["id"] for feature in result["features"])
 
+    @deprecate(renames={"place": None})
     def features(
         self,
         products=None,

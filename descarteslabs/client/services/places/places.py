@@ -21,12 +21,16 @@ from descarteslabs.client.services.service import Service
 from descarteslabs.client.auth import Auth
 from six import string_types
 from descarteslabs.common.dotdict import DotDict, DotList
+from descarteslabs.client.deprecation import deprecate_func
 
 
 class Places(Service):
     TIMEOUT = (9.5, 30)
     """Places and statistics service"""
 
+    @deprecate_func(
+        "The Places client has been deprecated and will be removed competely in a future version."
+    )
     def __init__(self, url=None, auth=None, maxsize=10, ttl=600, retries=None):
         """
         :param str url: A HTTP URL pointing to a version of the storage service

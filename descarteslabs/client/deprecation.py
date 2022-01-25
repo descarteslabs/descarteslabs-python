@@ -42,7 +42,7 @@ def check_deprecated_kwargs(kwargs, renames):
                     "The parameter `{}` has been deprecated "
                     "and will be removed in future versions.".format(field)
                 )
-            warnings.warn(msg, FutureWarning)
+            warnings.warn(msg, FutureWarning, stacklevel=2)
 
 
 def deprecate_func(message=None):
@@ -54,13 +54,14 @@ def deprecate_func(message=None):
     def wrapper(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            if message:
-                msg = message
-            else:
-                msg = "{} has been deprecated and will be removed competely in a future version".format(
-                    f.__name__
-                )
-            warnings.warn(msg, FutureWarning, stacklevel=2)
+            if not kwargs.pop("_suppress_warning", False):
+                if message:
+                    msg = message
+                else:
+                    msg = "{} has been deprecated and will be removed competely in a future version".format(
+                        f.__name__
+                    )
+                warnings.warn(msg, FutureWarning, stacklevel=2)
             return f(*args, **kwargs)
 
         return wrapped
@@ -176,7 +177,7 @@ def deprecate(required=None, renames=None):
                     ).format(old=old, new=new)
                     raise SyntaxError(msg)
 
-                warnings.warn(msg, FutureWarning)
+                warnings.warn(msg, FutureWarning, stacklevel=2)
 
             for key in required:
                 if key not in kwargs:
