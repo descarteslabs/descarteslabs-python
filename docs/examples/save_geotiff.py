@@ -39,7 +39,6 @@ raster_client.raster(
     scales=[[0, 5500], [0, 5500], [0, 5500], None],
     data_type="Byte",
     cutline=box,
-    save=True,
     outfile_basename="save_local",
     resolution=60,
 )

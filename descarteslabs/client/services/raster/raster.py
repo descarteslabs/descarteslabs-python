@@ -284,6 +284,7 @@ class Raster(Service):
             band will have source values 0-10000 scaled to 0-127, the second band will
             not be scaled, the third band will have 0-10000 scaled to 0-255.
         :param str output_format: Output format (one of ``GTiff``, ``PNG``, ``JPEG``).
+            The default is ``GTiff``.
         :param str data_type: Output data type (one of ``Byte``, ``UInt16``, ``Int16``,
             ``UInt32``, ``Int32``, ``Float32``, ``Float64``).
         :param str srs: Output spatial reference system definition understood by GDAL.
