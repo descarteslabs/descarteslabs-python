@@ -311,7 +311,17 @@ class Tasks(Service):
         Retrieves a limited list of task groups matching the given criteria.
 
         :param str status: Filter groups to this status.
-            Allowed are ['running', 'terminated'].
+            Allowed are:
+
+            - 'awaiting_bundle' -- The request was received but is waiting for the
+              corresponding code
+            - 'building' -- The code was received and a task group image is being
+              created
+            - 'build_failed' -- The task group image could not be created
+            - 'pending' -- The task group image has been built and is waiting for
+              resources
+            - 'running' -- The task group is ready to receive requests for tasks
+            - 'terminated' -- The task group has been shut down
         :param str created: Filter groups by creation date after this timestamp.
         :param str updated: Filter groups by updated date after this timestamp.
         :param str sort_field: The field to sort groups on. Allowed are
@@ -351,7 +361,17 @@ class Tasks(Service):
         Iterates over all task groups matching the given criteria.
 
         :param str status: Filter groups to this status.
-            Allowed are ['running', 'terminated'].
+            Allowed are:
+
+            - 'awaiting_bundle' -- The request was received but is waiting for the
+              corresponding code
+            - 'building' -- The code was received and a task group image is being
+              created
+            - 'build_failed' -- The task group image could not be created
+            - 'pending' -- The task group image has been built and is waiting for
+              resources
+            - 'running' -- The task group is ready to receive requests for tasks
+            - 'terminated' -- The task group has been shut down
         :param str created: Filter groups by creation date after this timestamp.
         :param str updated: Filter groups by updated date after this timestamp.
         :param str sort_field: The field to sort groups on. Allowed are
@@ -411,8 +431,17 @@ class Tasks(Service):
 
         :param str group_id: The group name.
         :param str status: Only consider groups with this status.
-            Allowed are ['running', 'terminated']. Default: 'running'.
+            The default is 'running'. Allowed are:
 
+            - 'awaiting_bundle' -- The request was received but is waiting for the
+              corresponding code
+            - 'building' -- The code was received and a task group image is being
+              created
+            - 'build_failed' -- The task group image could not be created
+            - 'pending' -- The task group image has been built and is waiting for
+              resources
+            - 'running' -- The task group is ready to receive requests for tasks
+            - 'terminated' -- The task group has been shut down
         :return: A dictionary representing the task group, or `None` if no group
             with the given name exists.
         :rtype: DotDict
