@@ -60,6 +60,7 @@ import time
 import datetime
 import uuid
 from enum import Enum
+from copy import deepcopy
 
 import numpy as np
 import requests
@@ -220,7 +221,7 @@ class Tables(object):
         Create a table
 
         :param str table_name: name of table
-        :param str schema: schema mapping
+        :param dict schema: schema mapping
         :param int srid: spatial reference identifier
         :param str|list primary_key: column name(s) to use as primary key. If None, a default key is used.
 
@@ -230,13 +231,18 @@ class Tables(object):
 
         DEFAULT_PK = "auto_id"
 
+        # Copy off the schema into a variable that is internal to the client so
+        # that we don't alter the user's schema variable, which very likely has
+        # the same variable name
+        _internal_schema = deepcopy(schema)
+
         if not primary_key:
             warnings.warn(
                 f'Primary key not provided, adding a new "{DEFAULT_PK}" column as an auto-incrementing primary key.',
                 UserWarning,
             )
-            if DEFAULT_PK not in schema["properties"]:
-                schema["properties"][DEFAULT_PK] = "auto"
+            if DEFAULT_PK not in _internal_schema["properties"]:
+                _internal_schema["properties"][DEFAULT_PK] = "auto"
                 primary_key = DEFAULT_PK
             else:
                 raise BadRequestError(
@@ -249,7 +255,7 @@ class Tables(object):
         # if primary key/s is/are not present in the schema then there's no point
         # in continuing
         for pk in primary_key:
-            if pk not in schema["properties"]:
+            if pk not in _internal_schema["properties"]:
                 raise BadRequestError(f'Could not find primary key "{pk}" in schema.')
 
         # TODO can we avoid reaching into the `ibis` serializer
@@ -257,8 +263,8 @@ class Tables(object):
         response = self.connection.client._client.api["CreateTable"](
             vektorius_pb2.CreateTableRequest(
                 table_name=table_name,
-                properties_schema=schema["properties"],
-                geometry_type=schema["geometry"],
+                properties_schema=_internal_schema["properties"],
+                geometry_type=_internal_schema["geometry"],
                 srid=srid,
                 primary_key=primary_key,
             )

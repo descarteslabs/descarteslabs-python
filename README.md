@@ -19,6 +19,9 @@ Changelog
 =========
 ## [Unreleased]
 
+### Tables
+- Fixed an issue that caused a user's schema to be overwritten if they didn't provide a primary key on table creation.
+
 ## [1.10.0] - 2022-01-18
 
 ### Python Versions Supported
