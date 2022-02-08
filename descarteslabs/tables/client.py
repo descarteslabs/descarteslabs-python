@@ -220,7 +220,7 @@ class Tables(object):
         """
         Create a table
 
-        :param str table_name: name of table
+        :param str table_name: name of table. Can only contain alphanumeric and "_" characters.
         :param dict schema: schema mapping
         :param int srid: spatial reference identifier
         :param str|list primary_key: column name(s) to use as primary key. If None, a default key is used.
