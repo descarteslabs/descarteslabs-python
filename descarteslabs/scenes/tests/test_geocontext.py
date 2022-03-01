@@ -1,7 +1,6 @@
 import pytest
 import unittest
 import multiprocessing
-import platform
 import concurrent.futures
 import copy
 import warnings
@@ -9,10 +8,6 @@ import warnings
 from descarteslabs.scenes import geocontext
 from descarteslabs.scenes.geocontext import EARTH_CIRCUMFERENCE_WGS84
 import shapely.geometry
-
-
-if platform.system() == 'Darwin':
-    multiprocessing.set_start_method("fork")
 
 
 class SimpleContext(geocontext.GeoContext):

@@ -235,7 +235,7 @@ class Raster(Service):
 
         super(Raster, self).__init__(url, auth=auth)
 
-    @deprecate(renames={"place": None})
+    @deprecate(deprecated=["place"])
     def raster(
         self,
         inputs,
@@ -399,7 +399,7 @@ class Raster(Service):
 
         return _retry(retry_req, headers=headers)
 
-    @deprecate(renames={"place": None})
+    @deprecate(deprecated=["place"])
     def ndarray(
         self,
         inputs,
@@ -560,7 +560,7 @@ class Raster(Service):
                 arr, meta = future.result()
                 yield i, arr, meta
 
-    @deprecate(renames={"place": None})
+    @deprecate(deprecated=["place"])
     def stack(
         self,
         inputs,
@@ -671,7 +671,7 @@ class Raster(Service):
                 raise ValueError("Must set `bounds`")
 
         if place is not None:
-            shape = Places(auth=self.auth, _suppress_warning=True).shape(
+            shape = Places(auth=self.auth, _suppress_deprecation_warnings=True).shape(
                 place, geom="low"
             )
             cutline = json.dumps(shape["geometry"])
@@ -684,7 +684,6 @@ class Raster(Service):
             resolution=resolution,
             dimensions=dimensions,
             cutline=cutline,
-            place=None,
             bounds=bounds,
             bounds_srs=bounds_srs,
             align_pixels=align_pixels,
@@ -748,7 +747,7 @@ class Raster(Service):
         cutline = as_json_string(cutline)
 
         if place is not None:
-            shape = Places(auth=self.auth, _suppress_warning=True).shape(
+            shape = Places(auth=self.auth, _suppress_deprecation_warnings=True).shape(
                 place, geom="low"
             )
             cutline = json.dumps(shape["geometry"])

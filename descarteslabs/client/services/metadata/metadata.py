@@ -19,7 +19,7 @@ from six import string_types
 from descarteslabs.client.services.service import Service
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.auth import Auth
-from descarteslabs.client.deprecation import check_deprecated_kwargs, deprecate
+from descarteslabs.client.deprecation import deprecate
 from descarteslabs.common.property_filtering.filtering import (
     AndExpression,
     GenericProperties,
@@ -165,6 +165,7 @@ class Metadata(Service):
 
         return DotDict(r.json())
 
+    @deprecate(renamed={"band": "bands"})
     def products(
         self, bands=None, limit=None, offset=None, owner=None, text=None, **kwargs
     ):
@@ -183,15 +184,14 @@ class Metadata(Service):
         """
         params = ["limit", "offset", "bands", "owner", "text"]
 
+        # Add parameters that were set to kwargs
         args = locals()
         kwargs = dict(
             kwargs,
             **{param: args[param] for param in params if args[param] is not None}
         )
-        check_deprecated_kwargs(kwargs, {"band": "bands"})
 
         r = self.session.post("/products/search", json=kwargs)
-
         return DotList(r.json())
 
     def available_products(self):
@@ -207,10 +207,19 @@ class Metadata(Service):
             ['landsat:LC08:PRE:TOAR']
         """
         r = self.session.get("/products")
-
         return DotList(r.json())
 
-    @deprecate(renames={"place": None})
+    @deprecate(
+        renamed={
+            "product": "products",
+            "const_id": "const_ids",
+            "sat_id": "sat_ids",
+            "start_time": "start_datetime",
+            "end_time": "end_datetime",
+            "part": "interval",
+        },
+        deprecated=["place"],
+    )
     def summary(
         self,
         products=None,
@@ -315,20 +324,8 @@ class Metadata(Service):
                 'products': ['landsat:LC08:PRE:TOAR']
             }
         """
-        check_deprecated_kwargs(
-            kwargs,
-            {
-                "product": "products",
-                "const_id": "const_ids",
-                "sat_id": "sat_ids",
-                "start_time": "start_datetime",
-                "end_time": "end_datetime",
-                "part": "interval",
-            },
-        )
-
         if place:
-            places = Places(_suppress_warning=True)
+            places = Places(_suppress_deprecation_warnings=True)
             places.auth = self.auth
             shape = places.shape(place, geom="low")
             geom = json.dumps(shape["geometry"])
@@ -393,7 +390,16 @@ class Metadata(Service):
         r = self.session.post("/summary", json=kwargs)
         return DotDict(r.json())
 
-    @deprecate(renames={"place": None})
+    @deprecate(
+        renamed={
+            "product": "products",
+            "const_id": "const_ids",
+            "sat_id": "sat_ids",
+            "start_time": "start_datetime",
+            "end_time": "end_datetime",
+        },
+        deprecated=["offset", "place"],
+    )
     def paged_search(
         self,
         products=None,
@@ -453,20 +459,8 @@ class Metadata(Service):
         :return: GeoJSON ``FeatureCollection`` containing at most `limit` features.
         :rtype: DotDict
         """
-        check_deprecated_kwargs(
-            kwargs,
-            {
-                "product": "products",
-                "const_id": "const_ids",
-                "sat_id": "sat_ids",
-                "start_time": "start_datetime",
-                "end_time": "end_datetime",
-                "offset": None,
-            },
-        )
-
         if place:
-            places = Places(_suppress_warning=True)
+            places = Places(_suppress_deprecation_warnings=True)
             places.auth = self.auth
             shape = places.shape(place, geom="low")
             geom = json.dumps(shape["geometry"])
@@ -545,7 +539,15 @@ class Metadata(Service):
 
         return DotDict(fc)
 
-    @deprecate(renames={"place": None})
+    @deprecate(
+        renamed={
+            "product": "products",
+            "sat_id": "sat_ids",
+            "start_time": "start_datetime",
+            "end_time": "end_datetime",
+        },
+        deprecated=["place"],
+    )
     def search(
         self,
         products=None,
@@ -651,12 +653,21 @@ class Metadata(Service):
             sort_order=sort_order,
             randomize=randomize,
             batch_size=1000 if limit is None else min(limit, 1000),
+            _suppress_deprecation_warnings=["place"],
             **kwargs
         )
         limited_features = itertools.islice(features_iter, limit)
         return DotDict(type="FeatureCollection", features=DotList(limited_features))
 
-    @deprecate(renames={"place": None})
+    @deprecate(
+        renamed={
+            "product": "products",
+            "sat_id": "sat_ids",
+            "start_time": "start_datetime",
+            "end_time": "end_datetime",
+        },
+        deprecated=["place"],
+    )
     def ids(
         self,
         products=None,
@@ -756,12 +767,21 @@ class Metadata(Service):
             sort_field=sort_field,
             sort_order=sort_order,
             randomize=randomize,
+            _suppress_deprecation_warnings=["place"],
             **kwargs
         )
 
         return DotList(feature["id"] for feature in result["features"])
 
-    @deprecate(renames={"place": None})
+    @deprecate(
+        renamed={
+            "product": "products",
+            "sat_id": "sat_ids",
+            "start_time": "start_datetime",
+            "end_time": "end_datetime",
+        },
+        deprecated=["place"],
+    )
     def features(
         self,
         products=None,
@@ -830,6 +850,7 @@ class Metadata(Service):
                 sort_order=sort_order,
                 randomize=randomize,
                 continuation_token=continuation_token,
+                _suppress_deprecation_warnings=["place"],
                 **kwargs
             )
 

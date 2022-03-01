@@ -9,11 +9,14 @@ import lazy_object_proxy
 
 from descarteslabs.client.addons import numpy as np
 from descarteslabs.client.auth import Auth
-from descarteslabs.client.deprecation import check_deprecated_kwargs
 from descarteslabs.client.exceptions import ServerError, NotFoundError
 from descarteslabs.client.services.metadata import Metadata
 from descarteslabs.client.services.service import Service, ThirdPartyService
-from descarteslabs.client.deprecation import deprecate_func
+from descarteslabs.client.deprecation import (
+    deprecate,
+    deprecate_func,
+    check_deprecated_kwargs,
+)
 
 
 class Catalog(Service):
@@ -293,14 +296,13 @@ class Catalog(Service):
         """
         return self._metadata.bands(owner=self.auth.payload["sub"])
 
+    @deprecate(renamed={"start_time": "start_datetime", "end_time": "end_datetime"})
     def _add_core_product(self, product_id, **kwargs):
         kwargs["id"] = product_id
-        check_deprecated_kwargs(
-            kwargs, {"start_time": "start_datetime", "end_time": "end_datetime"}
-        )
         r = self.session.post("/core/products", json=kwargs)
         return r.json()
 
+    @deprecate(removed=["add_namespace"])
     def get_product(self, product_id, add_namespace=False):
         """
         Get a product.
@@ -385,12 +387,15 @@ class Catalog(Service):
             a unknown error occurred on the server.
         """
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
 
         r = self.session.get("/products/{}".format(product_id))
         return r.json()
 
+    @deprecate(
+        renamed={"start_time": "start_datetime", "end_time": "end_datetime"},
+        removed=["add_namespace"],
+    )
     def add_product(
         self, product_id, title, description, add_namespace=False, **kwargs
     ):
@@ -439,12 +444,8 @@ class Catalog(Service):
                 if v is None:
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
-        check_deprecated_kwargs(
-            kwargs, {"start_time": "start_datetime", "end_time": "end_datetime"}
-        )
 
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             kwargs["id"] = self.namespace_product(product_id)
         else:
             kwargs["id"] = product_id
@@ -452,6 +453,10 @@ class Catalog(Service):
         r = self.session.post("/products", json=kwargs)
         return r.json()
 
+    @deprecate(
+        renamed={"start_time": "start_datetime", "end_time": "end_datetime"},
+        removed=["add_namespace"],
+    )
     def replace_product(
         self,
         product_id,
@@ -502,12 +507,8 @@ class Catalog(Service):
                 if v is None:
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
-        check_deprecated_kwargs(
-            kwargs, {"start_time": "start_datetime", "end_time": "end_datetime"}
-        )
 
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
 
         params = None
@@ -519,6 +520,10 @@ class Catalog(Service):
         )
         return r.json()
 
+    @deprecate(
+        renamed={"start_time": "start_datetime", "end_time": "end_datetime"},
+        removed=["add_namespace"],
+    )
     def change_product(
         self, product_id, add_namespace=False, set_global_permissions=False, **kwargs
     ):
@@ -559,12 +564,7 @@ class Catalog(Service):
         :raises ~descarteslabs.client.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
-        check_deprecated_kwargs(
-            kwargs, {"start_time": "start_datetime", "end_time": "end_datetime"}
-        )
-
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
 
         params = None
@@ -576,6 +576,7 @@ class Catalog(Service):
         )
         return r.json()
 
+    @deprecate(removed=["add_namespace"])
     def remove_product(self, product_id, add_namespace=False, cascade=False):
         """Remove a product from the catalog.
 
@@ -604,7 +605,6 @@ class Catalog(Service):
             a unknown error occurred on the server.
         """
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
         params = {"cascade": cascade}
         r = self.session.delete("/products/{}".format(product_id), params=params)
@@ -715,6 +715,7 @@ class Catalog(Service):
         r = self.session.get("/products/deletion_tasks/{}".format(deletion_task_id))
         return r.json()
 
+    @deprecate(removed=["add_namespace"])
     def get_band(self, product_id, name, add_namespace=False):
         """Get a band by name.
 
@@ -860,12 +861,12 @@ class Catalog(Service):
             a unknown error occurred on the server.
         """
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
 
         r = self.session.get("/products/{}/bands/{}".format(product_id, name))
         return r.json()
 
+    @deprecate(removed=["nbits"])
     def _add_core_band(
         self,
         product_id,
@@ -881,11 +882,11 @@ class Catalog(Service):
                 if v is None:
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
-        check_deprecated_kwargs(kwargs, {"nbits": None})
         kwargs["id"] = name
         r = self.session.post("/core/products/{}/bands".format(product_id), json=kwargs)
         return r.json()
 
+    @deprecate(renamed={"id": "name"}, removed=["add_namespace", "nbits"])
     def add_band(
         self,
         product_id,
@@ -973,13 +974,12 @@ class Catalog(Service):
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
-        check_deprecated_kwargs(kwargs, {"id": "name", "nbits": None})
 
         r = self.session.post("/products/{}/bands".format(product_id), json=kwargs)
         return r.json()
 
+    @deprecate(removed=["add_namespace", "nbits"])
     def replace_band(
         self,
         product_id,
@@ -1019,9 +1019,7 @@ class Catalog(Service):
                 if v is None:
                     raise TypeError("required arg `{}` not provided".format(k))
                 kwargs[k] = v
-        check_deprecated_kwargs(kwargs, {"nbits": None})
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
 
         r = self.session.put(
@@ -1029,6 +1027,7 @@ class Catalog(Service):
         )
         return r.json()
 
+    @deprecate(removed=["add_namespace"])
     def change_band(self, product_id, name, add_namespace=False, **kwargs):
         """Update a data band of a product.
 
@@ -1053,13 +1052,13 @@ class Catalog(Service):
             a unknown error occurred on the server.
         """
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
         r = self.session.patch(
             "/products/{}/bands/{}".format(product_id, name), json=kwargs
         )
         return r.json()
 
+    @deprecate(removed=["add_namespace"])
     def remove_band(self, product_id, name, add_namespace=False):
         """Remove a band from the catalog.
 
@@ -1075,10 +1074,10 @@ class Catalog(Service):
             a unknown error occurred on the server.
         """
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
         self.session.delete("/products/{}/bands/{}".format(product_id, name))
 
+    @deprecate(removed=["add_namespace"])
     def get_image(self, product_id, image_id, add_namespace=False):
         """Get a single image catalog entry.
 
@@ -1209,12 +1208,15 @@ class Catalog(Service):
             a unknown error occurred on the server.
         """
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
 
         r = self.session.get("/products/{}/images/{}".format(product_id, image_id))
         return r.json()
 
+    @deprecate(
+        renamed={"bpp": "bits_per_pixel", "key": "image_id"},
+        removed=["add_namespace"],
+    )
     def add_image(
         self,
         product_id,
@@ -1290,15 +1292,17 @@ class Catalog(Service):
         :raises ~descarteslabs.client.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
-        check_deprecated_kwargs(kwargs, {"bpp": "bits_per_pixel", "key": "image_id"})
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
         kwargs["id"] = image_id
         kwargs["storage_state"] = storage_state
         r = self.session.post("/products/{}/images".format(product_id), json=kwargs)
         return r.json()
 
+    @deprecate(
+        renamed={"bpp": "bits_per_pixel", "key": "image_id"},
+        removed=["add_namespace"],
+    )
     def replace_image(
         self,
         product_id,
@@ -1333,9 +1337,7 @@ class Catalog(Service):
             a unknown error occurred on the server.
         """
 
-        check_deprecated_kwargs(kwargs, {"bpp": "bits_per_pixel"})
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
 
         kwargs["storage_state"] = storage_state
@@ -1345,14 +1347,18 @@ class Catalog(Service):
         )
         return r.json()
 
+    @deprecate(renamed={"bpp": "bits_per_pixel", "key": "image_id"})
     def _add_core_image(self, product_id, image_id, **kwargs):
-        check_deprecated_kwargs(kwargs, {"bpp": "bits_per_pixel"})
         kwargs["id"] = image_id
         r = self.session.post(
             "/core/products/{}/images".format(product_id), json=kwargs
         )
         return r.json()
 
+    @deprecate(
+        renamed={"bpp": "bits_per_pixel", "key": "image_id"},
+        removed=["add_namespace"],
+    )
     def change_image(self, product_id, image_id, add_namespace=False, **kwargs):
         """Update an image metadata entry of a product.
 
@@ -1376,15 +1382,14 @@ class Catalog(Service):
         :raises ~descarteslabs.client.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
-        check_deprecated_kwargs(kwargs, {"bpp": "bits_per_pixel"})
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
         r = self.session.patch(
             "/products/{}/images/{}".format(product_id, image_id), json=kwargs
         )
         return r.json()
 
+    @deprecate(renamed={"key": "image_id"}, removed=["add_namespace"])
     def remove_image(self, product_id, image_id, add_namespace=False):
         """Remove a image from the catalog.
 
@@ -1401,10 +1406,10 @@ class Catalog(Service):
         """
 
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
         self.session.delete("/products/{}/images/{}".format(product_id, image_id))
 
+    @deprecate(renamed={"key": "image_id"})
     def upload_image(
         self,
         files,
@@ -1451,8 +1456,8 @@ class Catalog(Service):
         if metadata is None:
             metadata = {}
 
+        check_deprecated_kwargs(metadata, renamed={"bpp": "bits_per_pixel"})
         metadata.update(kwargs)
-        check_deprecated_kwargs(metadata, {"bpp": "bits_per_pixel"})
 
         if multi is True:
             if not hasattr(files, "__iter__"):
@@ -1479,6 +1484,7 @@ class Catalog(Service):
 
         return upload_id
 
+    @deprecate(renamed={"bpp": "bits_per_pixel", "key": "image_id"})
     def upload_ndarray(
         self,
         ndarray,
@@ -1795,14 +1801,12 @@ class Catalog(Service):
         upload_id = None
 
         if add_namespace:
-            check_deprecated_kwargs(locals(), {"add_namespace": None})
             product_id = self.namespace_product(product_id)
 
         if metadata is None:
             metadata = {}
 
         metadata.setdefault("process_controls", {"upload_type": "file"})
-        check_deprecated_kwargs(metadata, {"bpp": "bits_per_pixel"})
 
         if not isinstance(product_id, six.string_types):
             raise TypeError(

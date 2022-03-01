@@ -230,7 +230,7 @@ class Vector(JsonApiService):
         r = self.session.get("/products/{}".format(product_id))
         return DotDict(r.json())
 
-    @deprecate(renames={"name": "product_id"})
+    @deprecate(renamed={"name": "product_id"})
     def create_product(
         self, product_id, title, description, owners=None, readers=None, writers=None
     ):
@@ -286,7 +286,7 @@ class Vector(JsonApiService):
         r = self.session.post("/products", json=jsonapi)
         return DotDict(r.json())
 
-    @deprecate(required=["product_id", "title", "description"], renames={"name": None})
+    @deprecate(required=["product_id", "title", "description"], removed=["name"])
     def replace_product(
         self,
         product_id=None,
@@ -349,7 +349,7 @@ class Vector(JsonApiService):
         r = self.session.put("/products/{}".format(product_id), json=jsonapi)
         return DotDict(r.json())
 
-    @deprecate(renames={"name": None})
+    @deprecate(removed=["name"])
     def update_product(
         self,
         product_id,
@@ -958,7 +958,7 @@ class Vector(JsonApiService):
             self, product_id, geometry, query_expr, query_limit
         )
 
-    @deprecate(renames={"name": "new_product_id"})
+    @deprecate(renamed={"name": "new_product_id"})
     def create_product_from_query(
         self,
         new_product_id,

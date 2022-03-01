@@ -108,7 +108,7 @@ class FeatureCollection(object):
         return self
 
     @classmethod
-    @deprecate(renames={"name": "product_id"})
+    @deprecate(renamed={"name": "product_id"})
     def create(
         cls,
         product_id,
@@ -415,7 +415,7 @@ class FeatureCollection(object):
         return _FeaturesIterator(self.vector_client.search_features(**params))
 
     # TODO: remove name from params
-    @deprecate(renames={"name": None})
+    @deprecate(removed=["name"])
     def update(
         self,
         name=None,
@@ -481,7 +481,7 @@ class FeatureCollection(object):
         self.__dict__.update(response["data"]["attributes"])
 
     # TODO: remove name from params
-    @deprecate(["title", "description"], renames={"name": None})
+    @deprecate(required=["title", "description"], removed=["name"])
     def replace(
         self,
         name=None,
@@ -755,7 +755,7 @@ class FeatureCollection(object):
 
         return results
 
-    @deprecate(renames={"name": "product_id"})
+    @deprecate(renamed={"name": "product_id"})
     def copy(
         self, product_id, title, description, owners=None, readers=None, writers=None
     ):
