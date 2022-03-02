@@ -354,7 +354,7 @@ class TestSceneCollection(unittest.TestCase):
 
     @mock.patch("descarteslabs.scenes.scene.Metadata.get", _metadata_get)
     def test_filter_coverage(self):
-        polygon = shapely.geometry.Point(0.0, 0.0).buffer(1)
+        polygon = shapely.geometry.Point(0.0, 0.0).buffer(3)
         ctx = geocontext.AOI(geometry=polygon)
 
         scenes = SceneCollection(
