@@ -31,7 +31,7 @@ class InspectClient(Service):
     RETRY_CONFIG = Retry(
         total=3,
         backoff_factor=random.uniform(1, 3),
-        method_whitelist=frozenset(
+        allowed_methods=frozenset(
             [HttpRequestMethod.HEAD, HttpRequestMethod.GET, HttpRequestMethod.POST]
         ),
         status_forcelist=[

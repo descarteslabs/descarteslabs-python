@@ -74,7 +74,7 @@ class Auth:
     RETRY_CONFIG = Retry(
         total=5,
         backoff_factor=random.uniform(1, 10),
-        method_whitelist=frozenset(["GET", "POST"]),
+        allowed_methods=frozenset(["GET", "POST"]),
         status_forcelist=[429, 500, 502, 503, 504],
     )
 

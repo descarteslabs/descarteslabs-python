@@ -6,9 +6,7 @@ from urllib3.util.retry import Retry
 
 
 class RequestsWithRetry(object):
-    """
-
-    """
+    """"""
 
     TIMEOUT = (1, 10)
 
@@ -16,7 +14,7 @@ class RequestsWithRetry(object):
         total=3,
         read=2,
         backoff_factor=random.uniform(1, 3),
-        method_whitelist=frozenset(
+        allowed_methods=frozenset(
             ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"]
         ),
         status_forcelist=[500, 502, 503, 504],
