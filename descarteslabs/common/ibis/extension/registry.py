@@ -25,7 +25,7 @@ def _asmvt(t, expr):
 def _geometry_bbox_intersects(t, expr):
     arg, other = _translate_args(t, expr)
 
-    res = arg.op("&&", is_comparison=True)(other)
+    res = sa.func.ST_Intersects(arg, other)
     return res
 
 

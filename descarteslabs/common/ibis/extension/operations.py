@@ -23,7 +23,7 @@ class AsMVT(ops.Reduction):
 
 class GeometryBboxIntersects(ops.ValueOp):
     arg = Arg(rlz.geospatial)
-    other = Arg(rlz.one_of((rlz.column(rlz.geospatial), rlz.geospatial())))
+    other = Arg(rlz.one_of((rlz.column(rlz.geospatial), rlz.geospatial(), rlz.string)))
 
     output_type = rlz.shape_like("arg", dt.boolean)
 
