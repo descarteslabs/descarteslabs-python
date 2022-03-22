@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.7', '3.8', '3.9']
     steps:
       - uses: actions/checkout@v2
@@ -27,7 +27,7 @@ jobs:
           TMPDIR: tempdir
         run: |
           mkdir tempdir
-          pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
+          pytest -rfExXP --assert=plain --ignore-glob="*/e2e" --ignore-glob="*/smoke_tests" --ignore="descarteslabs/third_party/" descarteslabs
 
   slack:
     runs-on: ubuntu-latest
