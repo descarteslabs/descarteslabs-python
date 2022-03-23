@@ -11,13 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import os
 import tempfile
 import shutil
 import unittest
 import json
 import hashlib
+import sys
 
 from descarteslabs.client.addons import numpy as np
 from descarteslabs.client.services.raster import Raster
@@ -30,6 +30,16 @@ class TestRaster(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.raster = Raster()
+        # make sure we aren't testing with rasterio
+        cls.rasterio = None
+        if "rasterio" in sys.modules:
+            cls.rasterio = sys.modules["rasterio"]
+            del sys.modules["rasterio"]
+
+    @classmethod
+    def tearDownClass(cls):
+        # put back rasterio
+        sys.modules["rasterio"] = cls.rasterio
 
     def test_raster(self):
         filename, metadata = self.raster.raster(

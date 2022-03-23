@@ -2,8 +2,17 @@ from typing import List, Tuple, Union
 from enum import Enum
 import numpy as np
 from affine import Affine
+import sys
 
 from tifffile import TiffWriter
+
+# Rasterio is used in `make_geotiffs` but ONLY if installed
+try:
+    import rasterio
+    from rasterio.crs import CRS
+except ImportError:
+    rasterio = None
+
 
 ##############################################################################
 # GeoTiff Tags
@@ -299,6 +308,78 @@ def convert_to_geotiff_tags(
 
 
 def make_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress, nodata):
+    if "rasterio" in sys.modules:
+        make_rasterio_geotiff(
+            outfile, chunk_iter, metadata, blosc_meta, compress, nodata
+        )
+    else:
+        make_tifffile_geotiff(
+            outfile, chunk_iter, metadata, blosc_meta, compress, nodata
+        )
+
+
+def make_rasterio_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress, nodata):
+    """Use rasterio to create a geotiff. Uses libgdal to write thus offering full functionality
+    and more likely to be compatible with the rest of the geospatial software ecosystem
+
+    :param outfile: string, path to output geotiff file.
+    :param chunk_iter: Iterator yielding "chunks", a 3D array of (rows, cols, bands) representing one
+        geotiff block. Streamed from the npz service. The order and length of the chunk sequenmce
+        must match that of the underlying blocks on disk. npz and all our tiff writers
+        agree on the correct order.
+    :param metadata: dict of image and per-band metdata
+    :param blosc_meta: dict of metadata describing the npz payload shape
+    :param compress: string, compression method to use when writing geotiff. Defaults to "LZW".
+        For rasterio geotiffs, accepts any of the algorithms supported by the
+        underlying GDAL shared library.
+    :param nodata: numeric, global value to represent masked (nodata) regions
+    """
+    geotiff_profile = make_geotiff_profile(metadata, blosc_meta)
+
+    if compress is None:
+        # Always default to lossless compression to save disk space.
+        compress = "LZW"
+
+    crs = CRS.from_proj4(metadata["coordinateSystem"]["proj4"])
+
+    # must remove blocksize if image dimensions are smaller than a block
+    if (
+        geotiff_profile["height"] < geotiff_profile["blockysize"]
+        and geotiff_profile["width"] < geotiff_profile["blockxsize"]
+    ):
+        del geotiff_profile["blockxsize"]
+        del geotiff_profile["blockysize"]
+
+    with rasterio.open(
+        outfile, mode="w", compress=compress, nodata=nodata, crs=crs, **geotiff_profile
+    ) as dst:
+        for i, bandmeta in enumerate(metadata["bands"]):
+            dst.update_tags(i + 1, **bandmeta["description"])
+
+        # Windowed writing ensures that we never need more than one chunk in memory
+        # each "chunk" corresponds to a raster block (ie tile) by design
+        for chunk, (_, window) in zip(chunk_iter, dst.block_windows()):
+            # swap axis order from (rows, cols, bands) to (bands, rows, cols)
+            arr = np.transpose(chunk, [2, 0, 1])
+            dst.write(arr, window=window)
+
+
+def make_tifffile_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress, nodata):
+    """
+    Use the tiffwriter which makes viable GeoTiffs but with limited optionality
+    specifically, they lack lossless compression
+
+    :param outfile: string, path to output geotiff file.
+    :param chunk_iter: Iterator yielding "chunks", a 3D array of (rows, cols, bands) representing one
+        geotiff block. Streamed from the npz service. The order and length of the chunk sequenmce
+        must match that of the underlying blocks on disk. npz and all our tiff writers
+        agree on the correct order.
+    :param metadata: dict of image and per-band metdata
+    :param blosc_meta: dict of metadata describing the npz payload shape
+    :param compress: string, compression method to use when writing geotiff.
+        Defaults to uncompressed. Also supports "JPEG" and "PNG".
+    :param nodata: numeric, global value to represent masked (nodata) regions
+    """
     geotiff_profile = make_geotiff_profile(metadata, blosc_meta)
     gkd, projcs, geogcs = parse_projection(metadata)
     mtp, mps = parse_transform(geotiff_profile["transform"])
