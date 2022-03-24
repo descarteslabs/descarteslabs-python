@@ -529,6 +529,7 @@ class TestImage(ClientTestCase):
         # of the updated Image...
 
     @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
+    @patch("descarteslabs.catalog.Image.exists", return_value=False)
     def test_upload_warnings(self, *mocks):
         p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(id="p1:image", product=p, acquired="2012-05-06", projection="foo")
@@ -685,6 +686,7 @@ class TestImage(ClientTestCase):
         assert upload.status == ImageUploadStatus.SUCCESS
 
     @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
+    @patch("descarteslabs.catalog.Image.exists", return_value=False)
     def test_upload_ndarray_shape(self, *mocks):
         p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(
@@ -722,6 +724,7 @@ class TestImage(ClientTestCase):
             assert "cs_code" in str(w[0].message)
 
     @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
+    @patch("descarteslabs.catalog.Image.exists", return_value=False)
     def test_upload_ndarray_dtype(self, *mocks):
         p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(
@@ -742,7 +745,8 @@ class TestImage(ClientTestCase):
             ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.uint64)
         )
 
-    def test_upload_ndarray_bad_georef(self):
+    @patch("descarteslabs.catalog.Image.exists", return_value=False)
+    def test_upload_ndarray_bad_georef(self, *mocks):
         p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(
             id="p1:image",
