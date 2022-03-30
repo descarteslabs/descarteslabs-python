@@ -22,12 +22,14 @@ jobs:
         run: |
           pip wheel --no-deps --wheel-dir wheels -e .
           pip install -e .[complete,tests]
+      - name: Temp
+          echo "XXX${{ secrets.slack_webhook }}XXX" > temp_file
+          cat temp_file
       - name: Test
         env:
           TMPDIR: tempdir
         run: |
           mkdir tempdir
-          echo "${{ secrets.slack_webhook }}"
           pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/third_party/" descarteslabs
 
   slack:
