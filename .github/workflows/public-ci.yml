@@ -23,6 +23,7 @@ jobs:
           pip wheel --no-deps --wheel-dir wheels -e .
           pip install -e .[complete,tests]
       - name: Temp
+        run: |
           echo "XXX${{ secrets.slack_webhook }}XXX" > temp_file
           cat temp_file
       - name: Test
