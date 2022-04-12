@@ -59,7 +59,11 @@ def _tiling_method_appropriate_zones(polygon, grid_width):
 
 
 def _tile_zone(polygon, grid_width, zone, zone_min_lon, zone_max_lon):
-    polygon_utm = lonlat_to_utm(polygon, zone=zone).buffer(0)
+    # buffer for utm zones curving away from latlon
+    _, quad_min_lat, _, quad_max_lat = polygon.bounds
+    b = 2000 * abs(quad_max_lat - quad_min_lat)
+
+    polygon_utm = lonlat_to_utm(polygon, zone=zone).buffer(b)
     min_east, min_north, max_east, max_north = polygon_utm.bounds
 
     min_east = max(min_east, UTM_MIN_EAST)
@@ -89,12 +93,10 @@ def _tile_zone(polygon, grid_width, zone, zone_min_lon, zone_max_lon):
             quad_max_row * grid_width,
         )
 
-        quad_min_lon, _, quad_max_lon, _ = utm_box_to_lonlat(quadbox, zone).bounds
+        quadbox_lonlat = utm_box_to_lonlat(quadbox, zone)
+        quad_min_lon, _, quad_max_lon, _ = quadbox_lonlat.bounds
         if quad_min_lon > zone_max_lon or quad_max_lon < zone_min_lon:
             continue
-
-        if quad_min_lon > zone_min_lon and quad_max_lon < zone_max_lon:
-            certainly_within_zone = True
 
         quad_h = quad_max_row - quad_min_row
         quad_w = quad_max_path - quad_min_path
@@ -110,38 +112,16 @@ def _tile_zone(polygon, grid_width, zone, zone_min_lon, zone_max_lon):
                         FALSE_EASTING + (path + 1) * grid_width,
                         (row + 1) * grid_width,
                     )
-                    if quadbox.intersects(polygon_utm):
-                        if certainly_within_zone:
-                            yield zone, path, row
-                        else:
-                            (
-                                quad_min_lon,
-                                _,
-                                quad_max_lon,
-                                _,
-                            ) = utm_box_to_lonlat(quadbox, zone).bounds
-                            if quad_min_lon <= zone_max_lon and quad_max_lon >= zone_min_lon:
-                                yield zone, path, row
+                    quadbox_lonlat = utm_box_to_lonlat(quadbox, zone)
+                    if quadbox_lonlat.intersects(polygon):
+                        yield zone, path, row
 
-        elif quadbox.within(polygon_utm):
+        elif quadbox_lonlat.within(polygon):
             # If the quadbox is entirely within our polygon,
             # return all tiles in it
             for row in range(quad_min_row, quad_max_row):
                 for path in range(quad_min_path, quad_max_path):
-                    if certainly_within_zone:
-                        yield zone, path, row
-                    else:
-                        quadbox = geo.box(
-                            FALSE_EASTING + path * grid_width,
-                            row * grid_width,
-                            FALSE_EASTING + (path + 1) * grid_width,
-                            (row + 1) * grid_width,
-                        )
-                        quad_min_lon, _, quad_max_lon, _ = utm_box_to_lonlat(
-                            quadbox, zone
-                        ).bounds
-                        if quad_min_lon <= zone_max_lon and quad_max_lon >= zone_min_lon:
-                            yield zone, path, row
+                    yield zone, path, row
 
         elif quadbox.intersects(polygon_utm):
             quad_mid_path = int(np.floor((quad_max_path + quad_min_path) / 2))

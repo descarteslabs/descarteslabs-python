@@ -100,4 +100,4 @@ def test_normalize_polygons_badshape(feature):
 
 def test_normalize_polygons_error(feature):
     with pytest.raises(InvalidShapeError):
-        normalize_polygons([0, 'a', None])
+        normalize_polygons([0, "a", None])
