@@ -22,6 +22,10 @@ Changelog
 ### Tables
 - Fixed an issue that caused a user's schema to be overwritten if they didn't provide a primary key on table creation.
 
+## Scenes
+
+- Fixed an issue in `scenes.DLTile.from_shape` where there would be incomplete coverage of certain geometries. The function may now return more tiles than before.
+
 ## [1.10.0] - 2022-01-18
 
 ### Python Versions Supported
