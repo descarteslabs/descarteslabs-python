@@ -15,22 +15,23 @@ Discover
 .. autosummary::
   :nosignatures:
 
-  ~descarteslabs.discover.AccessGrant
+  ~descarteslabs.discover.Discover
   ~descarteslabs.discover.Asset
   ~descarteslabs.discover.Blob
-  ~descarteslabs.discover.Discover
   ~descarteslabs.discover.Folder
   ~descarteslabs.discover.SymLink
+  ~descarteslabs.discover.AssetType
+  ~descarteslabs.discover.AssetListFilter
 
+  ~descarteslabs.discover.AccessGrant
   ~descarteslabs.discover.UserEmail
   ~descarteslabs.discover.Organization
 
 -----
 
-.. autoclass:: descarteslabs.discover.AccessGrant
+.. autoclass:: descarteslabs.discover.Discover
   :autosummary:
   :members:
-  :inherited-members:
   :undoc-members:
 
 .. autoclass:: descarteslabs.discover.Asset
@@ -46,11 +47,6 @@ Discover
   :inherited-members:
   :undoc-members:
 
-.. autoclass:: descarteslabs.discover.Discover
-  :autosummary:
-  :members:
-  :undoc-members:
-
 .. autoclass:: descarteslabs.discover.Folder
   :autosummary:
   :members:
@@ -63,6 +59,23 @@ Discover
   :inherited-members:
   :undoc-members:
   :exclude-members: target_asset_name, target_asset_display_name
+
+.. autoclass:: descarteslabs.discover.AssetType
+  :autosummary:
+  :inherited-members:
+  :undoc-members:
+
+.. autoclass:: descarteslabs.discover.AssetListFilter
+  :autosummary:
+  :members:
+  :inherited-members:
+  :undoc-members:
+
+.. autoclass:: descarteslabs.discover.AccessGrant
+  :autosummary:
+  :members:
+  :inherited-members:
+  :undoc-members:
 
 .. autoclass:: descarteslabs.discover.UserEmail
   :autosummary:

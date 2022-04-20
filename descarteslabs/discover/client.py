@@ -4,7 +4,11 @@ from dataclasses import dataclass
 import re
 import os
 from typing import Generator, List, Optional, Union
+from enum import Enum
+from collections import UserDict
+
 import warnings
+import urllib
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.service import Service
@@ -108,6 +112,53 @@ class Organization(TargetBase):
             character.
         """
         pass
+
+
+class AssetType(str, Enum):
+    """The types of assets that discover supports."""
+
+    BLOB = "blob"
+    FOLDER = "folder"
+    NAMESPACE = "namespace"
+    SYM_LINK = "sym_link"
+    STS_MODEL = "sts_model"
+    TABLE = "vector"
+
+
+class AssetListFilter(UserDict):
+    """AssetListFilter represents a filter that will be applied to list_assets
+    it can either be a string in the form of a urlencoded query string
+    or it can be a dictionary.
+
+    Examples:
+    { type: "blob", name: "Some Name*" }
+    { type: ["blob", "folder"], name: "Some Name*" }
+    """
+
+    _allowed_fields = ["type", "name"]
+
+    def __setitem__(self, key, value):
+        """Validate fields and values for Asset Filters"""
+        if key not in self._allowed_fields:
+            raise KeyError(
+                f"The filter field {key} does not exist. Allowed fields are: {','.join(self._allowed_fields)}"
+            )
+
+        if key == "type":
+            # validate type is a list of allowed AssetTypes
+            allowedTypes = [e.value for e in AssetType]
+            values = value if isinstance(value, list) else [value]
+            invalid = set(values) - set(allowedTypes)
+
+            if len(invalid) != 0:
+                raise ValueError(
+                    (
+                        f"Unsupported filter type(s) found {','.join(invalid)}. "
+                        "Type must be one or more of: {', '.join(allowedTypes)}"
+                    )
+                )
+
+        super().__setitem__(key, value)
 
 
 # ShareTargets can either be emails in string format,
@@ -323,9 +374,11 @@ class _DiscoverRequestBuilder(ABC):
         """
 
         if (
-            (self._type() == "folder" and as_.lower() in ALLOWABLE_FOLDER_ROLES)
-            or (self._type() == "blob" and as_.lower() in ALLOWABLE_BLOB_ROLES)
-            or (self._type() == "vector" and as_.lower() in ALLOWABLE_TABLE_ROLES)
+            (self._type() == AssetType.FOLDER and as_.lower() in ALLOWABLE_FOLDER_ROLES)
+            or (self._type() == AssetType.BLOB and as_.lower() in ALLOWABLE_BLOB_ROLES)
+            or (
+                self._type() == AssetType.TABLE and as_.lower() in ALLOWABLE_TABLE_ROLES
+            )
         ):
             return self.discover.add_access_grant(self.asset_name, with_, as_)
         else:
@@ -384,9 +437,9 @@ class _DiscoverRequestBuilder(ABC):
         warnings.formatwarning = warning_on_one_line
 
         if (
-            (self._type() == "folder" and as_ not in ALLOWABLE_FOLDER_ROLES)
-            or (self._type() == "blob" and as_ not in ALLOWABLE_BLOB_ROLES)
-            or (self._type() == "vector" and as_ not in ALLOWABLE_TABLE_ROLES)
+            (self._type() == AssetType.FOLDER and as_ not in ALLOWABLE_FOLDER_ROLES)
+            or (self._type() == AssetType.BLOB and as_ not in ALLOWABLE_BLOB_ROLES)
+            or (self._type() == AssetType.TABLE and as_ not in ALLOWABLE_TABLE_ROLES)
         ):
             warnings.warn(message=WARNING)
 
@@ -441,9 +494,18 @@ class _DiscoverRequestBuilder(ABC):
         """
 
         if (
-            (self._type() == "folder" and to_role.lower() in ALLOWABLE_FOLDER_ROLES)
-            or (self._type() == "blob" and to_role.lower() in ALLOWABLE_BLOB_ROLES)
-            or (self._type() == "vector" and to_role.lower() in ALLOWABLE_TABLE_ROLES)
+            (
+                self._type() == AssetType.FOLDER
+                and to_role.lower() in ALLOWABLE_FOLDER_ROLES
+            )
+            or (
+                self._type() == AssetType.BLOB
+                and to_role.lower() in ALLOWABLE_BLOB_ROLES
+            )
+            or (
+                self._type() == AssetType.TABLE
+                and to_role.lower() in ALLOWABLE_TABLE_ROLES
+            )
         ):
             return self.discover.replace_access_grant(
                 self.asset_name, user, from_role, to_role
@@ -649,7 +711,7 @@ def _bad_asset_shape_error(asset_name: str, asset_type: str) -> ValueError:
         Error that explains what a good path looks like for the given asset.
     """
 
-    if asset_type == "blob":
+    if asset_type == AssetType.BLOB:
         error_english = (
             "A well-formed path should include a user ID, as well as a colon and a tilda separator, eg. "
             f"asset/blob/b1a1d1c20e655402691582723261a02caa693834{NAME_SEPARATOR}my_blob"
@@ -659,7 +721,7 @@ def _bad_asset_shape_error(asset_name: str, asset_type: str) -> ValueError:
             "A well-formed path should include a user ID, as well as a colon and a tilda separator, eg. "
             f"asset/vector/b1a1d1c20e655402691582723261a02caa693834{NAME_SEPARATOR}my_table"
         )
-    elif asset_type == "folder":
+    elif asset_type == AssetType.FOLDER:
         error_english = (
             "A well-formed folder name must include a folder ID, eg. "
             "asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de"
@@ -694,7 +756,7 @@ def _is_valid_uuid(uuid: str, num_chars: int) -> bool:
     right_curly_bracket = "}"
 
     NAMESPACE_PATTERN = re.compile(
-        fr"[0-9a-f]{left_curly_bracket}{num_chars}{right_curly_bracket}"
+        rf"[0-9a-f]{left_curly_bracket}{num_chars}{right_curly_bracket}"
     )
     return len(uuid) == num_chars and NAMESPACE_PATTERN.match(uuid)
 
@@ -1171,7 +1233,7 @@ class Table(_DiscoverRequestBuilder):
     """A Table is a pointer to a table."""
 
     def _type(self) -> str:
-        return "vector"
+        return AssetType.TABLE
 
     def _resolve_name(self, asset_name: str):
         """
@@ -1986,7 +2048,7 @@ class Discover:
 
         return self.get_asset(asset_name)
 
-    def _page_list(self, asset_name: str) -> Generator[Asset, None, None]:
+    def _page_list(self, asset_name: str, filters: str) -> Generator[Asset, None, None]:
         """
         Page through list results as a generator.
 
@@ -1994,6 +2056,8 @@ class Discover:
         ----------
         asset_name : str
             Asset name of the folder to list from.
+        filters : str
+            Filters to apply to the asset search query.
         """
 
         next_page = None
@@ -2001,6 +2065,7 @@ class Discover:
             list_request = discover_pb2.ListAssetsRequest(
                 parent_name=asset_name,
                 page_token=next_page,
+                filter=filters,
             )
 
             resp = self._discover_client.ListAssets(list_request)
@@ -2012,7 +2077,9 @@ class Discover:
             next_page = resp.next_page
 
     def list_assets(
-        self, asset_name: Optional[Union[str, Organization]] = None
+        self,
+        asset_name: Optional[Union[str, Organization]] = None,
+        filters: Optional[Union[str, AssetListFilter]] = None,
     ) -> List[Asset]:
         """
         List child assets of the provided asset.
@@ -2021,6 +2088,34 @@ class Discover:
         ----------
         asset_name : Optional[Union[str, Organization]]
             Asset name of the folder or namespace to list from.
+
+        filters : Optional[Union[str, AssetListFilter]]
+            Field names and associated values to find assets matching the specified terms.
+
+            ::
+
+                Filters can be an encoded URL query string or an AssetListFilter object.
+
+                Filters support the following fields:
+                    type: If supplied, can be one or more supported AssetTypes.
+
+                    name: If supplied, should be a string to find assets with the same display name.
+
+                Wildcards supported by the name field:
+                    * - Matches zero or more of any character between it and the next character in the filter.
+                        Ex. name=Test* will find assets that start with Test which could include Test 1 and Test 2.
+
+                        Ex. name=Te*.jpg will find assets like Test1.jpg, Test Image.jpg, and Testing 123.jpg
+
+                    ? - Matches any one character.
+                        Ex. name=Test?.jpg will find assets like Test1.jpg but not Test10.jpg
+
+                Raw filter string examples:
+                    type=blob&name=Test* : This filter will find Assets with a type of blob starting with the name Test.
+
+                    type=blob&type=vector : This filter will find Assets with a type of blob or vector.
+
+                    type=blob,vector : This syntax is an alternative to the above which is supported for types.
 
         Returns
         -------
@@ -2101,10 +2196,72 @@ class Discover:
             )
         ]
 
+        Calling .list_assets() with a set of filters to find assets that are of type blob.
+
+        >>> discover.list_assets(filters="type=blob,vector&name=australia*") # doctest: +SKIP
+        [
+            Asset(
+                asset_name='asset/blob/8f8fa89c6543143a6b58507d1b727f91:~/australia.geojson',
+                display_name='australia.geojson',
+                is_shared=True,
+                sym_link=None,
+                description='',
+                parent_asset_name='asset/namespace/eed8c8b3f49b49338cf276fc038ac25a47a73397'
+            ),
+            Asset(
+                asset_name='asset/blob/3a68f8fa89c654314b58507d1b727f91:~/australia.txt',
+                display_name='australia.txt',
+                is_shared=True,
+                sym_link=None,
+                description='',
+                parent_asset_name='asset/namespace/eed8c8b3f49b49338cf276fc038ac25a47a73397'
+            )
+        ]
+
+        >>> discover.list_assets(filters={ "type": "blob" }) # doctest: +SKIP
+        [
+            Asset(
+                asset_name='asset/blob/8f8fa89c6543143a6b58507d1b727f91:~/australia.geojson',
+                display_name='australia.geojson',
+                is_shared=True,
+                sym_link=None,
+                description='',
+                parent_asset_name='asset/namespace/eed8c8b3f49b49338cf276fc038ac25a47a73397'
+            )
+        ]
+
+        Calling .list_assets() with a set of filters using wildcards to find assets that contain
+        "tra" in their display name.
+
+        >>> discover.list_assets(filters={ "name": "*tra*" }) # doctest: +SKIP
+        [
+            Asset(
+                asset_name='asset/blob/8f8fa89c6543143a6b58507d1b727f91:~/australia.geojson',
+                display_name='australia.geojson',
+                is_shared=True,
+                sym_link=None,
+                description='',
+                parent_asset_name='asset/namespace/eed8c8b3f49b49338cf276fc038ac25a47a73397'
+            )
+        ],
+        [
+            Asset(
+                asset_name='asset/blob/89c6548f3143a6b58507d8fa1b727f91:~/parks-and-trails.geojson',
+                display_name='parks-and-trails.geojson',
+                is_shared=False,
+                sym_link=None,
+                description='',
+                parent_asset_name='asset/namespace/eed8c8b3f49b49338cf276fc038ac25a47a73397'
+            )
+        ]
+
         """
 
         if asset_name is None:
             asset_name = ""
+
+        if filters is None:
+            filters = ""
 
         if isinstance(asset_name, Organization):
             asset_name = f"{Organization._prefix}{asset_name}"
@@ -2112,7 +2269,16 @@ class Discover:
         if asset_name.startswith(Organization._prefix):
             asset_name = _organization_namespace_asset_name(asset_name)
 
-        return list(self._page_list(asset_name))
+        if not isinstance(filters, str):
+            # some character don't need to be encoded since this isn't a full url
+            filters = urllib.parse.urlencode(
+                AssetListFilter(filters),
+                doseq=True,
+                safe="/[]+'*?, ",
+                quote_via=urllib.parse.quote,
+            )
+
+        return list(self._page_list(asset_name, filters))
 
     def list_org_users(self, search=None):
         """

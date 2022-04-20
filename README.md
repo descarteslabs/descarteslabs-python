@@ -19,6 +19,20 @@ Changelog
 =========
 ## [Unreleased]
 
+### Discover
+
+- Added support for filtering `Assets` by type and name fields.
+  - Supported filter types `blob`, `folder`, `namespace`, `sym_link`, `sts_model`, and `vector`. Specifying multiple types will find assets matching any given type.
+  - The name field supports the following wildcards:
+    - `*` matches 0 or more of any character.
+    - `?` matches 1 of any character.
+  - Find assets matching type of `blob` and having a display name of `file name.json` or `file2name.txt` but **not** `filename.json`:
+    - `Discover().list_assets("asset/namespace/org:some_org", filters="type=blob&name=file?name.*")`
+    - `Discover().list_assets("asset/namespace/org:some_org", filters=AssetListFilter(type=AssetType.BLOB, name="file?name.*"))` 
+  - Find assets of type `blob` or `vector`:
+    - `Discover().list_assets("asset/namespace/org:some_org", filters="type=blob,vector")`
+    - `Discover().list_assets("asset/namespace/org:some_org", filters=AssetListFilter(type=[AssetType.BLOB, AssetType.VECTOR], name="file?name.*"))`
+
 ### Tables
 - Fixed an issue that caused a user's schema to be overwritten if they didn't provide a primary key on table creation.
 

@@ -718,6 +718,61 @@ def test_list_assets_single_page(discover_grpc_client):
     assert 2 == discover_grpc_client.ListAssets.call_count
 
 
+def test_list_assets_with_filters(discover_grpc_client):
+    asset_name = "asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de"
+    exp_asset = discover_pb2.Asset(
+        name="asset/blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt",
+        display_name="asset 1",
+        description="asset 1 desc",
+        parent_name=asset_name,
+    )
+
+    discover_grpc_client.ListAssets.side_effect = [
+        discover_pb2.ListAssetsResponse(assets=[exp_asset]),
+        discover_pb2.ListAssetsResponse(assets=[]),
+    ]
+    client = Discover(discover_client=discover_grpc_client)
+
+    filters = {"type": "blob"}
+    assets = client.list_assets(asset_name, filters)
+
+    discover_grpc_client.ListAssets.assert_called_with(
+        discover_pb2.ListAssetsRequest(
+            parent_name=asset_name,
+            page_token=None,
+            filter="type=blob",
+        )
+    )
+    assert 1 == len(assets)
+
+    discover_grpc_client.ListAssets.side_effect = [
+        discover_pb2.ListAssetsResponse(assets=[exp_asset]),
+        discover_pb2.ListAssetsResponse(assets=[]),
+    ]
+    filters = {"type": ["blob", "vector"], "name": "as?et *"}
+    assets = client.list_assets(asset_name, filters)
+
+    discover_grpc_client.ListAssets.assert_called_with(
+        discover_pb2.ListAssetsRequest(
+            parent_name=asset_name,
+            page_token=None,
+            filter="type=blob&type=vector&name=as?et *",
+        )
+    )
+    assert 1 == len(assets)
+
+
+def test_list_assets_with_invalid_filters(discover_grpc_client):
+    asset_name = "asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de"
+    client = Discover(discover_client=discover_grpc_client)
+
+    with pytest.raises(KeyError, match="Allowed fields are: type,name"):
+        client.list_assets(asset_name, filters={"non existent": "not here"})
+
+    with pytest.raises(ValueError, match="Type must be one or more of"):
+        client.list_assets(asset_name, filters={"type": "asdf"})
+
+
 def test_list_assets_multiple_page(discover_grpc_client):
     asset_name = "asset/folder/3d7bf4b0b1f4e6283e5cbeaadddbc6de"
     exp_asset1 = discover_pb2.Asset(
