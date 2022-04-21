@@ -35,6 +35,10 @@ Changelog
 
 ### Tables
 - Fixed an issue that caused a user's schema to be overwritten if they didn't provide a primary key on table creation.
+- Now uses Discover backend filtering for `list_tables()` instead of filtering on the client to improve performance.
+- `list_tables()` now supports filtering tables by name
+  - `Tables.list_tables(name="Test*.json")`
+  
 
 ## Scenes
 

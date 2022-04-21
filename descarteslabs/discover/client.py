@@ -309,6 +309,18 @@ class Asset:
 
         return cls._from_proto_asset(response.asset)
 
+    def _type(self) -> AssetType:
+        """
+        Determines the type of the Asset.
+
+        Returns
+        -------
+        AssetType
+            The type of the asset
+        """
+        asset_type = self.asset_name.split("/")[1]
+        return AssetType(asset_type)
+
 
 class _DiscoverRequestBuilder(ABC):
     def __init__(self, discover: "Discover", asset_name: str):

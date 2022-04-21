@@ -1,17 +1,33 @@
 import datetime
 import json
 import sys
+from unittest.mock import MagicMock, Mock
 
 import pytest
 import pandas as pd
 
-from descarteslabs.tables.client import Tables, JobStatus
 from descarteslabs.client.exceptions import BadRequestError
+from descarteslabs.discover.client import AccessGrant, Asset, SymLink
+from descarteslabs.tables.client import Tables, JobStatus
+
+
+def mock_dict(d: dict) -> MagicMock:
+    mock = MagicMock()
+    mock.__getitem__.side_effect = d.__getitem__
+    return mock
 
 
 @pytest.fixture
 def tables_client():
-    return Tables()
+    auth = Mock(payload=None)
+    discover_client = tables_client.discover_client = Mock(
+        spec=[
+            "list_assets",
+            "list_access_grants",
+        ],
+    )
+
+    return Tables(discover_client=discover_client, auth=auth)
 
 
 @pytest.fixture
@@ -128,3 +144,62 @@ def test_wait_until_completion_fail(tables_client):
         tables_client.wait_until_completion(
             1234, poll_interval=0.0, raise_on_failure=True
         )
+
+
+def test_list_tables(tables_client: Tables):
+    assets = [
+        Asset(asset_name="asset/vector/some_table.tbl", display_name="Table 1"),
+        Asset(asset_name="asset/vector/some_table2.tbl", display_name="Table 2"),
+        Asset(
+            asset_name="asset/sym_link/link_to_some_table2.tbl",
+            display_name="Link to Table 2",
+            sym_link=SymLink(
+                target_asset_display_name="Table 2",
+                target_asset_name="asset/vector/some_table2.tbl",
+            ),
+        ),
+    ]
+
+    grants = [
+        [
+            AccessGrant(
+                asset_name=assets[0].asset_name,
+                access="storage/role/owner",
+                target_id="test@descarteslabs.com",
+            )
+        ],
+        [
+            AccessGrant(
+                asset_name=assets[1].asset_name,
+                access="storage/role/editor",
+                target_id="test@descarteslabs.com",
+            ),
+            AccessGrant(
+                asset_name=assets[1].asset_name,
+                access="storage/role/owner",
+                target_id="not-you@descarteslabs.com",
+            ),
+        ],
+        [
+            AccessGrant(
+                asset_name=assets[2].sym_link.target_asset_name,
+                access="storage/role/viewer",
+                target_id="test@descarteslabs.com",
+            ),
+            AccessGrant(
+                asset_name=assets[2].sym_link.target_asset_name,
+                access="storage/role/owner",
+                target_id="not-you@descarteslabs.com",
+            ),
+        ],
+    ]
+
+    user = {"email": "test@descarteslabs.com"}
+    tables_client.auth.payload = mock_dict(user)
+    tables_client.discover_client.list_assets.side_effect = [assets]
+    tables_client.discover_client.list_access_grants.side_effect = grants
+
+    response = tables_client.list_tables()
+    assert response["owner"] == ["Table 1"]
+    assert response["editor"] == {"not-you@descarteslabs.com": ["Table 2"]}
+    assert response["viewer"] == {"not-you@descarteslabs.com": ["Table 2"]}

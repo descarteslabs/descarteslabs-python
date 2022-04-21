@@ -75,6 +75,7 @@ from descarteslabs.client.services.storage import Storage
 from descarteslabs.common.ibis.client import api as serializer
 from descarteslabs.common.proto.vektorius import vektorius_pb2
 from descarteslabs.client.deprecation import deprecate_func
+from descarteslabs.discover import AssetType
 
 
 def _default_json_serializer(obj):
@@ -276,9 +277,13 @@ class Tables(object):
         else:
             return table_name
 
-    def list_tables(self):
+    def list_tables(self, name: str = None):
         """
         Return a list of tables
+
+        :param str name: tables matching the search string will be included.
+            Wildcards * and ? can be used to match any number of any character or a
+            single character respectively.
 
         :return: list of tables owned by the authenticated user organized by schema
         :rtype: Dict(str, Dict(str, List(str)))
@@ -288,42 +293,21 @@ class Tables(object):
         viewer_tables = {}
 
         # retrieve a list of tables associated with this user
-        # TODO: currently discover doesn't have the ability to filter
-        # on asset type so the client will need to do this. however, when that
-        # is implemented then this logic should change and use that filtering
-        assets = self.discover_client.list_assets()
-
-        vector_assets = []
-
+        assets = self.discover_client.list_assets(
+            filters={"type": AssetType.TABLE, "name": name}
+        )
         for asset in assets:
-            # probably not the best way to do this but see TODO above
-            asset_type = asset.asset_name.split("/")[1]
             # sym_links have a slightly different structure from actual vector
-            # assets but we still want to list those
-            if asset_type == "sym_link":
-                if len(asset.sym_link.target_asset_name) > 0:
-                    # ignore any sym_links that aren't to vectors
-                    if asset.sym_link.target_asset_name.split("/")[1] == "vector":
-                        vector_assets.append(asset)
-                else:
-                    # invalid sym_link, most likely a link pointing to an asset
-                    # that wasn't cleaned up in database. skip these
-                    continue
-            elif asset_type == "vector":
-                vector_assets.append(asset)
-
-        for vector in vector_assets:
-            asset_type = vector.asset_name.split("/")[1]
-            if asset_type == "vector":
-                display_name = vector.display_name
-                asset_name = vector.asset_name
-            elif asset_type == "sym_link":
-                display_name = vector.sym_link.target_asset_display_name
-                asset_name = vector.sym_link.target_asset_name
+            # we need to get the display name and asset name from those as well
+            if asset._type() == AssetType.TABLE:
+                display_name = asset.display_name
+                asset_name = asset.asset_name
+            elif asset._type() == AssetType.SYM_LINK:
+                display_name = asset.sym_link.target_asset_display_name
+                asset_name = asset.sym_link.target_asset_name
             else:
-                # logically we shouldn't be able to reach this because the
-                # prior loop only retains vector and sym_link asset types
-                # but we'll play it safe
+                # logically this shouldn't be reached but if it is
+                # there's an error with the discover client
                 continue
 
             grants = self.discover_client.list_access_grants(asset_name)
