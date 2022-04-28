@@ -29,7 +29,8 @@ class TestGeoContext(unittest.TestCase):
         simple = SimpleContext(1, False)
         r = repr(simple)
         expected = """SimpleContext(foo=1,
-              bar=False)"""
+              bar=False,
+              all_touched=False)"""
         assert r == expected
 
     def test_eq(self):
@@ -319,10 +320,10 @@ class TestDLTIle(unittest.TestCase):
         )
 
     def test_assign(self):
-        tile = geocontext.DLTile.from_key(self.key2)
+        tile = geocontext.DLTile.from_key(self.key)
         tile = tile.assign(8)
 
-        assert tile.key == self.key2
+        assert tile.key == self.key.replace(":16:", ":8:")
         assert tile.resolution == 960
         assert tile.pad == 8
         assert tile.tilesize == 128

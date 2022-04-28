@@ -21,6 +21,7 @@ GeoContextBase = Struct[
             Float, Float, Float, Float, Float, Float
         ],  # 'a', 'b', 'c', 'd', 'e', 'f'
         "projected_bounds": Tuple[Float, Float, Float, Float],
+        "all_touched": Bool,
     }
 ]
 
@@ -127,6 +128,7 @@ class GeoContext(GeoContextBase):
         "bounds",
         "bounds_crs",
         "shape",
+        "all_touched",
     }
     _read_only = {"arr_shape", "gdal_geotrans", "projected_bounds"}
 
@@ -196,6 +198,13 @@ class GeoContext(GeoContextBase):
             This derived property cannot be set in ``__init__``, but you can call `compute` on it
             (useful for uploading to `.Catalog`).
             """,
+        "all_touched": """
+            If True, this ensures that any source pixel which intersects the
+            AOI GeoContext contributes to the raster result. Normally this mode is
+            not enabled, and its use is strongly discouraged. However, it can be
+            useful when the AOI is smaller than a source pixel, which under many
+            situations will return no result at all (i.e. entirely masked).
+            """,
     }
 
     def __init__(
@@ -207,6 +216,7 @@ class GeoContext(GeoContextBase):
         bounds=None,
         bounds_crs="EPSG:4326",
         shape=None,
+        all_touched=False,
     ):
         return super(GeoContext, self).__init__(
             geometry=geometry,
@@ -216,17 +226,24 @@ class GeoContext(GeoContextBase):
             bounds=bounds,
             bounds_crs=bounds_crs,
             shape=shape,
+            all_touched=all_touched,
         )
 
     @classmethod
     @typecheck_promote(Str)
-    def from_dltile_key(cls, key):
+    def from_dltile_key(cls, key, all_touched=False):
         """
         Construct a Workflows GeoContext from a DLTile key.
 
         Parameters
         ----------
-        key: Str
+        key: str
+        all_touched: bool, default False
+            If True, this ensures that any source pixel which intersects the
+            AOI GeoContext contributes to the raster result. Normally this mode is
+            not enabled, and its use is strongly discouraged. However, it can be
+            useful when the AOI is smaller than a source pixel, which under many
+            situations will return no result at all (i.e. entirely masked).
 
         Returns
         -------
@@ -250,11 +267,11 @@ class GeoContext(GeoContextBase):
          'tilesize': 512,
         ...
         """
-        return cls._from_apply("wf.GeoContext.from_dltile_key", key)
+        return cls._from_apply("wf.GeoContext.from_dltile_key", key, all_touched)
 
     @classmethod
     @typecheck_promote(Int, Int, Int)
-    def from_xyz_tile(cls, x, y, z):
+    def from_xyz_tile(cls, x, y, z, all_touched=False):
         """
         Construct a Workflows GeoContext for an XYZ tile in the OpenStreetMap tiling scheme.
 
@@ -263,6 +280,12 @@ class GeoContext(GeoContextBase):
         x: Int
         y: Int
         z: Int
+        all_touched: Bool, default False
+            If True, this ensures that any source pixel which intersects the
+            AOI GeoContext contributes to the raster result. Normally this mode is
+            not enabled, and its use is strongly discouraged. However, it can be
+            useful when the AOI is smaller than a source pixel, which under many
+            situations will return no result at all (i.e. entirely masked).
 
         Returns
         -------
@@ -288,7 +311,7 @@ class GeoContext(GeoContextBase):
          'crs': 'EPSG:3857',
         ...
         """
-        return cls._from_apply("wf.GeoContext.from_xyz_tile", x, y, z)
+        return cls._from_apply("wf.GeoContext.from_xyz_tile", x, y, z, all_touched)
 
     @classmethod
     def from_scenes(cls, ctx):
@@ -337,11 +360,12 @@ class GeoContext(GeoContextBase):
                 align_pixels=ctx.align_pixels,
                 bounds=ctx.bounds,
                 bounds_crs=ctx.bounds_crs,
+                all_touched=ctx.all_touched,
             )
         elif isinstance(ctx, scenes.DLTile):
-            return cls.from_dltile_key(ctx.key)
+            return cls.from_dltile_key(ctx.key, all_touched=ctx.all_touched)
         elif isinstance(ctx, scenes.XYZTile):
-            return cls.from_xyz_tile(ctx.x, ctx.y, ctx.z)
+            return cls.from_xyz_tile(ctx.x, ctx.y, ctx.z, all_touched=ctx.all_touched)
         else:
             raise TypeError(
                 "In GeoContext.from_scenes, expected a `descarteslabs.scenes.GeoContext` "

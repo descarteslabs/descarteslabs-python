@@ -43,6 +43,14 @@ Changelog
 ## Scenes
 
 - Fixed an issue in `scenes.DLTile.from_shape` where there would be incomplete coverage of certain geometries. The function may now return more tiles than before.
+- Added support for the new `all_touched` parameter to the different `GeoContext` types. Default behavior remains the same
+as always, but if you set `all_touched=True` this communicates to the raster service that you want the image(s) rastered
+using GDAL's `CUTLINE_ALL_TOUCHED` option which will change how source pixels are mapped to output pixels. This mode is
+only recommended when using an AOI which is smaller than the source imagery pixel resolution.
+
+## Workflows
+
+- Added support for the new `all_touched` parameter to the different `GeoContext` types. Se description above under `Scenes`.
 
 ## [1.10.0] - 2022-01-18
 

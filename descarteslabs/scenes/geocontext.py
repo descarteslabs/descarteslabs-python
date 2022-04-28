@@ -76,11 +76,25 @@ class GeoContext(object):
     GeoContexts are immutable.
     """
 
-    __slots__ = "_geometry_lock_"
+    __slots__ = (
+        "_geometry_lock_",
+        "_all_touched",
+    )
     # slots *suffixed* with an underscore will be ignored by `__eq__` and `__repr__`.
     # a double-underscore prefix would be more conventional, but that actually breaks as a slot name.
 
-    def __init__(self):
+    def __init__(self, all_touched=False):
+        """
+        Parameters
+        ----------
+        all_touched: bool, default False
+            If True, this ensures that any source pixel which intersects the
+            AOI GeoContext contributes to the raster result. Normally this mode is
+            not enabled, and its use is strongly discouraged. However, it can be
+            useful when the AOI is smaller than a source pixel, which under many
+            situations will return no result at all (i.e. entirely masked).
+        """
+
         # Shapely objects are not thread-safe, due to the way the underlying GEOS library is used.
         # Specifically, accessing `__geo_interface__` on the same geometry across threads
         # can cause bizzare exceptions. This makes `raster_params` and `__geo_interface__` thread-unsafe,
@@ -88,12 +102,14 @@ class GeoContext(object):
         # Subclasses of GeoContext can use this lock to ensure `self._geometry.__geo_interface__`
         # is accessed from at most 1 thread at a time.
         self._geometry_lock_ = threading.Lock()
+        self._all_touched = bool(all_touched)
 
     def __getstate__(self):
-        # Lock objects shouldn't be pickled or deepcopied
+        # Lock objects shouldn't be pickled or deepcopied, but recursively get all the other slots
         return {
             attr: getattr(self, attr)
-            for attr in self.__slots__
+            for s in self.__class__.__mro__
+            for attr in getattr(s, "__slots__", [])
             if not attr.endswith("_")
         }
 
@@ -103,12 +119,30 @@ class GeoContext(object):
         self._geometry_lock_ = threading.Lock()
 
     @property
+    def all_touched(self):
+        """
+        bool: If True, this ensures that any source pixel which intersects the
+        GeoContext contributes to the raster result.
+
+        Normally this mode is not enabled, and its use is strongly discouraged.
+        However, it can be useful when the AOI is smaller than a source pixel,
+        which under many situations will return no result at all (i.e. entirely
+        masked).
+        """
+        return self._all_touched
+
+    @property
     def raster_params(self):
         """
         dict: The properties of this GeoContext,
         as keyword arguments to use for `Raster.ndarray` or `Raster.raster`.
         """
-        raise NotImplementedError
+
+        raster_params = {}
+        if self.all_touched:
+            raster_params["cutline_all_touched"] = True
+
+        return raster_params
 
     def __eq__(self, other):
         """
@@ -129,7 +163,8 @@ class GeoContext(object):
         delim = ",\n" + " " * (len(classname) + 1)
         props = delim.join(
             "{}={}".format(attr.lstrip("_"), reprlib.repr(getattr(self, attr)))
-            for attr in self.__slots__
+            for s in self.__class__.__mro__
+            for attr in getattr(s, "__slots__", [])
             if not attr.endswith("_")
         )
         return "{}({})".format(classname, props)
@@ -171,6 +206,7 @@ class AOI(GeoContext):
         bounds=None,
         bounds_crs="EPSG:4326",
         shape=None,
+        all_touched=False,
     ):
         """
         Parameters
@@ -220,15 +256,30 @@ class AOI(GeoContext):
             ``(rows, columns)``, in pixels, the output raster should fit within;
             the longer side of the raster will be min(shape).
             Can only specify one of `resolution` and `shape`.
+        all_touched: bool, default False
+            If True, this ensures that any source pixel which intersects the
+            AOI GeoContext contributes to the raster result. Normally this mode is
+            not enabled, and its use is strongly discouraged. However, it can be
+            useful when the AOI is smaller than a source pixel, which under many
+            situations will return no result at all (i.e. entirely masked).
         """
 
-        super(AOI, self).__init__()
+        super(AOI, self).__init__(all_touched=all_touched)
 
         if bounds is None and geometry is not None:
             bounds = "update"
 
         # If no bounds were given, use the bounds of the geometry
-        self._assign(geometry, resolution, crs, align_pixels, bounds, bounds_crs, shape)
+        self._assign(
+            geometry,
+            resolution,
+            crs,
+            align_pixels,
+            bounds,
+            bounds_crs,
+            shape,
+            "unchanged",
+        )
         self._validate()
 
     @property
@@ -339,6 +390,7 @@ class AOI(GeoContext):
             raise ValueError("AOI must have one of resolution or shape specified")
         if self._align_pixels is None:
             raise ValueError("AOI must have align_pixels specified")
+        # all_touched doesn't affect the spatial equivalence
 
         with self._geometry_lock_:
             # see comment in `GeoContext.__init__` for why we need to prevent
@@ -352,6 +404,7 @@ class AOI(GeoContext):
         )
 
         return {
+            **super().raster_params,
             "cutline": cutline,
             "resolution": self._resolution,
             "srs": self._crs,
@@ -397,6 +450,7 @@ class AOI(GeoContext):
         bounds="unchanged",
         bounds_crs="unchanged",
         shape="unchanged",
+        all_touched="unchanged",
     ):
         """
         Return a copy of the AOI with the given values assigned.
@@ -424,7 +478,16 @@ class AOI(GeoContext):
         """
 
         new = copy.deepcopy(self)
-        new._assign(geometry, resolution, crs, align_pixels, bounds, bounds_crs, shape)
+        new._assign(
+            geometry,
+            resolution,
+            crs,
+            align_pixels,
+            bounds,
+            bounds_crs,
+            shape,
+            all_touched,
+        )
         new._validate()
         return new
 
@@ -535,7 +598,15 @@ class AOI(GeoContext):
                 )
 
     def _assign(
-        self, geometry, resolution, crs, align_pixels, bounds, bounds_crs, shape
+        self,
+        geometry,
+        resolution,
+        crs,
+        align_pixels,
+        bounds,
+        bounds_crs,
+        shape,
+        all_touched,
     ):
         # we use "unchanged" as a sentinel value, because None is a valid thing to set attributes to.
         if geometry is not None and geometry != "unchanged":
@@ -578,6 +649,8 @@ class AOI(GeoContext):
             self._bounds_crs = bounds_crs
         if shape != "unchanged":
             self._shape = shape
+        if all_touched != "unchanged":
+            self._all_touched = bool(all_touched)
 
 
 class DLTile(GeoContext):
@@ -640,14 +713,25 @@ class DLTile(GeoContext):
         "_wkt",
     )
 
-    def __init__(self, dltile_dict):
+    def __init__(self, dltile_dict, all_touched=False):
         """
         Constructs a DLTile from a parameter dictionary.
         It is preferred to use the `DLTile.from_latlon`, `DLTile.from_shape`,
         or `DLTile.from_key` class methods to construct a DLTile GeoContext.
+
+        Parameters
+        ----------
+        dltile_dict: Dict[Str, Any]
+            Dictionary for the tile.
+        all_touched: bool, default False
+            If True, this ensures that any source pixel which intersects the
+            AOI GeoContext contributes to the raster result. Normally this mode is
+            not enabled, and its use is strongly discouraged. However, it can be
+            useful when the AOI is smaller than a source pixel, which under many
+            situations will return no result at all (i.e. entirely masked).
         """
 
-        super(DLTile, self).__init__()
+        super(DLTile, self).__init__(all_touched=all_touched)
 
         if isinstance(dltile_dict["geometry"], shapely.geometry.polygon.Polygon):
             self._geometry = dltile_dict["geometry"]
@@ -672,7 +756,7 @@ class DLTile(GeoContext):
         self._wkt = properties.get("wkt", None)
 
     @classmethod
-    def from_latlon(cls, lat, lon, resolution, tilesize, pad):
+    def from_latlon(cls, lat, lon, resolution, tilesize, pad, all_touched=False):
         """
         Return a DLTile GeoContext that covers a latitude/longitude.
 
@@ -692,6 +776,12 @@ class DLTile(GeoContext):
         pad : int
             Number of extra pixels by which each side of the tile is buffered.
             This determines the number of pixels by which two tiles overlap.
+        all_touched: bool, default False
+            If True, this ensures that any source pixel which intersects the
+            AOI GeoContext contributes to the raster result. Normally this mode is
+            not enabled, and its use is strongly discouraged. However, it can be
+            useful when the AOI is smaller than a source pixel, which under many
+            situations will return no result at all (i.e. entirely masked).
 
         Returns
         -------
@@ -718,10 +808,12 @@ class DLTile(GeoContext):
 
         grid = Grid(resolution=resolution, tilesize=tilesize, pad=pad)
         tile = grid.tile_from_lonlat(lat=lat, lon=lon)
-        return cls(tile.geocontext)
+        return cls(tile.geocontext, all_touched=all_touched)
 
     @classmethod
-    def from_shape(cls, shape, resolution, tilesize, pad, keys_only=False):
+    def from_shape(
+        cls, shape, resolution, tilesize, pad, keys_only=False, all_touched=False
+    ):
         """
         Return a list of DLTiles that intersect the given geometry.
 
@@ -740,6 +832,12 @@ class DLTile(GeoContext):
         keys_only : bool, default False
             Whether to return DLTile objects or only DLTile keys. Set to True when
             returning a large number of tiles and you do not need the full objects.
+        all_touched: bool, default False
+            If True, this ensures that any source pixel which intersects the
+            AOI GeoContext contributes to the raster result. Normally this mode is
+            not enabled, and its use is strongly discouraged. However, it can be
+            useful when the AOI is smaller than a source pixel, which under many
+            situations will return no result at all (i.e. entirely masked).
 
         Returns
         -------
@@ -782,11 +880,13 @@ class DLTile(GeoContext):
         if keys_only:
             result = [tile for tile in tiles]
         else:
-            result = [cls(tile.geocontext) for tile in tiles]
+            result = [cls(tile.geocontext, all_touched=all_touched) for tile in tiles]
         return result
 
     @classmethod
-    def iter_from_shape(cls, shape, resolution, tilesize, pad, keys_only=False):
+    def iter_from_shape(
+        cls, shape, resolution, tilesize, pad, keys_only=False, all_touched=False
+    ):
         """
         Return a iterator for DLTiles that intersect the given geometry.
 
@@ -805,6 +905,12 @@ class DLTile(GeoContext):
         keys_only : bool, default False
             Whether to return DLTile objects or only DLTile keys. Set to True when
             returning a large number of tiles and you do not need the full objects.
+        all_touched: bool, default False
+            If True, this ensures that any source pixel which intersects the
+            AOI GeoContext contributes to the raster result. Normally this mode is
+            not enabled, and its use is strongly discouraged. However, it can be
+            useful when the AOI is smaller than a source pixel, which under many
+            situations will return no result at all (i.e. entirely masked).
 
         Returns
         -------
@@ -843,10 +949,10 @@ class DLTile(GeoContext):
             if keys_only:
                 yield tile
             else:
-                yield cls(tile.geocontext)
+                yield cls(tile.geocontext, all_touched=all_touched)
 
     @classmethod
-    def from_key(cls, dltile_key):
+    def from_key(cls, dltile_key, all_touched=False):
         """
         Return a DLTile GeoContext from a DLTile key.
 
@@ -854,6 +960,12 @@ class DLTile(GeoContext):
         ----------
         dltile_key : str
             DLTile key, e.g. '128:16:960.0:15:-1:37'
+        all_touched: bool, default False
+            If True, this ensures that any source pixel which intersects the
+            AOI GeoContext contributes to the raster result. Normally this mode is
+            not enabled, and its use is strongly discouraged. However, it can be
+            useful when the AOI is smaller than a source pixel, which under many
+            situations will return no result at all (i.e. entirely masked).
 
         Returns
         -------
@@ -880,7 +992,7 @@ class DLTile(GeoContext):
         """
 
         tile = Tile.from_key(dltile_key)
-        return cls(tile.geocontext)
+        return cls(tile.geocontext, all_touched=all_touched)
 
     def subtile(self, subdivide, resolution=None, pad=None, keys_only=False):
         """
@@ -930,7 +1042,7 @@ class DLTile(GeoContext):
             if keys_only:
                 yield tile.key
             else:
-                yield DLTile(tile.geocontext)
+                yield DLTile(tile.geocontext, all_touched=self.all_touched)
 
     def rowcol_to_latlon(self, row, col):
         """
@@ -997,14 +1109,16 @@ class DLTile(GeoContext):
             result = list(zip(*rowcol))
         return result
 
-    def assign(self, pad):
+    def assign(self, pad="unchanged", all_touched="unchanged"):
         """
-        Return a copy of the DLTile with the pad value modified.
+        Return a copy of the DLTile with the pad and/or all_touched value modified.
 
         Parameters
         ----------
-        pad : int
+        pad : int, default "unchanged"
             New pad value
+        all_touched : bool, default "unchanged"
+            New all_touched value
 
         Returns
         -------
@@ -1021,8 +1135,12 @@ class DLTile(GeoContext):
         123
         """
 
-        tile = Tile.from_key(self.key).assign(pad=pad)
-        return DLTile(tile.geocontext)
+        tile = Tile.from_key(self.key)
+        if pad != "unchanged":
+            tile = tile.assign(pad=pad)
+        if all_touched == "unchanged":
+            all_touched = self.all_touched
+        return DLTile(tile.geocontext, all_touched=all_touched)
 
     @property
     def key(self):
@@ -1132,13 +1250,14 @@ class DLTile(GeoContext):
         """
 
         return {
+            **super().raster_params,
             "dltile": self._key,
-            "align_pixels": False
             # QUESTION: shouldn't align_pixels be True?
             # based on the GDAL documentation for `-tap`, seems like that should be true
             # to ensure that pixels of images with different resolutions/projections
             # are aligned with the same dltile. otherwise, pixel (0,0) in 1 image could be at
             # different coordinates than the other
+            "align_pixels": False,
         }
 
     @property
@@ -1194,7 +1313,7 @@ class XYZTile(GeoContext):
 
     __slots__ = ("_x", "_y", "_z")
 
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, z, all_touched=False):
         """
         Parameters
         ----------
@@ -1204,12 +1323,18 @@ class XYZTile(GeoContext):
             Y-index of the tile (increases going south)
         z: int
             Zoom level of the tile
+        all_touched: bool, default False
+            If True, this ensures that any source pixel which intersects the
+            AOI GeoContext contributes to the raster result. Normally this mode is
+            not enabled, and its use is strongly discouraged. However, it can be
+            useful when the AOI is smaller than a source pixel, which under many
+            situations will return no result at all (i.e. entirely masked).
         """
 
         self._x = x
         self._y = y
         self._z = z
-        super(XYZTile, self).__init__()
+        super(XYZTile, self).__init__(all_touched=all_touched)
 
     @property
     def x(self):
@@ -1309,6 +1434,7 @@ class XYZTile(GeoContext):
         """
 
         return {
+            **super().raster_params,
             "bounds": self.bounds,
             "srs": self.crs,
             "bounds_srs": self.bounds_crs,
