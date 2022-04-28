@@ -578,7 +578,8 @@ class Image(NamedCatalogObject):
             raise ValueError("acquired field required")
         if self.cs_code and self.projection:
             warnings.warn(
-                "Only one of cs_code and projection fields permitted", FutureWarning,
+                "Only one of cs_code and projection fields permitted",
+                FutureWarning,
             )
             # raise ValueError("only one of cs_code and projection fields permitted")
 

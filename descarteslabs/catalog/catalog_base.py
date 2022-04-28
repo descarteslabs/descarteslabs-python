@@ -955,8 +955,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
 
 
 class CatalogObject(CatalogObjectBase):
-    """A base class for all representations of objects in the Descartes Labs catalog.
-    """
+    """A base class for all representations of objects in the Descartes Labs catalog."""
 
     owners = ListAttribute(
         TypedAttribute(str),

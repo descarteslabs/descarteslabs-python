@@ -22,8 +22,10 @@ class TestSimpleHelpers(unittest.TestCase):
             "type": "Polygon",
         }
         assert geom == shapely.geometry.box(*bounds).__geo_interface__
-        assert _helpers.polygon_from_bounds(bounds) == \
-            shapely.geometry.box(*bounds).__geo_interface__
+        assert (
+            _helpers.polygon_from_bounds(bounds)
+            == shapely.geometry.box(*bounds).__geo_interface__
+        )
 
     def test_valid_latlon_bounds(self):
         assert _helpers.valid_latlon_bounds([-10, 5, 60, 80])
@@ -124,10 +126,12 @@ class TestSimpleHelpers(unittest.TestCase):
         )
 
         assert not _helpers.is_wgs84_crs("EPSG:32615")
-        assert not _helpers.is_wgs84_crs("+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs")
         assert not _helpers.is_wgs84_crs(
-                textwrap.dedent(
-                    """\
+            "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs"
+        )
+        assert not _helpers.is_wgs84_crs(
+            textwrap.dedent(
+                """\
         PROJCS["WGS 84 / UTM zone 15N",
             GEOGCS["WGS 84",
                 DATUM["WGS_1984",
@@ -151,5 +155,5 @@ class TestSimpleHelpers(unittest.TestCase):
             AXIS["Northing",NORTH],
             AUTHORITY["EPSG","32615"]]
         """
-                )
             )
+        )

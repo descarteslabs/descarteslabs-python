@@ -16,8 +16,8 @@ from .utils import utm_box_to_lonlat
 
 
 def _get_next_tiling(polygon, grid_width):
-    """ This function yields (zone, path, row) tuples corresponding to
-    all tiles over a shape, given grid_width (resolution*tilesize) in meters. """
+    """This function yields (zone, path, row) tuples corresponding to
+    all tiles over a shape, given grid_width (resolution*tilesize) in meters."""
 
     min_lon, min_lat, max_lon, max_lat = polygon.bounds
 
@@ -40,7 +40,9 @@ def _tiling_method_appropriate_zones(polygon, grid_width):
     """Chooses the most appropriate zones to tile a shape."""
     min_lon, _, max_lon, _ = polygon.bounds
     min_zone = max(1, 1 + np.floor((min_lon + 180.0) / 6.0).astype(int))
-    max_zone = 1 + min(60, 1 + np.floor((max_lon + 180.0) / 6.0).astype(int))  # exclusive range
+    max_zone = 1 + min(
+        60, 1 + np.floor((max_lon + 180.0) / 6.0).astype(int)
+    )  # exclusive range
 
     for zone in range(min_zone, max_zone):
         zone_min_lon = 6 * zone - 186.0
@@ -49,13 +51,23 @@ def _tiling_method_appropriate_zones(polygon, grid_width):
 
         polygon_in_zone = polygon.intersection(zone_box)
 
-        if isinstance(polygon_in_zone, (geo.Polygon, geo.MultiPolygon)) and not polygon_in_zone.is_empty:
-            yield from _tile_zone(polygon_in_zone, grid_width, zone, zone_min_lon, zone_max_lon)
+        if (
+            isinstance(polygon_in_zone, (geo.Polygon, geo.MultiPolygon))
+            and not polygon_in_zone.is_empty
+        ):
+            yield from _tile_zone(
+                polygon_in_zone, grid_width, zone, zone_min_lon, zone_max_lon
+            )
 
         if isinstance(polygon_in_zone, geo.GeometryCollection):
             for shape in polygon_in_zone:
-                if isinstance(shape, (geo.Polygon, geo.MultiPolygon)) and not shape.is_empty:
-                    yield from _tile_zone(shape, grid_width, zone, zone_min_lon, zone_max_lon)
+                if (
+                    isinstance(shape, (geo.Polygon, geo.MultiPolygon))
+                    and not shape.is_empty
+                ):
+                    yield from _tile_zone(
+                        shape, grid_width, zone, zone_min_lon, zone_max_lon
+                    )
 
 
 def _tile_zone(polygon, grid_width, zone, zone_min_lon, zone_max_lon):

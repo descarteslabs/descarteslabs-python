@@ -716,11 +716,7 @@ class DLTile(GeoContext):
         (array('d', [31.20899205942612]), array('d', [30.013121672688087]))
         """
 
-        grid = Grid(
-            resolution=resolution,
-            tilesize=tilesize,
-            pad=pad
-        )
+        grid = Grid(resolution=resolution, tilesize=tilesize, pad=pad)
         tile = grid.tile_from_lonlat(lat=lat, lon=lon)
         return cls(tile.geocontext)
 
@@ -774,11 +770,7 @@ class DLTile(GeoContext):
         31
         """
 
-        grid = Grid(
-            resolution=resolution,
-            tilesize=tilesize,
-            pad=pad
-        )
+        grid = Grid(resolution=resolution, tilesize=tilesize, pad=pad)
 
         if grid._estimate_ntiles_from_shape(shape) > 50000:
             warnings.warn(
@@ -845,11 +837,7 @@ class DLTile(GeoContext):
         '500:0:1.0:10:94:8359'
         """
 
-        grid = Grid(
-            resolution=resolution,
-            tilesize=tilesize,
-            pad=pad
-        )
+        grid = Grid(resolution=resolution, tilesize=tilesize, pad=pad)
         tiles = grid.tiles_from_shape(shape=shape, keys_only=keys_only)
         for tile in tiles:
             if keys_only:

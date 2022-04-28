@@ -34,11 +34,7 @@ THIRD_FLATTENING = FLATTENING / (2 - FLATTENING)
 RECTIFYING_RADIUS = (
     EARTH_MAJOR_AXIS
     / (1 + THIRD_FLATTENING)
-    * (
-        1.0
-        + 1.0 / 4.0 * THIRD_FLATTENING ** 2
-        + 1.0 / 64.0 * THIRD_FLATTENING ** 4
-    )
+    * (1.0 + 1.0 / 4.0 * THIRD_FLATTENING ** 2 + 1.0 / 64.0 * THIRD_FLATTENING ** 4)
 )
 
 # Numbers outside these ranges are surely outside their UTM zone
@@ -113,9 +109,7 @@ def coordinate_transform(function):
             except TypeError:
                 # The elements of this sequence could not become a numpy array,
                 # try instead to see if this is a list of polygons.
-                return [
-                    _transform(polygon, *args, **kwargs) for polygon in points
-                ]
+                return [_transform(polygon, *args, **kwargs) for polygon in points]
 
         elif isinstance(points, geo.Polygon):
             exterior_points, *interiors_points = points_from_polygon(points)
@@ -146,7 +140,7 @@ def coordinate_transform(function):
 
 @coordinate_transform
 def lonlat_to_utm(points, zone=None, ref_lon=None):
-    """ Convert lon,lat points in a numpy array or shapely shape to UTM
+    """Convert lon,lat points in a numpy array or shapely shape to UTM
     coordinates in the given zone.
 
     Parameters
@@ -221,7 +215,7 @@ def lonlat_to_utm(points, zone=None, ref_lon=None):
 
 @coordinate_transform
 def utm_to_lonlat(points, zone):
-    """ Convert UTM points in a numpy array or shapely shape to lon,lat
+    """Convert UTM points in a numpy array or shapely shape to lon,lat
     coordinates in the given zone.
 
     Parameters
@@ -279,14 +273,9 @@ def utm_to_lonlat(points, zone):
     chi = np.arcsin(np.sin(xip) / np.cosh(etap))
 
     lat = np.rad2deg(
-        chi
-        + d1 * np.sin(2 * chi)
-        + d2 * np.sin(4 * chi)
-        + d3 * np.sin(6 * chi)
+        chi + d1 * np.sin(2 * chi) + d2 * np.sin(4 * chi) + d3 * np.sin(6 * chi)
     )
-    lon = (
-        6.0 * zone - 183.0 + np.rad2deg(np.arctan(np.sinh(etap) / np.cos(xip)))
-    )
+    lon = 6.0 * zone - 183.0 + np.rad2deg(np.arctan(np.sinh(etap) / np.cos(xip)))
 
     # Return all longitude outputs within the range -180.0, +180.0
     lon = (lon + 180.0) % 360.0 - 180.0
@@ -296,8 +285,8 @@ def utm_to_lonlat(points, zone):
 
 @coordinate_transform
 def utm_to_rowcol(utm_points, tile):
-    """ Convert UTM points in an array of shape (?, 2) to row,col array indices
-    given a tile. """
+    """Convert UTM points in an array of shape (?, 2) to row,col array indices
+    given a tile."""
     if not utm_points.shape[1] == 2:
         raise ValueError(
             "Expected array of utm points of shape (?, 2), got %s"
@@ -318,12 +307,11 @@ def utm_to_rowcol(utm_points, tile):
 
 @coordinate_transform
 def rowcol_to_utm(indices, tile):
-    """ Convert row,col array indices in an array of shape (?, 2) to UTM
-    coordinates given a tile.  """
+    """Convert row,col array indices in an array of shape (?, 2) to UTM
+    coordinates given a tile."""
     if not indices.shape[1] == 2:
         raise ValueError(
-            "Expected array of utm points of shape (?, 2), got %s"
-            % str(indices.shape)
+            "Expected array of utm points of shape (?, 2), got %s" % str(indices.shape)
         )
 
     min_col = tile.tilesize * tile.path - tile.pad

@@ -6,10 +6,10 @@ from . import utm as utm
 
 
 def utm_box_to_lonlat(polygon: geo.Polygon, zone: int) -> geo.base.BaseGeometry:
-    """ Given a box (polygon with four corners) in UTM coordinates, return
+    """Given a box (polygon with four corners) in UTM coordinates, return
     a box in lonlat coordinates which behaves appropriately at the prime
     antimeridian and polar regions. This is used in tile.py to construct
-    appropriate tile boundaries. """
+    appropriate tile boundaries."""
     min_x, min_y, max_x, max_y = polygon.bounds
 
     polygon_lonlat = utm.utm_to_lonlat(polygon, zone)
@@ -30,9 +30,7 @@ def utm_box_to_lonlat(polygon: geo.Polygon, zone: int) -> geo.base.BaseGeometry:
         n_points, _ = points_lonlat.shape
 
         points_by_lon = np.sort(points_lonlat, axis=0)
-        wrapforward = points_by_lon[0, :][np.newaxis] + np.array(
-            [(360.0, 0.0)]
-        )
+        wrapforward = points_by_lon[0, :][np.newaxis] + np.array([(360.0, 0.0)])
         wrapback = points_by_lon[-1, :][np.newaxis] - np.array([(360.0, 0.0)])
 
         # Create a polygon that goes beyond 90deg latitude, then cut it down
@@ -44,9 +42,7 @@ def utm_box_to_lonlat(polygon: geo.Polygon, zone: int) -> geo.base.BaseGeometry:
                         wrapback,
                         points_by_lon,
                         wrapforward,
-                        np.array(
-                            [(wrapforward[0, 0], 91.0), (wrapback[0, 0], 91.0)]
-                        ),
+                        np.array([(wrapforward[0, 0], 91.0), (wrapback[0, 0], 91.0)]),
                     ),
                     axis=0,
                 )
@@ -68,9 +64,7 @@ def utm_box_to_lonlat(polygon: geo.Polygon, zone: int) -> geo.base.BaseGeometry:
                     axis=0,
                 )
             )
-        return excessive_polygon.intersection(
-            geo.box(-180.0, -90.0, 180.0, 90.0)
-        )
+        return excessive_polygon.intersection(geo.box(-180.0, -90.0, 180.0, 90.0))
 
     # A square in UTM coordinates which does not contain a pole can never
     # map to a polygon with longitude range greater than 180deg.
@@ -90,15 +84,11 @@ def utm_box_to_lonlat(polygon: geo.Polygon, zone: int) -> geo.base.BaseGeometry:
     western_points = points_lonlat.copy()
     western_points[eastern_lons_mask, 0] -= 360.0
     western_hemisphere = geo.box(-180.0, -90.0, 0.0, 90.0)
-    western_polygon = geo.Polygon(western_points).intersection(
-        western_hemisphere
-    )
+    western_polygon = geo.Polygon(western_points).intersection(western_hemisphere)
 
     eastern_points = points_lonlat.copy()
     eastern_points[western_lons_mask, 0] += 360.0
     eastern_hemisphere = geo.box(0.0, -90.0, 180.0, 90.0)
-    eastern_polygon = geo.Polygon(eastern_points).intersection(
-        eastern_hemisphere
-    )
+    eastern_polygon = geo.Polygon(eastern_points).intersection(eastern_hemisphere)
 
     return geo.MultiPolygon([western_polygon, eastern_polygon])

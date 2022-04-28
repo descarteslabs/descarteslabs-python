@@ -18,7 +18,7 @@ def rasterize_shape(
     shape_coords="lonlat",
     all_touched=False,
 ) -> np.ndarray:
-    """ Rasterize a collection of lon,lat shapes onto a DLTile.
+    """Rasterize a collection of lon,lat shapes onto a DLTile.
     This is included in this directory's __init__.py, so you can import like:
 
         from descarteslabs.commmon.dltile import rasterize_shape
@@ -82,15 +82,14 @@ def rasterize_shape(
     tilebox = geo.box(0, 0, tile.tile_extent, tile.tile_extent)
     if shape_coords == "lonlat":
         shapes_rowcol = [
-            utm_to_rowcol(
-                lonlat_to_utm(shape, zone=tile.zone), tile=tile
-            ).intersection(tilebox)
+            utm_to_rowcol(lonlat_to_utm(shape, zone=tile.zone), tile=tile).intersection(
+                tilebox
+            )
             for shape in shapes
         ]
     elif shape_coords == "utm":
         shapes_rowcol = [
-            utm_to_rowcol(shape, tile=tile).intersection(tilebox)
-            for shape in shapes
+            utm_to_rowcol(shape, tile=tile).intersection(tilebox) for shape in shapes
         ]
     elif shape_coords == "rowcol":
         shapes_rowcol = [shape.intersection(tilebox) for shape in shapes]
@@ -101,9 +100,7 @@ def rasterize_shape(
         )
 
     # We use a quadtree algorithm to rasterize.
-    TreeNode = namedtuple(
-        "TreeNode", ("min_col", "min_row", "max_col", "max_row")
-    )
+    TreeNode = namedtuple("TreeNode", ("min_col", "min_row", "max_col", "max_row"))
     for shape_i, (shape, value) in enumerate(zip(shapes_rowcol, values)):
         nodes = [TreeNode(0, 0, tile.tile_extent, tile.tile_extent)]
         while len(nodes) > 0:
@@ -149,8 +146,7 @@ def rasterize_shape(
                                 out[row, col] += value
                             else:
                                 raise ValueError(
-                                    "Expected mode of 'burn' or 'add', got %s"
-                                    % mode
+                                    "Expected mode of 'burn' or 'add', got %s" % mode
                                 )
             elif shape.contains(min_nodebox):
                 # Apply to all pixels in box
@@ -165,9 +161,7 @@ def rasterize_shape(
                         node.min_col : node.max_col,
                     ] += value
                 else:
-                    raise ValueError(
-                        "Expected mode of 'burn' or 'add', got %s" % mode
-                    )
+                    raise ValueError("Expected mode of 'burn' or 'add', got %s" % mode)
             elif max_nodebox.disjoint(shape):
                 # No intersection, do nothing.
                 pass

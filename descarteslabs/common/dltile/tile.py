@@ -124,16 +124,20 @@ class Grid:
             ntiles += (s.area * m2) // ((self.resolution * self.tilesize) ** 2)
         return int(ntiles)
 
-    def tiles_from_shape(self, shape: AnyShapes, keys_only=False) -> Generator[Union["Tile", str], None, None]:
+    def tiles_from_shape(
+        self, shape: AnyShapes, keys_only=False
+    ) -> Generator[Union["Tile", str], None, None]:
         """Yields tiles which cover the given shape. If zone is given, all
         tiles will come from one UTM zone. This puts everything on the same
         UTM grid, but comes with the trade-off of more area distortion the
         further from the given zone your shape is."""
         shape = normalize_polygons(shape)
 
-        key_set = set()   # remove duplicate tiles
+        key_set = set()  # remove duplicate tiles
         for polygon in shape:
-            for zone, path, row in _tiling._get_next_tiling(polygon, self.tilesize * self.resolution):
+            for zone, path, row in _tiling._get_next_tiling(
+                polygon, self.tilesize * self.resolution
+            ):
                 tile = Tile(self, zone=zone, path=path, row=row)
                 tile_key = str(tile)
                 if tile_key not in key_set:
@@ -209,7 +213,9 @@ class Tile:
             self.row,
         )
 
-    def assign(self, resolution: float = None, tilesize: int = None, pad: int = None) -> "Tile":
+    def assign(
+        self, resolution: float = None, tilesize: int = None, pad: int = None
+    ) -> "Tile":
         """Returns a new Tile with new resolution, tilesize, and / or pad (thus changing grid)
         while keeping the tile region (ignoring pad) the same. If both resolution
         and tilesize are specified, they must multiply to the same value as before."""
@@ -221,9 +227,9 @@ class Tile:
 
         if resolution is None:
             if tilesize is None and pad is None:
-                return self                 # change nothing
+                return self  # change nothing
         else:
-            if tilesize is not None:        # change resolution and tilesize, must check
+            if tilesize is not None:  # change resolution and tilesize, must check
                 if resolution * tilesize != self.resolution * self.tilesize:
                     raise InvalidTileError(
                         "New resolution and tilesize are not compatible"
@@ -332,13 +338,15 @@ class Tile:
     def polygon(self) -> geo.Polygon:
         """ Shapely polygon """
         x_min, y_min, x_max, y_max = self.utm_bounds
-        utm_points = np.array([
-            (x_min, y_min),
-            (x_max, y_min),
-            (x_max, y_max),
-            (x_min, y_max),
-            (x_min, y_min),
-        ])
+        utm_points = np.array(
+            [
+                (x_min, y_min),
+                (x_max, y_min),
+                (x_max, y_max),
+                (x_min, y_max),
+                (x_min, y_min),
+            ]
+        )
         lonlat_points = utm_to_lonlat(utm_points, zone=self.zone)
         return geo.Polygon(lonlat_points)
 
@@ -349,8 +357,8 @@ class Tile:
 
     @property
     def epsg(self) -> int:
-        """ Returns the coordinate system's European Petroleum Survey Group
-        geodetic parameter database's standard code, as an integer. """
+        """Returns the coordinate system's European Petroleum Survey Group
+        geodetic parameter database's standard code, as an integer."""
         return 32600 + self.zone
 
     @property
@@ -432,7 +440,7 @@ class Tile:
             geotrans=self.geotransform,
             geoTransform=self.geotransform,
             wkt=self.srs,
-            proj4=self.proj4
+            proj4=self.proj4,
         )
         feature = self.feature
         feature["properties"] = properties
@@ -465,9 +473,7 @@ class Tile:
             )
             return np.round(utm_to_rowcol(utm_coordinates, tile=self)).astype(int)
         else:
-            utm_coordinates = lonlat_to_utm(
-                np.array([(lon, lat)]), zone=self.zone
-            )
+            utm_coordinates = lonlat_to_utm(np.array([(lon, lat)]), zone=self.zone)
             return np.round(utm_to_rowcol(utm_coordinates, tile=self)[0]).astype(int)
 
     def rowcol_to_lonlat(
@@ -483,9 +489,7 @@ class Tile:
             if len(row) != len(col):
                 raise InvalidRowColError("row and col must be the same length")
 
-            utm_coordinates = rowcol_to_utm(
-                np.stack((row, col), axis=-1), tile=self
-            )
+            utm_coordinates = rowcol_to_utm(np.stack((row, col), axis=-1), tile=self)
             return utm_to_lonlat(utm_coordinates, zone=self.zone)
         else:
             utm_coordinates = rowcol_to_utm(np.array([(row, col)]), tile=self)
@@ -540,9 +544,7 @@ class Tile:
             )
         new_tilesize = int(new_tilesize)
 
-        grid = Grid(
-            resolution=new_resolution, tilesize=new_tilesize, pad=new_pad
-        )
+        grid = Grid(resolution=new_resolution, tilesize=new_tilesize, pad=new_pad)
 
         # Get the path, row of the lower-left corner subtile
         ll_path = self.path * subdivide
@@ -553,12 +555,8 @@ class Tile:
         ul_row = ll_row + subdivide - 1
 
         if row is not None:
-            return Tile(
-                grid=grid, zone=self.zone, path=ul_path + col, row=ul_row - row
-            )
+            return Tile(grid=grid, zone=self.zone, path=ul_path + col, row=ul_row - row)
 
         for j in range(subdivide):
             for i in range(subdivide):
-                yield Tile(
-                    grid=grid, zone=self.zone, path=ul_path + i, row=ul_row - j
-                )
+                yield Tile(grid=grid, zone=self.zone, path=ul_path + i, row=ul_row - j)

@@ -309,7 +309,8 @@ class TestAttributes(unittest.TestCase):
 
         with pytest.raises(AttributeValidationError):
             FakeCatalogObject(
-                id="id", typedlistattribute=[12],
+                id="id",
+                typedlistattribute=[12],
             )
 
     def test_listattribute_change_tracking(self):

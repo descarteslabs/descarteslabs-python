@@ -6,16 +6,14 @@ from typing import List, Union
 
 from .exceptions import InvalidShapeError
 
-AnyShapes = Union[
-    List[geo.base.BaseGeometry], geo.base.BaseGeometry, dict, str
-]
+AnyShapes = Union[List[geo.base.BaseGeometry], geo.base.BaseGeometry, dict, str]
 
 AnyPoints = Union[List[geo.Point], geo.Point, dict, str, np.ndarray]
 
 
 def normalize_polygons(shape_or_shapes: AnyShapes) -> List[geo.base.BaseGeometry]:
-    """ Given a collection of shapes in some format, try to make it into a
-    list of shapely polygons. """
+    """Given a collection of shapes in some format, try to make it into a
+    list of shapely polygons."""
     if isinstance(shape_or_shapes, str):
         shape_or_shapes = json.loads(shape_or_shapes)
 
@@ -52,14 +50,13 @@ def normalize_polygons(shape_or_shapes: AnyShapes) -> List[geo.base.BaseGeometry
         return normalize_polygons(shape_or_shapes.__geo_interface__)
 
     raise InvalidShapeError(
-        "Could not normalize shape or shapes of type %s"
-        % type(shape_or_shapes)
+        "Could not normalize shape or shapes of type %s" % type(shape_or_shapes)
     )
 
 
 def normalize_points(point_or_points: AnyPoints) -> np.ndarray:
-    """ Given a collection of points in some format, try to make it into a
-    numpy array. """
+    """Given a collection of points in some format, try to make it into a
+    numpy array."""
     if isinstance(point_or_points, list):
         if isinstance(point_or_points, numbers.Number):
             return np.array([point_or_points])
@@ -105,8 +102,7 @@ def normalize_points(point_or_points: AnyPoints) -> np.ndarray:
         return point_or_points
 
     raise InvalidShapeError(
-        "Could not normalize point or points of type %s"
-        % type(point_or_points)
+        "Could not normalize point or points of type %s" % type(point_or_points)
     )
 
 

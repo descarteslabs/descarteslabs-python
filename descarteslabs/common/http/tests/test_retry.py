@@ -21,10 +21,12 @@ class TestRequestsWithRetry(unittest.TestCase):
             responses.add_callback(
                 method, "https://platform.descarteslabs.com", callback=request_callback
             )
-            assert getattr(client, method.lower())(
+            assert (
+                getattr(client, method.lower())(
                     "https://platform.descarteslabs.com"
-                ).status_code == \
-                200
+                ).status_code
+                == 200
+            )
 
 
 if __name__ == "__main__":

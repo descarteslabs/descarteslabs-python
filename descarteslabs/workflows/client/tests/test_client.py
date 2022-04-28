@@ -45,7 +45,8 @@ def test_client_compute_resource_exhausted_does_not_retry(stub):
 @mock.patch("descarteslabs.common.proto.job.job_pb2_grpc.JobAPIStub")
 def test_client_compute_retries_when_num_retries_is_specified(stub):
     stub.return_value.CreateJob.side_effect = [
-        _grpc_resource_exhausted_exception(), _grpc_resource_exhausted_exception()
+        _grpc_resource_exhausted_exception(),
+        _grpc_resource_exhausted_exception(),
     ]
     client = Client(auth=mock.Mock())
     result = Int(1) + 1

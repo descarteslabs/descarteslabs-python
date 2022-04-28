@@ -57,12 +57,14 @@ def test_truncated_delay_generator_multiplier(multiplier):
 
 def test__retry_exceptions():
     Retry(exceptions=(Exception,))._retry(
-        mock.Mock(side_effect=[FakeException, True]), fake_delay_generator(),
+        mock.Mock(side_effect=[FakeException, True]),
+        fake_delay_generator(),
     )
 
     with pytest.raises(FakeException):
         Retry(exceptions=(TypeError,))._retry(
-            mock.Mock(side_effect=[FakeException("")]), fake_delay_generator(),
+            mock.Mock(side_effect=[FakeException("")]),
+            fake_delay_generator(),
         )
 
 
@@ -74,18 +76,21 @@ def test__retry_blacklist():
 
     with pytest.raises(FakeException):
         Retry(blacklist=(FakeException,))._retry(
-            mock.Mock(side_effect=[FakeException("")]), fake_delay_generator(),
+            mock.Mock(side_effect=[FakeException("")]),
+            fake_delay_generator(),
         )
 
 
 def test__retry_retries():
     Retry(retries=1, exceptions=(FakeException,))._retry(
-        mock.Mock(side_effect=[FakeException, True]), fake_delay_generator(),
+        mock.Mock(side_effect=[FakeException, True]),
+        fake_delay_generator(),
     )
 
     with pytest.raises(RetryError) as exc_info:
         Retry(retries=0, exceptions=(FakeException,))._retry(
-            mock.Mock(side_effect=[FakeException, True]), fake_delay_generator(),
+            mock.Mock(side_effect=[FakeException, True]),
+            fake_delay_generator(),
         )
 
     assert len(exc_info.value.exceptions) == 1
@@ -101,12 +106,14 @@ def test__retry_retries():
 
 def test__retry_deadline():
     Retry(deadline=10, exceptions=(FakeException,))._retry(
-        mock.Mock(side_effect=[FakeException, True]), fake_delay_generator(),
+        mock.Mock(side_effect=[FakeException, True]),
+        fake_delay_generator(),
     )
 
     with pytest.raises(RetryError) as exc_info:
         Retry(deadline=0, exceptions=(FakeException,))._retry(
-            mock.Mock(side_effect=[FakeException, True]), fake_delay_generator(),
+            mock.Mock(side_effect=[FakeException, True]),
+            fake_delay_generator(),
         )
 
     assert len(exc_info.value.exceptions) == 1
@@ -118,7 +125,8 @@ def test_RetryError_message():
         match="^Maximum retry attempts calling descarteslabs.common.retry.tests.test_retry.fake_failing_func, exceptions: ",  # noqa
     ):
         Retry(retries=0, exceptions=(Exception,))._retry(
-            fake_failing_func, fake_delay_generator(),
+            fake_failing_func,
+            fake_delay_generator(),
         )
 
 
@@ -132,12 +140,14 @@ def test__retry_bad_delay_generator():
 
 def test__retry_predicate():
     Retry(predicate=lambda e: True)._retry(
-        mock.Mock(side_effect=[FakeException, True]), fake_delay_generator(),
+        mock.Mock(side_effect=[FakeException, True]),
+        fake_delay_generator(),
     )
 
     with pytest.raises(FakeException):
         Retry(predicate=lambda e: False)._retry(
-            mock.Mock(side_effect=[FakeException, True]), fake_delay_generator(),
+            mock.Mock(side_effect=[FakeException, True]),
+            fake_delay_generator(),
         )
 
 
