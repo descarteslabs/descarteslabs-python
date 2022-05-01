@@ -15,6 +15,8 @@ The `descarteslabs` python package, available at [https://pypi.org/project/desca
 
 The documentation for the latest release can be found at [https://docs.descarteslabs.com](https://docs.descarteslabs.com). For any issues please request Customer Support at [https://support.descarteslabs.com](https://support.descarteslabs.com).
 
+Blerg!
+
 Changelog
 =========
 ## [Unreleased]
