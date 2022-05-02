@@ -5,7 +5,6 @@ import random
 import string
 import ast
 import json
-import six
 from descarteslabs.common.dotdict import DotDict, DotList, DotDict_items, DotDict_values
 from descarteslabs.common.dotdict.dotdict import IndentedRepr, idr, untruncated_idr
 
@@ -117,20 +116,6 @@ class TestDotDict(unittest.TestCase):
         from_json = json.loads(json.dumps(d))
         assert from_json == d
 
-    def test_six_iteritems(self):
-        d = DotDict({"a": 1, "subdict": {"x": 0, "z": -1}, "sublist": [{"y": "foo"}]})
-        iterator = six.iteritems(d)
-        assert not isinstance(iterator, list)
-        for k, v in iterator:
-            if isinstance(v, dict):
-                assert isinstance(v, DotDict)
-                v.foo = "bar"
-            if isinstance(v, list):
-                assert isinstance(v, DotList)
-                v.append(None)
-        assert d.subdict.foo == "bar"
-        assert d.sublist[1] is None
-
     def test_items(self):
         d = DotDict({"a": 1, "subdict": {"x": 0, "z": -1}, "sublist": [{"y": "foo"}]})
         items = d.items()
@@ -145,7 +130,6 @@ class TestDotDict(unittest.TestCase):
         assert d.subdict.foo == "bar"
         assert d.sublist[1] is None
 
-    @unittest.skipIf(six.PY2, "Dict view objects only exist in py3")
     def test_DotDict_view(self):
         d1 = DotDict({"a": 0, "b": 1})
         d2 = DotDict({"a": 0, "c": 2})
@@ -171,16 +155,6 @@ class TestDotDict(unittest.TestCase):
 
         with pytest.raises(AttributeError):
             items1.foo()
-
-    def test_six_itervalues(self):
-        d = DotDict({"subdictA": {"x": 0}, "subdictB": {"x": 1}})
-        iterator = six.itervalues(d)
-        assert not isinstance(iterator, list)
-        for v in iterator:
-            assert isinstance(v.x, int)
-            v.foo = "bar"
-        assert d.subdictA.foo == "bar"
-        assert d.subdictB.foo == "bar"
 
     def test_values(self):
         d = DotDict({"subdictA": {"x": 0}, "subdictB": {"x": 1}})
@@ -249,9 +223,7 @@ class TestUnbox(unittest.TestCase):
         if not isinstance(obj, (dict, list)):
             return True
         if isinstance(obj, dict):
-            return type(obj) is dict and all(
-                cls.is_unboxed(x) for x in six.itervalues(obj)
-            )
+            return type(obj) is dict and all(cls.is_unboxed(x) for x in obj.values())
         if isinstance(obj, list):
             return type(obj) is list and all(cls.is_unboxed(x) for x in obj)
 
@@ -273,7 +245,7 @@ class TestUnbox(unittest.TestCase):
 
         obj = DotDict({i: DotList(range(i)) for i in range(10)})
         unboxed = obj.asdict()
-        assert all(type(x) is list for x in six.itervalues(unboxed))
+        assert all(type(x) is list for x in unboxed.values())
 
     def test_random_nested_container(self):
         obj = 0
@@ -339,11 +311,6 @@ class TestIndentedRepr(unittest.TestCase):
         unicode_prefix = ""
         set_start = "{"
         set_end = "}"
-
-        if six.PY2:  # repr of sets and unicode changed from py2 to py3
-            unicode_prefix = "u"
-            set_start = "set(["
-            set_end = "])"
 
         output = idr.repr(obj)
 

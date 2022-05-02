@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import six
 
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.services.service import Service, ThirdPartyService
@@ -223,7 +222,7 @@ class Storage(Service):
         """
         rurl = self.get_upload_url(key, storage_type=storage_type)
 
-        if isinstance(file_obj, six.string_types):
+        if isinstance(file_obj, str):
             with open(file_obj, "rb") as f:
                 self._gcs_upload_service.session.put(rurl, data=f)
         else:
@@ -251,7 +250,7 @@ class Storage(Service):
         )
         r.raise_for_status()
 
-        if isinstance(file_obj, six.string_types):
+        if isinstance(file_obj, str):
             with open(file_obj, "wb") as f:
                 for chunk in r.iter_content(chunk_size=None):
                     if chunk:

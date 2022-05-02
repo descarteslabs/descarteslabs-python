@@ -75,7 +75,6 @@ syntax is more lax.
    you---that's what it's for.
 """
 
-import six
 import itertools
 import contextlib
 
@@ -191,7 +190,7 @@ def apply_graft(function, *args, **kwargs):
     ]
     named_arg_grafts = {
         name: (arg if syntax.is_graft(arg) else value_graft(arg))
-        for name, arg in six.iteritems(kwargs)
+        for name, arg in kwargs.items()
     }
 
     if is_delayed(function):
@@ -205,7 +204,7 @@ def apply_graft(function, *args, **kwargs):
         if "parameters" in function:
             # function considered an actual function object, insert it as a subgraft
             param_names = function.get("parameters", [])
-            syntax.check_args(len(args), six.viewkeys(kwargs), param_names)
+            syntax.check_args(len(args), kwargs.keys(), param_names)
 
             function_key = guid()
             result_graft[function_key] = function
@@ -225,7 +224,7 @@ def apply_graft(function, *args, **kwargs):
     positional_args = []
     named_args = {}
     for name, arg_graft in itertools.chain(
-        zip(itertools.repeat(None), pos_args_grafts), six.iteritems(named_arg_grafts)
+        zip(itertools.repeat(None), pos_args_grafts), named_arg_grafts.items()
     ):
         if graft_is_function_graft(arg_graft):
             # argument considered an actual function object, insert it as a subgraft
@@ -376,7 +375,7 @@ def merge_value_grafts(**grafts):
         that you do not pass in a JSON value that looks like a graft, since it will not get quoted.
     """
     merged = {}
-    for name, value in six.iteritems(grafts):
+    for name, value in grafts.items():
         if name in syntax.RESERVED_WORDS:
             raise ValueError(
                 "Cannot use reserved name {!r} as a key in a graft".format(name)

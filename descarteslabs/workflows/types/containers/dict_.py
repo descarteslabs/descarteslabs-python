@@ -1,5 +1,3 @@
-import six
-
 from collections import abc
 
 from descarteslabs.common.graft import client
@@ -248,7 +246,7 @@ class Dict(BaseDict):
 
             is_str_dict = issubclass(kt, Str)
             promoted = {} if is_str_dict else []
-            for key, val in six.iteritems(dct):
+            for key, val in dct.items():
                 try:
                     promoted_key = kt._promote(key)
                 except ProxyTypeError:

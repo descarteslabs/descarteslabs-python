@@ -16,7 +16,6 @@ from descarteslabs.vectors.exceptions import (  # noqa
     WaitTimeoutError,  # noqa
 )
 from descarteslabs.vectors.async_job import DeleteJob, CopyJob
-import six
 
 
 class _FeaturesIterator(object):
@@ -475,7 +474,7 @@ class FeatureCollection(object):
             writers=writers,
         )
 
-        params = {k: v for k, v in six.iteritems(params) if v is not None}
+        params = {k: v for k, v in params.items() if v is not None}
 
         response = self.vector_client.update_product(self.id, **params)
         self.__dict__.update(response["data"]["attributes"])

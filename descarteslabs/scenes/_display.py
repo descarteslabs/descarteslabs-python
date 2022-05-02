@@ -17,7 +17,6 @@ Displays ndarrays as images, but is easier to use and more flexible than matplot
 """
 
 from __future__ import division
-import six
 
 import descarteslabs.client.addons
 
@@ -103,7 +102,7 @@ def _display_or_save(filename, *imgs, **kwargs):
     if len(kwargs) > 0:
         raise TypeError(
             "Unexpected keyword arguments for display: {}".format(
-                ", ".join(six.iterkeys(kwargs))
+                ", ".join(kwargs.keys())
             )
         )
 

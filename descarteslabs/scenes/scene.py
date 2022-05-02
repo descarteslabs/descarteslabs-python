@@ -41,7 +41,6 @@ datetime.datetime(2016, 7, 6, 16, 59, 42, 753476)
 """
 
 from __future__ import division
-import six
 import json
 import datetime
 import warnings
@@ -485,7 +484,7 @@ class Scene(object):
         mask_nodata = bool(mask_nodata)
 
         alpha_band_name = "alpha"
-        if isinstance(mask_alpha, six.string_types):
+        if isinstance(mask_alpha, str):
             alpha_band_name = mask_alpha
             mask_alpha = True
         elif mask_alpha is None:
@@ -536,14 +535,11 @@ class Scene(object):
             arr, info = raster_client.ndarray(**full_raster_args)
 
         except NotFoundError:
-            six.raise_from(
-                NotFoundError(
-                    "'{}' does not exist in the Descartes catalog".format(
-                        self.properties["id"]
-                    )
-                ),
-                None,
-            )
+            raise NotFoundError(
+                "'{}' does not exist in the Descartes catalog".format(
+                    self.properties["id"]
+                )
+            ) from None
         except BadRequestError as e:
             msg = (
                 "Error with request:\n"
@@ -552,7 +548,7 @@ class Scene(object):
                 "{args}"
             )
             msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))
-            six.raise_from(BadRequestError(msg), None)
+            raise BadRequestError(msg) from None
 
         if len(arr.shape) == 2:
             # if only 1 band requested, still return a 3d array
@@ -895,7 +891,7 @@ class Scene(object):
 
                 band_lines = []
                 # QUESTION(gabe): should there be a canonical ordering to bands? (see GH #973)
-                for bandname, band in six.iteritems(bands):
+                for bandname, band in bands.items():
                     band_line = "    * " + bandname
                     band_parts = []
 
@@ -917,7 +913,7 @@ class Scene(object):
 
     @staticmethod
     def _bands_to_list(bands):
-        if isinstance(bands, six.string_types):
+        if isinstance(bands, str):
             return bands.split(" ")
         if not isinstance(bands, (list, tuple)):
             raise TypeError(
@@ -938,6 +934,6 @@ class Scene(object):
         return DotDict(
             {
                 id if id.startswith("derived") else meta["name"]: meta
-                for id, meta in six.iteritems(metadata_bands)
+                for id, meta in metadata_bands.items()
             }
         )

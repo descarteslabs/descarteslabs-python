@@ -15,10 +15,8 @@
 
 import os
 import json
-import six
 import binascii
 
-from six.moves import input
 from pprint import pprint
 
 from descarteslabs.client.auth.auth import (
@@ -52,7 +50,7 @@ def auth_handler(args):
                 print("\nExiting without logging in")
                 break
 
-            if isinstance(s, six.text_type):
+            if isinstance(s, str):
                 s = s.encode("utf-8")
 
             if s:

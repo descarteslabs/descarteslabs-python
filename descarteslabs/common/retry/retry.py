@@ -4,8 +4,6 @@ import inspect
 import random
 import time
 
-import six
-
 _DEFAULT_RETRIES = 3
 _DEFAULT_DELAY_INITIAL = 0.1
 _DEFAULT_DELAY_MULTIPLIER = 2.0
@@ -149,25 +147,17 @@ class Retry(object):
     def _check_retries(self, retries, name, deadline, previous_exceptions):
         # Raise RetryError if deadline exceeded
         if deadline is not None and deadline <= datetime.datetime.utcnow():
-            six.raise_from(
-                RetryError(
-                    "Deadline of {:.1f}s exceeded while calling {}".format(
-                        deadline, name
-                    ),
-                    previous_exceptions,
-                ),
-                previous_exceptions[-1],
-            )
+            raise RetryError(
+                "Deadline of {:.1f}s exceeded while calling {}".format(deadline, name),
+                previous_exceptions,
+            ) from previous_exceptions[-1]
 
         # Raise RetryError if retries exhausted
         if retries is not None and retries == 0:
-            six.raise_from(
-                RetryError(
-                    "Maximum retry attempts calling {}".format(name),
-                    previous_exceptions,
-                ),
-                previous_exceptions[-1],
-            )
+            raise RetryError(
+                "Maximum retry attempts calling {}".format(name),
+                previous_exceptions,
+            ) from previous_exceptions[-1]
 
         if retries is not None:
             retries -= 1
@@ -249,6 +239,6 @@ def _wraps(wrapped):
     """
 
     if isinstance(wrapped, functools.partial) or not hasattr(wrapped, "__name__"):
-        return six.wraps(wrapped, assigned=_SAFE_VALID_ASSIGNMENTS)
+        return functools.wraps(wrapped, assigned=_SAFE_VALID_ASSIGNMENTS)
     else:
-        return six.wraps(wrapped)
+        return functools.wraps(wrapped)

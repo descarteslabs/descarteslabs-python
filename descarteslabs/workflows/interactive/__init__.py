@@ -1,5 +1,3 @@
-import six
-
 from . import widgets
 
 try:
@@ -48,7 +46,7 @@ except Exception as e:
                 "$ jupyter nbextension enable --py --sys-prefix ipyleaflet\n"
                 "Finally, restart the kernel, refresh the webpage, and re-run the notebook."
             )
-            six.raise_from(err, error)
+            raise err from error
 
         __getattr__ = __getitem__ = __call__ = __dir__ = __repr__ = _error
 

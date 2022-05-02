@@ -105,7 +105,6 @@ def do_setup():
             "pyarrow>=3.0.0",
             "pytz>=2021.1",
             "requests[security]>=2.25.1,<3",
-            "six>=1.15.0",
             "shapely>=1.7.1,<2",
             "tifffile==2020.9.3;python_version<'3.7'",
             "tifffile==2021.4.8;python_version>='3.7'",

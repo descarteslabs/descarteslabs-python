@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import base64
+import builtins
 from collections import defaultdict, OrderedDict
 import dis
 import glob
@@ -23,7 +24,6 @@ import itertools
 import logging
 import os
 import re
-import six
 import sys
 import time
 from warnings import warn
@@ -1269,13 +1269,13 @@ class Tasks(Service):
         if not hasattr(self, "_cached_sys_paths"):
             # use longest matching path entries.
             self._cached_sys_paths = sorted(
-                six.moves.map(os.path.abspath, sys.path), key=len, reverse=True
+                map(os.path.abspath, sys.path), key=len, reverse=True
             )
         return self._cached_sys_paths
 
     def _get_globals(self, func):
         # Disassemble the function and capture the output
-        buffer = six.StringIO()
+        buffer = io.StringIO()
         save_stdout = sys.stdout
 
         try:
@@ -1297,7 +1297,7 @@ class Tasks(Service):
             if result:
                 name = result.group(1)
 
-                if not hasattr(six.moves.builtins, name):
+                if not hasattr(builtins, name):
                     globs.add(name)
 
         return sorted(globs)
@@ -1342,15 +1342,11 @@ class Tasks(Service):
                         obj = importlib.import_module(current_module_path)
                     except Exception as ex:
                         traceback = sys.exc_info()[2]
-                        six.reraise(
-                            NameError,
-                            NameError(
-                                "Cannot resolve function name '{}', error importing module {}: {}".format(
-                                    name, current_module_path, ex
-                                )
-                            ),
-                            traceback,
-                        )
+                        raise NameError(
+                            "Cannot resolve function name '{}', error importing module {}: {}".format(
+                                name, current_module_path, ex
+                            )
+                        ).with_traceback(traceback)
 
         # When we're at the end, we should have found a valid object
         return obj, module_path, object_path
@@ -1393,7 +1389,7 @@ class Tasks(Service):
                     warn("Include data glob pattern had no matches: {}".format(pattern))
                 else:
                     raise ValueError("No data file found for path: {}".format(pattern))
-            for path in six.moves.map(os.path.abspath, matched_paths):
+            for path in map(os.path.abspath, matched_paths):
                 if os.path.exists(path):
                     sys_path = self._sys_path_prefix(path)
 
@@ -1415,7 +1411,7 @@ class Tasks(Service):
         return data_files
 
     def _write_main_function(self, f, archive):
-        is_named_function = isinstance(f, six.string_types)
+        is_named_function = isinstance(f, str)
 
         if is_named_function:
             f, module_path, function_path = self._find_object(f)
@@ -1552,7 +1548,7 @@ class Tasks(Service):
                 "Your Python does not have a recent version of `setuptools`. "
                 "For a better experience update your environment by running `pip install -U setuptools`."
             )
-        if isinstance(requirements, six.string_types):
+        if isinstance(requirements, str):
             return self._requirements_file_string(requirements)
         else:
             return self._requirements_list_string(requirements)

@@ -1,5 +1,4 @@
 import os
-import six
 import io
 
 from tempfile import NamedTemporaryFile
@@ -1808,7 +1807,7 @@ class Catalog(Service):
 
         metadata.setdefault("process_controls", {"upload_type": "file"})
 
-        if not isinstance(product_id, six.string_types):
+        if not isinstance(product_id, str):
             raise TypeError(
                 "product_id={} is invalid. "
                 "product_id must be a string.".format(product_id)
@@ -1820,7 +1819,7 @@ class Catalog(Service):
                 file_ish = io.open(file_ish.name, "rb")
 
             fd = file_ish
-        elif isinstance(file_ish, six.string_types) and os.path.exists(file_ish):
+        elif isinstance(file_ish, str) and os.path.exists(file_ish):
             fd = io.open(file_ish, "rb")
         else:
             e = Exception(

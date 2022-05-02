@@ -3,7 +3,6 @@ import unittest
 
 import responses
 import json
-from six import ensure_str
 
 from descarteslabs.client.auth import Auth
 from ..catalog_client import CatalogClient
@@ -36,8 +35,16 @@ class ClientTestCase(unittest.TestCase):
 
     def get_request(self, index):
         r = responses.calls[index].request
-        r.body = ensure_str(r.body)
+        if r.body is None:
+            r.body = ""
+        elif isinstance(r.body, bytes):
+            r.body = r.body.decode()
         return r
 
     def get_request_body(self, index):
-        return json.loads(ensure_str(responses.calls[index].request.body))
+        body = responses.calls[index].request.body
+        if body is None:
+            body = ""
+        elif isinstance(body, bytes):
+            body = body.decode()
+        return json.loads(body)

@@ -1,5 +1,4 @@
 import numbers
-import six
 
 from ...cereal import serializable
 from ..core import typecheck_promote
@@ -83,7 +82,7 @@ class Datetime(DatetimeStruct):
         try:
             return cls.from_string(obj.isoformat())
         except AttributeError:
-            if isinstance(obj, six.string_types):
+            if isinstance(obj, str):
                 return cls.from_string(obj)
 
             if isinstance(obj, numbers.Number):

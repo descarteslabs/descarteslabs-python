@@ -1,6 +1,5 @@
 import pytest
 import responses
-from six import assertCountEqual
 from datetime import datetime
 from pytz import utc
 
@@ -65,8 +64,7 @@ class TestCatalogObject(ClientTestCase):
 
     def test_constructor(self):
         c = CatalogObject(id="id")
-        assertCountEqual(
-            self,
+        self.assertCountEqual(
             list(c._attribute_types.keys()),
             [
                 "id",

@@ -1,22 +1,19 @@
-import six
 import numbers
 
 from collections import abc
 
 
-PRIMITIVE_TYPES = six.string_types + (numbers.Number, bool, type(None))
+PRIMITIVE_TYPES = (str, numbers.Number, bool, type(None))
 RESERVED_WORDS = ("parameters", "returns")
 
 
 def is_nonstring_sequence(x, other_types=()):
-    return isinstance(x, (abc.Sequence,) + other_types) and not isinstance(
-        x, six.string_types
-    )
+    return isinstance(x, (abc.Sequence,) + other_types) and not isinstance(x, str)
     # abc.ByteString might be preferable, but doesn't exist in py2
 
 
 def is_key(expr):
-    return isinstance(expr, six.string_types) and expr not in RESERVED_WORDS
+    return isinstance(expr, str) and expr not in RESERVED_WORDS
 
 
 def is_guid_key(expr):
@@ -50,7 +47,7 @@ def is_application(expr):
 
 def is_named_application_part(part):
     return isinstance(part, abc.Mapping) and all(
-        is_key(key) and is_key(val) for key, val in six.iteritems(part)
+        is_key(key) and is_key(val) for key, val in part.items()
     )
 
 
@@ -99,7 +96,7 @@ def check_args(
             raise exception_type(
                 "Missing required argument{} {}".format(
                     "s" if len(missing_positional) > 1 else "",
-                    ", ".join(six.moves.map(repr, missing_positional)),
+                    ", ".join(map(repr, missing_positional)),
                 )
             )
     else:
@@ -108,7 +105,7 @@ def check_args(
             raise exception_type(
                 "Unexpected named argument{} {}".format(
                     "s" if len(unexpected_names) > 1 else "",
-                    ", ".join(six.moves.map(repr, sorted(unexpected_names))),
+                    ", ".join(map(repr, sorted(unexpected_names))),
                 )
             )
 
@@ -117,6 +114,6 @@ def check_args(
             raise exception_type(
                 "Missing required argument{} {}".format(
                     "s" if len(still_missing_args) > 1 else "",
-                    ", ".join(six.moves.map(repr, still_missing_args)),
+                    ", ".join(map(repr, still_missing_args)),
                 )
             )

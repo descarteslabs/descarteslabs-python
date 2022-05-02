@@ -24,7 +24,6 @@ import warnings
 from hashlib import sha1
 
 import requests
-import six
 import binascii
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -394,7 +393,7 @@ class Auth:
         if self._token is None:
             self._get_token()
 
-        if isinstance(self._token, six.text_type):
+        if isinstance(self._token, str):
             token = self._token.encode("utf-8")
         else:
             token = self._token

@@ -2,8 +2,6 @@ import datetime
 import collections
 import itertools
 
-import six
-
 try:
     from backports.datetime_fromisoformat import MonkeyPatch
 
@@ -69,7 +67,7 @@ class EqualityMixin(object):
 
 
 def _join_dict_keys(dct, up_to=4):
-    keys = ", ".join(repr(k) for k in itertools.islice(six.iterkeys(dct), up_to))
+    keys = ", ".join(repr(k) for k in itertools.islice(dct.keys(), up_to))
     if len(dct) > up_to:
         keys += ", ..."
     return keys

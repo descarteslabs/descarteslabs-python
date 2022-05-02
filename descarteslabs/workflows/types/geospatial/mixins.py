@@ -1,5 +1,3 @@
-import six
-
 from collections import abc
 
 from ..containers import Dict, List, Tuple
@@ -14,7 +12,7 @@ class BandsMixin:
         raise TypeError("Please use Image or ImageCollection.")
 
     def with_bandinfo(self, band, **bandinfo):
-        if not isinstance(band, (Str, six.string_types)):
+        if not isinstance(band, (Str, str)):
             raise TypeError(
                 "Invalid type {!r} for band argument, must be a string.".format(
                     type(band).__name__
@@ -22,7 +20,7 @@ class BandsMixin:
             )
 
         bandinfo_promoted = {}
-        for name, value in six.iteritems(bandinfo):
+        for name, value in bandinfo.items():
             try:
                 bandinfo_promoted[name] = proxify(value)
             except NotImplementedError as e:
@@ -34,7 +32,7 @@ class BandsMixin:
         return self._from_apply("wf.with_bandinfo", self, band, **bandinfo_promoted)
 
     def without_bandinfo(self, band, *bandinfo_keys):
-        if not isinstance(band, (Str, six.string_types)):
+        if not isinstance(band, (Str, str)):
             raise TypeError(
                 "Invalid type {!r} for band argument, must be a string.".format(
                     type(band).__name__
@@ -42,7 +40,7 @@ class BandsMixin:
             )
 
         for bandinfo_key in bandinfo_keys:
-            if not isinstance(bandinfo_key, (Str, six.string_types)):
+            if not isinstance(bandinfo_key, (Str, str)):
                 raise TypeError(
                     "Invalid type {!r} for bandinfo key, must be a string.".format(
                         type(bandinfo_key).__name__
@@ -90,12 +88,10 @@ class BandsMixin:
         if isinstance(bands, abc.Sequence):
             # Allows for a cleaner graft for this common use-case.
             # Note that both strings and normal lists/tuples are Sequences.
-            if isinstance(bands, six.string_types):
+            if isinstance(bands, str):
                 bands = bands.split()
             else:
-                if not all(
-                    isinstance(band, six.string_types + (Str,)) for band in bands
-                ):
+                if not all(isinstance(band, (Str, str)) for band in bands):
                     raise TypeError(
                         "Band names must all be strings, not {!r}".format(bands)
                     )
@@ -126,7 +122,7 @@ class BandsMixin:
         >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
         >>> red, green, blue = img.unpack_bands("red green blue")
         """
-        if isinstance(bands, six.string_types):
+        if isinstance(bands, str):
             bands = bands.split()
         if not isinstance(bands, (abc.Sequence, Tuple)):
             msg = "unpack_bands requires a Python string or sequence, not {}".format(

@@ -1,6 +1,5 @@
 from enum import Enum
 import os.path
-import six
 import io
 from tempfile import NamedTemporaryFile
 import warnings
@@ -467,7 +466,7 @@ class Image(NamedCatalogObject):
             )
 
         # convert file to a list, validating and extracting file names
-        if isinstance(files, six.string_types) or isinstance(files, io.IOBase):
+        if isinstance(files, str) or isinstance(files, io.IOBase):
             files = [files]
         elif not isinstance(files, abc.Iterable):
             raise ValueError(
@@ -475,7 +474,7 @@ class Image(NamedCatalogObject):
             )
         filenames = []
         for f in files:
-            if isinstance(f, six.string_types):
+            if isinstance(f, str):
                 filenames.append(f)
             elif isinstance(f, io.IOBase):
                 filenames.append(f.name)

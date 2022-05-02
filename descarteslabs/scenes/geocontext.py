@@ -40,12 +40,11 @@ functionality.
 
 import copy
 import shapely.geometry
-import six
 import threading
 import warnings
 import math
 
-from six.moves import reprlib
+import reprlib
 
 from descarteslabs.client.addons import mercantile
 from descarteslabs.common import shapely_support
@@ -114,7 +113,7 @@ class GeoContext(object):
         }
 
     def __setstate__(self, state):
-        for attr, val in six.iteritems(state):
+        for attr, val in state.items():
             setattr(self, attr, val)
         self._geometry_lock_ = threading.Lock()
 

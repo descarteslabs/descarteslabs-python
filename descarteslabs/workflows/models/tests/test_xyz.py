@@ -1,7 +1,6 @@
 import datetime
 import logging
-
-from six.moves import queue
+import queue
 
 import grpc
 import mock

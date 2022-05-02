@@ -1,5 +1,3 @@
-import six
-
 from descarteslabs.common.graft import client
 from ...cereal import serializable
 from ..core import ProxyTypeError, GenericProxytype, assert_is_proxytype, merge_params
@@ -109,7 +107,7 @@ class Struct(GenericProxytype):
         dct.update(
             {
                 field: _property_factory(field, field_cls)
-                for field, field_cls in six.iteritems(type_params[0])
+                for field, field_cls in type_params[0].items()
             }
         )
 
@@ -129,7 +127,7 @@ class Struct(GenericProxytype):
         docs = subcls._doc
 
         if docs is not None:
-            for field, docstring in six.iteritems(docs):
+            for field, docstring in docs.items():
                 if field not in type_params:
                     raise TypeError(
                         "Cannot document field {!r}: it does not exist in {}".format(
@@ -174,7 +172,7 @@ class Struct(GenericProxytype):
             assert isinstance(
                 type_param, dict
             ), "Struct type parameters must be specified with a dictionary of field name to type"
-            for key, param_cls in six.iteritems(type_param):
+            for key, param_cls in type_param.items():
                 assert isinstance(
                     key, str
                 ), "Field names must be strings, but '{}' is a {!r}".format(
@@ -218,27 +216,25 @@ class Struct(GenericProxytype):
                 )
             )
 
-        missing_args = (
-            six.viewkeys(type_params) - six.viewkeys(kwargs) - optional - read_only
-        )
+        missing_args = type_params.keys() - kwargs.keys() - optional - read_only
 
         if len(missing_args) > 0:
             raise ProxyTypeError(
                 "Missing required keyword arguments to {}: {}".format(
-                    class_name, ", ".join(six.moves.map(repr, missing_args))
+                    class_name, ", ".join(map(repr, missing_args))
                 )
             )
 
-        provided_read_only_args = six.viewkeys(kwargs) & read_only
+        provided_read_only_args = kwargs.keys() & read_only
         if len(provided_read_only_args) > 0:
             raise ProxyTypeError(
                 "Read only keyword argument to {}: {}".format(
-                    class_name, ", ".join(six.moves.map(repr, provided_read_only_args))
+                    class_name, ", ".join(map(repr, provided_read_only_args))
                 )
             )
 
         promoted_kwargs = {}
-        for field_name, val in six.iteritems(kwargs):
+        for field_name, val in kwargs.items():
             try:
                 field_cls = type_params[field_name]
             except KeyError:

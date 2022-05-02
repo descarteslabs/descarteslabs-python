@@ -18,7 +18,6 @@ import json
 import pytest
 import unittest
 import warnings
-import six
 
 import responses
 from descarteslabs.client.auth import Auth
@@ -28,7 +27,7 @@ from mock import patch
 
 def token_response_callback(request):
     body = request.body
-    if not isinstance(body, six.text_type):
+    if not isinstance(body, str):
         body = body.decode("utf-8")
 
     data = json.loads(body)
@@ -60,7 +59,7 @@ def token_response_callback(request):
 
 
 def to_bytes(s):
-    if isinstance(s, six.text_type):
+    if isinstance(s, str):
         s = s.encode("utf-8")
     return s
 

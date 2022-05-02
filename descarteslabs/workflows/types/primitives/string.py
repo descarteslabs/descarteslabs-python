@@ -1,5 +1,3 @@
-import six
-
 from ...cereal import serializable
 from ..core import typecheck_promote
 from .primitive import Primitive
@@ -46,7 +44,7 @@ class Str(Primitive):
     'hello worldhello worldhello world'
     """
 
-    _pytype = six.string_types
+    _pytype = (str,)
 
     @typecheck_promote(lambda: Str)
     def __lt__(self, other):

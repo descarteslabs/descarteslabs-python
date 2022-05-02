@@ -1,4 +1,3 @@
-import six
 import logging
 
 from descarteslabs.common.graft import client
@@ -912,7 +911,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
             raise TypeError("Only one of `func` or `dates` may be given")
 
         if dates:
-            if isinstance(dates, six.string_types):
+            if isinstance(dates, str):
                 dates = (dates,)
 
             # consider implementing this on the backend instead; may be more performant

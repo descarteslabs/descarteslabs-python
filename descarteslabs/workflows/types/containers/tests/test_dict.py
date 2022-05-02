@@ -1,4 +1,3 @@
-import six
 import operator
 import pytest
 import mock
@@ -53,8 +52,8 @@ def test_init_fromkwargs(mock_apply):
     apply_args, apply_kwargs = mock_apply.call_args
 
     assert apply_args == ("wf.dict.create",)
-    assert six.viewkeys(apply_kwargs) == {"a", "b", "c"}
-    for value in six.itervalues(apply_kwargs):
+    assert apply_kwargs.keys() == {"a", "b", "c"}
+    for value in apply_kwargs.values():
         assert isinstance(value, Int)
 
     assert client.is_delayed(dct)
@@ -70,8 +69,8 @@ def test_init_fromdict_andkwargs(mock_apply):
     apply_args, apply_kwargs = mock_apply.call_args
 
     assert apply_args == ("wf.dict.create",)
-    assert six.viewkeys(apply_kwargs) == {"a", "z", "b", "c"}
-    for value in six.itervalues(apply_kwargs):
+    assert apply_kwargs.keys() == {"a", "z", "b", "c"}
+    for value in apply_kwargs.values():
         assert isinstance(value, Int)
 
     assert client.is_delayed(dct)
@@ -155,7 +154,7 @@ def test_getitem_roundtrip():
     src = {"a": 1, "b": 2}
     dct = Dict[Str, Int](src)
 
-    for key, truth in six.iteritems(src):
+    for key, truth in src.items():
         value = interpreter.interpret(
             dct[key].graft,
             builtins={"wf.get": operator.getitem, "wf.dict.create": dict_builtin},

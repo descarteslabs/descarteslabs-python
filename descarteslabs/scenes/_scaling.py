@@ -1,4 +1,3 @@
-import six
 from enum import Enum
 
 try:
@@ -169,7 +168,7 @@ class TupleBandScale(BandScale):
         is_pct = []
         is_float = []
         for t in value:
-            if isinstance(t, six.string_types):
+            if isinstance(t, str):
                 if not t.endswith("%"):
                     raise ValueError(
                         "Invalid scaling tuple value '{}' for band '{}' is not a percentage string".format(
@@ -265,7 +264,7 @@ def make_band_scale(name, properties, value):
     """
     if value is None:
         return NoBandScale(name, properties)
-    elif isinstance(value, six.string_types):
+    elif isinstance(value, str):
         try:
             mode = ScalingMode(value)
         except ValueError:
@@ -309,7 +308,7 @@ def parse_scaling(properties, bands, scaling):
     if scaling is None:
         # no scaling
         scales = None
-    elif isinstance(scaling, six.string_types):
+    elif isinstance(scaling, str):
         # automatic mode for all
         for band in bands:
             scales.append(make_band_scale(band, properties[band], scaling))
@@ -356,7 +355,7 @@ def append_alpha_scaling(scaling):
     """
     if (
         scaling is None
-        or isinstance(scaling, six.string_types)
+        or isinstance(scaling, str)
         or isinstance(scaling, abc.Mapping)
         or not isinstance(scaling, abc.Iterable)
     ):
@@ -421,7 +420,7 @@ def calc_pct(value, bounds, is_float):
     """
     Helper function to calculate a scaling tuple value from a percentage.
     """
-    if isinstance(value, six.string_types):
+    if isinstance(value, str):
         value = float(value[:-1]) * (bounds[1] - bounds[0]) / 100.0 + bounds[0]
     return value if is_float else int(value)
 

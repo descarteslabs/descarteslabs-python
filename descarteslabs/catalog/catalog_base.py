@@ -1,4 +1,4 @@
-from six import add_metaclass, iteritems, ensure_str, wraps
+from functools import wraps
 from types import MethodType
 import json
 
@@ -100,8 +100,7 @@ class CatalogObjectMeta(AttributeMeta):
         return new_cls
 
 
-@add_metaclass(CatalogObjectMeta)
-class CatalogObjectBase(AttributeEqualityMixin):
+class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
     """A base class for all representations of top level objects in the Catalog API."""
 
     # The following can be overridden by subclasses to customize behavior:
@@ -202,7 +201,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
         if id:
             self.id = id
 
-        for (name, val) in iteritems(kwargs):
+        for (name, val) in kwargs.items():
             # Only silently ignore unknown attributes if data came from service
             attribute_definition = (
                 self._attribute_types.get(name)
@@ -212,7 +211,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
             if attribute_definition is not None:
                 attribute_definition.__set__(self, val, validate=not saved)
 
-        for name, t in iteritems(self._reference_attribute_types):
+        for name, t in self._reference_attribute_types.items():
             id_value = kwargs.get(t.id_field)
             if id_value is not None:
                 object_value = kwargs.get(name)
@@ -235,7 +234,11 @@ class CatalogObjectBase(AttributeEqualityMixin):
 
     def __repr__(self):
 
-        name = ensure_str(self.name) if getattr(self, "name", None) is not None else ""
+        name = getattr(self, "name", None)
+        if name is None:
+            name = ""
+        elif isinstance(name, bytes):
+            name = name.decode()
 
         sections = [
             # Document type and ID
@@ -387,7 +390,7 @@ class CatalogObjectBase(AttributeEqualityMixin):
         original_values = dict(self._attributes)
         original_modified = set(self._modified)
 
-        for (name, val) in iteritems(kwargs):
+        for (name, val) in kwargs.items():
             try:
                 # A non-existent attribute will raise an AttributeError
                 attribute_definition = self._get_attribute_type(name)

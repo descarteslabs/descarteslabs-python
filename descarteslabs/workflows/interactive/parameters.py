@@ -2,7 +2,6 @@ import copy
 import datetime
 import contextlib
 
-import six
 import traitlets
 import ipywidgets
 
@@ -449,7 +448,7 @@ class ParameterSet(traitlets.HasTraits):
     def _make_widget_contents(self, skip=None):
         if skip is None:
             skip = ()
-        items = tuple((k, v) for k, v in six.iteritems(self.to_dict()) if k not in skip)
+        items = tuple((k, v) for k, v in self.to_dict().items() if k not in skip)
         if not items:
             return []
 
@@ -639,8 +638,8 @@ class ParameterSet(traitlets.HasTraits):
         """
         current_values = self.to_dict()
         current_traits = self.traits()
-        current_names = six.viewkeys(current_traits)
-        new_names = six.viewkeys(new_values)
+        current_names = current_traits.keys()
+        new_names = new_values.keys()
 
         add_names = new_names - current_names
         remove_names = current_names - new_names
@@ -690,7 +689,7 @@ class ParameterSet(traitlets.HasTraits):
             `Proxytype` instances, or ``ipywidgets.Widget`` instances.
         """
         with self.hold_trait_notifications():
-            for name, value in six.iteritems(new_values):
+            for name, value in new_values.items():
                 current_link = self._links.get(name, None)
                 if current_link is not None:
                     if value is not current_link.source[0]:

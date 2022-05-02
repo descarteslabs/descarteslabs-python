@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
 import collections
 import datetime
 
@@ -131,7 +130,7 @@ def search(
     if metadata_client is None:
         metadata_client = Metadata()
 
-    if isinstance(products, six.string_types):
+    if isinstance(products, str):
         products = [products]
 
     if isinstance(start_datetime, datetime.datetime):
@@ -181,8 +180,8 @@ def search(
                 None,
                 (
                     b.get("resolution")
-                    for band in six.itervalues(product_bands)
-                    for b in six.itervalues(band)
+                    for band in product_bands.values()
+                    for b in band.values()
                 ),
             )
             try:

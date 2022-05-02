@@ -1,5 +1,3 @@
-import six
-
 from descarteslabs.common.graft import client, syntax
 from .exceptions import ProxyTypeError
 
@@ -309,8 +307,7 @@ def type_params_issubclass(type_params: tuple, super_type_params: tuple) -> bool
         return issubclass(type_params, super_type_params)
 
 
-@six.add_metaclass(GenericProxytypeMetaclass)
-class GenericProxytype(Proxytype):
+class GenericProxytype(Proxytype, metaclass=GenericProxytypeMetaclass):
     """
     Abstract base class for generic Proxytypes; i.e. abstract types that can be parameterized with other types.
 
@@ -573,7 +570,7 @@ def validate_typespec(type_params):
         type_params = (type_params,)
     for i, type_param in enumerate(type_params):
         if isinstance(type_param, dict):
-            for key, param_cls in six.iteritems(type_param):
+            for key, param_cls in type_param.items():
                 validate_typespec(key)
                 validate_typespec(param_cls)
         elif isinstance(type_param, PRIMITIVES):

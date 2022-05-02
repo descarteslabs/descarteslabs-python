@@ -3,7 +3,7 @@ import responses
 import json
 import textwrap
 from datetime import datetime
-from six.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 
 from .. import properties as p
 from ..image import Image

@@ -18,7 +18,6 @@ A list-based sequence with helper methods, which serves as the base class for `S
 
 import itertools
 import collections
-import six
 
 
 # TODO: maybe subclass collections.UserList?
@@ -59,7 +58,7 @@ class Collection(object):
         if isinstance(idx, (list, slice)) or type(idx).__name__ == "ndarray":
             if isinstance(idx, slice):
                 idx = list(range(*idx.indices(len(self))))
-            if isinstance(item, six.string_types) or not isinstance(
+            if isinstance(item, str) or not isinstance(
                 item, collections.abc.Sequence
             ):  # if scalar
                 item = [item] * len(idx)
@@ -96,7 +95,7 @@ class Collection(object):
     def _cast_and_copy_attrs_to(self, other):
         # used to copy over any attrs a subclass may have set
         other = self.__class__(other)
-        for k, v in six.iteritems(self.__dict__):
+        for k, v in self.__dict__.items():
             if k != "_list":
                 setattr(other, k, v)
         return other
@@ -185,8 +184,7 @@ class Collection(object):
         if len(predicates) == 0:
             raise TypeError("No predicate(s) given to sorted")
         predicates = [
-            self._str_to_predicate(p) if isinstance(p, six.string_types) else p
-            for p in predicates
+            self._str_to_predicate(p) if isinstance(p, str) else p for p in predicates
         ]
         if len(predicates) == 1:
             predicate = predicates[0]
@@ -232,8 +230,7 @@ class Collection(object):
         if len(predicates) == 0:
             raise TypeError("No predicate(s) given to groupby")
         predicates = [
-            self._str_to_predicate(p) if isinstance(p, six.string_types) else p
-            for p in predicates
+            self._str_to_predicate(p) if isinstance(p, str) else p for p in predicates
         ]
         if len(predicates) == 1:
             predicate = predicates[0]

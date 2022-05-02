@@ -1,5 +1,3 @@
-import six
-
 import cachetools
 
 
@@ -30,7 +28,7 @@ def valid_latlon_bounds(bounds):
 
 
 def is_geographic_crs(crs):
-    if not isinstance(crs, six.string_types):
+    if not isinstance(crs, str):
         return False
     lower_crs = crs.lower()
     return (
@@ -45,7 +43,7 @@ def is_geographic_crs(crs):
 
 
 def is_wgs84_crs(crs):
-    if not isinstance(crs, six.string_types):
+    if not isinstance(crs, str):
         return False
     lower_crs = crs.lower()
     return (

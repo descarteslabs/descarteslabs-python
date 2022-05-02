@@ -1,4 +1,3 @@
-import six
 import time
 from enum import Enum
 from concurrent.futures import TimeoutError
@@ -343,10 +342,10 @@ class Product(CatalogObject):
         attributes = {"owners": owners, "readers": readers, "writers": writers}
         for name, parameter in attributes.items():
             if parameter is not None:
-                if isinstance(parameter, six.string_types):
+                if isinstance(parameter, str):
                     attributes[name] = [parameter]
                 elif isinstance(parameter, abc.Iterable) and all(
-                    isinstance(value, six.string_types) for value in parameter
+                    isinstance(value, str) for value in parameter
                 ):
                     attributes[name] = list(parameter)
                 else:

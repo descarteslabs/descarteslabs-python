@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import six
 import timeit
 import collections
 
@@ -126,8 +125,7 @@ def evaluate(expr, body, env, debug=None):
 
         positional_args = tuple(get(key, body, env, debug=debug) for key in expr[1:-1])
         named_args = {
-            name: get(key, body, env, debug=debug)
-            for name, key in six.iteritems(expr[-1])
+            name: get(key, body, env, debug=debug) for name, key in expr[-1].items()
         }
 
         return func(*positional_args, **named_args)
@@ -165,7 +163,7 @@ def as_function(expr, body, env, debug=None):
     def func(*args, **named_args):
         syntax.check_args(
             len(args),
-            six.viewkeys(named_args),
+            named_args.keys(),
             parameters,
             exception_type=exceptions.GraftTypeError,
         )

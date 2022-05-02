@@ -1,5 +1,3 @@
-import six
-
 from ...cereal import serializable
 from ..core import assert_is_proxytype
 from .dict_ import BaseDict
@@ -52,7 +50,7 @@ class KnownDict(BaseDict):
             )
         if len(type_params) == 3:
             assert isinstance(type_params[0], dict)
-            for key, param_cls in six.iteritems(type_params[0]):
+            for key, param_cls in type_params[0].items():
                 error_message = "KnownDict item type parameters must be Proxytypes but for key '{}', got {!r}".format(
                     key, param_cls
                 )

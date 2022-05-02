@@ -1,4 +1,3 @@
-import six
 import os.path
 import json
 
@@ -10,7 +9,7 @@ ext_to_format = {"tif": "GTiff", "png": "PNG", "jpg": "JPEG"}
 
 
 def _is_path_like(dest):
-    return isinstance(dest, six.string_types) or (
+    return isinstance(dest, str) or (
         hasattr(os, "PathLike") and isinstance(dest, os.PathLike)
     )
 
@@ -24,14 +23,11 @@ def _get_format(ext):
     try:
         return ext_to_format[ext]
     except KeyError:
-        six.raise_from(
-            ValueError(
-                "Unknown format '{}'. Possible values are {}.".format(
-                    ext, ", ".join(ext_to_format)
-                )
-            ),
-            None,
-        )
+        raise ValueError(
+            "Unknown format '{}'. Possible values are {}.".format(
+                ext, ", ".join(ext_to_format)
+            )
+        ) from None
 
 
 def _download(
@@ -102,7 +98,7 @@ def _download(
             msg = "Some or all of these IDs don't exist in the Descartes catalog: {}".format(
                 inputs
             )
-        six.raise_from(NotFoundError(msg), None)
+        raise NotFoundError(msg) from None
     except BadRequestError as e:
         msg = (
             "Error with request:\n"
@@ -111,7 +107,7 @@ def _download(
             "{args}"
         )
         msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))
-        six.raise_from(BadRequestError(msg), None)
+        raise BadRequestError(msg) from None
     except ValueError as e:
         raise e
 

@@ -14,7 +14,6 @@
 
 from __future__ import division
 import collections
-import six
 import logging
 import json
 import os.path
@@ -479,7 +478,7 @@ class SceneCollection(Collection):
                 "{args}"
             )
             msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))
-            six.raise_from(BadRequestError(msg), None)
+            raise BadRequestError(msg) from None
 
         if len(arr.shape) == 2:
             # if only 1 band requested, still return a 3d array
@@ -630,14 +629,11 @@ class SceneCollection(Collection):
                     for scene in self
                 ]
             except Exception as e:
-                six.raise_from(
-                    RuntimeError(
-                        "Error while generating default filenames:\n{}\n"
-                        "This is likely due to missing or unexpected data "
-                        "in Scenes in this SceneCollection.".format(e)
-                    ),
-                    None,
-                )
+                raise RuntimeError(
+                    "Error while generating default filenames:\n{}\n"
+                    "This is likely due to missing or unexpected data "
+                    "in Scenes in this SceneCollection.".format(e)
+                ) from None
 
         try:
             if len(dest) != len(self):
@@ -647,13 +643,10 @@ class SceneCollection(Collection):
                     )
                 )
         except TypeError:
-            six.raise_from(
-                TypeError(
-                    "`dest` should be a sequence of strings or path-like objects; "
-                    "instead found type {}, which has no length".format(type(dest))
-                ),
-                None,
-            )
+            raise TypeError(
+                "`dest` should be a sequence of strings or path-like objects; "
+                "instead found type {}, which has no length".format(type(dest))
+            ) from None
 
         # check for duplicate paths to prevent the confusing situation where
         # multiple rasters overwrite the same filename
@@ -908,9 +901,7 @@ class SceneCollection(Collection):
         try:
             products = self.each.properties.product.combine(collections.Counter)
             if len(products) > 0:
-                products = ", ".join(
-                    "{}: {}".format(k, v) for k, v in six.iteritems(products)
-                )
+                products = ", ".join("{}: {}".format(k, v) for k, v in products.items())
                 products = "  * Products: {}".format(products)
                 parts.append(products)
         except Exception:

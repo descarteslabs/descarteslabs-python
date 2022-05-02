@@ -2,8 +2,6 @@ import functools
 import inspect
 import types
 
-import six
-
 from collections import abc
 
 from descarteslabs.third_party import boltons
@@ -78,7 +76,7 @@ def _resolve_lambdas(to_classes):
     if isinstance(to_classes, types.FunctionType):
         return to_classes()
     if isinstance(to_classes, abc.Mapping):
-        return {k: _resolve_lambdas(v) for k, v in six.iteritems(to_classes)}
+        return {k: _resolve_lambdas(v) for k, v in to_classes.items()}
     elif isinstance(to_classes, abc.Sequence):
         return tuple(_resolve_lambdas(item) for item in to_classes)
     else:
@@ -154,7 +152,7 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
         ...
     """
     # assert all(isinstance(arg_type, Proxytype) for arg_type in expected_arg_types)
-    # assert all(isinstance(arg_type, Proxytype) for arg_type in six.itervalues(expected_kwarg_types))
+    # assert all(isinstance(arg_type, Proxytype) for arg_type in expected_kwarg_types.values())
 
     # NOTE(gabe): On Passing Expected Types As Lambdas
     # When defining a class, you might want to typecheck that methods recieve instances of that class.
@@ -202,7 +200,7 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
             # computed once.
             self_lambdas = {
                 name: func
-                for name, func in six.iteritems(bound_expected_args)
+                for name, func in bound_expected_args.items()
                 if _requires_self(func)
             }
 
@@ -224,7 +222,7 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
                     bound_expected_args,
                     **{
                         name: func(self_reference)
-                        for name, func in six.iteritems(self_lambdas)
+                        for name, func in self_lambdas.items()
                     }
                 )
             else:
@@ -235,7 +233,7 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
             bound_args.apply_defaults()
             bound_args_dict = bound_args.arguments
 
-            for name, argtype in six.iteritems(expected_types):
+            for name, argtype in expected_types.items():
                 if argtype is None:
                     # it's a placeholder for `self`
                     continue
@@ -247,7 +245,7 @@ def typecheck_promote(*expected_arg_types, **expected_kwarg_types):
                         return NotImplemented
                     else:
                         # Re-raise TypeError
-                        six.raise_from(e, None)
+                        raise e from None
 
             promoted_args = bound_args.args
             promoted_kwargs = bound_args.kwargs

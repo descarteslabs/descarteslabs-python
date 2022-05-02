@@ -2,7 +2,7 @@ import pytest
 import unittest
 import mock
 import sys
-import six
+import io
 
 from descarteslabs.client.exceptions import NotFoundError, BadRequestError
 from descarteslabs.scenes import geocontext
@@ -72,12 +72,12 @@ class TestDownload(unittest.TestCase):
         assert called_format == "GTiff"
 
     def test_to_file(self, mock_raster, mock_makedirs, mock_open):
-        file = six.BytesIO()
+        file = io.BytesIO()
         with pytest.raises(TypeError):
             self.download(file, format="jpg")
 
     def test_to_file_invalid_format(self, mock_raster, mock_makedirs, mock_open):
-        file = six.BytesIO()
+        file = io.BytesIO()
         with pytest.raises(ValueError):
             self.download(file, format="foo")
 

@@ -1,5 +1,4 @@
 import pytest
-import six
 
 from ...core import _resolve_lambdas
 from ...core.tests import utils
@@ -53,9 +52,9 @@ def test_from_id():
 
 
 def test_stats_return_type():
-    for axis, return_type in six.iteritems(
-        _resolve_lambdas(ImageCollection._STATS_RETURN_TYPES)
-    ):
+    for axis, return_type in _resolve_lambdas(
+        ImageCollection._STATS_RETURN_TYPES
+    ).items():
         assert ImageCollection._stats_return_type(thaw_axis(axis)) == return_type
 
     with pytest.raises(ValueError):
@@ -138,9 +137,7 @@ def test_all_stats_methods_and_reduction(stats_func_name):
 
     # NOTE: This assumes the correct construction of
     #       `ImageCollection._RESOLVED_STATS_RETURN_TYPES`.
-    for axis, return_type in six.iteritems(
-        ImageCollection._RESOLVED_STATS_RETURN_TYPES
-    ):
+    for axis, return_type in ImageCollection._RESOLVED_STATS_RETURN_TYPES.items():
         assert isinstance(stats_func(axis=thaw_axis(axis)), return_type)
         assert isinstance(
             col.reduction(stats_func_name, axis=thaw_axis(axis)), return_type

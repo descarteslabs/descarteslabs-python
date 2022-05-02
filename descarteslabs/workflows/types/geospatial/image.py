@@ -1,4 +1,3 @@
-import six
 import logging
 
 from descarteslabs import scenes
@@ -259,7 +258,7 @@ class Image(ImageBase, BandsMixin):
         'baz'
         """
         properties_promoted = {}
-        for name, value in six.iteritems(properties):
+        for name, value in properties.items():
             try:
                 properties_promoted[name] = proxify(value)
             except NotImplementedError as e:
@@ -300,7 +299,7 @@ class Image(ImageBase, BandsMixin):
         ...
         """
         for property_key in property_keys:
-            if not isinstance(property_key, (Str, six.string_types)):
+            if not isinstance(property_key, (Str, str)):
                 raise TypeError(
                     "Invalid type {!r} for property key, must be a string.".format(
                         type(property_key).__name__
@@ -548,9 +547,7 @@ class Image(ImageBase, BandsMixin):
             raise ValueError(
                 "Invalid axis argument {!r}, should be one of {}.".format(
                     axis,
-                    ", ".join(
-                        map(repr, six.viewkeys(cls._RESOLVED_STATS_RETURN_TYPES))
-                    ),
+                    ", ".join(map(repr, cls._RESOLVED_STATS_RETURN_TYPES.keys())),
                 )
             )
 

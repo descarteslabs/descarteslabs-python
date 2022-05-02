@@ -15,7 +15,6 @@
 import json
 import os
 import itertools
-from six import string_types
 from descarteslabs.client.services.service import Service
 from descarteslabs.client.services.places import Places
 from descarteslabs.client.auth import Auth
@@ -331,7 +330,7 @@ class Metadata(Service):
             geom = json.dumps(shape["geometry"])
 
         if dltile is not None:
-            if isinstance(dltile, string_types):
+            if isinstance(dltile, str):
                 geom = Tile.from_key(dltile).geometry
             if isinstance(dltile, dict):
                 geom = dltile["geometry"]
@@ -340,13 +339,13 @@ class Metadata(Service):
             geom = json.dumps(geom)
 
         if sat_ids:
-            if isinstance(sat_ids, string_types):
+            if isinstance(sat_ids, str):
                 sat_ids = [sat_ids]
 
             kwargs["sat_ids"] = sat_ids
 
         if products:
-            if isinstance(products, string_types):
+            if isinstance(products, str):
                 products = [products]
 
             kwargs["products"] = products
@@ -466,7 +465,7 @@ class Metadata(Service):
             geom = json.dumps(shape["geometry"])
 
         if dltile is not None:
-            if isinstance(dltile, string_types):
+            if isinstance(dltile, str):
                 geom = Tile.from_key(dltile).geometry
             if isinstance(dltile, dict):
                 geom = dltile["geometry"]
@@ -477,13 +476,13 @@ class Metadata(Service):
         kwargs.update({"date": date, "limit": limit})
 
         if sat_ids:
-            if isinstance(sat_ids, string_types):
+            if isinstance(sat_ids, str):
                 sat_ids = [sat_ids]
 
             kwargs["sat_ids"] = sat_ids
 
         if products:
-            if isinstance(products, string_types):
+            if isinstance(products, str):
                 products = [products]
 
             kwargs["products"] = products

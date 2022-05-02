@@ -34,12 +34,12 @@ Changelog
     - `Discover().list_assets("asset/namespace/org:some_org", filters=AssetListFilter(type=[AssetType.BLOB, AssetType.VECTOR], name="file?name.*"))`
 
 ### Tables
+
 - Fixed an issue that caused a user's schema to be overwritten if they didn't provide a primary key on table creation.
 - Now uses Discover backend filtering for `list_tables()` instead of filtering on the client to improve performance.
 - `list_tables()` now supports filtering tables by name
   - `Tables.list_tables(name="Test*.json")`
   
-
 ## Scenes
 
 - Fixed an issue in `scenes.DLTile.from_shape` where there would be incomplete coverage of certain geometries. The function may now return more tiles than before.
@@ -51,6 +51,11 @@ only recommended when using an AOI which is smaller than the source imagery pixe
 ## Workflows
 
 - Added support for the new `all_touched` parameter to the different `GeoContext` types. Se description above under `Scenes`.
+
+## General
+
+- With Python 2 far in the rearview mirror, the depedencies on the `six` python package have been removed throughout
+the library, the distribution and all tasks images.
 
 ## [1.10.0] - 2022-01-18
 

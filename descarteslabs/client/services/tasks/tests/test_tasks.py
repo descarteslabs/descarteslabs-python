@@ -21,7 +21,6 @@ import pytest
 import re
 import runpy
 import shutil
-import six
 import sys
 import tempfile
 import unittest

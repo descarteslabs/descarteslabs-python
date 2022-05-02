@@ -6,7 +6,6 @@ except ImportError:
 
 import geojson
 import shapely.geometry
-import six
 
 
 def shapely_to_geojson(geometry):
@@ -29,14 +28,11 @@ def geometry_like_to_shapely(geometry):
         try:
             geometry = geometry.__geo_interface__
         except AttributeError:
-            six.raise_from(
-                TypeError(
-                    "geometry object is not a GeoJSON dict, nor has a `__geo_interface__`: {}".format(
-                        geometry
-                    )
-                ),
-                None,
-            )
+            raise TypeError(
+                "geometry object is not a GeoJSON dict, nor has a `__geo_interface__`: {}".format(
+                    geometry
+                )
+            ) from None
 
     geoj = as_geojson_geometry(geometry)
     try:
@@ -122,14 +118,11 @@ def check_valid_bounds(bounds):
                 "got sequence of length {}".format(len(bounds))
             )
     except TypeError:
-        six.raise_from(
-            TypeError(
-                "Bounds must a sequence of (minx, miny, maxx, maxy), got {}".format(
-                    type(bounds)
-                )
-            ),
-            None,
-        )
+        raise TypeError(
+            "Bounds must a sequence of (minx, miny, maxx, maxy), got {}".format(
+                type(bounds)
+            )
+        ) from None
 
     if bounds[0] >= bounds[2]:
         raise ValueError(

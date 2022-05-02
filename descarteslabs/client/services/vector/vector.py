@@ -1,5 +1,4 @@
 import os
-import six
 import io
 import logging
 
@@ -406,7 +405,7 @@ class Vector(JsonApiService):
             readers=readers,
             writers=writers,
         )
-        params = {k: v for k, v in six.iteritems(params) if v is not None}
+        params = {k: v for k, v in params.items() if v is not None}
 
         jsonapi = self.jsonapi_document(
             type="product", attributes=params, id=product_id
@@ -648,7 +647,7 @@ class Vector(JsonApiService):
 
         if isinstance(file_ish, io.IOBase):
             return self._upload_features(file_ish, product_id, max_errors, fix_geometry)
-        elif isinstance(file_ish, six.string_types):
+        elif isinstance(file_ish, str):
             with io.open(file_ish, "rb") as stream:
                 return self._upload_features(
                     stream, product_id, max_errors, fix_geometry

@@ -19,7 +19,6 @@ from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
 from descarteslabs.client.services.service import Service
 from descarteslabs.client.auth import Auth
-from six import string_types
 from descarteslabs.common.dotdict import DotDict, DotList
 from descarteslabs.client.deprecation import deprecate_func
 
@@ -327,21 +326,21 @@ class Places(Service):
 
         if source:
 
-            if isinstance(source, string_types):
+            if isinstance(source, str):
                 source = [source]
 
             params["source"] = source
 
         if category:
 
-            if isinstance(category, string_types):
+            if isinstance(category, str):
                 category = [category]
 
             params["category"] = category
 
         if metric:
 
-            if isinstance(metric, string_types):
+            if isinstance(metric, str):
                 metric = [metric]
 
             params["metric"] = metric
