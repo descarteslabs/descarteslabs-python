@@ -1,10 +1,10 @@
 from typing import Union
 import json
 
-from descarteslabs.common.proto.destinations import destinations_pb2
-from descarteslabs.common.workflows.proto_munging import user_dict_to_has_proto
+from ...proto.destinations import destinations_pb2
+from ..proto_munging import user_dict_to_has_proto
 
-from descarteslabs.catalog import Image, DocumentState
+from ....catalog import Image, DocumentState
 
 
 DEFAULTS = {

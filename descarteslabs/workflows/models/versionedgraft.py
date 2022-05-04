@@ -2,9 +2,9 @@ from typing import Dict, Optional, Sequence
 import textwrap
 from urllib.parse import urlencode
 
-from descarteslabs.common.proto.workflow import workflow_pb2
-from descarteslabs.workflows.client import get_global_grpc_client, Client
-from descarteslabs.workflows.types import Proxytype
+from ...common.proto.workflow import workflow_pb2
+from ..client import get_global_grpc_client, Client
+from ..types import Proxytype
 
 from .published_graft import PublishedGraft
 

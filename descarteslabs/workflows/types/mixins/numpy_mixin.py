@@ -1,13 +1,13 @@
 def _delayed_numpy_functions():
     # avoid circular imports
-    from descarteslabs.workflows.types.numpy import numpy_functions
+    from ..numpy import numpy_functions
 
     return numpy_functions
 
 
 def _delayed_numpy_ufuncs():
     # avoid circular imports
-    from descarteslabs.workflows.types.numpy import numpy_ufuncs
+    from ..numpy import numpy_ufuncs
 
     return numpy_ufuncs
 

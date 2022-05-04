@@ -15,7 +15,7 @@
 import pytest
 import unittest
 
-from descarteslabs.vectors import (
+from .. import (
     FeatureCollection,
     Feature,
     properties as p,
@@ -23,7 +23,7 @@ from descarteslabs.vectors import (
     FailedJobError,
     InvalidQueryException,
 )
-from descarteslabs.common.dotdict import DotDict
+from ...common.dotdict import DotDict
 import mock
 
 from .fixtures import POINT

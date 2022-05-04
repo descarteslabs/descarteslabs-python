@@ -17,17 +17,13 @@ import re
 import pytest
 import unittest
 
-from descarteslabs.client.addons import blosc, numpy as np, ThirdParty
-from descarteslabs.client.auth import Auth
-import descarteslabs.client.services.raster.raster
-from descarteslabs.client.services.raster.raster import as_json_string, Raster
+import numpy as np
+import blosc
+
+from ....auth import Auth
+from ..raster import as_json_string, Raster
 
 import responses
-
-try:
-    import mock
-except ImportError:
-    from unittest import mock
 
 public_token = "header.e30.signature"
 a_geometry = {
@@ -102,19 +98,6 @@ class RasterTest(unittest.TestCase):
         np.testing.assert_array_equal(expected_array, stack[0, :])
         np.testing.assert_array_equal(expected_array, stack[1, :])
         assert [expected_metadata] * 2 == meta
-
-    @mock.patch.object(
-        descarteslabs.client.services.raster.raster,
-        "concurrent",
-        ThirdParty("concurrent"),
-    )
-    def test_stack_serial_blosc(self):
-        self.do_stack(
-            resolution=60,
-            srs="EPSG:32615",
-            bounds=(277280.0, 4569600.0, 354080.0, 4646400.0),
-            bands=["red"],
-        )
 
     def test_stack_threaded_blosc(self):
         self.do_stack(

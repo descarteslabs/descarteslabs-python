@@ -1,21 +1,21 @@
 import copy
 from shapely.geometry import shape
 
-from descarteslabs.common.dotdict import DotDict
-from descarteslabs.client.exceptions import NotFoundError
-from descarteslabs.client.deprecation import deprecate
-from descarteslabs.common.tasks import UploadTask, ExportTask, TransientResultError
-from descarteslabs.client.services.vector import Vector
-from descarteslabs.vectors.feature import Feature
+from ..common.dotdict import DotDict
+from ..client.exceptions import NotFoundError
+from ..client.deprecation import deprecate
+from ..common.tasks import UploadTask, ExportTask, TransientResultError
+from ..client.services.vector import Vector
+from .feature import Feature
 
 # import these exceptions for backwards compatibility
-from descarteslabs.vectors.exceptions import (  # noqa
+from .exceptions import (  # noqa
     InvalidQueryException,  # noqa
     VectorException,  # noqa
     FailedCopyError,  # noqa
     WaitTimeoutError,  # noqa
 )
-from descarteslabs.vectors.async_job import DeleteJob, CopyJob
+from .async_job import DeleteJob, CopyJob
 
 
 class _FeaturesIterator(object):

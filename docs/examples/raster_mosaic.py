@@ -11,13 +11,13 @@ by acquisition date (and/or any other metadata property).
 
 
 """
-import descarteslabs as dl
+from descarteslabs.client.services.raster import Raster
 from descarteslabs.catalog import Image, properties as p
 import matplotlib.pyplot as plt
 
 print(__doc__)
 
-raster_client = dl.Raster()
+raster_client = Raster()
 
 # Define my area of interest
 tile = raster_client.dltile_from_latlon(

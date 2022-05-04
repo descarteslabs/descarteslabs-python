@@ -8,24 +8,24 @@ import sys
 import grpc
 import requests
 
-from descarteslabs.client.version import __version__
-from descarteslabs.common.graft import client as graft_client, syntax as graft_syntax
-from descarteslabs.common.registry import registry
-from descarteslabs.common.proto.job import job_pb2
-from descarteslabs.common.proto.types import types_pb2
-from descarteslabs.common.proto.destinations import destinations_pb2
-from descarteslabs.common.proto.formats import formats_pb2
-from descarteslabs.common.workflows.outputs import (
+from ...client.version import __version__
+from ...common.graft import client as graft_client, syntax as graft_syntax
+from ...common.registry import registry
+from ...common.proto.job import job_pb2
+from ...common.proto.types import types_pb2
+from ...common.proto.destinations import destinations_pb2
+from ...common.proto.formats import formats_pb2
+from ...common.workflows.outputs import (
     user_format_to_proto,
     user_destination_to_proto,
 )
-from descarteslabs.common.workflows.proto_munging import (
+from ...common.workflows.proto_munging import (
     which_has,
     has_proto_to_user_dict,
 )
-from descarteslabs.common.workflows.arrow_serialization import deserialize_pyarrow
+from ...common.workflows.arrow_serialization import deserialize_pyarrow
 
-from descarteslabs import catalog
+from ... import catalog
 
 from ..cereal import deserialize_typespec
 from ..client import get_global_grpc_client, default_grpc_retry_predicate

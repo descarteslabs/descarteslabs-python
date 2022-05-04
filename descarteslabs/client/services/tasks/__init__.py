@@ -8,7 +8,7 @@ from .tasks import (
 )
 
 # Backwards compatibility
-from descarteslabs.common.tasks import FutureTask, TransientResultError
+from ....common.tasks import FutureTask, TransientResultError
 
 TransientResultException = TransientResultError
 

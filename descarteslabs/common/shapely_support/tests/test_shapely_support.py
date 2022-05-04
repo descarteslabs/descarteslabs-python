@@ -5,7 +5,7 @@ import pytest
 import shapely.geometry
 import geojson
 
-from descarteslabs.common.shapely_support import (
+from .. import (
     as_geojson_geometry,
     check_valid_bounds,
     geometry_like_to_shapely,

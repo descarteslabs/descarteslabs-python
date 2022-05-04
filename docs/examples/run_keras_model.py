@@ -16,7 +16,8 @@ from __future__ import print_function
 
 import requests
 
-import descarteslabs as dl
+from descarteslabs.client.services.raster import Raster
+from descarteslabs.client.services.tasks import Tasks
 from descarteslabs.catalog import Product, ClassBand
 
 
@@ -26,7 +27,7 @@ def deploy_keras_model(dltile, src_product_id, dest_product_id):
 
     from descarteslabs.catalog import Image, properties as p
 
-    raster_client = dl.Raster()
+    raster_client = Raster()
     # NOTE substitute your own trained model here.
     model = tf.keras.applications.resnet50.ResNet50()
     scene = next(
@@ -57,8 +58,8 @@ def deploy_keras_model(dltile, src_product_id, dest_product_id):
 
 
 if __name__ == "__main__":
-    tasks = dl.Tasks()
-    raster_client = dl.Raster()
+    tasks = Tasks()
+    raster_client = Raster()
     async_function = tasks.create_function(
         deploy_keras_model,
         image="us.gcr.io/dl-ci-cd/images/tasks/public/py2/default:v2018.06.20",

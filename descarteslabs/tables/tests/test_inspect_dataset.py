@@ -6,8 +6,8 @@ import pandas as pd
 import ibis.expr.schema as sch
 import ibis.expr.datatypes as dt
 
-from descarteslabs.tables.client import Tables
-from descarteslabs.common.ibis.client.client import _maybe_to_geodataframe
+from ..client import Tables
+from ...common.ibis.client.client import _maybe_to_geodataframe
 
 
 @pytest.fixture

@@ -8,11 +8,12 @@ import warnings
 import shapely.geometry
 import numpy as np
 
-from descarteslabs.common.dotdict import DotDict
-from descarteslabs.scenes import Scene, geocontext
-from descarteslabs.scenes.scene import _strptime_helper
+from ...common.dotdict import DotDict
+from .. import Scene, geocontext
+from .. import scene
+from ..scene import _strptime_helper
 
-from descarteslabs.client.services.metadata import Metadata
+from ...client.services.metadata import Metadata
 
 from .mock_data import _metadata_get, _cached_bands_by_product, _raster_ndarray
 
@@ -58,9 +59,10 @@ class TestScene(unittest.TestCase):
         },
     }
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
     def test_init(self):
@@ -175,9 +177,10 @@ class TestScene(unittest.TestCase):
         diagonal = np.sqrt(2 ** 2 + 2 ** 2)
         assert ctx.bounds == (0, -diagonal / 2, diagonal, diagonal / 2)
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
     def test_from_id(self):
@@ -188,12 +191,13 @@ class TestScene(unittest.TestCase):
         assert isinstance(scene.geometry, shapely.geometry.Polygon)
         assert isinstance(ctx, geocontext.AOI)
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    @mock.patch.object(scene.Raster, "ndarray", _raster_ndarray)
     def test_load_one_band(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr, info = scene.ndarray("red", ctx.assign(resolution=1000), raster_info=True)
@@ -206,9 +210,10 @@ class TestScene(unittest.TestCase):
         with pytest.raises(TypeError):
             scene.ndarray("blue", ctx, invalid_argument=True)
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
     def test_nonexistent_band_fails(self):
@@ -216,12 +221,13 @@ class TestScene(unittest.TestCase):
         with pytest.raises(ValueError):
             scene.ndarray("blue yellow", ctx)
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    @mock.patch.object(scene.Raster, "ndarray", _raster_ndarray)
     def test_different_band_dtypes(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         scene.properties.bands["green"]["dtype"] = "Int16"
@@ -230,12 +236,13 @@ class TestScene(unittest.TestCase):
         )
         assert arr.dtype.type == np.int32
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    @mock.patch.object(scene.Raster, "ndarray", _raster_ndarray)
     def test_load_multiband(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr = scene.ndarray("red green blue", ctx.assign(resolution=1000))
@@ -244,12 +251,13 @@ class TestScene(unittest.TestCase):
         assert (arr.mask[:, 2, 2]).all()
         assert not (arr.mask[:, 115, 116]).all()
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    @mock.patch.object(scene.Raster, "ndarray", _raster_ndarray)
     def test_load_multiband_axis_last(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr = scene.ndarray(
@@ -269,12 +277,13 @@ class TestScene(unittest.TestCase):
                 "red green blue", ctx.assign(resolution=1000), bands_axis=-3
             )
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    @mock.patch.object(scene.Raster, "ndarray", _raster_ndarray)
     def test_load_nomask(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr = scene.ndarray(
@@ -287,12 +296,13 @@ class TestScene(unittest.TestCase):
         assert not hasattr(arr, "mask")
         assert arr.shape == (2, 239, 235)
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    @mock.patch.object(scene.Raster, "ndarray", _raster_ndarray)
     def test_auto_mask_alpha_false(self):
         scene, ctx = Scene.from_id(
             "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1"
@@ -306,12 +316,13 @@ class TestScene(unittest.TestCase):
         assert not hasattr(arr, "mask")
         assert arr.shape == (2, 688, 473)
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    @mock.patch.object(scene.Raster, "ndarray", _raster_ndarray)
     def test_mask_alpha_string(self):
         scene, ctx = Scene.from_id(
             "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1"
@@ -326,12 +337,13 @@ class TestScene(unittest.TestCase):
         assert hasattr(arr, "mask")
         assert arr.shape == (2, 688, 473)
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    @mock.patch.object(scene.Raster, "ndarray", _raster_ndarray)
     def test_mask_missing_alpha(self):
         scene, ctx = Scene.from_id(
             "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1"
@@ -344,12 +356,13 @@ class TestScene(unittest.TestCase):
                 mask_nodata=False,
             )
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    @mock.patch.object(scene.Raster, "ndarray", _raster_ndarray)
     def test_mask_missing_band(self):
         scene, ctx = Scene.from_id(
             "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1"
@@ -362,12 +375,13 @@ class TestScene(unittest.TestCase):
                 mask_nodata=False,
             )
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    @mock.patch.object(scene.Raster, "ndarray", _raster_ndarray)
     def test_auto_mask_alpha_true(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr = scene.ndarray(
@@ -377,12 +391,13 @@ class TestScene(unittest.TestCase):
         assert hasattr(arr, "mask")
         assert arr.shape == (3, 239, 235)
 
-    @mock.patch("descarteslabs.client.services.metadata.Metadata.get", _metadata_get)
-    @mock.patch(
-        "descarteslabs.scenes.scene.cached_bands_by_product",
+    @mock.patch.object(Metadata, "get", _metadata_get)
+    @mock.patch.object(
+        scene,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch("descarteslabs.scenes.scene.Raster.ndarray", _raster_ndarray)
+    @mock.patch.object(scene.Raster, "ndarray", _raster_ndarray)
     def with_alpha(self):
         scene, ctx = Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
 
@@ -485,7 +500,7 @@ class TestScene(unittest.TestCase):
         geom_smaller = shapely.geometry.Point(0.0, 0.0).buffer(0.5)
         assert scene.coverage(geom_smaller) == pytest.approx(1.0, abs=1e-6)
 
-    @mock.patch("descarteslabs.scenes.scene._download._download")
+    @mock.patch.object(scene._download, "_download")
     def test_download(self, mock_geotiff):
         scene = MockScene(
             {},

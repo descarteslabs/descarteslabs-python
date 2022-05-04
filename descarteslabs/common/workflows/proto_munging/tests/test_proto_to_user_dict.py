@@ -1,7 +1,7 @@
 import pytest
 
-from descarteslabs.common.proto.formats import formats_pb2
-from descarteslabs.common.proto.destinations import destinations_pb2
+from ....proto.formats import formats_pb2
+from ....proto.destinations import destinations_pb2
 
 from ..proto_to_user_dict import has_proto_to_user_dict
 from ..user_dict_to_proto import user_dict_to_has_proto

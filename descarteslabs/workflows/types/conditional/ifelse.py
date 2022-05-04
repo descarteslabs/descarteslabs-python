@@ -1,8 +1,8 @@
-from descarteslabs.common.graft import client
+from ....common.graft import client
 
-from descarteslabs.workflows.types.core import typecheck_promote
-from descarteslabs.workflows.types.primitives import Bool
-from descarteslabs.workflows.types.proxify import proxify
+from ..core import typecheck_promote
+from ..primitives import Bool
+from ..proxify import proxify
 
 
 @typecheck_promote(Bool, None, None)

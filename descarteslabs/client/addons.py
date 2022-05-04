@@ -29,27 +29,6 @@ class ThirdParty(object):
         raise ImportError("Please install the %s package" % self._package)
 
 
-try:
-    import numpy
-except ImportError:
-    numpy = ThirdParty("numpy")
-
-try:
-    import blosc
-except ImportError:
-    blosc = ThirdParty("blosc")
-
-try:
-    import concurrent.futures
-except ImportError:
-    concurrent = ThirdParty("futures")
-
-try:
-    import mercantile
-except ImportError:
-    mercantile = ThirdParty("mercantile")
-
-
 def import_matplotlib_pyplot():
     try:
         import matplotlib

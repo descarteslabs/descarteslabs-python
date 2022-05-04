@@ -5,8 +5,9 @@ import random
 import string
 import ast
 import json
-from descarteslabs.common.dotdict import DotDict, DotList, DotDict_items, DotDict_values
-from descarteslabs.common.dotdict.dotdict import IndentedRepr, idr, untruncated_idr
+
+from .. import DotDict, DotList, DotDict_items, DotDict_values
+from ..dotdict import IndentedRepr, idr, untruncated_idr
 
 
 class TestDotDict(unittest.TestCase):

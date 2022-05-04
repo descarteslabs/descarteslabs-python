@@ -7,22 +7,22 @@ import responses
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
 
-from descarteslabs import scenes
-from descarteslabs.workflows.client import Client
+from .... import scenes
+from ...client import Client
 
-from descarteslabs.client.version import __version__
-from descarteslabs.common.proto.errors import errors_pb2
-from descarteslabs.common.proto.job import job_pb2
-from descarteslabs.common.proto.types import types_pb2
-from descarteslabs.common.workflows.arrow_serialization import serialize_pyarrow
-from descarteslabs.common.workflows.outputs import (
+from ....client.version import __version__
+from ....common.proto.errors import errors_pb2
+from ....common.proto.job import job_pb2
+from ....common.proto.types import types_pb2
+from ....common.workflows.arrow_serialization import serialize_pyarrow
+from ....common.workflows.outputs import (
     user_format_to_proto,
     user_destination_to_proto,
 )
-from descarteslabs.common.workflows.proto_munging import has_proto_to_user_dict
-from descarteslabs.common.graft import client as graft_client
+from ....common.workflows.proto_munging import has_proto_to_user_dict
+from ....common.graft import client as graft_client
 
-from descarteslabs.workflows import _channel
+from ... import _channel
 
 from ... import cereal, types
 from ..exceptions import JobInvalid, JobComputeError, JobTerminated, JobTimeoutError

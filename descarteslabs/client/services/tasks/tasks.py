@@ -35,19 +35,19 @@ try:
 except ImportError:
     pass
 
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.deprecation import deprecate_func
-from descarteslabs.client.exceptions import AuthError
-from descarteslabs.client.services.service import Service, ThirdPartyService
-from descarteslabs.common.dotdict import DotDict, DotList
-from descarteslabs.common.services.tasks.constants import (
+from ...auth import Auth
+from ...deprecation import deprecate_func
+from ...exceptions import AuthError
+from ..service import Service, ThirdPartyService
+from ....common.dotdict import DotDict, DotList
+from ....common.services.tasks.constants import (
     ENTRYPOINT,
     FunctionType,
     DIST,
     DATA,
     REQUIREMENTS,
 )
-from descarteslabs.common.tasks import FutureTask
+from ....common.tasks import FutureTask
 
 
 OFFSET_DEPRECATION_MESSAGE = (

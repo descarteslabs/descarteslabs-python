@@ -45,10 +45,10 @@ import warnings
 import math
 
 import reprlib
+import mercantile
 
-from descarteslabs.client.addons import mercantile
-from descarteslabs.common import shapely_support
-from descarteslabs.common.dltile import Tile, Grid
+from ..common import shapely_support
+from ..common.dltile import Tile, Grid
 
 from . import _helpers
 
@@ -1306,8 +1306,6 @@ class XYZTile(GeoContext):
 
     The tiles are always 256x256 pixels, in the spherical Mercator
     or "Web Mercator" coordinate reference system (:const:`EPSG:3857`).
-
-    Requires the optional ``mercantile`` package.
     """
 
     __slots__ = ("_x", "_y", "_z")

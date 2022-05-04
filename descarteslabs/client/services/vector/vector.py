@@ -2,13 +2,13 @@ import os
 import io
 import logging
 
-from descarteslabs.common.property_filtering import GenericProperties
-from descarteslabs.client.deprecation import deprecate
-from descarteslabs.client.services.service import JsonApiService, ThirdPartyService
-from descarteslabs.client.auth import Auth
-from descarteslabs.common.dotdict import DotDict
-from descarteslabs.common.shapely_support import shapely_to_geojson
-from descarteslabs.client.deprecation import deprecate_func
+from ....common.property_filtering import GenericProperties
+from ...deprecation import deprecate
+from ..service import JsonApiService, ThirdPartyService
+from ...auth import Auth
+from ....common.dotdict import DotDict
+from ....common.shapely_support import shapely_to_geojson
+from ...deprecation import deprecate_func
 
 
 class _SearchFeaturesIterator(object):

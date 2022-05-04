@@ -1,6 +1,6 @@
 import numpy as np
 
-from descarteslabs.common.graft import client
+from ....common.graft import client
 from ...cereal import serializable
 from ..primitives import Bool, Int, Float, NoneType
 from ..core import ProxyTypeError, typecheck_promote, merge_params

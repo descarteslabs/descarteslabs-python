@@ -1,6 +1,6 @@
 import logging
 
-from descarteslabs import scenes
+from .... import scenes
 
 from ...cereal import serializable
 from ..array import MaskedArray

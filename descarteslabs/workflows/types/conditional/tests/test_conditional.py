@@ -3,8 +3,8 @@ import mock
 
 import pytest
 
-from descarteslabs.common.graft.interpreter import interpret
-from descarteslabs.workflows.types import Function, Int
+from .....common.graft.interpreter import interpret
+from ... import Function, Int
 from .. import ifelse
 
 

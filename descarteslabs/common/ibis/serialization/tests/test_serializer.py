@@ -9,8 +9,8 @@ import ibis.expr.types as ir
 import ibis.expr.window as win
 from ibis.client import Client
 
-from descarteslabs.common.proto.ibis import ibis_pb2
-from descarteslabs.common.ibis.serialization.compiler import AstSerializer
+from ....proto.ibis import ibis_pb2
+from ..compiler import AstSerializer
 
 
 # RESIST THE URGE! to use the compiler.make_* functions to construct

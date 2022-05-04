@@ -10,10 +10,10 @@ from collections import UserDict
 import warnings
 import urllib
 
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.services.service import Service
-from descarteslabs.common.discover import DiscoverGrpcClient
-from descarteslabs.common.proto.discover import discover_pb2
+from ..client.auth import Auth
+from ..client.services.service import Service
+from ..common.discover import DiscoverGrpcClient
+from ..common.proto.discover import discover_pb2
 
 NAME_SEPARATOR = ":~/"
 PATH_SEPARATOR = "/"

@@ -2,7 +2,7 @@ import copy
 
 from shapely.geometry import shape
 
-from descarteslabs.common.dotdict import DotDict
+from ..common.dotdict import DotDict
 
 
 class Feature(object):

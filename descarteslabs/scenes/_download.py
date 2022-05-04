@@ -1,8 +1,8 @@
 import os.path
 import json
 
-from descarteslabs.client.services.raster import Raster
-from descarteslabs.client.exceptions import NotFoundError, BadRequestError
+from ..client.services.raster import Raster
+from ..client.exceptions import NotFoundError, BadRequestError
 
 
 ext_to_format = {"tif": "GTiff", "png": "PNG", "jpg": "JPEG"}
@@ -103,7 +103,7 @@ def _download(
         msg = (
             "Error with request:\n"
             "{err}\n"
-            "For reference, dl.Raster.raster was called with these arguments:\n"
+            "For reference, Raster.raster was called with these arguments:\n"
             "{args}"
         )
         msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))

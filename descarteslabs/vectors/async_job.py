@@ -1,7 +1,7 @@
 import time
 
-from descarteslabs.client.services.vector import Vector
-from descarteslabs.vectors.exceptions import FailedJobError, WaitTimeoutError
+from ..client.services.vector import Vector
+from .exceptions import FailedJobError, WaitTimeoutError
 
 
 class AsyncJob(object):

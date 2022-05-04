@@ -1,8 +1,8 @@
 import time
 
-from descarteslabs.client.exceptions import NotFoundError
-from descarteslabs.client.services.storage import Storage
-from descarteslabs.common.tasks import FutureTask, TransientResultError, TimeoutError
+from ...client.exceptions import NotFoundError
+from ...client.services.storage import Storage
+from . import FutureTask, TransientResultError, TimeoutError
 
 
 class ExportTask(FutureTask):
@@ -22,7 +22,7 @@ class ExportTask(FutureTask):
 
     def __init__(self, guid, tuid=None, client=None, result_attrs=None, key=None):
         if client is None:
-            from descarteslabs.client.services.vector import Vector  # circular import
+            from ...client.services.vector import Vector  # circular import
 
             client = Vector()
 

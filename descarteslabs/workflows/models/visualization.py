@@ -1,8 +1,8 @@
 from typing import List, Optional, Sequence, Union
 
-from descarteslabs.common.proto.visualization import visualization_pb2
+from ...common.proto.visualization import visualization_pb2
 
-from descarteslabs.workflows.types.geospatial import Image
+from ..types.geospatial import Image
 
 from .tile_url import validate_scales
 

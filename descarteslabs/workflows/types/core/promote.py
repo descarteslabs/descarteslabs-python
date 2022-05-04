@@ -4,7 +4,7 @@ import types
 
 from collections import abc
 
-from descarteslabs.third_party import boltons
+from ....third_party import boltons
 
 from .exceptions import ProxyTypeError
 

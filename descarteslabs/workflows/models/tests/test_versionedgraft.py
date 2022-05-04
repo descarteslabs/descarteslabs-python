@@ -2,16 +2,16 @@ import json
 import mock
 import pytest
 
-from descarteslabs.common.proto.workflow import workflow_pb2
+from ....common.proto.workflow import workflow_pb2
 
-from descarteslabs.client.version import __version__
-from descarteslabs.workflows.types import Int
-from descarteslabs.workflows.client import Client
-from descarteslabs.workflows.cereal import serialize_typespec
-from descarteslabs.workflows.models.versionedgraft import VersionedGraft
-from descarteslabs.workflows.models.visualization import VizOption
-from descarteslabs.workflows.models.tests import utils
-from descarteslabs.workflows import _channel
+from ....client.version import __version__
+from ...types import Int
+from ...client import Client
+from ...cereal import serialize_typespec
+from ..versionedgraft import VersionedGraft
+from ..visualization import VizOption
+from . import utils
+from ... import _channel
 
 
 @mock.patch(

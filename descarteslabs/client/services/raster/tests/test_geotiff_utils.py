@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 import sys
 
-from descarteslabs.client.services.raster.geotiff_utils import make_rasterio_geotiff
+from ..geotiff_utils import make_rasterio_geotiff
 
 
 def source_band(bidx, dtype="Float32"):

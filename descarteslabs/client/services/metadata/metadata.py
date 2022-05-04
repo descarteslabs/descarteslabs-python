@@ -15,17 +15,17 @@
 import json
 import os
 import itertools
-from descarteslabs.client.services.service import Service
-from descarteslabs.client.services.places import Places
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.deprecation import deprecate
-from descarteslabs.common.property_filtering.filtering import (
+
+from ..service import Service
+from ...auth import Auth
+from ...deprecation import deprecate
+from ....common.property_filtering.filtering import (
     AndExpression,
     GenericProperties,
 )
-from descarteslabs.common.dotdict import DotDict, DotList
-from descarteslabs.common.dltile import Tile
-from descarteslabs.common.shapely_support import shapely_to_geojson
+from ....common.dotdict import DotDict, DotList
+from ....common.dltile import Tile
+from ....common.shapely_support import shapely_to_geojson
 
 
 class Metadata(Service):
@@ -140,7 +140,7 @@ class Metadata(Service):
 
         Example::
 
-            >>> from descarteslabs.client.services import Metadata
+            >>> from descarteslabs.client.services.metadata import Metadata
             >>> bands = Metadata().get_bands_by_id('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1')
             >>> ndvi_info = bands['derived:ndvi'] # View NDVI band information
             >>> ndvi_info['physical_range']
@@ -200,7 +200,7 @@ class Metadata(Service):
         :rtype: DotList
 
         Example::
-            >>> from descarteslabs.client.services import Metadata
+            >>> from descarteslabs.client.services.metadata import Metadata
             >>> products = Metadata().available_products()
             >>> products  # doctest: +SKIP
             ['landsat:LC08:PRE:TOAR']
@@ -276,7 +276,7 @@ class Metadata(Service):
 
         Example::
 
-            >>> from descarteslabs.client.services import Metadata
+            >>> from descarteslabs.client.services.metadata import Metadata
             >>> iowa_geom = {
             ...     "coordinates": [[
             ...         [-96.498997, 42.560832],
@@ -324,6 +324,8 @@ class Metadata(Service):
             }
         """
         if place:
+            from ..places import Places
+
             places = Places(_suppress_deprecation_warnings=True)
             places.auth = self.auth
             shape = places.shape(place, geom="low")
@@ -459,6 +461,8 @@ class Metadata(Service):
         :rtype: DotDict
         """
         if place:
+            from ..places import Places
+
             places = Places(_suppress_deprecation_warnings=True)
             places.auth = self.auth
             shape = places.shape(place, geom="low")
@@ -606,7 +610,7 @@ class Metadata(Service):
 
         Example::
 
-            >>> from descarteslabs.client.services import Metadata
+            >>> from descarteslabs.client.services.metadata import Metadata
             >>> iowa_geom = {
             ...     "coordinates": [[
             ...         [-96.498997, 42.560832],
@@ -719,7 +723,7 @@ class Metadata(Service):
 
         Example::
 
-            >>> from descarteslabs.client.services import Metadata
+            >>> from descarteslabs.client.services.metadata import Metadata
             >>> iowa_geom = {
             ...     "coordinates": [[
             ...         [-96.498997, 42.560832],
@@ -812,7 +816,7 @@ class Metadata(Service):
 
         Example::
 
-            >>> from descarteslabs.client.services import Metadata
+            >>> from descarteslabs.client.services.metadata import Metadata
             >>> features = Metadata().features(
             ...     "landsat:LC08:PRE:TOAR",
             ...     start_datetime='2016-01-01',
@@ -876,7 +880,7 @@ class Metadata(Service):
 
         Example::
 
-            >>> from descarteslabs.client.services import Metadata
+            >>> from descarteslabs.client.services.metadata import Metadata
             >>> meta = Metadata().get('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1')
             >>> keys = list(meta.keys())
             >>> keys.sort()

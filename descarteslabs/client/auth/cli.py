@@ -19,7 +19,7 @@ import binascii
 
 from pprint import pprint
 
-from descarteslabs.client.auth.auth import (
+from .auth import (
     Auth,
     base64url_decode,
     DEFAULT_TOKEN_INFO_PATH,
@@ -28,7 +28,7 @@ from descarteslabs.client.auth.auth import (
     DESCARTESLABS_CLIENT_SECRET,
     DESCARTESLABS_REFRESH_TOKEN,
 )
-from descarteslabs.client.version import __version__
+from ..version import __version__
 
 
 LOGIN_URL = "https://iam.descarteslabs.com/auth/refresh_token"

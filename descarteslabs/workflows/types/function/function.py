@@ -3,7 +3,7 @@ import keyword
 
 from inspect import signature, Signature, Parameter
 
-from descarteslabs.common.graft import client
+from ....common.graft import client
 
 from ...cereal import serializable
 from ..core import (

@@ -1,4 +1,4 @@
-from descarteslabs.common.graft import client, syntax
+from ....common.graft import client, syntax
 from .exceptions import ProxyTypeError
 
 

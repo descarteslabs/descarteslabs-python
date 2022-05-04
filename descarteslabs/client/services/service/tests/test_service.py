@@ -16,19 +16,19 @@ import pickle
 import unittest
 
 import mock
-import descarteslabs
-from descarteslabs.client.exceptions import (
+from ....exceptions import (
     ProxyAuthenticationRequiredError,
     BadRequestError,
 )
-from descarteslabs.client.services.service import (
+from .. import (
     JsonApiService,
     JsonApiSession,
     Service,
     Session,
     ThirdPartyService,
 )
-from descarteslabs.client.services.service.service import (
+from .. import service
+from ..service import (
     HttpHeaderKeys,
     HttpHeaderValues,
     HttpRequestMethod,
@@ -36,8 +36,8 @@ from descarteslabs.client.services.service.service import (
     WrappedSession,
     requests,
 )
-from descarteslabs.client.version import __version__
-from descarteslabs.common.http.authorization import add_bearer
+from ....version import __version__
+from .....common.http.authorization import add_bearer
 
 FAKE_URL = "http://localhost"
 FAKE_TOKEN = "foo.bar.sig"
@@ -442,7 +442,7 @@ class TestDefaultProxyClass(unittest.TestCase):
 
 
 class TestWarningsClass(unittest.TestCase):
-    @mock.patch.object(descarteslabs.client.services.service.service, "warn")
+    @mock.patch.object(service, "warn")
     @mock.patch.object(requests.Session, "request")
     def test_session_deprecation_warning(self, request, warn):
         message = "Warning"
@@ -463,7 +463,7 @@ class TestWarningsClass(unittest.TestCase):
         service.session.get("bar")
         warn.assert_called_once_with(message, cls)
 
-    @mock.patch.object(descarteslabs.client.services.service.service, "warn")
+    @mock.patch.object(service, "warn")
     @mock.patch.object(requests.Session, "request")
     def test_session_my_warning(self, request, warn):
         message = "Warning"
@@ -482,7 +482,7 @@ class TestWarningsClass(unittest.TestCase):
         service.session.get("bar")
         warn.assert_called_once_with("{}: {}".format(category, message), UserWarning)
 
-    @mock.patch.object(descarteslabs.client.services.service.service, "warn")
+    @mock.patch.object(service, "warn")
     @mock.patch.object(requests.Session, "request")
     def test_session_warning(self, request, warn):
         message = "Warning"

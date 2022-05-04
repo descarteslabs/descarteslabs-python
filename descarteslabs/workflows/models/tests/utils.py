@@ -1,7 +1,7 @@
 import mock
 
 import json
-from descarteslabs.common.graft import client as graft_client
+from ....common.graft import client as graft_client
 from ... import cereal, types, client
 
 

@@ -2,7 +2,7 @@
 # in tab-completion for `wf.widgets.`
 import typing
 
-from descarteslabs.common.proto.widgets import widgets_pb2
+from ....common.proto.widgets import widgets_pb2
 from ...types import Image, ImageCollection
 from ...types.widget import Widget
 

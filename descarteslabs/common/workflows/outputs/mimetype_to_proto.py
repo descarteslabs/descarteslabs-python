@@ -1,4 +1,4 @@
-from descarteslabs.common.proto.formats import formats_pb2
+from ...proto.formats import formats_pb2
 from .user_format_options import user_format_to_proto
 
 

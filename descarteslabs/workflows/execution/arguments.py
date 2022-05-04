@@ -1,6 +1,6 @@
 from typing import Dict, Tuple
 
-from descarteslabs.common.graft import syntax as graft_syntax
+from ...common.graft import syntax as graft_syntax
 
 from ..types import Proxytype, Function
 

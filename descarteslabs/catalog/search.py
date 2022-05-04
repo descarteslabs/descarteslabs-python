@@ -5,8 +5,8 @@ import warnings
 from enum import Enum
 
 from .catalog_client import CatalogClient
-from descarteslabs.common.property_filtering.filtering import AndExpression
-from descarteslabs.common.property_filtering.filtering import Expression  # noqa: F401
+from ..common.property_filtering.filtering import AndExpression
+from ..common.property_filtering.filtering import Expression  # noqa: F401
 
 from .attributes import parse_iso_datetime, serialize_datetime
 

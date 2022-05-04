@@ -1,9 +1,10 @@
 import unittest
 import datetime
 
-from descarteslabs.scenes import geocontext, search
+from .. import geocontext, search
 from shapely.geometry import shape
 
+from .. import _search
 import mock
 from .mock_data import _metadata_search, _cached_bands_by_product
 
@@ -22,9 +23,10 @@ class TestScenesSearch(unittest.TestCase):
         "type": "Polygon",
     }
 
-    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
-    @mock.patch(
-        "descarteslabs.scenes._search.cached_bands_by_product",
+    @mock.patch.object(_search.Metadata, "search", _metadata_search)
+    @mock.patch.object(
+        _search,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
     def test_search_geom(self):
@@ -42,9 +44,10 @@ class TestScenesSearch(unittest.TestCase):
             assert abs(len(scene.properties.bands) - 24) < 4
             assert "derived:ndvi" in scene.properties.bands
 
-    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
-    @mock.patch(
-        "descarteslabs.scenes._search.cached_bands_by_product",
+    @mock.patch.object(_search.Metadata, "search", _metadata_search)
+    @mock.patch.object(
+        _search,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
     def test_search_shapely(self):
@@ -61,9 +64,10 @@ class TestScenesSearch(unittest.TestCase):
             assert abs(len(scene.properties.bands) - 24) < 4
             assert "derived:ndvi" in scene.properties.bands
 
-    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
-    @mock.patch(
-        "descarteslabs.scenes._search.cached_bands_by_product",
+    @mock.patch.object(_search.Metadata, "search", _metadata_search)
+    @mock.patch.object(
+        _search,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
     def test_search_AOI(self):
@@ -75,9 +79,10 @@ class TestScenesSearch(unittest.TestCase):
         assert ctx.resolution == 5
         assert ctx.crs == "EPSG:32615"
 
-    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
-    @mock.patch(
-        "descarteslabs.scenes._search.cached_bands_by_product",
+    @mock.patch.object(_search.Metadata, "search", _metadata_search)
+    @mock.patch.object(
+        _search,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
     def test_search_AOI_with_shape(self):
@@ -90,9 +95,10 @@ class TestScenesSearch(unittest.TestCase):
         assert ctx.shape == aoi.shape
         assert ctx.crs == "EPSG:32615"
 
-    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
-    @mock.patch(
-        "descarteslabs.scenes._search.cached_bands_by_product",
+    @mock.patch.object(_search.Metadata, "search", _metadata_search)
+    @mock.patch.object(
+        _search,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
     def test_search_dltile(self):
@@ -128,9 +134,10 @@ class TestScenesSearch(unittest.TestCase):
         assert len(sc) <= 4  # test client only has 2 scenes available
         assert ctx == tile
 
-    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
-    @mock.patch(
-        "descarteslabs.scenes._search.cached_bands_by_product",
+    @mock.patch.object(_search.Metadata, "search", _metadata_search)
+    @mock.patch.object(
+        _search,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
     def test_search_no_products(self):
@@ -138,9 +145,10 @@ class TestScenesSearch(unittest.TestCase):
         assert len(sc) > 0
         assert len(sc) <= 4  # test client only has 2 scenes available
 
-    @mock.patch("descarteslabs.scenes._search.Metadata.search", _metadata_search)
-    @mock.patch(
-        "descarteslabs.scenes._search.cached_bands_by_product",
+    @mock.patch.object(_search.Metadata, "search", _metadata_search)
+    @mock.patch.object(
+        _search,
+        "cached_bands_by_product",
         _cached_bands_by_product,
     )
     def test_search_datetime(self):

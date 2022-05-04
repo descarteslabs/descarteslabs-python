@@ -5,7 +5,8 @@ import unittest
 import mock
 
 import numpy as np
-from descarteslabs.scenes import display
+from .. import _display
+from .. import display
 
 
 class TestDisplay(unittest.TestCase):
@@ -21,7 +22,7 @@ class TestDisplay(unittest.TestCase):
         mock_plt.subplots.return_value = (mock_fig, mock_axs)
         return mock_plt, mock_fig, mock_axs
 
-    @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
+    @mock.patch.object(_display, "import_matplotlib_pyplot")
     def test_display_2d(self, mock_matplotlib_importer):
         mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
             mock_matplotlib_importer, 1
@@ -39,7 +40,7 @@ class TestDisplay(unittest.TestCase):
         assert (imshow_args[0] == img_normed).all()
         ax.set_title.assert_called_with("foo")
 
-    @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
+    @mock.patch.object(_display, "import_matplotlib_pyplot")
     def test_display_3d_masked(self, mock_matplotlib_importer):
         mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
             mock_matplotlib_importer, 1
@@ -66,7 +67,7 @@ class TestDisplay(unittest.TestCase):
 
         ax.set_title.assert_not_called()
 
-    @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
+    @mock.patch.object(_display, "import_matplotlib_pyplot")
     def test_display_3d_multiple(self, mock_matplotlib_importer):
         mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
             mock_matplotlib_importer, 5
@@ -85,7 +86,7 @@ class TestDisplay(unittest.TestCase):
             assert called_arr.shape == (3, 2, 3)
             ax.set_title.assert_called_with(str(i))
 
-    @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
+    @mock.patch.object(_display, "import_matplotlib_pyplot")
     def test_fails_2band(self, mock_matplotlib_importer):
         mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
             mock_matplotlib_importer, 1
@@ -96,7 +97,7 @@ class TestDisplay(unittest.TestCase):
         with pytest.raises(NotImplementedError):
             display(img)
 
-    @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
+    @mock.patch.object(_display, "import_matplotlib_pyplot")
     def test_fails_wrong_num_titles(self, mock_matplotlib_importer):
         mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
             mock_matplotlib_importer, 5
@@ -106,7 +107,7 @@ class TestDisplay(unittest.TestCase):
         with pytest.raises(ValueError, match="titles"):
             display(*img, title=[1, 2])
 
-    @mock.patch("descarteslabs.client.addons.import_matplotlib_pyplot")
+    @mock.patch.object(_display, "import_matplotlib_pyplot")
     def test_fails_wrong_kwargs(self, mock_matplotlib_importer):
         with pytest.raises(TypeError, match="what"):
             display(None, title="foo", what="bar")

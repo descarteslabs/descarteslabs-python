@@ -10,9 +10,9 @@ import ipyleaflet
 import ipywidgets as widgets
 import traitlets
 
-from descarteslabs.common.proto.logging import logging_pb2
+from ...common.proto.logging import logging_pb2
 
-from descarteslabs.common.graft import client as graft_client
+from ...common.graft import client as graft_client
 from ..models import XYZ
 from ..models.tile_url import validate_scales
 from ..types import Image, ImageCollection

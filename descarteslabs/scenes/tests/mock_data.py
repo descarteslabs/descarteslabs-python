@@ -1,4 +1,4 @@
-from descarteslabs.common.dotdict import DotDict
+from ...common.dotdict import DotDict
 import json
 import numpy as np
 

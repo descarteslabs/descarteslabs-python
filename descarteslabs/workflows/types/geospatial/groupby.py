@@ -1,4 +1,4 @@
-from descarteslabs.common.graft import client
+from ....common.graft import client
 
 
 from ..core import typecheck_promote, GenericProxytype, merge_params

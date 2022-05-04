@@ -3,16 +3,16 @@ import textwrap
 import re
 from urllib.parse import urlencode
 
-from descarteslabs.common.proto.workflow import workflow_pb2
-from descarteslabs.common.proto.discover import discover_pb2
+from ...common.proto.workflow import workflow_pb2
+from ...common.proto.discover import discover_pb2
 
-from descarteslabs.workflows.client import get_global_grpc_client
-from descarteslabs.workflows.client.client import (
+from ..client import get_global_grpc_client
+from ..client.client import (
     ALL_AUTHENTICATED_USERS,
     ROLE_WORKFLOWS_VIEWER,
 )
 
-from descarteslabs.discover.client import (
+from ...discover.client import (
     _convert_target,
     Organization,
     TargetBase,

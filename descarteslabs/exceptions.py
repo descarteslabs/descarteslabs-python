@@ -1,1 +1,1 @@
-from descarteslabs.client.exceptions import *  # noqa
+from .client.exceptions import *  # noqa

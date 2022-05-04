@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from .metadata import Metadata
-from descarteslabs.common.property_filtering import GenericProperties
+from ....common.property_filtering import GenericProperties
 
 
 properties = GenericProperties()

@@ -7,7 +7,7 @@ This example demonstrates how to save an image
 to your local machine in GeoTiff format.
 """
 
-import descarteslabs as dl
+from descarteslabs.client.services.raster import Raster
 
 # Create an aoi feature to clip imagery to
 box = {
@@ -32,7 +32,7 @@ images = [
 # The Raster API call to download an image mosaic. Other parameters are available
 # The file is written in to the same directory as the script.
 
-raster_client = dl.Raster()
+raster_client = Raster()
 raster_client.raster(
     inputs=images,
     bands=["red", "green", "blue", "alpha"],

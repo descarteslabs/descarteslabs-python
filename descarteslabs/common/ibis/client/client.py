@@ -13,13 +13,13 @@ import numpy as np
 from functools import lru_cache
 from ibis.client import Client
 
-from descarteslabs.client.grpc import GrpcClient
-from descarteslabs.common.proto.vektorius import vektorius_pb2_grpc, vektorius_pb2
-from descarteslabs.common.proto.health import health_pb2
+from ....client.grpc import GrpcClient
+from ...proto.vektorius import vektorius_pb2_grpc, vektorius_pb2
+from ...proto.health import health_pb2
 
 
-from descarteslabs.common.ibis.serialization import compiler as comp
-from descarteslabs.common.ibis.deserialization import AstDeserializer
+from ..serialization import compiler as comp
+from ..deserialization import AstDeserializer
 
 
 JOB_STATUS_DONE = "DONE"

@@ -6,7 +6,7 @@ from datetime import datetime
 from enum import Enum
 from pytz import utc
 
-from descarteslabs.common.shapely_support import (
+from ..common.shapely_support import (
     geometry_like_to_shapely,
     shapely_to_geojson,
 )

@@ -2,8 +2,8 @@ import unittest
 
 import ibis.expr.types
 
-from descarteslabs.common.proto.ibis import ibis_pb2
-from descarteslabs.common.ibis.client.api import compile
+from ....proto.ibis import ibis_pb2
+from ..api import compile
 
 
 class ApiTestCase(unittest.TestCase):

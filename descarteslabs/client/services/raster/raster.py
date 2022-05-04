@@ -13,24 +13,23 @@
 # limitations under the License.
 
 import json
-import logging
 import os
 import random
 import struct
 import time
+from concurrent import futures
 
-from tqdm import tqdm
-from urllib3.exceptions import ProtocolError, IncompleteRead
+import blosc
+import numpy as np
 from PIL import Image
+from tqdm import tqdm
+from urllib3.exceptions import IncompleteRead, ProtocolError
 
-from descarteslabs.client.addons import blosc, concurrent, numpy as np
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.deprecation import deprecate
-from descarteslabs.client.services.places import Places
-from descarteslabs.client.services.service.service import Service
-from descarteslabs.client.exceptions import ServerError
-from descarteslabs.common.dltile import Tile
-
+from ....common.dltile import Tile
+from ...auth import Auth
+from ...deprecation import deprecate
+from ...exceptions import ServerError
+from ..service.service import Service
 from .geotiff_utils import make_geotiff
 
 DEFAULT_MAX_WORKERS = 8
@@ -261,7 +260,7 @@ class Raster(Service):
         _retry=_retry,
         **pass_through_params,
     ):
-        """Given a list of :class:`Metadata <descarteslabs.services.Metadata>` identifiers,
+        """Given a list of :class:`Metadata <descarteslabs.client.services.metadata.Metadata>` identifiers,
         retrieve a translated and warped mosaic as an image file.
 
         :param inputs: List of :class:`Metadata` identifiers.
@@ -537,17 +536,6 @@ class Raster(Service):
         max_workers = kwargs.pop(
             "max_workers", min(len(id_groups), DEFAULT_MAX_WORKERS)
         )
-        try:
-            futures = concurrent.futures
-        except ImportError:
-            logging.warning(
-                "Failed to import concurrent.futures. ndarray calls will be serial"
-            )
-            # Fallback to serial execution
-            for i, arr, meta in self._serial_ndarray(id_groups, *args, **kwargs):
-                yield i, arr, meta
-            return
-
         with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_ndarrays = {}
             for i, id_group in enumerate(id_groups):
@@ -671,6 +659,8 @@ class Raster(Service):
                 raise ValueError("Must set `bounds`")
 
         if place is not None:
+            from ..places import Places
+
             shape = Places(auth=self.auth, _suppress_deprecation_warnings=True).shape(
                 place, geom="low"
             )
@@ -747,6 +737,8 @@ class Raster(Service):
         cutline = as_json_string(cutline)
 
         if place is not None:
+            from ..places import Places
+
             shape = Places(auth=self.auth, _suppress_deprecation_warnings=True).shape(
                 place, geom="low"
             )

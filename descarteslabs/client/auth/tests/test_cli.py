@@ -19,8 +19,9 @@ import os
 import sys
 import unittest
 
-from descarteslabs.client.exceptions import AuthError
-from descarteslabs.client.auth.cli import auth_handler
+from ...exceptions import AuthError
+from ..cli import auth_handler
+from .. import auth, cli
 from mock import patch
 
 
@@ -108,8 +109,8 @@ class Open:
 # Note that the environment must be cleaned in order to get
 # expected behavior (i.e. no credentials present).
 #
-@patch("descarteslabs.client.auth.auth.makedirs_if_not_exists")
-@patch("descarteslabs.client.auth.cli.os")
+@patch.object(auth, "makedirs_if_not_exists")
+@patch.object(cli, "os")
 class TestAuth(unittest.TestCase):
     def setUp(self):
         # Clean up the environment
@@ -132,28 +133,28 @@ class TestAuth(unittest.TestCase):
             os.environ["CLIENT_SECRET"] = self.client_secret
 
     # Test simple bad input
-    @patch("descarteslabs.client.auth.cli.input", Input("foo", "foo.bar"))
+    @patch.object(cli, "input", Input("foo", "foo.bar"))
     @patch("builtins.print", Print(None, UnicodeDecodeError, binascii.Error))
     @patch("builtins.open", Open(PAYLOAD))
     def test_invalid_token(self, *mocks):
         auth_handler(Args)
 
     # Test incorrect json
-    @patch("descarteslabs.client.auth.cli.input", Input("VGhpcyBpcyBhIHRlc3Q="))
+    @patch.object(cli, "input", Input("VGhpcyBpcyBhIHRlc3Q="))
     @patch("builtins.print", Print(None, json.JSONDecodeError))
     @patch("builtins.open", Open(PAYLOAD))
     def test_invalid_json(self, *mocks):
         auth_handler(Args)
 
     # Test incorrect character set. Base64encoded CP51932: This is ∞ test
-    @patch("descarteslabs.client.auth.cli.input", Input("VGhpcyBpcyCh5yB0ZXN0"))
+    @patch.object(cli, "input", Input("VGhpcyBpcyCh5yB0ZXN0"))
     @patch("builtins.print", Print(None, UnicodeDecodeError))
     @patch("builtins.open", Open(PAYLOAD))
     def test_invalid_character(self, *mocks):
         auth_handler(Args)
 
     # Test incomplete json: {"test": "test"}
-    @patch("descarteslabs.client.auth.cli.input", Input("eyJ0ZXN0IjogInRlc3QifQ=="))
+    @patch.object(cli, "input", Input("eyJ0ZXN0IjogInRlc3QifQ=="))
     @patch("builtins.print", Print(None, None, None))
     @patch("builtins.open", Open(""))
     def test_incomplete_json(self, *mocks):

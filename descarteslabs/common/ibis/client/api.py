@@ -3,7 +3,7 @@
 import ibis.common.exceptions as com
 from ibis.config import options  # noqa: F401
 
-from descarteslabs.common.ibis.serialization import AstSerializer
+from ..serialization import AstSerializer
 
 from .client import SerializerClient
 

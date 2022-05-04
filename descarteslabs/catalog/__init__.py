@@ -46,7 +46,7 @@ from .attributes import (
     ResolutionUnit,
 )
 
-from descarteslabs.common.property_filtering import GenericProperties
+from ..common.property_filtering import GenericProperties
 
 properties = GenericProperties()
 

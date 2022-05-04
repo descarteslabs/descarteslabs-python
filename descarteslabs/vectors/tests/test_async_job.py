@@ -6,9 +6,9 @@ try:
 except ImportError:
     import unittest.mock as mock
 
-from descarteslabs.common.dotdict import DotDict
-from descarteslabs.vectors.async_job import CopyJob, DeleteJob
-from descarteslabs.vectors.exceptions import FailedJobError
+from ...common.dotdict import DotDict
+from ..async_job import CopyJob, DeleteJob
+from ..exceptions import FailedJobError
 
 
 @mock.patch("descarteslabs.vectors.async_job.Vector")

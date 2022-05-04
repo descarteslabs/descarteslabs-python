@@ -4,7 +4,7 @@ import sys
 import unittest
 import threading
 
-from descarteslabs.common.threading.local import ThreadLocalWrapper
+from ..local import ThreadLocalWrapper
 
 
 class ThreadLocalWrapperTest(unittest.TestCase):

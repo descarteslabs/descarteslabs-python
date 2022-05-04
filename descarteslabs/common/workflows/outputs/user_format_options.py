@@ -1,7 +1,7 @@
 from typing import Union
 
-from descarteslabs.common.proto.formats import formats_pb2
-from descarteslabs.common.workflows.proto_munging import user_dict_to_has_proto
+from ...proto.formats import formats_pb2
+from ..proto_munging import user_dict_to_has_proto
 
 
 DEFAULTS = {

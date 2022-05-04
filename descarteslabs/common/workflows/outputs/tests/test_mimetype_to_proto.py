@@ -1,6 +1,6 @@
 import pytest
 
-from descarteslabs.common.proto.formats import formats_pb2
+from ....proto.formats import formats_pb2
 from .. import mimetype_to_proto
 
 

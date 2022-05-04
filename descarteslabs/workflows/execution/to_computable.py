@@ -6,7 +6,7 @@ from ..types import proxify, Function, Proxytype
 from .arguments import arguments_to_grafts, promote_arguments
 
 if typing.TYPE_CHECKING:
-    from descarteslabs.common.proto.typespec import typespec_pb2  # noqa: F401
+    from ...common.proto.typespec import typespec_pb2  # noqa: F401
 
 
 def to_computable(

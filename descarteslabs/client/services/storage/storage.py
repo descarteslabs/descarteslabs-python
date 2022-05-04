@@ -14,9 +14,9 @@
 
 import os
 
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.services.service import Service, ThirdPartyService
-from descarteslabs.client.exceptions import NotFoundError
+from ...auth import Auth
+from ..service import Service, ThirdPartyService
+from ...exceptions import NotFoundError
 
 
 class Storage(Service):

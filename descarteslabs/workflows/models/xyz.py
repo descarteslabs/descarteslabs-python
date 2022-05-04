@@ -6,10 +6,10 @@ from urllib.parse import urlencode
 import warnings
 
 import grpc
-from descarteslabs.common.proto.xyz import xyz_pb2
+from ...common.proto.xyz import xyz_pb2
 
-from descarteslabs.workflows.client import get_global_grpc_client, Client
-from descarteslabs.workflows.types import Proxytype
+from ..client import get_global_grpc_client, Client
+from ..types import Proxytype
 
 from .published_graft import PublishedGraft
 from .utils import (

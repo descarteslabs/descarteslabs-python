@@ -2,13 +2,13 @@ import json
 import mock
 import pytest
 
-from descarteslabs.common.proto.workflow import workflow_pb2
+from ....common.proto.workflow import workflow_pb2
 
-from descarteslabs.workflows.client import Client
-from descarteslabs.workflows.models import Workflow, wmts_url
-from descarteslabs.workflows.models.utils import pb_milliseconds_to_datetime
-from descarteslabs.workflows.models.tests import utils
-from descarteslabs.workflows.types import Int, Function
+from ...client import Client
+from .. import Workflow, wmts_url
+from ..utils import pb_milliseconds_to_datetime
+from . import utils
+from ...types import Int, Function
 
 
 @mock.patch(

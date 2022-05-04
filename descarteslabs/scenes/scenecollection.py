@@ -14,14 +14,14 @@
 
 from __future__ import division
 import collections
-import logging
+import concurrent.futures
 import json
 import os.path
 
-from descarteslabs.client.addons import concurrent, numpy as np
+import numpy as np
 
-from descarteslabs.client.services.raster import Raster
-from descarteslabs.client.exceptions import NotFoundError, BadRequestError
+from ..client.services.raster import Raster
+from ..client.exceptions import NotFoundError, BadRequestError
 
 from .collection import Collection
 from .scene import Scene
@@ -278,28 +278,19 @@ class SceneCollection(Collection):
                         bands, ctx, **ndarray_kwargs
                     )
 
-            try:
-                futures = concurrent.futures
-            except ImportError:
-                logging.warning(
-                    "Failed to import concurrent.futures. ndarray calls will be serial."
-                )
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=max_workers
+            ) as executor:
+                future_ndarrays = {}
                 for i, scene_or_scenecollection in enumerate(scenes):
-                    yield i, data_loader(
-                        scene_or_scenecollection, bands, ctx, **kwargs
-                    )()
-            else:
-                with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-                    future_ndarrays = {}
-                    for i, scene_or_scenecollection in enumerate(scenes):
-                        future_ndarray = executor.submit(
-                            data_loader(scene_or_scenecollection, bands, ctx, **kwargs)
-                        )
-                        future_ndarrays[future_ndarray] = i
-                    for future in futures.as_completed(future_ndarrays):
-                        i = future_ndarrays[future]
-                        result = future.result()
-                        yield i, result
+                    future_ndarray = executor.submit(
+                        data_loader(scene_or_scenecollection, bands, ctx, **kwargs)
+                    )
+                    future_ndarrays[future_ndarray] = i
+                for future in concurrent.futures.as_completed(future_ndarrays):
+                    i = future_ndarrays[future]
+                    result = future.result()
+                    yield i, result
 
         for i, arr in threaded_ndarrays():
             if raster_info:
@@ -474,7 +465,7 @@ class SceneCollection(Collection):
             msg = (
                 "Error with request:\n"
                 "{err}\n"
-                "For reference, dl.Raster.ndarray was called with these arguments:\n"
+                "For reference, Raster.ndarray was called with these arguments:\n"
                 "{args}"
             )
             msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))
@@ -667,32 +658,23 @@ class SceneCollection(Collection):
             progress=progress,
             raster_client=self._raster_client,
         )
-        try:
-            futures = concurrent.futures
-        except ImportError:
-            logging.warning(
-                "Failed to import concurrent.futures. Download calls will be serial."
-            )
-            for scene, path in zip(self, dest):
-                scene.download(bands, ctx, dest=path, **download_args)
-        else:
-            with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = {
-                    executor.submit(
-                        scene.download, bands, ctx, dest=path, **download_args
-                    ): path
-                    for scene, path in zip(self, dest)
-                }
-                exceptions = []
-                for future in concurrent.futures.as_completed(futures):
-                    try:
-                        future.result()
-                    except Exception as ex:
-                        exceptions.append((futures[future], ex))
-                if exceptions:
-                    raise RuntimeError(
-                        "One or more downloads failed: {}".format(exceptions)
-                    )
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {
+                executor.submit(
+                    scene.download, bands, ctx, dest=path, **download_args
+                ): path
+                for scene, path in zip(self, dest)
+            }
+            exceptions = []
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    future.result()
+                except Exception as ex:
+                    exceptions.append((futures[future], ex))
+            if exceptions:
+                raise RuntimeError(
+                    "One or more downloads failed: {}".format(exceptions)
+                )
         return dest
 
     def download_mosaic(

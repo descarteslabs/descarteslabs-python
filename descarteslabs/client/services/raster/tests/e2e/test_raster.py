@@ -19,8 +19,9 @@ import json
 import hashlib
 import sys
 
-from descarteslabs.client.addons import numpy as np
-from descarteslabs.client.services.raster import Raster
+import numpy as np
+
+from ...raster import Raster
 
 
 class TestRaster(unittest.TestCase):

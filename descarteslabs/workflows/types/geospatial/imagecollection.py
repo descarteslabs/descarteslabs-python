@@ -1,6 +1,6 @@
 import logging
 
-from descarteslabs.common.graft import client
+from ....common.graft import client
 
 from ...cereal import serializable
 from ..array import MaskedArray

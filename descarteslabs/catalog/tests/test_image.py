@@ -14,7 +14,7 @@ from pytz import utc
 
 import numpy as np
 
-from descarteslabs.common.shapely_support import shapely_to_geojson
+from ...common.shapely_support import shapely_to_geojson
 
 from .base import ClientTestCase
 from ..attributes import (

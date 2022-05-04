@@ -11,8 +11,8 @@ except ImportError:
 
 import numpy as np
 
-from descarteslabs.common.property_filtering import GenericProperties
-from descarteslabs.client.services.service import ThirdPartyService
+from ..common.property_filtering import GenericProperties
+from ..client.services.service import ThirdPartyService
 
 from .catalog_base import DocumentState, check_deleted
 from .named_catalog_base import NamedCatalogObject

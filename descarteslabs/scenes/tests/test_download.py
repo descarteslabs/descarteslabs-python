@@ -1,12 +1,11 @@
 import pytest
 import unittest
 import mock
-import sys
 import io
 
-from descarteslabs.client.exceptions import NotFoundError, BadRequestError
-from descarteslabs.scenes import geocontext
-from descarteslabs.scenes import _download
+from ...client.exceptions import NotFoundError, BadRequestError
+from .. import geocontext
+from .. import _download
 
 
 class TestFormat(unittest.TestCase):
@@ -23,14 +22,17 @@ class TestFormat(unittest.TestCase):
             _download._format_from_path("foo")
 
 
-@mock.patch("descarteslabs.scenes._download.open", new_callable=mock.mock_open)
-@mock.patch("descarteslabs.scenes._download.os.makedirs")
+@mock.patch.object(_download, "open", new_callable=mock.mock_open)
+@mock.patch.object(_download.os, "makedirs", new_callabke=mock.MagicMock)
 # wrap return value in lambda so individual tests can safely mutate it
-@mock.patch(
-    "descarteslabs.scenes._download.Raster.raster",
-    side_effect=lambda *args, **kwargs: {
-        "files": {"foo:bar_nir-yellow.tiff": b"i'm a geotiff!"}
-    },
+@mock.patch.object(
+    _download.Raster,
+    "raster",
+    new_callable=lambda: mock.MagicMock(
+        side_effect=lambda *args, **kwargs: {
+            "files": {"foo:bar_nir-yellow.tiff": b"i'm a geotiff!"}
+        },
+    ),
 )
 class TestDownload(unittest.TestCase):
     id = "foo:bar"
@@ -112,7 +114,6 @@ class TestDownload(unittest.TestCase):
         with pytest.raises(ValueError):
             self.download_mosaic(None, format="baz")
 
-    @unittest.skipIf(sys.version_info[:2] < (3, 6), "PathLike ABC introduced in 3.6")
     def test_to_pathlib(self, mock_raster, mock_makedirs, mock_open):
         import pathlib
 

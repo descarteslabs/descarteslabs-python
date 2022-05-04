@@ -1,10 +1,11 @@
 import pytest
 import shapely.geometry
-from descarteslabs import scenes
+
+from ..... import scenes
 
 from .. import GeoContext
-from descarteslabs.workflows.types.containers import Tuple
-from descarteslabs.workflows.types.primitives import Int, Float
+from ...containers import Tuple
+from ...primitives import Int, Float
 
 
 def test_from_scenes_wrong_type():

@@ -1,4 +1,4 @@
-from descarteslabs.common.graft import client
+from ....common.graft import client
 from ...cereal import serializable
 from ..core import Proxytype, typecheck_promote, merge_params
 from ..primitives import Int, NoneType

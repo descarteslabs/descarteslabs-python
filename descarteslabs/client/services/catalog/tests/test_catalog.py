@@ -23,8 +23,8 @@ import responses
 import json
 import re
 
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.services.catalog import Catalog
+from ....auth import Auth
+from .. import Catalog
 
 
 @patch.object(Auth, "token", "token")

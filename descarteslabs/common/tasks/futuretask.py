@@ -16,8 +16,8 @@ import pickle
 import json
 import time
 
-from descarteslabs.client.exceptions import NotFoundError
-from descarteslabs.client.services.storage import Storage
+from ...client.exceptions import NotFoundError
+from ...client.services.storage import Storage
 
 
 class TransientResultError(Exception):

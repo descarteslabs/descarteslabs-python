@@ -3,13 +3,13 @@ import json
 
 from google.protobuf import message
 
-from descarteslabs.client.version import __version__
-from descarteslabs.common.graft import client as graft_client
-from descarteslabs.workflows.cereal import deserialize_typespec, serialize_typespec
-from descarteslabs.workflows.client import get_global_grpc_client, Client
+from ...client.version import __version__
+from ...common.graft import client as graft_client
+from ..cereal import deserialize_typespec, serialize_typespec
+from ..client import get_global_grpc_client, Client
 
-from descarteslabs.workflows.types import Proxytype, Function, proxify, parameter
-from descarteslabs.workflows.types.widget import serialize_params, deserialize_params
+from ..types import Proxytype, Function, proxify, parameter
+from ..types.widget import serialize_params, deserialize_params
 
 from .visualization import VizOption
 

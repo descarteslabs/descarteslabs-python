@@ -1,21 +1,16 @@
-import os
 import io
-
+import os
 from tempfile import NamedTemporaryFile
-from requests.exceptions import RequestException
 
 import lazy_object_proxy
+import numpy as np
+from requests.exceptions import RequestException
 
-from descarteslabs.client.addons import numpy as np
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.exceptions import ServerError, NotFoundError
-from descarteslabs.client.services.metadata import Metadata
-from descarteslabs.client.services.service import Service, ThirdPartyService
-from descarteslabs.client.deprecation import (
-    deprecate,
-    deprecate_func,
-    check_deprecated_kwargs,
-)
+from ...auth import Auth
+from ...deprecation import check_deprecated_kwargs, deprecate, deprecate_func
+from ...exceptions import NotFoundError, ServerError
+from ..metadata import Metadata
+from ..service import Service, ThirdPartyService
 
 
 class Catalog(Service):

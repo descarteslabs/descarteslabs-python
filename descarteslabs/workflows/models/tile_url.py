@@ -1,8 +1,8 @@
 import json
 import urllib
 
-from descarteslabs.workflows.execution import arguments_to_grafts, promote_arguments
-from descarteslabs.workflows.types import Proxytype
+from ..execution import arguments_to_grafts, promote_arguments
+from ..types import Proxytype
 
 
 def tile_url(

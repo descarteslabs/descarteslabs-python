@@ -4,7 +4,7 @@ import mock
 import inspect
 import typing
 
-from descarteslabs.common.graft import client, interpreter
+from .....common.graft import client, interpreter
 
 from ...core import ProxyTypeError
 from ...primitives import Any, Int, Str, Float, Number

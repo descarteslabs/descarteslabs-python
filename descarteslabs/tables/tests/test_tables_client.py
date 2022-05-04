@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, Mock
 import pytest
 import pandas as pd
 
-from descarteslabs.client.exceptions import BadRequestError
-from descarteslabs.discover.client import AccessGrant, Asset, SymLink
-from descarteslabs.tables.client import Tables, JobStatus
+from ...client.exceptions import BadRequestError
+from ...discover.client import AccessGrant, Asset, SymLink
+from ..client import Tables, JobStatus
 
 
 def mock_dict(d: dict) -> MagicMock:

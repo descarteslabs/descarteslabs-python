@@ -1,6 +1,6 @@
 import pytest
 
-from descarteslabs.common.graft import client
+from .....common.graft import client
 
 from ...core import ProxyTypeError
 from ...primitives import Int, Str

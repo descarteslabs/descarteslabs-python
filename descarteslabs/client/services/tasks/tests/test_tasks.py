@@ -35,15 +35,15 @@ try:
 except ImportError:
     from unittest import mock
 
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.services.tasks import (
+from ....auth import Auth
+from .. import (
     BoundGlobalError,
     CloudFunction,
     Tasks,
     as_completed,
     GroupTerminalException,
 )
-from descarteslabs.common.services.tasks.constants import (
+from .....common.services.tasks.constants import (
     DIST,
     DATA,
     ENTRYPOINT,
@@ -51,7 +51,7 @@ from descarteslabs.common.services.tasks.constants import (
     REQUIREMENTS,
 )
 
-from descarteslabs.common.tasks import FutureTask
+from .....common.tasks import FutureTask
 
 # flake8: noqa
 public_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0sImlzcyI6Imh0dHBzOi8vZGVzY2FydGVzbGFicy5hdXRoMC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMTExMzg1NTY1MjQ4MTIzOTU3MTIiLCJhdWQiOiJaT0JBaTRVUk9sNWdLWklweHhsd09FZng4S3BxWGYyYyIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNDc4MjAxNDE5fQ.sbSzD9ACNZvaxSgClZCnZMpee_p5MBaKV9uHZQonD6Q"

@@ -1,16 +1,16 @@
 from typing import Union, Dict, TYPE_CHECKING
 
-from descarteslabs.common.proto.typespec.typespec_pb2 import (
+from ...common.proto.typespec.typespec_pb2 import (
     Typespec,
     Primitive,
     MapFieldEntry,
     Map,
     CompositeType,
 )
-from descarteslabs.workflows.result_types import unmarshal
+from ..result_types import unmarshal
 
 if TYPE_CHECKING:
-    from descarteslabs.workflows.types import Proxytype  # noqa: F401
+    from ..types import Proxytype  # noqa: F401
 
 
 PRIMITIVES = (int, float, bool, str)

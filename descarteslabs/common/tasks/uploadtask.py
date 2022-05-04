@@ -1,4 +1,4 @@
-from descarteslabs.common.tasks import FutureTask, TransientResultError, TimeoutError
+from . import FutureTask, TransientResultError, TimeoutError
 
 import time
 
@@ -35,7 +35,7 @@ class UploadTask(FutureTask):
 
     def __init__(self, guid, tuid=None, client=None, upload_id=None, result_attrs=None):
         if client is None:
-            from descarteslabs.client.services.vector import Vector  # circular import
+            from ...client.services.vector import Vector  # circular import
 
             client = Vector()
 

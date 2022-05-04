@@ -6,23 +6,23 @@ import warnings
 
 import grpc
 
-from descarteslabs.common.retry import (
+from ...common.retry import (
     Retry,
     truncated_delay_generator,
     _name_of_func,
     _wraps,
 )
-from descarteslabs.common.proto.job import job_pb2_grpc
-from descarteslabs.common.proto.xyz import xyz_pb2_grpc
-from descarteslabs.common.proto.workflow import workflow_pb2_grpc
-from descarteslabs.common.proto.discover import discover_pb2_grpc
+from ...common.proto.job import job_pb2_grpc
+from ...common.proto.xyz import xyz_pb2_grpc
+from ...common.proto.workflow import workflow_pb2_grpc
+from ...common.proto.discover import discover_pb2_grpc
 
-from descarteslabs.client.grpc import (  # noqa: F401
+from ...client.grpc import (  # noqa: F401
     GrpcClient,
     default_grpc_retry_predicate,
 )
 
-from descarteslabs.workflows import _channel
+from .. import _channel
 
 
 # For lack of a better location for these:

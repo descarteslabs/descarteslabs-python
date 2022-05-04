@@ -2,7 +2,7 @@ import collections
 import pytest
 import unittest
 
-from descarteslabs.scenes import Collection
+from .. import Collection
 
 
 class SubCollection(Collection):

@@ -14,7 +14,7 @@ import ibis.expr.schema as sch
 import ibis.expr.types as ir
 import ibis.expr.window as win
 import shapely.wkt
-from descarteslabs.common.proto.ibis import ibis_pb2
+from ...proto.ibis import ibis_pb2
 from google.protobuf.message import Message
 from ibis import util
 from ibis.client import Client

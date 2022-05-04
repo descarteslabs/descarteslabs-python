@@ -2,7 +2,7 @@ from functools import wraps
 from types import MethodType
 import json
 
-from descarteslabs.client.exceptions import NotFoundError
+from ..client.exceptions import NotFoundError
 from .attributes import (
     AttributeMeta,
     AttributeValidationError,

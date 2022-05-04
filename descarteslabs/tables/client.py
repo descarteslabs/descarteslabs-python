@@ -68,14 +68,14 @@ import pandas as pd
 
 import warnings
 
-import descarteslabs.discover as disco
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.exceptions import BadRequestError
-from descarteslabs.client.services.storage import Storage
-from descarteslabs.common.ibis.client import api as serializer
-from descarteslabs.common.proto.vektorius import vektorius_pb2
-from descarteslabs.client.deprecation import deprecate_func
-from descarteslabs.discover import AssetType
+from .. import discover as disco
+from ..client.auth import Auth
+from ..client.exceptions import BadRequestError
+from ..client.services.storage import Storage
+from ..common.ibis.client import api as serializer
+from ..common.proto.vektorius import vektorius_pb2
+from ..client.deprecation import deprecate_func
+from ..discover import AssetType
 
 
 def _default_json_serializer(obj):

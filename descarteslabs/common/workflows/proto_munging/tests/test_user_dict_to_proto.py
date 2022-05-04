@@ -2,9 +2,9 @@ import re
 
 import pytest
 
-from descarteslabs.common.proto.formats import formats_pb2
-from descarteslabs.common.proto.destinations import destinations_pb2
-from descarteslabs.common.proto.typespec import typespec_pb2
+from ....proto.formats import formats_pb2
+from ....proto.destinations import destinations_pb2
+from ....proto.typespec import typespec_pb2
 from ..user_dict_to_proto import user_dict_to_has_proto, user_dict_to_proto
 
 

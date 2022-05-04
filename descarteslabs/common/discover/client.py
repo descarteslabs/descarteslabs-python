@@ -1,5 +1,5 @@
-from descarteslabs.client.grpc import GrpcClient
-from descarteslabs.common.proto.discover import discover_pb2_grpc
+from ...client.grpc import GrpcClient
+from ..proto.discover import discover_pb2_grpc
 
 
 class DiscoverGrpcClient(GrpcClient):

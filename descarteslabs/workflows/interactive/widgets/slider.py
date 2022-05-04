@@ -2,7 +2,7 @@ from typing import Union, Optional, Generic, T, ClassVar
 
 from ._ipywidgets import ipywidgets
 
-from descarteslabs.common.proto.widgets import widgets_pb2
+from ....common.proto.widgets import widgets_pb2
 
 from ...types import Int, Float
 from ...types.widget import Widget

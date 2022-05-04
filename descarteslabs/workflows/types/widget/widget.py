@@ -3,8 +3,8 @@ from typing import List, Iterable, ClassVar, Type, TYPE_CHECKING
 
 from google.protobuf import message
 
-from descarteslabs.common.proto.widgets import widgets_pb2
-from descarteslabs.common.graft import client
+from ....common.proto.widgets import widgets_pb2
+from ....common.graft import client
 
 from ...cereal import serialize_typespec, deserialize_typespec
 from ..core import Proxytype

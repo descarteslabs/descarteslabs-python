@@ -48,13 +48,13 @@ import warnings
 import shapely.geometry
 from affine import Affine
 
-from descarteslabs.client.addons import numpy as np
+import numpy as np
 
-from descarteslabs.client.services.raster import Raster
-from descarteslabs.client.services.metadata import Metadata
-from descarteslabs.client.exceptions import NotFoundError, BadRequestError
-from descarteslabs.common.dotdict import DotDict
-from descarteslabs.common import shapely_support
+from ..client.services.raster import Raster
+from ..client.services.metadata import Metadata
+from ..client.exceptions import NotFoundError, BadRequestError
+from ..common.dotdict import DotDict
+from ..common import shapely_support
 
 from . import geocontext
 from . import _download
@@ -283,7 +283,7 @@ class Scene(object):
                     "The array will be 'north-up', with the data rotated within it, "
                     "and extra empty pixels padded around the side(s). "
                     "To get the original, unrotated data, you must use the Raster API: "
-                    "`dl.raster.ndarray(scene.properties.id, ...)`."
+                    "`descarteslabs.client.services.raster.Raster.ndarray(scene.properties.id, ...)`."
                 )
 
             scaling1, scaling2 = geotrans._scaling
@@ -544,7 +544,7 @@ class Scene(object):
             msg = (
                 "Error with request:\n"
                 "{err}\n"
-                "For reference, dl.Raster.ndarray was called with these arguments:\n"
+                "For reference, Raster.ndarray was called with these arguments:\n"
                 "{args}"
             )
             msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))

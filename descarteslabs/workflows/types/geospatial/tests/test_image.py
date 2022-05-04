@@ -1,7 +1,7 @@
 import pytest
 import mock
 
-from descarteslabs import scenes
+from ..... import scenes
 from ...core.tests import utils
 
 from ...core import ProxyTypeError, _resolve_lambdas

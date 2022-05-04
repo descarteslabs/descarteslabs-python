@@ -1,6 +1,6 @@
 import pyarrow as pa
 
-from descarteslabs.common.workflows.arrow_serialization import serialization_context
+from .context import serialization_context
 
 
 def serialize_pyarrow(data: bytes, codec: str):

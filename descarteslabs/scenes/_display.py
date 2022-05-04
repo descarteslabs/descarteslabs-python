@@ -18,7 +18,8 @@ Displays ndarrays as images, but is easier to use and more flexible than matplot
 
 from __future__ import division
 
-import descarteslabs.client.addons
+import numpy as np
+from ..client.addons import import_matplotlib_pyplot
 
 
 def display(*imgs, **kwargs):
@@ -106,8 +107,7 @@ def _display_or_save(filename, *imgs, **kwargs):
             )
         )
 
-    np = descarteslabs.client.addons.numpy
-    matplotlib = descarteslabs.client.addons.import_matplotlib_pyplot()
+    matplotlib = import_matplotlib_pyplot()
     plt = matplotlib.pyplot
 
     if len(imgs) == 1:

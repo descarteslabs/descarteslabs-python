@@ -20,8 +20,9 @@ import unittest
 import warnings
 
 import responses
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.exceptions import AuthError
+from .. import auth as auth_module
+from ..auth import Auth
+from ...exceptions import AuthError
 from mock import patch
 
 
@@ -108,7 +109,7 @@ class TestAuth(unittest.TestCase):
 
         assert "id_token" == auth._token
 
-    @patch("descarteslabs.client.auth.Auth.payload", new=dict(sub="asdf"))
+    @patch.object(Auth, "payload", new=dict(sub="asdf"))
     def test_get_namespace(self):
         auth = Auth(
             token_info_path=None, client_secret="client_secret", client_id="client_id"
@@ -155,7 +156,7 @@ class TestAuth(unittest.TestCase):
         auth._get_token()
         assert "id_token" == auth._token
 
-    @patch("descarteslabs.client.auth.Auth._get_token")
+    @patch.object(Auth, "_get_token")
     def test_token(self, _get_token):
         auth = Auth(
             token_info_path=None,
@@ -173,7 +174,7 @@ class TestAuth(unittest.TestCase):
         assert auth.token == token
         _get_token.assert_not_called()
 
-    @patch("descarteslabs.client.auth.Auth._get_token")
+    @patch.object(Auth, "_get_token")
     def test_token_expired(self, _get_token):
         auth = Auth(
             token_info_path=None,
@@ -191,7 +192,7 @@ class TestAuth(unittest.TestCase):
         assert auth.token == token
         _get_token.assert_called_once()
 
-    @patch("descarteslabs.client.auth.Auth._get_token", side_effect=AuthError("error"))
+    @patch.object(Auth, "_get_token", side_effect=AuthError("error"))
     def test_token_expired_autherror(self, _get_token):
         auth = Auth(
             token_info_path=None,
@@ -210,7 +211,7 @@ class TestAuth(unittest.TestCase):
             auth.token
         _get_token.assert_called_once()
 
-    @patch("descarteslabs.client.auth.Auth._get_token", side_effect=AuthError("error"))
+    @patch.object(Auth, "_get_token", side_effect=AuthError("error"))
     def test_token_in_leeway_autherror(self, _get_token):
         auth = Auth(
             token_info_path=None,
@@ -243,9 +244,7 @@ class TestAuth(unittest.TestCase):
         )
 
         # should work with direct var
-        with patch.dict(
-            "descarteslabs.client.auth.auth.os.environ", environ, clear=True
-        ):
+        with patch.object(auth_module.os, "environ", environ):
             auth = Auth(
                 client_id="client_id",
                 client_secret="client_secret",
@@ -256,9 +255,7 @@ class TestAuth(unittest.TestCase):
             assert auth.client_id == "client_id"
 
         # should work with namespaced env vars
-        with patch.dict(
-            "descarteslabs.client.auth.auth.os.environ", environ, clear=True
-        ):
+        with patch.object(auth_module.os, "environ", environ):
             auth = Auth()
             # when refresh_token and client_secret do not match,
             # the Auth implementation sets both to the value of
@@ -274,9 +271,7 @@ class TestAuth(unittest.TestCase):
         environ.pop("DESCARTESLABS_CLIENT_ID")
 
         # should fallback to legacy env vars
-        with patch.dict(
-            "descarteslabs.client.auth.auth.os.environ", environ, clear=True
-        ):
+        with patch.object(auth_module.os, "environ", environ):
             auth = Auth()
             assert auth.client_secret == environ.get("DESCARTESLABS_REFRESH_TOKEN")
             assert auth.client_id == environ.get("CLIENT_ID")
@@ -284,9 +279,7 @@ class TestAuth(unittest.TestCase):
     def test_set_token(self):
         environ = dict(DESCARTESLABS_TOKEN="token")
 
-        with patch.dict(
-            "descarteslabs.client.auth.auth.os.environ", environ, clear=True
-        ):
+        with patch.object(auth_module.os, "environ", environ):
             with self.assertRaises(AuthError):
                 auth = Auth()
                 auth.payload
@@ -298,17 +291,13 @@ class TestAuth(unittest.TestCase):
     def test_set_token_info_path(self):
         environ = dict(DESCARTESLABS_TOKEN_INFO_PATH="token_info_path")
 
-        with patch.dict(
-            "descarteslabs.client.auth.auth.os.environ", environ, clear=True
-        ):
+        with patch.object(auth_module.os, "environ", environ):
             with self.assertRaises(AuthError):
                 auth = Auth()
                 assert auth.token_info_path == "token_info_path"
                 auth.payload
 
-        with patch.dict(
-            "descarteslabs.client.auth.auth.os.environ", dict(), clear=True
-        ):
+        with patch.object(auth_module.os, "environ", dict()):
             with self.assertRaises(AuthError):
                 auth = Auth(token_info_path="token_info_path")
                 assert auth.token_info_path == "token_info_path"

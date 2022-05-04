@@ -28,8 +28,8 @@ import binascii
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from descarteslabs.client.exceptions import AuthError, OauthError
-from descarteslabs.common.threading.local import ThreadLocalWrapper
+from ..exceptions import AuthError, OauthError
+from ...common.threading.local import ThreadLocalWrapper
 
 DEFAULT_TOKEN_INFO_PATH = os.path.join(
     os.path.expanduser("~"), ".descarteslabs", "token_info.json"

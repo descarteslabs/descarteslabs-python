@@ -2,8 +2,8 @@ import operator
 import pytest
 import mock
 
-from descarteslabs.common.graft import client
-from descarteslabs.common.graft import interpreter
+from .....common.graft import client
+from .....common.graft import interpreter
 
 from ...core import ProxyTypeError
 from ...primitives import Int, Str, Float, Bool

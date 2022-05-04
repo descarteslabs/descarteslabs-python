@@ -57,9 +57,9 @@ def do_setup():
         classifiers=[
             "Programming Language :: Python",
             "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
+            "Programming Language :: Python :: 3.9",
         ],
         license="Apache 2.0",
         download_url=(
@@ -82,20 +82,17 @@ def do_setup():
                 "descarteslabs = descarteslabs.client.scripts.__main__:main"
             ]
         },
-        python_requires="~=3.6",
+        python_requires="~=3.7",
         install_requires=[
             "affine>=2.2.2",
-            "backports-datetime-fromisoformat>=1.0.0;python_version<'3.7'",
             "blosc==1.10.2",
             "cachetools>=3.1.1",
             "cloudpickle==0.4.0;python_version<'3.8'",
             "cloudpickle==1.6.0;python_version>='3.8'",
-            "dataclasses>=0.8;python_version<'3.7'",
             "geojson>=2.5.0",
             "grpcio>=1.35.0,<2",
             "ibis-framework==1.4.0",
-            "imagecodecs>=2020.5.30;python_version<'3.7'",
-            "imagecodecs>=2021.5.20;python_version>='3.7'",
+            "imagecodecs>=2021.5.20",
             "lazy_object_proxy>=1.4.1",
             "mercantile>=1.1.3",
             "numpy>=1.18.1",
@@ -106,8 +103,7 @@ def do_setup():
             "pytz>=2021.1",
             "requests[security]>=2.25.1,<3",
             "shapely>=1.7.1,<2",
-            "tifffile==2020.9.3;python_version<'3.7'",
-            "tifffile==2021.4.8;python_version>='3.7'",
+            "tifffile==2021.4.8",
             "tqdm>=4.32.1",
         ],
         extras_require={
@@ -115,8 +111,7 @@ def do_setup():
                 "matplotlib>=3.1.2",
                 "ipyleaflet>=0.13.3,<1",
                 "ipywidgets>=7.5.1,<8",
-                "traitlets>=4.3.3,<6;python_version<'3.7'",
-                "traitlets==5.0.5,<6;python_version>='3.7'",
+                "traitlets==5.0.5,<6",
                 "markdown2>=2.4.0,<3",
             ],
             "tests": [

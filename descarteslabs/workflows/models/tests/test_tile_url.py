@@ -5,7 +5,7 @@ import json
 import functools
 from urllib.parse import urlencode, parse_qs
 
-from descarteslabs.common.graft import client as graft_client
+from ....common.graft import client as graft_client
 
 from ... import types
 from .. import tile_url

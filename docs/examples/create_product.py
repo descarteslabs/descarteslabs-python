@@ -7,7 +7,7 @@ This example demonstrates how to create a product
 in our Catalog and upload an example scene.
 """
 from descarteslabs.catalog import Product, SpectralBand, Image
-import descarteslabs as dl
+import descarteslabs.scenes
 
 ################################################
 # Create a product entry in our Catalog
@@ -51,7 +51,7 @@ paris = {
     ],
 }
 
-scenes, geoctx = dl.scenes.search(
+scenes, geoctx = descarteslabs.scenes.search(
     paris,
     products=["sentinel-2:L1C"],
     start_datetime="2018-06-24",

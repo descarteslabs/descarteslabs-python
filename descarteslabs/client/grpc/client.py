@@ -2,11 +2,11 @@ import os
 
 import certifi
 import grpc
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.version import __version__
-from descarteslabs.common.proto.health import health_pb2, health_pb2_grpc
-from descarteslabs.common.retry import Retry, RetryError
-from descarteslabs.common.retry.retry import _wraps
+from ..auth import Auth
+from ..version import __version__
+from ...common.proto.health import health_pb2, health_pb2_grpc
+from ...common.retry import Retry, RetryError
+from ...common.retry.retry import _wraps
 
 
 from .exceptions import from_grpc_error

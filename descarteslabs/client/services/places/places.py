@@ -17,10 +17,10 @@ import os
 from functools import partial
 from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
-from descarteslabs.client.services.service import Service
-from descarteslabs.client.auth import Auth
-from descarteslabs.common.dotdict import DotDict, DotList
-from descarteslabs.client.deprecation import deprecate_func
+from ..service import Service
+from ...auth import Auth
+from ....common.dotdict import DotDict, DotList
+from ...deprecation import deprecate_func
 
 
 class Places(Service):
@@ -96,7 +96,7 @@ class Places(Service):
 
         Example::
 
-            >>> from descarteslabs.client.services import Places
+            >>> from descarteslabs.client.services.places import Places
             >>> results = Places().find('morocco')
             >>> _ = results[0].pop('bbox')
             >>> results
@@ -125,7 +125,7 @@ class Places(Service):
         :return: list of candidates
 
         Example::
-            >>> from descarteslabs.client.services import Places
+            >>> from descarteslabs.client.services.places import Places
             >>> results = Places().search('texas')
             >>> results[0]
             {
@@ -168,7 +168,7 @@ class Places(Service):
         :return: GeoJSON ``Feature``
 
         Example::
-            >>> from descarteslabs.client.services import Places
+            >>> from descarteslabs.client.services.places import Places
             >>> kansas = Places().shape('north-america_united-states_kansas')
             >>> kansas['bbox']
             [-102.051744, 36.993016, -94.588658, 40.003078]
@@ -204,7 +204,7 @@ class Places(Service):
         :return: GeoJSON or TopoJSON ``FeatureCollection``
 
         Example::
-            >>> from descarteslabs.client.services import Places
+            >>> from descarteslabs.client.services.places import Places
             >>> il_counties = Places().prefix('north-america_united-states_illinois', placetype='county')
             >>> len(il_counties['features'])
             102

@@ -1,11 +1,11 @@
 import mock
 import pytest
 
-from descarteslabs.client.grpc.exceptions import ResourceExhausted
-from descarteslabs.common.retry import RetryError
-from descarteslabs.workflows import _channel
-from descarteslabs.workflows.models.toplevel import compute
-from descarteslabs.workflows.types import Int
+from ....client.grpc.exceptions import ResourceExhausted
+from ....common.retry import RetryError
+from ... import _channel
+from ...models.toplevel import compute
+from ...types import Int
 
 from .. import Client
 

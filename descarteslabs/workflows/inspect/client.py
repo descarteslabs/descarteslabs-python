@@ -6,16 +6,16 @@ import warnings
 import requests
 from urllib3.util.retry import Retry
 
-from descarteslabs.client.services.service.service import (
+from ...client.services.service.service import (
     Service,
     HttpStatusCode,
     HttpRequestMethod,
 )
-from descarteslabs.common.workflows.outputs import (
+from ...common.workflows.outputs import (
     user_format_to_mimetype,
     field_name_to_mimetype,
 )
-from descarteslabs.common.workflows.arrow_serialization import deserialize_pyarrow
+from ...common.workflows.arrow_serialization import deserialize_pyarrow
 
 from .. import _channel
 from ..execution import to_computable

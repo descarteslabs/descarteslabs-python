@@ -7,7 +7,7 @@ try:
 except ImportError:
     rasterio = None
 
-from descarteslabs.client.services.raster.geotiff_utils import (
+from ..geotiff_utils import (
     make_rasterio_geotiff,
     make_tifffile_geotiff,
 )

@@ -8,7 +8,7 @@ from ..primitives import Bool, Int, Str, NoneType
 
 def _delayed_numpy():
     # avoid circular imports
-    from descarteslabs.workflows.types import numpy
+    from .. import numpy
 
     return numpy
 

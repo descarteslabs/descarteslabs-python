@@ -3,7 +3,7 @@ import textwrap
 
 import shapely.geometry
 
-from descarteslabs.scenes import _helpers
+from .. import _helpers
 
 
 class TestSimpleHelpers(unittest.TestCase):

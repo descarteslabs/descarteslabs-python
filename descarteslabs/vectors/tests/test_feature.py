@@ -15,8 +15,8 @@
 import json
 import unittest
 
-from descarteslabs.common.dotdict import DotDict
-from descarteslabs.vectors import Feature
+from ...common.dotdict import DotDict
+from .. import Feature
 
 from .fixtures import POINT, POLYGON
 

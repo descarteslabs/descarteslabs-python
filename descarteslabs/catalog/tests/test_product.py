@@ -7,7 +7,7 @@ import warnings
 from datetime import datetime
 from mock import patch
 
-from descarteslabs.client.exceptions import BadRequestError
+from ...client.exceptions import BadRequestError
 
 from .. import properties
 from ..attributes import AttributeValidationError, ListAttribute

@@ -7,7 +7,7 @@ The Scenes API returns a series of metadata. This
 example demonstrates how to aggregate the
 returned scenes by date.
 """
-import descarteslabs as dl
+import descarteslabs.scenes
 
 # Define a bounding box around Taos in a GeoJSON
 taos = {
@@ -25,7 +25,7 @@ taos = {
 
 ################################################
 # Create a SceneCollection
-scenes, ctx = dl.scenes.search(
+scenes, ctx = descarteslabs.scenes.search(
     taos,
     products="landsat:LC08:01:RT:TOAR",
     start_datetime="2018-01-01",

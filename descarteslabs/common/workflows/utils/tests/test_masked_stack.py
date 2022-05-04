@@ -1,6 +1,6 @@
 import numpy as np
 
-from descarteslabs.common.workflows.utils import masked_stack
+from .. import masked_stack
 
 # Fixtures:
 

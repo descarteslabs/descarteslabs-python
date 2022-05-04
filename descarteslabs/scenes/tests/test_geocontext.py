@@ -6,8 +6,8 @@ import concurrent.futures
 import copy
 import warnings
 
-from descarteslabs.scenes import geocontext
-from descarteslabs.scenes.geocontext import EARTH_CIRCUMFERENCE_WGS84
+from .. import geocontext
+from ..geocontext import EARTH_CIRCUMFERENCE_WGS84
 import shapely.geometry
 
 

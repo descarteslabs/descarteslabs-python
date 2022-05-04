@@ -8,12 +8,13 @@ and scale the returned values.
 
 """
 
-import descarteslabs as dl
+import descarteslabs.scenes
+from descarteslabs.client.services.raster import Raster
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-raster_client = dl.Raster()
+raster_client = Raster()
 
 # A bounding box geometry
 aoi = {
@@ -30,7 +31,7 @@ aoi = {
 }
 
 # fetch scene from the MODIS product
-scenes, ctx = dl.scenes.search(
+scenes, ctx = descarteslabs.scenes.search(
     aoi,
     products=["modis:09:v2"],
     start_datetime="2017-05-01",

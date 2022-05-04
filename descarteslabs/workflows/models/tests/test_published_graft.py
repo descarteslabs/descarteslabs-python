@@ -3,14 +3,14 @@ import pytest
 import json
 from typing import Tuple
 
-from descarteslabs.common.graft import client as graft_client
+from ....common.graft import client as graft_client
 
-from descarteslabs.common.proto.typespec import typespec_pb2
-from descarteslabs.common.proto.widgets import widgets_pb2
+from ....common.proto.typespec import typespec_pb2
+from ....common.proto.widgets import widgets_pb2
 
-from descarteslabs.client.version import __version__
-from descarteslabs.workflows.cereal import deserialize_typespec
-from descarteslabs.workflows.types import Int, List, Function, parameter
+from ....client.version import __version__
+from ...cereal import deserialize_typespec
+from ...types import Int, List, Function, parameter
 
 from ..published_graft import PublishedGraft
 from . import utils

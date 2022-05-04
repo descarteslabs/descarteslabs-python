@@ -6,10 +6,10 @@ import grpc
 import mock
 from google.protobuf.timestamp_pb2 import Timestamp
 
-from descarteslabs.common.proto.xyz import xyz_pb2
-from descarteslabs.common.proto.logging import logging_pb2
+from ....common.proto.xyz import xyz_pb2
+from ....common.proto.logging import logging_pb2
 
-from descarteslabs.workflows import _channel, client
+from ... import _channel, client
 
 from .. import XYZ, XYZLogListener
 from ..published_graft import PublishedGraft

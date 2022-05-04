@@ -5,7 +5,7 @@ import ibis.expr.operations as ops
 import ibis.expr.schema as sch
 import ibis.client
 
-from descarteslabs.common.ibis.deserialization import find_tables
+from .. import find_tables
 
 
 @pytest.fixture

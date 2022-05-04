@@ -1,7 +1,7 @@
 from .exceptions import JobComputeError, JobTimeoutError
 from .visualization import VizOption
 from .workflow import Workflow, wmts_url, AllAuthenticatedUsers
-from descarteslabs.discover import UserEmail, Organization
+from ...discover import UserEmail, Organization
 from .versionedgraft import VersionedGraft
 from .job import Job
 from .xyz import XYZ, XYZLogListener

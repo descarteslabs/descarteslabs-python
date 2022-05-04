@@ -3,7 +3,7 @@ Note: It is recommended to use the object oriented interface at :py:mod:`descart
 """
 
 from .vector import Vector
-from descarteslabs.common.property_filtering import GenericProperties
+from ....common.property_filtering import GenericProperties
 
 properties = GenericProperties()
 

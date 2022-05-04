@@ -10,9 +10,9 @@ import ibis.expr.types as ir
 import ibis.expr.window as win
 from ibis.client import Client
 
-from descarteslabs.common.proto.ibis import ibis_pb2
+from ....proto.ibis import ibis_pb2
 
-from descarteslabs.common.ibis.serialization.compiler import (
+from ...serialization.compiler import (
     make_schema,
     make_window,
     make_primitive,
@@ -21,7 +21,7 @@ from descarteslabs.common.ibis.serialization.compiler import (
     make_query,
 )
 
-from descarteslabs.common.ibis.deserialization.compiler import (
+from ..compiler import (
     all_equal,
     Deserializer,
     LiteralDeserializer,
@@ -32,7 +32,7 @@ from descarteslabs.common.ibis.deserialization.compiler import (
     QueryDeserializer,
     AstDeserializer,
 )
-from descarteslabs.common.ibis.deserialization.exceptions import (
+from ..exceptions import (
     LiteralDeserializationError,
     OperationError,
     DataTypeError,

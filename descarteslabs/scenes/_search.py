@@ -15,8 +15,8 @@
 import collections
 import datetime
 
-from descarteslabs.client.services.raster import Raster
-from descarteslabs.client.services.metadata import Metadata
+from ..client.services.raster import Raster
+from ..client.services.metadata import Metadata
 
 from .scene import Scene
 from .scenecollection import SceneCollection

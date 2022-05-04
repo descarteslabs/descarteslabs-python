@@ -10,11 +10,11 @@ and displays the image.
 
 from pprint import pprint
 
-import descarteslabs as dl
+from descarteslabs.client.services.raster import Raster
 import matplotlib.pyplot as plt
 
 
-raster_client = dl.Raster()
+raster_client = Raster()
 
 aoi = {
     "type": "Polygon",

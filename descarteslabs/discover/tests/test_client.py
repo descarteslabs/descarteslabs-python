@@ -1,8 +1,8 @@
 import pytest
-from descarteslabs.client.exceptions import ServerError
+from ...client.exceptions import ServerError
 
-from descarteslabs.common.proto.discover import discover_pb2
-from descarteslabs.discover.client import (
+from ...common.proto.discover import discover_pb2
+from ..client import (
     AccessGrant,
     Asset,
     Discover,
@@ -11,8 +11,8 @@ from descarteslabs.discover.client import (
     Organization,
     _IamClient,
 )
-from descarteslabs.client.grpc.exceptions import BadRequest
-from descarteslabs.client.auth import Auth
+from ...client.grpc.exceptions import BadRequest
+from ...client.auth import Auth
 from unittest.mock import Mock
 import warnings
 import unittest

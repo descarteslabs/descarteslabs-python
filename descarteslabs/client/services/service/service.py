@@ -31,8 +31,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from warnings import warn
 
-from descarteslabs.client.auth import Auth
-from descarteslabs.client.exceptions import (
+from ...auth import Auth
+from ...exceptions import (
     ClientError,
     ServerError,
     BadRequestError,
@@ -42,9 +42,9 @@ from descarteslabs.client.exceptions import (
     GatewayTimeoutError,
     ConflictError,
 )
-from descarteslabs.client.version import __version__
-from descarteslabs.common.http.authorization import add_bearer
-from descarteslabs.common.threading.local import ThreadLocalWrapper
+from ...version import __version__
+from ....common.http.authorization import add_bearer
+from ....common.threading.local import ThreadLocalWrapper
 
 
 class HttpMountProtocol(object):

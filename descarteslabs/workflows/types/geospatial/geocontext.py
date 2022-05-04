@@ -1,4 +1,4 @@
-from descarteslabs import scenes
+from .... import scenes
 
 from ...cereal import serializable
 from ..core import typecheck_promote

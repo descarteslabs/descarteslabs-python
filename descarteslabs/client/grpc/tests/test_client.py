@@ -3,7 +3,7 @@ from unittest import mock
 import grpc
 import pytest
 
-from descarteslabs.common.retry import Retry
+from ....common.retry import Retry
 
 from ..client import GrpcClient, USER_AGENT_HEADER
 

@@ -1,9 +1,9 @@
 import pytest
 import mock
 
-from descarteslabs.common.proto.widgets import widgets_pb2
+from .....common.proto.widgets import widgets_pb2
 
-from descarteslabs.workflows import cereal
+from .... import cereal
 from ...identifier import parameter
 from ...primitives import Str, Int
 from ...containers import List

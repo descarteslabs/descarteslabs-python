@@ -1,9 +1,4 @@
-try:
-    # only after py3.4
-    import collections.abc as abc
-except ImportError:
-    import collections as abc
-
+import collections.abc as abc
 import geojson
 import shapely.geometry
 

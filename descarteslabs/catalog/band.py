@@ -1,7 +1,7 @@
 from enum import Enum
 from collections.abc import Iterable, Mapping, MutableMapping
 
-from descarteslabs.common.property_filtering import GenericProperties
+from ..common.property_filtering import GenericProperties
 from .catalog_base import CatalogObject, _new_abstract_class
 from .named_catalog_base import NamedCatalogObject
 from .attributes import (

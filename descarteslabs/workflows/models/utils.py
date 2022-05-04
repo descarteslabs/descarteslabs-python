@@ -1,7 +1,7 @@
 import datetime
 import logging
 
-from descarteslabs.common.proto.logging import logging_pb2
+from ...common.proto.logging import logging_pb2
 
 
 LOG_LEVEL_TO_PROTO_LOG_LEVEL = {

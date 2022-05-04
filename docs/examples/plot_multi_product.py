@@ -8,7 +8,7 @@ display as a single image.
 
 """
 
-import descarteslabs as dl
+import descarteslabs.scenes
 import numpy as np
 
 # Define a bounding box around Taos in a GeoJSON
@@ -27,7 +27,7 @@ taos = {
 }
 
 # Create a SceneCollection
-scenes, ctx = dl.scenes.search(
+scenes, ctx = descarteslabs.scenes.search(
     taos,
     products=["landsat:LC08:01:RT:TOAR", "sentinel-2:L1C"],
     start_datetime="2018-05-01",
@@ -57,4 +57,4 @@ arr_stack = scenes.stack("red green blue", ctx_lowres)
 
 # Composite the scenes based on the median pixel value
 composite = np.ma.median(arr_stack, axis=0)
-dl.scenes.display(composite, title="Taos Composite")
+descarteslabs.scenes.display(composite, title="Taos Composite")

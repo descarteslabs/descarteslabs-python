@@ -15,12 +15,12 @@ from shapely.geometry import Point
 
 import grpc
 
-from descarteslabs.common.proto.vektorius import vektorius_pb2
-from descarteslabs.common.ibis.serialization.compiler import (
+from ....proto.vektorius import vektorius_pb2
+from ...serialization.compiler import (
     make_schema,
     serialize_record_batch,
 )
-from descarteslabs.common.ibis.client.client import (
+from ..client import (
     SerializerClient,
     _maybe_to_geodataframe,
 )
