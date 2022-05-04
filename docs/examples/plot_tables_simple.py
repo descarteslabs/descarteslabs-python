@@ -13,6 +13,9 @@ with others, and then deletes the table.
 The API reference for these methods and classes is at :py:mod:`descarteslabs.tables`.
 """
 
+import os
+from tempfile import mkstemp
+
 from descarteslabs.tables import Tables
 
 t = Tables()
@@ -29,41 +32,48 @@ import requests
 url = "https://firms.modaps.eosdis.nasa.gov/data/active_fire/modis-c6.1/shapes/zips/MODIS_C6_1_USA_contiguous_and_Hawaii_7d.zip"
 r = requests.get(url)
 
-with open("/tmp/modis_fire.zip", "wb") as f:
-    f.write(r.content)
+fd, tmpf = mkstemp(suffix=".zip")
+try:
+    with os.fdopen(fd, mode="w+b") as f:
+        f.write(r.content)
 
-################################################
-# Once you have data, the next step is to create a table that supports the features in
-# this shape file.  We need a schema and an SRID, and a quick way to get that is by
-# using :meth:`Tables.inspect_dataset <descarteslabs.tables.inspect_dataset>` Note
-# that this method of deriving the schema and srid should not be relied upon without
-# manually inspecting the output due to the sheer amount of conversions possible. For
-# example, converting a ``date`` type may not translate properly so it is encumbent on
-# the user to ensure everything looks correct before creating a table.
-schema, srid = t.inspect_dataset("/tmp/modis_fire.zip")
-print(schema, srid)
+    ################################################
+    # Once you have data, the next step is to create a table that supports the features in
+    # this shape file.  We need a schema and an SRID, and a quick way to get that is by
+    # using :meth:`Tables.inspect_dataset <descarteslabs.tables.inspect_dataset>` Note
+    # that this method of deriving the schema and srid should not be relied upon without
+    # manually inspecting the output due to the sheer amount of conversions possible. For
+    # example, converting a ``date`` type may not translate properly so it is encumbent on
+    # the user to ensure everything looks correct before creating a table.
+    schema, srid = t.inspect_dataset(tmpf)
+    print(schema, srid)
 
-################################################
-# Now let's create our table with :meth:`Tables.create_table
-# <descarteslabs.tables.create_table>`. The table must have a primary key, which is
-# either provided on creation or created by the service. We'll create one on our own
-# and make it auto-increment.
-from uuid import uuid4
+    ################################################
+    # Now let's create our table with :meth:`Tables.create_table
+    # <descarteslabs.tables.create_table>`. The table must have a primary key, which is
+    # either provided on creation or created by the service. We'll create one on our own
+    # and make it auto-increment.
+    from uuid import uuid4
 
-table_name = f"fires_{uuid4().hex}"
-schema["properties"]["ID"] = "auto"
-t.create_table(table_name, srid=srid, schema=schema, primary_key="ID")
+    table_name = f"fires_{uuid4().hex}"
+    schema["properties"]["ID"] = "auto"
+    t.create_table(table_name, srid=srid, schema=schema, primary_key="ID")
 
-################################################
-# Now that we've created the table, we can start inserting rows into it. We have the
-# dataset from earlier, so let's just insert that using :meth:`Tables.insert_rows
-# <descarteslabs.tables.insert_rows>`.  Like many other asynchronous client calls in
-# the platform, a job ID is returned that can be used to poll the status of the job.
-# :meth:`Tables.wait_until_completion <descarteslabs.tables.wait_until_completion>`
-# can be used to halt execution of the program until the ingest job succeeds.
-jobid = t.upload_file("/tmp/modis_fire.zip", table_name)
-t.wait_until_completion(jobid)
+    ################################################
+    # Now that we've created the table, we can start inserting rows into it. We have the
+    # dataset from earlier, so let's just insert that using :meth:`Tables.insert_rows
+    # <descarteslabs.tables.insert_rows>`.  Like many other asynchronous client calls in
+    # the platform, a job ID is returned that can be used to poll the status of the job.
+    # :meth:`Tables.wait_until_completion <descarteslabs.tables.wait_until_completion>`
+    # can be used to halt execution of the program until the ingest job succeeds.
+    jobid = t.upload_file(tmpf, table_name)
+    t.wait_until_completion(jobid)
 
+finally:
+    try:
+        os.remove(tmpf)
+    except Exception:
+        pass
 
 ################################################
 # Once the data has been ingested, the ibis library provides an interface for us to
