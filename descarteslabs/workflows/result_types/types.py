@@ -2,14 +2,6 @@ import datetime
 import collections
 import itertools
 
-try:
-    from backports.datetime_fromisoformat import MonkeyPatch
-
-    MonkeyPatch.patch_fromisoformat()
-except ImportError:
-    # not installed in python3.7 to limit surface
-    # area for installation issues
-    pass
 import numpy as np
 
 from . import unmarshal

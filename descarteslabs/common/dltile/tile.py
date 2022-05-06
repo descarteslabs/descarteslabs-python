@@ -1,7 +1,7 @@
 """In this file we define two classes: Grid, which describes a way to
 divide UTM zones in a grid, and Tile, which specifies a particular
 element in a grid."""
-import collections
+import collections.abc
 import numpy as np
 import re
 import shapely.geometry as geo
@@ -464,7 +464,7 @@ class Tile:
         if type(lon) != type(lat):
             raise InvalidLatLonError("lat and lon should have compatible types")
 
-        if isinstance(lon, (collections.Sequence, np.ndarray)):
+        if isinstance(lon, (collections.abc.Sequence, np.ndarray)):
             if len(lon) != len(lat):
                 raise InvalidLatLonError("lat and lon must be the same length")
 
@@ -485,7 +485,7 @@ class Tile:
         if type(row) != type(col):
             raise InvalidRowColError("row and col should have compatible types")
 
-        if isinstance(row, (collections.Sequence, np.ndarray)):
+        if isinstance(row, (collections.abc.Sequence, np.ndarray)):
             if len(row) != len(col):
                 raise InvalidRowColError("row and col must be the same length")
 

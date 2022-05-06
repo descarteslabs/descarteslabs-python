@@ -14,7 +14,7 @@ def _delayed_numpy_ufuncs():
     return numpy_ufuncs
 
 
-PY_TYPE = {np.int64: int, np.float64: float, np.bool: bool, np.bool_: bool}
+PY_TYPE = {np.int64: int, np.float64: float, np.bool_: bool}
 
 
 @serializable()
@@ -32,7 +32,7 @@ class Scalar(Proxytype, NumPyMixin):
     def __init__(self, obj):
         if isinstance(obj, type(self)):
             self.graft = obj.graft
-        elif isinstance(obj, (np.int64, np.float64, np.bool, np.bool_)):
+        elif isinstance(obj, (np.int64, np.float64, np.bool_)):
             cast = PY_TYPE[type(obj)](obj)
             self.graft = client.apply_graft("wf.scalar.create", cast)
         else:

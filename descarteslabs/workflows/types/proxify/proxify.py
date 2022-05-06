@@ -31,7 +31,7 @@ def proxify(obj):
         return Bool(obj)
     elif isinstance(obj, (int, np.integer)):
         return Int(obj)
-    elif isinstance(obj, (float, np.float)):
+    elif isinstance(obj, float):
         return Float(obj)
     elif isinstance(obj, str):
         return Str(obj)

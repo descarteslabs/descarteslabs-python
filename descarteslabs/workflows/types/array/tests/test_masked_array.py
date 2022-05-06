@@ -72,7 +72,7 @@ def test_promote(val):
 
 
 @pytest.mark.parametrize(
-    "val", ["foo", Str("foo"), List[Int]([1, 2, 3]), np.array([1, 2], dtype=np.object)]
+    "val", ["foo", Str("foo"), List[Int]([1, 2, 3]), np.array([1, 2], dtype=object)]
 )
 def test_promote_invalid(val):
     with pytest.raises((TypeError, ProxyTypeError)):

@@ -19,7 +19,6 @@ class DType(Proxytype):
             val = type_.char
         elif type_ in (
             int,
-            np.int,
             np.int_,
             np.int8,
             np.int16,
@@ -27,13 +26,11 @@ class DType(Proxytype):
             np.int64,
             Int,
             float,
-            np.float,
             np.float_,
             np.float32,
             np.float64,
             Float,
             bool,
-            np.bool,
             np.bool_,
             Bool,
         ):

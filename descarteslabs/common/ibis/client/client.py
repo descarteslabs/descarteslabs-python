@@ -172,7 +172,7 @@ def _to_shapely(v):
 
 
 # vectorized version of `_to_shapely`
-to_shapely = np.vectorize(_to_shapely, otypes=[np.object])
+to_shapely = np.vectorize(_to_shapely, otypes=[object])
 
 
 def _struct_to_geospatial(struct, geos, arrs, structs):
@@ -213,7 +213,7 @@ def _struct_to_geospatial(struct, geos, arrs, structs):
 # those values are the same for every row in the array
 # and determined by the schema of the array
 struct_to_geospatial = np.vectorize(
-    _struct_to_geospatial, excluded=[1, 2, 3], otypes=[np.object]
+    _struct_to_geospatial, excluded=[1, 2, 3], otypes=[object]
 )
 
 
@@ -260,7 +260,7 @@ def _array_to_geospatial(arr, arr_dtype):
 
 
 # vectorized version of `_array_to_geospatial`, think nested for loops
-apply_to_array_column = np.vectorize(_array_to_geospatial, otypes=[np.object])
+apply_to_array_column = np.vectorize(_array_to_geospatial, otypes=[object])
 
 
 def _maybe_to_geodataframe(df, schema):

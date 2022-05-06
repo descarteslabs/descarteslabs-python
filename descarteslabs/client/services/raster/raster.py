@@ -153,7 +153,7 @@ def yield_chunks(metadata, data, progress, nodata):
 
         mask_raw_size, mask_buffer = read_blosc_buffer(data)
         if nodata is not None:
-            mask_chunk = np.ma.empty(chunk_metadata["shape"], dtype=np.bool)
+            mask_chunk = np.ma.empty(chunk_metadata["shape"], dtype=bool)
             if mask_raw_size != mask_chunk.nbytes:
                 raise ServerError(
                     "Did not receive complete mask chunk (got {}, expected {})".format(

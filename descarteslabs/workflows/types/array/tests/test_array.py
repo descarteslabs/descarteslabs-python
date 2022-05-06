@@ -53,7 +53,7 @@ def test_promote(val):
     assert isinstance(arr, Array)
 
 
-@pytest.mark.parametrize("val", ["foo", Str("foo"), np.array([1, 2], dtype=np.object)])
+@pytest.mark.parametrize("val", ["foo", Str("foo"), np.array([1, 2], dtype=object)])
 def test_promote_invalid(val):
     with pytest.raises((TypeError, ProxyTypeError)):
         Array._promote(val)
