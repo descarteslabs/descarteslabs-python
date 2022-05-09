@@ -3,6 +3,7 @@
 # source: descarteslabs/common/proto/logging/logging.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
@@ -13,104 +14,12 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor.FileDescriptor(
-  name='descarteslabs/common/proto/logging/logging.proto',
-  package='descarteslabs.workflows',
-  syntax='proto3',
-  serialized_options=None,
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n0descarteslabs/common/proto/logging/logging.proto\x12\x17\x64\x65scarteslabs.workflows\"\xb9\x01\n\tLogRecord\x12>\n\x05level\x18\x01 \x01(\x0e\x32(.descarteslabs.workflows.LogRecord.LevelR\x05level\x12\x18\n\x07message\x18\x03 \x01(\tR\x07message\x12\x1c\n\ttimestamp\x18\x04 \x01(\x03R\ttimestamp\"4\n\x05Level\x12\t\n\x05\x44\x45\x42UG\x10\x00\x12\x08\n\x04INFO\x10\x01\x12\x0b\n\x07WARNING\x10\x02\x12\t\n\x05\x45RROR\x10\x03\x62\x06proto3'
-)
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n0descarteslabs/common/proto/logging/logging.proto\x12\x17\x64\x65scarteslabs.workflows\"\xb9\x01\n\tLogRecord\x12>\n\x05level\x18\x01 \x01(\x0e\x32(.descarteslabs.workflows.LogRecord.LevelR\x05level\x12\x18\n\x07message\x18\x03 \x01(\tR\x07message\x12\x1c\n\ttimestamp\x18\x04 \x01(\x03R\ttimestamp\"4\n\x05Level\x12\t\n\x05\x44\x45\x42UG\x10\x00\x12\x08\n\x04INFO\x10\x01\x12\x0b\n\x07WARNING\x10\x02\x12\t\n\x05\x45RROR\x10\x03\x62\x06proto3')
 
 
 
-_LOGRECORD_LEVEL = _descriptor.EnumDescriptor(
-  name='Level',
-  full_name='descarteslabs.workflows.LogRecord.Level',
-  filename=None,
-  file=DESCRIPTOR,
-  create_key=_descriptor._internal_create_key,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='DEBUG', index=0, number=0,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='INFO', index=1, number=1,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='WARNING', index=2, number=2,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ERROR', index=3, number=3,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=211,
-  serialized_end=263,
-)
-_sym_db.RegisterEnumDescriptor(_LOGRECORD_LEVEL)
-
-
-_LOGRECORD = _descriptor.Descriptor(
-  name='LogRecord',
-  full_name='descarteslabs.workflows.LogRecord',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='level', full_name='descarteslabs.workflows.LogRecord.level', index=0,
-      number=1, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='level', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='message', full_name='descarteslabs.workflows.LogRecord.message', index=1,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='message', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='timestamp', full_name='descarteslabs.workflows.LogRecord.timestamp', index=2,
-      number=4, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='timestamp', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-    _LOGRECORD_LEVEL,
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=78,
-  serialized_end=263,
-)
-
-_LOGRECORD.fields_by_name['level'].enum_type = _LOGRECORD_LEVEL
-_LOGRECORD_LEVEL.containing_type = _LOGRECORD
-DESCRIPTOR.message_types_by_name['LogRecord'] = _LOGRECORD
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
+_LOGRECORD = DESCRIPTOR.message_types_by_name['LogRecord']
+_LOGRECORD_LEVEL = _LOGRECORD.enum_types_by_name['Level']
 LogRecord = _reflection.GeneratedProtocolMessageType('LogRecord', (_message.Message,), {
   'DESCRIPTOR' : _LOGRECORD,
   '__module__' : 'descarteslabs.common.proto.logging.logging_pb2'
@@ -118,5 +27,11 @@ LogRecord = _reflection.GeneratedProtocolMessageType('LogRecord', (_message.Mess
   })
 _sym_db.RegisterMessage(LogRecord)
 
+if _descriptor._USE_C_DESCRIPTORS == False:
 
+  DESCRIPTOR._options = None
+  _LOGRECORD._serialized_start=78
+  _LOGRECORD._serialized_end=263
+  _LOGRECORD_LEVEL._serialized_start=211
+  _LOGRECORD_LEVEL._serialized_end=263
 # @@protoc_insertion_point(module_scope)
