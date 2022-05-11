@@ -1,5 +1,5 @@
 import pytest
-from ...client.exceptions import ServerError
+from descarteslabs.exceptions import ServerError
 
 from ...common.proto.discover import discover_pb2
 from ..client import (
@@ -12,7 +12,7 @@ from ..client import (
     _IamClient,
 )
 from ...client.grpc.exceptions import BadRequest
-from ...client.auth import Auth
+from descarteslabs.auth import Auth
 from unittest.mock import Mock
 import warnings
 import unittest

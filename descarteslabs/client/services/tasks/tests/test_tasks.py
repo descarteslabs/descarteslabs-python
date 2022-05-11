@@ -35,7 +35,7 @@ try:
 except ImportError:
     from unittest import mock
 
-from ....auth import Auth
+from descarteslabs.auth import Auth
 from .. import (
     BoundGlobalError,
     CloudFunction,

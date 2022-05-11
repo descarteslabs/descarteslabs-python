@@ -3,7 +3,7 @@
 
 import os
 
-from ..client.auth import Auth
+from descarteslabs.auth import Auth
 from ..client.services.service.service import (
     JsonApiService,
     HttpRequestMethod,

@@ -2,7 +2,7 @@ import os.path
 import json
 
 from ..client.services.raster import Raster
-from ..client.exceptions import NotFoundError, BadRequestError
+from descarteslabs.exceptions import NotFoundError, BadRequestError
 
 
 ext_to_format = {"tif": "GTiff", "png": "PNG", "jpg": "JPEG"}

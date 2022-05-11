@@ -5,7 +5,7 @@ import urllib3.exceptions
 import requests.exceptions
 import warnings
 
-from ..client.exceptions import ServerError
+from descarteslabs.exceptions import ServerError
 
 from .catalog_base import CatalogObjectBase, check_deleted
 from .attributes import (

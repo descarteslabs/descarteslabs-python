@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, Mock
 import pytest
 import pandas as pd
 
-from ...client.exceptions import BadRequestError
+from descarteslabs.exceptions import BadRequestError
 from ...discover.client import AccessGrant, Asset, SymLink
 from ..client import Tables, JobStatus
 

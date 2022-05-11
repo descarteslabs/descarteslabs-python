@@ -19,7 +19,7 @@ import unittest
 import responses
 import json
 
-from ....auth import Auth
+from descarteslabs.auth import Auth
 from .. import Metadata
 
 from shapely.geometry import shape

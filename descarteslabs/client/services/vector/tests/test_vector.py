@@ -20,9 +20,9 @@ import json
 import responses
 from shapely.geometry import shape
 
-from ....auth import Auth
+from descarteslabs.auth import Auth
 from .. import Vector
-from ....exceptions import BadRequestError, NotFoundError
+from descarteslabs.exceptions import BadRequestError, NotFoundError
 
 public_token = "header.e30.signature"
 

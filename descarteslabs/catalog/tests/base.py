@@ -4,7 +4,7 @@ import unittest
 import responses
 import json
 
-from ...client.auth import Auth
+from descarteslabs.auth import Auth
 from ..catalog_client import CatalogClient
 
 

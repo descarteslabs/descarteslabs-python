@@ -10,7 +10,7 @@ from collections import UserDict
 import warnings
 import urllib
 
-from ..client.auth import Auth
+from descarteslabs.auth import Auth
 from ..client.services.service import Service
 from ..common.discover import DiscoverGrpcClient
 from ..common.proto.discover import discover_pb2

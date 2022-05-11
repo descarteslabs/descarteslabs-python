@@ -18,7 +18,7 @@ from functools import partial
 from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
 from ..service import Service
-from ...auth import Auth
+from descarteslabs.auth import Auth
 from ....common.dotdict import DotDict, DotList
 from ...deprecation import deprecate_func
 

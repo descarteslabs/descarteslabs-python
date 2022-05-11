@@ -16,7 +16,7 @@ import pickle
 import unittest
 
 import mock
-from ....exceptions import (
+from descarteslabs.exceptions import (
     ProxyAuthenticationRequiredError,
     BadRequestError,
 )

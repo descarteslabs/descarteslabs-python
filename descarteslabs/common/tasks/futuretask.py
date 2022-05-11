@@ -16,7 +16,7 @@ import pickle
 import json
 import time
 
-from ...client.exceptions import NotFoundError
+from descarteslabs.exceptions import NotFoundError
 from ...client.services.storage import Storage
 
 

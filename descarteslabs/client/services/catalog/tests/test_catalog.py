@@ -23,7 +23,7 @@ import responses
 import json
 import re
 
-from ....auth import Auth
+from descarteslabs.auth import Auth
 from .. import Catalog
 
 

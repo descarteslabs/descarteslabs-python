@@ -2,7 +2,7 @@ import copy
 from shapely.geometry import shape
 
 from ..common.dotdict import DotDict
-from ..client.exceptions import NotFoundError
+from descarteslabs.exceptions import NotFoundError
 from ..client.deprecation import deprecate
 from ..common.tasks import UploadTask, ExportTask, TransientResultError
 from ..client.services.vector import Vector
@@ -153,11 +153,11 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.BadRequestError
+        ~descarteslabs.exceptions.BadRequestError
             Raised when the request is malformed, e.g. the supplied product id is already in use.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example
@@ -195,11 +195,11 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if subsequent pages cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example
@@ -250,11 +250,11 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example
@@ -305,11 +305,11 @@ class FeatureCollection(object):
         ------
         ~descarteslabs.vectors.exceptions.InvalidQueryException
             Raised when there is a previously applied geometry filter and a new geometry was provided.
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example
@@ -386,13 +386,13 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.BadRequestError
+        ~descarteslabs.exceptions.BadRequestError
             Raised when the request is malformed, e.g. the limit is not a number.
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example
@@ -450,13 +450,13 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.BadRequestError
+        ~descarteslabs.exceptions.BadRequestError
             Raised when the request is malformed, e.g. the owners list is missing prefixes.
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example
@@ -518,13 +518,13 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.BadRequestError
+        ~descarteslabs.exceptions.BadRequestError
             Raised when the request is malformed, e.g. the owners list is missing prefixes.
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
 
@@ -600,15 +600,15 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.BadRequestError
+        ~descarteslabs.exceptions.BadRequestError
             Raised when the request is malformed.  May also indicate that too many features were included.
             If more than 100 features were provided, some of these features may have been successfuly
             inserted while others may not have been inserted.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example
@@ -673,11 +673,11 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example
@@ -709,11 +709,11 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example
@@ -800,13 +800,13 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.BadRequestError
+        ~descarteslabs.exceptions.BadRequestError
             Raised when the request is malformed, e.g. no query was specified.
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example
@@ -860,11 +860,11 @@ class FeatureCollection(object):
         ------
         ~descarteslabs.vectors.exceptions.FailedJobError
             Raised when the copy job fails to complete successfully.
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product or status cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
         ~descarteslabs.vectors.exceptions.WaitTimeoutError
             Raised when the copy job doesn't complete before the timeout is reached.
@@ -909,13 +909,13 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.BadRequestError
+        ~descarteslabs.exceptions.BadRequestError
             Raised when the request is malformed, e.g. the query limit is not a number.
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
 
@@ -963,11 +963,11 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example
@@ -1026,15 +1026,15 @@ class FeatureCollection(object):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.BadRequestError
+        ~descarteslabs.exceptions.BadRequestError
             Raised when the request is malformed, e.g. the query limit is not a number.
         ~descarteslabs.vectors.exceptions.InvalidQueryException
             Raised when a limit was applied to the ``FeatureCollection``.
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
 
         Example

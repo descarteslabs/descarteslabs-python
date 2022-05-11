@@ -2,7 +2,7 @@ import os
 
 import certifi
 import grpc
-from ..auth import Auth
+from descarteslabs.auth import Auth
 from ..version import __version__
 from ...common.proto.health import health_pb2, health_pb2_grpc
 from ...common.retry import Retry, RetryError

@@ -2,7 +2,7 @@ import pytest
 import responses
 import textwrap
 
-from ...client.exceptions import NotFoundError
+from descarteslabs.exceptions import NotFoundError
 
 from .base import ClientTestCase
 from ..attributes import AttributeValidationError, DocumentState

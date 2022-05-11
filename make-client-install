@@ -17,7 +17,9 @@ for d in ${directories[@]}; do
     echo $DEST/$d
 done
 
-rsync -av $excludes $SRC/descarteslabs/client/packaging/descarteslabs_init.py $DEST/descarteslabs/__init__.py
+rsync -av $excludes $SRC/descarteslabs/*.py $DEST
+rsync -av $excludes $SRC/descarteslabs/auth $DEST
+rsync -av $excludes $SRC/descarteslabs/config $DEST
 rsync -av $excludes $SRC/descarteslabs/client/*.py $DEST/descarteslabs/_dl_modules/client
 rsync -av $excludes $SRC/descarteslabs/client/auth $DEST/descarteslabs/_dl_modules/client
 for s in ${services_pkgs[@]}; do
@@ -28,3 +30,4 @@ for c in ${common_pkgs[@]}; do
 done
 rsync -av $excludes $SRC/descarteslabs/scenes $DEST/descarteslabs/_dl_modules
 rsync -av $excludes $SRC/descarteslabs/client/packaging/{*.py,README.md} $DEST
+mv -f $DEST/descarteslabs_init.py $DEST/__init__.py

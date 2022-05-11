@@ -19,6 +19,15 @@ Changelog
 =========
 ## [Unreleased]
 
+### Auth and Exceptions
+
+- The `descarteslabs.client.auth` package has moved to `descarteslabs.auth`. It is now imported into the original
+  location at `descarteslabs.client.auth` to continue to work with existing code, but new code should use the new
+  location.
+- The `descarteslabs.client.exceptions` module has moved to `descarteslabs.exceptions`. It is now imported into the original
+  location at `descarteslabs.client.exceptions` to continue to work with existing code, but new code should use the new
+  location.
+
 ### Discover
 
 - Added support for filtering `Assets` by type and name fields.

@@ -3,7 +3,7 @@ import responses
 from datetime import datetime
 from pytz import utc
 
-from ...client.exceptions import (
+from descarteslabs.exceptions import (
     NotFoundError,
     BadRequestError,
     ConflictError,

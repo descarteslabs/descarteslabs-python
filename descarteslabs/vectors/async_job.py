@@ -63,11 +63,11 @@ class AsyncJob(object):
         ------
         ~descarteslabs.vectors.exceptions.FailedJobError
             Raised when the copy job fails to complete successfully.
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product or status cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
         ~descarteslabs.vectors.exceptions.WaitTimeoutError
             Raised when the timeout is exceeded before the job completes.
@@ -154,11 +154,11 @@ class DeleteJob(AsyncJob):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
         """
 
@@ -203,11 +203,11 @@ class CopyJob(AsyncJob):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             Raised if the product or status cannot be found.
-        ~descarteslabs.client.exceptions.RateLimitError
+        ~descarteslabs.exceptions.RateLimitError
             Raised when too many requests have been made within a given time period.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Raised when a unknown error occurred on the server.
         """
         response = self.vector_client.get_product_from_query_status(self.id)

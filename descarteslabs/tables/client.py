@@ -69,8 +69,8 @@ import pandas as pd
 import warnings
 
 from .. import discover as disco
-from ..client.auth import Auth
-from ..client.exceptions import BadRequestError
+from descarteslabs.auth import Auth
+from descarteslabs.exceptions import BadRequestError
 from ..client.services.storage import Storage
 from ..common.ibis.client import api as serializer
 from ..common.proto.vektorius import vektorius_pb2

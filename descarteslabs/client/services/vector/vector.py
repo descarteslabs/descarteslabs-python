@@ -5,7 +5,7 @@ import logging
 from ....common.property_filtering import GenericProperties
 from ...deprecation import deprecate
 from ..service import JsonApiService, ThirdPartyService
-from ...auth import Auth
+from descarteslabs.auth import Auth
 from ....common.dotdict import DotDict
 from ....common.shapely_support import shapely_to_geojson
 from ...deprecation import deprecate_func
@@ -165,11 +165,11 @@ class Vector(JsonApiService):
                     prev: (Optional) A link to the previous page of products
                           if available.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if
             subsequent pages cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         params = dict(limit=page_size, page=page)
@@ -219,11 +219,11 @@ class Vector(JsonApiService):
                                      organizations that can write
                                      into this product.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         r = self.session.get("/products/{}".format(product_id))
@@ -262,12 +262,12 @@ class Vector(JsonApiService):
         :return: Created vector product, as a JSON API resource object. For
             a list of keys, please see :meth:`get_product`.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the supplied product id is already in
             use.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -323,13 +323,13 @@ class Vector(JsonApiService):
         :return: Replaced vector product, as a JSON API resource object.  For a
             description of the keys, please see :meth:`get_product`.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -387,13 +387,13 @@ class Vector(JsonApiService):
         :return: Updated vector product, as a JSON API resource object.  For a
             description of the keys please see :meth:`get_product`.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -418,11 +418,11 @@ class Vector(JsonApiService):
 
         :param str product_id: (Required) The ID of the Vector product to remove.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -488,13 +488,13 @@ class Vector(JsonApiService):
                                          potentially nesting lists
                                          depends on the given type.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -558,16 +558,16 @@ class Vector(JsonApiService):
                                          potentially nesting lists
                                          depends on the given type.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed.  May also indicate that too many features
             were included.  If more than 100 features were provided, some of these
             features may have been successfuly inserted while others may not have
             been inserted.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -637,11 +637,11 @@ class Vector(JsonApiService):
         :rtype: str
         :return: The upload id.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -721,11 +721,11 @@ class Vector(JsonApiService):
                     labels:            A list of string labels.  The last value is
                                        the upload ID.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -836,11 +836,11 @@ class Vector(JsonApiService):
                                             "output_rows" above).
                             job_id:         The internal job ID.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product or upload cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -944,13 +944,13 @@ class Vector(JsonApiService):
             :func:`len` can be used on the returned iterator to determine
             the query size.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the query limit is not a number.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         return _SearchFeaturesIterator(
@@ -1038,14 +1038,14 @@ class Vector(JsonApiService):
         :return: Created vector product, as a JSON API resource object.  For a
             description of the keys, please see :meth:`get_product`.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the supplied new product id is already in
             use.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -1103,11 +1103,11 @@ class Vector(JsonApiService):
                                  ISO-8601 UTC (when available).
                         state:   "PENDING", "RUNNING", or "DONE".
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product or status cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         r = self.session.get("/products/{}/search/copy/status".format(product_id))
@@ -1176,13 +1176,13 @@ class Vector(JsonApiService):
         :rtype: str
         :return: The export id.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the query limit is not a number.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         query_params = {
@@ -1225,11 +1225,11 @@ class Vector(JsonApiService):
             :meth:`export_product_from_query`.  See :meth:`get_export_result`
             under ``data`` for an explanation of the information returned.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         continuation_token = None
@@ -1291,12 +1291,12 @@ class Vector(JsonApiService):
                         labels:            A list of string labels.  The
                                            last value is the key.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: When the task is
+        :raises ~descarteslabs.exceptions.NotFoundError: When the task is
             either not found or the task is pending or running but has not
             completed yet.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         r = self.session.get(
@@ -1352,13 +1352,13 @@ class Vector(JsonApiService):
         :return: Vector product from which the features were deleted, as a JSON API
             resource object. For a list of keys, please see :meth:`get_product`.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the query limit is not a number.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         query_params = {
@@ -1386,11 +1386,11 @@ class Vector(JsonApiService):
             of the keys, please see :meth:`get_product_from_query_status`.
             Note that the ``type`` will be ``delete_job``.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the product
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the product
             cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -1405,11 +1405,11 @@ class Vector(JsonApiService):
         :rtype: int
         :return: The total number of features in a product.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         r = self.session.get("/products/{}/features/count".format(product_id))

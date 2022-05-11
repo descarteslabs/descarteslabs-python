@@ -16,7 +16,7 @@ import itertools
 import unittest
 
 from ... import Metadata
-from .....exceptions import NotFoundError
+from descarteslabs.exceptions import NotFoundError
 
 
 class TestMetadata(unittest.TestCase):

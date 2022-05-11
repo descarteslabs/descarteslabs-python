@@ -21,7 +21,7 @@ import os.path
 import numpy as np
 
 from ..client.services.raster import Raster
-from ..client.exceptions import NotFoundError, BadRequestError
+from descarteslabs.exceptions import NotFoundError, BadRequestError
 
 from .collection import Collection
 from .scene import Scene

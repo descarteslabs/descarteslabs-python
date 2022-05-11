@@ -35,9 +35,9 @@ try:
 except ImportError:
     pass
 
-from ...auth import Auth
+from descarteslabs.auth import Auth
 from ...deprecation import deprecate_func
-from ...exceptions import AuthError
+from descarteslabs.exceptions import AuthError
 from ..service import Service, ThirdPartyService
 from ....common.dotdict import DotDict, DotList
 from ....common.services.tasks.constants import (
@@ -237,7 +237,7 @@ class Tasks(Service):
 
         :raises ~descarteslabs.client.services.tasks.tasks.BoundGlobalError:
             Raised if the given function refers to global variables.
-        :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
+        :raises ~descarteslabs.exceptions.BadRequest: Raised if any of
             the supplied parameters are invalid.
         """
 
@@ -413,7 +413,7 @@ class Tasks(Service):
         :return: A dictionary representing the task group.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             task group cannot be found.
         """
         r = self.session.get(
@@ -501,7 +501,7 @@ class Tasks(Service):
         :return: A dictionary representing the updated task group.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             task group cannot be found.
         """
 
@@ -545,7 +545,7 @@ class Tasks(Service):
         :return: A dictionary representing the terminated task group.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             task group cannot be found.
         """
         r = self.session.delete("/groups/{uid}".format(uid=group_id))
@@ -603,9 +603,9 @@ class Tasks(Service):
             one element representing the submitted task.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             task group cannot be found.
-        :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
+        :raises ~descarteslabs.exceptions.BadRequest: Raised if any of
             the supplied parameters are invalid.
         """
         return self.new_tasks(
@@ -643,9 +643,9 @@ class Tasks(Service):
             dictionaries representing the submitted tasks.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             task group cannot be found.
-        :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
+        :raises ~descarteslabs.exceptions.BadRequest: Raised if any of
             the supplied parameters are invalid.
         """
         list_of_arguments = list_of_arguments if list_of_arguments is not None else [[]]
@@ -687,7 +687,7 @@ class Tasks(Service):
         :return: A dictionary representing the task result.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             task group or task itself cannot be found.
         """
         params = {"include": include} if include is not None else {}
@@ -940,7 +940,7 @@ class Tasks(Service):
         :return: A list of dictionaries representing the tasks that have been submitted.
         :rtype: DotList
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             task group cannot be found.
         """
         rerun = []
@@ -1021,7 +1021,7 @@ class Tasks(Service):
         :return: A :class:`CloudFunction`.
         :rtype: :class:`CloudFunction`
 
-        :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
+        :raises ~descarteslabs.exceptions.BadRequest: Raised if any of
             the supplied parameters are invalid.
         """
         group_info = self.new_group(
@@ -1054,11 +1054,11 @@ class Tasks(Service):
         :return: A :class:`CloudFunction`.
         :rtype: :class:`CloudFunction`
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             task group cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         group = self.get_group(group_id)
@@ -1144,7 +1144,7 @@ class Tasks(Service):
         :return: A :class:`CloudFunction`.
         :rtype: :class:`CloudFunction`
 
-        :raises ~descarteslabs.client.exceptions.BadRequest: Raised if any of
+        :raises ~descarteslabs.exceptions.BadRequest: Raised if any of
             the supplied parameters are invalid.
         """
 
@@ -1198,7 +1198,7 @@ class Tasks(Service):
         :return: A dictionary with properties of the newly created webhook.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             task group cannot be found.
         """
 
@@ -1242,7 +1242,7 @@ class Tasks(Service):
         :return: A dictionary of the webhook's properties.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             webhook cannot be found.
         """
         r = self.session.get("/webhooks/{webhook_id}".format(webhook_id=webhook_id))
@@ -1258,7 +1258,7 @@ class Tasks(Service):
         :return: A boolean indicating if the deletion was successful.
         :rtype: bool
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             webhook cannot be found.
         """
         r = self.session.delete("/webhooks/{webhook_id}".format(webhook_id=webhook_id))

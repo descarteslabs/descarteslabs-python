@@ -19,7 +19,7 @@ import binascii
 
 from pprint import pprint
 
-from .auth import (
+from descarteslabs.auth.auth import (
     Auth,
     base64url_decode,
     DEFAULT_TOKEN_INFO_PATH,

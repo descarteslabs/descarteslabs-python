@@ -26,9 +26,9 @@ from tqdm import tqdm
 from urllib3.exceptions import IncompleteRead, ProtocolError
 
 from ....common.dltile import Tile
-from ...auth import Auth
+from descarteslabs.auth import Auth
 from ...deprecation import deprecate
-from ...exceptions import ServerError
+from descarteslabs.exceptions import ServerError
 from ..service.service import Service
 from .geotiff_utils import make_geotiff
 

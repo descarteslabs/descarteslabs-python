@@ -52,7 +52,7 @@ import numpy as np
 
 from ..client.services.raster import Raster
 from ..client.services.metadata import Metadata
-from ..client.exceptions import NotFoundError, BadRequestError
+from descarteslabs.exceptions import NotFoundError, BadRequestError
 from ..common.dotdict import DotDict
 from ..common import shapely_support
 

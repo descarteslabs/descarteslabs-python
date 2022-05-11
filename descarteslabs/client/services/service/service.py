@@ -31,8 +31,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from warnings import warn
 
-from ...auth import Auth
-from ...exceptions import (
+from descarteslabs.auth import Auth
+from descarteslabs.exceptions import (
     ClientError,
     ServerError,
     BadRequestError,
@@ -174,7 +174,7 @@ class Session(requests.Session):
             A 429 HTTP response status code was encountered.
         GatewayTimeoutError
             A 504 HTTP response status code was encountered.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Any HTTP response status code larger than 400 that was not covered above
             is returned as a ServerError.  The original HTTP response status code
             can be found in the attribute :py:attr:`original_status`.
@@ -233,7 +233,7 @@ class Session(requests.Session):
         """Handle proxy authentication when the HTTP request was denied.
 
         This method can be overridden in a derived class.  By default a
-        :py:class:`~descarteslabs.client.exceptions.ProxyAuthenticationRequiredError`
+        :py:class:`~descarteslabs.exceptions.ProxyAuthenticationRequiredError`
         will be raised.
 
         Returns
@@ -241,7 +241,7 @@ class Session(requests.Session):
         bool
             Return True if the proxy authentication has been handled and no further
             exception should be raised.  Return False if a
-            :py:class:`~descarteslabs.client.exceptions.ProxyAuthenticationRequiredError`
+            :py:class:`~descarteslabs.exceptions.ProxyAuthenticationRequiredError`
             should be raised.
         """
 
@@ -282,7 +282,7 @@ class Service(object):
     token: str, optional
         Deprecated.
     auth: Auth, optional
-        A Descartes Labs :py:class:`~descarteslabs.client.auth.Auth` instance.  If not
+        A Descartes Labs :py:class:`~descarteslabs.auth.Auth` instance.  If not
         provided, a default one will be instantiated.
     retries: int or urllib3.util.retry.Retry
         If a number, it's the number of retries that will be attempled.  If a
@@ -563,7 +563,7 @@ class JsonApiSession(Session):
         ------
         BadRequestError
             Either a 400 or 422 HTTP response status code was encountered.
-        ~descarteslabs.client.exceptions.NotFoundError
+        ~descarteslabs.exceptions.NotFoundError
             A 404 HTTP response status code was encountered.
         ProxyAuthenticationRequiredError
             A 407 HTTP response status code was encountered and the resulting
@@ -575,7 +575,7 @@ class JsonApiSession(Session):
             A 429 HTTP response status code was encountered.
         GatewayTimeoutError
             A 504 HTTP response status code was encountered.
-        ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ServerError
             Any HTTP response status code larger than 400 that was not covered above
             is returned as a ServerError.  The original HTTP response status code
             can be found in the attribute :py:attr:`original_status`.
@@ -606,7 +606,7 @@ class JsonApiSession(Session):
         """Handle proxy authentication when the HTTP request was denied.
 
         This method can be overridden in a derived class.  By default a
-        :py:class:`~descarteslabs.client.exceptions.ProxyAuthenticationRequiredError`
+        :py:class:`~descarteslabs.exceptions.ProxyAuthenticationRequiredError`
         will be raised.
 
         Returns
@@ -614,7 +614,7 @@ class JsonApiSession(Session):
         bool
             Return True if the proxy authentication has been handled and no further
             exception should be raised.  Return False if a
-            :py:class:`~descarteslabs.client.exceptions.ProxyAuthenticationRequiredError`
+            :py:class:`~descarteslabs.exceptions.ProxyAuthenticationRequiredError`
             should be raised.
         """
 
@@ -720,7 +720,7 @@ class JsonApiService(Service):
         When set to ``True``, errors are rewritten to be more readable.  Each JsonApi
         error becomes a single line of error information without tags.
     auth: Auth, optional
-        A Descartes Labs :py:class:`~descarteslabs.client.auth.Auth` instance.  If not
+        A Descartes Labs :py:class:`~descarteslabs.auth.Auth` instance.  If not
         provided, a default one will be instantiated.
     retries: int or urllib3.util.retry.Retry If a number, it's the number of retries
         that will be attempled.  If a :py:class:`urllib3.util.retry.Retry` instance,

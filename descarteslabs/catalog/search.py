@@ -27,7 +27,7 @@ class Search(object):
 
     You must use the `Search` object as an ``iterator`` to get the results.  This will
     execute the search query and return a generator for iterating through the returned
-    results.  This might raise a `~descarteslabs.client.exceptions.BadRequestError`
+    results.  This might raise a `~descarteslabs.exceptions.BadRequestError`
     if any of the query parameters or filters are invalid.
 
     Example
@@ -216,7 +216,7 @@ class Search(object):
         ------
         BadRequestError
             If any of the query parameters or filters are invalid
-        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -247,7 +247,7 @@ class Search(object):
         ------
         BadRequestError
             If any of the query parameters or filters are invalid
-        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -419,7 +419,7 @@ class ImageSearch(Search):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -482,7 +482,7 @@ class ImageSearch(Search):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 

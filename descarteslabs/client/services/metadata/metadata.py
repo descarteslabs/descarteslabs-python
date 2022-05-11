@@ -17,7 +17,7 @@ import os
 import itertools
 
 from ..service import Service
-from ...auth import Auth
+from descarteslabs.auth import Auth
 from ...deprecation import deprecate
 from ....common.property_filtering.filtering import (
     AndExpression,
@@ -135,7 +135,7 @@ class Metadata(Service):
         :return: A dictionary of band entries and their metadata.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if image id cannot
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if image id cannot
             be found.
 
         Example::
@@ -875,7 +875,7 @@ class Metadata(Service):
         :return: A dictionary of metadata for a single image.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if image id cannot
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if image id cannot
              be found.
 
         Example::
@@ -909,7 +909,7 @@ class Metadata(Service):
         :return: List of image metadata dicts.
         :rtype: DotList(DotDict)
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if an image id cannot
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if an image id cannot
              be found and ignore_not_found set to `False` (default is `True`)
         """
         kwargs["ids"] = ids
@@ -928,7 +928,7 @@ class Metadata(Service):
         :return: A dictionary with metadata for a single product.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if an product id
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if an product id
             cannot be found.
         """
         r = self.session.get("/products/{}".format(product_id))
@@ -942,7 +942,7 @@ class Metadata(Service):
         :return: A dictionary with metadata for a single band.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if an band id
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if an band id
             cannot be found.
         """
         r = self.session.get("/bands/{}".format(band_id))
@@ -956,7 +956,7 @@ class Metadata(Service):
         :return: A dictionary with metadata for a single derived band.
         :rtype: DotDict
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if an band id
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if an band id
             cannot be found.
         """
         r = self.session.get("/bands/derived/{}".format(derived_band_id))

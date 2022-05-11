@@ -32,7 +32,7 @@ class Retry(object):
     >>> retry = dl.common.retry.Retry(
     ...     maximum=30,
     ...     retries=5,
-    ...     exceptions=(dl.client.exceptions.GatewayTimeoutError,)
+    ...     exceptions=(dl.exceptions.GatewayTimeoutError,)
     ... )
     >>> @retry
     ... def flaky(x):

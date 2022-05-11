@@ -8,7 +8,7 @@ import re
 import responses
 import unittest
 
-from ....client.auth import Auth
+from descarteslabs.auth import Auth
 from ....client.services.tasks import (
     Tasks,
     as_completed,

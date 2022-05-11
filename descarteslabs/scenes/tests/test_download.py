@@ -3,7 +3,7 @@ import unittest
 import mock
 import io
 
-from ...client.exceptions import NotFoundError, BadRequestError
+from descarteslabs.exceptions import NotFoundError, BadRequestError
 from .. import geocontext
 from .. import _download
 

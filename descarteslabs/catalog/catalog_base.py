@@ -2,7 +2,7 @@ from functools import wraps
 from types import MethodType
 import json
 
-from ..client.exceptions import NotFoundError
+from descarteslabs.exceptions import NotFoundError
 from .attributes import (
     AttributeMeta,
     AttributeValidationError,
@@ -478,7 +478,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
@@ -563,7 +563,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         ids : list(str)
             A list of identifiers for the objects you are requesting.
         ignore_missing : bool, optional
-            Whether to raise a `~descarteslabs.client.exceptions.NotFoundError`
+            Whether to raise a `~descarteslabs.exceptions.NotFoundError`
             exception if any of the requested objects are not found in the Descartes
             Labs catalog.  ``False`` by default which raises the exception.
         client : CatalogClient, optional
@@ -582,7 +582,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         NotFoundError
             If any of the requested objects do not exist in the Descartes Labs catalog
             and `ignore_missing` is ``False``.
-        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
@@ -646,7 +646,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
 
         Raises
         ------
-        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
@@ -697,7 +697,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         `~descarteslabs.catalog.DocumentState.UNSAVED` state and is considered a new
         Descartes Labs catalog object that must be created.  If the catalog object
         already exists in this case, this method will raise a
-        `~descarteslabs.client.exceptions.BadRequestError`.
+        `~descarteslabs.exceptions.BadRequestError`.
 
         If this instance was retrieved using :py:meth:`get`, :py:meth:`get_or_create`
         or any other way (for example as part of a :py:meth:`search`), and any of its
@@ -729,7 +729,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             If any of the attribute values are invalid.
         DeletedObjectError
             If this catalog object was deleted.
-        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -809,7 +809,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             If the catalog object is not in the ``SAVED`` state.
         DeletedObjectError
             If this catalog object was deleted.
-        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -879,7 +879,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         ------
         ConflictError
             If the object has related objects (bands, images) that exist.
-        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
 
@@ -909,7 +909,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             If this catalog object was already deleted.
         UnsavedObjectError
             If this catalog object is being deleted without having been saved.
-        ~descarteslabs.client.exceptions.ClientError or ~descarteslabs.client.exceptions.ServerError
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """

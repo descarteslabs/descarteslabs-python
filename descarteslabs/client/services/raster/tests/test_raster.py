@@ -20,7 +20,7 @@ import unittest
 import numpy as np
 import blosc
 
-from ....auth import Auth
+from descarteslabs.auth import Auth
 from ..raster import as_json_string, Raster
 
 import responses

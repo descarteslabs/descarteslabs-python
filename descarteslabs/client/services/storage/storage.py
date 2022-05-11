@@ -14,9 +14,9 @@
 
 import os
 
-from ...auth import Auth
+from descarteslabs.auth import Auth
 from ..service import Service, ThirdPartyService
-from ...exceptions import NotFoundError
+from descarteslabs.exceptions import NotFoundError
 
 
 class Storage(Service):
@@ -95,7 +95,7 @@ class Storage(Service):
         :param str key: A key identifying an existing storage blob
         :param str storage_type: A type of data storage. Possible values:
             ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
-        :raises descarteslabs.client.exceptions.NotFoundError: if no data exists
+        :raises descarteslabs.exceptions.NotFoundError: if no data exists
             for the given key and storage type
         """
 
@@ -128,7 +128,7 @@ class Storage(Service):
             ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
         :return: the data stored at ``key`` as a string
         :rtype: str
-        :raises descarteslabs.client.exceptions.NotFoundError: if no data exists
+        :raises descarteslabs.exceptions.NotFoundError: if no data exists
             for the given key and storage type
         """
 
@@ -241,7 +241,7 @@ class Storage(Service):
             example, a file opened in binary mode such as with ``open(filename, 'wb')``).
         :param str storage_type: A type of data storage. Possible values:
             ``"data"``, ``"tmp"``, ``"result"``. Default: ``"data"``.
-        :raises descarteslabs.client.exceptions.NotFoundError: if no data exists
+        :raises descarteslabs.exceptions.NotFoundError: if no data exists
             for the given key and storage type
         """
         r = self.session.get(

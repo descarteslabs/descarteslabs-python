@@ -7,7 +7,7 @@ import re
 import responses
 import unittest
 
-from ....client.auth import Auth
+from descarteslabs.auth import Auth
 from ....client.services.vector import Vector
 from .. import ExportTask, TransientResultError, TimeoutError
 

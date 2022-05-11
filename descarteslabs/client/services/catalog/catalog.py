@@ -6,9 +6,9 @@ import lazy_object_proxy
 import numpy as np
 from requests.exceptions import RequestException
 
-from ...auth import Auth
+from descarteslabs.auth import Auth
 from ...deprecation import check_deprecated_kwargs, deprecate, deprecate_func
-from ...exceptions import NotFoundError, ServerError
+from descarteslabs.exceptions import NotFoundError, ServerError
 from ..metadata import Metadata
 from ..service import Service, ThirdPartyService
 
@@ -150,9 +150,9 @@ class Catalog(Service):
                 swath:            How large an area the sensor
                                   captures at a given time.
 
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         return self._metadata.products(owner=self.auth.payload["sub"])
@@ -283,9 +283,9 @@ class Catalog(Service):
                                        groups, e.g. group:groupname.
                                        user email, e.g. email:user@company.com.
 
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         return self._metadata.bands(owner=self.auth.payload["sub"])
@@ -373,11 +373,11 @@ class Catalog(Service):
                                           groups, e.g. group:groupname.
                                           user email, e.g.  email:user@company.com.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         if add_namespace:
@@ -424,13 +424,13 @@ class Catalog(Service):
         :return: JSON API representation of the product. See :meth:`get_product`
             for information about returned keys.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.ConflictError: Raised when
+        :raises ~descarteslabs.exceptions.ConflictError: Raised when
             a product with the specified ID already exists.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         for k, v in locals().items():
@@ -487,13 +487,13 @@ class Catalog(Service):
         :return: JSON API representation of the product. See :meth:`get_product`
             for information about returned keys.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         for k, v in locals().items():
@@ -549,13 +549,13 @@ class Catalog(Service):
         :return: JSON API representation of the product. See :meth:`get_product`
             for information about returned keys.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         if add_namespace:
@@ -589,13 +589,13 @@ class Catalog(Service):
                 deletion_task: Identifier for the task
                                that is removing bands and images.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             ``cascade=False`` and there are dependant bands or images.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         if add_namespace:
@@ -699,11 +699,11 @@ class Catalog(Service):
                                             images that could not be updated
                                             due to multiple concurrent updates.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             task cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         r = self.session.get("/products/deletion_tasks/{}".format(deletion_task_id))
@@ -847,11 +847,11 @@ class Catalog(Service):
                                                groups, e.g. group:groupname.
                                                user email, e.g. email:user@company.com.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             band cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         if add_namespace:
@@ -952,13 +952,13 @@ class Catalog(Service):
         :return: JSON API representation of the band. See :meth:`get_band`
             for information about returned keys.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.ConflictError: Raised when
+        :raises ~descarteslabs.exceptions.ConflictError: Raised when
             a band with the specified name already exists.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -998,13 +998,13 @@ class Catalog(Service):
         :return: JSON API representation of the band. See :meth:`get_band`
             for information about returned keys.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             band cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -1036,13 +1036,13 @@ class Catalog(Service):
         :return: JSON API representation of the band. See :meth:`get_band`
             for information about returned keys.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             band cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         if add_namespace:
@@ -1060,11 +1060,11 @@ class Catalog(Service):
         :param str name: Name of the band to remove.
         :param bool add_namespace: (Deprecated) Add your user namespace to the ``product_id``.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             band cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         if add_namespace:
@@ -1194,11 +1194,11 @@ class Catalog(Service):
                                                 groups, e.g. group:groupname.
                                                 user email, e.g. email:user@company.com.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             image cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         if add_namespace:
@@ -1277,13 +1277,13 @@ class Catalog(Service):
         :return: JSON API representation of the band. See :meth:`get_image`
             for information about returned keys.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.ConflictError: Raised when
+        :raises ~descarteslabs.exceptions.ConflictError: Raised when
             a image with the specified ID already exists.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         if add_namespace:
@@ -1321,13 +1321,13 @@ class Catalog(Service):
         :return: JSON API representation of the band. See :meth:`get_image`
             for information about returned keys.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             image cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -1367,13 +1367,13 @@ class Catalog(Service):
         :return: JSON API representation of the band. See :meth:`get_image`
             for information about returned keys.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the owners list is missing prefixes.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             image cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         if add_namespace:
@@ -1391,11 +1391,11 @@ class Catalog(Service):
         :param str image_id: ID of the image to remove.
         :param bool add_namespace: (Deprecated) Add your user namespace to the ``product_id``.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product or image cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -1439,11 +1439,11 @@ class Catalog(Service):
 
         :raises ValueError: Raised when ``multi=True`` but multiple ``files`` aren't provided,
             or if ``image_id`` isn't specified.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
 
@@ -1530,11 +1530,11 @@ class Catalog(Service):
         :rtype: str
         :return: The upload id.
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         if ndarray.dtype.name not in self.UPLOAD_NDARRAY_SUPPORTED_DTYPES:
@@ -1636,13 +1636,13 @@ class Catalog(Service):
 
                     continuation_token: Token used for paging responses.
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the status filter has an invalid value.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         kwargs = {"limit": limit}
@@ -1690,13 +1690,13 @@ class Catalog(Service):
                     status:            Status of the task, one of
                                        ["SUCCESS", "FAILURE"].
 
-        :raises ~descarteslabs.client.exceptions.BadRequestError: Raised when
+        :raises ~descarteslabs.exceptions.BadRequestError: Raised when
             the request is malformed, e.g. the status filter has an invalid value.
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         continuation_token = None
@@ -1752,11 +1752,11 @@ class Catalog(Service):
                     status:            Status of the task, one of
                                        ["SUCCESS", "FAILURE"].
 
-        :raises ~descarteslabs.client.exceptions.NotFoundError: Raised if the
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             product or upload cannot be found.
-        :raises ~descarteslabs.client.exceptions.RateLimitError: Raised when
+        :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
-        :raises ~descarteslabs.client.exceptions.ServerError: Raised when
+        :raises ~descarteslabs.exceptions.ServerError: Raised when
             a unknown error occurred on the server.
         """
         result = self.session.get(
