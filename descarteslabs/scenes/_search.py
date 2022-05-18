@@ -26,7 +26,7 @@ from ._helpers import cached_bands_by_product
 
 def search(
     aoi,
-    products=None,
+    products,
     start_datetime=None,
     end_datetime=None,
     cloud_fraction=None,
@@ -52,7 +52,7 @@ def search(
         Search for scenes that intersect this area by any amount.
         If a :class:`~descarteslabs.scenes.geocontext.GeoContext`, a copy is returned as ``ctx``, with missing values
         filled in. Otherwise, the returned ``ctx`` will be an `AOI`, with this as its geometry.
-    products : str or List[str], optional
+    products : str or List[str]
         Descartes Labs product identifiers
     start_datetime : str, datetime-like, optional
         Restrict to scenes acquired after this datetime
@@ -115,6 +115,9 @@ def search(
         * crs: the most common CRS used of all matching scenes
     """
 
+    if not products:
+        raise ValueError("Products is a required parameter.")
+
     if isinstance(aoi, geocontext.GeoContext):
         ctx = aoi
         if ctx.bounds is None and ctx.geometry is None:
@@ -155,8 +158,6 @@ def search(
     )
 
     metadata = metadata_client.search(**metadata_params)
-    if products is None:
-        products = {meta["properties"]["product"] for meta in metadata["features"]}
 
     product_bands = {
         product: Scene._scenes_bands_dict(
@@ -200,3 +201,211 @@ def search(
             ctx = ctx.assign(**assign_ctx)
 
     return scenes, ctx
+
+
+def get_product(product_id, metadata_client=None):
+    """Get information about a single product.
+
+    Parameters
+    ----------
+    product_id : str
+        Product Identifier.
+    metadata_client : Metadata, optional
+        Unneeded in general use; lets you use a specific client instance
+        with non-default auth and parameters.
+
+    Returns
+    -------
+    DotDict
+        A dictionary with metadata for a single product.
+
+    Raises
+    ------
+    NotFoundError
+        Raised if a product id cannot be found.
+    """
+    if metadata_client is None:
+        metadata_client = Metadata()
+
+    return metadata_client.get_product(product_id)
+
+
+def search_products(
+    bands=None,
+    limit=None,
+    offset=None,
+    owner=None,
+    text=None,
+    metadata_client=None,
+):
+    """Search products that are available on the platform.
+    An empty search with no parameters will pass back all available products.
+
+    Parameters
+    ----------
+    bands : list(str), optional
+        Band name(s) e.g ["red", "nir"] to filter products by.
+        Note that products must match all bands that are passed.
+    limit : int, optional
+        Number of results to return.
+    offset : int, optional
+        Index to start at when returning results.
+    owner : str, optional
+        Filter products by the owner's uuid.
+    text : str, optional
+        Filter products by string match.
+    metadata_client : Metadata, optional
+        Unneeded in general use; lets you use a specific client instance
+        with non-default auth and parameters.
+
+    Returns
+    -------
+    DotList(DotDict)
+        List of dicts containing at most `limit` products.
+        Empty if no matching products are found.
+    """
+    if metadata_client is None:
+        metadata_client = Metadata()
+
+    return metadata_client.products(
+        bands=bands, limit=limit, offset=offset, owner=owner, text=text
+    )
+
+
+def get_band(band_id, metadata_client=None):
+    """Get information about a single band.
+
+    Parameters
+    ----------
+    band_id : str
+        A band identifier.
+    metadata_client : Metadata, optional
+        Unneeded in general use; lets you use a specific client instance
+        with non-default auth and parameters.
+
+    Returns
+    -------
+    DotDict
+        A dictionary mapping band ids to dictionaries of their metadata.
+        Returns empty dict if product id not found.
+
+    Raises
+    ------
+    NotFoundError
+        Raised if a band id cannot be found.
+    """
+    if metadata_client is None:
+        metadata_client = Metadata()
+
+    return metadata_client.get_band(band_id=band_id)
+
+
+def search_bands(
+    products=None,
+    limit=None,
+    offset=None,
+    wavelength=None,
+    resolution=None,
+    tags=None,
+    bands=None,
+    metadata_client=None,
+):
+    """Search for imagery data bands that you have access to.
+
+    Parameters
+    ----------
+    products : list(str), optional
+        A list of product(s) to return bands for.
+    limit : int, optional
+        Number of results to return.
+    offset : int, optional
+        Index to start at when returning results.
+    wavelength : float, optional
+        A wavelength in nm e.g 700 that the band sensor must measure.
+    resolution : int, optional
+        The resolution in meters per pixel e.g 30 of the data available in this band.
+    tags : list(str), optional
+        A list of tags that the band must have in its own tag list.
+    metadata_client : Metadata, optional
+        Unneeded in general use; lets you use a specific client instance
+        with non-default auth and parameters.
+
+    Returns
+    -------
+    DotList(DotDict)
+        List of dicts containing at most `limit` bands.
+        Empty if there are no bands matching query (e.g. product id not available).
+    """
+    if metadata_client is None:
+        metadata_client = Metadata()
+
+    return metadata_client.bands(
+        products=products,
+        limit=limit,
+        offset=offset,
+        wavelength=wavelength,
+        resolution=resolution,
+        tags=tags,
+        bands=bands,
+    )
+
+
+def get_derived_band(derived_band_id, metadata_client=None):
+    """Get information about a single derived band.
+
+    Parameters
+    ----------
+    derived_band_id : str
+        Derived band identifier.
+    metadata_client : Metadata, optional
+        Unneeded in general use; lets you use a specific client instance
+        with non-default auth and parameters.
+
+    Returns
+    -------
+    DotDict
+        A dictionary with metadata for a single derived band.
+
+    Raises
+    ------
+    NotFoundError
+        Raised if a band id cannot be found.
+    """
+    if metadata_client is None:
+        metadata_client = Metadata()
+
+    return metadata_client.get_derived_band(derived_band_id)
+
+
+def search_derived_bands(
+    bands, require_bands=None, limit=None, offset=None, metadata_client=None
+):
+    """Search for predefined derived bands that you have access to.
+
+    Parameters
+    ----------
+    bands : list(str)
+        Limit the derived bands to ones that can be computed using this list of spectral bands.
+        e.g ["red", "nir", "swir1"]
+    require_bands : bool
+        Control whether searched bands *must* contain all the spectral bands passed in the bands param.
+        Defaults to False.
+    limit : int
+        Number of results to return.
+    offset : int
+        Index to start at when returning results.
+    metadata_client : Metadata, optional
+        Unneeded in general use; lets you use a specific client instance
+        with non-default auth and parameters.
+
+    Returns
+    -------
+    DotList(DotDict)
+        List of dicts containing at most `limit` bands.
+    """
+    if metadata_client is None:
+        metadata_client = Metadata()
+
+    return metadata_client.derived_bands(
+        bands=bands, require_bands=require_bands, limit=limit, offset=offset
+    )

@@ -152,7 +152,7 @@ class Metadata(Service):
 
     def get_bands_by_product(self, product_id):
         """
-        All bands (includig derived bands) available in a product.
+        All bands (including derived bands) available in a product.
 
         :param str product_id: A product identifier.
 
@@ -956,8 +956,7 @@ class Metadata(Service):
         :return: A dictionary with metadata for a single derived band.
         :rtype: DotDict
 
-        :raises ~descarteslabs.exceptions.NotFoundError: Raised if an band id
-            cannot be found.
+        :raises ~descarteslabs.exceptions.NotFoundError: Raised if a band id cannot be found.
         """
         r = self.session.get("/bands/derived/{}".format(derived_band_id))
         return DotDict(r.json())

@@ -28,6 +28,12 @@ Changelog
   location at `descarteslabs.client.exceptions` to continue to work with existing code, but new code should use the new
   location.
 
+### Scenes
+
+- Added support for retrieving products and bands. 
+  - Methods added: `get_product`, `get_band`, `get_derived_band`, `search_products`, `search_bands`, `search_derived_bands`.
+  - Disallows search without `products` parameter.
+
 ### Discover
 
 - Added support for filtering `Assets` by type and name fields.

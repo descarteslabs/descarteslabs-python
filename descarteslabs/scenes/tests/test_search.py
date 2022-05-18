@@ -140,10 +140,21 @@ class TestScenesSearch(unittest.TestCase):
         "cached_bands_by_product",
         _cached_bands_by_product,
     )
+    def test_search_products_arg_is_required(self):
+        # Python raises a TypeError when required args are not passed in.
+        with self.assertRaises(TypeError):
+            search(self.geom, limit=4)
+
+    @mock.patch.object(_search.Metadata, "search", _metadata_search)
+    @mock.patch.object(
+        _search,
+        "cached_bands_by_product",
+        _cached_bands_by_product,
+    )
     def test_search_no_products(self):
-        sc, ctx = search(self.geom, limit=4)
-        assert len(sc) > 0
-        assert len(sc) <= 4  # test client only has 2 scenes available
+        # If the user passes in a falsy arg for products, we raise a ValueError.
+        with self.assertRaises(ValueError):
+            search(self.geom, products=[], limit=4)
 
     @mock.patch.object(_search.Metadata, "search", _metadata_search)
     @mock.patch.object(

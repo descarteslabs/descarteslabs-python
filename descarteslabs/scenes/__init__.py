@@ -15,7 +15,15 @@ It's available under ``descarteslabs.scenes``.
 
 from .geocontext import AOI, DLTile, XYZTile, GeoContext
 from ._display import display, save_image
-from ._search import search
+from ._search import (
+    search,
+    get_product,
+    get_band,
+    get_derived_band,
+    search_products,
+    search_bands,
+    search_derived_bands,
+)
 from .scene import Scene
 from .collection import Collection
 from .scenecollection import SceneCollection
@@ -29,6 +37,12 @@ __all__ = [
     "XYZTile",
     "GeoContext",
     "search",
+    "get_product",
+    "get_band",
+    "get_derived_band",
+    "search_products",
+    "search_bands",
+    "search_derived_bands",
     "display",
     "save_image",
 ]
