@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 from dataclasses import dataclass
 import re
-import os
 from typing import Generator, List, Optional, Union
 from enum import Enum
 from collections import UserDict
@@ -11,6 +10,7 @@ import warnings
 import urllib
 
 from descarteslabs.auth import Auth
+from descarteslabs.config import get_settings
 from ..client.services.service import Service
 from ..common.discover import DiscoverGrpcClient
 from ..common.proto.discover import discover_pb2
@@ -1456,11 +1456,17 @@ class Discover:
 
     def __init__(
         self,
-        host: str = "platform.descarteslabs.com",
+        host: str = None,
         discover_client: DiscoverGrpcClient = None,
         auth=None,
+        port=None,
     ):
         if discover_client is None:
+            if host is None:
+                host = get_settings().discover_host
+            if port is None:
+                port = int(get_settings().discover_port)
+
             discover_client = DiscoverGrpcClient(host, auth)
         self._discover_client = discover_client
 
@@ -2335,10 +2341,7 @@ class _IamClient(Service):
             auth = Auth()
 
         if url is None:
-            url = os.environ.get(
-                "DESCARTESLABS_IAM_URL",
-                "https://iam.descarteslabs.com",
-            )
+            url = get_settings().iam_url
 
         super().__init__(url, auth=auth, retries=retries)
 

@@ -7,6 +7,7 @@ import numpy as np
 from requests.exceptions import RequestException
 
 from descarteslabs.auth import Auth
+from descarteslabs.config import get_settings
 from ...deprecation import check_deprecated_kwargs, deprecate, deprecate_func
 from descarteslabs.exceptions import NotFoundError, ServerError
 from ..metadata import Metadata
@@ -47,8 +48,9 @@ class Catalog(Service):
         backoff/retry. Override the url parameter to use a different instance
         of the backing service.
 
-        :param str url: A HTTP URL pointing to a version of the storage service
-            (defaults to current version)
+        :param str url: URL for the catalog service.  Only change
+            this if you are being asked to use a non-default Descartes Labs catalog.  If
+            not set, then ``descarteslabs.config.get_settings().CATALOG_URL`` will be used.
         :param Auth auth: A custom user authentication (defaults to the user
             authenticated locally by token information on disk or by environment
             variables)
@@ -67,10 +69,7 @@ class Catalog(Service):
         self._gcs_upload_service = ThirdPartyService()
 
         if url is None:
-            url = os.environ.get(
-                "DESCARTESLABS_CATALOG_URL",
-                "https://platform.descarteslabs.com/metadata/v1/catalog",
-            )
+            url = get_settings().catalog_url
 
         super(Catalog, self).__init__(url, auth=auth)
 

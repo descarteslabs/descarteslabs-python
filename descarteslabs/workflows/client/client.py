@@ -1,11 +1,11 @@
 import functools
-import os
 import random
 import time
 import warnings
 
 import grpc
 
+from descarteslabs.config import get_settings
 from ...common.retry import (
     Retry,
     truncated_delay_generator,
@@ -127,12 +127,10 @@ class Client(GrpcClient):
 
     def __init__(self, host=None, auth=None, certificate=None, port=None, channel=None):
         if host is None:
-            host = os.environ.get(
-                "DESCARTESLABS_WORKFLOWS_HOST", _channel.DEFAULT_GRPC_HOST
-            )
+            host = get_settings().workflows_host or _channel.DEFAULT_GRPC_HOST
 
         if port is None:
-            port = os.environ.get("DESCARTESLABS_WORKFLOWS_PORT", 443)
+            port = get_settings().workflows_port
 
         if channel is None:
             channel = _channel.__channel__

@@ -1,14 +1,14 @@
-import os
 import io
 import logging
 
-from ....common.property_filtering import GenericProperties
-from ...deprecation import deprecate
-from ..service import JsonApiService, ThirdPartyService
 from descarteslabs.auth import Auth
+from descarteslabs.config import get_settings
+
 from ....common.dotdict import DotDict
+from ....common.property_filtering import GenericProperties
 from ....common.shapely_support import shapely_to_geojson
-from ...deprecation import deprecate_func
+from ...deprecation import deprecate, deprecate_func
+from ..service import JsonApiService, ThirdPartyService
 
 
 class _SearchFeaturesIterator(object):
@@ -96,8 +96,9 @@ class Vector(JsonApiService):
     @deprecate_func("Vector has been deprecated, please use Tables instead")
     def __init__(self, url=None, auth=None):
         """
-        :param str url: A HTTP URL pointing to a version of the storage service
-            (defaults to current version)
+        :param str url: URL for the vector service.  Only change
+            this if you are being asked to use a non-default Descartes Labs catalog.  If
+            not set, then ``descarteslabs.config.get_settings().VECTOR_URL`` will be used.
         :param Auth auth: A custom user authentication (defaults to the user
             authenticated locally by token information on disk or by environment
             variables)
@@ -109,10 +110,8 @@ class Vector(JsonApiService):
             auth = Auth()
 
         if url is None:
-            url = os.environ.get(
-                "DESCARTESLABS_VECTOR_URL",
-                "https://platform.descarteslabs.com/vector/v2",
-            )
+            url = get_settings().vector_url
+
         self._gcs_upload_service = ThirdPartyService()
 
         super(Vector, self).__init__(url, auth=auth)

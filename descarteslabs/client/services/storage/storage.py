@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 from descarteslabs.auth import Auth
-from ..service import Service, ThirdPartyService
+from descarteslabs.config import get_settings
 from descarteslabs.exceptions import NotFoundError
+
+from ..service import Service, ThirdPartyService
 
 
 class Storage(Service):
@@ -29,8 +29,9 @@ class Storage(Service):
 
     def __init__(self, url=None, auth=None, retries=None):
         """
-        :param str url: A HTTP URL pointing to a version of the storage service
-            (defaults to current version)
+        :param str url: URL for the storage service.  Only change
+            this if you are being asked to use a non-default Descartes Labs catalog.  If
+            not set, then ``descarteslabs.config.get_settings().STORAGE_URL`` will be used.
         :param Auth auth: A custom user authentication (defaults to the user
             authenticated locally by token information on disk or by environment
             variables)
@@ -41,10 +42,7 @@ class Storage(Service):
             auth = Auth()
 
         if url is None:
-            url = os.environ.get(
-                "DESCARTESLABS_STORAGE_URL",
-                "https://platform.descarteslabs.com/storage/v1",
-            )
+            url = get_settings().storage_url
 
         self._gcs_upload_service = ThirdPartyService()
 

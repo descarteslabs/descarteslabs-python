@@ -89,6 +89,7 @@ def do_setup():
             "cachetools>=3.1.1",
             "cloudpickle==0.4.0;python_version<'3.8'",
             "cloudpickle==1.6.0;python_version>='3.8'",
+            "dynaconf==3.1.1",
             "geojson>=2.5.0",
             "grpcio>=1.35.0,<2",
             "ibis-framework==1.4.0",

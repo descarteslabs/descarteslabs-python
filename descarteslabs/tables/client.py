@@ -70,6 +70,7 @@ import warnings
 
 from .. import discover as disco
 from descarteslabs.auth import Auth
+from descarteslabs.config import get_settings
 from descarteslabs.exceptions import BadRequestError
 from ..client.services.storage import Storage
 from ..common.ibis.client import api as serializer
@@ -102,8 +103,8 @@ class JobStatus(str, Enum):
 class Tables(object):
     def __init__(
         self,
-        host="platform.descarteslabs.com",
-        port=443,
+        host=None,
+        port=None,
         auth=None,
         discover_client=None,
         database=None,
@@ -119,6 +120,11 @@ class Tables(object):
             variables)
         :param database: Backend database
         """
+        if host is None:
+            host = get_settings().tables_host
+        if port is None:
+            port = int(get_settings().tables_port)
+
         self.connection = serializer.connect(
             host=host, port=port, auth=auth, **grpc_client_kwargs
         )
@@ -129,7 +135,7 @@ class Tables(object):
         self.database = database
 
         self.auth = auth or Auth()
-        self.discover_client = discover_client or disco.Discover(host, auth=auth)
+        self.discover_client = discover_client or disco.Discover(auth=auth)
 
     @property
     def dialect(self):

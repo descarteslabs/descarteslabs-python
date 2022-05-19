@@ -28,16 +28,6 @@ def setup_aws():
 
     descarteslabs = sys.modules["descarteslabs"]
 
-    # auth
-    auth = importlib.import_module("descarteslabs._dl_modules.client.auth")
-    sys.modules["descarteslabs.auth"] = auth
-    descarteslabs.auth = auth
-
-    # config
-    config = types.ModuleType("descarteslabs.config")
-    sys.modules["descarteslabs.config"] = config
-    descarteslabs.config = config
-
     # exceptions
     exceptions = importlib.import_module("descarteslabs._dl_modules.client.exceptions")
     sys.modules["descarteslabs.exceptions"] = exceptions

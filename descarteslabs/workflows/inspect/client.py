@@ -6,6 +6,7 @@ import warnings
 import requests
 from urllib3.util.retry import Retry
 
+from descarteslabs.config import get_settings
 from ...client.services.service.service import (
     Service,
     HttpStatusCode,
@@ -48,9 +49,7 @@ class InspectClient(Service):
         self._channel = channel
 
         if host is None:
-            host = os.environ.get(
-                "DESCARTESLABS_WORKFLOWS_HOST_HTTP", _channel.DEFAULT_HTTP_HOST
-            )
+            host = get_settings().workflows_host_http or _channel.DEFAULT_HTTP_HOST
 
         if url is None:
             url = f"https://{host}/{channel}"

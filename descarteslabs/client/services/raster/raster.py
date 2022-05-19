@@ -21,14 +21,15 @@ from concurrent import futures
 
 import blosc
 import numpy as np
+from descarteslabs.auth import Auth
+from descarteslabs.config import get_settings
+from descarteslabs.exceptions import ServerError
 from PIL import Image
 from tqdm import tqdm
 from urllib3.exceptions import IncompleteRead, ProtocolError
 
 from ....common.dltile import Tile
-from descarteslabs.auth import Auth
 from ...deprecation import deprecate
-from descarteslabs.exceptions import ServerError
 from ..service.service import Service
 from .geotiff_utils import make_geotiff
 
@@ -227,10 +228,7 @@ class Raster(Service):
             auth = Auth()
 
         if url is None:
-            url = os.environ.get(
-                "DESCARTESLABS_RASTER_URL",
-                "https://platform.descarteslabs.com/raster/v2",
-            )
+            url = get_settings().raster_url
 
         super(Raster, self).__init__(url, auth=auth)
 

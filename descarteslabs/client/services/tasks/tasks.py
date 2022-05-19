@@ -14,7 +14,6 @@
 
 import base64
 import builtins
-from collections import defaultdict, OrderedDict
 import dis
 import glob
 import importlib
@@ -26,9 +25,10 @@ import os
 import re
 import sys
 import time
-from warnings import warn
-from tempfile import NamedTemporaryFile
 import zipfile
+from collections import OrderedDict, defaultdict
+from tempfile import NamedTemporaryFile
+from warnings import warn
 
 try:
     import cloudpickle
@@ -36,19 +36,20 @@ except ImportError:
     pass
 
 from descarteslabs.auth import Auth
-from ...deprecation import deprecate_func
+from descarteslabs.config import get_settings
 from descarteslabs.exceptions import AuthError
-from ..service import Service, ThirdPartyService
+
 from ....common.dotdict import DotDict, DotList
 from ....common.services.tasks.constants import (
-    ENTRYPOINT,
-    FunctionType,
-    DIST,
     DATA,
+    DIST,
+    ENTRYPOINT,
     REQUIREMENTS,
+    FunctionType,
 )
 from ....common.tasks import FutureTask
-
+from ...deprecation import deprecate_func
+from ..service import Service, ThirdPartyService
 
 OFFSET_DEPRECATION_MESSAGE = (
     "Keyword arg `offset` has been deprecated and will be removed in "
@@ -108,8 +109,9 @@ class Tasks(Service):
 
     def __init__(self, url=None, auth=None, retries=None):
         """
-        :param str url: An HTTP URL pointing to a version of the storage service
-            (defaults to current version)
+        :param str url: URL for the tasks service.  Only change
+            this if you are being asked to use a non-default Descartes Labs catalog.  If
+            not set, then ``descarteslabs.config.get_settings().TASKS_URL`` will be used.
         :param Auth auth: A custom user authentication (defaults to the user
             authenticated locally by token information on disk or by environment
             variables)
@@ -120,9 +122,7 @@ class Tasks(Service):
             auth = Auth()
 
         if url is None:
-            url = os.environ.get(
-                "DESCARTESLABS_TASKS_URL", "https://platform.descarteslabs.com/tasks/v1"
-            )
+            url = get_settings().tasks_url
 
         self._gcs_upload_service = ThirdPartyService()
 

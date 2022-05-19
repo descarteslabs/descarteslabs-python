@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import operator
-import os
 from functools import partial
 from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
 from ..service import Service
 from descarteslabs.auth import Auth
+from descarteslabs.config import get_settings
 from ....common.dotdict import DotDict, DotList
 from ...deprecation import deprecate_func
 
@@ -32,8 +32,9 @@ class Places(Service):
     )
     def __init__(self, url=None, auth=None, maxsize=10, ttl=600, retries=None):
         """
-        :param str url: A HTTP URL pointing to a version of the storage service
-            (defaults to current version)
+        :param str url: URL for the places service.  Only change
+            this if you are being asked to use a non-default Descartes Labs catalog.  If
+            not set, then ``descarteslabs.config.get_settings().PLACES_URL`` will be used.
         :param Auth auth: A custom user authentication (defaults to the user
             authenticated locally by token information on disk or by environment
             variables)
@@ -46,10 +47,7 @@ class Places(Service):
             auth = Auth()
 
         if url is None:
-            url = os.environ.get(
-                "DESCARTESLABS_PLACES_URL",
-                "https://platform.descarteslabs.com/waldo/v2",
-            )
+            url = get_settings().places_url
 
         super(Places, self).__init__(url, auth=auth, retries=retries)
         self.cache = TTLCache(maxsize, ttl)

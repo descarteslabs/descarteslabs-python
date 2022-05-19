@@ -1,9 +1,8 @@
 # jsonapi_document
 
 
-import os
-
 from descarteslabs.auth import Auth
+from descarteslabs.config import get_settings
 from ..client.services.service.service import (
     JsonApiService,
     HttpRequestMethod,
@@ -25,9 +24,7 @@ class CatalogClient(JsonApiService):
     url : str, optional
         The URL to use when connecting to the Descartes Labs catalog.  Only change
         this if you are being asked to use a non-default Descartes Labs catalog.  If
-        not set, the logic will first look for the environment variable
-        ``DESCARTESLABS_CATALOG_V2_URL`` and then use the default Descartes Labs
-        catalog.
+        not set, then ``descarteslabs.config.get_settings().CATALOG_V2_URL`` will be used.
     auth : Auth, optional
         The authentication object used when connecting to the Descartes Labs catalog.
         This is typically the default `Auth` object that uses the cached authentication
@@ -44,10 +41,7 @@ class CatalogClient(JsonApiService):
             auth = Auth()
 
         if url is None:
-            url = os.environ.get(
-                "DESCARTESLABS_CATALOG_V2_URL",
-                "https://platform.descarteslabs.com/metadata/v1/catalog/v2",
-            )
+            url = get_settings().catalog_v2_url
 
         super(CatalogClient, self).__init__(
             url, auth=auth, retries=retries, rewrite_errors=True

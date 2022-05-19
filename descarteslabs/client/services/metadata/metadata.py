@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import json
-import os
 import itertools
 
 from ..service import Service
 from descarteslabs.auth import Auth
+from descarteslabs.config import get_settings
 from ...deprecation import deprecate
 from ....common.property_filtering.filtering import (
     AndExpression,
@@ -44,8 +44,9 @@ class Metadata(Service):
 
     def __init__(self, url=None, auth=None, retries=None):
         """
-        :param str url: A HTTP URL pointing to a version of the storage service
-            (defaults to current version)
+        :param str url: URL for the metadata service.  Only change
+            this if you are being asked to use a non-default Descartes Labs catalog.  If
+            not set, then ``descarteslabs.config.get_settings().METADATA_URL`` will be used.
         :param Auth auth: A custom user authentication (defaults to the user
             authenticated locally by token information on disk or by environment
             variables)
@@ -56,10 +57,7 @@ class Metadata(Service):
             auth = Auth()
 
         if url is None:
-            url = os.environ.get(
-                "DESCARTESLABS_METADATA_URL",
-                "https://platform.descarteslabs.com/metadata/v1",
-            )
+            url = get_settings().metadata_url
 
         super(Metadata, self).__init__(url, auth=auth, retries=retries)
 
