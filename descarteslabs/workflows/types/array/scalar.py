@@ -4,12 +4,12 @@ from ..core import Proxytype, ProxyTypeError, allow_reflect
 from ..mixins import NumPyMixin
 from ...cereal import serializable
 
-from descarteslabs.common.graft import client
+from ....common.graft import client
 
 
 def _delayed_numpy_ufuncs():
     # avoid circular imports
-    from descarteslabs.workflows.types.numpy import numpy_ufuncs
+    from ..numpy import numpy_ufuncs
 
     return numpy_ufuncs
 

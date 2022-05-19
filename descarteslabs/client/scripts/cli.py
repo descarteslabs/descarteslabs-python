@@ -17,7 +17,7 @@
 
 
 import argparse
-from descarteslabs.auth.cli import auth_handler
+from descarteslabs.client.auth.cli import auth_handler
 from descarteslabs.client.services.metadata.cli import metadata_handler
 from descarteslabs.client.services.raster.cli import scales, raster_handler
 from descarteslabs.client.services.places.cli import places_handler

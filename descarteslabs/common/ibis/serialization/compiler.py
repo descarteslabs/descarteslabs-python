@@ -26,7 +26,7 @@ except ImportError:
 
 import pyarrow as pa
 
-from descarteslabs.common.proto.ibis import ibis_pb2
+from ...proto.ibis import ibis_pb2
 
 COERCES_LITERAL = {set: frozenset, tuple: list}
 SUPPORTED_REPEATED_ITEMS = {
