@@ -104,6 +104,28 @@ iam_url = "https://iam.dev.aws.descarteslabs.com"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
 
+# for use in the workflows backend
+[gcp-compute-production]
+platform_url = "https://platform.descarteslabs.com"
+
+metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
+raster_url = "http://ruster.ruster:8000"
+
+workflows_host = "workflows-api.prod.descarteslabs.com"
+workflows_port = "443"
+workflows_host_http = "workflows.prod.descarteslabs.com"
+
+# for use in the workflows backend
+[gcp-compute-stage]
+platform_url = "https://platform.descarteslabs.com"
+
+metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
+raster_url = "http://ruster.ruster:8000"
+
+workflows_host = "workflows-api.stage.descarteslabs.com"
+workflows_port = "443"
+workflows_host_http = "workflows.stage.descarteslabs.com"
+
 [testing]
 testing = true
 platform_url = "https://platform.descarteslabs.com"
