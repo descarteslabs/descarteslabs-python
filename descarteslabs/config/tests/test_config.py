@@ -4,6 +4,9 @@ from unittest.mock import patch, MagicMock
 from .. import Settings
 
 
+# prevent any actual setup of `descarteslabs`
+@patch("descarteslabs.config._aws_init._setup_aws", lambda: None)
+@patch("descarteslabs.config._gcp_init._setup_gcp", lambda: None)
 class TestSettings(unittest.TestCase):
     def setup(self):
         self.assertIsNone(Settings._settings)

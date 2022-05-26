@@ -19,6 +19,27 @@ Changelog
 =========
 ## [Unreleased]
 
+### Installation
+
+- The extra requirement options have changed. There are four extra requirement options now, `visualization`, `tables`,
+  `complete`, and `tests`. `visualization` pulls in extra requirements to support operating in a Jupyter notebook or
+  environment, enabling interactive maps and graphical displays. It is not required for operating in a "headless"
+  manner. `tables` pulls in extra requirements to support the `Tables` client. `complete` is the combination of
+  `visualization` and `tables`. `tests` pulls in extra requirements for running the tests. As always,
+  `pip install 'descarteslabs[complete]'` will install a fully enabled client.
+
+### Configuration
+
+- The Descartes Labs client now supports configuration to support operating in different environments. By default,
+  the client will configure itself for standard usage against the GCP platform (`"gcp-production"`). Alternate
+  environments can be configured by setting the `DESCARTESLABS_ENV` environment variable before starting python,
+  or by using a prelude like
+  ```
+  from descarteslabs.config import Settings
+  Settings.select_env("environment-name")
+  ```
+  before any other imports of any part of the descarteslabs client package.
+
 ### Auth and Exceptions
 
 - The `descarteslabs.client.auth` package has moved to `descarteslabs.auth`. It is now imported into the original

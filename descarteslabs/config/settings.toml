@@ -84,6 +84,7 @@ workflows_port = "443"
 workflows_host_http = "workflows.stage.descarteslabs.com"
 
 [aws-production]
+aws_client = true
 platform_url = "https://platform.production.aws.descarteslabs.com"
 
 iam_url = "https://iam.production.aws.descarteslabs.com"
@@ -91,6 +92,7 @@ metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
 
 [aws-staging]
+aws_client = true
 platform_url = "https://platform.staging.aws.descarteslabs.com"
 
 iam_url = "https://iam.staging.aws.descarteslabs.com"
@@ -98,6 +100,7 @@ metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
 
 [aws-dev]
+aws_client = true
 platform_url = "https://platform.dev.aws.descarteslabs.com"
 
 iam_url = "https://iam.dev.aws.descarteslabs.com"
@@ -153,4 +156,13 @@ tables_port = "@format {this.GRPC_PORT}"
 workflows_host = "workflows-api.prod.descarteslabs.com"
 workflows_port = "443"
 workflows_host_http = "workflows.prod.descarteslabs.com"
+
+[aws-testing]
+testing = true
+aws_client = true
+platform_url = "https://platform.dev.aws.descarteslabs.com"
+
+iam_url = "https://iam.dev.aws.descarteslabs.com"
+metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
+raster_url = "@format {this.PLATFORM_URL}/raster/v2"
 

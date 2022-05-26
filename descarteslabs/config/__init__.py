@@ -1,5 +1,9 @@
+import importlib
 import os
+import sys
 from threading import Lock
+
+import descarteslabs
 import dynaconf
 from descarteslabs.auth import Auth
 
@@ -116,6 +120,34 @@ class Settings(dynaconf.Dynaconf):
 
         # assign to the global instance
         cls._settings = settings
+
+        if os.path.exists(
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "client")
+        ):
+            # we are in monorepo, don't configure any client (currently this means we do not
+            # support the AWS client within monorepo)
+            pass
+        else:
+            # we are in a client install
+            # first remove the fake descarteslabs module
+            # note that as we are always imported by `descarteslabs` before the fake
+            # module is installed, our `descarteslabs` attribute here is the real
+            # module.
+            sys.modules[descarteslabs.__name__] = descarteslabs
+
+            # super important! We hold the Settings._lock, so no (transitive)
+            # imports can try to use `get_settings()`!
+            if settings.get("AWS_CLIENT", False):
+                from ._aws_init import _setup_aws
+
+                _setup_aws()
+            else:
+                from ._gcp_init import _setup_gcp
+
+                _setup_gcp()
+
+            # invalidate the meta_path caches
+            importlib.invalidate_caches()
 
         # and return the settings object
         return settings

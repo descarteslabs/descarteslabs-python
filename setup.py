@@ -28,7 +28,7 @@ DOCLINES = __doc__.split("\n")
 
 # Parse version out of descarteslabs/client/version.py
 _version_re = re.compile(r"__version__\s+=\s+(.*)")
-with open("descarteslabs/client/version.py", "rb") as f:
+with open("descarteslabs/_dl_modules/client/version.py", "rb") as f:
     version = str(
         ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
     )
@@ -47,6 +47,25 @@ def check_setuptools():
 
 
 def do_setup():
+    viz_requires = [
+        "matplotlib>=3.1.2",
+        "ipyleaflet>=0.13.3,<1",
+        "ipywidgets>=7.5.1,<8",
+        "traitlets==5.0.5,<6",
+        "markdown2>=2.4.0,<3",
+    ]
+    tables_requires = [
+        "ibis-framework==1.4.0",
+        "geopandas>=0.10.2;'linux' in sys_platform",
+        "pandas>=1.3.5",
+    ]
+    tests_requires = [
+        "hypothesis[numpy]==5.7.0",
+        "mock",
+        "pytest==6.0.0",
+        "responses==0.12.1",
+        "freezegun==0.3.12",
+    ]
     setup(
         name="descarteslabs",
         description=DOCLINES[0],
@@ -71,15 +90,15 @@ def do_setup():
         packages=find_packages(),
         package_data={
             "descarteslabs": [
-                "client/services/tasks/tests/data/dl_test_package/package/*.pyx",
-                "client/services/tasks/tests/data/dl_test_package/*.json",
-                "client/services/tasks/tests/data/*.txt",
+                "_dl_modules/client/services/tasks/tests/data/dl_test_package/package/*.pyx",
+                "_dl_modules/client/services/tasks/tests/data/dl_test_package/*.json",
+                "_dl_modules/client/services/tasks/tests/data/*.txt",
             ]
         },
         include_package_data=True,
         entry_points={
             "console_scripts": [
-                "descarteslabs = descarteslabs.client.scripts.__main__:main"
+                "descarteslabs = descarteslabs._dl_modules.client.scripts.__main__:main"
             ]
         },
         python_requires="~=3.7",
@@ -92,12 +111,10 @@ def do_setup():
             "dynaconf==3.1.1",
             "geojson>=2.5.0",
             "grpcio>=1.35.0,<2",
-            "ibis-framework==1.4.0",
             "imagecodecs>=2021.5.20",
             "lazy_object_proxy>=1.4.1",
             "mercantile>=1.1.3",
             "numpy>=1.21.6",
-            "pandas>=1.3.5",
             "Pillow>=8.1.1",
             "protobuf>=3.14.0,<4",
             "pyarrow>=3.0.0",
@@ -108,24 +125,10 @@ def do_setup():
             "tqdm>=4.32.1",
         ],
         extras_require={
-            "complete": [
-                "matplotlib>=3.1.2",
-                "ipyleaflet>=0.13.3,<1",
-                "ipywidgets>=7.5.1,<8",
-                "traitlets==5.0.5,<6",
-                "markdown2>=2.4.0,<3",
-            ],
-            "tests": [
-                "geopandas>=0.10.2;'linux' in sys_platform",
-                "hypothesis[numpy]==5.7.0",
-                "mock",
-                "pytest==6.0.0",
-                "responses==0.12.1",
-                "freezegun==0.3.12",
-            ],
-            "tables": [
-                "geopandas>=0.10.2;'linux' in sys_platform",
-            ],
+            "visualization": viz_requires,
+            "tables": tables_requires,
+            "complete": viz_requires + tables_requires,
+            "tests": tests_requires + tables_requires,
         },
         data_files=[("docs/descarteslabs", ["README.md"])],
     )

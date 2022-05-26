@@ -1,16 +1,3 @@
-# Copyright 2018-2019 Descartes Labs.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Descartes Labs Python Client
 
 .. code-block:: bash
@@ -25,67 +12,31 @@ https://github.com/descarteslabs/descarteslabs-python.
 The Descartes Labs Platform simplifies analysis of **global-scale raster data**
 by providing:
 
-  * Access to a catalog of petabytes of disparate geospatial data,
-    all normalized and interoperable through one **common interface**
-  * **Infrastructure** to parallelize any code across thousands of machines
-    co-located with that data
-  * The ability to **add new data to that catalog**-whether the output of
-    analysis on existing data, or from a proprietary source-which can then
-    be used as an input for more analysis
-  * Organize, upload, and query tabular data and vector geometries using
-    the tables interface (alpha release)
-  * A Python client library to access these systems
-  * Web interfaces to `browse this catalog <https://catalog.descarteslabs.com/>`_ and
-    `view imagery <https://viewer.descarteslabs.com/>`_, including your data you create
+    * Access to a catalog of petabytes of disparate geospatial data,
+      all normalized and interoperable through one **common interface**
+    * A Python client library to access these systems
 """
 
-from .client import exceptions
-from .client import services
-from .client.auth import Auth
-from .client.services import *  # noqa: F403
-from .client.version import __version__
-from .common.property_filtering import GenericProperties
-import lazy_object_proxy
+import sys
 
-# Object-oriented clients
-from . import catalog
-from . import scenes
-from . import tables
-from . import vectors
+# these must be imported prior to installing the Finder and Module below
+from descarteslabs import auth  # noqa: F401
+from descarteslabs import config
+from descarteslabs import exceptions
 
-# Delay potential authentication errors
-descartes_auth = lazy_object_proxy.Proxy(lambda: Auth())
+from descarteslabs.config._helpers import (
+    DescartesLabsFinder,
+    DescartesLabsModule,
+)
 
-raster = Raster(auth=descartes_auth)  # noqa: F405
-storage = Storage(auth=descartes_auth)  # noqa: F405
-tasks = Tasks(auth=descartes_auth)  # noqa: F405
-properties = GenericProperties()
 
-# Semi-deprecated client
-metadata = Metadata(auth=descartes_auth)  # noqa: F405
+# install the special Finder
+_finder = DescartesLabsFinder()
+sys.meta_path.append(_finder)
 
-# Deprecated clients
-places = lazy_object_proxy.Proxy(lambda: Places(auth=descartes_auth))  # noqa: F405
-vector = lazy_object_proxy.Proxy(lambda: Vector(auth=descartes_auth))  # noqa: F405
-
-__all__ = [
-    "__version__",
-    "Auth",
-    "catalog",
-    "descartes_auth",
-    "exceptions",
-    "metadata",
-    "places",
-    "properties",
-    "raster",
-    "scenes",
-    "services",
-    "storage",
-    "tables",
-    "tasks",
-    "vector",
-    "vectors",
-]
-__all__ += services.__all__
+# install the special Module
+sys.modules[__name__] = DescartesLabsModule(sys.modules[__name__])
 
 __author__ = "Descartes Labs"
+
+__all__ = ["auth", "config", "exceptions"]
