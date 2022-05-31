@@ -88,6 +88,7 @@ aws_client = true
 platform_url = "https://platform.production.aws.descarteslabs.com"
 
 iam_url = "https://iam.production.aws.descarteslabs.com"
+catalog_v2_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog/v2"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
 
@@ -96,6 +97,7 @@ aws_client = true
 platform_url = "https://platform.staging.aws.descarteslabs.com"
 
 iam_url = "https://iam.staging.aws.descarteslabs.com"
+catalog_v2_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog/v2"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
 
@@ -104,6 +106,7 @@ aws_client = true
 platform_url = "https://platform.dev.aws.descarteslabs.com"
 
 iam_url = "https://iam.dev.aws.descarteslabs.com"
+catalog_v2_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog/v2"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
 
@@ -163,6 +166,7 @@ aws_client = true
 platform_url = "https://platform.dev.aws.descarteslabs.com"
 
 iam_url = "https://iam.dev.aws.descarteslabs.com"
+catalog_v2_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog/v2"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
 
