@@ -90,6 +90,7 @@ def do_setup():
         packages=find_packages(),
         package_data={
             "descarteslabs": [
+                "config/settings.toml",
                 "_dl_modules/client/services/tasks/tests/data/dl_test_package/package/*.pyx",
                 "_dl_modules/client/services/tasks/tests/data/dl_test_package/*.json",
                 "_dl_modules/client/services/tasks/tests/data/*.txt",
