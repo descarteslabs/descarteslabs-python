@@ -121,11 +121,15 @@ class DescartesLabsModule(object):
 # A wrapper fake module for unsupported client modules.
 # For why this works, see https://stackoverflow.com/questions/2447353/getattr-on-a-module
 class DescartesLabsUnsupportedModule(object):
-    def __init__(self, message, exc):
+    def __init__(self, name, message, exc):
+        self.__name__ = name
         self._message = message
         self._exc = exc
 
     def __getattr__(self, attr):
+        if attr.startswith("__"):
+            return super().__getattribute__(attr)
+
         raise ImportError(self._message) from self._exc
 
     def __dir__(self):

@@ -171,6 +171,7 @@ def _setup_gcp():
         tables = clone_module("descarteslabs.tables", dl_tables)
     except ImportError as e:
         tables = DescartesLabsUnsupportedModule(
+            "tables",
             """descarteslabs.tables not supported due to missing optional depencencies
 Please install optional dependencies using:
 $ pip install --upgrade 'descarteslabs[tables]'
