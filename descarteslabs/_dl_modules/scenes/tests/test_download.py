@@ -23,7 +23,7 @@ class TestFormat(unittest.TestCase):
 
 
 @mock.patch.object(_download, "open", new_callable=mock.mock_open)
-@mock.patch.object(_download.os, "makedirs", new_callable=mock.MagicMock)
+@mock.patch.object(_download, "makedirs", new_callable=mock.MagicMock)
 # wrap return value in lambda so individual tests can safely mutate it
 @mock.patch.object(
     _download.Raster,

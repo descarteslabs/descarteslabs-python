@@ -1,6 +1,8 @@
 import os.path
 import json
 
+from os import makedirs
+
 from ..client.services.raster import Raster
 from descarteslabs.exceptions import NotFoundError, BadRequestError
 
@@ -68,7 +70,7 @@ def _download(
     if _is_path_like(dest):
         dirname = os.path.dirname(dest)
         if dirname != "" and not os.path.exists(dirname):
-            os.makedirs(dirname)
+            makedirs(dirname)
 
         format = _format_from_path(dest)
     else:

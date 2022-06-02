@@ -68,9 +68,8 @@ class ThreadLocalWrapper(object):
         self._local._pid = pid
 
 
-DEFAULT_TOKEN_INFO_PATH = os.path.join(
-    os.path.expanduser("~"), ".descarteslabs", "token_info.json"
-)
+DEFAULT_TOKEN_INFO_DIR = os.path.join(os.path.expanduser("~"), ".descarteslabs")
+DEFAULT_TOKEN_INFO_PATH = os.path.join(DEFAULT_TOKEN_INFO_DIR, "token_info.json")
 DESCARTESLABS_CLIENT_ID = "DESCARTESLABS_CLIENT_ID"
 DESCARTESLABS_CLIENT_SECRET = "DESCARTESLABS_CLIENT_SECRET"
 DESCARTESLABS_REFRESH_TOKEN = "DESCARTESLABS_REFRESH_TOKEN"
@@ -269,9 +268,29 @@ class Auth:
             or self.refresh_token is not None
             or self._token is not None
         ):
-            # The used passed in some info; don't touch the stored info!
-            self.token_info_path = None
-        elif self.token_info_path:
+            if self.client_id:
+                # But do cache the refresh token...
+                self.token_info_path = os.path.join(
+                    DEFAULT_TOKEN_INFO_DIR,
+                    f"{sha1(self.client_id.encode()).hexdigest()}.json",
+                )
+
+                if not os.path.exists(self.token_info_path):
+                    self._write_token_info(
+                        self.token_info_path,
+                        {
+                            self.KEY_CLIENT_ID: self.client_id,
+                            self.KEY_CLIENT_SECRET: self.client_secret or None,
+                            self.KEY_REFRESH_TOKEN: self.refresh_token
+                            or self.client_secret
+                            or None,
+                            self.KEY_JWT_TOKEN: self._token or None,
+                        },
+                    )
+            else:
+                self.token_info_path = None
+
+        if self.token_info_path:
             # Info is missing; read the stored info
             token_info = self._read_token_info(self.token_info_path, _suppress_warning)
 
@@ -282,10 +301,16 @@ class Auth:
             if self.client_secret is None:
                 self.client_secret = token_info.get(self.KEY_CLIENT_SECRET)
 
-            if self.refresh_token is None:
+            # Only pick up the refresh token if the secret didn't change
+            if self.refresh_token is None and self.client_secret == token_info.get(
+                self.KEY_CLIENT_SECRET, self.client_secret
+            ):
                 self.refresh_token = token_info.get(self.KEY_REFRESH_TOKEN)
 
-            if self._token is None:
+            # Only pick up the JWT token if the secret/refresh token didn't change
+            if self._token is None and self.refresh_token == token_info.get(
+                self.KEY_REFRESH_TOKEN, self.refresh_token
+            ):
                 self._token = next(
                     (
                         x
@@ -480,12 +505,13 @@ class Auth:
     def _write_token_info(path, token_info):
         token_info_directory = os.path.dirname(path)
         temp_prefix = ".{}.".format(os.path.basename(path))
-        makedirs_if_not_exists(token_info_directory)
 
         fd = None
         temp_path = None
 
         try:
+            makedirs_if_not_exists(token_info_directory)
+
             fd, temp_path = tempfile.mkstemp(
                 prefix=temp_prefix, dir=token_info_directory
             )
@@ -571,7 +597,10 @@ class Auth:
             if not token_info:
                 return
 
+        token_info[self.KEY_CLIENT_SECRET] = self.client_secret
+        token_info[self.KEY_REFRESH_TOKEN] = self.refresh_token
         token_info[self.KEY_JWT_TOKEN] = self._token
+
         token_info.pop(self.KEY_ALT_JWT_TOKEN, None)  # Make sure the alt key is removed
 
         if self.token_info_path:
