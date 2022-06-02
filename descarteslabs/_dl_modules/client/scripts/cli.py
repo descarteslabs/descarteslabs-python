@@ -21,6 +21,7 @@ from ..auth.cli import auth_handler
 from ..services.metadata.cli import metadata_handler
 from ..services.raster.cli import scales, raster_handler
 from ..services.places.cli import places_handler
+from ..version import __version__
 
 
 parser = argparse.ArgumentParser()
@@ -96,6 +97,9 @@ raster_parser.add_argument("-srs", default=None, type=str)
 raster_parser.add_argument("-place", default=None, type=str)
 raster_parser.add_argument("-outfile_basename", default=None, type=str)
 
+# Version
+auth_parser = subparsers.add_parser("version")
+
 
 def handle(args):
     if args.group == "auth":
@@ -106,8 +110,12 @@ def handle(args):
         places_handler(args)
     elif args.group == "raster":
         raster_handler(args)
+    elif args.group == "version":
+        print(__version__)
     else:
-        print("invalid command group")
+        print(
+            "invalid command: choose from 'auth', 'metadata', 'places', 'raster', 'version'"
+        )
 
 
 if __name__ == "__main__":

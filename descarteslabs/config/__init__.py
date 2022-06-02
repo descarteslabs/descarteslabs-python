@@ -6,6 +6,7 @@ from threading import Lock
 import descarteslabs
 import dynaconf
 from descarteslabs.auth import Auth
+from descarteslabs.exceptions import AuthError
 
 
 class Settings(dynaconf.Dynaconf):
@@ -25,7 +26,8 @@ class Settings(dynaconf.Dynaconf):
     from descarteslabs.config import Settings
     Settings.select_env(...)
     ```
-    before importing or otherwise accessing anything else within the descarteslabs package.
+    before importing or otherwise accessing anything else within the descarteslabs
+    package.
     """
 
     # the global settings instance, can only be set once via select_env
@@ -43,25 +45,29 @@ class Settings(dynaconf.Dynaconf):
         Parameters
         ----------
         env : str, optional
-            Name of the environment to configure. Must appear in ``descarteslabs/config/settings.toml``
-            If not supplied will be determined from the `DESCARTESLABS_ENV` environment variable,
-            if set, otherwise from the user's authenticated permissions.
+            Name of the environment to configure. Must appear in
+            ``descarteslabs/config/settings.toml`` If not supplied will be determined
+            from the `DESCARTESLABS_ENV` environment variable, if set, otherwise from
+            the user's authenticated permissions.
         settings_file: str, optional
-            If supplied, will be consulted for additional configuration overrides. These are applied
-            over those in the ``descarteslabs/config/settings.toml`` file, but are themselves
-            overwritten by any environment variable settings matching the `envvar_prefix`.
+            If supplied, will be consulted for additional configuration overrides. These
+            are applied over those in the ``descarteslabs/config/settings.toml`` file,
+            but are themselves overwritten by any environment variable settings matching
+            the `envvar_prefix`.
         envvar_prefix: str, optional
-            Prefix for environment variable names to consult for configuration overrides. Environment
-            variables with a leading prefix of ``"<envvar_prefix>_"`` will override the settings
-            in the resulting configuration after the settings file(s) have been consulted.
+            Prefix for environment variable names to consult for configuration
+            overrides. Environment variables with a leading prefix of
+            ``"<envvar_prefix>_"`` will override the settings in the resulting
+            configuration after the settings file(s) have been consulted.
         auth: Auth, optional
-            If env is not supplied, then consult the user's authenticated permissions using this
-            ``Auth`` instance. If not supplied, then a default ``Auth`` instance is constructed.
+            If env is not supplied, then consult the user's authenticated permissions
+            using this ``Auth`` instance. If not supplied, then a default ``Auth``
+            instance is constructed.
 
         Returns
         -------
-        Returns a ``Settings`` object, essentially a glorified dict-like object containing the
-        configured settings for the client.
+        Returns a ``Settings`` object, essentially a glorified dict-like object
+        containing the configured settings for the client.
         """
         # once the settings has been lazy evaluated, we cannot change it.
         # the reviled double-check pattern. actually ok with CPython and the GIL, but not
@@ -89,9 +95,23 @@ class Settings(dynaconf.Dynaconf):
         elif not os.environ.get("DESCARTESLABS_ENV"):
             # default it
             if auth is None:
-                auth = Auth()
-            groups = auth.payload.get("groups", {})
-            if "aws-customer" in groups:
+                auth = Auth(_suppress_warning=True)
+
+            try:
+                groups = auth.payload.get("groups", {})
+            except AuthError:
+                groups = None
+
+                if "login" not in sys.argv and "version" not in sys.argv:
+                    print(
+                        """
+You need to log in using `descarteslabs auth login` in order to proceed.
+"""
+                    )
+
+            if groups is None:
+                os.environ["DESCARTESLABS_ENV"] = "default"
+            elif "aws-customer" in groups:
                 os.environ["DESCARTESLABS_ENV"] = "aws-production"
             else:
                 os.environ["DESCARTESLABS_ENV"] = "gcp-production"
@@ -141,7 +161,7 @@ class Settings(dynaconf.Dynaconf):
                 from ._aws_init import _setup_aws
 
                 _setup_aws()
-            else:
+            elif settings.get("GCP_CLIENT", False):
                 from ._gcp_init import _setup_gcp
 
                 _setup_gcp()

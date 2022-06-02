@@ -1,6 +1,8 @@
 import os
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, PropertyMock
+
+from descarteslabs.exceptions import AuthError
 from .. import Settings
 
 
@@ -49,6 +51,19 @@ class TestSettings(unittest.TestCase):
     def test_select_env_from_default_auth(self, mock_auth):
         settings = Settings.select_env()
         self.assertEqual(settings.current_env, "gcp-production")
+        self.assertEqual(id(settings), id(Settings._settings))
+        self.assertEqual(id(settings), id(Settings.get_settings()))
+
+    # environment must be patched because select_env will alter it
+    @patch("descarteslabs.config.Auth")
+    @patch.dict(os.environ, clear=True)
+    def test_select_env_from_no_auth(self, mock_auth):
+        instance = MagicMock()
+        type(instance).payload = PropertyMock(side_effect=AuthError())
+        mock_auth.return_value = instance
+
+        settings = Settings.select_env()
+        self.assertEqual(settings.current_env, "default")
         self.assertEqual(id(settings), id(Settings._settings))
         self.assertEqual(id(settings), id(Settings.get_settings()))
 

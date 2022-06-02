@@ -1,7 +1,10 @@
 [default]
 log_level = "WARNING"
+gcp_client = false
+aws_client = false
 
 [gcp-production]
+gcp_client = true
 platform_url = "https://platform.descarteslabs.com"
 grpc_host = "platform.descarteslabs.com"
 grpc_port = "443"
@@ -29,6 +32,7 @@ workflows_port = "443"
 workflows_host_http = "workflows.prod.descarteslabs.com"
 
 [gcp-prerelease]
+gcp_client = true
 platform_url = "https://platform-prerelease.descarteslabs.com"
 grpc_host = "platform-prerelease.descarteslabs.com"
 grpc_port = "443"
@@ -56,6 +60,7 @@ workflows_port = "443"
 workflows_host_http = "workflows.prod.descarteslabs.com"
 
 [gcp-stage]
+gcp_client = true
 platform_url = "https://platform.stage.descarteslabs.com"
 grpc_host = "platform.stage.descarteslabs.com"
 grpc_port = "443"
@@ -112,6 +117,7 @@ raster_url = "@format {this.PLATFORM_URL}/raster/v2"
 
 # for use in the workflows backend
 [gcp-compute-production]
+gcp_client = true
 platform_url = "https://platform.descarteslabs.com"
 
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
@@ -123,6 +129,7 @@ workflows_host_http = "workflows.prod.descarteslabs.com"
 
 # for use in the workflows backend
 [gcp-compute-stage]
+gcp_client = true
 platform_url = "https://platform.descarteslabs.com"
 
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
@@ -134,6 +141,7 @@ workflows_host_http = "workflows.stage.descarteslabs.com"
 
 [testing]
 testing = true
+gcp_client = true
 platform_url = "https://platform.descarteslabs.com"
 grpc_host = "platform.descarteslabs.com"
 grpc_port = "443"
@@ -169,4 +177,3 @@ iam_url = "https://iam.dev.aws.descarteslabs.com"
 catalog_v2_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog/v2"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
-
