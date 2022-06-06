@@ -29,7 +29,7 @@ t = Tables()
 
 import requests
 
-url = "https://firms.modaps.eosdis.nasa.gov/data/active_fire/modis-c6.1/shapes/zips/MODIS_C6_1_USA_contiguous_and_Hawaii_7d.zip"
+url = "https://cdn.descarteslabs.com/docs/MODIS_C6_1_USA_contiguous_and_Hawaii_7d.zip"
 r = requests.get(url)
 
 fd, tmpf = mkstemp(suffix=".zip")
