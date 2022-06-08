@@ -37,6 +37,20 @@ sys.meta_path.append(_finder)
 # install the special Module
 sys.modules[__name__] = DescartesLabsModule(sys.modules[__name__])
 
+select_env = config.Settings.select_env
+get_settings = config.get_settings
+
+GCP_ENVIRONMENT = "gcp-production"
+AWS_ENVIRONMENT = "aws-production"
+
 __author__ = "Descartes Labs"
 
-__all__ = ["auth", "config", "exceptions"]
+__all__ = [
+    "AWS_ENVIRONMENT",
+    "GCP_ENVIRONMENT",
+    "auth",
+    "config",
+    "exceptions",
+    "get_settings",
+    "select_env",
+]

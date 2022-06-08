@@ -10,7 +10,7 @@ from .. import Settings
 @patch("descarteslabs.config._aws_init._setup_aws", lambda: None)
 @patch("descarteslabs.config._gcp_init._setup_gcp", lambda: None)
 class TestSettings(unittest.TestCase):
-    def setup(self):
+    def setUp(self):
         self.assertIsNone(Settings._settings)
 
     def tearDown(self):
@@ -82,7 +82,7 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(settings.current_env, "testing")
         self.assertEqual(settings.testing, "hello")
 
-    @patch.dict(os.environ, {"DL_TESTING": "hello"})
+    @patch.dict(os.environ, {"DL_ENV": "testing", "DL_TESTING": "hello"})
     def test_select_env_prefix(self):
         settings = Settings.select_env(envvar_prefix="DL")
         self.assertEqual(settings.current_env, "testing")
