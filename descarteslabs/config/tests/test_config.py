@@ -11,7 +11,8 @@ from .. import Settings
 @patch("descarteslabs.config._gcp_init._setup_gcp", lambda: None)
 class TestSettings(unittest.TestCase):
     def setUp(self):
-        self.assertIsNone(Settings._settings)
+        # clean up from any other tests
+        Settings._settings = None
 
     def tearDown(self):
         Settings._settings = None
