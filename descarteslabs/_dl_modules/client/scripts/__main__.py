@@ -13,7 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from descarteslabs.client.scripts.cli import parser, handle
+# normally this will be used from the public client and will not be pre-configured
+try:
+    from descarteslabs._dl_modules.client.scripts.cli import parser, handle
+except ImportError:
+    # run from monorepo, somewhat unusual
+    from descarteslabs.client.scripts.cli import parser, handle
 
 
 def main():
