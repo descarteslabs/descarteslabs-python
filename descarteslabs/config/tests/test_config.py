@@ -11,10 +11,12 @@ from .. import Settings
 @patch("descarteslabs.config._gcp_init._setup_gcp", lambda: None)
 class TestSettings(unittest.TestCase):
     def setUp(self):
-        # clean up from any other tests
+        # Clean up from any other tests
         Settings._settings = None
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
+        # Clean up for tests following this suite
         Settings._settings = None
 
     def test_select_env_default(self):
@@ -63,10 +65,8 @@ class TestSettings(unittest.TestCase):
         type(instance).payload = PropertyMock(side_effect=AuthError())
         mock_auth.return_value = instance
 
-        settings = Settings.select_env()
-        self.assertEqual(settings.current_env, "default")
-        self.assertEqual(id(settings), id(Settings._settings))
-        self.assertEqual(id(settings), id(Settings.get_settings()))
+        with self.assertRaises(RuntimeError):
+            Settings.select_env()
 
     # environment must be patched because select_env will alter it
     @patch.dict(os.environ, clear=True)

@@ -1,7 +1,6 @@
 import importlib
 import os
 import sys
-import warnings
 from threading import Lock
 
 import descarteslabs
@@ -36,9 +35,6 @@ class Settings(dynaconf.Dynaconf):
     _settings = None
 
     _lock = Lock()
-
-    _AWS_CLIENT = "AWS_CLIENT"
-    _GCP_CLIENT = "GCP_CLIENT"
 
     @classmethod
     def select_env(
@@ -80,11 +76,11 @@ class Settings(dynaconf.Dynaconf):
         # necessarily any other Python implementation
         settings = cls._settings
 
-        if not cls._is_configured(settings):
+        if settings is None:
             with cls._lock:
                 settings = cls._settings
 
-                if not cls._is_configured(settings):
+                if settings is None:
                     settings = cls._select_env(
                         env=env,
                         settings_file=settings_file,
@@ -92,7 +88,7 @@ class Settings(dynaconf.Dynaconf):
                         auth=auth,
                     )
 
-        if cls._is_configured(settings) and env is not None and env != settings.ENV:
+        if settings is not None and env is not None and env != settings.ENV:
             raise RuntimeError(
                 f"configuration environment already selected: {settings.ENV}"
             )
@@ -100,17 +96,11 @@ class Settings(dynaconf.Dynaconf):
         return settings
 
     @classmethod
-    def _is_configured(cls, settings):
-        if settings is None:
-            return False
-
-        return settings.get("AWS_CLIENT", False) or settings.get("GCP_CLIENT", False)
-
-    @classmethod
     def _select_env(
         cls, env=None, settings_file=None, envvar_prefix="DESCARTESLABS", auth=None
     ):
         selector = f"{envvar_prefix}_ENV"
+        original_selector_value = os.environ.get(selector)
 
         if env:
             os.environ[selector] = env
@@ -122,21 +112,11 @@ class Settings(dynaconf.Dynaconf):
             try:
                 groups = auth.payload.get("groups", {})
             except AuthError:
-                groups = None
+                raise RuntimeError(
+                    "You need to login using `descarteslabs auth login` in order to proceed."
+                )
 
-                if "login" not in sys.argv and "version" not in sys.argv:
-                    warnings.warn_explicit(
-                        """
-You need to log in using `descarteslabs auth login` in order to proceed.
-""",
-                        UserWarning,
-                        "descarteslabs",
-                        0,
-                    )
-
-            if groups is None:
-                os.environ[selector] = "default"
-            elif "aws-customer" in groups:
+            if "aws-customer" in groups:
                 os.environ[selector] = "aws-production"
             else:
                 os.environ[selector] = "gcp-production"
@@ -145,34 +125,38 @@ You need to log in using `descarteslabs auth login` in order to proceed.
             os.path.dirname(os.path.abspath(__file__)), "settings.toml"
         )
 
-        params = {
-            "settings_file": [builtin_settings_file],
-            "includes": [] if not settings_file else [settings_file],
+        settings = cls(
+            settings_file=[builtin_settings_file],
+            includes=[] if not settings_file else [settings_file],
             # disable other file loaders since we only use toml
             # env_loader is enabled by default, and is not disabled here
-            "core_loaders": ["TOML"],
+            core_loaders=["TOML"],
             # allow loading all environments, choosing the
             # active environment from DESCARTESLABS_ENV
-            "environments": True,
+            environments=True,
             # don't use default values to avoid mishaps
             # determines which environment variable specifies
             # the active environment
-            "env_switcher": selector,
+            env_switcher=selector,
             # the prefix to envvar overrides, e.g DESCARTESLABS_MY_SETTING
-            "envvar_prefix": envvar_prefix,
+            envvar_prefix=envvar_prefix,
             # if environment can't load, then fail hard
-            "silent_errors_for_dynaconf": False,
-        }
+            silent_errors_for_dynaconf=False,
+        )
 
-        settings = cls(**params)
-
-        # Make sure we have valid settings!
+        # Make sure we selected an environment!
         try:
-            settings.ENV
-        except KeyError:
-            env = os.environ.get(selector)
-            os.environ[selector] = "default"
-            settings = cls(**params)
+            # Checking whether ENV is present doesn't work...
+            assert settings.env
+            assert settings.gcp_client or settings.aws_client
+        except (AttributeError, KeyError, AssertionError):
+            env = os.environ[selector]
+
+            if original_selector_value is None:
+                os.environ.pop(selector)
+            else:
+                os.environ[selector] = original_selector_value
+
             raise KeyError(f"{env}: That environment doesn't exist!") from None
 
         # assign to the global instance
@@ -194,11 +178,11 @@ You need to log in using `descarteslabs auth login` in order to proceed.
 
             # super important! We hold the Settings._lock, so no (transitive)
             # imports can try to use `get_settings()`!
-            if settings.get("AWS_CLIENT", False):
+            if settings.aws_client:
                 from ._aws_init import _setup_aws
 
                 _setup_aws()
-            elif settings.get("GCP_CLIENT", False):
+            elif settings.gcp_client:
                 from ._gcp_init import _setup_gcp
 
                 _setup_gcp()
