@@ -27,6 +27,7 @@ jobs:
           TMPDIR: tempdir
           DESCARTESLABS_ENV: testing
         run: |
+          exit 1
           mkdir tempdir
           pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/third_party/" descarteslabs
 
