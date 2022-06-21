@@ -14,30 +14,28 @@
 
 import pickle
 import unittest
+from http import HTTPStatus
 
 import mock
-from descarteslabs.exceptions import (
-    ProxyAuthenticationRequiredError,
-    BadRequestError,
-)
+from descarteslabs.exceptions import BadRequestError, ProxyAuthenticationRequiredError
+
+from .....common.http.authorization import add_bearer
+from ....version import __version__
 from .. import (
     JsonApiService,
     JsonApiSession,
     Service,
     Session,
     ThirdPartyService,
+    service,
 )
-from .. import service
 from ..service import (
     HttpHeaderKeys,
     HttpHeaderValues,
     HttpRequestMethod,
-    HttpStatusCode,
     WrappedSession,
     requests,
 )
-from ....version import __version__
-from .....common.http.authorization import add_bearer
 
 FAKE_URL = "http://localhost"
 FAKE_TOKEN = "foo.bar.sig"
@@ -102,7 +100,7 @@ class TestWrappedSession(unittest.TestCase):
 
     @mock.patch.object(requests.Session, "request")
     def test_request_group_header_conflict(self, request):
-        request.return_value.status_code = HttpStatusCode.Ok
+        request.return_value.status_code = HTTPStatus.OK
 
         args = "POST", FAKE_URL
         kwargs = dict(headers={"X-Request-Group": "f00"})
@@ -113,7 +111,7 @@ class TestWrappedSession(unittest.TestCase):
 
     @mock.patch.object(requests.Session, "request")
     def test_request_group_header_no_conflict(self, request):
-        request.return_value.status_code = HttpStatusCode.Ok
+        request.return_value.status_code = HTTPStatus.OK
 
         session = WrappedSession("")
         session.request("POST", FAKE_URL, headers={"foo": "bar"})
@@ -134,7 +132,7 @@ class TestSessionClass(unittest.TestCase):
 
     @mock.patch.object(requests.Session, "request")
     def test_good_session(self, request):
-        request.return_value.status_code = HttpStatusCode.Ok
+        request.return_value.status_code = HTTPStatus.OK
 
         class MySession(Session):
             pass
@@ -148,7 +146,7 @@ class TestSessionClass(unittest.TestCase):
 
     @mock.patch.object(requests.Session, "request")
     def test_bad_json_session(self, request):
-        request.return_value.status_code = HttpStatusCode.Ok
+        request.return_value.status_code = HTTPStatus.OK
 
         class MySession(Session):
             pass
@@ -160,7 +158,7 @@ class TestSessionClass(unittest.TestCase):
 
     @mock.patch.object(requests.Session, "request")
     def test_good_json_session(self, request):
-        request.return_value.status_code = HttpStatusCode.Ok
+        request.return_value.status_code = HTTPStatus.OK
 
         class MySession(JsonApiSession):
             pass
@@ -174,7 +172,7 @@ class TestSessionClass(unittest.TestCase):
 
     @mock.patch.object(requests.Session, "request")
     def test_proxy_called(self, request):
-        request.return_value.status_code = HttpStatusCode.ProxyAuthenticationRequired
+        request.return_value.status_code = HTTPStatus.PROXY_AUTHENTICATION_REQUIRED
 
         class MySession(Session):
             handle_proxy_authentication_called = 0
@@ -201,7 +199,7 @@ class TestSessionClass(unittest.TestCase):
 
     @mock.patch.object(requests.Session, "request")
     def test_proxy_called_jsonapi(self, request):
-        request.return_value.status_code = HttpStatusCode.ProxyAuthenticationRequired
+        request.return_value.status_code = HTTPStatus.PROXY_AUTHENTICATION_REQUIRED
 
         class MySession(JsonApiSession):
             handle_proxy_authentication_called = 0
@@ -228,7 +226,7 @@ class TestSessionClass(unittest.TestCase):
 
     @mock.patch.object(requests.Session, "request")
     def test_proxy_called_thirdpary(self, request):
-        request.return_value.status_code = HttpStatusCode.ProxyAuthenticationRequired
+        request.return_value.status_code = HTTPStatus.PROXY_AUTHENTICATION_REQUIRED
 
         class MySession(Session):
             handle_proxy_authentication_called = 0
@@ -266,7 +264,7 @@ class TestJsonApiSession(unittest.TestCase):
         error_title = "Title"
         error_status = "Status"  # Should be ignored
 
-        request.return_value.status_code = HttpStatusCode.BadRequest
+        request.return_value.status_code = HTTPStatus.BAD_REQUEST
         request.return_value.text = (
             '{{"errors": [{{"title": "{}", "status": "{}"}}]}}'
         ).format(error_title, error_status)
@@ -284,7 +282,7 @@ class TestJsonApiSession(unittest.TestCase):
         error_title = "Title"
         error_detail = "Description"
 
-        request.return_value.status_code = HttpStatusCode.BadRequest
+        request.return_value.status_code = HTTPStatus.BAD_REQUEST
         request.return_value.text = (
             '{{"errors": [{{"title": "{}", "detail": "{}"}}]}}'
         ).format(error_title, error_detail)
@@ -302,7 +300,7 @@ class TestJsonApiSession(unittest.TestCase):
         error_status = "Status"  # Should be used instead of the title
         error_detail = "Description"
 
-        request.return_value.status_code = HttpStatusCode.BadRequest
+        request.return_value.status_code = HTTPStatus.BAD_REQUEST
         request.return_value.text = (
             '{{"errors": [{{"status": "{}", "detail": "{}"}}]}}'
         ).format(error_status, error_detail)
@@ -321,7 +319,7 @@ class TestJsonApiSession(unittest.TestCase):
         error_detail = "Detail"
         error_field = "Field"
 
-        request.return_value.status_code = HttpStatusCode.BadRequest
+        request.return_value.status_code = HTTPStatus.BAD_REQUEST
         request.return_value.text = (
             '{{"errors": [{{"title": "{}", "detail": "{}", "source": '
             '{{"pointer": "/path/to/{}"}}}}]}}'
@@ -343,7 +341,7 @@ class TestJsonApiSession(unittest.TestCase):
         error_detail = "Detail"
         error_id = "123"
 
-        request.return_value.status_code = HttpStatusCode.BadRequest
+        request.return_value.status_code = HTTPStatus.BAD_REQUEST
         request.return_value.text = (
             '{{"errors": [{{"title": "{}", "detail": "{}", "id": {}}}]}}'
         ).format(error_title, error_detail, error_id)
@@ -364,7 +362,7 @@ class TestJsonApiSession(unittest.TestCase):
         error_detail = "Detail"
         error_href = "Href"
 
-        request.return_value.status_code = HttpStatusCode.BadRequest
+        request.return_value.status_code = HTTPStatus.BAD_REQUEST
         request.return_value.text = (
             '{{"errors": [{{"title": "{}", "detail": "{}", "links": '
             '{{"about": "{}"}}}}]}}'
@@ -403,7 +401,7 @@ class TestJsonApiSession(unittest.TestCase):
 class TestDefaultProxyClass(unittest.TestCase):
     @mock.patch.object(requests.Session, "request")
     def test_session_default_proxy(self, request):
-        request.return_value.status_code = HttpStatusCode.ProxyAuthenticationRequired
+        request.return_value.status_code = HTTPStatus.PROXY_AUTHENTICATION_REQUIRED
 
         class MySession(Session):
             handle_proxy_authentication_called = 0
@@ -449,7 +447,7 @@ class TestWarningsClass(unittest.TestCase):
         cls = FutureWarning
 
         class result:
-            status_code = HttpStatusCode.Ok
+            status_code = HTTPStatus.OK
 
             def json(self):
                 return {
@@ -470,7 +468,7 @@ class TestWarningsClass(unittest.TestCase):
         category = "MyCategory"
 
         class result:
-            status_code = HttpStatusCode.Ok
+            status_code = HTTPStatus.OK
 
             def json(self):
                 return {
@@ -488,7 +486,7 @@ class TestWarningsClass(unittest.TestCase):
         message = "Warning"
 
         class result:
-            status_code = HttpStatusCode.Ok
+            status_code = HTTPStatus.OK
 
             def json(self):
                 return {"meta": {"warnings": [{"message": message}]}}
@@ -502,7 +500,7 @@ class TestWarningsClass(unittest.TestCase):
 class TestInitialize(unittest.TestCase):
     @mock.patch.object(requests.Session, "request")
     def test_initialize_session(self, request):
-        request.return_value.status_code = HttpStatusCode.Ok
+        request.return_value.status_code = HTTPStatus.OK
 
         class MySession(Session):
             initialize_called = 0
@@ -519,7 +517,7 @@ class TestInitialize(unittest.TestCase):
 
     @mock.patch.object(requests.Session, "request")
     def test_initialize_json_api_session(self, request):
-        request.return_value.status_code = HttpStatusCode.Ok
+        request.return_value.status_code = HTTPStatus.OK
 
         class MySession(JsonApiSession):
             initialize_called = 0
@@ -536,7 +534,7 @@ class TestInitialize(unittest.TestCase):
 
     @mock.patch.object(requests.Session, "request")
     def test_initialize_third_party_session(self, request):
-        request.return_value.status_code = HttpStatusCode.Ok
+        request.return_value.status_code = HTTPStatus.OK
 
         class MySession(Session):
             initialize_called = 0

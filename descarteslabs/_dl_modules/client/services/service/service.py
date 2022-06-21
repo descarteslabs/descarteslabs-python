@@ -19,40 +19,41 @@ except ImportError:
     builtins = __builtins__
 
 import itertools
+import json
 import os
 import platform
 import random
-import requests
 import sys
 import uuid
-import json
-
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
+from http import HTTPStatus
 from warnings import warn
 
+import requests
 from descarteslabs.auth import Auth
 from descarteslabs.exceptions import (
-    ClientError,
-    ServerError,
     BadRequestError,
-    NotFoundError,
-    RateLimitError,
-    ProxyAuthenticationRequiredError,
-    GatewayTimeoutError,
+    ClientError,
     ConflictError,
+    GatewayTimeoutError,
+    NotFoundError,
+    ProxyAuthenticationRequiredError,
+    RateLimitError,
+    ServerError,
 )
-from ...version import __version__
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 from ....common.http.authorization import add_bearer
 from ....common.threading.local import ThreadLocalWrapper
+from ...version import __version__
 
 
-class HttpMountProtocol(object):
+class HttpMountProtocol:
     HTTP = "http://"
     HTTPS = "https://"
 
 
-class HttpRequestMethod(object):
+class HttpRequestMethod:
     DELETE = "DELETE"
     GET = "GET"
     HEAD = "HEAD"
@@ -63,21 +64,7 @@ class HttpRequestMethod(object):
     TRACE = "TRACE"
 
 
-class HttpStatusCode(object):
-    Ok = 200
-    BadRequest = 400
-    NotFound = 404
-    ProxyAuthenticationRequired = 407
-    Conflict = 409
-    UnprocessableEntity = 422
-    TooManyRequests = 429
-    InternalServerError = 500
-    BadGateway = 502
-    ServiceUnavailable = 503
-    GatewayTimeout = 504
-
-
-class HttpHeaderKeys(object):
+class HttpHeaderKeys:
     Accept = "Accept"
     Authorization = "Authorization"
     ClientSession = "X-Client-Session"
@@ -91,7 +78,7 @@ class HttpHeaderKeys(object):
     UserAgent = "User-Agent"
 
 
-class HttpHeaderValues(object):
+class HttpHeaderValues:
     ApplicationJson = "application/json"
     ApplicationVndApiJson = "application/vnd.api+json"
     ApplicationOctetStream = "application/octet-stream"
@@ -191,29 +178,29 @@ class Session(requests.Session):
         resp = super(Session, self).request(method, self.base_url + url, **kwargs)
 
         if (
-            resp.status_code >= HttpStatusCode.Ok
-            and resp.status_code < HttpStatusCode.BadRequest
+            resp.status_code >= HTTPStatus.OK
+            and resp.status_code < HTTPStatus.BAD_REQUEST
         ):
             return resp
-        elif resp.status_code == HttpStatusCode.BadRequest:
+        elif resp.status_code == HTTPStatus.BAD_REQUEST:
             raise BadRequestError(resp.text)
-        elif resp.status_code == HttpStatusCode.NotFound:
+        elif resp.status_code == HTTPStatus.NOT_FOUND:
             text = resp.text
             if not text:
-                text = "{} {} {}".format(HttpStatusCode.NotFound, method, url)
+                text = "{} {} {}".format(HTTPStatus.NOT_FOUND, method, url)
             raise NotFoundError(text)
-        elif resp.status_code == HttpStatusCode.ProxyAuthenticationRequired:
+        elif resp.status_code == HTTPStatus.PROXY_AUTHENTICATION_REQUIRED:
             if not self.handle_proxy_authentication(method, url, **kwargs):
                 raise ProxyAuthenticationRequiredError()
-        elif resp.status_code == HttpStatusCode.Conflict:
+        elif resp.status_code == HTTPStatus.CONFLICT:
             raise ConflictError(resp.text)
-        elif resp.status_code == HttpStatusCode.UnprocessableEntity:
+        elif resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
             raise BadRequestError(resp.text)
-        elif resp.status_code == HttpStatusCode.TooManyRequests:
+        elif resp.status_code == HTTPStatus.TOO_MANY_REQUESTS:
             raise RateLimitError(
                 resp.text, retry_after=resp.headers.get(HttpHeaderKeys.RetryAfter)
             )
-        elif resp.status_code == HttpStatusCode.GatewayTimeout:
+        elif resp.status_code == HTTPStatus.GATEWAY_TIMEOUT:
             raise GatewayTimeoutError(
                 "Your request timed out on the server. "
                 "Consider reducing the complexity of your request."
@@ -252,7 +239,7 @@ class Session(requests.Session):
 WrappedSession = Session
 
 
-class Service(object):
+class Service:
     """The default Descartes Labs HTTP Service used to communicate with its servers.
 
     This service has a default timeout and retry policy that retries HTTP requests
@@ -326,10 +313,10 @@ class Service(object):
             ]
         ),
         status_forcelist=[
-            HttpStatusCode.InternalServerError,
-            HttpStatusCode.BadGateway,
-            HttpStatusCode.ServiceUnavailable,
-            HttpStatusCode.GatewayTimeout,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            HTTPStatus.BAD_GATEWAY,
+            HTTPStatus.SERVICE_UNAVAILABLE,
+            HTTPStatus.GATEWAY_TIMEOUT,
         ],
         remove_headers_on_redirect=[],
     )
@@ -918,7 +905,7 @@ class JsonApiService(Service):
         return {JsonApiService.KEY_DATA: resources}
 
 
-class ThirdPartyService(object):
+class ThirdPartyService:
     """The default Descartes Labs HTTP Service used for 3rd party servers.
 
     This service has a default timeout and retry policy that retries HTTP requests
@@ -976,11 +963,11 @@ class ThirdPartyService(object):
             ]
         ),
         status_forcelist=[
-            HttpStatusCode.TooManyRequests,
-            HttpStatusCode.InternalServerError,
-            HttpStatusCode.BadGateway,
-            HttpStatusCode.ServiceUnavailable,
-            HttpStatusCode.GatewayTimeout,
+            HTTPStatus.TOO_MANY_REQUESTS,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            HTTPStatus.BAD_GATEWAY,
+            HTTPStatus.SERVICE_UNAVAILABLE,
+            HTTPStatus.GATEWAY_TIMEOUT,
         ],
     )
 

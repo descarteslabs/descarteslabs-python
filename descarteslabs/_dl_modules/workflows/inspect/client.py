@@ -2,28 +2,20 @@ import os
 import random
 import shutil
 import warnings
+from http import HTTPStatus
 
 import requests
+from descarteslabs.config import get_settings
 from urllib3.util.retry import Retry
 
-from descarteslabs.config import get_settings
-from ...client.services.service.service import (
-    Service,
-    HttpStatusCode,
-    HttpRequestMethod,
-)
-from ...common.workflows.outputs import (
-    user_format_to_mimetype,
-    field_name_to_mimetype,
-)
+from ...client.services.service.service import HttpRequestMethod, Service
 from ...common.workflows.arrow_serialization import deserialize_pyarrow
-
+from ...common.workflows.outputs import field_name_to_mimetype, user_format_to_mimetype
 from .. import _channel
 from ..execution import to_computable
 from ..models.exceptions import JobTimeoutError
-from ..types import ProxyTypeError, GeoContext
 from ..result_types import unmarshal
-
+from ..types import GeoContext, ProxyTypeError
 
 _pyarrow_content_type = field_name_to_mimetype["pyarrow"]
 
@@ -36,9 +28,9 @@ class InspectClient(Service):
             [HttpRequestMethod.HEAD, HttpRequestMethod.GET, HttpRequestMethod.POST]
         ),
         status_forcelist=[
-            HttpStatusCode.BadGateway,
-            HttpStatusCode.ServiceUnavailable,
-            HttpStatusCode.GatewayTimeout,
+            HTTPStatus.BAD_GATEWAY,
+            HTTPStatus.SERVICE_UNAVAILABLE,
+            HTTPStatus.GATEWAY_TIMEOUT,
         ],
         remove_headers_on_redirect=[],
     )
