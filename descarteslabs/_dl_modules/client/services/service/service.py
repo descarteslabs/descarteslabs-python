@@ -420,7 +420,7 @@ class Service:
         self.auth._token = token
 
     @property
-    def session(self):
+    def session(self) -> "requests.Session":
         """Session: The session instance used by this service."""
         session = self._session.get()
         auth = add_bearer(self.token)
