@@ -115,7 +115,7 @@ def do_setup():
             "imagecodecs>=2021.5.20",
             "lazy_object_proxy>=1.4.1",
             "mercantile>=1.1.3",
-            "numpy>=1.21.6",
+            "numpy>=1.21.6,<1.23.0",
             "Pillow>=8.1.1",
             "protobuf>=3.14.0,<4",
             "pyarrow>=3.0.0",
