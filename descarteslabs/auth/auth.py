@@ -521,7 +521,7 @@ class Auth:
             )
 
         if self.client_id in [
-            "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c"
+            "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
         ]:  # TODO(justin) remove legacy handling
             # TODO (justin) insert deprecation warning
             if self.scope is None:
@@ -546,7 +546,9 @@ class Auth:
             if self.scope is not None:
                 params[self.KEY_SCOPE] = " ".join(self.scope)
 
-        r = self.session.post(self.domain + "/token", json=params, timeout=timeout)
+        r = self.session.post(
+            self.domain + "/token", json=params, timeout=timeout, verify=False
+        )
 
         if r.status_code != 200:
             raise OauthError("Could not retrieve token: {}".format(r.text.strip()))
