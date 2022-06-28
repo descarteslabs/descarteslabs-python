@@ -9,6 +9,10 @@ from descarteslabs.auth import Auth
 from descarteslabs.exceptions import AuthError
 
 
+GCP_ENVIRONMENT = "gcp-production"  #: Standard GCP environment
+AWS_ENVIRONMENT = "aws-production"  #: Standard AWS environment
+
+
 class Settings(dynaconf.Dynaconf):
     """
     Configuration settings for the descarteslabs client.
@@ -210,5 +214,12 @@ class Settings(dynaconf.Dynaconf):
 
 
 get_settings = Settings.get_settings
+select_env = Settings.select_env
 
-__all__ = ["Settings", "get_settings"]
+__all__ = [
+    "AWS_ENVIRONMENT",
+    "GCP_ENVIRONMENT",
+    "Settings",
+    "get_settings",
+    "select_env",
+]

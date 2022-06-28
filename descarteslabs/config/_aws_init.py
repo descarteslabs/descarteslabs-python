@@ -101,7 +101,11 @@ def _setup_aws():
     dotdict = importlib.import_module("descarteslabs._dl_modules.common.dotdict")
     utils.DotDict = dotdict.DotDict
     utils.DotList = dotdict.DotList
-    utils.__all__ = ["DotDict", "DotList"]
+
+    utils.display = dl_scenes.display
+    utils.save_image = dl_scenes.save_image
+
+    utils.__all__ = ["DotDict", "DotList", "display", "save_image"]
 
     sys.modules["descarteslabs.utils"] = utils
     descarteslabs.utils = utils

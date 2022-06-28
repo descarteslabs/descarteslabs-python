@@ -497,7 +497,7 @@ def scaling_parameters(properties, bands, scaling, data_type):
 
     # validate data_type
     if data_type is not None and data_type not in valid_data_types:
-        raise ValueError("Invalid data_type value {}")
+        raise ValueError(f"Invalid data_type value {data_type}")
 
     # handle this common case quickly
     if scaling is None:
