@@ -27,7 +27,7 @@ taos = {
 # Create a SceneCollection
 scenes, ctx = search(
     taos,
-    products=["landsat:LC08:01:RT:TOAR"],
+    products=["usgs:landsat:oli-tirs:c2:l1:v0"],
     start_datetime="2018-01-01",
     end_datetime="2018-12-31",
     cloud_fraction=0.7,

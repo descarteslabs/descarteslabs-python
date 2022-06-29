@@ -29,7 +29,7 @@ taos = {
 # Create a SceneCollection
 scenes, ctx = search(
     taos,
-    products=["landsat:LC08:01:RT:TOAR", "sentinel-2:L1C"],
+    products=["usgs:landsat:oli-tirs:c2:l1:v0", "esa:sentinel-2:l1c:v1"],
     start_datetime="2018-05-01",
     end_datetime="2018-06-01",
     cloud_fraction=0.2,
@@ -53,7 +53,7 @@ print(scenes.each.properties.id)
 ctx_lowres = ctx.assign(resolution=60)
 
 # Request a NumPy stack of all the scenes using the same GeoContext
-arr_stack = scenes.stack("red green blue", ctx_lowres)
+arr_stack = scenes.stack("red green blue", ctx_lowres, data_type="Float64")
 
 # Composite the scenes based on the median pixel value
 composite = np.ma.median(arr_stack, axis=0)

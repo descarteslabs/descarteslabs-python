@@ -5,13 +5,13 @@ when an error in a client request is encountered.
 .. autosummary::
    :nosignatures:
 
-   descarteslabs.client.exceptions
+   descarteslabs.exceptions
    descarteslabs.client.grpc.exceptions
 
 HTTP Exceptions
 ~~~~~~~~~~~~~~~
 
-.. automodule:: descarteslabs.client.exceptions
+.. automodule:: descarteslabs.exceptions
    :members:
    :undoc-members:
    :show-inheritance:

@@ -8,13 +8,9 @@ and scale the returned values.
 
 """
 
-import descarteslabs.scenes
-from descarteslabs.client.services.raster import Raster
+from descarteslabs.scenes import search
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-raster_client = Raster()
 
 # A bounding box geometry
 aoi = {
@@ -31,7 +27,7 @@ aoi = {
 }
 
 # fetch scene from the MODIS product
-scenes, ctx = descarteslabs.scenes.search(
+scenes, ctx = search(
     aoi,
     products=["modis:09:v2"],
     start_datetime="2017-05-01",
@@ -40,9 +36,9 @@ scenes, ctx = descarteslabs.scenes.search(
 )
 low_res = ctx.assign(resolution=480)
 # speed up by requesting a lower resolution ndarray
-masked_array = scenes[0].ndarray("ndvi alpha", low_res, bands_axis=2)
+masked_array = scenes[0].ndarray("ndvi alpha", low_res)
 
-masked = np.where(masked_array.mask[:, :, -1], 0, masked_array.data[:, :, 0])
+masked = np.where(masked_array.mask[-1, :, :], 0, masked_array.data[0, :, :])
 
 # plot the results on a histogram
 plt.hist(masked)

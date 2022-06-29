@@ -26,7 +26,7 @@ box = {
 # find the scenes
 scenes, ctx = search(
     aoi=box,
-    products=["landsat:LC08:01:RT:TOAR"],
+    products=["usgs:landsat:oli-tirs:c2:l1:v0"],
     start_datetime="2018-06-02",
     end_datetime="2018-06-03",
 )
@@ -36,6 +36,5 @@ scenes.download_mosaic(
     bands=["red", "green", "blue", "alpha"],
     ctx=ctx.assign(resolution=60),
     dest="save-local.tif",
-    scaling=[[0, 5500], [0, 5500], [0, 5500], None],
-    data_type="Byte",
+    data_type="Float64",
 )
