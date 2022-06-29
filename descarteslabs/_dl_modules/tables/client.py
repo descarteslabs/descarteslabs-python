@@ -134,7 +134,7 @@ class Tables(object):
 
         self.database = database
 
-        self.auth = auth or Auth()
+        self.auth = auth or Auth.get_default_auth()
         self.discover_client = discover_client or disco.Discover(auth=auth)
 
     @property

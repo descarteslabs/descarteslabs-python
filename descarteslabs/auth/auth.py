@@ -146,6 +146,8 @@ class Auth:
 
     _default_token_info_path = object()  # Just any unique object
 
+    _instance = None  # the default Auth instance
+
     def __init__(
         self,
         domain="https://accounts.descarteslabs.com",
@@ -462,6 +464,27 @@ class Auth:
         return session
 
     @staticmethod
+    def get_default_auth():
+        """Retrieve the default Auth.
+
+        This Auth is used whenever you don't explicitly set the Auth
+        when creating clients, etc.
+        """
+        if Auth._instance is None:
+            Auth._instance = Auth()
+
+        return Auth._instance
+
+    @staticmethod
+    def set_default_auth(auth):
+        """Change the default Auth to the given Auth.
+
+        This is the Auth that will be used whenever you don't explicitly set the
+        Auth when creating clients, etc.
+        """
+        Auth._instance = auth
+
+    @staticmethod
     def _read_token_info(path, suppress_warning=False):
         try:
             with open(path) as fp:
@@ -608,6 +631,6 @@ class Auth:
 
 
 if __name__ == "__main__":
-    auth = Auth()
+    auth = Auth.get_default_auth()
 
     print(auth.token)

@@ -225,7 +225,7 @@ class Raster(Service):
         of the backing service.
         """
         if auth is None:
-            auth = Auth()
+            auth = Auth.get_default_auth()
 
         if url is None:
             url = get_settings().raster_url

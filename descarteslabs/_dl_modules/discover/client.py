@@ -2338,7 +2338,7 @@ class _IamClient(Service):
 
     def __init__(self, url=None, auth=None, retries=None):
         if auth is None:
-            auth = Auth()
+            auth = Auth.get_default_auth()
 
         if url is None:
             url = get_settings().iam_url

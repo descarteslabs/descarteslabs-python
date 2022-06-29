@@ -368,7 +368,7 @@ class Service:
 
     def __init__(self, url, token=None, auth=None, retries=None, session_class=None):
         if auth is None:
-            auth = Auth()
+            auth = Auth.get_default_auth()
 
         if token is not None:
             warn(

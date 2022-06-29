@@ -38,7 +38,7 @@ class CatalogClient(JsonApiService):
 
     def __init__(self, url=None, auth=None, retries=None):
         if auth is None:
-            auth = Auth()
+            auth = Auth.get_default_auth()
 
         if url is None:
             url = get_settings().catalog_v2_url

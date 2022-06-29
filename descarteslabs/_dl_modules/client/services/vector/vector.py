@@ -107,7 +107,7 @@ class Vector(JsonApiService):
         """
 
         if auth is None:
-            auth = Auth()
+            auth = Auth.get_default_auth()
 
         if url is None:
             url = get_settings().vector_url

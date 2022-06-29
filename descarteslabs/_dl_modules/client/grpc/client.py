@@ -66,7 +66,7 @@ class GrpcClient:
         use_insecure_channel=False,
     ):
         if auth is None:
-            auth = Auth()
+            auth = Auth.get_default_auth()
 
         self.auth = auth
         self.host = host

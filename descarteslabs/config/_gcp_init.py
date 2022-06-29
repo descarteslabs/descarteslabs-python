@@ -125,7 +125,7 @@ def _setup_gcp():
     setattr(descarteslabs, "properties", properties)
     sys.modules[property_filtering.__name__] = property_filtering
 
-    descartes_auth = lazy_object_proxy.Proxy(lambda: descarteslabs.auth.Auth())
+    descartes_auth = lazy_object_proxy.Proxy(descarteslabs.auth.Auth.get_default_auth)
     setattr(descarteslabs, "descartes_auth", descartes_auth)
     setattr(
         descarteslabs,

@@ -59,7 +59,7 @@ class Catalog(Service):
             used for all API requests (defaults to a reasonable amount of retries)
         """
         if auth is None:
-            auth = Auth()
+            auth = Auth.get_default_auth()
 
         if metadata is None:
             self._metadata = Metadata(auth=auth, retries=retries)
@@ -1847,4 +1847,4 @@ class Catalog(Service):
 
 
 # Don't warn until called by user
-catalog = lazy_object_proxy.Proxy(lambda: Catalog(auth=Auth()))
+catalog = lazy_object_proxy.Proxy(lambda: Catalog(auth=Auth.get_default_auth()))

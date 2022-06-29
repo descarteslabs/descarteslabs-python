@@ -41,7 +41,7 @@ class Storage(Service):
             used for all API requests (defaults to a reasonable amount of retries)
         """
         if auth is None:
-            auth = Auth()
+            auth = Auth.get_default_auth()
 
         if url is None:
             url = get_settings().storage_url
