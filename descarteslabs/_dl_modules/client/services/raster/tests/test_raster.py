@@ -21,6 +21,7 @@ import numpy as np
 import blosc
 
 from descarteslabs.auth import Auth
+from descarteslabs.exceptions import ServerError
 from ..raster import as_json_string, Raster
 
 import responses
@@ -51,29 +52,43 @@ class RasterTest(unittest.TestCase):
     def mock_response(self, method, json, status=200, **kwargs):
         responses.add(method, self.match_url, json=json, status=status, **kwargs)
 
-    def create_blosc_response(self, metadata, array):
-        array_meta = {"shape": array.shape, "dtype": array.dtype.name, "chunks": 1}
-        chunk_meta = {"offset": [0, 0, 0], "shape": list(array.shape)}
+    def create_blosc_response(self, metadata, *arrays):
+        narray = len(arrays)
+        shape = arrays[0].shape
+        array_meta = {
+            "shape": (shape[0] * narray, shape[1], shape[2]),
+            "dtype": arrays[0].dtype.name,
+            "chunks": narray,
+        }
 
-        array_ptr = array.__array_interface__["data"][0]
-        blosc_data = blosc.compress_ptr(
-            array_ptr, array.size, array.dtype.itemsize
-        ).decode("utf-8")
+        parts = [
+            json.dumps(metadata) + "\n",
+            json.dumps(array_meta) + "\n",
+        ]
 
-        mask = np.zeros(array.shape[1:]).astype(bool)
-        mask_ptr = mask.__array_interface__["data"][0]
-        mask_data = blosc.compress_ptr(mask_ptr, mask.size, mask.dtype.itemsize).decode(
-            "utf-8"
-        )
+        for i, array in enumerate(arrays):
+            # special stopping key to emulate failure
+            if isinstance(array, str):
+                parts.append(array)
+                break
 
-        return "\n".join(
-            [
-                json.dumps(metadata),
-                json.dumps(array_meta),
-                json.dumps(chunk_meta),
-                blosc_data + mask_data,
-            ]
-        )
+            chunk_meta = {"offset": [i * shape[0], 0, 0], "shape": list(array.shape)}
+
+            array_ptr = array.__array_interface__["data"][0]
+            blosc_data = blosc.compress_ptr(
+                array_ptr, array.size, array.dtype.itemsize
+            ).decode("utf-8")
+
+            mask = np.zeros(array.shape[1:]).astype(bool)
+            mask_ptr = mask.__array_interface__["data"][0]
+            mask_data = blosc.compress_ptr(
+                mask_ptr, mask.size, mask.dtype.itemsize
+            ).decode("utf-8")
+
+            parts.append(json.dumps(chunk_meta) + "\n")
+            parts.append(blosc_data + mask_data)
+
+        return "".join(parts)
 
     @responses.activate
     def test_ndarray_blosc(self):
@@ -84,6 +99,37 @@ class RasterTest(unittest.TestCase):
         array, meta = self.raster.ndarray(["fakeid"])
         assert expected_metadata == meta
         np.testing.assert_array_equal(expected_array.transpose((1, 2, 0)), array)
+
+    @responses.activate
+    def test_ndarray_multi_blosc(self):
+        expected_metadata = {"foo": "bar"}
+        expected_array = np.zeros((2, 2, 2))
+        content = self.create_blosc_response(
+            expected_metadata, expected_array[0:1, :, :], expected_array[1:2, :, :]
+        )
+        self.mock_response(responses.POST, json=None, body=content, stream=True)
+        array, meta = self.raster.ndarray(["fakeid"])
+        assert expected_metadata == meta
+        np.testing.assert_array_equal(expected_array.transpose((1, 2, 0)), array)
+
+    @responses.activate
+    def test_ndarray_multi_blosc_failure(self):
+        expected_metadata = {"foo": "bar"}
+        expected_array = np.zeros((2, 2, 2))
+
+        content = self.create_blosc_response(
+            expected_metadata, expected_array[0:1, :, :], ""
+        )
+        self.mock_response(responses.POST, json=None, body=content, stream=True)
+        with self.assertRaises(ServerError):
+            self.raster.ndarray(["fakeid"])
+
+        content = self.create_blosc_response(
+            expected_metadata, expected_array[0:1, :, :], "{"
+        )
+        self.mock_response(responses.POST, json=None, body=content, stream=True)
+        with self.assertRaises(ServerError):
+            self.raster.ndarray(["fakeid"])
 
     @responses.activate
     def do_stack(self, **stack_args):

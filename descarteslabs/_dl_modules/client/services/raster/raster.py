@@ -75,9 +75,27 @@ def read_tiled_blosc_array(metadata, data, progress=None):
         else None
     )
     for _ in range(metadata["chunks"]):
-        chunk_metadata = json.loads(data.readline().decode("utf-8").strip())
+        chunk_metadata_bytes = data.readline()
+        # the service instance may have gotten killed such that we
+        # see no transport error, but we do not get the complete
+        # chunk metadata. Handle all the variants as a retryable error.
+        # Note that although there are different paths to an exception,
+        # they all represent the same problem: we did not receive a
+        # complete and valid chunk metadata JSON dict.
+        errmsg = "Did not receive complete chunk metadata"
+        try:
+            chunk_metadata_str = chunk_metadata_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            # incomplete bytes don't decode
+            raise ServerError(errmsg)
+        try:
+            chunk_metadata = json.loads(chunk_metadata_str.strip())
+        except json.JSONDecodeError:
+            # incomplete JSON string doesn't decode (including empty string)
+            raise ServerError(errmsg)
 
         if "error" in chunk_metadata:
+            # The server encountered an error
             raise ServerError(chunk_metadata["error"])
 
         chunk = np.empty(chunk_metadata["shape"], dtype=output.dtype)
