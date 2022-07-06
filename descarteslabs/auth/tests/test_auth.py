@@ -18,6 +18,8 @@ import json
 import pytest
 import unittest
 import warnings
+import os
+import tempfile
 
 import responses
 from .. import auth as auth_module
@@ -66,11 +68,24 @@ def to_bytes(s):
 
 
 class TestAuth(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.env = dict(os.environ)
+        os.environ.clear()
+
+        # Make sure we're not picking up credentials from anywhere
+        auth_module.DEFAULT_TOKEN_INFO_DIR = "/tmp"
+        auth_module.DEFAULT_TOKEN_INFO_PATH = "/dev/null"
+
+    @classmethod
+    def tearDownClass(cls):
+        os.environ.update(cls.env)
+
     def tearDown(self):
         warnings.resetwarnings()
 
     def test_auth_client_refresh_match(self):
-        with warnings.catch_warnings(record=True):
+        with warnings.catch_warnings(record=True) as caught_warnings:
             auth = Auth(
                 client_id="client_id",
                 client_secret="secret",
@@ -78,6 +93,10 @@ class TestAuth(unittest.TestCase):
             )
             assert "mismatched_refresh_token" == auth.refresh_token
             assert "mismatched_refresh_token" == auth.client_secret
+
+            assert len(caught_warnings) == 1
+            assert caught_warnings[0].category == UserWarning
+            assert "token mismatch" in str(caught_warnings[0].message)
 
     @responses.activate
     def test_get_token(self):
@@ -87,9 +106,7 @@ class TestAuth(unittest.TestCase):
             json=dict(access_token="access_token"),
             status=200,
         )
-        auth = Auth(
-            token_info_path=None, client_secret="client_secret", client_id="client_id"
-        )
+        auth = Auth(client_secret="client_secret", client_id="client_id")
         auth._get_token()
 
         assert "access_token" == auth._token
@@ -102,23 +119,25 @@ class TestAuth(unittest.TestCase):
             json=dict(id_token="id_token"),
             status=200,
         )
-        auth = Auth(
-            token_info_path=None, client_secret="client_secret", client_id="client_id"
-        )
+        auth = Auth(client_secret="client_secret", client_id="client_id")
         auth._get_token()
 
         assert "id_token" == auth._token
 
     @patch.object(Auth, "payload", new=dict(sub="asdf"))
     def test_get_namespace(self):
-        auth = Auth(
-            token_info_path=None, client_secret="client_secret", client_id="client_id"
-        )
+        auth = Auth(client_secret="client_secret", client_id="client_id")
         assert auth.namespace == "3da541559918a808c2402bba5012f6c60b27661c"
 
     def test_init_token_no_path(self):
-        auth = Auth(jwt_token="token", token_info_path=None, client_id="foo")
-        assert "token" == auth._token
+        token = b".".join(
+            (
+                base64.b64encode(to_bytes(p))
+                for p in ["header", json.dumps(dict(exp=9999999999, aud="foo")), "sig"]
+            )
+        )
+        auth = Auth(jwt_token=token, client_id="foo")
+        assert token == auth._token
 
     @responses.activate
     def test_get_token_schema_internal_only(self):
@@ -127,16 +146,12 @@ class TestAuth(unittest.TestCase):
             "https://accounts.descarteslabs.com/token",
             callback=token_response_callback,
         )
-        auth = Auth(
-            token_info_path=None, refresh_token="refresh_token", client_id="client_id"
-        )
+        auth = Auth(refresh_token="refresh_token", client_id="client_id")
         auth._get_token()
 
         assert "access_token" == auth._token
 
-        auth = Auth(
-            token_info_path=None, client_secret="refresh_token", client_id="client_id"
-        )
+        auth = Auth(client_secret="refresh_token", client_id="client_id")
         auth._get_token()
 
         assert "access_token" == auth._token
@@ -149,7 +164,6 @@ class TestAuth(unittest.TestCase):
             callback=token_response_callback,
         )
         auth = Auth(
-            token_info_path=None,
             client_secret="client_secret",
             client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
         )
@@ -159,7 +173,6 @@ class TestAuth(unittest.TestCase):
     @patch.object(Auth, "_get_token")
     def test_token(self, _get_token):
         auth = Auth(
-            token_info_path=None,
             client_secret="client_secret",
             client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
         )
@@ -177,7 +190,6 @@ class TestAuth(unittest.TestCase):
     @patch.object(Auth, "_get_token")
     def test_token_expired(self, _get_token):
         auth = Auth(
-            token_info_path=None,
             client_secret="client_secret",
             client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
         )
@@ -195,7 +207,6 @@ class TestAuth(unittest.TestCase):
     @patch.object(Auth, "_get_token", side_effect=AuthError("error"))
     def test_token_expired_autherror(self, _get_token):
         auth = Auth(
-            token_info_path=None,
             client_secret="client_secret",
             client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
         )
@@ -214,7 +225,6 @@ class TestAuth(unittest.TestCase):
     @patch.object(Auth, "_get_token", side_effect=AuthError("error"))
     def test_token_in_leeway_autherror(self, _get_token):
         auth = Auth(
-            token_info_path=None,
             client_secret="client_secret",
             client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
         )
@@ -249,7 +259,6 @@ class TestAuth(unittest.TestCase):
                 client_id="client_id",
                 client_secret="client_secret",
                 refresh_token="client_secret",
-                jwt_token="jwt_token",
             )
             assert auth.client_secret == "client_secret"
             assert auth.client_id == "client_id"
@@ -302,6 +311,167 @@ class TestAuth(unittest.TestCase):
                 auth = Auth(token_info_path="token_info_path")
                 assert auth.token_info_path == "token_info_path"
                 auth.payload
+
+    def test_cache_jwt_token(self):
+        token = b".".join(
+            (
+                base64.b64encode(to_bytes(p))
+                for p in ["header", json.dumps(dict(exp=9999999999, aud="foo")), "sig"]
+            )
+        ).decode()
+        with patch.object(auth_module, "DEFAULT_TOKEN_INFO_DIR", "/tmp"):
+            # This instance should write out the jwt token to /tmp/...
+            Auth(client_id="foo", client_secret="bar", jwt_token=token)
+            # This instance should read it back in
+            a = Auth(client_id="foo", client_secret="bar")
+            assert a._token == token
+
+    def test_clear_cached_jwt_token_expired(self):
+        token = b".".join(
+            (
+                base64.b64encode(to_bytes(p))
+                for p in ["header", json.dumps(dict(exp=0, aud="foo")), "sig"]
+            )
+        ).decode()
+        with patch.object(auth_module, "DEFAULT_TOKEN_INFO_DIR", "/tmp"):
+            # This instance should write out the jwt token to /tmp/...
+            Auth(client_id="foo", client_secret="bar", jwt_token=token)
+            # This instance should clear it because the token is expired
+            a = Auth(client_id="foo", client_secret="bar")
+            assert a._token is None
+
+    def test_clear_cached_jwt_token_different_client(self):
+        token = b".".join(
+            (
+                base64.b64encode(to_bytes(p))
+                for p in ["header", json.dumps(dict(exp=9999999999, aud="foo")), "sig"]
+            )
+        ).decode()
+        with patch.object(auth_module, "DEFAULT_TOKEN_INFO_DIR", "/tmp"):
+            # This instance should write out the jwt token to /tmp/...
+            Auth(client_id="foo", client_secret="bar", jwt_token=token)
+            # This instance should clear it because the client_id differs
+            a = Auth(client_id="bar", client_secret="bar")
+            assert a._token is None
+
+    def test_clear_cached_jwt_token_different_secret(self):
+        token = b".".join(
+            (
+                base64.b64encode(to_bytes(p))
+                for p in ["header", json.dumps(dict(exp=9999999999, aud="foo")), "sig"]
+            )
+        ).decode()
+        with patch.object(auth_module, "DEFAULT_TOKEN_INFO_DIR", "/tmp"):
+            # This instance should write out the jwt token to /tmp/...
+            Auth(client_id="foo", client_secret="bar", jwt_token=token)
+            # This instance should clear it because the client_secret differs
+            a = Auth(client_id="foo", client_secret="foo")
+            assert a._token is None
+
+    def test_no_valid_auth_info(self):
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            Auth(client_id="client_id")
+            assert len(caught_warnings) == 1
+            assert caught_warnings[0].category == UserWarning
+            assert "No valid authentication info found" in str(
+                caught_warnings[0].message
+            )
+
+    def test_token_info_file(self):
+        token = b".".join(
+            (
+                base64.b64encode(to_bytes(p))
+                for p in ["header", json.dumps(dict(exp=9999999999, aud="foo")), "sig"]
+            )
+        ).decode()
+        with tempfile.NamedTemporaryFile(delete=False) as token_info_file:
+            token_info_file.write(
+                json.dumps(
+                    {
+                        "client_id": "foo",
+                        "refresh_token": "bar",
+                        "jwt_token": token,
+                    }
+                ).encode()
+            )
+            token_info_file.close()
+
+            # This instance should read in that token
+            a = Auth(
+                client_id="foo",
+                client_secret="bar",
+                token_info_path=token_info_file.name,
+            )
+            assert a._token == token
+
+    def test_clear_token_info_file(self):
+        token = b".".join(
+            (
+                base64.b64encode(to_bytes(p))
+                for p in ["header", json.dumps(dict(exp=9999999999, aud="foo")), "sig"]
+            )
+        ).decode()
+        with tempfile.NamedTemporaryFile(delete=False) as token_info_file:
+            token_info_file.write(
+                json.dumps(
+                    {
+                        "client_id": "foo",
+                        "refresh_token": "bar",
+                        "jwt_token": token,
+                    }
+                ).encode()
+            )
+            token_info_file.close()
+
+            # This instance should not read in that token
+            a = Auth(
+                client_id="bar",
+                client_secret="bar",
+                token_info_path=token_info_file.name,
+            )
+            assert a._token is None
+
+    @responses.activate
+    def test_write_token_info_file(self):
+        token = b".".join(
+            (
+                base64.b64encode(to_bytes(p))
+                for p in ["header", json.dumps(dict(exp=9999999999, aud="foo")), "sig"]
+            )
+        ).decode()
+        responses.add(
+            responses.POST,
+            "https://accounts.descarteslabs.com/token",
+            json=dict(client_id="foo", client_secret="bar", id_token=token),
+            status=200,
+        )
+
+        with tempfile.NamedTemporaryFile(delete=False) as token_info_file:
+            token_info_file.close()
+
+            # This instance should write the token
+            a = Auth(
+                client_id="foo",
+                client_secret="bar",
+                token_info_path=token_info_file.name,
+            )
+            a.token
+
+            # This instance should read the token
+            a = Auth(
+                client_id="foo",
+                client_secret="bar",
+                token_info_path=token_info_file.name,
+            )
+            assert a._token == token
+
+            # This instance should clear the token because the client_id doesn't match
+            a = Auth(
+                client_id="bar",
+                client_secret="bar",
+                token_info_path=token_info_file.name,
+            )
+            assert a._token is None
 
 
 if __name__ == "__main__":
