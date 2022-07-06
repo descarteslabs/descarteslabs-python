@@ -569,9 +569,7 @@ class Auth:
             if self.scope is not None:
                 params[self.KEY_SCOPE] = " ".join(self.scope)
 
-        r = self.session.post(
-            self.domain + "/token", json=params, timeout=timeout, verify=False
-        )
+        r = self.session.post(self.domain + "/token", json=params, timeout=timeout)
 
         if r.status_code != 200:
             raise OauthError("Could not retrieve token: {}".format(r.text.strip()))
