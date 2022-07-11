@@ -164,6 +164,15 @@ class Product(CatalogObject):
         ``["red", "green", "blue"]``, and ``["red", "green", "blue", "alpha"]``.
         """,
     )
+    image_index_name = TypedAttribute(
+        str,
+        doc="""str: The name of the image index for this product.
+
+        This is an internal field, accessible to privileged users only.
+
+        *Filterable, sortable*.
+        """,
+    )
 
     def named_id(self, name):
         """Return the ~descarteslabs.catalog.NamedCatalogObject.id` for the given named catalog object.
