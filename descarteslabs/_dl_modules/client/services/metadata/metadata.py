@@ -179,17 +179,30 @@ class Metadata(Service):
             products are found.
         :rtype: DotList(DotDict)
         """
-        params = ["limit", "offset", "bands", "owner", "text"]
+        keys = ["limit", "offset", "bands", "owner", "text"]
+        args = locals()
+        params = {key: args[key] for key in keys if args[key]}
+
+        # sets minumum limit
+        params["limit"] = 1000 if limit is None else min(limit, 1000)
 
         # Add parameters that were set to kwargs
-        args = locals()
-        kwargs = dict(
-            kwargs,
-            **{param: args[param] for param in params if args[param] is not None}
-        )
+        kwargs = dict(kwargs, **params)
 
-        r = self.session.post("/products/search", json=kwargs)
-        return DotList(r.json())
+        products = []
+        continuation_token = None
+        while limit is None or len(products) < limit:
+            if continuation_token:
+                kwargs["continuation_token"] = continuation_token
+
+            r = self.session.post("/products/search", json=kwargs)
+            continuation_token = r.headers.get("X-Continuation-Token")
+            paged_response = r.json()
+            products.extend(paged_response)
+            if not continuation_token or not paged_response:
+                break
+
+        return DotList(products[:limit])
 
     def available_products(self):
         """Get the list of product identifiers you have access to.
@@ -203,8 +216,7 @@ class Metadata(Service):
             >>> products  # doctest: +SKIP
             ['landsat:LC08:PRE:TOAR']
         """
-        r = self.session.get("/products")
-        return DotList(r.json())
+        return DotList(p.id for p in self.products())
 
     @deprecate(
         renamed={
