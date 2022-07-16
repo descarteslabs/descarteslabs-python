@@ -179,7 +179,13 @@ class TestAuth(unittest.TestCase):
         token = b".".join(
             (
                 base64.b64encode(to_bytes(p))
-                for p in ["header", json.dumps(dict(exp=9999999999)), "sig"]
+                for p in [
+                    "header",
+                    json.dumps(
+                        dict(exp=9999999999, aud="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c")
+                    ),
+                    "sig",
+                ]
             )
         )
         auth._token = token

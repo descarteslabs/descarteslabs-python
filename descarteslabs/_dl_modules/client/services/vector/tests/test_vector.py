@@ -12,23 +12,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 import io
-import re
-import pytest
-import unittest
 import json
+import re
+import time
+import unittest
+
+import pytest
 import responses
+from descarteslabs.auth import Auth
+from descarteslabs.exceptions import BadRequestError, NotFoundError
 from shapely.geometry import shape
 
-from descarteslabs.auth import Auth
 from .. import Vector
-from descarteslabs.exceptions import BadRequestError, NotFoundError
-
-public_token = "header.e30.signature"
 
 
 class ClientTestCase(unittest.TestCase):
     def setUp(self):
+        payload = (
+            base64.b64encode(
+                json.dumps(
+                    {
+                        "aud": "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+                        "exp": time.time() + 3600,
+                    }
+                ).encode()
+            )
+            .decode()
+            .strip("=")
+        )
+        public_token = f"header.{payload}.signature"
+
         self.url = "http://example.vector.com"
         self.gcs_url = "http://example.gcs.com"
 
@@ -137,9 +152,9 @@ class VectorsTest(ClientTestCase):
         s = io.StringIO()
 
         for i in range(10):
-            s.write(u"{")
-            s.write(u"{}".format(self.attrs))
-            s.write(u"}\n")
+            s.write("{")
+            s.write("{}".format(self.attrs))
+            s.write("}\n")
 
         self.client.upload_features(s, "test")
 

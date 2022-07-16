@@ -1,18 +1,15 @@
-import pytest
-import responses
 import json
 import textwrap
 from datetime import datetime
 from urllib.parse import urlparse
 
+import pytest
+import responses
+
 from .. import properties as p
 from ..image import Image
 from ..product import Product
-
 from .base import ClientTestCase
-
-
-public_token = "header.e30.signature"
 
 
 class TestImageSummary(ClientTestCase):

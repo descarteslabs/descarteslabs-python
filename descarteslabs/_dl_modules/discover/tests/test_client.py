@@ -1,23 +1,27 @@
+import base64
+import json
+import re
+import time
+import unittest
+import warnings
+from unittest.mock import Mock
+
 import pytest
+import responses
+from descarteslabs.auth import Auth
 from descarteslabs.exceptions import ServerError
 
+from ...client.grpc.exceptions import BadRequest
 from ...common.proto.discover import discover_pb2
 from ..client import (
     AccessGrant,
     Asset,
     Discover,
     DiscoverGrpcClient,
-    UserEmail,
     Organization,
+    UserEmail,
     _IamClient,
 )
-from ...client.grpc.exceptions import BadRequest
-from descarteslabs.auth import Auth
-from unittest.mock import Mock
-import warnings
-import unittest
-import re
-import responses
 
 
 @pytest.fixture
@@ -1100,7 +1104,20 @@ def test_revoke_folder_fails_with_wrong_shortcut_role(discover_grpc_client):
 
 
 class TestListOrgUsers(unittest.TestCase):
-    public_token = "header.e30.signature"
+    payload = (
+        base64.b64encode(
+            json.dumps(
+                {
+                    "aud": "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+                    "exp": time.time() + 3600,
+                }
+            ).encode()
+        )
+        .decode()
+        .strip("=")
+    )
+    public_token = f"header.{payload}.signature"
+
     url = "https://foo.com"
     url_match = re.compile(url)
 

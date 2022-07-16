@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 import json
 import re
-import pytest
+import time
 import unittest
 
-import numpy as np
 import blosc
-
-from descarteslabs.auth import Auth
-from ..raster import as_json_string, Raster
-
+import numpy as np
+import pytest
 import responses
+from descarteslabs.auth import Auth
 
-public_token = "header.e30.signature"
+from ..raster import Raster, as_json_string
+
 a_geometry = {
     "coordinates": (
         (
@@ -42,6 +42,20 @@ a_geometry = {
 
 class RasterTest(unittest.TestCase):
     def setUp(self):
+        payload = (
+            base64.b64encode(
+                json.dumps(
+                    {
+                        "aud": "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+                        "exp": time.time() + 3600,
+                    }
+                ).encode()
+            )
+            .decode()
+            .strip("=")
+        )
+        public_token = f"header.{payload}.signature"
+
         self.url = "http://example.com/raster"
         self.raster = Raster(
             url=self.url, auth=Auth(jwt_token=public_token, token_info_path=None)

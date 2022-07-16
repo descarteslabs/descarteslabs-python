@@ -382,9 +382,9 @@ class Auth:
                         and self.refresh_token == token_info.get(self.KEY_REFRESH_TOKEN)
                     ):
                         self._token = token_info.get(self.KEY_JWT_TOKEN)
-            else:
+            elif self.refresh_token:
                 # Make the saved JWT token file unique to the refresh token
-                token = self.refresh_token or self.client_secret or ""
+                token = self.refresh_token
                 token_sha1 = sha1(token.encode("utf-8")).hexdigest()
                 self.token_info_path = os.path.join(
                     DEFAULT_TOKEN_INFO_DIR, f"{JWT_TOKEN_PREFIX}{token_sha1}.json"
@@ -441,7 +441,7 @@ class Auth:
         )
 
         # Verify that the token is valid; otherwise clear it
-        if self._token and not self._in_test():
+        if self._token:
             try:
                 payload = self._get_payload(self._token)
             except AuthError:
@@ -503,7 +503,7 @@ class Auth:
 
             return now + leeway > exp
 
-        return False
+        return True  # Must have exp
 
     @property
     def token(self):
@@ -613,10 +613,6 @@ class Auth:
         Auth._instance = auth
 
     @staticmethod
-    def _in_test():
-        return os.environ.get("TESTING", "").lower() == "true"
-
-    @staticmethod
     def _read_token_info(path, suppress_warning=False):
         try:
             with open(path) as fp:
@@ -634,9 +630,6 @@ class Auth:
 
     @staticmethod
     def _write_token_info(path, token_info):
-        if Auth._in_test():
-            return
-
         token_info_directory = os.path.dirname(path)
         temp_prefix = ".{}.".format(os.path.basename(path))
 

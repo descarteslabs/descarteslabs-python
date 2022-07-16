@@ -12,23 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
+import json
 import re
-import warnings
+import time
 import unittest
+import warnings
 
 import responses
-import json
-
 from descarteslabs.auth import Auth
-from .. import Metadata
-
 from shapely.geometry import shape
 
-public_token = "header.e30.signature"
+from .. import Metadata
 
 
 class MetadataTest(unittest.TestCase):
     def setUp(self):
+        payload = (
+            base64.b64encode(
+                json.dumps(
+                    {
+                        "aud": "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+                        "exp": time.time() + 3600,
+                    }
+                ).encode()
+            )
+            .decode()
+            .strip("=")
+        )
+        public_token = f"header.{payload}.signature"
+
         self.url = "http://example.com/metadata"
         self.instance = Metadata(
             url=self.url, auth=Auth(jwt_token=public_token, token_info_path=None)
