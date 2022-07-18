@@ -96,6 +96,8 @@ Guide <catalog_v2_guide>`.
   ~descarteslabs.catalog.DataType
   ~descarteslabs.catalog.BandType
   ~descarteslabs.catalog.Colormap
+  ~descarteslabs.catalog.ProcessingStepAttribute
+  ~descarteslabs.catalog.ProcessingLevelsAttribute
   ~descarteslabs.catalog.Resolution
   ~descarteslabs.catalog.ResolutionUnit
   ~descarteslabs.catalog.File

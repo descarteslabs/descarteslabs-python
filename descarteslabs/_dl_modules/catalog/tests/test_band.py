@@ -15,6 +15,7 @@ from ..band import (
     MicrowaveBand,
     ProcessingStepAttribute,
     DerivedParamsAttribute,
+    DataType,
 )
 from ..product import Product
 
@@ -282,6 +283,43 @@ class TestBand(ClientTestCase):
                 "default": "toa_reflectance",
                 "toa_reflectance": [
                     ProcessingStepAttribute(function="fun", parameter="param", index=0)
+                ],
+            },
+        )
+
+        b = SpectralBand(
+            id=band_id,
+            processing_levels={
+                "default": "toa_reflectance",
+                "toa_reflectance": [
+                    {
+                        "function": "fun",
+                        "parameter": "param",
+                        "index": 0,
+                        "data_type": "Float64",
+                        "data_range": [0, 1],
+                        "display_range": [0, 0.4],
+                        "physical_range": [0, 1],
+                        "physical_range_unit": "reflectance",
+                    }
+                ],
+            },
+        )
+        self.assertEqual(
+            b.processing_levels,
+            {
+                "default": "toa_reflectance",
+                "toa_reflectance": [
+                    ProcessingStepAttribute(
+                        function="fun",
+                        parameter="param",
+                        index=0,
+                        data_type=DataType("Float64"),
+                        data_range=(0.0, 1.0),
+                        display_range=(0, 0.4),
+                        physical_range=(0.0, 1.0),
+                        physical_range_unit="reflectance",
+                    )
                 ],
             },
         )

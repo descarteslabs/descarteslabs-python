@@ -147,11 +147,41 @@ class ProcessingStepAttribute(MappingAttribute):
         the coefficients for the processing function. Required.
     index : int
         Optional index into the named parameter (an array) for the band.
+    data_type : str or DataType
+        Optional data type for pixel values in this band.
+    data_range : tuple(float, float)
+        Optional normal range of pixel values stored in the band.
+    display_range : tuple(float, float)
+        Optional normal range of pixel values stored in the band for display purposes.
+    physical_range : tuple(float, float)
+        Optional normal range of physical values stored in the band.
+    physical_range_units : str
+        Optional unit of the physical range.
     """
 
     function = TypedAttribute(str)
     parameter = TypedAttribute(str)
     index = TypedAttribute(int)
+    data_type = EnumAttribute(DataType)
+    data_range = TupleAttribute(
+        min_length=2,
+        max_length=2,
+        coerce=True,
+        attribute_type=float,
+    )
+    display_range = TupleAttribute(
+        min_length=2,
+        max_length=2,
+        coerce=True,
+        attribute_type=float,
+    )
+    physical_range = TupleAttribute(
+        min_length=2,
+        max_length=2,
+        coerce=True,
+        attribute_type=float,
+    )
+    physical_range_unit = Attribute()
 
 
 class ProcessingLevelsAttribute(ModelAttribute, MutableMapping):
