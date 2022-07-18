@@ -65,7 +65,7 @@ class BandScale(object):
     # and if two different bands imply two incompatible modes, it is not an error but
     # rather a case in which we cannot determine a mode.
     #
-    # Both are used in order to determine which possible input range to use (`default_range` or
+    # Both are used in order to determine which possible input range to use (`display_range` or
     # `data_range`), which possible output range to use (range of the data type, `physical_range`,
     # or [0, 255]), and how to default the output data type. AN explicit mode is stronger, and
     # the implied mode is never consulted unless there is no explicit mode.
@@ -77,38 +77,7 @@ class BandScale(object):
         Will raise ValueError for any bad input.
         """
         self.name = name
-        self._properties = {
-            k: properties.get(k)
-            for k in ("type", "dtype", "data_range", "default_range", "physical_range")
-            if k in properties
-        }
-        # ensure required fields are available:
-        if "type" not in self._properties:
-            # handle a derived band
-            if name.startswith("derived:"):
-                self._properties["type"] = BandType.OTHER.value
-            else:
-                raise ValueError(
-                    "Invalid properties for band '{}' is missing 'type' field".format(
-                        name
-                    )
-                )
-        if "dtype" not in self._properties:
-            raise ValueError(
-                "Invalid properties for band '{}' is missing 'dtype' field".format(name)
-            )
-        if "data_range" not in self._properties:
-            raise ValueError(
-                "Invalid properties for band '{}' is missing 'data_range' field".format(
-                    name
-                )
-            )
-        # default_range isn't always populated
-        if "default_range" not in self._properties:
-            self._properties["default_range"] = self._properties["data_range"]
-        # physical_range isn't populated for mask and class types
-        if "physical_range" not in self._properties:
-            self._properties["physical_range"] = self._properties["data_range"]
+        self._properties = properties
         self.mode = mode
         self.mode_is_implied = mode_is_implied
 
@@ -158,9 +127,16 @@ class AutomaticBandScale(BandScale):
             return ()
         elif self.mode == ScalingMode.DISPLAY:
             # 255.99 from GDAL
-            return tuple(self.default_range + [0, 255.99 if ofloat else 255])
+            return tuple(self.display_range + [0, 255.99 if ofloat else 255])
         elif self.mode == ScalingMode.PHYSICAL:
-            return tuple(self.data_range + self.physical_range)
+            # avoid common no-op
+            if self.data_range == self.physical_range:
+                return None
+            else:
+                return tuple(self.data_range + self.physical_range)
+        else:
+            # shouldn't get here but be explicit
+            return None
 
 
 class TupleBandScale(BandScale):
@@ -224,7 +200,7 @@ class TupleBandScale(BandScale):
             return [0, 255]
 
     def get_scale(self, mode, data_type):
-        ifloat = self.dtype.startswith("Float")
+        ifloat = self.data_type.startswith("Float")
         ofloat = data_type.startswith("Float")
         if len(self._tuple) == 0:
             # GDAL handles this
@@ -232,14 +208,14 @@ class TupleBandScale(BandScale):
         else:
             # generate default ranges
             if mode == ScalingMode.RAW:
-                irange = data_type_ranges[self.dtype]
+                irange = data_type_ranges[self.data_type]
                 # not sure about this; GDAL always uses 0, 255
                 orange = data_type_ranges[data_type]
             elif mode == ScalingMode.PHYSICAL:
                 irange = self.data_range
                 orange = self.physical_range
             else:
-                irange = self.default_range
+                irange = self.display_range
                 orange = [0.0, 255.99]  # from GDAL, works for integer also
             if len(self._tuple) == 2:
                 scale = (self._tuple[0], self._tuple[1], orange[0], orange[1])
@@ -271,18 +247,7 @@ def make_band_scale(name, properties, value):
             raise ValueError(
                 "Invalid scaling mode '{}' for band '{}'".format(value, name)
             )
-        if name.startswith("derived:"):
-            band_type = BandType.OTHER
-        else:
-            try:
-                band_type = BandType(properties["type"])
-            except ValueError:
-                raise ValueError(
-                    "Invalid band type '{}' for band '{}'".format(
-                        properties["type"], name
-                    )
-                )
-        if band_type in (BandType.MASK, BandType.CLASS):
+        if properties["band_type"] in (BandType.MASK, BandType.CLASS):
             # do not scale these automatically, and make mode weak default
             return NoBandScale(name, properties, mode)
         else:
@@ -319,13 +284,7 @@ def parse_scaling(properties, bands, scaling):
             if band in scaling:
                 bscale = scaling[band]
             else:
-                try:
-                    band_type = BandType(properties[band]["type"])
-                except ValueError:
-                    raise ValueError(
-                        "Invalid band type '{}' for band '{}'".format(band_type, band)
-                    )
-                if band_type in (BandType.MASK, BandType.CLASS):
+                if properties[band]["band_type"] in (BandType.MASK, BandType.CLASS):
                     bscale = None
                 else:
                     bscale = scaling.get("default_", None)
@@ -416,6 +375,101 @@ def data_type_from_range(min, max, is_float):
     return "Float64"
 
 
+def resolve_processing_level(processing_level, processing_levels, depth=0):
+    """
+    Resolve a processing_level through any aliases to the processing steps.
+
+    Returns list of processing steps, or None if not found.
+
+    Raises ValueError on bad processing levels definitions, although this
+    is really a problem with the metadata, not anything here.
+    """
+    if depth >= 10:
+        # infinite loop, problem with band definitions
+        raise ValueError("Processing levels contains infinite loop")
+    if not processing_level:
+        processing_level = "default"
+    result = processing_levels.get(processing_level)
+
+    if result is None:
+        if depth > 0:
+            # dangling alias, problem with band definitions
+            raise ValueError(
+                f"Processing levels contains dangling alias {processing_level}"
+            )
+        # unknown but not an error
+        return None
+
+    if isinstance(result, str):
+        # alias
+        return resolve_processing_level(result, processing_levels, depth=depth + 1)
+
+    # a real processing level definition
+    return result
+
+
+def properties_for_band(name, properties, processing_level):
+    """
+    Gather up relevant properties for the band, applying processing level and defaults.
+
+    Note we clean up some naming from metadata v1:
+    dtype -> data_type and default_range -> display_range
+    """
+    type_ = properties.get("type")
+    if type_ is None:
+        if name.startswith("derived:"):
+            type_ = "other"
+        else:
+            raise ValueError(
+                f"Invalid band properties missing 'type' for band '{name}'"
+            )
+    try:
+        band_type = BandType(type_)
+    except ValueError:
+        raise ValueError(f"Invalid band type '{type_}' for band '{name}'")
+
+    # defaults on band base properties are real legacy
+    data_type = properties.get("dtype", "UInt16")
+    data_range = properties.get("data_range", [0, 10000])
+    # these are not required
+    display_range = properties.get("default_range", data_range)
+    physical_range = properties.get("physical_range", data_range)
+
+    processing_levels = properties.get("processing_levels")
+    if not processing_levels:
+        # not an error for legacy or mask and class bands
+        if (
+            processing_level
+            and processing_level not in ("default", "toa", "surface")
+            and band_type not in (BandType.MASK, BandType.CLASS)
+        ):
+            raise ValueError(
+                f"Unknown processing_level value {processing_level} for band {name}"
+            )
+    else:
+        processing_level_steps = resolve_processing_level(
+            processing_level, processing_levels
+        )
+        if processing_level_steps:
+            step = processing_level_steps[-1]
+            # processing levels are always Float64 by default, except "dlsr" is special
+            # and always uses the underlying raw band's definitions
+            if step.get("function") != "dlsr":
+                data_type = step.get("data_type", "Float64")
+                # this is a somewhat arbitrary default (good for reflectance)
+                data_range = step.get("data_range", data_type_ranges.get(data_type))
+                display_range = step.get("display_range", data_range)
+                physical_range = step.get("physical_range", data_range)
+    return {
+        "name": name,
+        "band_type": band_type,
+        "data_type": data_type,
+        "data_range": data_range,
+        "display_range": display_range,
+        "physical_range": physical_range,
+    }
+
+
 def calc_pct(value, bounds, is_float):
     """
     Helper function to calculate a scaling tuple value from a percentage.
@@ -478,7 +532,7 @@ def check_implied_data_type(scales):
     return data_type_from_range(output_min, output_max, is_float)
 
 
-def scaling_parameters(properties, bands, scaling, data_type):
+def scaling_parameters(properties, bands, processing_level, scaling, data_type):
     """
     Determine GDAL-style band scaling parameters.
 
@@ -487,13 +541,17 @@ def scaling_parameters(properties, bands, scaling, data_type):
     returns scales, data_type where scales is either a None or a list of tuples and Nones,
     and data_type is the target GDAL data type.
     """
-    # validate bands
+    # validate bands and resolve properties
+    band_properties = {}
     for band in bands:
         if band not in properties:
             message = "Invalid bands: band '{}' is not available".format(band)
             if "derived:{}".format(band) in properties:
                 message += ", did you mean 'derived:{}'?".format(band)
             raise ValueError(message)
+        band_properties[band] = properties_for_band(
+            band, properties[band], processing_level
+        )
 
     # validate data_type
     if data_type is not None and data_type not in valid_data_types:
@@ -502,11 +560,13 @@ def scaling_parameters(properties, bands, scaling, data_type):
     # handle this common case quickly
     if scaling is None:
         if data_type is None:
-            data_type = common_data_type([properties[band]["dtype"] for band in bands])
+            data_type = common_data_type(
+                [band_properties[band]["data_type"] for band in bands]
+            )
         return scaling, data_type
 
     # get list of BandScales, validates scaling possibly throwing ValueError
-    scales = parse_scaling(properties, bands, scaling)
+    scales = parse_scaling(band_properties, bands, scaling)
 
     # at this point everything is validated, except possible conflicts between
     # specifications for individual bands.
@@ -536,7 +596,9 @@ def scaling_parameters(properties, bands, scaling, data_type):
             mode = ScalingMode.RAW
     elif data_type is None:
         if mode == ScalingMode.RAW:
-            data_type = common_data_type([properties[band]["dtype"] for band in bands])
+            data_type = common_data_type(
+                [band_properties[band]["data_type"] for band in bands]
+            )
         elif mode == ScalingMode.PHYSICAL:
             data_type = "Float64"
         else:
@@ -545,10 +607,16 @@ def scaling_parameters(properties, bands, scaling, data_type):
     # now take a pass to determine complete scaling for each band
     scales = [bscale.get_scale(mode, data_type) for bscale in scales]
 
+    # simplify no scaling
+    if all([s is None for s in scales]):
+        scales = None
+
     return scales, data_type
 
 
-def multiproduct_scaling_parameters(properties, bands, scaling, data_type):
+def multiproduct_scaling_parameters(
+    properties, bands, processing_level, scaling, data_type
+):
     """
     Determine GDAL-style band scaling parameters.
 
@@ -559,6 +627,7 @@ def multiproduct_scaling_parameters(properties, bands, scaling, data_type):
     and data_type is the target GDAL data type.
     """
     # validate bands
+    product_band_properties = {}
     for band in bands:
         for product in properties:
             if band not in properties[product]:
@@ -570,6 +639,9 @@ def multiproduct_scaling_parameters(properties, bands, scaling, data_type):
                 if "derived:{}".format(band) in properties[product]:
                     message += ", did you mean 'derived:{}'?".format(band)
                 raise ValueError(message)
+            product_band_properties.setdefault(product, {})[band] = properties_for_band(
+                band, properties[product][band], processing_level
+            )
 
     # validate data_type
     if data_type is not None and data_type not in valid_data_types:
@@ -580,17 +652,17 @@ def multiproduct_scaling_parameters(properties, bands, scaling, data_type):
         if data_type is None:
             data_type = common_data_type(
                 [
-                    properties[product][band]["dtype"]
-                    for band in bands
-                    for product in properties
+                    product_band_properties[product][band]["data_type"]
+                    for product in product_band_properties
+                    for band in product_band_properties[product]
                 ]
             )
         return scaling, data_type
 
     # loop over all products and bands, get list of BandScales, validates scaling possibly throwing ValueError
     scales = []
-    for product in properties:
-        scales.extend(parse_scaling(properties[product], bands, scaling))
+    for product in product_band_properties:
+        scales.extend(parse_scaling(product_band_properties[product], bands, scaling))
 
     # at this point everything is validated, except possible conflicts between
     # specifications for individual bands. This will be checked below.
@@ -622,9 +694,9 @@ def multiproduct_scaling_parameters(properties, bands, scaling, data_type):
         if mode == ScalingMode.RAW:
             data_type = common_data_type(
                 [
-                    properties[product][band]["dtype"]
-                    for band in bands
-                    for product in properties
+                    product_band_properties[product][band]["data_type"]
+                    for product in product_band_properties
+                    for band in product_band_properties[product]
                 ]
             )
         elif mode == ScalingMode.PHYSICAL:
@@ -637,8 +709,8 @@ def multiproduct_scaling_parameters(properties, bands, scaling, data_type):
 
     # verify the resulting scale parameters for each band is the same across
     # all products
-    products = [product for product in properties]
-    for i in range(1, len(properties)):
+    products = [product for product in product_band_properties]
+    for i in range(1, len(product_band_properties)):
         for j in range(len(bands)):
             if scales[i * len(bands) + j] != scales[j]:
                 raise ValueError(

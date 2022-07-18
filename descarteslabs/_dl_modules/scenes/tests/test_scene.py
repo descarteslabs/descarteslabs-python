@@ -434,48 +434,6 @@ class TestScene(unittest.TestCase):
         assert scenes_bands.ndvi == meta_bands["someproduct:ndvi"]
         assert scenes_bands["derived:ndvi"] == meta_bands["derived:ndvi"]
 
-    def test_raw_data_type(self):
-        mock_properties = {
-            "product": "mock_product",
-            "bands": {
-                "one": dict(dtype="UInt16"),
-                "two": dict(dtype="UInt16"),
-                "derived:three": dict(dtype="UInt16"),
-                "derived:one": dict(dtype="UInt16"),
-                "its_a_byte": dict(dtype="Byte"),
-                "signed": dict(dtype="Int16"),
-                "future_unknown_type": dict(dtype="FutureInt16"),
-                "alpha": dict(dtype="Byte"),
-            },
-        }
-        s = MockScene({}, mock_properties)
-        assert s.scaling_parameters(["its_a_byte"], scaling=None)[1] == "Byte"
-        assert s.scaling_parameters(["one", "two"], scaling=None)[1] == "UInt16"
-        assert s.scaling_parameters(["its_a_byte", "alpha"], scaling=None)[1] == "Byte"
-        # alpha ignored from common datatype
-        assert s.scaling_parameters(["one", "alpha"], scaling=None)[1] == "UInt16"
-        assert s.scaling_parameters(["alpha"], scaling=None)[1] == "Byte"
-        assert (
-            s.scaling_parameters(
-                ["one", "two", "derived:three", "derived:one"], scaling=None
-            )[1]
-            == "UInt16"
-        )
-        assert s.scaling_parameters(["one", "its_a_byte"], scaling=None)[1] == "UInt16"
-        assert (
-            s.scaling_parameters(["signed", "its_a_byte"], scaling=None)[1] == "Int16"
-        )
-        assert s.scaling_parameters(["one", "signed"], scaling=None)[1] == "Int32"
-
-        with pytest.raises(ValueError, match="is not available"):
-            s.scaling_parameters(["one", "woohoo"], scaling=None)
-        with pytest.raises(ValueError, match="did you mean"):
-            s.scaling_parameters(
-                ["one", "three"], scaling=None
-            )  # should hint that derived:three exists
-        with pytest.raises(ValueError, match="Invalid data type"):
-            s.scaling_parameters(["its_a_byte", "future_unknown_type"], scaling=None)
-
     def test__naive_dateparse(self):
         assert _strptime_helper("2017-08-31T00:00:00+00:00") is not None
         assert _strptime_helper("2017-08-31T00:00:00.00+00:00") is not None
@@ -506,200 +464,31 @@ class TestScene(unittest.TestCase):
             {},
             {
                 "id": "foo:bar",
-                "bands": {"nir": {"dtype": "UInt16"}, "yellow": {"dtype": "UInt16"}},
+                "bands": {
+                    "nir": {
+                        "type": "spectral",
+                        "dtype": "UInt16",
+                        "data_range": [0, 10000],
+                    },
+                    "yellow": {
+                        "type": "spectral",
+                        "dtype": "UInt16",
+                        "data_range": [0, 10000],
+                    },
+                },
             },
         )
         ctx = geocontext.AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
         scene.download("nir yellow", ctx)
         mock_geotiff.assert_called_once()
 
-    def test_scaling_parameters_none(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters("red green blue alpha")
-        assert scales is None
-        assert data_type == "UInt16"
-
-    def test_scaling_parameters_dtype(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", None, "UInt32"
-        )
-        assert scales is None
-        assert data_type == "UInt32"
-
-    def test_scaling_parameters_raw(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters("red green blue alpha", "raw")
-        assert scales == [None, None, None, None]
-        assert data_type == "UInt16"
-
     def test_scaling_parameters_display(self):
         scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters("red green blue alpha", "display")
-        assert scales == [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
-        assert data_type == "Byte"
-
-    def test_scaling_parameters_display_uint16(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
         scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", "display", "UInt16"
-        )
-        assert scales == [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
-        assert data_type == "UInt16"
-
-    def test_scaling_parameters_auto(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters("red green blue alpha", "auto")
-        assert scales == [(), (), (), None]
-        assert data_type == "Byte"
-
-    def test_scaling_parameters_physical(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters("red green blue alpha", "physical")
-        assert scales == [
-            (0, 10000, 0.0, 1.0),
-            (0, 10000, 0.0, 1.0),
-            (0, 10000, 0.0, 1.0),
-            None,
-        ]
-        assert data_type == "Float64"
-
-    def test_scaling_parameters_physical_int32(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", "physical", "Int32"
-        )
-        assert scales == [
-            (0, 10000, 0.0, 1.0),
-            (0, 10000, 0.0, 1.0),
-            (0, 10000, 0.0, 1.0),
-            None,
-        ]
-        assert data_type == "Int32"
-
-    def test_scaling_parameters_bad_mode(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        with pytest.raises(ValueError):
-            scales, data_type = scene.scaling_parameters("red green blue alpha", "mode")
-
-    def test_scaling_parameters_list(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", [(0, 10000), "display", (), None]
-        )
-        assert scales == [(0, 10000, 0, 255), (0, 4000, 0, 255), (), None]
-        assert data_type == "Byte"
-
-    def test_scaling_parameters_list_alpha(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", [(0, 4000), (0, 4000), (0, 4000), "raw"]
+            "red green blue alpha", scaling="display"
         )
         assert scales == [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
         assert data_type == "Byte"
-
-    def test_scaling_parameters_list_bad_length(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        with pytest.raises(ValueError):
-            scales, data_type = scene.scaling_parameters(
-                "red green blue alpha", [(0, 10000), "display", ()]
-            )
-
-    def test_scaling_parameters_list_bad_mode(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        with pytest.raises(ValueError):
-            scales, data_type = scene.scaling_parameters(
-                "red green blue alpha", [(0, 10000), "mode", (), None]
-            )
-
-    def test_scaling_parameters_dict(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha",
-            {"red": "display", "green": (0, 10000), "default_": "auto"},
-        )
-        assert scales == [(0, 4000, 0, 255), (0, 10000, 0, 255), (), None]
-        assert data_type == "Byte"
-
-    def test_scaling_parameters_dict_default(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", {"red": (0, 4000, 0, 255), "default_": "raw"}
-        )
-        assert scales == [(0, 4000, 0, 255), None, None, None]
-        assert data_type == "UInt16"
-
-    def test_scaling_parameters_dict_default_none(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", {"red": "display", "green": "display"}
-        )
-        assert scales == [(0, 4000, 0, 255), (0, 4000, 0, 255), None, None]
-        assert data_type == "Byte"
-
-    def test_scaling_parameters_tuple_range(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", [(0, 10000, 0, 255), (0, 4000), (), None]
-        )
-        assert scales == [(0, 10000, 0, 255), (0, 4000, 0, 255), (), None]
-        assert data_type == "Byte"
-
-    def test_scaling_parameters_tuple_range_uint16(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", [(0, 10000, 0, 10000), (0, 4000), (), None]
-        )
-        assert scales == [(0, 10000, 0, 10000), (0, 4000, 0, 65535), (), None]
-        assert data_type == "UInt16"
-
-    def test_scaling_parameters_tuple_range_float(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha", [(0, 10000, 0, 1.0), (0, 4000), (0, 4000), None]
-        )
-        assert scales == [(0, 10000, 0, 1), (0, 4000, 0, 1), (0, 4000, 0, 1), None]
-        assert data_type == "Float64"
-
-    def test_scaling_parameters_tuple_pct(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha",
-            [("0%", "100%", "0%", "100%"), ("2%", "98%", "2%", "98%"), "display", None],
-        )
-        assert scales == [
-            (0, 4000, 0, 255),
-            (80, 3920, 5, 250),
-            (0, 4000, 0, 255),
-            None,
-        ]
-        assert data_type == "Byte"
-
-    def test_scaling_parameters_tuple_pct_float(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        scales, data_type = scene.scaling_parameters(
-            "red green blue alpha",
-            [
-                ("0%", "100%", "0%", "100%"),
-                ("2%", "98%", "2%", "98%"),
-                "physical",
-                None,
-            ],
-        )
-        assert scales == [
-            (0, 10000, 0, 1),
-            (200, 9800, 0.02, 0.98),
-            (0, 10000, 0, 1),
-            None,
-        ]
-        assert data_type == "Float64"
-
-    def test_scaling_parameters_bad_data_type(self):
-        scene = MockScene({}, self.MOCK_RGBA_PROPERTIES)
-        with pytest.raises(ValueError):
-            scales, data_type = scene.scaling_parameters(
-                "red green blue alpha", None, "data_type"
-            )
 
 
 class TestSceneRepr(unittest.TestCase):
@@ -718,6 +507,7 @@ class TestSceneRepr(unittest.TestCase):
                     (
                         "blue",
                         {
+                            "type": "spectral",
                             "resolution": 5,
                             "resolution_unit": "smoot",
                             "dtype": "UInt16",
@@ -729,6 +519,7 @@ class TestSceneRepr(unittest.TestCase):
                     (
                         "alpha",
                         {
+                            "type": "mask",
                             "resolution": 5,
                             "resolution_unit": "smoot",
                             "dtype": "UInt8",

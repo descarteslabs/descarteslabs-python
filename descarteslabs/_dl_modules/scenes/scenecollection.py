@@ -171,9 +171,10 @@ class SceneCollection(Collection):
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         processing_level : str, optional
             How the processing level of the underlying data should be adjusted. Possible
-            values are ``toa`` (top of atmosphere) and ``surface``. For products that
-            support it, ``surface`` applies Descartes Labs' general surface reflectance
-            algorithm to the output.
+            values depend on the product and bands in use. Legacy products support
+            ``toa`` (top of atmosphere) and in some cases ``surface``. Consult the
+            available ``processing_levels`` in the product bands to understand what
+            is available.
         scaling : None, str, list, dict
             Band scaling specification. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
@@ -257,7 +258,7 @@ class SceneCollection(Collection):
         )
 
         scales, data_type = _scaling.multiproduct_scaling_parameters(
-            self._product_band_properties(), bands, scaling, data_type
+            self._product_band_properties(), bands, processing_level, scaling, data_type
         )
 
         if pop_alpha:
@@ -382,9 +383,10 @@ class SceneCollection(Collection):
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         processing_level : str, optional
             How the processing level of the underlying data should be adjusted. Possible
-            values are ``toa`` (top of atmosphere) and ``surface``. For products that
-            support it, ``surface`` applies Descartes Labs' general surface reflectance
-            algorithm to the output.
+            values depend on the product and bands in use. Legacy products support
+            ``toa`` (top of atmosphere) and in some cases ``surface``. Consult the
+            available ``processing_levels`` in the product bands to understand what
+            is available.
         scaling : None, str, list, dict
             Band scaling specification. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
@@ -435,7 +437,7 @@ class SceneCollection(Collection):
         mask_nodata = bool(mask_nodata)
 
         scales, data_type = _scaling.multiproduct_scaling_parameters(
-            self._product_band_properties(), bands, scaling, data_type
+            self._product_band_properties(), bands, processing_level, scaling, data_type
         )
         raster_params = ctx.raster_params
         full_raster_args = dict(
@@ -532,9 +534,10 @@ class SceneCollection(Collection):
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         processing_level : str, optional
             How the processing level of the underlying data should be adjusted. Possible
-            values are ``toa`` (top of atmosphere) and ``surface``. For products that
-            support it, ``surface`` applies Descartes Labs' general surface reflectance
-            algorithm to the output.
+            values depend on the product and bands in use. Legacy products support
+            ``toa`` (top of atmosphere) and in some cases ``surface``. Consult the
+            available ``processing_levels`` in the product bands to understand what
+            is available.
         scaling : None, str, list, dict
             Band scaling specification. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
@@ -603,7 +606,7 @@ class SceneCollection(Collection):
 
         bands = Scene._bands_to_list(bands)
         scales, data_type = _scaling.multiproduct_scaling_parameters(
-            self._product_band_properties(), bands, scaling, data_type
+            self._product_band_properties(), bands, processing_level, scaling, data_type
         )
 
         if _download._is_path_like(dest):
@@ -730,9 +733,10 @@ class SceneCollection(Collection):
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         processing_level : str, optional
             How the processing level of the underlying data should be adjusted. Possible
-            values are ``toa`` (top of atmosphere) and ``surface``. For products that
-            support it, ``surface`` applies Descartes Labs' general surface reflectance
-            algorithm to the output.
+            values depend on the product and bands in use. Legacy products support
+            ``toa`` (top of atmosphere) and in some cases ``surface``. Consult the
+            available ``processing_levels`` in the product bands to understand what
+            is available.
         scaling : None, str, list, dict
             Band scaling specification. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
@@ -788,7 +792,7 @@ class SceneCollection(Collection):
             bands, mask_alpha=mask_alpha, scaling=scaling
         )
         scales, data_type = _scaling.multiproduct_scaling_parameters(
-            self._product_band_properties(), bands, scaling, data_type
+            self._product_band_properties(), bands, processing_level, scaling, data_type
         )
 
         return _download._download(
@@ -806,7 +810,9 @@ class SceneCollection(Collection):
             raster_client=self._raster_client,
         )
 
-    def scaling_parameters(self, bands, scaling=None, data_type=None):
+    def scaling_parameters(
+        self, bands, processing_level=None, scaling=None, data_type=None
+    ):
         """
         Computes fully defaulted scaling parameters and output data_type
         from provided specifications.
@@ -830,6 +836,12 @@ class SceneCollection(Collection):
         ----------
         bands : list(str)
             List of bands to be scaled.
+        processing_level : str, optional
+            How the processing level of the underlying data should be adjusted. Possible
+            values depend on the product and bands in use. Legacy products support
+            ``toa`` (top of atmosphere) and in some cases ``surface``. Consult the
+            available ``processing_levels`` in the product bands to understand what
+            is available.
         scaling : None or str or list or dict
             Band scaling specification. See
             :meth:`Scene.scaling_parameters <descarteslabs.scenes.scene.Scene.scaling_parameters>`
@@ -863,7 +875,7 @@ class SceneCollection(Collection):
         """
         bands = Scene._bands_to_list(bands)
         return _scaling.multiproduct_scaling_parameters(
-            self._product_band_properties(), bands, scaling, data_type
+            self._product_band_properties(), bands, processing_level, scaling, data_type
         )
 
     def __repr__(self):

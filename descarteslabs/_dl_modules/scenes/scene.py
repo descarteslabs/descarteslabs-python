@@ -416,9 +416,10 @@ class Scene(object):
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         processing_level : str, optional
             How the processing level of the underlying data should be adjusted. Possible
-            values are ``toa`` (top of atmosphere) and ``surface``. For products that
-            support it, ``surface`` applies Descartes Labs' general surface reflectance
-            algorithm to the output.
+            values depend on the product and bands in use. Legacy products support
+            ``toa`` (top of atmosphere) and in some cases ``surface``. Consult the
+            available ``processing_levels`` in the product bands to understand what
+            is available.
         scaling : None, str, list, dict
             Band scaling specification. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
@@ -508,7 +509,7 @@ class Scene(object):
         self_bands = self.properties["bands"]
 
         scales, dtype = _scaling.scaling_parameters(
-            self_bands, bands, scaling, data_type
+            self_bands, bands, processing_level, scaling, data_type
         )
 
         mask_nodata = bool(mask_nodata)
@@ -646,9 +647,10 @@ class Scene(object):
             ``lanczos``, ``average``, ``mode``, ``max``, ``min``, ``med``, ``q1``, ``q3``.
         processing_level : str, optional
             How the processing level of the underlying data should be adjusted. Possible
-            values are ``toa`` (top of atmosphere) and ``surface``. For products that
-            support it, ``surface`` applies Descartes Labs' general surface reflectance
-            algorithm to the output.
+            values depend on the product and bands in use. Legacy products support
+            ``toa`` (top of atmosphere) and in some cases ``surface``. Consult the
+            available ``processing_levels`` in the product bands to understand what
+            is available.
         scaling : None, str, list, dict
             Band scaling specification. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
@@ -727,7 +729,7 @@ class Scene(object):
     ):
         bands = self._bands_to_list(bands)
         scales, dtype = _scaling.scaling_parameters(
-            self.properties["bands"], bands, scaling, data_type
+            self.properties["bands"], bands, processing_level, scaling, data_type
         )
 
         return _download._download(
@@ -745,7 +747,9 @@ class Scene(object):
             raster_client=raster_client,
         )
 
-    def scaling_parameters(self, bands, scaling=None, data_type=None):
+    def scaling_parameters(
+        self, bands, processing_level=None, scaling=None, data_type=None
+    ):
         """
         Computes fully defaulted scaling parameters and output data_type
         from provided specifications.
@@ -761,6 +765,12 @@ class Scene(object):
         ----------
         bands : list
             List of bands to be scaled.
+        processing_level : str, optional
+            How the processing level of the underlying data should be adjusted. Possible
+            values depend on the product and bands in use. Legacy products support
+            ``toa`` (top of atmosphere) and in some cases ``surface``. Consult the
+            available ``processing_levels`` in the product bands to understand what
+            is available.
         scaling : None or str or list or dict, default None
             Supplied scaling specification, see below.
         data_type : None or str, default None
@@ -905,7 +915,7 @@ class Scene(object):
         """
         bands = self._bands_to_list(bands)
         return _scaling.scaling_parameters(
-            self.properties["bands"], bands, scaling, data_type
+            self.properties["bands"], bands, processing_level, scaling, data_type
         )
 
     @property

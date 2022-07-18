@@ -45,57 +45,6 @@ class TestSceneCollection(unittest.TestCase):
         },
     }
 
-    MOCK_RGBA_PROPERTIES2 = {
-        "product": "mock_product2",
-        "id": "mock_id2",
-        "bands": {
-            "red": {
-                "type": "spectral",
-                "dtype": "UInt16",
-                "data_range": [0, 10000],
-                "default_range": [0, 4000],
-                "physical_range": [0.0, 1.0],
-            },
-            "green": {
-                "type": "spectral",
-                "dtype": "UInt16",
-                "data_range": [0, 10000],
-                "default_range": [0, 4000],
-                "physical_range": [0.0, 1.0],
-            },
-            "blue": {
-                "type": "spectral",
-                "dtype": "UInt16",
-                "data_range": [0, 10000],
-                "default_range": [0, 4000],
-                "physical_range": [0.0, 1.0],
-            },
-            "alpha": {"type": "mask", "dtype": "UInt16", "data_range": [0, 1]},
-        },
-    }
-
-    MOCK_RGBA_PROPERTIES3 = {
-        "product": "mock_product3",
-        "id": "mock_id2",
-        "bands": {
-            "red": {
-                "type": "spectral",
-                "dtype": "Int16",
-                "data_range": [0, 10000],
-                "default_range": [0, 4000],
-                "physical_range": [0.0, 1.0],
-            },
-            "green": {
-                "type": "spectral",
-                "dtype": "UInt16",
-                "data_range": [0, 10000],
-                "default_range": [0, 4000],
-                "physical_range": [-1.0, 1.0],
-            },
-            "alpha": {"type": "mask", "dtype": "UInt16", "data_range": [0, 1]},
-        },
-    }
-
     @mock.patch.object(Metadata, "get", _metadata_get)
     @mock.patch.object(
         scene_module,
@@ -359,86 +308,11 @@ class TestSceneCollection(unittest.TestCase):
 
         assert len(scenes.filter_coverage(ctx)) == 1
 
-    def test_scaling_parameters_single(self):
+    def test_scaling_parameters(self):
         sc = SceneCollection([MockScene({}, self.MOCK_RGBA_PROPERTIES)])
         scales, data_type = sc.scaling_parameters("red green blue alpha")
         assert scales is None
         assert data_type == "UInt16"
-
-    def test_scaling_parameters_none(self):
-        sc = SceneCollection(
-            [
-                MockScene({}, self.MOCK_RGBA_PROPERTIES),
-                MockScene({}, self.MOCK_RGBA_PROPERTIES2),
-            ]
-        )
-        scales, data_type = sc.scaling_parameters("red green blue alpha")
-        assert scales is None
-        assert data_type == "UInt16"
-
-    def test_scaling_parameters_display(self):
-        sc = SceneCollection(
-            [
-                MockScene({}, self.MOCK_RGBA_PROPERTIES),
-                MockScene({}, self.MOCK_RGBA_PROPERTIES2),
-            ]
-        )
-        scales, data_type = sc.scaling_parameters("red green blue alpha", "display")
-        assert scales == [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]
-        assert data_type == "Byte"
-
-    def test_scaling_parameters_missing_band(self):
-        sc = SceneCollection(
-            [
-                MockScene({}, self.MOCK_RGBA_PROPERTIES),
-                MockScene({}, self.MOCK_RGBA_PROPERTIES3),
-            ]
-        )
-        with pytest.raises(ValueError, match="not available"):
-            scales, data_type = sc.scaling_parameters("red green blue alpha")
-
-    def test_scaling_parameters_none_data_type(self):
-        sc = SceneCollection(
-            [
-                MockScene({}, self.MOCK_RGBA_PROPERTIES),
-                MockScene({}, self.MOCK_RGBA_PROPERTIES3),
-            ]
-        )
-        scales, data_type = sc.scaling_parameters("red alpha")
-        assert scales is None
-        assert data_type == "Int32"
-
-    def test_scaling_parameters_display_range(self):
-        sc = SceneCollection(
-            [
-                MockScene({}, self.MOCK_RGBA_PROPERTIES),
-                MockScene({}, self.MOCK_RGBA_PROPERTIES3),
-            ]
-        )
-        scales, data_type = sc.scaling_parameters("red alpha", "display")
-        assert scales == [(0, 4000, 0, 255), None]
-        assert data_type == "Byte"
-
-    def test_scaling_parameters_raw_range(self):
-        sc = SceneCollection(
-            [
-                MockScene({}, self.MOCK_RGBA_PROPERTIES),
-                MockScene({}, self.MOCK_RGBA_PROPERTIES3),
-            ]
-        )
-        scales, data_type = sc.scaling_parameters("red alpha", "raw")
-        assert scales == [None, None]
-        assert data_type == "Int32"
-
-    def test_scaling_parameters_physical_incompatible(self):
-        sc = SceneCollection(
-            [
-                MockScene({}, self.MOCK_RGBA_PROPERTIES),
-                MockScene({}, self.MOCK_RGBA_PROPERTIES3),
-            ]
-        )
-        with pytest.raises(ValueError, match="incompatible"):
-            scales, data_type = sc.scaling_parameters("green alpha", "physical")
 
 
 @mock.patch.object(MockScene, "_download")
@@ -447,7 +321,18 @@ class TestSceneCollectionDownload(unittest.TestCase):
         properties = [
             {
                 "id": "foo:bar" + str(i),
-                "bands": {"nir": {"dtype": "UInt16"}, "yellow": {"dtype": "UInt16"}},
+                "bands": {
+                    "nir": {
+                        "type": "spectral",
+                        "dtype": "UInt16",
+                        "data_range": [0, 10000],
+                    },
+                    "yellow": {
+                        "type": "spectral",
+                        "dtype": "UInt16",
+                        "data_range": [0, 10000],
+                    },
+                },
                 "product": "foo",
             }
             for i in range(3)
