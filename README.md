@@ -19,6 +19,8 @@ Changelog
 =========
 ## [Unreleased]
 
+## [1.11.0] - 2022-07-20
+
 ### Installation
 
 - The extra requirement options have changed. There are four extra requirement options now, `visualization`, `tables`,
@@ -31,29 +33,58 @@ Changelog
 ### Configuration
 
 - The Descartes Labs client now supports configuration to support operating in different environments. By default,
-  the client will configure itself for standard usage against the GCP platform (`"gcp-production"`). Alternate
-  environments can be configured by setting the `DESCARTESLABS_ENV` environment variable before starting python,
-  or by using a prelude like
+  the client will configure itself for standard usage against the GCP platform (`"gcp-production"`), except in the case of AWS Marketplace users, for whom
+  the client will configure itself against the AWS platform (`"aws-production"`).
+  Alternate environments can be configured by setting the `DESCARTESLABS_ENV` environment variable before starting python, or by using a prelude like
   ```
   from descarteslabs.config import Settings
   Settings.select_env("environment-name")
   ```
   before any other imports of any part of the descarteslabs client package.
+- The new AWS Enterprise Accelerator release currently includes only Auth, Configuration
+  and the Scenes client.
 
 ### Auth and Exceptions
 
-- The `descarteslabs.client.auth` package has moved to `descarteslabs.auth`. It is now imported into the original
-  location at `descarteslabs.client.auth` to continue to work with existing code, but new code should use the new
-  location.
-- The `descarteslabs.client.exceptions` module has moved to `descarteslabs.exceptions`. It is now imported into the original
-  location at `descarteslabs.client.exceptions` to continue to work with existing code, but new code should use the new
-  location.
+- The `descarteslabs.client.auth` package has moved to `descarteslabs.auth`. It is now imported
+  into the original location at `descarteslabs.client.auth` to continue to work with existing
+  code, but new code should use the new location.
+- The `descarteslabs.client.exceptions` module has moved to `descarteslabs.exceptions`. It is
+  now imported into the original location at `descarteslabs.client.exceptions` to continue to
+  work with existing code, but new code should use the new location.
 
 ### Scenes
 
+- Fixed an issue in `scenes.DLTile.from_shape` where there would be incomplete coverage of certain geometries. The function may now return more tiles than before.
+- Added support for the new `all_touched` parameter to the different `GeoContext` types. Default behavior remains the same
+as always, but if you set `all_touched=True` this communicates to the raster service that you want the image(s) rastered
+using GDAL's `CUTLINE_ALL_TOUCHED` option which will change how source pixels are mapped to output pixels. This mode is
+only recommended when using an AOI which is smaller than the source imagery pixel resolution.
+- The DLTile support has been fixed to avoid generating gaps when tiling regions that span
+  a large distance north-to-south and straddle meridians which are boundaries between
+  UTM zones. So methods such as `DLTile.from_shape` may return more tiles than previously,
+  but properly covering the region.
 - Added support for retrieving products and bands. 
-  - Methods added: `get_product`, `get_band`, `get_derived_band`, `search_products`, `search_bands`, `search_derived_bands`.
+  - Methods added: `get_product`, `get_band`, `get_derived_band`, `search_products`,
+    `search_bands`, `search_derived_bands`.
   - Disallows search without `products` parameter.
+- Scaling support has been enhanced to understand processing levels for newer products. The
+  `Scene.scaling_parameters` and `SceneCollection.scaling_parameters` methods now accept
+  a `processing_level` argument, and this will be factored in to the determination of
+  the default result data type and scaling for all rastering operations such as `Scene.ndarray`
+  and `SceneCollection.mosaic`.
+- If the user provides the `rasterio` package (which implies providing GDAL), then rasterio
+  will be used to save any downloaded images as GeoTIFF, allowing for the use of compression.
+  Otherwise, by default the `tifffile` support will be used to generate the GeoTIFF files
+  but compression is not supported in this mode.
+- As the Places client has been deprecated, so has any use of the `place=` parameter supported
+  by several of the Scenes functions and methods.
+
+### Catalog
+
+- (Core users only) Added support for specifying the image index to use when creating a new `Product`.
+- Added support for defining per-processing-level `data_type`, `data_range`, `display_range`
+  and `physical_range` properties on processing level steps.
 
 ### Discover
 
@@ -69,29 +100,49 @@ Changelog
     - `Discover().list_assets("asset/namespace/org:some_org", filters="type=blob,vector")`
     - `Discover().list_assets("asset/namespace/org:some_org", filters=AssetListFilter(type=[AssetType.BLOB, AssetType.VECTOR], name="file?name.*"))`
 
+### Metadata
+
+- `Metadata.products` and `Metadata.available_products` now properly implement paging so that
+  by default, a DotList containing every matching product accessible to the user is returned.
+
+### Raster
+
+- If the user provides the `rasterio` package (which implies providing GDAL), then rasterio
+  will be used to save any downloaded images as GeoTIFF, allowing for the use of compression.
+  Otherwise, by default the `tifffile` support will be used to generate the GeoTIFF files
+  but compression is not supported in this mode.
+
 ### Tables
 
-- Fixed an issue that caused a user's schema to be overwritten if they didn't provide a primary key on table creation.
-- Now uses Discover backend filtering for `list_tables()` instead of filtering on the client to improve performance.
+- Fixed an issue that caused a user's schema to be overwritten if they didn't provide a primary
+  key on table creation.
+- Now uses Discover backend filtering for `list_tables()` instead of filtering on the client to
+  improve performance.
 - `list_tables()` now supports filtering tables by name
   - `Tables.list_tables(name="Test*.json")`
-  
-## Scenes
 
-- Fixed an issue in `scenes.DLTile.from_shape` where there would be incomplete coverage of certain geometries. The function may now return more tiles than before.
-- Added support for the new `all_touched` parameter to the different `GeoContext` types. Default behavior remains the same
-as always, but if you set `all_touched=True` this communicates to the raster service that you want the image(s) rastered
-using GDAL's `CUTLINE_ALL_TOUCHED` option which will change how source pixels are mapped to output pixels. This mode is
-only recommended when using an AOI which is smaller than the source imagery pixel resolution.
+### Tasks
 
-## Workflows
+- New Tasks images for this release bump the versions of several dependencies, please see
+  the Tasks guide for detailed lists of dependencies.
 
-- Added support for the new `all_touched` parameter to the different `GeoContext` types. Se description above under `Scenes`.
+### Workbench
 
-## General
+- The new Workbench release bumps the versions of several dependencies.
 
-- With Python 2 far in the rearview mirror, the depedencies on the `six` python package have been removed throughout
-the library, the distribution and all tasks images.
+### Workflows
+
+- Added support for the new `all_touched` parameter to the different `GeoContext` types.
+  See description above under `Scenes`.
+
+### General
+
+- The Places client has been deprecated, and use thereof will generate a deprecation warning.
+- The older Catalog V1 client has been deprecated, and use thereof will generate a deprecation
+  warning. Please use the Catalog V2 client in its place.
+- Documentation has been updated to include the `AWS Enterprise Accelerator" release.
+- With Python 2 far in the rearview mirror, the depedencies on the `six` python package have
+  been removed throughout the library, the distribution and all tasks images.
 
 ## [1.10.0] - 2022-01-18
 
