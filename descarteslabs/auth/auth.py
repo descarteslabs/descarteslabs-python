@@ -614,6 +614,9 @@ class Auth:
 
     @staticmethod
     def _read_token_info(path, suppress_warning=False):
+        if os.environ.get("DESCARTESLABS_NO_JWT_CACHE", "").lower() == "true":
+            return {}
+
         try:
             with open(path) as fp:
                 return json.load(fp)
