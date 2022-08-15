@@ -561,7 +561,8 @@ class AOI(GeoContext):
 
         # TODO: better way of checking equivalence between CRSs than string equality
         if (
-            self._crs is not None
+            not self._all_touched
+            and self._crs is not None
             and self._resolution is not None
             and self._bounds is not None
             and self._bounds_crs == self._crs
@@ -576,6 +577,11 @@ class AOI(GeoContext):
             )
             if _helpers.is_geographic_crs(self._crs):
                 msg += "\nSince your CRS is in lat-lon coordinates, resolution must be given in decimal degrees."
+            msg += (
+                "\nIf you are intending to raster an area smaller than the source imagery resolution, then you"
+                "should set an appropriate value of resolution, shape, or all_touched=True on the supplied AOI"
+                " to signal your intentions."
+            )
 
             if crs_width < self._resolution:
                 raise ValueError(
