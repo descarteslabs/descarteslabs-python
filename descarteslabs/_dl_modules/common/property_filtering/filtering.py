@@ -269,7 +269,17 @@ class Property(object):
         values in the given iterable. This can be thought of as behaving
         like an ``in`` expression in Python or an ``IN`` expression in SQL.
         """
-        return OrExpression([(self == item) for item in iterable])
+        exprs = [(self == item) for item in iterable]
+        if len(exprs) > 1:
+            return OrExpression(exprs)
+        elif len(exprs) == 1:
+            return exprs[0]
+        else:
+            # technically we should return an expression that always evaluates false
+            # (to match python in operator on an empty sequence). But there's nothing
+            # we can do here to create such an expression, so instead error to the user
+            # since they surely didn't mean this.
+            raise ValueError("in_ expression requires at least one item")
 
     any_of = in_
 
