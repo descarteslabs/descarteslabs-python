@@ -19,6 +19,12 @@ Changelog
 =========
 ## [Unreleased]
 
+### Catalog
+
+- Previously, the internal implementation of the `physical_range` attribute on various band types was inconsistent with
+  that of `data_range` and `display_range`. It has now been made consistent, which means it will either not be set,
+  or will contain a 2-tuple of float values. It is no longer possible to explicitly set it to `None`.
+
 ## [1.11.0] - 2022-07-20
 
 ### Installation

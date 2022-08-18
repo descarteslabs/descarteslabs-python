@@ -28,7 +28,7 @@ class TestBand(ClientTestCase):
         assert "foo:test" == s.id
         assert "spectral" == s.type
         assert 1200 == s.wavelength_nm_max
-        assert [0.0, 1.0] == s.physical_range
+        assert (0.0, 1.0) == s.physical_range
         with pytest.raises(AttributeError):
             s.frequency  # Attribute from a different band type
 
@@ -102,7 +102,7 @@ class TestBand(ClientTestCase):
 
         b = Band.get("p1:blue", client=self.client)
         assert isinstance(b, SpectralBand)
-        assert [0.0, 1.0] == b.physical_range
+        assert (0.0, 1.0) == b.physical_range
         assert 2000 == b.wavelength_nm_min
         assert "P1" == b.product.name
 

@@ -155,7 +155,7 @@ class ProcessingStepAttribute(MappingAttribute):
         Optional normal range of pixel values stored in the band for display purposes.
     physical_range : tuple(float, float)
         Optional normal range of physical values stored in the band.
-    physical_range_units : str
+    physical_range_unit : str
         Optional unit of the physical range.
     """
 
@@ -668,7 +668,13 @@ class SpectralBand(Band):
 
     _derived_type = BandType.SPECTRAL.value
 
-    physical_range = Attribute(doc=Band._DOC_PHYSICALRANGE)
+    physical_range = TupleAttribute(
+        min_length=2,
+        max_length=2,
+        coerce=True,
+        attribute_type=float,
+        doc=Band._DOC_PHYSICALRANGE,
+    )
     physical_range_unit = Attribute(doc="str, optional: Unit of the physical range.")
     wavelength_nm_center = Attribute(
         doc="""float, optional: Weighted center of min/max responsiveness of the band, in nm.
@@ -734,7 +740,13 @@ class MicrowaveBand(Band):
         *Filterable, sortable*.
         """
     )
-    physical_range = Attribute(doc=Band._DOC_PHYSICALRANGE)
+    physical_range = TupleAttribute(
+        min_length=2,
+        max_length=2,
+        coerce=True,
+        attribute_type=float,
+        doc=Band._DOC_PHYSICALRANGE,
+    )
     physical_range_unit = Attribute(doc="str, optional: Unit of the physical range.")
 
 
@@ -851,7 +863,13 @@ class GenericBand(Band):
 
     _derived_type = BandType.GENERIC.value
 
-    physical_range = Attribute(doc=Band._DOC_PHYSICALRANGE)
+    physical_range = TupleAttribute(
+        min_length=2,
+        max_length=2,
+        coerce=True,
+        attribute_type=float,
+        doc=Band._DOC_PHYSICALRANGE,
+    )
     physical_range_unit = Attribute(doc="str, optional: Unit of the physical range.")
     colormap_name = EnumAttribute(Colormap, doc=Band._DOC_COLORMAPNAME)
     colormap = Attribute(doc=Band._DOC_COLORMAP)
@@ -897,7 +915,14 @@ class DerivedBand(CatalogObject):
     data_range = Attribute(
         readonly=True, doc="tuple(float, float), readonly: " + Band._DOC_DATARANGE
     )
-    physical_range = Attribute(readonly=True, doc=Band._DOC_PHYSICALRANGE)
+    physical_range = TupleAttribute(
+        readonly=True,
+        min_length=2,
+        max_length=2,
+        coerce=True,
+        attribute_type=float,
+        doc=Band._DOC_PHYSICALRANGE,
+    )
     bands = Attribute(
         readonly=True,
         doc="""list(str), readonly: List of bands used in the derived band pixel function.
