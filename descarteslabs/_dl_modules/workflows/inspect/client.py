@@ -162,7 +162,7 @@ def inspect(
         Proxy object to compute, or list/tuple of proxy objects.
         If it depends on parameters, ``obj`` is first converted
         to a `.Function` that takes those parameters.
-    geoctx: `.scenes.geocontext.GeoContext`, `~.workflows.types.geospatial.GeoContext`, or None
+    geoctx: `.common.geo.geocontext.GeoContext`, `~.workflows.types.geospatial.GeoContext`, or None
         The GeoContext parameter under which to run the computation.
         Almost all computations will require a `~.workflows.types.geospatial.GeoContext`,
         but for operations that only involve non-geospatial types,

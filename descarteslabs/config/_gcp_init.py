@@ -158,6 +158,12 @@ def _setup_gcp():
         lazy_object_proxy.Proxy(lambda: vector.Vector.get_default_client),
     )
 
+    # geo
+    dl_geo = importlib.import_module("descarteslabs._dl_modules.common.geo")
+    geo = clone_module("descarteslabs.geo", dl_geo)
+    sys.modules[geo.__name__] = geo
+    setattr(descarteslabs, "geo", geo)
+
     # these should be fully imported and in the local namespace
     for package in ("catalog", "scenes", "vectors"):
         dl_module = importlib.import_module(f"descarteslabs._dl_modules.{package}")

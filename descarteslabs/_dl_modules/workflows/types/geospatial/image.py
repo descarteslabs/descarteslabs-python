@@ -70,7 +70,7 @@ class Image(ImageBase, BandsMixin):
     Examples
     --------
     >>> from descarteslabs.workflows import Image
-    >>> from descarteslabs.scenes import DLTile
+    >>> from descarteslabs.geo import DLTile
     >>> img = Image.from_id("sentinel-2:L1C:2019-05-04_13SDV_99_S2B_v1")
     >>> img
     <descarteslabs.workflows.types.geospatial.image.Image object at 0x...>

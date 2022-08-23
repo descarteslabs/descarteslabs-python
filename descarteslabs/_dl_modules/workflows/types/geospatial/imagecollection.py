@@ -57,7 +57,7 @@ class ImageCollection(BandsMixin, CollectionMixin, ImageCollectionBase):
     Examples
     --------
     >>> from descarteslabs.workflows import ImageCollection
-    >>> from descarteslabs.scenes import DLTile
+    >>> from descarteslabs.geo import DLTile
     >>> col = ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
     ...        start_datetime="2017-01-01",
     ...        end_datetime="2017-12-31")

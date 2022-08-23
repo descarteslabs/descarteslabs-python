@@ -9,7 +9,8 @@ import shapely.geometry
 import numpy as np
 
 from ...common.dotdict import DotDict
-from .. import Scene, geocontext
+from ...common.geo import AOI
+from .. import Scene
 from .. import scene
 from ..scene import _strptime_helper
 
@@ -91,13 +92,11 @@ class TestScene(unittest.TestCase):
     def test_default_ctx(self):
         # test doesn't fail with nothing
         ctx = MockScene({}, {}).default_ctx()
-        assert ctx == geocontext.AOI(bounds_crs=None, align_pixels=False)
+        assert ctx == AOI(bounds_crs=None, align_pixels=False)
 
         # no geotrans
         ctx = MockScene({}, {"crs": "EPSG:4326"}).default_ctx()
-        assert ctx == geocontext.AOI(
-            crs="EPSG:4326", bounds_crs=None, align_pixels=False
-        )
+        assert ctx == AOI(crs="EPSG:4326", bounds_crs=None, align_pixels=False)
 
         # north-up geotrans - resolution
         with warnings.catch_warnings(record=True) as w:
@@ -189,7 +188,7 @@ class TestScene(unittest.TestCase):
 
         assert scene.properties.id == scene_id
         assert isinstance(scene.geometry, shapely.geometry.Polygon)
-        assert isinstance(ctx, geocontext.AOI)
+        assert isinstance(ctx, AOI)
 
     @mock.patch.object(Metadata, "get", _metadata_get)
     @mock.patch.object(
@@ -478,7 +477,7 @@ class TestScene(unittest.TestCase):
                 },
             },
         )
-        ctx = geocontext.AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
+        ctx = AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
         scene.download("nir yellow", ctx)
         mock_geotiff.assert_called_once()
 

@@ -1,7 +1,9 @@
 import unittest
 import datetime
 
-from .. import geocontext, search
+from ...common.geo import AOI, DLTile
+
+from .. import search
 from shapely.geometry import shape
 
 from .. import _search
@@ -34,7 +36,7 @@ class TestScenesSearch(unittest.TestCase):
         assert len(sc) > 0
         assert len(sc) <= 4  # test client only has 2 scenes available
 
-        assert isinstance(ctx, geocontext.AOI)
+        assert isinstance(ctx, AOI)
         assert ctx.__geo_interface__ == self.geom
         assert ctx.resolution == 15
         assert ctx.crs == "EPSG:32615"
@@ -54,7 +56,7 @@ class TestScenesSearch(unittest.TestCase):
         sc, ctx = search(shape(self.geom), products="landsat:LC08:PRE:TOAR", limit=4)
         assert len(sc) == 2
 
-        assert isinstance(ctx, geocontext.AOI)
+        assert isinstance(ctx, AOI)
         assert ctx.__geo_interface__ == self.geom
         assert ctx.resolution == 15
         assert ctx.crs == "EPSG:32615"
@@ -71,7 +73,7 @@ class TestScenesSearch(unittest.TestCase):
         _cached_bands_by_product,
     )
     def test_search_AOI(self):
-        aoi = geocontext.AOI(self.geom, resolution=5)
+        aoi = AOI(self.geom, resolution=5)
         sc, ctx = search(aoi, products="landsat:LC08:PRE:TOAR", limit=4)
         assert len(sc) > 0
         assert len(sc) <= 4  # test client only has 2 scenes available
@@ -86,7 +88,7 @@ class TestScenesSearch(unittest.TestCase):
         _cached_bands_by_product,
     )
     def test_search_AOI_with_shape(self):
-        aoi = geocontext.AOI(self.geom, shape=(100, 100))
+        aoi = AOI(self.geom, shape=(100, 100))
         sc, ctx = search(aoi, products="landsat:LC08:PRE:TOAR", limit=4)
         assert len(sc) > 0
         assert len(sc) <= 4  # test client only has 2 scenes available
@@ -102,7 +104,7 @@ class TestScenesSearch(unittest.TestCase):
         _cached_bands_by_product,
     )
     def test_search_dltile(self):
-        tile = geocontext.DLTile(
+        tile = DLTile(
             {
                 "geometry": {
                     "coordinates": [

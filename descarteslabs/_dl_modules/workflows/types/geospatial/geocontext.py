@@ -1,4 +1,4 @@
-from .... import scenes
+from ....common import geo
 
 from ...cereal import serializable
 from ..core import typecheck_promote
@@ -29,12 +29,12 @@ GeoContextBase = Struct[
 @serializable(is_named_concrete_type=True)
 class GeoContext(GeoContextBase):
     """
-    Proxy `.scenes.geocontext.GeoContext` containing the spatial parameters (AOI, resolution, etc.)
-    to use when loading geospatial data. Equivalent to a `.scenes.geocontext.AOI`,
+    Proxy `.geo.geocontext.GeoContext` containing the spatial parameters (AOI, resolution, etc.)
+    to use when loading geospatial data. Equivalent to a `.geo.geocontext.AOI`,
     with the additional read-only properties ``arr_shape``, ``gdal_geotrans``, and ``projected_bounds``.
 
     You don't often need to construct a Workflows GeoContext yourself. When you call compute(),
-    you can pass in any `.scenes.geocontext.GeoContext`, or use
+    you can pass in any `.geo.geocontext.GeoContext`, or use
     `wf.map.geocontext() <.interactive.Map.geocontext>` for the current map viewport.
 
     Note: The ``raster_params`` of a GeoContext can be passed to `.raster.ndarray` to get an
@@ -43,10 +43,10 @@ class GeoContext(GeoContextBase):
     Examples
     --------
     >>> from descarteslabs.workflows import GeoContext
-    >>> from descarteslabs import scenes
-    >>> scene = scenes.DLTile.from_latlon(10, 30, resolution=10, tilesize=512, pad=0)
+    >>> from descarteslabs.geo import DLTile
+    >>> dltile = DLTile.from_latlon(10, 30, resolution=10, tilesize=512, pad=0)
     >>> # the above scene could be passed to compute without being changed to a Workflows GeoContext
-    >>> geoctx = GeoContext.from_scenes(scene)
+    >>> geoctx = GeoContext.from_geo(dltile)
     >>> geoctx
     <descarteslabs.workflows.types.geospatial.geocontext.GeoContext object at 0x...>
     >>> geoctx.compute() # doctest: +SKIP
@@ -314,13 +314,13 @@ class GeoContext(GeoContextBase):
         return cls._from_apply("wf.GeoContext.from_xyz_tile", x, y, z, all_touched)
 
     @classmethod
-    def from_scenes(cls, ctx):
+    def from_geo(cls, ctx):
         """
-        Construct a Workflows GeoContext from a Scenes GeoContext
+        Construct a Workflows GeoContext from a DL GeoContext
 
         Parameters
         ----------
-        ctx: ~descarteslabs.scenes.AOI, ~descarteslabs.scenes.DLTile, or ~descarteslabs.scenes.XYZTile
+        ctx: ~descarteslabs.common.geo.AOI, ~descarteslabs.common.geo.DLTile, or ~descarteslabs.common.geo.XYZTile
 
         Returns
         -------
@@ -329,10 +329,10 @@ class GeoContext(GeoContextBase):
         Example
         -------
         >>> from descarteslabs.workflows import GeoContext
-        >>> from descarteslabs import scenes
-        >>> scene = scenes.DLTile.from_latlon(10, 30, resolution=10, tilesize=512, pad=0)
+        >>> from descarteslabs import geo
+        >>> scene = geo.DLTile.from_latlon(10, 30, resolution=10, tilesize=512, pad=0)
         >>> # the above scene could be passed to compute without being changed to a Workflows GeoContext
-        >>> geoctx = GeoContext.from_scenes(scene)
+        >>> geoctx = GeoContext.from_geo(scene)
         >>> geoctx
         <descarteslabs.workflows.types.geospatial.geocontext.GeoContext object at 0x...>
         >>> geoctx.compute() # doctest: +SKIP
@@ -348,7 +348,7 @@ class GeoContext(GeoContextBase):
          'pad': 0,
         ...
         """
-        if isinstance(ctx, scenes.AOI):
+        if isinstance(ctx, geo.AOI):
             resolution = float(ctx.resolution) if ctx.resolution else None
             # ^ often given as an int, but we're stricter here
 
@@ -362,20 +362,23 @@ class GeoContext(GeoContextBase):
                 bounds_crs=ctx.bounds_crs,
                 all_touched=ctx.all_touched,
             )
-        elif isinstance(ctx, scenes.DLTile):
+        elif isinstance(ctx, geo.DLTile):
             return cls.from_dltile_key(ctx.key, all_touched=ctx.all_touched)
-        elif isinstance(ctx, scenes.XYZTile):
+        elif isinstance(ctx, geo.XYZTile):
             return cls.from_xyz_tile(ctx.x, ctx.y, ctx.z, all_touched=ctx.all_touched)
         else:
             raise TypeError(
-                "In GeoContext.from_scenes, expected a `descarteslabs.scenes.GeoContext` "
+                "In GeoContext.from_geo, expected a `descarteslabs.geo.GeoContext` "
                 "but got {}".format(ctx)
             )
 
+    # back compatibility
+    from_scenes = from_geo
+
     @classmethod
     def _promote(cls, obj):
-        if isinstance(obj, scenes.GeoContext):
-            return cls.from_scenes(obj)
+        if isinstance(obj, geo.GeoContext):
+            return cls.from_geo(obj)
         else:
             return super(GeoContext, cls)._promote(obj)
 

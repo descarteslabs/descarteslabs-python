@@ -13,8 +13,9 @@ raster services that makes most interactions easier.
 It's available under ``descarteslabs.scenes``.
 """
 
-from .geocontext import AOI, DLTile, XYZTile, GeoContext
-from ._display import display, save_image
+from ..common.geo import AOI, DLTile, XYZTile, GeoContext
+from ..common.collection import Collection
+from ..common.display import display, save_image
 from ._search import (
     search,
     get_product,
@@ -25,7 +26,6 @@ from ._search import (
     search_derived_bands,
 )
 from .scene import Scene
-from .collection import Collection
 from .scenecollection import SceneCollection
 
 __all__ = [

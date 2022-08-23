@@ -4,7 +4,7 @@ import mock
 import io
 
 from descarteslabs.exceptions import NotFoundError, BadRequestError
-from .. import geocontext
+from ...common.geo import AOI
 from .. import _download
 
 
@@ -37,7 +37,7 @@ class TestFormat(unittest.TestCase):
 class TestDownload(unittest.TestCase):
     id = "foo:bar"
     bands = ["nir", "yellow"]
-    ctx = geocontext.AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
+    ctx = AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
 
     def download(self, dest, format="tif"):
         return _download._download(

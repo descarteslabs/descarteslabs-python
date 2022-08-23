@@ -23,7 +23,7 @@ import numpy as np
 from ..client.services.raster import Raster
 from descarteslabs.exceptions import NotFoundError, BadRequestError
 
-from .collection import Collection
+from ..common.collection import Collection
 from .scene import Scene
 from . import _download
 from . import _scaling
@@ -38,7 +38,7 @@ class SceneCollection(Collection):
     contianed Scenes.
 
     `stack` and `mosaic` rasterize all contained Scenes into an ndarray
-    using the a :class:`~descarteslabs.scenes.geocontext.GeoContext`.
+    using the a :class:`~descarteslabs.common.geo.geocontext.GeoContext`.
     """
 
     def __init__(self, iterable=None, raster_client=None):
@@ -67,7 +67,7 @@ class SceneCollection(Collection):
 
         Parameters
         ----------
-        geom : GeoJSON-like dict, :class:`~descarteslabs.scenes.geocontext.GeoContext`, or object with __geo_interface__
+        geom : GeoJSON-like dict, :class:`~descarteslabs.common.geo.geocontext.GeoContext`, or object with __geo_interface__  # noqa: E501
             Geometry to which to compare each Scene's geometry.
         minimum_coverage : float
             Only include Scenes that cover ``geom`` by at least this fraction.
@@ -123,8 +123,8 @@ class SceneCollection(Collection):
             or a sequence of band names (``["red", "green", "blue"]``).
             If the alpha band is requested, it must be last in the list
             to reduce rasterization errors.
-        ctx : :class:`~descarteslabs.scenes.geocontext.GeoContext`
-            A :class:`~descarteslabs.scenes.geocontext.GeoContext` to use when loading each Scene
+        ctx : :class:`~descarteslabs.common.geo.geocontext.GeoContext`
+            A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading each Scene
         flatten : str, Sequence[str], callable, or Sequence[callable], default None
             "Flatten" groups of Scenes in the stack into a single layer by mosaicking
             each group (such as Scenes from the same day), then stacking the mosaics.
@@ -210,7 +210,8 @@ class SceneCollection(Collection):
         ValueError
             If requested bands are unavailable, or band names are not given
             or are invalid.
-            If not all required parameters are specified in the :class:`~descarteslabs.scenes.geocontext.GeoContext`.
+            If not all required parameters are specified in the
+            :class:`~descarteslabs.common.geo.geocontext.GeoContext`.
             If the SceneCollection is empty.
         NotFoundError
             If a Scene's ID cannot be found in the Descartes Labs catalog
@@ -353,8 +354,8 @@ class SceneCollection(Collection):
             or a sequence of band names (``["red", "green", "blue"]``).
             If the alpha band is requested, it must be last in the list
             to reduce rasterization errors.
-        ctx : :class:`~descarteslabs.scenes.geocontext.GeoContext`
-            A :class:`~descarteslabs.scenes.geocontext.GeoContext` to use when loading each Scene
+        ctx : :class:`~descarteslabs.common.geo.geocontext.GeoContext`
+            A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading each Scene
         mask_nodata : bool, default True
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
@@ -415,7 +416,8 @@ class SceneCollection(Collection):
         ValueError
             If requested bands are unavailable, or band names are not given
             or are invalid.
-            If not all required parameters are specified in the :class:`~descarteslabs.scenes.geocontext.GeoContext`.
+            If not all required parameters are specified in the
+            :class:`~descarteslabs.common.geo.geocontext.GeoContext`.
             If the SceneCollection is empty.
         NotFoundError
             If a Scene's ID cannot be found in the Descartes Labs catalog
@@ -508,8 +510,8 @@ class SceneCollection(Collection):
             Band names to load. Can be a single string of band names
             separated by spaces (``"red green blue"``),
             or a sequence of band names (``["red", "green", "blue"]``).
-        ctx : :class:`~descarteslabs.scenes.geocontext.GeoContext`
-            A :class:`~descarteslabs.scenes.geocontext.GeoContext` to use when loading each Scene
+        ctx : :class:`~descarteslabs.common.geo.geocontext.GeoContext`
+            A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading each Scene
         dest : str, path-like, or sequence of str or path-like
             Directory or sequence of paths to which to write the image files.
 
@@ -592,7 +594,8 @@ class SceneCollection(Collection):
         ValueError
             If requested bands are unavailable, or band names are not given
             or are invalid.
-            If not all required parameters are specified in the :class:`~descarteslabs.scenes.geocontext.GeoContext`.
+            If not all required parameters are specified in the
+            :class:`~descarteslabs.common.geo.geocontext.GeoContext`.
             If the SceneCollection is empty.
             If ``dest`` is a sequence not equal in length to the SceneCollection.
             If ``format`` is invalid, or a path has an invalid extension.
@@ -707,8 +710,8 @@ class SceneCollection(Collection):
             Band names to load. Can be a single string of band names
             separated by spaces (``"red green blue"``),
             or a sequence of band names (``["red", "green", "blue"]``).
-        ctx : :class:`~descarteslabs.scenes.geocontext.GeoContext`
-            A :class:`~descarteslabs.scenes.geocontext.GeoContext` to use when loading the Scenes
+        ctx : :class:`~descarteslabs.common.geo.geocontext.GeoContext`
+            A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading the Scenes
         dest : str or path-like object, default None
             Where to write the image file.
 
@@ -778,7 +781,8 @@ class SceneCollection(Collection):
         ValueError
             If requested bands are unavailable, or band names are not given
             or are invalid.
-            If not all required parameters are specified in the :class:`~descarteslabs.scenes.geocontext.GeoContext`.
+            If not all required parameters are specified in the
+            :class:`~descarteslabs.common.geo.geocontext.GeoContext`.
             If the SceneCollection is empty.
             If ``format`` is invalid, or the path has an invalid extension.
         NotFoundError

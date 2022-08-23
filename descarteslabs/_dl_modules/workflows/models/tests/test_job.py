@@ -7,7 +7,7 @@ import responses
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
 
-from .... import scenes
+from ....common.geo import XYZTile
 from ...client import Client
 
 from ....client.version import __version__
@@ -101,7 +101,7 @@ class TestJob:
 
     @pytest.mark.parametrize(
         "ctx",
-        [scenes.XYZTile(30, 40, 8), types.GeoContext.from_dltile_key("fake"), None],
+        [XYZTile(30, 40, 8), types.GeoContext.from_dltile_key("fake"), None],
     )
     def test_create_geoctx(self, stub, ctx):
         obj = types.Int(1)

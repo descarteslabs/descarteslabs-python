@@ -84,16 +84,10 @@ def _setup_aws():
     setattr(descarteslabs, "scenes", scenes)
 
     # geo
-    geo = types.ModuleType("descarteslabs.geo")
-
-    geo.GeoContext = scenes.GeoContext
-    geo.AOI = scenes.AOI
-    geo.DLTile = scenes.DLTile
-    geo.XYZTile = scenes.XYZTile
-    geo.__all__ = ["AOI", "DLTile", "GeoContext", "XYZTile"]
-
-    sys.modules["descarteslabs.geo"] = geo
-    descarteslabs.geo = geo
+    dl_geo = importlib.import_module("descarteslabs._dl_modules.common.geo")
+    geo = clone_module("descarteslabs.geo", dl_geo)
+    sys.modules[geo.__name__] = geo
+    setattr(descarteslabs, "geo", geo)
 
     # utils
     utils = types.ModuleType("descarteslabs.utils")
@@ -102,8 +96,9 @@ def _setup_aws():
     utils.DotDict = dotdict.DotDict
     utils.DotList = dotdict.DotList
 
-    utils.display = dl_scenes.display
-    utils.save_image = dl_scenes.save_image
+    display = importlib.import_module("descarteslabs._dl_modules.common.display")
+    utils.display = display.display
+    utils.save_image = display.save_image
 
     utils.__all__ = ["DotDict", "DotList", "display", "save_image"]
 

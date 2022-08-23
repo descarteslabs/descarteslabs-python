@@ -56,7 +56,7 @@ from descarteslabs.exceptions import NotFoundError, BadRequestError
 from ..common.dotdict import DotDict
 from ..common import shapely_support
 
-from . import geocontext
+from ..common.geo import GeoContext, AOI
 from . import _download
 from ._helpers import cached_bands_by_product
 from . import _scaling
@@ -179,7 +179,7 @@ class Scene(object):
         """
         Return the metadata for a Descartes Labs scene ID as a Scene object.
 
-        Also returns a :class:`~descarteslabs.scenes.geocontext.GeoContext`
+        Also returns a :class:`~descarteslabs.common.geo.geocontext.GeoContext`
         for loading the Scene's original, unwarped data.
 
         Parameters
@@ -196,7 +196,7 @@ class Scene(object):
         scene: Scene
             Scene instance with metadata loaded from the Descartes Labs catalog
         ctx: AOI
-            A :class:`~descarteslabs.scenes.geocontext.GeoContext` for loading this Scene's original data.
+            A :class:`~descarteslabs.common.geo.geocontext.GeoContext` for loading this Scene's original data.
             The defaults used are described in `Scene.default_ctx`.
 
         Example
@@ -241,7 +241,7 @@ class Scene(object):
 
     def default_ctx(self):
         """
-        Return an :class:`AOI GeoContext <descarteslabs.scenes.geocontext.AOI>`
+        Return an :class:`AOI GeoContext <descarteslabs.common.geo.geocontext.AOI>`
         for loading this Scene's original, unwarped data.
 
         These defaults are used:
@@ -255,11 +255,11 @@ class Scene(object):
 
         .. note::
 
-            Using this :class:`~descarteslabs.scenes.geocontext.GeoContext` will only
+            Using this :class:`~descarteslabs.common.geo.geocontext.GeoContext` will only
             return original, unwarped data if the Scene is axis-aligned ("north-up")
             within the CRS. If its ``geotrans`` applies a rotation, a warning will be raised.
             In that case, use `Raster.ndarray` or `Raster.raster` to retrieve
-            original data. (The :class:`~descarteslabs.scenes.geocontext.GeoContext`
+            original data. (The :class:`~descarteslabs.common.geo.geocontext.GeoContext`
             paradigm requires bounds for consistentcy, which are inherently axis-aligned.)
 
         Returns
@@ -306,7 +306,7 @@ class Scene(object):
                 bounds = (min(xs), min(ys), max(xs), max(ys))
                 bounds_crs = crs
 
-        return geocontext.AOI(
+        return AOI(
             geometry=None,
             resolution=resolution,
             bounds=bounds,
@@ -321,7 +321,7 @@ class Scene(object):
 
         Parameters
         ----------
-        geom : GeoJSON-like dict, :class:`~descarteslabs.scenes.geocontext.GeoContext`, or object with __geo_interface__
+        geom : GeoJSON-like dict, :class:`~descarteslabs.common.geo.geocontext.GeoContext`, or object with __geo_interface__  # noqa: E501
             Geometry to which to compare this Scene's geometry
 
         Returns
@@ -338,7 +338,7 @@ class Scene(object):
         0.8
         """
 
-        if isinstance(geom, geocontext.GeoContext):
+        if isinstance(geom, GeoContext):
             shape = geom.geometry
         else:
             shape = shapely_support.geometry_like_to_shapely(geom)
@@ -385,8 +385,8 @@ class Scene(object):
             Names must be keys in ``self.properties.bands``.
             If the alpha band is requested, it must be last in the list
             to reduce rasterization errors.
-        ctx : :class:`~descarteslabs.scenes.geocontext.GeoContext`
-            A :class:`~descarteslabs.scenes.geocontext.GeoContext` to use when loading this Scene
+        ctx : :class:`~descarteslabs.common.geo.geocontext.GeoContext`
+            A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading this Scene
         mask_nodata : bool, default True
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
@@ -619,8 +619,8 @@ class Scene(object):
             separated by spaces (``"red green blue derived:ndvi"``),
             or a sequence of band names (``["red", "green", "blue", "derived:ndvi"]``).
             Names must be keys in ``self.properties.bands``.
-        ctx : :class:`~descarteslabs.scenes.geocontext.GeoContext`
-            A :class:`~descarteslabs.scenes.geocontext.GeoContext` to use when loading this Scene
+        ctx : :class:`~descarteslabs.common.geo.geocontext.GeoContext`
+            A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading this Scene
         dest : str or path-like object, default None
             Where to write the image file.
 

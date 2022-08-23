@@ -1,35 +1,33 @@
 import pytest
 import shapely.geometry
 
-from ..... import scenes
+from .....common import geo
 
 from .. import GeoContext
 from ...containers import Tuple
 from ...primitives import Int, Float
 
 
-def test_from_scenes_wrong_type():
-    with pytest.raises(
-        TypeError, match=r"expected a `descarteslabs\.scenes\.GeoContext`"
-    ):
-        GeoContext.from_scenes("foo")
+def test_from_geo_wrong_type():
+    with pytest.raises(TypeError, match=r"expected a `descarteslabs\.geo\.GeoContext`"):
+        GeoContext.from_geo("foo")
 
 
-def test_from_scenes_aoi():
-    aoi = scenes.AOI(
+def test_from_geo_aoi():
+    aoi = geo.AOI(
         geometry=shapely.geometry.box(-60.0, 30.0, -50.0, 40.0),
         resolution=1,
         crs="EPSG:4326",
         align_pixels=False,
     )
-    ctx = GeoContext.from_scenes(aoi)
+    ctx = GeoContext.from_geo(aoi)
     assert ctx.graft[ctx.graft["returns"]][0] == "wf.GeoContext.create"
 
     promoted = GeoContext._promote(aoi)
     assert promoted.graft[promoted.graft["returns"]][0] == "wf.GeoContext.create"
 
 
-def test_from_scenes_tile():
+def test_from_geo_tile():
     tile_dict = {
         "geometry": {
             "coordinates": [
@@ -59,8 +57,8 @@ def test_from_scenes_tile():
         "type": "Feature",
     }
 
-    tile = scenes.DLTile(tile_dict)
-    ctx = GeoContext.from_scenes(tile)
+    tile = geo.DLTile(tile_dict)
+    ctx = GeoContext.from_geo(tile)
     assert ctx.graft[ctx.graft["returns"]][0] == "wf.GeoContext.from_dltile_key"
 
     promoted = GeoContext._promote(tile)
@@ -69,9 +67,9 @@ def test_from_scenes_tile():
     )
 
 
-def test_from_scenes_xyztile():
-    tile = scenes.XYZTile(3, 5, 4)
-    ctx = GeoContext.from_scenes(tile)
+def test_from_geo_xyztile():
+    tile = geo.XYZTile(3, 5, 4)
+    ctx = GeoContext.from_geo(tile)
     assert ctx.graft[ctx.graft["returns"]][0] == "wf.GeoContext.from_xyz_tile"
 
     promoted = GeoContext._promote(tile)
@@ -97,26 +95,26 @@ def test_readonly_attributes(attr):
 
 
 def test_index_to_coords():
-    aoi = scenes.AOI(
+    aoi = geo.AOI(
         geometry=shapely.geometry.box(-60.0, 30.0, -50.0, 40.0),
         resolution=1,
         crs="EPSG:4326",
         align_pixels=False,
     )
-    ctx = GeoContext.from_scenes(aoi)
+    ctx = GeoContext.from_geo(aoi)
 
     coords = ctx.index_to_coords(0, 0)
     assert isinstance(coords, Tuple[Float, Float])
 
 
 def test_coords_to_index():
-    aoi = scenes.AOI(
+    aoi = geo.AOI(
         geometry=shapely.geometry.box(-60.0, 30.0, -50.0, 40.0),
         resolution=1,
         crs="EPSG:4326",
         align_pixels=False,
     )
-    ctx = GeoContext.from_scenes(aoi)
+    ctx = GeoContext.from_geo(aoi)
     ctx = GeoContext._promote(ctx)
 
     index = ctx.coords_to_index(0.0, 1.0)

@@ -5,9 +5,11 @@ import os.path
 import shapely.geometry
 import numpy as np
 
-from .. import Scene, SceneCollection, geocontext
-
+from ...common.geo import AOI
 from ...client.services.metadata import Metadata
+
+from .. import Scene, SceneCollection
+
 from .. import scene as scene_module
 from .. import _download
 from .test_scene import MockScene
@@ -297,7 +299,7 @@ class TestSceneCollection(unittest.TestCase):
     @mock.patch.object(Metadata, "get", _metadata_get)
     def test_filter_coverage(self):
         polygon = shapely.geometry.Point(0.0, 0.0).buffer(3)
-        ctx = geocontext.AOI(geometry=polygon)
+        ctx = AOI(geometry=polygon)
 
         scenes = SceneCollection(
             [
@@ -339,9 +341,7 @@ class TestSceneCollectionDownload(unittest.TestCase):
         ]
 
         self.scenes = SceneCollection([MockScene({}, p) for p in properties])
-        self.ctx = geocontext.AOI(
-            bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326"
-        )
+        self.ctx = AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
 
     def test_directory(self, mock_download):
         dest = "rasters"

@@ -19,7 +19,7 @@ from ..client.services.metadata import Metadata
 
 from .scene import Scene
 from .scenecollection import SceneCollection
-from . import geocontext
+from ..common.geo import GeoContext, AOI
 from ._helpers import cached_bands_by_product
 
 
@@ -47,10 +47,11 @@ def search(
 
     Parameters
     ----------
-    aoi : GeoJSON-like dict, :class:`~descarteslabs.scenes.geocontext.GeoContext`, or object with __geo_interface__
+    aoi : GeoJSON-like dict, :class:`~descarteslabs.common.geo.geocontext.GeoContext`, or object with __geo_interface__
         Search for scenes that intersect this area by any amount.
-        If a :class:`~descarteslabs.scenes.geocontext.GeoContext`, a copy is returned as ``ctx``, with missing values
-        filled in. Otherwise, the returned ``ctx`` will be an `AOI`, with this as its geometry.
+        If a :class:`~descarteslabs.common.geo.geocontext.GeoContext`, a copy is returned as ``ctx``,
+        with missing values filled in. Otherwise, the returned ``ctx`` will be
+        an `AOI`, with this as its geometry.
     products : str or List[str]
         Descartes Labs product identifiers
     start_datetime : str, datetime-like, optional
@@ -98,14 +99,14 @@ def search(
     -------
     scenes : `SceneCollection`
         Scenes matching your criteria.
-    ctx: :class:`~descarteslabs.scenes.geocontext.GeoContext`
-        The given ``aoi`` as a :class:`~descarteslabs.scenes.geocontext.GeoContext` (if it isn't one already),
+    ctx: :class:`~descarteslabs.common.geo.geocontext.GeoContext`
+        The given ``aoi`` as a :class:`~descarteslabs.common.geo.geocontext.GeoContext` (if it isn't one already),
         with reasonable default parameters for loading all matching Scenes.
 
-        If ``aoi`` was a :class:`~descarteslabs.scenes.geocontext.GeoContext`, ``ctx`` will be a copy of ``aoi``,
+        If ``aoi`` was a :class:`~descarteslabs.common.geo.geocontext.GeoContext`, ``ctx`` will be a copy of ``aoi``,
         with any properties that were ``None`` assigned the defaults below.
 
-        If ``aoi`` was not a :class:`~descarteslabs.scenes.geocontext.GeoContext`, an `AOI` instance will be created
+        If ``aoi`` was not a :class:`~descarteslabs.common.geo.geocontext.GeoContext`, an `AOI` instance will be created
         with ``aoi`` as its geometry, and defaults assigned as described below:
 
         **Default Spatial Parameters:**
@@ -117,7 +118,7 @@ def search(
     if not products:
         raise ValueError("Products is a required parameter.")
 
-    if isinstance(aoi, geocontext.GeoContext):
+    if isinstance(aoi, GeoContext):
         ctx = aoi
         if ctx.bounds is None and ctx.geometry is None:
             raise ValueError(
@@ -125,7 +126,7 @@ def search(
                 "since the GeoContext given for ``aoi`` has neither geometry nor bounds set"
             )
     else:
-        ctx = geocontext.AOI(geometry=aoi)
+        ctx = AOI(geometry=aoi)
 
     if metadata_client is None:
         metadata_client = Metadata.get_default_client()
@@ -174,7 +175,7 @@ def search(
         **raster_args
     )
 
-    if len(scenes) > 0 and isinstance(ctx, geocontext.AOI):
+    if len(scenes) > 0 and isinstance(ctx, AOI):
         assign_ctx = {}
         if ctx.resolution is None and ctx.shape is None:
             resolutions = filter(

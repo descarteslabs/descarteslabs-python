@@ -23,7 +23,7 @@ class ImageCollectionGroupby(GenericProxytype):
     Examples
     --------
     >>> import descarteslabs.workflows as wf
-    >>> from descarteslabs.scenes import DLTile
+    >>> from descarteslabs.geo import DLTile
     >>> col = wf.ImageCollection.from_id("landsat:LC08:01:RT:TOAR",
     ...        start_datetime="2017-01-01",
     ...        end_datetime="2017-12-31")
