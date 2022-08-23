@@ -128,7 +128,7 @@ def search(
         ctx = geocontext.AOI(geometry=aoi)
 
     if metadata_client is None:
-        metadata_client = Metadata()
+        metadata_client = Metadata.get_default_client()
 
     if isinstance(products, str):
         products = [products]
@@ -225,7 +225,7 @@ def get_product(product_id, metadata_client=None):
         Raised if a product id cannot be found.
     """
     if metadata_client is None:
-        metadata_client = Metadata()
+        metadata_client = Metadata.get_default_client()
 
     return metadata_client.get_product(product_id)
 
@@ -265,7 +265,7 @@ def search_products(
         Empty if no matching products are found.
     """
     if metadata_client is None:
-        metadata_client = Metadata()
+        metadata_client = Metadata.get_default_client()
 
     return metadata_client.products(
         bands=bands, limit=limit, offset=offset, owner=owner, text=text
@@ -295,7 +295,7 @@ def get_band(band_id, metadata_client=None):
         Raised if a band id cannot be found.
     """
     if metadata_client is None:
-        metadata_client = Metadata()
+        metadata_client = Metadata.get_default_client()
 
     return metadata_client.get_band(band_id=band_id)
 
@@ -337,7 +337,7 @@ def search_bands(
         Empty if there are no bands matching query (e.g. product id not available).
     """
     if metadata_client is None:
-        metadata_client = Metadata()
+        metadata_client = Metadata.get_default_client()
 
     return metadata_client.bands(
         products=products,
@@ -372,7 +372,7 @@ def get_derived_band(derived_band_id, metadata_client=None):
         Raised if a band id cannot be found.
     """
     if metadata_client is None:
-        metadata_client = Metadata()
+        metadata_client = Metadata.get_default_client()
 
     return metadata_client.get_derived_band(derived_band_id)
 
@@ -404,7 +404,7 @@ def search_derived_bands(
         List of dicts containing at most `limit` bands.
     """
     if metadata_client is None:
-        metadata_client = Metadata()
+        metadata_client = Metadata.get_default_client()
 
     return metadata_client.derived_bands(
         bands=bands, require_bands=require_bands, limit=limit, offset=offset

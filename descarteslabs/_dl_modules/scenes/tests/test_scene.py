@@ -17,7 +17,7 @@ from ...client.services.metadata import Metadata
 
 from .mock_data import _metadata_get, _cached_bands_by_product, _raster_ndarray
 
-metadata_client = Metadata()
+metadata_client = Metadata.get_default_client()
 
 
 class MockScene(Scene):

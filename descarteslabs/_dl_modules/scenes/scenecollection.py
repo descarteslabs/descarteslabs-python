@@ -43,7 +43,9 @@ class SceneCollection(Collection):
 
     def __init__(self, iterable=None, raster_client=None):
         super(SceneCollection, self).__init__(iterable)
-        self._raster_client = raster_client if raster_client is not None else Raster()
+        self._raster_client = (
+            raster_client if raster_client is not None else Raster.get_default_client()
+        )
 
     def map(self, f):
         """

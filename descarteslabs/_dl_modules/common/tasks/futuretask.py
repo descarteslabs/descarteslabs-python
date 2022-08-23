@@ -66,7 +66,7 @@ class FutureTask(object):
         if client is None:
             from descarteslabs.client.services.tasks import Tasks  # circular import
 
-            client = Tasks()
+            client = Tasks.get_default_client()
 
         self.client = client
         self.args = args
@@ -140,7 +140,7 @@ class FutureTask(object):
 
         if not self._is_return_value_loaded:
             if self._task_result.result_size_bytes > 0:
-                return_value = Storage().get(
+                return_value = Storage.get_default_client().get(
                     self._task_result.result_key, storage_type="result"
                 )
                 result_type = self._task_result.get(

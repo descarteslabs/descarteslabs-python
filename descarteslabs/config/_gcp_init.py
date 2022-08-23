@@ -130,32 +130,32 @@ def _setup_gcp():
     setattr(
         descarteslabs,
         "raster",
-        lazy_object_proxy.Proxy(lambda: raster.Raster(auth=descartes_auth)),
+        lazy_object_proxy.Proxy(lambda: raster.Raster.get_default_client),
     )
     setattr(
         descarteslabs,
         "storage",
-        lazy_object_proxy.Proxy(lambda: storage.Storage(auth=descartes_auth)),
+        lazy_object_proxy.Proxy(lambda: storage.Storage.get_default_client),
     )
     setattr(
         descarteslabs,
         "tasks",
-        lazy_object_proxy.Proxy(lambda: tasks.Tasks(auth=descartes_auth)),
+        lazy_object_proxy.Proxy(lambda: tasks.Tasks.get_default_client),
     )
     setattr(
         descarteslabs,
         "metadata",
-        lazy_object_proxy.Proxy(lambda: metadata.Metadata(auth=descartes_auth)),
+        lazy_object_proxy.Proxy(lambda: metadata.Metadata.get_default_client),
     )
     setattr(
         descarteslabs,
         "places",
-        lazy_object_proxy.Proxy(lambda: places.Places(auth=descartes_auth)),
+        lazy_object_proxy.Proxy(lambda: places.Places.get_default_client),
     )
     setattr(
         descarteslabs,
         "vector",
-        lazy_object_proxy.Proxy(lambda: vector.Vector(auth=descartes_auth)),
+        lazy_object_proxy.Proxy(lambda: vector.Vector.get_default_client),
     )
 
     # these should be fully imported and in the local namespace

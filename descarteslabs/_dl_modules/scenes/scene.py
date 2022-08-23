@@ -221,7 +221,7 @@ class Scene(object):
         """
 
         if metadata_client is None:
-            metadata_client = Metadata()
+            metadata_client = Metadata.get_default_client()
 
         metadata = metadata_client.get(scene_id)
         metadata = {
@@ -496,7 +496,7 @@ class Scene(object):
         raster_client=None,
     ):
         if raster_client is None:
-            raster_client = Raster()
+            raster_client = Raster.get_default_client()
 
         if not (-3 < bands_axis < 3):
             raise ValueError(

@@ -49,7 +49,7 @@ def _download(
     Code shared by Scene.download and SceneCollection.download_mosaic
     """
     if raster_client is None:
-        raster_client = Raster()
+        raster_client = Raster.get_default_client()
 
     if dest is None:
         if len(inputs) == 0:

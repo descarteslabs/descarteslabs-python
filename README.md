@@ -25,6 +25,12 @@ Changelog
   that of `data_range` and `display_range`. It has now been made consistent, which means it will either not be set,
   or will contain a 2-tuple of float values. It is no longer possible to explicitly set it to `None`.
 
+### REST Clients
+
+- All the REST client types, such as `Metadata` and `Raster`, now support `get_default_client()` and `set_default_client()`
+  instances. This functionality was previously limited to the Catalog V2 `CatalogClient`. Whenever such a client is required,
+  the client libraries use `get_default_client()` rather than using the default constructor. This makes it easy to comprehensively redirect the library to use a specially configured client when necessary.
+
 ## [1.11.0] - 2022-07-20
 
 ### Installation

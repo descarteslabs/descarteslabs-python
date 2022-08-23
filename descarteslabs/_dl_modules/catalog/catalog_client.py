@@ -34,8 +34,6 @@ class CatalogClient(JsonApiService):
         zero to disable retries.  The default is 3 retries.
     """
 
-    _instance = None
-
     def __init__(self, url=None, auth=None, retries=None):
         if auth is None:
             auth = Auth.get_default_auth()
@@ -46,23 +44,3 @@ class CatalogClient(JsonApiService):
         super(CatalogClient, self).__init__(
             url, auth=auth, retries=retries, rewrite_errors=True
         )
-
-    @staticmethod
-    def get_default_client():
-        """Retrieve the default client.
-
-        This client is used whenever you don't explicitly set the client.
-        """
-        if CatalogClient._instance is None:
-            CatalogClient._instance = CatalogClient()
-
-        return CatalogClient._instance
-
-    @staticmethod
-    def set_default_client(client):
-        """Change the default client to the given client.
-
-        This is the client that will be used whenever you don't explicitly set the
-        client
-        """
-        CatalogClient._instance = client

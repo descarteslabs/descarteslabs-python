@@ -50,7 +50,7 @@ class ExportTask(FutureTask):
         if self.key is None:
             raise TransientResultError()
         else:
-            return Storage().get_file(self.key, file_obj)
+            return Storage.get_default_client().get_file(self.key, file_obj)
 
     def get_result(self, wait=False, timeout=None):
         """
