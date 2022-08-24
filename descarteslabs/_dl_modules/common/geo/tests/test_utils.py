@@ -158,6 +158,3 @@ class TestSimpleHelpers(unittest.TestCase):
         """
             )
         )
-
-
-# force copybara

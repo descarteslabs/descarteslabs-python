@@ -520,6 +520,3 @@ class TestShapelyThreadSafe(unittest.TestCase):
     def test_dltile_geo_interface_threadsafe(self):
         errors = run_threadsafe_experiment(self.dltile_factory, "__geo_interface__")
         assert errors == []
-
-
-# force copybara

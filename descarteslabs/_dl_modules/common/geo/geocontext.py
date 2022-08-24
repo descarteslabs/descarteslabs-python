@@ -1446,6 +1446,3 @@ class XYZTile(GeoContext):
             "align_pixels": False,
             "resolution": self.resolution,
         }
-
-
-# force copybara

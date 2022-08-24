@@ -57,6 +57,3 @@ def is_wgs84_crs(crs):
         or lower_crs.startswith('geodcrs["wgs 84"')
         or lower_crs.startswith('geodeticcrs["wgs 84"')
     )
-
-
-# force copybara

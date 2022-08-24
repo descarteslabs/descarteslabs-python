@@ -148,6 +148,3 @@ class TestCollection(unittest.TestCase):
             (1, 7),
             (1, 9),
         )
-
-
-# force copybara

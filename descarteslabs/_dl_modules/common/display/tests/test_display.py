@@ -111,6 +111,3 @@ class TestDisplay(unittest.TestCase):
     def test_fails_wrong_kwargs(self, mock_matplotlib_importer):
         with pytest.raises(TypeError, match="what"):
             display(None, title="foo", what="bar")
-
-
-# force copybara

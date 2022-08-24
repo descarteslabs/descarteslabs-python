@@ -308,6 +308,3 @@ class Eacher(object):
             if len(head) == max_length:
                 s = s + "\n..."
             return s
-
-
-# force copybara

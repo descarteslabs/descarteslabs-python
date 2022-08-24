@@ -251,6 +251,3 @@ def _display_or_save(filename, *imgs, **kwargs):
         plt.savefig(filename)
     else:
         plt.show()
-
-
-# force copybara
