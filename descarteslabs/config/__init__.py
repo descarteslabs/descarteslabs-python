@@ -117,7 +117,12 @@ class Settings(dynaconf.Dynaconf):
                 groups = auth.payload.get("groups", {})
             except AuthError:
                 raise RuntimeError(
-                    "You need to login using `descarteslabs auth login` in order to proceed."
+                    "Cannot determine runtime environment. Either set the "
+                    "DESCARTESLABS_ENV environment variable to the desired "
+                    "environment or login using 'descarteslabs auth login' in "
+                    "order to proceed. See "
+                    "https://docs.descarteslabs.com/configuration.html#environments "
+                    "for more information."
                 )
 
             if "aws-customer" in groups:
