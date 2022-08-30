@@ -894,13 +894,13 @@ class Metadata(Service):
             >>> meta = Metadata().get('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1')
             >>> keys = list(meta.keys())
             >>> keys.sort()
-            >>> keys
+            >>> keys  # doctest: +SKIP
             ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket',
              'cloud_fraction', 'cloud_fraction_0', 'confidence_dlsr', 'cs_code',
              'descartes_version', 'file_md5s', 'file_sizes', 'files', 'fill_fraction',
              'geolocation_accuracy', 'geometry', 'geotrans', 'id', 'identifier', 'key',
-             'owner_type', 'processed', 'product', 'proj4', 'projcs', 'published',
-             'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id',
+             'modified', 'owner_type', 'processed', 'product', 'proj4', 'projcs',
+             'published', 'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id',
              'solar_azimuth_angle', 'solar_elevation_angle', 'storage_state',
              'sw_version', 'terrain_correction', 'tile_id']
         """
