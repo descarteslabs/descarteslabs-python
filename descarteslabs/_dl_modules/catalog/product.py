@@ -2,6 +2,7 @@ import time
 from enum import Enum
 from concurrent.futures import TimeoutError
 
+from ..common.collection import Collection
 from ..common.property_filtering import GenericProperties
 from .catalog_base import (
     CatalogObject,
@@ -67,6 +68,7 @@ class Product(CatalogObject):
 
     _doc_type = "product"
     _url = "/products"
+    # _collection_type set below due to circular problems
 
     # Product Attributes
     name = TypedAttribute(
@@ -536,6 +538,14 @@ class Product(CatalogObject):
             return id_
 
         return "{}{}".format(prefix, id_)
+
+
+class ProductCollection(Collection):
+    _item_type = Product
+
+
+# handle circular references
+Product._collection_type = ProductCollection
 
 
 class TaskState(str, Enum):

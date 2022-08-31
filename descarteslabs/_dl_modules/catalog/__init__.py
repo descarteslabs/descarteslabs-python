@@ -3,14 +3,22 @@ The Catalog Service provides access to products, bands, and images
 available from Descartes Labs.
 """
 
-from .product import DeletionTaskStatus, Product, TaskState, UpdatePermissionsTaskStatus
+from .product import (
+    DeletionTaskStatus,
+    Product,
+    ProductCollection,
+    TaskState,
+    UpdatePermissionsTaskStatus,
+)
 from .band import (
     Band,
+    BandCollection,
     BandType,
     ClassBand,
     Colormap,
     DataType,
     DerivedBand,
+    DerivedBandCollection,
     DerivedParamsAttribute,
     GenericBand,
     MaskBand,
@@ -20,6 +28,7 @@ from .band import (
     SpectralBand,
 )
 from .image import Image, StorageState
+from .image_types import ResampleAlgorithm, DownloadFileFormat
 from .image_upload import (
     ImageUpload,
     ImageUploadEvent,
@@ -30,6 +39,7 @@ from .image_upload import (
     ImageUploadType,
     OverviewResampler,
 )
+from .image_collection import ImageCollection
 from .search import ImageSearch, Search, Interval, AggregateDateField, SummaryResult
 from .catalog_base import (
     CatalogClient,
@@ -54,6 +64,7 @@ __all__ = [
     "AggregateDateField",
     "AttributeValidationError",
     "Band",
+    "BandCollection",
     "BandType",
     "CatalogClient",
     "CatalogObject",
@@ -63,11 +74,14 @@ __all__ = [
     "DeletedObjectError",
     "DeletionTaskStatus",
     "DerivedBand",
+    "DerivedBandCollection",
     "DerivedParamsAttribute",
     "DocumentState",
+    "DownloadFileFormat",
     "File",
     "GenericBand",
     "Image",
+    "ImageCollection",
     "ImageSearch",
     "ImageUpload",
     "ImageUploadEvent",
@@ -84,7 +98,9 @@ __all__ = [
     "ProcessingLevelsAttribute",
     "ProcessingStepAttribute",
     "Product",
+    "ProductCollection",
     "properties",
+    "ResampleAlgorithm",
     "Resolution",
     "ResolutionUnit",
     "Search",

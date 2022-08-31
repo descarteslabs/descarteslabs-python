@@ -234,6 +234,25 @@ class Search(object):
         response = r.json()
         return response["meta"]["count"]
 
+    def collect(self, **kwargs):
+        """
+        Execute the search query and return the collection, the type of which is defined by the _model_cls
+
+        Returns
+        -------
+        collection
+            Collection of objects that match the type of document beng searched.
+
+        Raises
+        ------
+        BadRequestError
+            If any of the query parameters or filters are invalid
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
+        """
+        return self._model_cls._collection_type(self, **kwargs)
+
     def __iter__(self):
         """
         Execute the search query and get a generator for iterating through the returned results
@@ -241,7 +260,7 @@ class Search(object):
         Returns
         -------
         generator
-            Generator of objects that match the type of document being searched. Empty if no matching images found.
+            Generator of objects that match the type of document being searched. Empty if no matching documents found.
 
         Raises
         ------
@@ -370,6 +389,10 @@ class ImageSearch(Search):
 
     _unsupported_summary_params = ["sort"]
 
+    def __init__(self, model, client=None, url=None, includes=True):
+        super(ImageSearch, self).__init__(model, client, url, includes)
+        self._intersects = None
+
     def intersects(self, geometry):
         """Filter images to those that intersect the given geometry.
 
@@ -378,7 +401,7 @@ class ImageSearch(Search):
 
         Parameters
         ----------
-        geometry : shapely.geometry.base.BaseGeometry, geojson-like
+        geometry : shapely.geometry.base.BaseGeometry, descarteslabs.common.geo.Geocontext, geojson-like
             Geometry that found images must intersect.
 
         Returns
@@ -392,6 +415,7 @@ class ImageSearch(Search):
             self._model_cls._serialize_filter_attribute("geometry", geometry),
             separators=(",", ":"),
         )
+        s._intersects = copy.deepcopy(geometry)
         return s
 
     def _summary_request(self):
@@ -518,6 +542,35 @@ class ImageSearch(Search):
         response = r.json()
 
         return [SummaryResult(**d["attributes"]) for d in response["data"]]
+
+    def collect(self, geocontext=None, **kwargs):
+        """
+         Execute the search query and return the collection, the type of which is defined by the _model_cls
+
+         Parameters
+         ----------
+         geocontext : shapely.geometry.base.BaseGeometry, descarteslabs.common.geo.Geocontext, geojson-like, default None  # noqa: E501
+             AOI for the ImageCollection.
+
+        Returns
+         -------
+         collection
+             ImageCollection of Images returned from the search.
+
+         Raises
+         ------
+         BadRequestError
+             If any of the query parameters or filters are invalid
+         ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
+             :ref:`Spurious exception <network_exceptions>` that can occur during a
+             network request.
+        """
+        if geocontext is None:
+            geocontext = self._intersects
+        if geocontext is not None:
+            kwargs["geocontext"] = geocontext
+
+        return super(ImageSearch, self).collect(**kwargs)
 
 
 class SummaryResult(object):

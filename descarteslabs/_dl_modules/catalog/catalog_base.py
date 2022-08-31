@@ -3,6 +3,7 @@ from types import MethodType
 import json
 
 from descarteslabs.exceptions import NotFoundError
+from ..common.collection import Collection
 from .attributes import (
     AttributeMeta,
     AttributeValidationError,
@@ -121,6 +122,9 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
     _derived_type_switch = None
 
     _model_classes_by_type_and_derived_type = {}
+
+    # Type returned by collect() on the corresponding Search object
+    _collection_type = Collection
 
     id = TypedAttribute(
         str,

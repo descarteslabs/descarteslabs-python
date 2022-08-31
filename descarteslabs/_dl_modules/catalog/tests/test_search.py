@@ -2,10 +2,13 @@ import responses
 import json
 import shapely.geometry
 
+from ...common.collection import Collection
+from ...common.geo import AOI
 from .base import ClientTestCase
 from .. import properties as p
-from ..search import Search
+from ..search import Search, ImageSearch
 from ..image import Image
+from ..image_collection import ImageCollection
 from ..attributes import DocumentState
 from ..product import Product
 
@@ -82,6 +85,57 @@ class TestSearch(ClientTestCase):
         results = list(self.search)
         assert len(results) == 1
         assert type(results[0]) == Product
+        # followed continuation token
+        assert responses.calls[0].request.url == self.url + "/products"
+        assert (
+            responses.calls[1].request.url == self.url + "/products?continuation=.xxx"
+        )
+
+    @responses.activate
+    def test_search_collect(self):
+        assert self.search._to_request() == ("/products", {})
+        self.mock_response(
+            responses.PUT,
+            {
+                "meta": {"count": 1},
+                "data": [
+                    {
+                        "attributes": {
+                            "owners": ["org:descarteslabs"],
+                            "name": "My Product",
+                            "readers": [],
+                            "modified": "2019-06-12T20:31:48.542725Z",
+                            "created": "2019-06-12T20:31:48.542725Z",
+                            "start_datetime": None,
+                            "writers": [],
+                            "end_datetime": None,
+                            "description": "This is a test product",
+                        },
+                        "type": "product",
+                        "id": "descarteslabs:my-product",
+                    }
+                ],
+                "jsonapi": {"version": "1.0"},
+                "links": {
+                    "self": "https://example.com/catalog/v2/products",
+                    "next": "https://example.com/catalog/v2/products?continuation=.xxx",
+                },
+            },
+        )
+
+        self.mock_response(
+            responses.PUT,
+            {
+                "meta": {"count": 0},
+                "data": [],
+                "jsonapi": {"version": "1.0"},
+                "links": {"self": "https://example.com/catalog/v2/products"},
+            },
+        )
+        results = self.search.collect()
+        assert isinstance(results, Collection)
+        assert results._item_type == Product
+        assert len(results) == 1
         # followed continuation token
         assert responses.calls[0].request.url == self.url + "/products"
         assert (
@@ -287,16 +341,18 @@ class TestSearch(ClientTestCase):
     def test_filter_object(self):
         my_product = Product(id="my_product")
 
-        s = Search(Image, client=self.client)
+        s = ImageSearch(Image, client=self.client)
         s = s.filter(p.product == my_product)
         filters = s._serialize_filters()
         assert filters[0]["name"] == "product_id"
+        assert filters[0]["op"] == "eq"
         assert filters[0]["val"] == my_product.id
 
-        s = Search(Image, client=self.client)
+        s = ImageSearch(Image, client=self.client)
         s = s.filter(p.product != my_product)
         filters = s._serialize_filters()
         assert filters[0]["name"] == "product_id"
+        assert filters[0]["op"] == "ne"
         assert filters[0]["val"] == my_product.id
 
         # Not supported for <, <=, >, >=
@@ -371,5 +427,116 @@ class TestSearch(ClientTestCase):
         assert request_params["text"] == "test"
 
     def test_default_includes(self):
-        s = Search(Image, client=self.client)
+        s = ImageSearch(Image, client=self.client)
         assert s._to_request() == ("/images", {"include": "product"})
+
+    @responses.activate
+    def test_search_image_collection(self):
+        my_product = Product(id="descarteslabs:my_product")
+        s = ImageSearch(Image, client=self.client)
+        s = s.filter(p.product == my_product)
+        aoi = {
+            "type": "Polygon",
+            "coordinates": (
+                (
+                    (-95.0, 42.0),
+                    (-94.0, 42.0),
+                    (-94.0, 41.0),
+                    (-95.0, 41.0),
+                    (-95.0, 42.0),
+                ),
+            ),
+        }
+        s = s.intersects(aoi)
+
+        self.mock_response(
+            responses.PUT,
+            {
+                "meta": {"count": 1},
+                "data": [
+                    {
+                        "attributes": {
+                            "owners": ["org:descarteslabs"],
+                            "name": "my-image",
+                            "product_id": "descarteslabs:my-product",
+                            "readers": [],
+                            "created": "2019-06-12T20:31:48.542725Z",
+                            "acquired": "2019-06-12T20:31:48.542725Z",
+                            "writers": [],
+                            "files": [
+                                {
+                                    "hash": "abcdefg0123456789",
+                                    "href": "gs://some-bucket/file.tif",
+                                    "size_bytes": 1,
+                                },
+                            ],
+                            "geometry": {
+                                "type": "Polygon",
+                                "coordinates": [
+                                    [
+                                        [-95.2989209, 42.7999878],
+                                        [-93.1167728, 42.3858464],
+                                        [-93.7138666, 40.703737],
+                                        [-95.8364984, 41.1150618],
+                                        [-95.2989209, 42.7999878],
+                                    ]
+                                ],
+                            },
+                        },
+                        "type": "image",
+                        "id": "descarteslabs:my-product:my-image",
+                    }
+                ],
+                "jsonapi": {"version": "1.0"},
+                "links": {
+                    "self": "https://example.com/catalog/v2/images",
+                },
+            },
+        )
+        # product bands request
+        self.mock_response(
+            responses.PUT,
+            {
+                "meta": {"count": 1},
+                "data": [
+                    {
+                        "attributes": {
+                            "owners": ["org:descarteslabs"],
+                            "name": "my-band",
+                            "product_id": "descarteslabs:my-product",
+                            "readers": [],
+                            "created": "2019-06-12T20:31:48.542725Z",
+                            "writers": [],
+                            "resolution": {"value": 30, "unit": "meters"},
+                            "type": "spectral",
+                        },
+                        "type": "band",
+                        "id": "descarteslabs:my-product:my-band",
+                    }
+                ],
+                "jsonapi": {"version": "1.0"},
+                "links": {
+                    "self": "https://example.com/catalog/v2/bands",
+                },
+            },
+        )
+        # product derived bands request
+        self.mock_response(
+            responses.PUT,
+            {
+                "meta": {"count": 0},
+                "data": [],
+                "jsonapi": {"version": "1.0"},
+                "links": {
+                    "self": "https://example.com/catalog/v2/derived_bands",
+                },
+            },
+        )
+        assert s._intersects == aoi
+
+        results = s.collect()
+        assert isinstance(results, ImageCollection)
+        assert results._item_type == Image
+        assert len(results) == 1
+        assert isinstance(results.geocontext, AOI)
+        assert results.geocontext.__geo_interface__ == aoi

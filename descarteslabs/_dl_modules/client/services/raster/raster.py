@@ -17,6 +17,7 @@ import os
 import random
 import struct
 import time
+from collections.abc import Iterable
 from concurrent import futures
 
 import blosc
@@ -276,10 +277,10 @@ class Raster(Service):
         _retry=_retry,
         **pass_through_params,
     ):
-        """Given a list of :class:`Metadata <descarteslabs.client.services.metadata.Metadata>` identifiers,
+        """Given a list of image identifiers,
         retrieve a translated and warped mosaic as an image file.
 
-        :param inputs: List of :class:`Metadata` identifiers.
+        :param inputs: Iterable of image identifiers.
         :param bands: List of requested bands. If the last item in the list is an alpha
             band (with data range `[0, 1]`) it affects rastering of all other bands:
             When rastering multiple images, they are combined image-by-image only where
@@ -380,7 +381,7 @@ class Raster(Service):
             chunk_iter = yield_chunks(blosc_meta, r.raw, progress, nodata)
 
             if "id" not in metadata:
-                metadata["id"] = inputs[0]
+                metadata["id"] = params["inputs"][0]
 
             try:
                 if output_format == "GTiff":
@@ -442,7 +443,7 @@ class Raster(Service):
     ):
         """Retrieve a raster as a NumPy array.
 
-        :param inputs: List of :class:`Metadata` identifiers.
+        :param inputs: List of image identifiers.
         :param bands: List of requested bands. If the last item in the list is an alpha
             band (with data range `[0, 1]`) it affects rastering of all other bands:
             When rastering multiple images, they are combined image-by-image only where
@@ -596,7 +597,7 @@ class Raster(Service):
         * set ``dltile``, or
         * set [``resolution`` or ``dimensions``], ``srs``, and ``bounds``
 
-        :param inputs: List, or list of lists, of :class:`Metadata` identifiers.
+        :param inputs: Iterable, or Iterable of Iterables, of image identifiers.
             The stack will follow the same order as this list.
             Each element in the list is treated as a separate input to ``raster.ndarray``,
             so if a list of lists is given, each sublist's identifiers will be mosaiced together
@@ -661,9 +662,15 @@ class Raster(Service):
               contain useful information about the raster, such as its geotransform matrix and WKT
               of its coordinate system, but there are no guarantees that certain keys will be present.
         """
-        if not isinstance(inputs, (list, tuple)):
+        if isinstance(inputs, str):
+            inputs = list(inputs)
+        if isinstance(inputs, (list, tuple)):
+            pass
+        elif isinstance(inputs, Iterable):
+            inputs = list(inputs)
+        else:
             raise TypeError(
-                "Inputs must be a list or tuple, instead got '{}'".format(type(inputs))
+                "Inputs must be a Iterable, instead got '{}'".format(type(inputs))
             )
 
         if dltile is None:
@@ -764,7 +771,7 @@ class Raster(Service):
             inputs = [inputs]
 
         params = {
-            "ids": inputs,
+            "ids": list(inputs),
             "bands": bands,
             "scales": scales,
             "ot": data_type,

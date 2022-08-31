@@ -1,6 +1,7 @@
 from enum import Enum
 from collections.abc import Iterable, Mapping, MutableMapping
 
+from ..common.collection import Collection
 from ..common.property_filtering import GenericProperties
 from .catalog_base import CatalogObject, _new_abstract_class
 from .named_catalog_base import NamedCatalogObject
@@ -515,6 +516,7 @@ class Band(NamedCatalogObject):
     _url = "/bands"
     _derived_type_switch = "type"
     _default_includes = ["product"]
+    # _collection_type set below due to circular problems
 
     description = Attribute(doc="str, optional: " + _DOC_DESCRIPTION)
     type = EnumAttribute(
@@ -640,6 +642,14 @@ class Band(NamedCatalogObject):
         if cls._derived_type:
             search = search.filter(properties.type == cls._derived_type)
         return search
+
+
+class BandCollection(Collection):
+    _item_type = Band
+
+
+# set here due to circular references
+Band._collection_type = BandCollection
 
 
 class SpectralBand(Band):
@@ -898,6 +908,7 @@ class DerivedBand(CatalogObject):
 
     _doc_type = "derived_band"
     _url = "/derived_bands"
+    # _collection_type set below due to circular problems
 
     name = Attribute(
         readonly=True,
@@ -975,3 +986,11 @@ class DerivedBand(CatalogObject):
             This method is not supported for DerivedBands.
         """
         raise NotImplementedError("Deleting DerivedBands is not permitted")
+
+
+class DerivedBandCollection(Collection):
+    _item_type = DerivedBand
+
+
+# set here due to circular references
+DerivedBand._collection_type = DerivedBand

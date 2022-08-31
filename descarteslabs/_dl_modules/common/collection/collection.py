@@ -19,6 +19,8 @@ A list-based sequence with helper methods, which serves as the base class for `S
 import itertools
 import collections
 
+from ...client.deprecation import deprecate
+
 
 # TODO: maybe subclass collections.UserList?
 class Collection(object):
@@ -32,6 +34,12 @@ class Collection(object):
             self._list = []
         else:
             self._list = list(iterable)
+            item_type = getattr(self, "_item_type", None)
+            if item_type is not None:
+                if not all(map(lambda i: isinstance(i, item_type), self._list)):
+                    raise ValueError(
+                        f"item is not of required type {item_type.__name__}"
+                    )
 
     def __getitem__(self, idx):
         """
@@ -54,7 +62,7 @@ class Collection(object):
         Can assign a scalar, or a list of equal length to the slice,
         to any valid slice (including an list of indices)
         """
-
+        item_type = getattr(self, "_item_type", None)
         if isinstance(idx, (list, slice)) or type(idx).__name__ == "ndarray":
             if isinstance(idx, slice):
                 idx = list(range(*idx.indices(len(self))))
@@ -70,8 +78,14 @@ class Collection(object):
                     )
                 )
             for i, x in zip(idx, item):
+                if item_type is not None and not isinstance(x, item_type):
+                    raise ValueError(
+                        f"item is not of required type {item_type.__name__}"
+                    )
                 self._list[i] = x
         else:
+            if item_type is not None and not isinstance(x, item_type):
+                raise ValueError(f"item is not of required type {item_type.__name__}")
             self._list[idx] = item
 
     def __iter__(self):
@@ -104,18 +118,18 @@ class Collection(object):
     def each(self):
         """
         Any operations chained onto
-        :attr:`~descarteslabs.scenes.collection.Collection.each` (attribute access,
+        :attr:`~descarteslabs.common.collection.Collection.each` (attribute access,
         item access, and calls) are applied to each item in the
-        :class:`~descarteslabs.scenes.collection.Collection`.
+        :class:`~descarteslabs.common.collection.Collection`.
 
         Notes
         -----
-            * Add :meth:`~descarteslabs.scenes.collection.Eacher.combine`
+            * Add :meth:`~descarteslabs.common.collection.Eacher.combine`
               at the end of the operations chain to combine the results into a
               list by default, or any container type passed into
-              :meth:`~descarteslabs.scenes.collection.Eacher.combine`
+              :meth:`~descarteslabs.common.collection.Eacher.combine`
             * Use
-              :meth:`pipe(f, *args, **kwargs) <descarteslabs.scenes.collection.Eacher.pipe>`
+              :meth:`pipe(f, *args, **kwargs) <descarteslabs.common.collection.Eacher.pipe>`
               to yield ``f(x, *args, **kwargs)`` for each item ``x`` yielded by the
               preceeding operations chain
 
@@ -143,26 +157,30 @@ class Collection(object):
 
         Yields
         ------
-            item with all operations following :attr:`~descarteslabs.scenes.collection.Collection.each` applied to it
+            item with all operations following :attr:`~descarteslabs.common.collection.Collection.each` applied to it
 
         """
         return Eacher(iter(self._list))
 
     def map(self, f):
-        "Returns a :class:`~descarteslabs.scenes.collection.Collection` of ``f`` applied to each item"
+        "Returns a :class:`~descarteslabs.common.collection.Collection` of ``f`` applied to each item"
 
         res = (f(x) for x in self._list)
-        return self._cast_and_copy_attrs_to(res)
+        item_type = getattr(self, "_item_type", None)
+        if item_type is None or all(map(lambda i: isinstance(i, item_type), res)):
+            return self._cast_and_copy_attrs_to(res)
+        else:
+            return Collection(res)
 
     def filter(self, predicate):
-        "Returns a :class:`~descarteslabs.scenes.collection.Collection` of items for which ``predicate(item)`` is True"
+        "Returns a :class:`~descarteslabs.common.collection.Collection` of items for which ``predicate(item)`` is True"
 
         res = (x for x in self._list if predicate(x))
         return self._cast_and_copy_attrs_to(res)
 
     def sorted(self, *predicates, **reverse):
         """
-        Returns a :class:`~descarteslabs.scenes.collection.Collection`,
+        Returns a :class:`~descarteslabs.common.collection.Collection`,
         sorted by predicates in ascending order.
 
         Each predicate can be a key function, or a string of dot-chained attributes
@@ -200,7 +218,7 @@ class Collection(object):
         """
         Groups items by predicates and yields tuple of ``(group, items)``
         for each group, where ``items`` is a
-        :class:`~descarteslabs.scenes.collection.Collection`.
+        :class:`~descarteslabs.common.collection.Collection`.
 
         Each predicate can be a key function, or a string of dot-chained attributes
         to use as sort keys.
@@ -244,12 +262,22 @@ class Collection(object):
             yield group, self._cast_and_copy_attrs_to(items)
 
     def append(self, x):
-        "Append x to the end of this :class:`~descarteslabs.scenes.collection.Collection`"
+        "Append x to the end of this :class:`~descarteslabs.common.collection.Collection`"
+
+        item_type = getattr(self, "_item_type", None)
+        if item_type is not None and not isinstance(x, item_type):
+            raise ValueError(f"item is not of required type {item_type.__name__}")
 
         self._list.append(x)
 
     def extend(self, x):
-        "Extend this :class:`~descarteslabs.scenes.collection.Collection` by appending elements from the iterable"
+        "Extend this :class:`~descarteslabs.common.collection.Collection` by appending elements from the iterable"
+
+        item_type = getattr(self, "_item_type", None)
+        if item_type is not None and not all(
+            map(lambda i: isinstance(i, item_type), x)
+        ):
+            raise ValueError(f"item is not of required type {item_type.__name__}")
 
         self._list.extend(x)
 
@@ -286,7 +314,13 @@ class Eacher(object):
     def __call__(self, *args, **kwargs):
         return Eacher(x(*args, **kwargs) for x in self)
 
-    def combine(self, collection=list):
+    @deprecate(renamed={"collection": "op"})
+    def combine(self, op=list):
+        "``self.combine(collection) <--> op(iter(self))``"
+
+        return op(iter(self))
+
+    def collect(self, collection=Collection):
         "``self.combine(collection) <--> collection(iter(self))``"
 
         return collection(iter(self))
