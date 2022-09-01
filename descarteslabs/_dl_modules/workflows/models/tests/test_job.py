@@ -31,6 +31,9 @@ from ..utils import pb_milliseconds_to_datetime, pb_timestamp_to_datetime
 
 from . import utils
 
+from .. import job as job_module
+from ....common.proto.job import job_pb2_grpc
+
 
 class MockRpcError(grpc.RpcError, grpc.Call):
     def __init__(self, code):
@@ -40,11 +43,8 @@ class MockRpcError(grpc.RpcError, grpc.Call):
         return self._code
 
 
-@mock.patch(
-    "descarteslabs.workflows.models.job.get_global_grpc_client",
-    new=lambda: utils.MockedClient(),
-)
-@mock.patch("descarteslabs.common.proto.job.job_pb2_grpc.JobAPIStub")
+@mock.patch.object(job_module, "get_global_grpc_client", lambda: utils.MockedClient())
+@mock.patch.object(job_pb2_grpc, "JobAPIStub")
 class TestJob:
     def test_create_full(self, stub):
         x = types.Int(1)

@@ -21,6 +21,10 @@ from ..utils import (
 from ..visualization import VizOption
 from . import utils
 
+from .. import published_graft
+from .. import xyz
+from ....common.proto.xyz import xyz_pb2_grpc
+
 
 def mock_CreateXYZ(msg: xyz_pb2.CreateXYZRequest, **kwargs) -> xyz_pb2.XYZ:
     assert isinstance(msg, xyz_pb2.CreateXYZRequest)
@@ -41,15 +45,11 @@ def mock_CreateXYZ(msg: xyz_pb2.CreateXYZRequest, **kwargs) -> xyz_pb2.XYZ:
     )
 
 
-@mock.patch(
-    "descarteslabs.workflows.models.published_graft.get_global_grpc_client",
-    new=lambda: utils.MockedClient(),
+@mock.patch.object(
+    published_graft, "get_global_grpc_client", lambda: utils.MockedClient()
 )
-@mock.patch(
-    "descarteslabs.workflows.models.xyz.get_global_grpc_client",
-    new=lambda: utils.MockedClient(),
-)
-@mock.patch("descarteslabs.common.proto.xyz.xyz_pb2_grpc.XYZAPIStub")
+@mock.patch.object(xyz, "get_global_grpc_client", lambda: utils.MockedClient())
+@mock.patch.object(xyz_pb2_grpc, "XYZAPIStub")
 class TestXYZ(object):
     def test_init(self, stub):
         CreateXYZ = stub.return_value.CreateXYZ
@@ -212,7 +212,7 @@ class TestXYZ(object):
         )
 
 
-@mock.patch("descarteslabs.workflows.models.xyz._tile_log_stream")
+@mock.patch.object(xyz, "_tile_log_stream")
 def test_xyz_log_listener(log_stream_mock):
     class FakeRendezvous(object):
         def __init__(self, q):

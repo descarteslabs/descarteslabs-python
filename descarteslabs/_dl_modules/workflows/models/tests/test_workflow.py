@@ -10,12 +10,14 @@ from ..utils import pb_milliseconds_to_datetime
 from . import utils
 from ...types import Int, Function
 
+from .. import workflow as workflow_module
+from ....common.proto.workflow import workflow_pb2_grpc
 
-@mock.patch(
-    "descarteslabs.workflows.models.workflow.get_global_grpc_client",
-    new=lambda: utils.MockedClient(),
+
+@mock.patch.object(
+    workflow_module, "get_global_grpc_client", lambda: utils.MockedClient()
 )
-@mock.patch("descarteslabs.common.proto.workflow.workflow_pb2_grpc.WorkflowAPIStub")
+@mock.patch.object(workflow_pb2_grpc, "WorkflowAPIStub")
 class TestWorkflow(object):
     def test_build(self, stub):
         wf = Workflow(

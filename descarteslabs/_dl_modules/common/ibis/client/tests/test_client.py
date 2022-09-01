@@ -25,6 +25,8 @@ from ..client import (
     _maybe_to_geodataframe,
 )
 
+from ..client import VektoriusGrpcClient
+
 
 def slice_(df):
     chunksize = 64 * 1024
@@ -106,7 +108,7 @@ class ClientTestCase(unittest.TestCase):
         assert type(result) is sch.Schema
         assert result == schema
 
-    @patch("descarteslabs.common.ibis.client.client.VektoriusGrpcClient.api")
+    @patch.object(VektoriusGrpcClient, "api")
     def test_table(self, mock_api):
         schema = sch.Schema(names=["anInt64", "aString"], types=[dt.int64, dt.string])
 

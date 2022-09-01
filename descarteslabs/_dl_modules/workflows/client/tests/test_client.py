@@ -9,8 +9,11 @@ from ...types import Int
 
 from .. import Client
 
+from ....common.proto.health import health_pb2_grpc
+from ....common.proto.job import job_pb2_grpc
 
-@mock.patch("descarteslabs.common.proto.health.health_pb2_grpc.HealthStub")
+
+@mock.patch.object(health_pb2_grpc, "HealthStub")
 def test_client_health_called_with_default_metadata(stub):
     stub.return_value.Check.return_value = True
     client = Client(auth=mock.Mock())
@@ -29,7 +32,7 @@ def _grpc_resource_exhausted_exception():
     return e
 
 
-@mock.patch("descarteslabs.common.proto.job.job_pb2_grpc.JobAPIStub")
+@mock.patch.object(job_pb2_grpc, "JobAPIStub")
 def test_client_compute_resource_exhausted_does_not_retry(stub):
     expected = _grpc_resource_exhausted_exception()
     stub.return_value.CreateJob.side_effect = expected
@@ -42,7 +45,7 @@ def test_client_compute_resource_exhausted_does_not_retry(stub):
     assert stub.return_value.CreateJob.call_count == 1
 
 
-@mock.patch("descarteslabs.common.proto.job.job_pb2_grpc.JobAPIStub")
+@mock.patch.object(job_pb2_grpc, "JobAPIStub")
 def test_client_compute_retries_when_num_retries_is_specified(stub):
     stub.return_value.CreateJob.side_effect = [
         _grpc_resource_exhausted_exception(),

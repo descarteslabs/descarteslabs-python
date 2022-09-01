@@ -6,6 +6,7 @@ import pytest
 from ....common.retry import Retry
 
 from ..client import GrpcClient, USER_AGENT_HEADER
+from ....common.proto.health import health_pb2_grpc
 
 
 class FakeRpcError(grpc.RpcError):
@@ -16,8 +17,8 @@ class FakeRpcError(grpc.RpcError):
         return self._code
 
 
-@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
-@mock.patch("descarteslabs.common.proto.health.health_pb2_grpc.HealthStub")
+@mock.patch.object(GrpcClient, "_populate_api")
+@mock.patch.object(health_pb2_grpc, "HealthStub")
 def test_client_health(stub, _):
     stub.return_value.Check.return_value = True
     client = GrpcClient("host", auth=mock.Mock())
@@ -26,8 +27,8 @@ def test_client_health(stub, _):
     assert stub.return_value.Check.call_args_list[0][1]["timeout"] == 5
 
 
-@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
-@mock.patch("descarteslabs.common.proto.health.health_pb2_grpc.HealthStub")
+@mock.patch.object(GrpcClient, "_populate_api")
+@mock.patch.object(health_pb2_grpc, "HealthStub")
 def test_client_health_called_with_user_agent_metadata(stub, _):
     stub.return_value.Check.return_value = True
     client = GrpcClient("host", auth=mock.Mock())
@@ -36,8 +37,8 @@ def test_client_health_called_with_user_agent_metadata(stub, _):
     assert USER_AGENT_HEADER in stub.return_value.Check.call_args_list[0][1]["metadata"]
 
 
-@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
-@mock.patch("descarteslabs.common.proto.health.health_pb2_grpc.HealthStub")
+@mock.patch.object(GrpcClient, "_populate_api")
+@mock.patch.object(health_pb2_grpc, "HealthStub")
 def test_client_health_called_with_default_metadata(stub, _):
     stub.return_value.Check.return_value = True
     client = GrpcClient(
@@ -52,8 +53,8 @@ def test_client_health_called_with_default_metadata(stub, _):
     assert USER_AGENT_HEADER in stub.return_value.Check.call_args_list[0][1]["metadata"]
 
 
-@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
-@mock.patch("descarteslabs.common.proto.health.health_pb2_grpc.HealthStub")
+@mock.patch.object(GrpcClient, "_populate_api")
+@mock.patch.object(health_pb2_grpc, "HealthStub")
 def test_client_health_default_retry_false_predicate(stub, _):
     stub.return_value.Check.side_effect = [TypeError(), True]
     client = GrpcClient("host", auth=mock.Mock())
@@ -64,7 +65,7 @@ def test_client_health_default_retry_false_predicate(stub, _):
     assert len(stub.return_value.Check.call_args_list) == 1
 
 
-@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+@mock.patch.object(GrpcClient, "_populate_api")
 def test_wrap_stub_with_default_retry(_):
     def f(*args, **kwargs):
         return args, kwargs
@@ -76,7 +77,7 @@ def test_wrap_stub_with_default_retry(_):
     retry.assert_called_once_with(f)
 
 
-@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+@mock.patch.object(GrpcClient, "_populate_api")
 def test_wrap_stub_with_kwarg(_):
     args = (0,)
     kwargs = {
@@ -92,7 +93,7 @@ def test_wrap_stub_with_kwarg(_):
     f.assert_called_once_with(*args, **kwargs)
 
 
-@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+@mock.patch.object(GrpcClient, "_populate_api")
 def test_wrap_stub_args_kwargs(_):
     args = (0,)
     kwargs = {
@@ -108,7 +109,7 @@ def test_wrap_stub_args_kwargs(_):
     f.assert_called_once_with(*args, **kwargs)
 
 
-@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+@mock.patch.object(GrpcClient, "_populate_api")
 def test_metadata_header(_):
     # Test that channel is added as a header
     args = (0,)
@@ -152,7 +153,7 @@ def test_metadata_header(_):
     f.assert_called_once_with(*args, **kwargs_w_header)
 
 
-@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+@mock.patch.object(GrpcClient, "_populate_api")
 def test_add_api_metadata_header_merge(_):
     client = GrpcClient(
         "host", auth=mock.Mock(), default_metadata=(("foo", "bar"), ("baz", "qux"))
@@ -185,7 +186,7 @@ def test_add_api_metadata_header_merge(_):
     )
 
 
-@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+@mock.patch.object(GrpcClient, "_populate_api")
 def test_close(_):
     mock_channel = mock.Mock()
     client = GrpcClient("host")
@@ -201,7 +202,7 @@ def test_close(_):
     assert client._channel is None
 
 
-@mock.patch("descarteslabs.client.grpc.GrpcClient._populate_api")
+@mock.patch.object(GrpcClient, "_populate_api")
 def test_context_manager(_):
     client = GrpcClient("host")
     with mock.patch.object(client, "close") as close:

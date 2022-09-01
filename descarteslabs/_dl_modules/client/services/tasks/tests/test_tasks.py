@@ -53,6 +53,8 @@ from .....common.services.tasks.constants import (
 
 from .....common.tasks import FutureTask
 
+from ... import tasks as tasks_module
+
 # flake8: noqa
 public_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJncm91cHMiOlsicHVibGljIl0sImlzcyI6Imh0dHBzOi8vZGVzY2FydGVzbGFicy5hdXRoMC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMTExMzg1NTY1MjQ4MTIzOTU3MTIiLCJhdWQiOiJaT0JBaTRVUk9sNWdLWklweHhsd09FZng4S3BxWGYyYyIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNDc4MjAxNDE5fQ.sbSzD9ACNZvaxSgClZCnZMpee_p5MBaKV9uHZQonD6Q"
 
@@ -525,7 +527,7 @@ class TasksPackagingTest(ClientTestCase):
             )
 
         zf = self.client._build_bundle(
-            "descarteslabs.client.services.tasks.tests.test_tasks.TasksPackagingTest.a_function",
+            f"{tasks_module.__package__}.tests.test_tasks.TasksPackagingTest.a_function",
             [self.DATA_FILE_PATH],
             [self.TEST_MODULE],
         )
