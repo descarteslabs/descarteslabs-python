@@ -381,7 +381,7 @@ class Raster(Service):
             chunk_iter = yield_chunks(blosc_meta, r.raw, progress, nodata)
 
             if "id" not in metadata:
-                metadata["id"] = params["inputs"][0]
+                metadata["id"] = params["ids"][0]
 
             try:
                 if output_format == "GTiff":
