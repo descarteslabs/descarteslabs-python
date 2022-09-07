@@ -14,9 +14,10 @@
 
 
 class Expression(object):
-    """An expression for filtering a property against a value or set of values.
+    """An expression is the result of a filtering operation.
 
-    An expression contains a :py:class:`Property`, a comparison operator, and a value (or set of values):
+    An expression can contain a :py:class:`Property`, a comparison operator, and a
+    value (or set of values):
 
         | ``property`` ``operator`` ``value``
         | or
@@ -35,20 +36,29 @@ class Expression(object):
 
         ``value`` ``operator`` ``property`` ``operator`` ``value``
 
-    Expressions can be combined using the Boolean operators ``and`` or ``or``,
-    but due to language limitations
+    Expressions can be combined using the Boolean operators ``&`` and ``|`` to form
+    larger expressions. Due to language limitations
     the operator for ``and`` is expressed as ``&`` and the operator for ``or`` is
-    expressed as ``|``.
+    expressed as ``|``. Also, because of operator precedence, you must bracket
+    expressions with ``(`` and ``)`` to avoid unexpected behavior:
 
-    In addition there are a couple of method-like operators that can be used on a
-    property:
+        ``(`` ``property`` ``operator`` ``value`` ``)`` ``&`` ``(`` ``value`` ``operator`` ``property`` ``)``
 
-    * :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
-    * :meth:`~descarteslabs.common.property_filtering.filtering.Property.any_of` or
-      :meth:`~descarteslabs.common.property_filtering.filtering.Property.in_`
+    In addition there is a method-like operator that can be used on a
+    property.
 
-    Example
-    -------
+    * :py:meth:`Property.any_of` or :meth:`Property.in_`
+
+    And a couple of properties that allow you to verify whether a property value has
+    been set or not. A property value is considered ``null`` when it's either set to
+    ``None`` or to the empty list ``[]`` in case of a list property. These are only
+    available for the Catalog Service.
+
+    * :py:attr:`Property.isnull`
+    * :py:attr:`Property.isnotnull`
+
+    Examples
+    --------
     >>> from descarteslabs.common.property_filtering import GenericProperties
     >>> p = GenericProperties()
     >>> e = p.foo == 5
@@ -63,7 +73,12 @@ class Expression(object):
     >>> e = (5 < p.foo < 10) & p.foo.any_of([1, 2, 3, 4, 5])
     >>> type(e)
     <class 'descarteslabs.common.property_filtering.filtering.AndExpression'>
-
+    >>> e = p.foo.isnotnull
+    >>> type(e)
+    <class 'descarteslabs.common.property_filtering.filtering.IsNotNullExpression'>
+    >>> e = p.foo.isnull
+    >>> type(e)
+    <class 'descarteslabs.common.property_filtering.filtering.IsNullExpression'>
     """
 
     def __and__(self, other):
@@ -95,6 +110,8 @@ class Expression(object):
 
 
 class EqExpression(Expression):
+    """Whether a property value is equal to the given value."""
+
     def __init__(self, name, value):
         self.name, self.value = self._convert_name_value_pair(name, value)
 
@@ -111,6 +128,8 @@ class EqExpression(Expression):
 
 
 class NeExpression(Expression):
+    """Whether a property value is not equal to the given value."""
+
     def __init__(self, name, value):
         self.name, self.value = self._convert_name_value_pair(name, value)
 
@@ -127,6 +146,14 @@ class NeExpression(Expression):
 
 
 class RangeExpression(Expression):
+    """Whether a property value is within the given range.
+
+    A range can have a single value that must be ``>``, ``>=``,
+    ``<`` or ``<=`` than the value of the property. If the range
+    has two values, the property value must be between the given
+    range values.
+    """
+
     def __init__(self, name, parts):
         self.name = name
         self.parts = parts
@@ -148,7 +175,43 @@ class RangeExpression(Expression):
         return serialized[0] if len(serialized) == 1 else {"and": serialized}
 
 
+class IsNullExpression(Expression):
+    """Whether a property value is ``None`` or ``[]``."""
+
+    def __init__(self, name):
+        self.name = name
+
+    def serialize(self):
+        raise TypeError("'isnull' expression is not supported")
+        # return {"isnull": self.name}
+
+    def jsonapi_serialize(self, model=None):
+        return {"name": self.name, "op": "isnull"}
+
+
+class IsNotNullExpression(Expression):
+    """Whether a property value is not ``None`` or ``[]``."""
+
+    def __init__(self, name):
+        self.name = name
+
+    def serialize(self):
+        raise TypeError("'isnotnull' expression is not supported")
+        # return {"isnotnull": self.name}
+
+    def jsonapi_serialize(self, model=None):
+        return {"name": self.name, "op": "isnotnull"}
+
+
 class LikeExpression(Expression):
+    """Whether a property value matches the given wildcard expression.
+
+    The wildcard expression can contain ``%`` for zero or more characters and
+    ``_`` for a single character.
+
+    This can only be used in expressions for the ``Vector`` product.
+    """
+
     def __init__(self, name, value):
         self.name = name
         self.value = value
@@ -157,13 +220,16 @@ class LikeExpression(Expression):
         return {"like": {self.name: self.value}}
 
     def jsonapi_serialize(self, model=None):
-        value = (
-            model._serialize_attribute(self.name, self.value) if model else self.value
-        )
-        return {"name": self.name, "op": "ilike", "val": value}
+        raise TypeError("'like' expression is not supported")
+        # value = (
+        #     model._serialize_attribute(self.name, self.value) if model else self.value
+        # )
+        # return {"name": self.name, "op": "ilike", "val": value}
 
 
 class AndExpression(object):
+    """``True`` if both expressions are ``True``, ``False`` otherwise."""
+
     def __init__(self, parts):
         self.parts = parts
 
@@ -190,6 +256,8 @@ class AndExpression(object):
 
 
 class OrExpression(object):
+    """``True`` if either expression is ``True``, ``False`` otherwise."""
+
     def __init__(self, parts):
         self.parts = parts
 
@@ -226,7 +294,27 @@ def range_expr(op):
 
 
 class Property(object):
-    """A wrapper object for a single property"""
+    """A filter property that can be used in an expression.
+
+    Although you can generate filter properties by instantiating this class, a more
+    convenient method is to use a
+    :py:class:`~descarteslabs.common.property_filtering.filtering.Properties`
+    or
+    :py:class:`~descarteslabs.common.property_filtering.filtering.GenericProperties`
+    instance.
+    By referencing any
+    attribute of a
+    :py:class:`~descarteslabs.common.property_filtering.filtering.GenericProperties`
+    instance the corresponding filter property
+    will be created.
+
+    See :ref:`Properties Introduction <property_filtering>`
+    for a more detailed explanation.
+
+    Examples
+    --------
+    >>> e = Property("modified") > "2020-01-01"
+    """
 
     def __init__(self, name, parts=None):
         self.name = name
@@ -246,9 +334,10 @@ class Property(object):
     def __repr__(self):
         return "<Property {}>".format(self.name)
 
-    def like(self, other):
+    def like(self, wildcard):
         """Compare against a wildcard string.
 
+        This can only be used in expressions for the ``Vector`` service.
         This allows for wildcards, e.g. ``like("bar%foo")`` where any
         string that starts with ``'bar'`` and ends with ``'foo'`` will be
         matched.
@@ -261,15 +350,17 @@ class Property(object):
         python string, i.e. use ``like("bar\\\\%foo")`` to match exactly
         ``'bar%foo'``.
         """
-        return LikeExpression(self.name, other)
+        return LikeExpression(self.name, wildcard)
 
-    def in_(self, iterable):
-        """
+    def any_of(self, iterable):
+        """The property must have any of the given values.
+
         Asserts that this property must have a value equal to one of the
         values in the given iterable. This can be thought of as behaving
         like an ``in`` expression in Python or an ``IN`` expression in SQL.
         """
         exprs = [(self == item) for item in iterable]
+
         if len(exprs) > 1:
             return OrExpression(exprs)
         elif len(exprs) == 1:
@@ -281,11 +372,49 @@ class Property(object):
             # since they surely didn't mean this.
             raise ValueError("in_ expression requires at least one item")
 
-    any_of = in_
+    in_ = any_of
+
+    @property
+    def isnull(self):
+        """Whether a property value is ``None`` or ``[]``.
+
+        This can only be used in expressions for the ``Catalog`` service.
+        """
+        return IsNullExpression(self.name)
+
+    @property
+    def isnotnull(self):
+        """Whether a property value is not ``None`` or ``[]``.
+
+        This can only be used in expressions for the ``Catalog`` service.
+        """
+        return IsNotNullExpression(self.name)
 
 
 class Properties(object):
-    """A wrapper object to allow constructing filter expressions using properties"""
+    """A wrapper object to construct filter properties by referencing instance attributes.
+
+    By referring to any instance attribute, a corresponding property will be created.
+    The instance validates whether the generated property is in the list of property
+    names that this instance was created with.
+
+    See :ref:`Properties Introduction <property_filtering>`
+    for a more detailed explanation.
+
+    Parameters
+    ----------
+    name: str
+        The property names that are allowed, each as a positional parameter.
+
+    Examples
+    --------
+    >>> p = Properties("modified", "created")
+    >>> e = p.modified > "2020-01-01"
+    >>> e = p.deleted > "2020-01-01"  # doctest: +SKIP
+    Traceback (most recent call last):
+      ...
+    AttributeError: 'Properties' object has no attribute 'deleted'
+    >>>"""
 
     def __init__(self, *args):
         self.props = args
@@ -298,16 +427,19 @@ class Properties(object):
 
 
 class GenericProperties(object):
-    """A wrapper object to allow constructing filter expressions using properties.
+    """A wrapper object to construct filter properties by referencing instance attributes.
 
-    You can construct filter expression using the ``==``, ``!=``, ``<``, ``>``,
-    ``<=`` and ``>=`` operators as well as the
-    :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
-    and :meth:`~descarteslabs.common.property_filtering.filtering.Property.in_`
-    or :meth:`~descarteslabs.common.property_filtering.filtering.Property.any_of`
-    method. You cannot use the boolean keywords ``and`` and ``or`` because of
-    Python language limitations; instead you can combine filter expressions
-    with ``&`` (boolean "and") and ``|`` (boolean "or").
+    By referring to any instance attribute, a corresponding property will be created.
+    There is no validation whether the generated property actually exists until the
+    full expression is evaluated.
+
+    See :ref:`Properties Introduction <property_filtering>`
+    for a more detailed explanation.
+
+    Examples
+    --------
+    >>> p = GenericProperties()
+    >>> e = p.modified > "2020-01-01"
     """
 
     def __getattr__(self, attr):

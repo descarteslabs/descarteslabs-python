@@ -24,6 +24,7 @@ Changelog
 - Previously, the internal implementation of the `physical_range` attribute on various band types was inconsistent with
   that of `data_range` and `display_range`. It has now been made consistent, which means it will either not be set,
   or will contain a 2-tuple of float values. It is no longer possible to explicitly set it to `None`.
+- Add `isnull` and `isnotnull` to property filtering.
 
 ### REST Clients
 
@@ -76,7 +77,7 @@ only recommended when using an AOI which is smaller than the source imagery pixe
   a large distance north-to-south and straddle meridians which are boundaries between
   UTM zones. So methods such as `DLTile.from_shape` may return more tiles than previously,
   but properly covering the region.
-- Added support for retrieving products and bands. 
+- Added support for retrieving products and bands.
   - Methods added: `get_product`, `get_band`, `get_derived_band`, `search_products`,
     `search_bands`, `search_derived_bands`.
   - Disallows search without `products` parameter.
@@ -107,7 +108,7 @@ only recommended when using an AOI which is smaller than the source imagery pixe
     - `?` matches 1 of any character.
   - Find assets matching type of `blob` and having a display name of `file name.json` or `file2name.txt` but **not** `filename.json`:
     - `Discover().list_assets("asset/namespace/org:some_org", filters="type=blob&name=file?name.*")`
-    - `Discover().list_assets("asset/namespace/org:some_org", filters=AssetListFilter(type=AssetType.BLOB, name="file?name.*"))` 
+    - `Discover().list_assets("asset/namespace/org:some_org", filters=AssetListFilter(type=AssetType.BLOB, name="file?name.*"))`
   - Find assets of type `blob` or `vector`:
     - `Discover().list_assets("asset/namespace/org:some_org", filters="type=blob,vector")`
     - `Discover().list_assets("asset/namespace/org:some_org", filters=AssetListFilter(type=[AssetType.BLOB, AssetType.VECTOR], name="file?name.*"))`

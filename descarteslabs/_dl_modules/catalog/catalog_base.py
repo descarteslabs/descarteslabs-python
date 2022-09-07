@@ -829,7 +829,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         >>> p.name = "My name has changed"
         >>> p.reload() # doctest: +SKIP
         Traceback (most recent call last):
-            ...
+          ...
         ValueError: Product instance with id my_org_id:my_product_id has not been saved
         >>> # But you can revert
         >>> p = Product.get(p.id) # doctest: +SKIP

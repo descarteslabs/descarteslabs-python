@@ -1,3 +1,3 @@
-from .filtering import Properties, GenericProperties
+from .filtering import GenericProperties, Properties, Property
 
-__all__ = ["Properties", "GenericProperties"]
+__all__ = ["GenericProperties", "Properties", "Property"]
