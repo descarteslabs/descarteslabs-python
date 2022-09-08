@@ -1139,8 +1139,8 @@ class TestImage(ClientTestCase):
         _cached_bands_by_product,
     )
     def test_scaling_parameters_display(self):
-        scene = Image.get("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
-        scales, data_type = scene.scaling_parameters(
+        image = Image.get("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
+        scales, data_type = image.scaling_parameters(
             "red green blue alpha", scaling="display"
         )
         assert scales == [(0, 4000, 0, 255), (0, 4000, 0, 255), (0, 4000, 0, 255), None]

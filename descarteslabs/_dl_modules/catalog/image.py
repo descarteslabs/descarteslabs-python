@@ -1065,7 +1065,7 @@ class Image(NamedCatalogObject):
 
         raster_params = geocontext.raster_params
         full_raster_args = dict(
-            inputs=self.id,
+            inputs=[self.id],
             order="gdal",
             bands=bands,
             scales=scales,
