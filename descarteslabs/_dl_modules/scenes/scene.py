@@ -26,11 +26,12 @@ AOI(geometry=None,
     align_pixels=False,
     bounds=(258292.5, 4503907.5, 493732.5, 4743307.5),
     bounds_crs='EPSG:32615',
-    shape=None)
+    shape=None,
+    all_touched=False)
 >>> scene.properties.id  # doctest: +SKIP
 'landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1'
 >>> scene.properties.date  # doctest: +SKIP
-datetime.datetime(2016, 7, 6, 16, 59, 42, 753476)
+datetime.datetime(2016, 7, 6, 16, 59, 42, 753476, tzinfo=<UTC>)
 >>> scene.properties.bands.red.resolution  # doctest: +SKIP
 15
 >>> arr = scene.ndarray("red green blue", ctx.assign(resolution=120.))  # doctest: +SKIP
@@ -40,44 +41,94 @@ datetime.datetime(2016, 7, 6, 16, 59, 42, 753476)
 (3, 1995, 1962)
 """
 
-from __future__ import division
-import json
-import datetime
-import warnings
-
-import shapely.geometry
-from affine import Affine
-
-import numpy as np
-
-from ..client.services.raster import Raster
-from ..client.services.metadata import Metadata
-from descarteslabs.exceptions import NotFoundError, BadRequestError
+from descarteslabs.exceptions import NotFoundError
+from ..client.deprecation import deprecate
+from ..catalog import Image
 from ..common.dotdict import DotDict
-from ..common import shapely_support
 
-from ..common.geo import GeoContext, AOI
-from . import _download
-from ._helpers import cached_bands_by_product
-from . import _scaling
+from .helpers import REQUEST_PARAMS, cached_bands_by_product
 
 
-def _strptime_helper(s):
-    formats = [
-        "%Y-%m-%dT%H:%M:%S.%fZ",
-        "%Y-%m-%dT%H:%M:%SZ",
-        "%Y-%m-%dT%H:%M:%S.%f+00:00",
-        "%Y-%m-%dT%H:%M:%S+00:00",
-        "%Y-%m-%dT%H:%M:%S",
-    ]
+# more or less like a DotDict but delegates everything to the underlying image
+# most importantly, it is lazy about retrieving bands
+class _PropertiesAccessor(object):
+    def __init__(self, image):
+        self.__dict__["_image"] = image
 
-    for fmt in formats:
+    # The following three properties are not part of the metadata model,
+    # but instead were computed and added to the metadata dict by the old
+    # Scenes constructor. We implement them via @property here instead
+    # as all but `bands` are lightweight, and `bands` is best deferred until
+    # actually needed.
+    @property
+    def bands(self):
+        return DotDict(
+            cached_bands_by_product(self._image.product_id, self._image._client)
+        )
+
+    @property
+    def crs(self):
+        return self._image.cs_code or self._image.projection
+
+    @property
+    def date(self):
+        return self._image.acquired
+
+    def get(self, key, default=None):
         try:
-            return datetime.datetime.strptime(s, fmt)
-        except ValueError:
-            pass
+            return getattr(self, key)
+        except AttributeError:
+            return default
 
-    return None
+    def __getitem__(self, key):
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            raise KeyError(key) from None
+
+    def __setitem__(self, key, value):
+        raise TypeError("Properties are read-only")
+
+    def __delitem__(self, key):
+        raise TypeError("Properties are read-only")
+
+    def __getattr__(self, attr):
+        try:
+            return DotDict._box(self._image.v1_properties[attr])
+        except KeyError:
+            raise AttributeError(attr) from None
+
+    def __setattr__(self, attr, value):
+        raise TypeError("Properties are read-only")
+
+    def __delattr__(self, attr):
+        raise TypeError("Properties are read-only")
+
+    def __iter__(self):
+        for k in self._image.v1_properties.keys():
+            yield k
+        yield "date"
+        yield "crs"
+        yield "bands"
+
+    def __dir__(self):
+        return super(_PropertiesAccessor, self).__dir__() + list(
+            self._image.v1_properties.keys()
+        )
+
+    def keys(self):
+        return self.__iter__()
+
+    def values(self):
+        for k, v in self.items():
+            yield v
+
+    def items(self):
+        for kv in DotDict(self._image.v1_properties.items()):
+            yield kv
+        yield ("date", self.date)
+        yield ("crs", self.crs)
+        yield ("bands", self.bands)
 
 
 class Scene(object):
@@ -91,7 +142,7 @@ class Scene(object):
     geometry : shapely.geometry.Polygon
         The region the scene's data covers, in WGS84 (lat-lon) coordinates,
         represented as a Shapely polygon.
-    properties : DotDict
+    properties : DotDict-like
         Metadata about the scene. Some fields will vary between products,
         but these will be present:
 
@@ -149,33 +200,31 @@ class Scene(object):
                 Units of the wavelength fields, such as ``"nm"``
     """
 
-    def __init__(self, scene_dict, bands_dict):
+    def __init__(self, image: Image):
         """
-        ``__init__`` instantiates a Scene from a dict returned by `Metadata.search`
-        and `Metadata.get_bands_by_id`.
+        ``__init__`` instantiates a Scene by wrapping a `descarteslabs.catalog.Image` instead.
 
-        It's preferred to use `Scene.from_id` or `scenes.search <scenes._search.search>` instead.
+        It's preferred to use `Scene.from_id` or `scenes.search <scenes.search_api.search>` instead.
         """
+        if not isinstance(image, Image):
+            ValueError("image must be a descarteslabs.catalog.Image")
+        self._image = image
 
-        self.geometry = shapely.geometry.shape(scene_dict["geometry"])
-        properties = scene_dict["properties"]
-        properties["id"] = scene_dict["id"]
-        properties["bands"] = self._scenes_bands_dict(bands_dict)
-        properties["crs"] = (
-            properties.pop("cs_code")
-            if "cs_code" in properties
-            else properties.get("proj4")
-        )
+    @property
+    def geometry(self):
+        return self._image.geometry
 
-        if "acquired" in properties:
-            properties["date"] = _strptime_helper(properties["acquired"])
-        else:
-            properties["date"] = None
+    @property
+    def properties(self):
+        return _PropertiesAccessor(self._image)
 
-        self.properties = properties
+    @property
+    def __geo_interface__(self):
+        return self.geometry.__geo_interface__
 
     @classmethod
-    def from_id(cls, scene_id, metadata_client=None):
+    @deprecate(removed=["metadata_client"])
+    def from_id(cls, scene_id):
         """
         Return the metadata for a Descartes Labs scene ID as a Scene object.
 
@@ -210,9 +259,10 @@ class Scene(object):
             align_pixels=False,
             bounds=(348592.5, 4345567.5, 581632.5, 4582807.5),
             bounds_crs='EPSG:32615',
-            shape=None)
+            shape=None.
+            all_touched=True)
         >>> scene.properties.date  # doctest: +SKIP
-        datetime.datetime(2016, 7, 15, 16, 53, 59, 495435)
+        datetime.datetime(2016, 7, 15, 16, 53, 59, 495435, tzinfo=<UTC>)
 
         Raises
         ------
@@ -220,24 +270,10 @@ class Scene(object):
             If the ``scene_id`` cannot be found in the Descartes Labs catalog
         """
 
-        if metadata_client is None:
-            metadata_client = Metadata.get_default_client()
-
-        metadata = metadata_client.get(scene_id)
-        metadata = {
-            "type": "Feature",
-            "geometry": metadata.pop("geometry"),
-            "id": metadata.pop("id"),
-            "key": metadata.pop("key"),
-            "properties": metadata,
-        }
-
-        bands = cached_bands_by_product(
-            metadata["properties"]["product"], metadata_client
-        )
-        scene = cls(metadata, bands)
-
-        return scene, scene.default_ctx()
+        image = Image.get(scene_id, request_params=REQUEST_PARAMS)
+        if image is None:
+            raise NotFoundError("Scene {scene_id} not found")
+        return cls(image), image.geocontext
 
     def default_ctx(self):
         """
@@ -266,54 +302,7 @@ class Scene(object):
         -------
         ctx: AOI
         """
-
-        resolution = None
-        bounds = None
-        bounds_crs = None
-        crs = self.properties.get("crs")
-
-        geotrans = self.properties.get("geotrans")
-        if geotrans is not None:
-            geotrans = Affine.from_gdal(*geotrans)
-            if not geotrans.is_rectilinear:
-                # NOTE: this may still be an insufficient check for some CRSs, i.e. polar stereographic?
-                warnings.warn(
-                    "The GeoContext will *not* return this Scene's original data, "
-                    "since it's rotated compared to the grid of the CRS. "
-                    "The array will be 'north-up', with the data rotated within it, "
-                    "and extra empty pixels padded around the side(s). "
-                    "To get the original, unrotated data, you must use the Raster API: "
-                    "`descarteslabs.client.services.raster.Raster.ndarray(scene.properties.id, ...)`."
-                )
-
-            scaling1, scaling2 = geotrans._scaling
-            if scaling1 == scaling2:
-                resolution = scaling1
-            else:
-                # if pixels aren't square (unlikely), we won't just pick a resolution---user has to figure that out.
-                warnings.warn(
-                    "Scene has non-square pixels, so no single resolution can be assigned. "
-                    "Use `shape` instead for more predictable results."
-                )
-
-            raster_size = self.properties.get("raster_size")
-            if raster_size is not None:
-                cols, rows = raster_size
-                # upper-left, upper-right, lower-left, lower-right in pixel coordinates
-                pixel_corners = [(0, 0), (cols, 0), (0, rows), (cols, rows)]
-                geo_corners = [geotrans * corner for corner in pixel_corners]
-                xs, ys = zip(*geo_corners)
-                bounds = (min(xs), min(ys), max(xs), max(ys))
-                bounds_crs = crs
-
-        return AOI(
-            geometry=None,
-            resolution=resolution,
-            bounds=bounds,
-            bounds_crs=bounds_crs,
-            crs=crs,
-            align_pixels=False,
-        )
+        return self._image.geocontext
 
     def coverage(self, geom):
         """
@@ -335,17 +324,11 @@ class Scene(object):
         >>> import descarteslabs as dl
         >>> scene, ctx = dl.scenes.Scene.from_id("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")  # doctest: +SKIP
         >>> scene.coverage(scene.geometry.buffer(1))  # doctest: +SKIP
-        0.8
+        0.258370644415335
         """
+        return self._image.coverage(geom)
 
-        if isinstance(geom, GeoContext):
-            shape = geom.geometry
-        else:
-            shape = shapely_support.geometry_like_to_shapely(geom)
-
-        intersection = shape.intersection(self.geometry)
-        return intersection.area / shape.area
-
+    @deprecate(removed=["raster_client"])
     def ndarray(
         self,
         bands,
@@ -359,7 +342,6 @@ class Scene(object):
         scaling=None,
         data_type=None,
         progress=None,
-        raster_client=None,
     ):
         """
         Load bands from this scene as an ndarray, optionally masking invalid data.
@@ -465,9 +447,9 @@ class Scene(object):
         BadRequestError
             If the Descartes Labs Platform is given invalid parameters
         """
-        return self._ndarray(
+        return self._image.ndarray(
             bands,
-            ctx,
+            geocontext=ctx,
             mask_nodata=mask_nodata,
             mask_alpha=mask_alpha,
             bands_axis=bands_axis,
@@ -477,124 +459,12 @@ class Scene(object):
             scaling=scaling,
             data_type=data_type,
             progress=progress,
-            raster_client=raster_client,
         )
-
-    def _ndarray(
-        self,
-        bands,
-        ctx,
-        mask_nodata=True,
-        mask_alpha=None,
-        bands_axis=0,
-        raster_info=False,
-        resampler="near",
-        processing_level=None,
-        scaling=None,
-        data_type=None,
-        progress=None,
-        raster_client=None,
-    ):
-        if raster_client is None:
-            raster_client = Raster.get_default_client()
-
-        if not (-3 < bands_axis < 3):
-            raise ValueError(
-                "Invalid bands_axis; axis {} would not exist in a 3D array".format(
-                    bands_axis
-                )
-            )
-
-        bands = self._bands_to_list(bands)
-        self_bands = self.properties["bands"]
-
-        scales, dtype = _scaling.scaling_parameters(
-            self_bands, bands, processing_level, scaling, data_type
-        )
-
-        mask_nodata = bool(mask_nodata)
-
-        alpha_band_name = "alpha"
-        if isinstance(mask_alpha, str):
-            alpha_band_name = mask_alpha
-            mask_alpha = True
-        elif mask_alpha is None:
-            # if user does not set mask_alpha, only attempt to mask_alpha if
-            # alpha band is exists in the scene.
-            mask_alpha = self.has_alpha(alpha_band_name)
-        elif type(mask_alpha) is not bool:
-            raise ValueError("'mask_alpha' must be None, a band name, or a bool.")
-
-        drop_alpha = False
-        if mask_alpha:
-            if not self.has_alpha(alpha_band_name):
-                raise ValueError(
-                    "Cannot mask alpha: no {} band for the product '{}'. "
-                    "Try setting 'mask_alpha=False'.".format(
-                        alpha_band_name, self.properties["product"]
-                    )
-                )
-            try:
-                alpha_i = bands.index(alpha_band_name)
-            except ValueError:
-                bands.append(alpha_band_name)
-                drop_alpha = True
-            else:
-                if alpha_i != len(bands) - 1:
-                    raise ValueError(
-                        "Alpha must be the last band in order to reduce rasterization errors"
-                    )
-
-        raster_params = ctx.raster_params
-        full_raster_args = dict(
-            inputs=self.properties["id"],
-            order="gdal",
-            bands=bands,
-            scales=scales,
-            data_type=dtype,
-            resampler=resampler,
-            processing_level=processing_level,
-            masked=mask_nodata or mask_alpha,
-            mask_nodata=mask_nodata,
-            mask_alpha=mask_alpha,
-            drop_alpha=drop_alpha,
-            progress=progress,
-            **raster_params
-        )
-
-        try:
-            arr, info = raster_client.ndarray(**full_raster_args)
-
-        except NotFoundError:
-            raise NotFoundError(
-                "'{}' does not exist in the Descartes catalog".format(
-                    self.properties["id"]
-                )
-            ) from None
-        except BadRequestError as e:
-            msg = (
-                "Error with request:\n"
-                "{err}\n"
-                "For reference, Raster.ndarray was called with these arguments:\n"
-                "{args}"
-            )
-            msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))
-            raise BadRequestError(msg) from None
-
-        if len(arr.shape) == 2:
-            # if only 1 band requested, still return a 3d array
-            arr = arr[np.newaxis]
-
-        if bands_axis != 0:
-            arr = np.moveaxis(arr, 0, bands_axis)
-        if raster_info:
-            return arr, info
-        else:
-            return arr
 
     def has_alpha(self, alpha_band_name):
-        return alpha_band_name in self.properties["bands"]
+        return alpha_band_name in self.properties.bands
 
+    @deprecate(removed=["raster_client"])
     def download(
         self,
         bands,
@@ -607,7 +477,6 @@ class Scene(object):
         data_type=None,
         nodata=None,
         progress=None,
-        raster_client=None,
     ):
         """
         Save bands from this scene as a GeoTIFF, PNG, or JPEG, writing to a path.
@@ -661,9 +530,6 @@ class Scene(object):
             NODATA value for a geotiff file. Will be assigned to any masked pixels.
         progress : None, bool
             Controls display of a progress bar.
-        raster_client : Raster, optional
-            Unneeded in general use; lets you use a specific client instance
-            with non-default auth and parameters.
 
         Returns
         -------
@@ -679,9 +545,9 @@ class Scene(object):
         "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue.tif"
         >>> import os
         >>> os.listdir(".")  # doctest: +SKIP
-        ["landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1_red-green-blue.tif"]
+        ["landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1-red-green-blue.tif"]
         >>> scene.download(
-        ...     "nir swir1",
+        ...     "red green blue",
         ...     ctx,
         ...     "rasters/{ctx.resolution}-{scene.properties.id}.jpg".format(ctx=ctx, scene=scene)
         ... )  # doctest: +SKIP
@@ -699,9 +565,9 @@ class Scene(object):
         BadRequestError
             If the Descartes Labs Platform is given invalid parameters
         """
-        return self._download(
+        return self._image.download(
             bands,
-            ctx,
+            geocontext=ctx,
             dest=dest,
             format=format,
             resampler=resampler,
@@ -710,41 +576,6 @@ class Scene(object):
             data_type=data_type,
             nodata=nodata,
             progress=progress,
-            raster_client=raster_client,
-        )
-
-    def _download(
-        self,
-        bands,
-        ctx,
-        dest=None,
-        format="tif",
-        resampler="near",
-        processing_level=None,
-        scaling=None,
-        data_type=None,
-        nodata=None,
-        progress=None,
-        raster_client=None,
-    ):
-        bands = self._bands_to_list(bands)
-        scales, dtype = _scaling.scaling_parameters(
-            self.properties["bands"], bands, processing_level, scaling, data_type
-        )
-
-        return _download._download(
-            inputs=[self.properties["id"]],
-            bands_list=bands,
-            ctx=ctx,
-            dtype=dtype,
-            dest=dest,
-            format=format,
-            resampler=resampler,
-            processing_level=processing_level,
-            scales=scales,
-            nodata=nodata,
-            progress=progress,
-            raster_client=raster_client,
         )
 
     def scaling_parameters(
@@ -913,21 +744,13 @@ class Scene(object):
         :doc:`Scenes Guide </guides/scenes>` : This contains many examples of the use of
         the ``scaling`` and ``data_type`` parameters.
         """
-        bands = self._bands_to_list(bands)
-        return _scaling.scaling_parameters(
-            self.properties["bands"], bands, processing_level, scaling, data_type
+        return self._image.scaling_parameters(
+            bands, processing_level, scaling, data_type
         )
 
-    @property
-    def __geo_interface__(self):
-        # QUESTION: this returns a Geometry, should it be a Feature and include properties?
-        try:
-            return self.geometry.__geo_interface__
-        except AttributeError:
-            return self.geometry
-
-    def _dict(self):
-        return dict(geometry=self.__geo_interface__, properties=self.properties)
+    # not sure this is even needed?
+    # def _dict(self):
+    #     return dict(geometry=self.__geo_interface__, properties=DotDict({k: v for k, v in self.properties})
 
     def __repr__(self):
         parts = [
@@ -978,30 +801,3 @@ class Scene(object):
                 if len(band_lines) > 0:
                     parts += ["  * Bands:"] + band_lines
         return "\n".join(parts)
-
-    @staticmethod
-    def _bands_to_list(bands):
-        if isinstance(bands, str):
-            return bands.split(" ")
-        if not isinstance(bands, (list, tuple)):
-            raise TypeError(
-                "Expected list or tuple of band names, instead got {}".format(
-                    type(bands)
-                )
-            )
-        if len(bands) == 0:
-            raise ValueError("No bands specified to load")
-        return list(bands)
-
-    @staticmethod
-    def _scenes_bands_dict(metadata_bands):
-        """
-        Convert bands dict from metadata client ({id: band_meta})
-        to {<name, or ID if derived>: band_meta}
-        """
-        return DotDict(
-            {
-                id if id.startswith("derived") else meta["name"]: meta
-                for id, meta in metadata_bands.items()
-            }
-        )

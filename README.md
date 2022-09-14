@@ -21,10 +21,23 @@ Changelog
 
 ### Catalog
 
+- Catalog V2 has been enhanced to provide substantially all the functionality of the Scenes API. The `Image` class now
+  includes methods such as `ndarray` and `download`. A new `ImageCollection` class has been added, mirroring `SceneCollection`.
+  The various `Search` objects now support a new `collect` method which will return appropriate `Collection` types
+  (e.g. `ProductCollection`, `BandCollection`, and of course `ImageCollection`). Please see the updated Catalog V2
+  guide and API documentation for more details.
 - Previously, the internal implementation of the `physical_range` attribute on various band types was inconsistent with
   that of `data_range` and `display_range`. It has now been made consistent, which means it will either not be set,
   or will contain a 2-tuple of float values. It is no longer possible to explicitly set it to `None`.
 - Add `isnull` and `isnotnull` to property filtering.
+
+### Scenes
+
+- With the addition of the Scenes functionality to Catalog V2, you are strongly encouraged to migrate your Scenes-based
+  code to use Catalog V2 instead. Scenes will be deprecated in a future release. Some examples of migrating from Scenes
+  to Catalog V2 are included in the Catalog V2 guide. In the meantime the Scenes API has been completely reimplemented
+  to use Catalog V2 under the hood. From a user perspective, existing code using the Scenes API should continue to
+  function as normal, with the exception of a few differences around some little-used dark corners of the API.
 
 ### REST Clients
 

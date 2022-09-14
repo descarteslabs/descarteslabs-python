@@ -11,6 +11,9 @@ from ..common.property_filtering.filtering import Expression  # noqa: F401
 from .attributes import parse_iso_datetime, serialize_datetime
 
 
+V1_COMPATIBILITY = "v1_compatibility"
+
+
 class Search(object):
     """A search request that iterates over its search results.
 
@@ -37,10 +40,14 @@ class Search(object):
     >>> list(search) # doctest: +SKIP
     """
 
-    def __init__(self, model, client=None, url=None, includes=True):
+    def __init__(
+        self, model, client=None, url=None, includes=True, request_params=None
+    ):
         self._url = url or model._url
         self._model_cls = model
         self._request_params = {}
+        if request_params:
+            self._request_params.update(request_params)
 
         self._filter_properties = None
         self._client = client or CatalogClient.get_default_client()
@@ -148,7 +155,12 @@ class Search(object):
         filters = []
 
         if self._filter_properties:
-            serialized = self._filter_properties.jsonapi_serialize(self._model_cls)
+            kwargs = {}
+            if V1_COMPATIBILITY in self._request_params:
+                kwargs[V1_COMPATIBILITY] = self._request_params[V1_COMPATIBILITY]
+            serialized = self._filter_properties.jsonapi_serialize(
+                self._model_cls, **kwargs
+            )
             # Flatten top-level "and" expressions since they are fairly common, e.g.
             # if you call filter() multiple times.
             if type(self._filter_properties) == AndExpression:
@@ -389,8 +401,12 @@ class ImageSearch(Search):
 
     _unsupported_summary_params = ["sort"]
 
-    def __init__(self, model, client=None, url=None, includes=True):
-        super(ImageSearch, self).__init__(model, client, url, includes)
+    def __init__(
+        self, model, client=None, url=None, includes=True, request_params=None
+    ):
+        super(ImageSearch, self).__init__(
+            model, client, url, includes, request_params=request_params
+        )
         self._intersects = None
 
     def intersects(self, geometry):
@@ -411,8 +427,9 @@ class ImageSearch(Search):
             class that includes geometry filter.
         """
         s = copy.deepcopy(self)
+        name, value = self._model_cls._serialize_filter_attribute("geometry", geometry)
         s._request_params["intersects"] = json.dumps(
-            self._model_cls._serialize_filter_attribute("geometry", geometry),
+            value,
             separators=(",", ":"),
         )
         s._intersects = copy.deepcopy(geometry)

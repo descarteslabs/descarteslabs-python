@@ -754,6 +754,7 @@ class AttributeMeta(type):
 
     _KEY_ATTR_TYPES = "_attribute_types"
     _KEY_REF_ATTR_TYPES = "_reference_attribute_types"
+    _KEY_V1_PROPERTIES = "v1_properties"
 
     def __new__(cls, name, bases, attrs):
         types = {}
@@ -786,7 +787,9 @@ class AttributeMeta(type):
                     if attr_name not in references:
                         references[attr_name] = attr_type
 
-        attrs["ATTRIBUTES"] = tuple(types.keys())
+        attrs["ATTRIBUTES"] = tuple(
+            k for k in types.keys() if k != AttributeMeta._KEY_V1_PROPERTIES
+        )
         attrs[AttributeMeta._KEY_ATTR_TYPES] = types
         attrs[AttributeMeta._KEY_REF_ATTR_TYPES] = references
 

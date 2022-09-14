@@ -465,7 +465,7 @@ class Image(NamedCatalogObject):
         return self.acquired
 
     @classmethod
-    def search(cls, client=None):
+    def search(cls, client=None, request_params=None):
         """A search query for all images.
 
         Return an `~descarteslabs.catalog.ImageSearch` instance for searching
@@ -496,7 +496,7 @@ class Image(NamedCatalogObject):
         """
         from .search import ImageSearch
 
-        return ImageSearch(cls, client=client)
+        return ImageSearch(cls, client=client, request_params=request_params)
 
     @check_deleted
     def upload(self, files, upload_options=None, overwrite=False):

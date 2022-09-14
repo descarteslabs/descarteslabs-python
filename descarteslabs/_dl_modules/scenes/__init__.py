@@ -16,11 +16,11 @@ It's available under ``descarteslabs.scenes``.
 from ..common.geo import AOI, DLTile, XYZTile, GeoContext
 from ..common.collection import Collection
 from ..common.display import display, save_image
-from ._search import (
-    search,
+from .search_api import (
     get_product,
     get_band,
     get_derived_band,
+    search,
     search_products,
     search_bands,
     search_derived_bands,

@@ -12,68 +12,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import division
 import collections
-import concurrent.futures
-import json
-import os.path
-
-import numpy as np
-
-from ..client.services.raster import Raster
-from descarteslabs.exceptions import NotFoundError, BadRequestError
 
 from ..common.collection import Collection
+from ..catalog import ImageCollection
 from .scene import Scene
-from . import _download
-from . import _scaling
 
 
 class SceneCollection(Collection):
     """
     Holds Scenes, with methods for loading their data.
 
-    As a subclass of `Collection`, the `filter`, `map`, and `groupby`
+    As a subclass of the `Collection` class, the `filter`, `map`, and `groupby`
     methods and `each` property simplify inspection and subselection of
-    contianed Scenes.
+    contained Scenes.
 
     `stack` and `mosaic` rasterize all contained Scenes into an ndarray
     using the a :class:`~descarteslabs.common.geo.geocontext.GeoContext`.
     """
 
-    def __init__(self, iterable=None, raster_client=None):
-        super(SceneCollection, self).__init__(iterable)
-        self._raster_client = (
-            raster_client if raster_client is not None else Raster.get_default_client()
-        )
+    _item_type = Scene
 
-    def map(self, f):
-        """
-        Returns list of ``f`` applied to each item in self,
-        or SceneCollection if ``f`` returns Scenes.
-
-        Note that this is actually different behavior than the underlying
-        meth:`~descarteslabs.common.collection.Collection.map` method.
-        """
-        res = super(SceneCollection, self).map(f)
-        if isinstance(res, self.__class__):
-            return res
+    def __init__(self, iterable=None):
+        # unlike an ImageCollection, SceneCollection has no default geocontext
+        if isinstance(iterable, ImageCollection):
+            super(SceneCollection, self).__init__(Scene(image) for image in iterable)
         else:
-            return list(res)
+            super(SceneCollection, self).__init__(iterable)
 
     def filter_coverage(self, geom, minimum_coverage=1):
         """
         Include only Scenes overlapping with ``geom`` by some fraction.
 
-        See `Scene.coverage <descarteslabs.scenes.scene.Scene.coverage>`
-        for getting coverage information for a scene.
+        See `Image.coverage <descarteslabs.catalog.image.Image.coverage>`
+        for getting coverage information for an image.
 
         Parameters
         ----------
         geom : GeoJSON-like dict, :class:`~descarteslabs.common.geo.geocontext.GeoContext`, or object with __geo_interface__  # noqa: E501
-            Geometry to which to compare each Scene's geometry.
+            Geometry to which to compare each image's geometry.
         minimum_coverage : float
-            Only include Scenes that cover ``geom`` by at least this fraction.
+            Only include scenes that cover ``geom`` by at least this fraction.
 
         Returns
         -------
@@ -85,13 +64,11 @@ class SceneCollection(Collection):
         >>> aoi_geometry = {
         ...    'type': 'Polygon',
         ...    'coordinates': [[[-95, 42],[-93, 42],[-93, 40],[-95, 41],[-95, 42]]]}
-        >>> scenes, ctx = dl.scenes.search(aoi_geometry, products=["landsat:LC08:PRE:TOAR"], limit=20,
-        ...    sort_field='processed')  # doctest: +SKIP
-        >>> filtered_scenes = scenes.filter_coverage(ctx, 0.50)  # doctest: +SKIP
+        >>> scenes, ctx = dl.scenes.search(aoi_geometry, products="landsat:LC08:PRE:TOAR", limit=20)  # doctest: +SKIP
+        >>> filtered_scenes = scenes.filter_coverage(ctx, 0.01)  # doctest: +SKIP
         >>> assert len(filtered_scenes) < len(scenes)  # doctest: +SKIP
         """
-
-        return self.filter(lambda scene: scene.coverage(geom) >= minimum_coverage)
+        return self.filter(lambda s: s._image.coverage(geom) >= minimum_coverage)
 
     def stack(
         self,
@@ -221,107 +198,35 @@ class SceneCollection(Collection):
         BadRequestError
             If the Descartes Labs Platform is given unrecognized parameters
         """
-        if len(self) == 0:
-            raise ValueError("This SceneCollection is empty")
+        # ImageCollection can handle everything, except we have to generate a flattening map
+        # now as it depends upon Scene properties, not Image properties
+        if flatten is not None:
+            if isinstance(flatten, str) or not hasattr(flatten, "__len__"):
+                flatten = [flatten]
+            image_map = {
+                s._image.id: group for group, sc in self.groupby(*flatten) for s in sc
+            }
 
-        kwargs = dict(
+            def map_group(image):
+                return image_map.get(image.id)
+
+            flatten = [map_group]
+
+        return ImageCollection(s._image for s in self).stack(
+            bands=bands,
+            geocontext=ctx,
+            flatten=flatten,
             mask_nodata=mask_nodata,
             mask_alpha=mask_alpha,
             bands_axis=bands_axis,
             raster_info=raster_info,
             resampler=resampler,
             processing_level=processing_level,
+            scaling=scaling,
+            data_type=data_type,
             progress=progress,
+            max_workers=max_workers,
         )
-
-        if bands_axis == 0 or bands_axis == -4:
-            raise NotImplementedError(
-                "bands_axis of 0 is currently unsupported for `SceneCollection.stack`. "
-                "If you require this shape, try ``np.moveaxis(my_stack, 1, 0)`` on the returned ndarray."
-            )
-        elif bands_axis > 0:
-            kwargs["bands_axis"] = (
-                bands_axis - 1
-            )  # the bands axis for each component ndarray call in the stack
-
-        if flatten is not None:
-            if isinstance(flatten, str) or not hasattr(flatten, "__len__"):
-                flatten = [flatten]
-            scenes = [
-                sc if len(sc) > 1 else sc[0] for group, sc in self.groupby(*flatten)
-            ]
-        else:
-            scenes = self
-
-        full_stack = None
-        mask = None
-        if raster_info:
-            raster_infos = [None] * len(scenes)
-
-        bands = Scene._bands_to_list(bands)
-        (bands, scaling, mask_alpha, pop_alpha) = self._mask_alpha_if_applicable(
-            bands, mask_alpha=mask_alpha, scaling=scaling
-        )
-
-        scales, data_type = _scaling.multiproduct_scaling_parameters(
-            self._product_band_properties(), bands, processing_level, scaling, data_type
-        )
-
-        if pop_alpha:
-            bands.pop(-1)
-            if scales:
-                scales.pop(-1)
-
-        kwargs["scaling"] = scales
-        kwargs["data_type"] = data_type
-
-        def threaded_ndarrays():
-            def data_loader(scene_or_scenecollection, bands, ctx, **kwargs):
-                if isinstance(scene_or_scenecollection, self.__class__):
-                    return lambda: scene_or_scenecollection.mosaic(bands, ctx, **kwargs)
-                else:
-                    ndarray_kwargs = dict(kwargs, raster_client=self._raster_client)
-                    return lambda: scene_or_scenecollection._ndarray(
-                        bands, ctx, **ndarray_kwargs
-                    )
-
-            with concurrent.futures.ThreadPoolExecutor(
-                max_workers=max_workers
-            ) as executor:
-                future_ndarrays = {}
-                for i, scene_or_scenecollection in enumerate(scenes):
-                    future_ndarray = executor.submit(
-                        data_loader(scene_or_scenecollection, bands, ctx, **kwargs)
-                    )
-                    future_ndarrays[future_ndarray] = i
-                for future in concurrent.futures.as_completed(future_ndarrays):
-                    i = future_ndarrays[future]
-                    result = future.result()
-                    yield i, result
-
-        for i, arr in threaded_ndarrays():
-            if raster_info:
-                arr, raster_meta = arr
-                raster_infos[i] = raster_meta
-
-            if full_stack is None:
-                stack_shape = (len(scenes),) + arr.shape
-                full_stack = np.empty(stack_shape, dtype=arr.dtype)
-                if isinstance(arr, np.ma.MaskedArray):
-                    mask = np.empty(stack_shape, dtype=bool)
-
-            if isinstance(arr, np.ma.MaskedArray):
-                full_stack[i] = arr.data
-                mask[i] = arr.mask
-            else:
-                full_stack[i] = arr
-
-        if mask is not None:
-            full_stack = np.ma.MaskedArray(full_stack, mask, copy=False)
-        if raster_info:
-            return full_stack, raster_infos
-        else:
-            return full_stack
 
     def mosaic(
         self,
@@ -427,69 +332,19 @@ class SceneCollection(Collection):
         BadRequestError
             If the Descartes Labs Platform is given unrecognized parameters
         """
-        if len(self) == 0:
-            raise ValueError("This SceneCollection is empty")
-
-        if not (-3 < bands_axis < 3):
-            raise ValueError(
-                "Invalid bands_axis; axis {} would not exist in a 3D array".format(
-                    bands_axis
-                )
-            )
-
-        bands = Scene._bands_to_list(bands)
-        (bands, scaling, mask_alpha, drop_alpha) = self._mask_alpha_if_applicable(
-            bands, mask_alpha=mask_alpha, scaling=scaling
-        )
-        mask_nodata = bool(mask_nodata)
-
-        scales, data_type = _scaling.multiproduct_scaling_parameters(
-            self._product_band_properties(), bands, processing_level, scaling, data_type
-        )
-        raster_params = ctx.raster_params
-        full_raster_args = dict(
-            inputs=[scene.properties["id"] for scene in self],
-            order="gdal",
+        return ImageCollection(s._image for s in self).mosaic(
             bands=bands,
-            scales=scales,
-            data_type=data_type,
-            resampler=resampler,
-            processing_level=processing_level,
+            geocontext=ctx,
             mask_nodata=mask_nodata,
             mask_alpha=mask_alpha,
-            drop_alpha=drop_alpha,
-            masked=mask_nodata or mask_alpha,
+            bands_axis=bands_axis,
+            resampler=resampler,
+            processing_level=processing_level,
+            scaling=scaling,
+            data_type=data_type,
             progress=progress,
-            **raster_params
+            raster_info=raster_info,
         )
-        try:
-            arr, info = self._raster_client.ndarray(**full_raster_args)
-        except NotFoundError:
-            raise NotFoundError(
-                "Some or all of these IDs don't exist in the Descartes catalog: {}".format(
-                    full_raster_args["inputs"]
-                )
-            )
-        except BadRequestError as e:
-            msg = (
-                "Error with request:\n"
-                "{err}\n"
-                "For reference, Raster.ndarray was called with these arguments:\n"
-                "{args}"
-            )
-            msg = msg.format(err=e, args=json.dumps(full_raster_args, indent=2))
-            raise BadRequestError(msg) from None
-
-        if len(arr.shape) == 2:
-            # if only 1 band requested, still return a 3d array
-            arr = arr[np.newaxis]
-
-        if bands_axis != 0:
-            arr = np.moveaxis(arr, 0, bands_axis)
-        if raster_info:
-            return arr, info
-        else:
-            return arr
 
     def download(
         self,
@@ -609,84 +464,18 @@ class SceneCollection(Collection):
         BadRequestError
             If the Descartes Labs Platform is given unrecognized parameters
         """
-        if len(self) == 0:
-            raise ValueError("This SceneCollection is empty")
-
-        bands = Scene._bands_to_list(bands)
-        scales, data_type = _scaling.multiproduct_scaling_parameters(
-            self._product_band_properties(), bands, processing_level, scaling, data_type
-        )
-
-        if _download._is_path_like(dest):
-            default_pattern = "{scene.properties.id}-{bands}.{ext}"
-            bands_str = "-".join(bands)
-            try:
-                dest = [
-                    os.path.join(
-                        dest,
-                        default_pattern.format(
-                            scene=scene, bands=bands_str, ext=format
-                        ),
-                    )
-                    for scene in self
-                ]
-            except Exception as e:
-                raise RuntimeError(
-                    "Error while generating default filenames:\n{}\n"
-                    "This is likely due to missing or unexpected data "
-                    "in Scenes in this SceneCollection.".format(e)
-                ) from None
-
-        try:
-            if len(dest) != len(self):
-                raise ValueError(
-                    "`dest` contains {} items, but the SceneCollection contains {}".format(
-                        len(dest), len(self)
-                    )
-                )
-        except TypeError:
-            raise TypeError(
-                "`dest` should be a sequence of strings or path-like objects; "
-                "instead found type {}, which has no length".format(type(dest))
-            ) from None
-
-        # check for duplicate paths to prevent the confusing situation where
-        # multiple rasters overwrite the same filename
-        unique = set()
-        for path in dest:
-            if path in unique:
-                raise RuntimeError(
-                    "Paths must be unique, but '{}' occurs multiple times".format(path)
-                )
-            else:
-                unique.add(path)
-
-        download_args = dict(
+        return ImageCollection(s._image for s in self).download(
+            bands=bands,
+            geocontext=ctx,
+            dest=dest,
+            format=format,
             resampler=resampler,
             processing_level=processing_level,
-            scaling=scales,
+            scaling=scaling,
             data_type=data_type,
             progress=progress,
-            raster_client=self._raster_client,
+            max_workers=max_workers,
         )
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = {
-                executor.submit(
-                    scene._download, bands, ctx, dest=path, **download_args
-                ): path
-                for scene, path in zip(self, dest)
-            }
-            exceptions = []
-            for future in concurrent.futures.as_completed(futures):
-                try:
-                    future.result()
-                except Exception as ex:
-                    exceptions.append((futures[future], ex))
-            if exceptions:
-                raise RuntimeError(
-                    "One or more downloads failed: {}".format(exceptions)
-                )
-        return dest
 
     def download_mosaic(
         self,
@@ -774,7 +563,7 @@ class SceneCollection(Collection):
         >>> tile = dl.scenes.DLTile.from_key("256:0:75.0:15:-5:230")  # doctest: +SKIP
         >>> scenes, _ = dl.scenes.search(tile, products=["landsat:LC08:PRE:TOAR"], limit=5)  # doctest: +SKIP
         >>> scenes.download_mosaic("nir red", tile)  # doctest: +SKIP
-        'mosaic-nir-red.jpg'
+        'mosaic-nir-red-alpha.jpg'
         >>> scenes.download_mosaic("nir red", tile, dest="mosaics/{}.png".format(tile.key))  # doctest: +SKIP
         'mosaics/256:0:75.0:15:-5:230.png'
 
@@ -793,157 +582,40 @@ class SceneCollection(Collection):
         BadRequestError
             If the Descartes Labs Platform is given unrecognized parameters
         """
-        if len(self) == 0:
-            raise ValueError("This SceneCollection is empty")
-
-        bands = Scene._bands_to_list(bands)
-        (bands, scaling, mask_alpha, drop_alpha) = self._mask_alpha_if_applicable(
-            bands, mask_alpha=mask_alpha, scaling=scaling
-        )
-        scales, data_type = _scaling.multiproduct_scaling_parameters(
-            self._product_band_properties(), bands, processing_level, scaling, data_type
-        )
-
-        return _download._download(
-            inputs=self.each.properties["id"].combine(),
-            bands_list=bands,
-            ctx=ctx,
-            scales=scales,
-            dtype=data_type,
+        return ImageCollection(s._image for s in self).download_mosaic(
+            bands=bands,
+            geocontext=ctx,
             dest=dest,
             format=format,
             resampler=resampler,
             processing_level=processing_level,
+            scaling=scaling,
+            data_type=data_type,
+            mask_alpha=mask_alpha,
             nodata=nodata,
             progress=progress,
-            raster_client=self._raster_client,
         )
 
-    def scaling_parameters(
-        self, bands, processing_level=None, scaling=None, data_type=None
-    ):
-        """
-        Computes fully defaulted scaling parameters and output data_type
-        from provided specifications.
 
-        This method is provided as a convenience to the user to help with
-        understanding how ``scaling`` and ``data_type`` parameters passed
-        to other methods on this class (e.g. :meth:`stack` or :meth:`mosaic`)
-        will be interpreted. It would not usually be used in a normal
-        workflow.
+def __repr__(self):
+    parts = [
+        "SceneCollection of {} scene{}".format(len(self), "" if len(self) == 1 else "s")
+    ]
+    try:
+        first = min(self.each.properties.date)
+        last = max(self.each.properties.date)
+        dates = "  * Dates: {:%b %d, %Y} to {:%b %d, %Y}".format(first, last)
+        parts.append(dates)
+    except Exception:
+        pass
 
-        A scene collection may contain scenes from more than one product,
-        introducing the possibility that the band properties for a band
-        of a given name may differ from product to product. This method
-        works in a similar fashion to the
-        :meth:`Scene.scaling_parameters <descarteslabs.scenes.scene.Scene.scaling_parameters>`
-        method, but it additionally ensures that the resulting scale
-        elements are compatible across the multiple products. If there
-        is an incompatibility, an appropriate ValueError will be raised.
+    try:
+        products = self.each.properties.product.combine(collections.Counter)
+        if len(products) > 0:
+            products = ", ".join("{}: {}".format(k, v) for k, v in products.items())
+            products = "  * Products: {}".format(products)
+            parts.append(products)
+    except Exception:
+        pass
 
-        Parameters
-        ----------
-        bands : list(str)
-            List of bands to be scaled.
-        processing_level : str, optional
-            How the processing level of the underlying data should be adjusted. Possible
-            values depend on the product and bands in use. Legacy products support
-            ``toa`` (top of atmosphere) and in some cases ``surface``. Consult the
-            available ``processing_levels`` in the product bands to understand what
-            is available.
-        scaling : None or str or list or dict
-            Band scaling specification. See
-            :meth:`Scene.scaling_parameters <descarteslabs.scenes.scene.Scene.scaling_parameters>`
-            for a full description of this parameter.
-        data_type : None or str
-            Result data type desired, as a standard data type string (e.g.
-            ``"Byte"``, ``"Uint16"``, or ``"Float64"``). If not specified,
-            will be deduced from the ``scaling`` specification. See
-            :meth:`Scene.scaling_parameters <descarteslabs.scenes.scene.Scene.scaling_parameters>`
-            for a full description of this parameter.
-
-        Returns
-        -------
-        scales : list(tuple)
-            The fully specified scaling parameter, compatible with the
-            :class:`~descarteslabs.client.services.raster.Raster` API and the
-            output data type.
-        data_type : str
-            The result data type as a standard GDAL type string.
-
-        Raises
-        ------
-        ValueError
-            If any invalid or incompatible value is passed to any of the
-            three parameters.
-
-        See Also
-        --------
-        :doc:`Scenes Guide </guides/scenes>` : This contains many examples of the use of
-        the ``scaling`` and ``data_type`` parameters.
-        """
-        bands = Scene._bands_to_list(bands)
-        return _scaling.multiproduct_scaling_parameters(
-            self._product_band_properties(), bands, processing_level, scaling, data_type
-        )
-
-    def __repr__(self):
-        parts = [
-            "SceneCollection of {} scene{}".format(
-                len(self), "" if len(self) == 1 else "s"
-            )
-        ]
-        try:
-            first = min(self.each.properties.date)
-            last = max(self.each.properties.date)
-            dates = "  * Dates: {:%b %d, %Y} to {:%b %d, %Y}".format(first, last)
-            parts.append(dates)
-        except Exception:
-            pass
-
-        try:
-            products = self.each.properties.product.combine(collections.Counter)
-            if len(products) > 0:
-                products = ", ".join("{}: {}".format(k, v) for k, v in products.items())
-                products = "  * Products: {}".format(products)
-                parts.append(products)
-        except Exception:
-            pass
-
-        return "\n".join(parts)
-
-    def _collection_has_alpha(self, alpha_band_name):
-        return all(scene.has_alpha(alpha_band_name) for scene in self)
-
-    def _mask_alpha_if_applicable(self, bands, mask_alpha=None, scaling=None):
-        alpha_band_name = "alpha"
-        if isinstance(mask_alpha, str):
-            alpha_band_name = mask_alpha
-            mask_alpha = True
-        elif mask_alpha is None:
-            mask_alpha = self._collection_has_alpha(alpha_band_name)
-        elif type(mask_alpha) is not bool:
-            raise ValueError("'mask_alpha' must be None, a band name, or a bool.")
-
-        drop_alpha = False
-        if mask_alpha:
-            try:
-                alpha_i = bands.index(alpha_band_name)
-            except ValueError:
-                bands.append(alpha_band_name)
-                drop_alpha = True
-                scaling = _scaling.append_alpha_scaling(scaling)
-            else:
-                if alpha_i != len(bands) - 1:
-                    raise ValueError(
-                        "Alpha must be the last band in order to reduce rasterization errors"
-                    )
-        return (bands, scaling, mask_alpha, drop_alpha)
-
-    def _product_band_properties(self):
-        result = {}
-        for scene in self:
-            product = scene.properties["product"]
-            if product not in result:
-                result[product] = scene.properties["bands"]
-        return result
+    return "\n".join(parts)

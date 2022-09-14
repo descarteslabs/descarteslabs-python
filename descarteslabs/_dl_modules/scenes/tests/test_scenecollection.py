@@ -1,65 +1,61 @@
 import pytest
 import unittest
-import mock
-import os.path
-import shapely.geometry
-import numpy as np
-
-from ...common.geo import AOI
-from ...client.services.metadata import Metadata
+from unittest.mock import patch
 
 from .. import Scene, SceneCollection
 
+from ...catalog import Image, ImageCollection
+from ...catalog import image as image_module
+from ...catalog import image_collection as image_collection_module
 from .. import scene as scene_module
-from .. import _download
-from .test_scene import MockScene
-from .mock_data import _metadata_get, _cached_bands_by_product, _raster_ndarray
+from ..helpers import REQUEST_PARAMS
+
+from .mock_data import (
+    _image_get,
+    _cached_bands_by_product,
+    _raster_ndarray,
+)
 
 
 class TestSceneCollection(unittest.TestCase):
-
-    MOCK_RGBA_PROPERTIES = {
-        "product": "mock_product",
-        "id": "mock_id",
-        "bands": {
-            "red": {
-                "type": "spectral",
-                "dtype": "UInt16",
-                "data_range": [0, 10000],
-                "default_range": [0, 4000],
-                "physical_range": [0.0, 1.0],
-            },
-            "green": {
-                "type": "spectral",
-                "dtype": "UInt16",
-                "data_range": [0, 10000],
-                "default_range": [0, 4000],
-                "physical_range": [0.0, 1.0],
-            },
-            "blue": {
-                "type": "spectral",
-                "dtype": "UInt16",
-                "data_range": [0, 10000],
-                "default_range": [0, 4000],
-                "physical_range": [0.0, 1.0],
-            },
-            "alpha": {"type": "mask", "dtype": "UInt16", "data_range": [0, 1]},
-        },
-    }
-
-    @mock.patch.object(Metadata, "get", _metadata_get)
-    @mock.patch.object(
-        scene_module,
-        "cached_bands_by_product",
-        _cached_bands_by_product,
-    )
-    @mock.patch.object(scene_module.Raster, "ndarray", _raster_ndarray)
-    def test_stack(self):
-        scenes = (
+    @patch.object(scene_module.Image, "get", _image_get)
+    @patch.object(Image, "get", _image_get)
+    def test_init(self):
+        scene_ids = (
             "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
             "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
         )
-        scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
+        scenes = SceneCollection(Scene.from_id(scene_id)[0] for scene_id in scene_ids)
+
+        assert len(scenes) == len(scene_ids)
+        assert scenes.each.properties.id.collect(tuple) == scene_ids
+
+        images = ImageCollection(
+            Image.get(scene_id, request_params=REQUEST_PARAMS) for scene_id in scene_ids
+        )
+        scenes = SceneCollection(images)
+
+        assert len(scenes) == len(scene_ids)
+        assert scenes.each.properties.id.collect(tuple) == scene_ids
+
+    @patch.object(scene_module.Image, "get", _image_get)
+    @patch.object(
+        image_module,
+        "cached_bands_by_product",
+        _cached_bands_by_product,
+    )
+    @patch.object(
+        image_collection_module,
+        "cached_bands_by_product",
+        _cached_bands_by_product,
+    )
+    @patch.object(image_module.Raster, "ndarray", _raster_ndarray)
+    def test_stack(self):
+        scene_ids = (
+            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
+            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
+        )
+        scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scene_ids])
 
         overlap = scenes[0].geometry.intersection(scenes[1].geometry)
         ctx = ctxs[0].assign(geometry=overlap, bounds="update", resolution=600)
@@ -87,43 +83,18 @@ class TestSceneCollection(unittest.TestCase):
         stack_axis_1 = scenes.stack("nir red", ctx, bands_axis=1)
         assert stack_axis_1.shape == (2, 2, 122, 120)
 
-    @mock.patch.object(Metadata, "get", _metadata_get)
-    @mock.patch.object(
-        scene_module,
+    @patch.object(scene_module.Image, "get", _image_get)
+    @patch.object(
+        image_module,
         "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch.object(scene_module.Raster, "ndarray", _raster_ndarray)
-    def test_stack_scaling(self):
-        scenes = (
-            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
-            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
-        )
-        scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
-
-        overlap = scenes[0].geometry.intersection(scenes[1].geometry)
-        ctx = ctxs[0].assign(geometry=overlap, bounds="update", resolution=600)
-        scenes = SceneCollection(scenes)
-
-        stack = scenes.stack("nir alpha", ctx, scaling="raw")
-        assert stack.shape == (2, 2, 122, 120)
-        assert stack.dtype == np.uint16
-
-        stack = scenes.stack("nir", ctx, scaling="raw")
-        assert stack.shape == (2, 1, 122, 120)
-        assert stack.dtype == np.uint16
-
-        stack = scenes.stack("nir", ctx, scaling=[None])
-        assert stack.shape == (2, 1, 122, 120)
-        assert stack.dtype == np.uint16
-
-    @mock.patch.object(Metadata, "get", _metadata_get)
-    @mock.patch.object(
-        scene_module,
+    @patch.object(
+        image_collection_module,
         "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch.object(scene_module.Raster, "ndarray", _raster_ndarray)
+    @patch.object(image_module.Raster, "ndarray", _raster_ndarray)
     def test_stack_flatten(self):
         scenes = (
             "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
@@ -137,8 +108,6 @@ class TestSceneCollection(unittest.TestCase):
 
         scenes = SceneCollection(scenes)
 
-        unflattened = scenes.stack("nir", ctx)
-
         flattened, metas = scenes.stack(
             "nir", ctx, flatten="properties.id", raster_info=True
         )
@@ -150,20 +119,18 @@ class TestSceneCollection(unittest.TestCase):
         allflat = scenes.stack("nir", ctx, flatten="properties.product")
         assert (mosaic == allflat).all()
 
-        for i, scene in enumerate(scenes):
-            scene.properties.foo = i
-
-        noflat = scenes.stack("nir", ctx, flatten="properties.foo")
-        assert len(noflat) == len(scenes)
-        assert (noflat == unflattened).all()
-
-    @mock.patch.object(Metadata, "get", _metadata_get)
-    @mock.patch.object(
-        scene_module,
+    @patch.object(scene_module.Image, "get", _image_get)
+    @patch.object(
+        image_module,
         "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch.object(scene_module.Raster, "ndarray", _raster_ndarray)
+    @patch.object(
+        image_collection_module,
+        "cached_bands_by_product",
+        _cached_bands_by_product,
+    )
+    @patch.object(image_module.Raster, "ndarray", _raster_ndarray)
     def test_mosaic(self):
         scenes = (
             "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
@@ -209,43 +176,18 @@ class TestSceneCollection(unittest.TestCase):
         assert hasattr(mask_non_alpha, "mask")
         assert mask_non_alpha.shape == (2, 122, 120)
 
-    @mock.patch.object(Metadata, "get", _metadata_get)
-    @mock.patch.object(
-        scene_module,
+    @patch.object(scene_module.Image, "get", _image_get)
+    @patch.object(
+        image_module,
         "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch.object(scene_module.Raster, "ndarray", _raster_ndarray)
-    def test_mosaic_scaling(self):
-        scenes = (
-            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
-            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
-        )
-        scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
-
-        overlap = scenes[0].geometry.intersection(scenes[1].geometry)
-        ctx = ctxs[0].assign(geometry=overlap, bounds="update", resolution=600)
-        scenes = SceneCollection(scenes)
-
-        mosaic = scenes.mosaic("nir alpha", ctx, scaling="raw")
-        assert mosaic.shape == (2, 122, 120)
-        assert mosaic.dtype == np.uint16
-
-        mosaic = scenes.mosaic("nir", ctx, scaling="raw")
-        assert mosaic.shape == (1, 122, 120)
-        assert mosaic.dtype == np.uint16
-
-        mosaic = scenes.mosaic("nir", ctx, scaling=[None])
-        assert mosaic.shape == (1, 122, 120)
-        assert mosaic.dtype == np.uint16
-
-    @mock.patch.object(Metadata, "get", _metadata_get)
-    @mock.patch.object(
-        scene_module,
+    @patch.object(
+        image_collection_module,
         "cached_bands_by_product",
         _cached_bands_by_product,
     )
-    @mock.patch.object(scene_module.Raster, "ndarray", _raster_ndarray)
+    @patch.object(image_module.Raster, "ndarray", _raster_ndarray)
     def test_mosaic_no_alpha(self):
         scenes = (
             "modis:mod11a2:006:meta_MOD11A2.A2017305.h09v05.006.2017314042814_v1",
@@ -271,148 +213,3 @@ class TestSceneCollection(unittest.TestCase):
             sc.mosaic(
                 ["Clear_sky_days", "Clear_sky_nights"], ctx, mask_alpha="alt-alpha"
             )
-
-    @mock.patch.object(Metadata, "get", _metadata_get)
-    @mock.patch.object(
-        scene_module,
-        "cached_bands_by_product",
-        _cached_bands_by_product,
-    )
-    @mock.patch.object(scene_module.Raster, "ndarray", _raster_ndarray)
-    def test_incompatible_dtypes(self):
-        scenes = (
-            "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1",
-            "landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1",
-        )
-        scenes, ctxs = zip(*[Scene.from_id(scene) for scene in scenes])
-
-        overlap = scenes[0].geometry.intersection(scenes[1].geometry)
-        ctx = ctxs[0].assign(geometry=overlap, bounds="update", resolution=600)
-
-        scenes = SceneCollection(scenes)
-        scenes[0].properties.bands.nir.dtype = "Int16"
-        mosaic = scenes.mosaic("nir", ctx)
-        assert mosaic.dtype.type == np.int32
-        stack, meta = scenes.stack("nir", ctx)
-        assert stack.dtype.type == np.int32
-
-    @mock.patch.object(Metadata, "get", _metadata_get)
-    def test_filter_coverage(self):
-        polygon = shapely.geometry.Point(0.0, 0.0).buffer(3)
-        ctx = AOI(geometry=polygon)
-
-        scenes = SceneCollection(
-            [
-                Scene(dict(id="foo", geometry=polygon, properties={}), {}),
-                Scene(dict(id="bar", geometry=polygon.buffer(-0.1), properties={}), {}),
-            ]
-        )
-
-        assert len(scenes.filter_coverage(ctx)) == 1
-
-    def test_scaling_parameters(self):
-        sc = SceneCollection([MockScene({}, self.MOCK_RGBA_PROPERTIES)])
-        scales, data_type = sc.scaling_parameters("red green blue alpha")
-        assert scales is None
-        assert data_type == "UInt16"
-
-
-@mock.patch.object(MockScene, "_download")
-class TestSceneCollectionDownload(unittest.TestCase):
-    def setUp(self):
-        properties = [
-            {
-                "id": "foo:bar" + str(i),
-                "bands": {
-                    "nir": {
-                        "type": "spectral",
-                        "dtype": "UInt16",
-                        "data_range": [0, 10000],
-                    },
-                    "yellow": {
-                        "type": "spectral",
-                        "dtype": "UInt16",
-                        "data_range": [0, 10000],
-                    },
-                },
-                "product": "foo",
-            }
-            for i in range(3)
-        ]
-
-        self.scenes = SceneCollection([MockScene({}, p) for p in properties])
-        self.ctx = AOI(bounds=[30, 40, 50, 60], resolution=2, crs="EPSG:4326")
-
-    def test_directory(self, mock_download):
-        dest = "rasters"
-        paths = self.scenes.download("nir yellow", self.ctx, dest, format="png")
-
-        assert paths == [
-            os.path.join(dest, "foo:bar0-nir-yellow.png"),
-            os.path.join(dest, "foo:bar1-nir-yellow.png"),
-            os.path.join(dest, "foo:bar2-nir-yellow.png"),
-        ]
-
-        assert mock_download.call_count == len(self.scenes)
-        for scene, path in zip(self.scenes, paths):
-            mock_download.assert_any_call(
-                ["nir", "yellow"],
-                self.ctx,
-                dest=path,
-                resampler="near",
-                processing_level=None,
-                scaling=None,
-                data_type="UInt16",
-                progress=None,
-                raster_client=self.scenes._raster_client,
-            )
-
-    def test_custom_paths(self, mock_download):
-        filenames = [
-            os.path.join("foo", "img1.tif"),
-            os.path.join("bar", "img2.jpg"),
-            os.path.join("foo", "img3.tif"),
-        ]
-        result = self.scenes.download("nir yellow", self.ctx, filenames)
-        assert result == filenames
-
-        assert mock_download.call_count == len(self.scenes)
-        for scene, path in zip(self.scenes, filenames):
-            mock_download.assert_any_call(
-                ["nir", "yellow"],
-                self.ctx,
-                dest=path,
-                resampler="near",
-                processing_level=None,
-                scaling=None,
-                data_type="UInt16",
-                progress=None,
-                raster_client=self.scenes._raster_client,
-            )
-
-    def test_non_unique_paths(self, mock_download):
-        nonunique_paths = ["img.tif", "img2.tif", "img.tif"]
-        with pytest.raises(RuntimeError):
-            self.scenes.download("nir yellow", self.ctx, nonunique_paths)
-
-    def test_wrong_number_of_dest(self, mock_download):
-        with pytest.raises(ValueError):
-            self.scenes.download("nir", self.ctx, ["a", "b"])
-
-    def test_wrong_type_of_dest(self, mock_download):
-        with pytest.raises(TypeError):
-            self.scenes.download("nir", self.ctx, 4)
-
-    def test_download_failure(self, mock_download):
-        mock_download.side_effect = RuntimeError("blarf")
-        dest = "rasters"
-        with pytest.raises(RuntimeError):
-            self.scenes.download("nir", self.ctx, dest)
-
-    @mock.patch.object(_download, "_download")
-    def test_download_mosaic(self, mock_base_download, mock_download):
-        self.scenes.download_mosaic("nir yellow", self.ctx)
-
-        mock_base_download.assert_called_once()
-        called_ids = mock_base_download.call_args[1]["inputs"]
-        assert called_ids == self.scenes.each.properties["id"].combine()

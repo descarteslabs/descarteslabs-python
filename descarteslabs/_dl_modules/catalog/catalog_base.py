@@ -1,13 +1,16 @@
 from functools import wraps
 from types import MethodType
 import json
+import urllib.parse
 
 from descarteslabs.exceptions import NotFoundError
+from ..client.deprecation import deprecate
 from ..common.collection import Collection
 from .attributes import (
     AttributeMeta,
     AttributeValidationError,
     AttributeEqualityMixin,
+    CatalogObjectReference,
     DocumentState,
     Timestamp,
     ListAttribute,
@@ -152,6 +155,12 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         *Filterable, sortable*.
         """,
     )
+    v1_properties = TypedAttribute(
+        dict,
+        mutable=False,
+        serializable=False,
+        readonly=True,
+    )
 
     def __new__(cls, *args, **kwargs):
         return _new_abstract_class(cls, CatalogObjectBase)
@@ -169,7 +178,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             saved=kwargs.pop("_saved", False),
             relationships=kwargs.pop("_relationships", None),
             related_objects=kwargs.pop("_related_objects", None),
-            **kwargs
+            **kwargs,
         )
 
     def __del__(self):
@@ -195,7 +204,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         relationships=None,
         related_objects=None,
         deleted=False,
-        **kwargs
+        **kwargs,
     ):
         self._clear_attributes()
         self._saved = saved
@@ -314,7 +323,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         return klass
 
     @classmethod
-    def _serialize_filter_attribute(cls, name, value):
+    def _serialize_filter_attribute(cls, name, value, v1_compatibility=False):
         """Serialize a single value for a filter.
 
         Allow the given value to be serialized using the serialization logic
@@ -328,6 +337,13 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         value : object
             The value to be serialized.
 
+        Returns
+        -------
+        name : str
+            The name to use in the serialized filter
+        value : str
+            The serialized value
+
         Raises
         ------
         AttributeValidationError
@@ -336,7 +352,13 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         attribute_type = cls._get_attribute_type(name)
         if isinstance(attribute_type, ListAttribute):
             attribute_type = attribute_type._attribute_type
-        return attribute_type.serialize(value)
+        if (
+            v1_compatibility
+            and isinstance(attribute_type, CatalogObjectReference)
+            and isinstance(value, str)
+        ):
+            return (attribute_type.id_field, value)
+        return (name, attribute_type.serialize(value))
 
     def _set_modified(self, attr_name, changed=True, validate=True):
         # Verify it is allowed to to be set
@@ -451,7 +473,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             return DocumentState.SAVED
 
     @classmethod
-    def get(cls, id, client=None):
+    def get(cls, id, client=None, request_params=None):
         """Get an existing object from the Descartes Labs catalog.
 
         If the Descartes Labs catalog object is found, it will be returned in the
@@ -488,7 +510,10 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         """
         try:
             data, related_objects = cls._send_data(
-                method=HttpRequestMethod.GET, id=id, client=client
+                method=HttpRequestMethod.GET,
+                id=id,
+                client=client,
+                request_params=request_params,
             )
         except NotFoundError:
             return None
@@ -503,7 +528,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             _saved=True,
             _relationships=data.get("relationships"),
             _related_objects=related_objects,
-            **data["attributes"]
+            **data["attributes"],
         )
 
     @classmethod
@@ -552,7 +577,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         return obj
 
     @classmethod
-    def get_many(cls, ids, ignore_missing=False, client=None):
+    def get_many(cls, ids, ignore_missing=False, client=None, request_params=None):
         """Get existing objects from the Descartes Labs catalog.
 
         All returned Descartes Labs catalog objects will be in the
@@ -600,6 +625,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             method=HttpRequestMethod.PUT,
             client=client,
             json={"filter": json.dumps([id_filter], separators=(",", ":"))},
+            request_params=request_params,
         )
 
         if not ignore_missing:
@@ -618,7 +644,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
                 _saved=True,
                 _relationships=obj.get("relationships"),
                 _related_objects=related_objects,
-                **obj["attributes"]
+                **obj["attributes"],
             )
             for obj in raw_objects
             for model_class in (cls._get_model_class(obj),)
@@ -665,7 +691,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
 
     @classmethod
     @check_derived
-    def search(cls, client=None):
+    def search(cls, client=None, request_params=None):
         """A search query for all objects of the type this class represents.
 
         Parameters
@@ -691,10 +717,11 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         """
         from .search import Search
 
-        return Search(cls, client=client)
+        return Search(cls, client=client, request_params=request_params)
 
     @check_deleted
-    def save(self, extra_attributes=None):
+    @deprecate(renamed={"extra_attributes": "request_params"})
+    def save(self, request_params=None):
         """Saves this object to the Descartes Labs catalog.
 
         If this instance was created using the constructor, it will be in the
@@ -712,12 +739,12 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         If this instance was retrieved using :py:meth:`get`, :py:meth:`get_or_create`
         or any other way (for example as part of a :py:meth:`search`), and none of its
         values were changed, it will be in the
-        `~descarteslabs.catalog.DocumentState.SAVED` state, and if no `extra_attributes`
+        `~descarteslabs.catalog.DocumentState.SAVED` state, and if no `request_params`
         parameter is given, nothing will happen.
 
         Parameters
         ----------
-        extra_attributes : dict, optional
+        request_params : dict, optional
             A dictionary of attributes that should be sent to the catalog along with
             attributes already set on this object.  Empty by default.  If not empty,
             and the object is in the `~descarteslabs.catalog.DocumentState.SAVED`
@@ -769,7 +796,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         <DocumentState.DELETED: 'deleted'>
 
         """
-        if self.state == DocumentState.SAVED and not extra_attributes:
+        if self.state == DocumentState.SAVED and not request_params:
             # Noop, already saved in the catalog
             return
 
@@ -780,8 +807,8 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             method = HttpRequestMethod.PATCH
             json = self.serialize(modified_only=True, jsonapi_format=True)
 
-        if extra_attributes:
-            json["data"]["attributes"].update(extra_attributes)
+        if request_params:
+            json["data"]["attributes"].update(request_params)
 
         data, related_objects = self._send_data(
             method=method, id=self.id, json=json, client=self._client
@@ -792,11 +819,11 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             saved=True,
             relationships=data.get("relationships"),
             related_objects=related_objects,
-            **data["attributes"]
+            **data["attributes"],
         )
 
     @check_deleted
-    def reload(self):
+    def reload(self, request_params=None):
         """Reload all attributes from the Descartes Labs catalog.
 
         Refresh the state of this catalog object from the object in the Descartes Labs
@@ -846,7 +873,10 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             )
 
         data, related_objects = self._send_data(
-            method=HttpRequestMethod.GET, id=self.id, client=self._client
+            method=HttpRequestMethod.GET,
+            id=self.id,
+            client=self._client,
+            request_params=request_params,
         )
 
         # this will effectively wipe all current state & caching
@@ -855,7 +885,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             saved=True,
             relationships=data.get("relationships"),
             related_objects=related_objects,
-            **data["attributes"]
+            **data["attributes"],
         )
 
     @classmethod
@@ -925,16 +955,27 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
 
     @classmethod
     @check_derived
-    def _send_data(cls, method, id=None, json=None, client=None):
+    def _send_data(cls, method, id=None, json=None, client=None, request_params=None):
         client = client or CatalogClient.get_default_client()
         session_method = getattr(client.session, method.lower())
         url = cls._url
 
+        query_params = {}
         if method not in (HttpRequestMethod.POST, HttpRequestMethod.PUT):
             url += "/" + id
+            if request_params:
+                query_params.update(**request_params)
+        elif request_params:
+            if json:
+                json = dict(**json, **request_params)
+            else:
+                json = dict(**request_params)
 
         if cls._default_includes:
-            url += "?include=" + ",".join(cls._default_includes)
+            query_params["include"] = ",".join(cls._default_includes)
+
+        if query_params:
+            url += "?" + urllib.parse.urlencode(query_params)
 
         r = session_method(url, json=json).json()
         data = r["data"]
@@ -954,7 +995,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
                         id=serialized["id"],
                         client=client,
                         _saved=True,
-                        **serialized["attributes"]
+                        **serialized["attributes"],
                     )
                     related_objects[(serialized["type"], serialized["id"])] = related
 

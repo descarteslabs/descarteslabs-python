@@ -12,17 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections
-import datetime
+from descarteslabs.exceptions import NotFoundError
+from ..common.dotdict import DotDict, DotList
+from ..client.deprecation import deprecate
+from ..catalog import (
+    Product,
+    Band,
+    SpectralBand,
+    DerivedBand,
+    Image,
+    properties,
+)
 
-from ..client.services.metadata import Metadata
-
-from .scene import Scene
-from .scenecollection import SceneCollection
 from ..common.geo import GeoContext, AOI
-from ._helpers import cached_bands_by_product
+
+from .scenecollection import SceneCollection
+from .helpers import REQUEST_PARAMS
 
 
+@deprecate(removed=["randomized", "raster_client", "metadata_client"])
 def search(
     aoi,
     products,
@@ -31,13 +39,10 @@ def search(
     cloud_fraction=None,
     storage_state=None,
     limit=100,
-    sort_field=None,
+    sort_field="acquired",
     sort_order="asc",
     date_field="acquired",
     query=None,
-    randomize=False,
-    raster_client=None,
-    metadata_client=None,
 ):
     """
     Search for Scenes in the Descartes Labs catalog.
@@ -66,7 +71,7 @@ def search(
         (``"available"``, ``"remote"``, or ``None``)
     limit : int or None, optional, default 100
         Maximum number of Scenes to return, or None for all results.
-    sort_field : str, optional
+    sort_field : str, optional, default 'acquired'
         Field name in :py:attr:`Scene.properties` by which to order the results
     sort_order : str, optional, default 'asc'
         ``"asc"`` or ``"desc"``
@@ -88,12 +93,6 @@ def search(
     randomize : bool, default False, optional
         Randomize the order of the results.
         You may also use an int or str as an explicit seed.
-    raster_client : Raster, optional
-        Unneeded in general use; lets you use a specific client instance
-        with non-default auth and parameters.
-    metadata_client : Metadata, optional
-        Unneeded in general use; lets you use a specific client instance
-        with non-default auth and parameters.
 
     Returns
     -------
@@ -117,6 +116,8 @@ def search(
 
     if not products:
         raise ValueError("Products is a required parameter.")
+    elif isinstance(products, str):
+        products = [products]
 
     if isinstance(aoi, GeoContext):
         ctx = aoi
@@ -128,92 +129,51 @@ def search(
     else:
         ctx = AOI(geometry=aoi)
 
-    if metadata_client is None:
-        metadata_client = Metadata.get_default_client()
-
-    if isinstance(products, str):
-        products = [products]
-
-    if isinstance(start_datetime, datetime.datetime):
-        start_datetime = start_datetime.isoformat()
-
-    if isinstance(end_datetime, datetime.datetime):
-        end_datetime = end_datetime.isoformat()
-
-    metadata_params = dict(
-        products=products,
-        geom=ctx.__geo_interface__,
-        start_datetime=start_datetime,
-        end_datetime=end_datetime,
-        cloud_fraction=cloud_fraction,
-        storage_state=storage_state,
-        limit=limit,
-        sort_field=sort_field,
-        sort_order=sort_order,
-        date=date_field,
-        q=query,
-        randomize=randomize,
+    search = (
+        Image.search(request_params=REQUEST_PARAMS)
+        .filter(properties.product_id.in_(products))
+        .intersects(ctx)
     )
 
-    metadata = metadata_client.search(**metadata_params)
+    if start_datetime or end_datetime:
+        date = getattr(properties, date_field)
+        if start_datetime and end_datetime:
+            search = search.filter(start_datetime <= date < end_datetime)
+        elif start_datetime:
+            search = search.filter(start_datetime <= date)
+        else:
+            search = search.filter(date < end_datetime)
 
-    product_bands = {
-        product: Scene._scenes_bands_dict(
-            cached_bands_by_product(product, metadata_client)
-        )
-        for product in products
-    }
+    if cloud_fraction:
+        search = search.filter(properties.cloud_fraction < cloud_fraction)
+    if storage_state:
+        search = search.filter(properties.storage_state == storage_state)
 
-    raster_args = {}
-    if raster_client:
-        raster_args["raster_client"] = raster_client
-    scenes = SceneCollection(
-        (
-            Scene(meta, product_bands[meta["properties"]["product"]])
-            for meta in metadata["features"]
-        ),
-        **raster_args
-    )
+    if query is not None:
+        if not isinstance(query, list):
+            query = [query]
+        for q in query:
+            search = search.filter(q)
 
-    if len(scenes) > 0 and isinstance(ctx, AOI):
-        assign_ctx = {}
-        if ctx.resolution is None and ctx.shape is None:
-            resolutions = filter(
-                None,
-                (
-                    b.get("resolution")
-                    for band in product_bands.values()
-                    for b in band.values()
-                ),
-            )
-            try:
-                assign_ctx["resolution"] = min(resolutions)
-            except ValueError:
-                assign_ctx[
-                    "resolution"
-                ] = None  # from min of an empty sequence; no band defines resolution
+    if sort_field != "acquired" or sort_order != "asc":
+        search = search.sort(sort_field, sort_order == "asc")
 
-        if ctx.crs is None:
-            assign_ctx["crs"] = collections.Counter(
-                scene.properties["crs"] for scene in scenes
-            ).most_common(1)[0][0]
+    if limit:
+        search = search.limit(limit)
 
-        if len(assign_ctx) > 0:
-            ctx = ctx.assign(**assign_ctx)
+    ic = search.collect()
 
-    return scenes, ctx
+    return (SceneCollection(ic), ic.geocontext)
 
 
-def get_product(product_id, metadata_client=None):
-    """Get information about a single product.
+@deprecate(removed=["metadata_client"])
+def get_product(product_id):
+    """Retrieve information about a single product.
 
     Parameters
     ----------
     product_id : str
         Product Identifier.
-    metadata_client : Metadata, optional
-        Unneeded in general use; lets you use a specific client instance
-        with non-default auth and parameters.
 
     Returns
     -------
@@ -225,39 +185,29 @@ def get_product(product_id, metadata_client=None):
     NotFoundError
         Raised if a product id cannot be found.
     """
-    if metadata_client is None:
-        metadata_client = Metadata.get_default_client()
+    product = Product.get(product_id, request_params=REQUEST_PARAMS)
+    if product is None:
+        raise NotFoundError(f"Product {product_id} not found")
+    return DotDict(product.v1_properties)
 
-    return metadata_client.get_product(product_id)
 
-
+@deprecate(removed=["bands", "offset", "metadata_client"])
 def search_products(
-    bands=None,
     limit=None,
-    offset=None,
     owner=None,
     text=None,
-    metadata_client=None,
 ):
     """Search products that are available on the platform.
     An empty search with no parameters will pass back all available products.
 
     Parameters
     ----------
-    bands : list(str), optional
-        Band name(s) e.g ["red", "nir"] to filter products by.
-        Note that products must match all bands that are passed.
     limit : int, optional
         Number of results to return.
-    offset : int, optional
-        Index to start at when returning results.
     owner : str, optional
         Filter products by the owner's uuid.
     text : str, optional
         Filter products by string match.
-    metadata_client : Metadata, optional
-        Unneeded in general use; lets you use a specific client instance
-        with non-default auth and parameters.
 
     Returns
     -------
@@ -265,51 +215,50 @@ def search_products(
         List of dicts containing at most `limit` products.
         Empty if no matching products are found.
     """
-    if metadata_client is None:
-        metadata_client = Metadata.get_default_client()
 
-    return metadata_client.products(
-        bands=bands, limit=limit, offset=offset, owner=owner, text=text
-    )
+    search = Product.search(request_params=REQUEST_PARAMS)
+    if owner:
+        search = search.filter(properties.owners.in_([owner]))
+    if text:
+        search = search.find_text(text)
+    if limit:
+        search = search.limit(limit)
+
+    return DotList(DotDict(p.v1_properties) for p in search)
 
 
-def get_band(band_id, metadata_client=None):
+@deprecate(removed=["metadata_client"])
+def get_band(band_id):
     """Get information about a single band.
 
     Parameters
     ----------
     band_id : str
         A band identifier.
-    metadata_client : Metadata, optional
-        Unneeded in general use; lets you use a specific client instance
-        with non-default auth and parameters.
 
     Returns
     -------
     DotDict
-        A dictionary mapping band ids to dictionaries of their metadata.
-        Returns empty dict if product id not found.
+        A dictionary of metadata for the band
 
     Raises
     ------
     NotFoundError
         Raised if a band id cannot be found.
     """
-    if metadata_client is None:
-        metadata_client = Metadata.get_default_client()
+    band = Band.get(band_id, request_params=REQUEST_PARAMS)
+    if band is None:
+        raise NotFoundError(f"Band {band_id} not found")
+    return DotDict(band.v1_properties)
 
-    return metadata_client.get_band(band_id=band_id)
 
-
+@deprecate(removed=["bands", "offset", "metadata_client"])
 def search_bands(
     products=None,
     limit=None,
-    offset=None,
     wavelength=None,
     resolution=None,
     tags=None,
-    bands=None,
-    metadata_client=None,
 ):
     """Search for imagery data bands that you have access to.
 
@@ -319,17 +268,12 @@ def search_bands(
         A list of product(s) to return bands for.
     limit : int, optional
         Number of results to return.
-    offset : int, optional
-        Index to start at when returning results.
     wavelength : float, optional
         A wavelength in nm e.g 700 that the band sensor must measure.
     resolution : int, optional
         The resolution in meters per pixel e.g 30 of the data available in this band.
     tags : list(str), optional
-        A list of tags that the band must have in its own tag list.
-    metadata_client : Metadata, optional
-        Unneeded in general use; lets you use a specific client instance
-        with non-default auth and parameters.
+        A list of tags to match. Any band which has any of these tags will be included.
 
     Returns
     -------
@@ -337,21 +281,32 @@ def search_bands(
         List of dicts containing at most `limit` bands.
         Empty if there are no bands matching query (e.g. product id not available).
     """
-    if metadata_client is None:
-        metadata_client = Metadata.get_default_client()
+    if wavelength:
+        search = SpectralBand.search(request_params=REQUEST_PARAMS)
+    else:
+        search = Band.search(request_params=REQUEST_PARAMS)
+    if products:
+        if isinstance(products, str):
+            products = [products]
+        search = search.filter(properties.product_id.in_(products))
+    if wavelength:
+        search = search.filter(properties.wavelength_nm_min <= wavelength).filter(
+            properties.wavelength_nm_max >= wavelength
+        )
+    if resolution:
+        search = search.filter(properties.resolution == resolution)
+    if tags:
+        if isinstance(tags, str):
+            tags = [tags]
+        search = search.filter(properties.tags.in_(tags))
+    if limit:
+        search = search.limit(limit)
 
-    return metadata_client.bands(
-        products=products,
-        limit=limit,
-        offset=offset,
-        wavelength=wavelength,
-        resolution=resolution,
-        tags=tags,
-        bands=bands,
-    )
+    return DotList(DotDict(b.v1_properties) for b in search)
 
 
-def get_derived_band(derived_band_id, metadata_client=None):
+@deprecate(removed=["metadata_client"])
+def get_derived_band(derived_band_id):
     """Get information about a single derived band.
 
     Parameters
@@ -372,14 +327,17 @@ def get_derived_band(derived_band_id, metadata_client=None):
     NotFoundError
         Raised if a band id cannot be found.
     """
-    if metadata_client is None:
-        metadata_client = Metadata.get_default_client()
+    band = DerivedBand.get(derived_band_id, request_params=REQUEST_PARAMS)
+    if band is None:
+        raise NotFoundError(f"DerivedBand {derived_band_id} not found")
+    return DotDict(band.v1_properties)
 
-    return metadata_client.get_derived_band(derived_band_id)
 
-
+@deprecate(removed=["offset", "metadata_client"])
 def search_derived_bands(
-    bands, require_bands=None, limit=None, offset=None, metadata_client=None
+    bands,
+    require_bands=None,
+    limit=None,
 ):
     """Search for predefined derived bands that you have access to.
 
@@ -393,20 +351,22 @@ def search_derived_bands(
         Defaults to False.
     limit : int
         Number of results to return.
-    offset : int
-        Index to start at when returning results.
-    metadata_client : Metadata, optional
-        Unneeded in general use; lets you use a specific client instance
-        with non-default auth and parameters.
 
     Returns
     -------
     DotList(DotDict)
         List of dicts containing at most `limit` bands.
     """
-    if metadata_client is None:
-        metadata_client = Metadata.get_default_client()
+    search = DerivedBand.search(request_params=REQUEST_PARAMS)
+    if bands:
+        if isinstance(bands, str):
+            bands = [bands]
+        if require_bands:
+            for band in bands:
+                search = search.filter(properties.bands == band)
+        else:
+            search = search.filter(properties.bands.in_(bands))
+    if limit:
+        search = search.limit(limit)
 
-    return metadata_client.derived_bands(
-        bands=bands, require_bands=require_bands, limit=limit, offset=offset
-    )
+    return DotList(DotDict(db.v1_properties) for db in search)

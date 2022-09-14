@@ -1,6 +1,7 @@
 import pytest
 import mock
 
+from ..... import catalog
 from ..... import scenes
 from ...core.tests import utils
 
@@ -28,12 +29,14 @@ def test_from_id():
 
 @mock.patch.object(Image, "from_id", wraps=Image.from_id)
 def test_promote(from_id_wrapper):
-    scene = scenes.Scene.__new__(scenes.Scene)
-    # ^ easier than making fake metadata for the constructor
-    scene.properties = {"id": "foo"}
+    scene = scenes.Scene(
+        catalog.Image(
+            id="prod:foo", v1_properties={"id": "prod:foo", "key": "foo"}, _saved=True
+        )
+    )
 
     img = Image._promote(scene)
-    from_id_wrapper.assert_called_once_with("foo")
+    from_id_wrapper.assert_called_once_with("prod:foo")
 
     assert Image._promote(img) is img
 

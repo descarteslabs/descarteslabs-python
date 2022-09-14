@@ -75,6 +75,7 @@ class TestCatalogObject(ClientTestCase):
                 "modified",
                 "extra_properties",
                 "tags",
+                "v1_properties",
             ],
         )
         assert c.owners is None
@@ -245,7 +246,7 @@ class TestCatalogObject(ClientTestCase):
         assert foo.state == DocumentState.SAVED
 
     @responses.activate
-    def test_save_extra_attributes(self):
+    def test_save_request_params(self):
         self.mock_response(
             responses.POST,
             {
@@ -260,14 +261,14 @@ class TestCatalogObject(ClientTestCase):
 
         foo = Foo(id="foo1", client=self.client)
         foo.bar = "baz"
-        foo.save(extra_attributes={"foo": "bar"})
+        foo.save(request_params={"foo": "bar"})
         assert foo.state == DocumentState.SAVED
 
         body = self.get_request_body(0)
         assert {"bar": "baz", "foo": "bar"} == body["data"]["attributes"]
 
     @responses.activate
-    def test_save_update_extra_attributes(self):
+    def test_save_update_request_params(self):
         self.mock_response(
             responses.PATCH,
             {
@@ -281,7 +282,7 @@ class TestCatalogObject(ClientTestCase):
         )
 
         foo = Foo(id="foo1", bar="baz", client=self.client, _saved=True)
-        foo.save(extra_attributes={"foo": "bar"})
+        foo.save(request_params={"foo": "bar"})
         assert foo.state == DocumentState.SAVED
 
         body = self.get_request_body(0)

@@ -1,6 +1,7 @@
 from enum import Enum
 from collections.abc import Iterable, Mapping, MutableMapping
 
+from ..client.deprecation import deprecate
 from ..common.collection import Collection
 from ..common.property_filtering import GenericProperties
 from .catalog_base import CatalogObject, _new_abstract_class
@@ -616,7 +617,7 @@ class Band(NamedCatalogObject):
         super(Band, self).__init__(**kwargs)
 
     @classmethod
-    def search(cls, client=None):
+    def search(cls, client=None, request_params=None):
         """A search query for all bands.
 
         Returns an instance of the
@@ -638,7 +639,7 @@ class Band(NamedCatalogObject):
         :py:class:`~descarteslabs.catalog.Search`
             An instance of the :py:class:`~descarteslabs.catalog.Search` class
         """
-        search = super(Band, cls).search(client)
+        search = super(Band, cls).search(client, request_params=request_params)
         if cls._derived_type:
             search = search.filter(properties.type == cls._derived_type)
         return search
@@ -956,7 +957,8 @@ class DerivedBand(CatalogObject):
         """
         raise NotImplementedError("Updating DerivedBands is not permitted")
 
-    def save(self):
+    @deprecate(renamed={"extra_attributes": "request_params"})
+    def save(self, request_params=None):
         """You cannot save a derived band.
 
         Raises
