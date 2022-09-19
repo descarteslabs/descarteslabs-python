@@ -3,7 +3,7 @@ from collections.abc import Iterable, Mapping, MutableMapping
 
 from ..client.deprecation import deprecate
 from ..common.collection import Collection
-from ..common.property_filtering import GenericProperties
+from ..common.property_filtering import Properties
 from .catalog_base import CatalogObject, _new_abstract_class
 from .named_catalog_base import NamedCatalogObject
 from .attributes import (
@@ -20,7 +20,7 @@ from .attributes import (
 )
 
 
-properties = GenericProperties()
+properties = Properties()
 
 
 class DataType(str, Enum):

@@ -279,7 +279,7 @@ class FeatureCollection(object):
             the new geometry will override it -- they cannot be chained.
         properties : ~descarteslabs.common.property_filtering.filtering.Expression; optional
             Expression used to filter features by their properties, built from
-            :class:`dl.properties <descarteslabs.common.property_filtering.filtering.GenericProperties>`.
+            :class:`dl.properties <descarteslabs.common.property_filtering.filtering.Properties>`.
             You can construct filter expression using the ``==``, ``!=``,
             ``<``, ``>``, ``<=`` and ``>=`` operators as well as the
             :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`

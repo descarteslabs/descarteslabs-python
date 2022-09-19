@@ -59,8 +59,8 @@ class Expression(object):
 
     Examples
     --------
-    >>> from descarteslabs.common.property_filtering import GenericProperties
-    >>> p = GenericProperties()
+    >>> from descarteslabs.common.property_filtering import Properties
+    >>> p = Properties()
     >>> e = p.foo == 5
     >>> type(e)
     <class 'descarteslabs.common.property_filtering.filtering.EqExpression'>
@@ -313,12 +313,9 @@ class Property(object):
     Although you can generate filter properties by instantiating this class, a more
     convenient method is to use a
     :py:class:`~descarteslabs.common.property_filtering.filtering.Properties`
-    or
-    :py:class:`~descarteslabs.common.property_filtering.filtering.GenericProperties`
     instance.
-    By referencing any
-    attribute of a
-    :py:class:`~descarteslabs.common.property_filtering.filtering.GenericProperties`
+    By referencing any attribute of a
+    :py:class:`~descarteslabs.common.property_filtering.filtering.Properties`
     instance the corresponding filter property
     will be created.
 
@@ -434,30 +431,13 @@ class Properties(object):
         self.props = args
 
     def __getattr__(self, attr):
+        # keep sphinx happy
+        if attr == "__qualname__":
+            return self.__class__.__qualname__
+        if not self.props:
+            # implement the old GenericProperties
+            return Property(attr)
         if attr in self.props:
             return Property(attr)
 
         raise AttributeError("'Properties' object has no attribute '{}'".format(attr))
-
-
-class GenericProperties(object):
-    """A wrapper object to construct filter properties by referencing instance attributes.
-
-    By referring to any instance attribute, a corresponding property will be created.
-    There is no validation whether the generated property actually exists until the
-    full expression is evaluated.
-
-    See :ref:`Properties Introduction <property_filtering>`
-    for a more detailed explanation.
-
-    Examples
-    --------
-    >>> p = GenericProperties()
-    >>> e = p.modified > "2020-01-01"
-    """
-
-    def __getattr__(self, attr):
-        # keep sphinx happy
-        if attr == "__qualname__":
-            return self.__class__.__qualname__
-        return Property(attr)

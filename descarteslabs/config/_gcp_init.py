@@ -1,5 +1,6 @@
 import importlib
 import sys
+import types
 
 import lazy_object_proxy
 
@@ -120,8 +121,8 @@ def _setup_gcp():
         "descarteslabs.common.property_filtering", dl_property_filtering
     )
     setattr(common, "property_filtering", property_filtering)
-    setattr(descarteslabs, "GenericProperties", property_filtering.GenericProperties)
-    properties = property_filtering.GenericProperties()
+    setattr(descarteslabs, "GenericProperties", property_filtering.Properties)
+    properties = property_filtering.Properties()
     setattr(descarteslabs, "properties", properties)
     sys.modules[property_filtering.__name__] = property_filtering
 
@@ -163,6 +164,30 @@ def _setup_gcp():
     geo = clone_module("descarteslabs.geo", dl_geo)
     sys.modules[geo.__name__] = geo
     setattr(descarteslabs, "geo", geo)
+
+    # utils
+    utils = types.ModuleType("descarteslabs.utils")
+
+    dotdict = importlib.import_module("descarteslabs._dl_modules.common.dotdict")
+    utils.DotDict = dotdict.DotDict
+    utils.DotList = dotdict.DotList
+
+    display = importlib.import_module("descarteslabs._dl_modules.common.display")
+    utils.display = display.display
+    utils.save_image = display.save_image
+
+    utils.Properties = dl_property_filtering.Properties
+
+    utils.__all__ = [
+        "DotDict",
+        "DotList",
+        "Properties",
+        "display",
+        "save_image",
+    ]
+
+    sys.modules[utils.__name__] = utils
+    descarteslabs.utils = utils
 
     # these should be fully imported and in the local namespace
     for package in ("catalog", "scenes", "vectors"):

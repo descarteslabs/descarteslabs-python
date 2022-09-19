@@ -113,7 +113,7 @@ class Search(object):
         properties : Expression
             Expression used to filter objects in the search by their properties, built
             from :class:`properties
-            <descarteslabs.common.property_filtering.filtering.GenericProperties>`.
+            <descarteslabs.common.property_filtering.filtering.Properties>`.
             You can construct filter expressions using the ``==``, ``!=``, ``<``,
             ``>``, ``<=`` and ``>=`` operators as well as the
             :meth:`~descarteslabs.common.property_filtering.filtering.Property.in_`

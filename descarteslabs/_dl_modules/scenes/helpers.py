@@ -2,7 +2,7 @@ import cachetools
 
 from ..catalog import Band, DerivedBand, Search
 from ..common.dotdict import DotDict
-from ..common.property_filtering import GenericProperties
+from ..common.property_filtering import Properties
 
 REQUEST_PARAMS = {"v1_compatibility": True}
 
@@ -15,7 +15,7 @@ def cached_bands_by_product(product_id, client):
             band.name: DotDict(band.v1_properties)
             for band in Band.search(
                 client=client, request_params=REQUEST_PARAMS
-            ).filter(GenericProperties().product_id == product_id)
+            ).filter(Properties().product_id == product_id)
         }
     )
     bands.update(

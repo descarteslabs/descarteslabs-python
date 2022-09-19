@@ -5,7 +5,7 @@ from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
 
 from ....common.dotdict import DotDict
-from ....common.property_filtering import GenericProperties
+from ....common.property_filtering import Properties
 from ....common.shapely_support import shapely_to_geojson
 from ...deprecation import deprecate, deprecate_func
 from ..service import JsonApiService, ThirdPartyService
@@ -91,7 +91,7 @@ class Vector(JsonApiService):
 
     TIMEOUT = (9.5, 60)
     SEARCH_PAGE_SIZE = 1000
-    properties = GenericProperties()
+    properties = Properties()
 
     @deprecate_func("Vector has been deprecated, please use Tables instead")
     def __init__(self, url=None, auth=None):
@@ -915,7 +915,7 @@ class Vector(JsonApiService):
 
         :param ~descarteslabs.common.property_filtering.filtering.Expression query_expr:
             Expression used to filter features by their properties, built from
-            :class:`dl.properties <descarteslabs.common.property_filtering.filtering.GenericProperties>`.
+            :class:`dl.properties <descarteslabs.common.property_filtering.filtering.Properties>`.
             You can construct filter expression using the ``==``, ``!=``,
             ``<``, ``>``, ``<=`` and ``>=`` operators as well as the
             :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
@@ -1013,7 +1013,7 @@ class Vector(JsonApiService):
 
         :param ~descarteslabs.common.property_filtering.filtering.Expression query_expr:
             Expression used to filter features by their properties, built from
-            :class:`dl.properties <descarteslabs.common.property_filtering.filtering.GenericProperties>`.
+            :class:`dl.properties <descarteslabs.common.property_filtering.filtering.Properties>`.
             You can construct filter expression using the ``==``, ``!=``,
             ``<``, ``>``, ``<=`` and ``>=`` operators as well as the
             :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
@@ -1152,7 +1152,7 @@ class Vector(JsonApiService):
 
         :param ~descarteslabs.common.property_filtering.filtering.Expression query_expr:
             Expression used to filter features by their properties, built from
-            :class:`dl.properties <descarteslabs.common.property_filtering.filtering.GenericProperties>`.
+            :class:`dl.properties <descarteslabs.common.property_filtering.filtering.Properties>`.
             You can construct filter expression using the ``==``, ``!=``,
             ``<``, ``>``, ``<=`` and ``>=`` operators as well as the
             :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`
@@ -1330,7 +1330,7 @@ class Vector(JsonApiService):
 
         :param ~descarteslabs.common.property_filtering.filtering.Expression query_expr:
             Expression used to filter features by their properties, built from
-            :class:`dl.properties <descarteslabs.common.property_filtering.filtering.GenericProperties>`.
+            :class:`dl.properties <descarteslabs.common.property_filtering.filtering.Properties>`.
             You can construct filter expression using the ``==``, ``!=``,
             ``<``, ``>``, ``<=`` and ``>=`` operators as well as the
             :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`

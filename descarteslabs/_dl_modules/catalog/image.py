@@ -17,7 +17,7 @@ from affine import Affine
 from descarteslabs.exceptions import NotFoundError, BadRequestError
 
 from ..common.geo import GeoContext, AOI
-from ..common.property_filtering import GenericProperties
+from ..common.property_filtering import Properties
 from ..common.scaling import scaling_parameters
 from ..common.shapely_support import geometry_like_to_shapely
 from ..client.services.service import ThirdPartyService
@@ -37,7 +37,7 @@ from .attributes import (
 from .image_types import ResampleAlgorithm, DownloadFileFormat
 from .helpers import bands_to_list, cached_bands_by_product, download
 
-properties = GenericProperties()
+properties = Properties()
 
 
 class StorageState(str, Enum):

@@ -3,7 +3,7 @@ from enum import Enum
 from concurrent.futures import TimeoutError
 
 from ..common.collection import Collection
-from ..common.property_filtering import GenericProperties
+from ..common.property_filtering import Properties
 from .catalog_base import (
     CatalogObject,
     CatalogClient,
@@ -24,7 +24,7 @@ except ImportError:
     import collections as abc
 
 
-properties = GenericProperties()
+properties = Properties()
 
 
 class Product(CatalogObject):

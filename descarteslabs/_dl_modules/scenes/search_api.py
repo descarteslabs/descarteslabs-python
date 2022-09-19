@@ -80,7 +80,7 @@ def search(
         (``"acquired"``, ``"processed"``, ``"published"``)
     query : ~descarteslabs.common.property_filtering.filtering.Expression, optional
         Expression used to filter Scenes by their properties, built from
-        :class:`dl.properties <descarteslabs.common.property_filtering.filtering.GenericProperties>`.
+        :class:`dl.properties <descarteslabs.common.property_filtering.filtering.Properties>`.
         You can construct filter expression using the ``==``, ``!=``, ``<``, ``>``,
         ``<=`` and ``>=`` operators as well as the
         :meth:`~descarteslabs.common.property_filtering.filtering.Property.like`

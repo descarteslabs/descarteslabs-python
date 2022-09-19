@@ -3,9 +3,9 @@ Note: It is recommended to use the object oriented interface at :py:mod:`descart
 """
 
 from .vector import Vector
-from ....common.property_filtering import GenericProperties
+from ....common.property_filtering import Properties
 
-properties = GenericProperties()
+properties = Properties()
 
 
 __all__ = ["Vector", "properties"]

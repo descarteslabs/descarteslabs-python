@@ -17,7 +17,7 @@ from ..search_api import (
 )
 
 from ...catalog.search import Search
-from ...common.property_filtering import GenericProperties
+from ...common.property_filtering import Properties
 from .. import scene as scene_module
 from ...catalog import catalog_base
 from ...catalog import image_collection as image_collection_module
@@ -81,7 +81,7 @@ class TestScenesSearch(unittest.TestCase):
             cloud_fraction=0.6,
             storage_state="available",
             sort_order="desc",
-            query=(GenericProperties().bright_fraction < 0.3),
+            query=(Properties().bright_fraction < 0.3),
             limit=4,
         )
 

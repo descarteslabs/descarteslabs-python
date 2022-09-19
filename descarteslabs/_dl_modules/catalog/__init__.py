@@ -56,9 +56,9 @@ from .attributes import (
     ResolutionUnit,
 )
 
-from ..common.property_filtering import GenericProperties
+from ..common.property_filtering import Properties
 
-properties = GenericProperties()
+properties = Properties()
 
 __all__ = [
     "AggregateDateField",

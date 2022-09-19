@@ -19,10 +19,7 @@ from ..service import Service
 from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
 from ...deprecation import deprecate
-from ....common.property_filtering.filtering import (
-    AndExpression,
-    GenericProperties,
-)
+from ....common import property_filtering
 from ....common.dotdict import DotDict, DotList
 from ....common.dltile import Tile
 from ....common.shapely_support import shapely_to_geojson
@@ -40,7 +37,7 @@ class Metadata(Service):
 
     TIMEOUT = (9.5, 120)
 
-    properties = GenericProperties()
+    properties = property_filtering.Properties()
 
     def __init__(self, url=None, auth=None, retries=None):
         """
@@ -390,7 +387,9 @@ class Metadata(Service):
         if q is not None:
             if not isinstance(q, list):
                 q = [q]
-            kwargs["query_expr"] = AndExpression(q).serialize()
+            kwargs["query_expr"] = property_filtering.filtering.AndExpression(
+                q
+            ).serialize()
 
         if pixels:
             kwargs["pixels"] = pixels
@@ -529,7 +528,9 @@ class Metadata(Service):
         if q is not None:
             if not isinstance(q, list):
                 q = [q]
-            kwargs["query_expr"] = AndExpression(q).serialize()
+            kwargs["query_expr"] = property_filtering.filtering.AndExpression(
+                q
+            ).serialize()
 
         if sort_field is not None:
             kwargs["sort_field"] = sort_field

@@ -29,7 +29,6 @@ Changelog
 - Previously, the internal implementation of the `physical_range` attribute on various band types was inconsistent with
   that of `data_range` and `display_range`. It has now been made consistent, which means it will either not be set,
   or will contain a 2-tuple of float values. It is no longer possible to explicitly set it to `None`.
-- Add `isnull` and `isnotnull` to property filtering.
 
 ### Scenes
 
@@ -44,6 +43,18 @@ Changelog
 - All the REST client types, such as `Metadata` and `Raster`, now support `get_default_client()` and `set_default_client()`
   instances. This functionality was previously limited to the Catalog V2 `CatalogClient`. Whenever such a client is required,
   the client libraries use `get_default_client()` rather than using the default constructor. This makes it easy to comprehensively redirect the library to use a specially configured client when necessary.
+
+### Utils package
+
+- The `descarteslabs.utils` package, added in the previous release for the AWS client only, now exists in the GCP client
+  as well, and is the preferred location to pick up the `DotDict` and `DotList` classes, the `display` and `save_image` functions,
+  and the `Properties` class for property filtering in Catalog V2.
+
+### Property filtering
+
+- The `property_filtering.GenericProperties` class has been replaced with `property_filtering.Properties`, but remains
+  for back compatibility.
+- Add `isnull` and `isnotnull` to property filtering.
 
 ## [1.11.0] - 2022-07-20
 
