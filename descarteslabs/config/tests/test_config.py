@@ -21,7 +21,7 @@ class TestSettings(unittest.TestCase):
 
     def test_select_env_default(self):
         settings = Settings.select_env()
-        self.assertEqual(settings.current_env, "testing")
+        self.assertEqual(settings.current_env, os.environ.get("DESCARTESLABS_ENV"))
         self.assertEqual(id(settings), id(Settings._settings))
         self.assertEqual(id(settings), id(Settings.get_settings()))
 
@@ -44,9 +44,14 @@ class TestSettings(unittest.TestCase):
         settings = Settings.select_env(
             settings_file=os.path.join(os.path.dirname(__file__), "settings.toml")
         )
-        self.assertEqual(settings.current_env, "testing")
+        self.assertEqual(settings.current_env, os.environ.get("DESCARTESLABS_ENV"))
         self.assertEqual(settings.testing, "hello")
-        self.assertEqual(settings.iam_url, "https://iam.descarteslabs.com")
+        self.assertEqual(
+            settings.gcp_client, os.environ.get("DESCARTESLABS_ENV") == "testing"
+        )
+        self.assertEqual(
+            settings.aws_client, os.environ.get("DESCARTESLABS_ENV") == "aws-testing"
+        )
 
     # environment must be patched because select_env will alter it
     @patch("descarteslabs.config.Auth")
@@ -80,7 +85,7 @@ class TestSettings(unittest.TestCase):
     @patch.dict(os.environ, {"DESCARTESLABS_TESTING": "hello"})
     def test_select_env_override_from_env(self):
         settings = Settings.select_env()
-        self.assertEqual(settings.current_env, "testing")
+        self.assertEqual(settings.current_env, os.environ.get("DESCARTESLABS_ENV"))
         self.assertEqual(settings.testing, "hello")
 
     @patch.dict(os.environ, {"DL_ENV": "testing", "DL_TESTING": "hello"})
@@ -91,6 +96,6 @@ class TestSettings(unittest.TestCase):
 
     def test_get_settings(self):
         settings = Settings.get_settings()
-        self.assertEqual(settings.current_env, "testing")
+        self.assertEqual(settings.current_env, os.environ.get("DESCARTESLABS_ENV"))
         self.assertEqual(id(settings), id(Settings._settings))
         self.assertEqual(id(settings), id(Settings.get_settings()))

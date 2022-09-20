@@ -1,2 +1,5 @@
 ["testing"]
 testing = "hello"
+
+["aws-testing"]
+testing = "hello"

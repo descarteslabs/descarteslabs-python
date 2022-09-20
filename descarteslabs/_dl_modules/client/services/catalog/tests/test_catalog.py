@@ -45,8 +45,9 @@ class TestCatalog(unittest.TestCase):
         np.load(request.body)
         return (200, {}, "")
 
-    @patch(
-        "descarteslabs.client.services.catalog.Catalog._do_upload",
+    @patch.object(
+        Catalog,
+        "_do_upload",
         return_value=(False, "upload_id", None),
     )
     def test_upload_ndarray_dtype(self, _do_upload):
