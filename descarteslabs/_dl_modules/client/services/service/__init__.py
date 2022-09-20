@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from descarteslabs.common.http import NotFoundError, ProxyAuthentication
-
 from .service import JsonApiService, JsonApiSession, Service, Session, ThirdPartyService
+
+from ....common.http import NotFoundError, ProxyAuthentication
 
 __all__ = [
     "JsonApiService",

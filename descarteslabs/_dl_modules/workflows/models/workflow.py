@@ -435,7 +435,7 @@ class Workflow:
         if obj is None:
             # decorator format
             def version_decorator(py_func):
-                from descarteslabs.workflows.types import Function
+                from ..types import Function
 
                 wf_func = Function.from_callable(py_func)
                 docstring_ = docstring

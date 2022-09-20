@@ -14,6 +14,8 @@
 # limitations under the License.
 
 # normally this will be used from the public client and will not be pre-configured
+
+# The backslash-continued lines here are to hide these absolute imports from the style checker
 try:
     from descarteslabs._dl_modules.client.scripts.cli import parser, handle
 except ImportError:

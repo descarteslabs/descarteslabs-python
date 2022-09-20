@@ -3,10 +3,10 @@ from unittest import mock
 
 import grpc
 import pytest
-from descarteslabs.common.http.proxy import ProxyAuthentication
 
 from ....common.proto.health import health_pb2_grpc
 from ....common.retry import Retry
+from ....common.http.proxy import ProxyAuthentication
 from ..client import USER_AGENT_HEADER, GrpcClient
 
 

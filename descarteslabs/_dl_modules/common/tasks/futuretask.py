@@ -64,7 +64,7 @@ class FutureTask(object):
         self.guid = guid
         self.tuid = tuid
         if client is None:
-            from descarteslabs.client.services.tasks import Tasks  # circular import
+            from ...client.services.tasks import Tasks  # circular import
 
             client = Tasks.get_default_client()
 

@@ -10,7 +10,7 @@ from .primitive import Primitive
 
 def _delayed_numpy_ufuncs():
     # avoid circular imports
-    from descarteslabs.workflows.types.numpy import numpy_ufuncs
+    from ..numpy import numpy_ufuncs
 
     return numpy_ufuncs
 

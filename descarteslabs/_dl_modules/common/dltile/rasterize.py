@@ -19,9 +19,6 @@ def rasterize_shape(
     all_touched=False,
 ) -> np.ndarray:
     """Rasterize a collection of lon,lat shapes onto a DLTile.
-    This is included in this directory's __init__.py, so you can import like:
-
-        from descarteslabs.commmon.dltile import rasterize_shape
 
     Parameters
     ----------

@@ -2,10 +2,10 @@ import os
 
 import certifi
 from descarteslabs.auth import Auth
-from descarteslabs.common.http import ProxyAuthentication
 
 import grpc
 
+from ...common.http import ProxyAuthentication
 from ...common.proto.health import health_pb2, health_pb2_grpc
 from ...common.retry import Retry, RetryError
 from ...common.retry.retry import _wraps
