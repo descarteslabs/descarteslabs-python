@@ -17,7 +17,7 @@
 
 
 class ClientError(Exception):
-    """ Base class for all client exceptions."""
+    """Base class for all client exceptions."""
 
     pass
 
@@ -53,9 +53,23 @@ class NotFoundError(ClientError):
 
 
 class ProxyAuthenticationRequiredError(ClientError):
-    """Client request needs proxy authentication."""
+    """Client request needs proxy authentication.
+
+    Attributes
+    ==========
+    status : int
+        The status code of the error response.
+    proxy_authenticate : Optional[str]
+        A `ProxyAuthenticate <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Proxy-Authenticate>`_
+        header if found in the response.
+    """
 
     status = 407
+
+    def __init__(self, message, proxy_authenticate=None) -> None:
+        super(ProxyAuthenticationRequiredError, self).__init__(message)
+
+        self.proxy_authenticate = proxy_authenticate
 
 
 class ConflictError(ClientError):

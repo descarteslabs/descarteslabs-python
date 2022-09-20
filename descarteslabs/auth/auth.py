@@ -24,9 +24,8 @@ import threading
 import warnings
 from hashlib import sha1
 
-import requests
+from descarteslabs.common.http import Session
 from descarteslabs.exceptions import AuthError, OauthError
-from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 
@@ -113,8 +112,6 @@ class Auth:
         allowed_methods=frozenset(["GET", "POST"]),
         status_forcelist=[429, 500, 502, 503, 504],
     )
-
-    ADAPTER = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=Auth.RETRY_CONFIG))
 
     AUTHORIZATION_ERROR = (
         "No valid authentication info found{}. "
@@ -461,11 +458,9 @@ class Auth:
         self._namespace = None
 
         if retries is None:
-            self._adapter = self.ADAPTER
-        else:
-            self.RETRY_CONFIG = retries
-            self._init_adapter()
+            retries = self.RETRY_CONFIG
 
+        self._retry_config = retries
         self._init_session()
         self.domain = domain
         self.leeway = leeway
@@ -480,11 +475,6 @@ class Auth:
         See :py:class:`Auth` for details.
         """
         return Auth(**kwargs)
-
-    def _init_adapter(self):
-        self._adapter = ThreadLocalWrapper(
-            lambda: HTTPAdapter(max_retries=self.RETRY_CONFIG)
-        )
 
     def _init_session(self):
         # Sessions can't be shared across threads or processes because the underlying
@@ -587,9 +577,7 @@ class Auth:
         return self._session.get()
 
     def build_session(self):
-        session = requests.Session()
-        session.mount("https://", self.ADAPTER.get())
-        return session
+        return Session(self.domain, retries=self._retry_config)
 
     @staticmethod
     def get_default_auth():
@@ -718,7 +706,7 @@ class Auth:
             if self.scope is not None:
                 params[self.KEY_SCOPE] = " ".join(self.scope)
 
-        r = self.session.post(self.domain + "/token", json=params, timeout=timeout)
+        r = self.session.post("/token", json=params, timeout=timeout)
 
         if r.status_code != 200:
             raise OauthError("Could not retrieve token: {}".format(r.text.strip()))
@@ -784,7 +772,6 @@ class Auth:
         for name, value in state.items():
             setattr(self, name, value)
 
-        self._init_adapter()
         self._init_session()
 
 

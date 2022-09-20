@@ -1,12 +1,13 @@
+import unittest
 from unittest import mock
 
 import grpc
 import pytest
+from descarteslabs.common.http.proxy import ProxyAuthentication
 
-from ....common.retry import Retry
-
-from ..client import GrpcClient, USER_AGENT_HEADER
 from ....common.proto.health import health_pb2_grpc
+from ....common.retry import Retry
+from ..client import USER_AGENT_HEADER, GrpcClient
 
 
 class FakeRpcError(grpc.RpcError):
@@ -209,3 +210,90 @@ def test_context_manager(_):
         with client as client_:
             assert client_ is client
         close.assert_called_once_with()
+
+
+class TestProxyAuth(unittest.TestCase):
+    class MyGrpcClient(GrpcClient):
+        def _populate_api(self):
+            pass
+
+    def tearDown(self):
+        ProxyAuthentication.unregister()
+        ProxyAuthentication.clear_proxy()
+
+    def test_no_options(self):
+        client = TestProxyAuth.MyGrpcClient("some-service")
+        options = client._build_channel_options()
+        assert options == []
+
+    def test_registered_no_proxy_set(self):
+        class MyProxyAuth(ProxyAuthentication):
+            def authorize(self, proxy: str, protocol: str) -> dict:
+                return {
+                    "Proxy-Authentication": "some-token",
+                    "x-another-header": "some-other-header",
+                }
+
+        ProxyAuthentication.register(MyProxyAuth)
+        client = TestProxyAuth.MyGrpcClient("some-service")
+        options = client._build_channel_options()
+        assert options == []
+
+    def test_determines_proxy(self):
+        ProxyAuthentication.set_proxy("http://some-proxy.test:8888")
+
+        client = TestProxyAuth.MyGrpcClient("some-service")
+        options = client._build_channel_options()
+        assert options == [("grpc.http_proxy", "http://some-proxy.test:8888")]
+
+        ProxyAuthentication.set_proxy(
+            "http://grpc-specific-override:1234", ProxyAuthentication.Protocol.GRPC
+        )
+        options = client._build_channel_options()
+        assert options == [("grpc.http_proxy", "http://grpc-specific-override:1234")]
+
+    def test_validates_authorize(self):
+        class MyProxyAuth(ProxyAuthentication):
+            def authorize(self, proxy: str, protocol: str) -> dict:
+                return 15
+
+        ProxyAuthentication.register(MyProxyAuth)
+        ProxyAuthentication.set_proxy("http://some-proxy.test:8888")
+
+        with self.assertRaisesRegex(TypeError, "must return a dictionary"):
+            client = TestProxyAuth.MyGrpcClient("some-service")
+            client.channel
+
+    def test_sends_connect_headers(self):
+        class MyProxyAuth(ProxyAuthentication):
+            def authorize(self, proxy: str, protocol: str) -> dict:
+                return {
+                    "Proxy-Authentication": "some-token",
+                    "x-another-header": "some-other-header",
+                }
+
+        ProxyAuthentication.register(MyProxyAuth)
+        ProxyAuthentication.set_proxy("http://some-proxy.test:8888")
+
+        expected_options = [
+            ("grpc.http_proxy", "http://some-proxy.test:8888"),
+            (
+                "grpc.http_connect_headers",
+                "Proxy-Authentication: some-token\nx-another-header: some-other-header",
+            ),
+        ]
+
+        client = TestProxyAuth.MyGrpcClient("some-service")
+        options = client._build_channel_options()
+        assert options == expected_options
+
+        mock_chan_factory = mock.Mock()
+        client.SECURE_CHANNEL_FACTORY = mock_chan_factory
+        client.channel
+
+        assert mock_chan_factory.called
+
+        host, creds, headers, *other = mock_chan_factory.call_args[0]
+        assert host == "some-service:443"
+        assert type(creds) == grpc.ChannelCredentials
+        assert headers == expected_options

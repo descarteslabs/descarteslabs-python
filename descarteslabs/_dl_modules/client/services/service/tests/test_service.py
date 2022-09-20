@@ -15,8 +15,12 @@
 import pickle
 import unittest
 from http import HTTPStatus
+from io import BytesIO
 
 import mock
+import requests
+import responses
+import urllib3
 from descarteslabs.exceptions import BadRequestError, ProxyAuthenticationRequiredError
 
 from .....common.http.authorization import add_bearer
@@ -24,18 +28,13 @@ from ....version import __version__
 from .. import (
     JsonApiService,
     JsonApiSession,
+    ProxyAuthentication,
     Service,
     Session,
     ThirdPartyService,
     service,
 )
-from ..service import (
-    HttpHeaderKeys,
-    HttpHeaderValues,
-    HttpRequestMethod,
-    WrappedSession,
-    requests,
-)
+from ..service import HttpHeaderKeys, HttpHeaderValues, WrappedSession
 
 FAKE_URL = "http://localhost"
 FAKE_TOKEN = "foo.bar.sig"
@@ -169,85 +168,6 @@ class TestSessionClass(unittest.TestCase):
         service.session.get("bar")
 
         request.assert_called()
-
-    @mock.patch.object(requests.Session, "request")
-    def test_proxy_called(self, request):
-        request.return_value.status_code = HTTPStatus.PROXY_AUTHENTICATION_REQUIRED
-
-        class MySession(Session):
-            handle_proxy_authentication_called = 0
-            handled = True
-
-            def handle_proxy_authentication(self, method, url, **kwargs):
-                MySession.handle_proxy_authentication_called += 1
-                assert method == HttpRequestMethod.GET
-                assert url == "bar"
-                return MySession.handled
-
-        service = Service(
-            "foo", auth=mock.MagicMock(token=FAKE_TOKEN), session_class=MySession
-        )
-        service.session.get("bar")
-
-        assert MySession.handle_proxy_authentication_called == 1
-
-        MySession.handled = False
-        with self.assertRaises(ProxyAuthenticationRequiredError):
-            service.session.get("bar")
-
-        assert MySession.handle_proxy_authentication_called == 2
-
-    @mock.patch.object(requests.Session, "request")
-    def test_proxy_called_jsonapi(self, request):
-        request.return_value.status_code = HTTPStatus.PROXY_AUTHENTICATION_REQUIRED
-
-        class MySession(JsonApiSession):
-            handle_proxy_authentication_called = 0
-            handled = True
-
-            def handle_proxy_authentication(self, method, url, **kwargs):
-                MySession.handle_proxy_authentication_called += 1
-                assert method == HttpRequestMethod.GET
-                assert url == "bar"
-                return MySession.handled
-
-        service = JsonApiService(
-            "foo", auth=mock.MagicMock(token=FAKE_TOKEN), session_class=MySession
-        )
-        service.session.get("bar")
-
-        assert MySession.handle_proxy_authentication_called == 1
-
-        MySession.handled = False
-        with self.assertRaises(ProxyAuthenticationRequiredError):
-            service.session.get("bar")
-
-        assert MySession.handle_proxy_authentication_called == 2
-
-    @mock.patch.object(requests.Session, "request")
-    def test_proxy_called_thirdpary(self, request):
-        request.return_value.status_code = HTTPStatus.PROXY_AUTHENTICATION_REQUIRED
-
-        class MySession(Session):
-            handle_proxy_authentication_called = 0
-            handled = True
-
-            def handle_proxy_authentication(self, method, url, **kwargs):
-                MySession.handle_proxy_authentication_called += 1
-                assert method == HttpRequestMethod.GET
-                assert url == "bar"
-                return MySession.handled
-
-        service = ThirdPartyService(session_class=MySession)
-        service.session.get("bar")
-
-        assert MySession.handle_proxy_authentication_called == 1
-
-        MySession.handled = False
-        with self.assertRaises(ProxyAuthenticationRequiredError):
-            service.session.get("bar")
-
-        assert MySession.handle_proxy_authentication_called == 2
 
 
 class TestJsonApiSession(unittest.TestCase):
@@ -398,47 +318,6 @@ class TestJsonApiSession(unittest.TestCase):
             )
 
 
-class TestDefaultProxyClass(unittest.TestCase):
-    @mock.patch.object(requests.Session, "request")
-    def test_session_default_proxy(self, request):
-        request.return_value.status_code = HTTPStatus.PROXY_AUTHENTICATION_REQUIRED
-
-        class MySession(Session):
-            handle_proxy_authentication_called = 0
-            handled = True
-
-            def handle_proxy_authentication(self, method, url, **kwargs):
-                MySession.handle_proxy_authentication_called += 1
-                assert method == HttpRequestMethod.GET
-                assert url == "bar"
-                return MySession.handled
-
-        Service.set_default_session_class(MySession)
-        service = Service("foo", auth=mock.MagicMock(token=FAKE_TOKEN))
-        service.session.get("bar")
-
-        assert MySession.handle_proxy_authentication_called == 1
-
-        MySession.handled = False
-        with self.assertRaises(ProxyAuthenticationRequiredError):
-            service.session.get("bar")
-
-        assert MySession.handle_proxy_authentication_called == 2
-
-        MySession.handled = True
-        ThirdPartyService.set_default_session_class(MySession)
-        service = ThirdPartyService()
-        service.session.get("bar")
-
-        assert MySession.handle_proxy_authentication_called == 3
-
-        MySession.handled = False
-        with self.assertRaises(ProxyAuthenticationRequiredError):
-            service.session.get("bar")
-
-        assert MySession.handle_proxy_authentication_called == 4
-
-
 class TestWarningsClass(unittest.TestCase):
     @mock.patch.object(service, "warn")
     @mock.patch.object(requests.Session, "request")
@@ -546,3 +425,150 @@ class TestInitialize(unittest.TestCase):
         service.session.get("bar")
 
         assert MySession.initialize_called == 1
+
+
+class TestProxyAuthHTTPS(unittest.TestCase):
+    url = "https://fake-service"
+    protocol = ProxyAuthentication.Protocol.HTTPS
+
+    def tearDown(self):
+        ProxyAuthentication.unregister()
+        ProxyAuthentication.clear_proxy()
+
+    @responses.activate
+    def test_requires_proxy_auth(self):
+        responses.add("GET", self.url + "/bar", status=407)
+
+        service = Service(self.url, auth=mock.MagicMock(token=FAKE_TOKEN))
+
+        with self.assertRaises(ProxyAuthenticationRequiredError):
+            service.session.get("/bar")
+
+    # responses hijacks the connection pool and bypasses our HTTPAdapter
+    # unfortunately we have to mock the pool manager here instead.
+    @mock.patch(
+        "urllib3.poolmanager.PoolManager._new_pool",
+    )
+    def test_no_proxy_headers_if_proxy_not_set(self, mock_conn):
+        mock_conn.return_value.urlopen.side_effect = [
+            urllib3.response.HTTPResponse(
+                status=200,
+                reason=None,
+                body=BytesIO(),
+                headers=[],
+                preload_content=False,
+            ),
+        ]
+
+        class MyProxyAuth(ProxyAuthentication):
+            def authorize(self, proxy: str, protocol: str) -> dict:
+                MyProxyAuth.proxy = proxy
+                MyProxyAuth.protocol = protocol
+
+                return {"header-1": "uh oh"}
+
+        ProxyAuthentication.register(MyProxyAuth)
+
+        service = Service(self.url, auth=mock.MagicMock(token=FAKE_TOKEN))
+        service.session.get("/bar")
+
+        assert not hasattr(MyProxyAuth, "proxy")
+        assert not hasattr(MyProxyAuth, "protocol")
+        assert mock_conn.called
+
+        _, kwargs = mock_conn.call_args
+
+        assert "_proxy" not in kwargs["request_context"]
+        assert "_proxy_headers" not in kwargs["request_context"]
+
+    @mock.patch(
+        "urllib3.poolmanager.PoolManager._new_pool",
+    )
+    def test_proxy_authentication(self, mock_conn):
+        mock_conn.return_value.urlopen.side_effect = [
+            urllib3.response.HTTPResponse(
+                status=200,
+                reason=None,
+                body=BytesIO(),
+                headers=[],
+                preload_content=False,
+            ),
+        ]
+
+        class MyProxyAuth(ProxyAuthentication):
+            def authorize(self, proxy: str, protocol: str) -> dict:
+                MyProxyAuth.proxy = proxy
+                MyProxyAuth.protocol = protocol
+
+                return {
+                    "Proxy-Authorization": "proxy-auth-value",
+                    "X-Test-Header": "another test header",
+                }
+
+        ProxyAuthentication.register(MyProxyAuth)
+        ProxyAuthentication.set_proxy("http://some-proxy.test")
+
+        service = Service(self.url, auth=mock.MagicMock(token=FAKE_TOKEN))
+        service.session.get("/bar")
+
+        assert MyProxyAuth.proxy == "http://some-proxy.test"
+        assert MyProxyAuth.protocol == self.protocol
+        assert mock_conn.called
+
+        args, kwargs = mock_conn.call_args
+        assert str(kwargs["request_context"]["_proxy"]) == "http://some-proxy.test:80"
+        assert kwargs["request_context"]["_proxy_headers"] == {
+            "Proxy-Authorization": "proxy-auth-value",
+            "X-Test-Header": "another test header",
+        }
+        assert kwargs["request_context"]["scheme"] == self.protocol
+        assert (
+            kwargs["request_context"]["port"] == 80
+            if self.protocol == ProxyAuthentication.Protocol.HTTP
+            else 443
+        )
+
+        # The request is tunneling it should be directed at the real service instead of
+        # the proxy
+        if self.protocol == ProxyAuthentication.Protocol.HTTPS:
+            assert kwargs["request_context"]["host"] == "fake-service"
+        else:
+            assert kwargs["request_context"]["host"] == "some-proxy.test"
+
+    def test_validates_authorize(self):
+        class MyProxyAuth(ProxyAuthentication):
+            def authorize(self, proxy: str, protocol: str) -> dict:
+                MyProxyAuth.called = True
+                return 10
+
+        ProxyAuthentication.register(MyProxyAuth)
+        ProxyAuthentication.set_proxy("http://some-proxy.test:8888")
+
+        with self.assertRaisesRegex(TypeError, "must return a dictionary"):
+            service = Service(self.url, auth=mock.MagicMock(token=FAKE_TOKEN))
+            service.session.get("/bar")
+            assert MyProxyAuth.called
+
+
+class TestProxyAuthHTTP(TestProxyAuthHTTPS):
+    url = "http://fake-service"
+    protocol = ProxyAuthentication.Protocol.HTTP
+
+    @responses.activate
+    def test_proxy_auth_required_headers(self):
+        responses.add(
+            "GET",
+            self.url + "/bar",
+            status=407,
+            headers={
+                "Proxy-Authenticate": "Basic",
+            },
+        )
+
+        service = Service(self.url, auth=mock.MagicMock(token=FAKE_TOKEN))
+
+        with self.assertRaises(ProxyAuthenticationRequiredError) as ctx:
+            service.session.get("/bar")
+
+        assert ctx.exception.status == 407
+        assert ctx.exception.proxy_authenticate == "Basic"

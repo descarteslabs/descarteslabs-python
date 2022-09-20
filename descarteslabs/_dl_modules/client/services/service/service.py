@@ -28,19 +28,9 @@ import uuid
 from http import HTTPStatus
 from warnings import warn
 
-import requests
 from descarteslabs.auth import Auth
-from descarteslabs.exceptions import (
-    BadRequestError,
-    ClientError,
-    ConflictError,
-    GatewayTimeoutError,
-    NotFoundError,
-    ProxyAuthenticationRequiredError,
-    RateLimitError,
-    ServerError,
-)
-from requests.adapters import HTTPAdapter
+from descarteslabs.common.http import Session
+from descarteslabs.exceptions import ClientError, ServerError
 from urllib3.util.retry import Retry
 
 from ....common.http.authorization import add_bearer
@@ -83,156 +73,6 @@ class HttpHeaderValues:
     ApplicationVndApiJson = "application/vnd.api+json"
     ApplicationOctetStream = "application/octet-stream"
     DlPython = "dl-python"
-
-
-class Session(requests.Session):
-    """The HTTP Session that performs the actual HTTP request.
-
-    This is the base session that is used for all Descartes Labs HTTP calls which
-    itself is derived from `requests.Session
-    <https://requests.readthedocs.io/en/master/api/#requests.Session>`_.
-
-    You cannot control its instantiation, but you can derive from this class
-    and pass it as the class to use when you instantiate a :py:class:`Service`
-    or register it as the default session class using
-    :py:meth:`Service.set_default_session_class`.
-
-    Parameters
-    ----------
-    base_url: str
-        The URL prefix to use for communication with the Descartes Labs servers.
-    timeout: int or tuple(int, int)
-        See `requests timeouts
-        <https://requests.readthedocs.io/en/master/user/advanced/#timeouts>`_.
-    """
-
-    ATTR_BASE_URL = "base_url"
-    ATTR_HEADERS = "headers"
-    ATTR_TIMEOUT = "timeout"
-
-    # Adapts the custom pickling protocol of requests.Session
-    __attrs__ = requests.Session.__attrs__ + [ATTR_BASE_URL, ATTR_TIMEOUT]
-
-    def __init__(self, base_url, timeout=None):
-        self.base_url = base_url
-        self.timeout = timeout
-        super(Session, self).__init__()
-
-    def initialize(self):
-        """Initialize the :py:class:`Session` instance
-
-        You can override this method in a derived class to add your own initialization.
-        This method does nothing in the base class.
-        """
-
-        pass
-
-    def request(self, method, url, **kwargs):
-        """Sends an HTTP request and emits Descartes Labs specific errors.
-
-        Parameters
-        ----------
-        method: str
-            The HTTP method to use.
-        url: str
-            The URL to send the request to.
-        kwargs: dict
-            Additional arguments.  See `requests.request
-            <https://requests.readthedocs.io/en/master/api/#requests.request>`_.
-
-        Returns
-        -------
-        Response
-            A :py:class:`request.Response` object.
-
-        Raises
-        ------
-        BadRequestError
-            Either a 400 or 422 HTTP response status code was encountered.
-        NotFoundError
-            A 404 HTTP response status code was encountered.
-        ProxyAuthenticationRequiredError
-            A 407 HTTP response status code was encountered and the resulting
-            :py:meth:`handle_proxy_authentication` did not indicate that the
-            proxy authentication was handled.
-        ConflictError
-            A 409 HTTP response status code was encountered.
-        RateLimitError
-            A 429 HTTP response status code was encountered.
-        GatewayTimeoutError
-            A 504 HTTP response status code was encountered.
-        ~descarteslabs.exceptions.ServerError
-            Any HTTP response status code larger than 400 that was not covered above
-            is returned as a ServerError.  The original HTTP response status code
-            can be found in the attribute :py:attr:`original_status`.
-        """
-
-        if self.timeout and self.ATTR_TIMEOUT not in kwargs:
-            kwargs[self.ATTR_TIMEOUT] = self.timeout
-
-        if self.ATTR_HEADERS not in kwargs:
-            kwargs[self.ATTR_HEADERS] = {}
-
-        kwargs[self.ATTR_HEADERS][HttpHeaderKeys.RequestGroup] = uuid.uuid4().hex
-
-        resp = super(Session, self).request(method, self.base_url + url, **kwargs)
-
-        if (
-            resp.status_code >= HTTPStatus.OK
-            and resp.status_code < HTTPStatus.BAD_REQUEST
-        ):
-            return resp
-        elif resp.status_code == HTTPStatus.BAD_REQUEST:
-            raise BadRequestError(resp.text)
-        elif resp.status_code == HTTPStatus.NOT_FOUND:
-            text = resp.text
-            if not text:
-                text = "{} {} {}".format(HTTPStatus.NOT_FOUND, method, url)
-            raise NotFoundError(text)
-        elif resp.status_code == HTTPStatus.PROXY_AUTHENTICATION_REQUIRED:
-            if not self.handle_proxy_authentication(method, url, **kwargs):
-                raise ProxyAuthenticationRequiredError()
-        elif resp.status_code == HTTPStatus.CONFLICT:
-            raise ConflictError(resp.text)
-        elif resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
-            raise BadRequestError(resp.text)
-        elif resp.status_code == HTTPStatus.TOO_MANY_REQUESTS:
-            raise RateLimitError(
-                resp.text, retry_after=resp.headers.get(HttpHeaderKeys.RetryAfter)
-            )
-        elif resp.status_code == HTTPStatus.GATEWAY_TIMEOUT:
-            raise GatewayTimeoutError(
-                "Your request timed out on the server. "
-                "Consider reducing the complexity of your request."
-            )
-        else:
-            # The whole error hierarchy has some problems.  Originally a ClientError
-            # could be thrown by our client libraries, but any HTTP error was a
-            # ServerError.  That changed and HTTP errors below 500 became ClientErrors.
-            # That means that this actually should be split in ClientError for
-            # status < 500 and ServerError for status >= 500, but that might break
-            # things.  So instead, we'll add the original status.
-            server_error = ServerError(resp.text)
-            server_error.original_status = resp.status_code
-            raise server_error
-
-    def handle_proxy_authentication(self, method, url, **kwargs):
-        """Handle proxy authentication when the HTTP request was denied.
-
-        This method can be overridden in a derived class.  By default a
-        :py:class:`~descarteslabs.exceptions.ProxyAuthenticationRequiredError`
-        will be raised.
-
-        Returns
-        -------
-        bool
-            Return True if the proxy authentication has been handled and no further
-            exception should be raised.  Return False if a
-            :py:class:`~descarteslabs.exceptions.ProxyAuthenticationRequiredError`
-            should be raised.
-        """
-
-        return False
 
 
 # For backward compatibility
@@ -321,10 +161,6 @@ class Service:
         remove_headers_on_redirect=[],
     )
 
-    # We share an adapter (one per thread/process) among all clients to take advantage
-    # of the single underlying connection pool.
-    ADAPTER = ThreadLocalWrapper(lambda: HTTPAdapter(max_retries=Service.RETRY_CONFIG))
-
     _session_class = Session
 
     # List of attributes that will be included in state for pickling.
@@ -402,10 +238,8 @@ class Service:
         self.base_url = url
 
         if retries is None:
-            self._adapter = self.ADAPTER
-        else:
-            self.RETRY_CONFIG = retries
-            self._init_adapter()
+            retries = Service.RETRY_CONFIG
+        self._retry_config = retries
 
         if session_class is not None:
             # Overwrite the default session class
@@ -417,11 +251,6 @@ class Service:
             self._session_class = session_class
 
         self._init_session()
-
-    def _init_adapter(self):
-        self._adapter = ThreadLocalWrapper(
-            lambda: HTTPAdapter(max_retries=self.RETRY_CONFIG)
-        )
 
     def _init_session(self):
         # Sessions can't be shared across threads or processes because the underlying
@@ -441,7 +270,7 @@ class Service:
         self.auth._token = token
 
     @property
-    def session(self) -> "requests.Session":
+    def session(self) -> Session:
         """Session: The session instance used by this service."""
         session = self._session.get()
         auth = add_bearer(self.token)
@@ -451,13 +280,10 @@ class Service:
         return session
 
     def _build_session(self):
-        session = self._session_class(self.base_url, timeout=self.TIMEOUT)
+        session = self._session_class(
+            self.base_url, timeout=self.TIMEOUT, retries=self._retry_config
+        )
         session.initialize()
-
-        adapter = self._adapter.get()
-        session.mount(HttpMountProtocol.HTTPS, adapter)
-        session.mount(HttpMountProtocol.HTTP, adapter)
-
         session.headers.update(
             {
                 HttpHeaderKeys.ContentType: HttpHeaderValues.ApplicationJson,
@@ -496,7 +322,6 @@ class Service:
         for name, value in state.items():
             setattr(self, name, value)
 
-        self._init_adapter()
         self._init_session()
 
 
@@ -574,9 +399,8 @@ class JsonApiSession(Session):
         ~descarteslabs.exceptions.NotFoundError
             A 404 HTTP response status code was encountered.
         ProxyAuthenticationRequiredError
-            A 407 HTTP response status code was encountered and the resulting
-            :py:meth:`~JsonApiSession.handle_proxy_authentication` did not indicate
-            that the proxy authentication was handled.
+            A 407 HTTP response status code was encountered indicating proxy
+            authentication was not handled or was invalid.
         ConflictError
             A 409 HTTP response status code was encountered.
         RateLimitError
@@ -609,24 +433,6 @@ class JsonApiSession(Session):
             pass
 
         return resp
-
-    def handle_proxy_authentication(self, method, url, **kwargs):
-        """Handle proxy authentication when the HTTP request was denied.
-
-        This method can be overridden in a derived class.  By default a
-        :py:class:`~descarteslabs.exceptions.ProxyAuthenticationRequiredError`
-        will be raised.
-
-        Returns
-        -------
-        bool
-            Return True if the proxy authentication has been handled and no further
-            exception should be raised.  Return False if a
-            :py:class:`~descarteslabs.exceptions.ProxyAuthenticationRequiredError`
-            should be raised.
-        """
-
-        return False
 
     def _emit_warnings(self, json_response):
         if (
@@ -992,10 +798,6 @@ class ThirdPartyService:
         ],
     )
 
-    ADAPTER = ThreadLocalWrapper(
-        lambda: HTTPAdapter(max_retries=ThirdPartyService.RETRY_CONFIG)
-    )
-
     _session_class = Session
 
     @classmethod
@@ -1053,8 +855,6 @@ class ThirdPartyService:
     def _build_session(self):
         session = self._session_class(self.base_url, timeout=self.TIMEOUT)
         session.initialize()
-
-        session.mount(HttpMountProtocol.HTTPS, self.ADAPTER.get())
         session.headers.update(
             {
                 HttpHeaderKeys.ContentType: HttpHeaderValues.ApplicationOctetStream,

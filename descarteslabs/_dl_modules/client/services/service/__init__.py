@@ -12,20 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .service import (
-    Service,
-    Session,
-    JsonApiService,
-    JsonApiSession,
-    ThirdPartyService,
-    NotFoundError,
-)
+from descarteslabs.common.http import NotFoundError, ProxyAuthentication
+
+from .service import JsonApiService, JsonApiSession, Service, Session, ThirdPartyService
 
 __all__ = [
-    "Service",
-    "Session",
     "JsonApiService",
     "JsonApiSession",
-    "ThirdPartyService",
     "NotFoundError",
+    "ProxyAuthentication",
+    "Service",
+    "Session",
+    "ThirdPartyService",
 ]
