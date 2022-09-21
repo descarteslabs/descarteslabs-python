@@ -43,7 +43,7 @@ from .. import (
     as_completed,
     GroupTerminalException,
 )
-from .....common.services.tasks.constants import (
+from .....common.tasks.constants import (
     DIST,
     DATA,
     ENTRYPOINT,

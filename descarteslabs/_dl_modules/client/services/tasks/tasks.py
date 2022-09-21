@@ -40,7 +40,7 @@ from descarteslabs.config import get_settings
 from descarteslabs.exceptions import AuthError
 
 from ....common.dotdict import DotDict, DotList
-from ....common.services.tasks.constants import (
+from ....common.tasks.constants import (
     DATA,
     DIST,
     ENTRYPOINT,
