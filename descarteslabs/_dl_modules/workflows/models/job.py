@@ -8,36 +8,25 @@ import sys
 import grpc
 import requests
 
+from ... import catalog
 from ...client.version import __version__
-from ...common.graft import client as graft_client, syntax as graft_syntax
-from ...common.registry import registry
-from ...common.proto.job import job_pb2
-from ...common.proto.types import types_pb2
+from ...common.graft import client as graft_client
+from ...common.graft import syntax as graft_syntax
 from ...common.proto.destinations import destinations_pb2
 from ...common.proto.formats import formats_pb2
-from ...common.workflows.outputs import (
-    user_format_to_proto,
-    user_destination_to_proto,
-)
-from ...common.workflows.proto_munging import (
-    which_has,
-    has_proto_to_user_dict,
-)
+from ...common.proto.job import job_pb2
+from ...common.proto.types import types_pb2
+from ...common.registry import registry
 from ...common.workflows.arrow_serialization import deserialize_pyarrow
-
-from ... import catalog
-
+from ...common.workflows.outputs import user_destination_to_proto, user_format_to_proto
+from ...common.workflows.proto_munging import has_proto_to_user_dict, which_has
 from ..cereal import deserialize_typespec
-from ..client import get_global_grpc_client, default_grpc_retry_predicate
+from ..client import default_grpc_retry_predicate, get_global_grpc_client
 from ..execution import to_computable
 from ..result_types import unmarshal
-from ..types import GeoContext, ProxyTypeError, Any
-from .exceptions import error_code_to_exception, JobTimeoutError, JobCancelled
-from .utils import (
-    in_notebook,
-    pb_milliseconds_to_datetime,
-    pb_timestamp_to_datetime,
-)
+from ..types import Any, GeoContext, ProxyTypeError
+from .exceptions import JobCancelled, JobTimeoutError, error_code_to_exception
+from .utils import in_notebook, pb_milliseconds_to_datetime, pb_timestamp_to_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +112,7 @@ class Job:
             asynchronous requests, you can use this parameter as a way to indicate that you are comfortable waiting
             and retrying in response to RESOURCE EXHAUSTED errors. By default, most failures will trigger a small number
             of retries, but if you have reached your outstanding job limit, by default, the client will not retry.
-            See the `compute section of the Workflows Guide </guides/workflows/compute.html>` for more information.
+            See the :doc:`compute section of the Workflows Guide </guides/workflows/compute>` for more information.
         **arguments: Any
             Values for all parameters that ``obj`` depends on
             (or arguments that ``obj`` takes, if it's a `.Function`).

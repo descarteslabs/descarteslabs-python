@@ -1,21 +1,21 @@
 import time
-from enum import Enum
 from concurrent.futures import TimeoutError
+from enum import Enum
 
 from ..common.collection import Collection
 from ..common.property_filtering import Properties
-from .catalog_base import (
-    CatalogObject,
-    CatalogClient,
-    check_deleted,
-    _new_abstract_class,
-)
 from .attributes import (
+    BooleanAttribute,
+    ListAttribute,
     Resolution,
     Timestamp,
-    BooleanAttribute,
     TypedAttribute,
-    ListAttribute,
+)
+from .catalog_base import (
+    CatalogClient,
+    CatalogObject,
+    _new_abstract_class,
+    check_deleted,
 )
 
 try:
@@ -63,7 +63,7 @@ class Product(CatalogObject):
     privileges to everyone in that organization.  The `readers` and `writers` attributes
     are only visible to the `owners`, you will not see them otherwise.
 
-    Also see `Sharing Resources </guides/sharing.html>`_.
+    Also see :doc:`Sharing Resources </guides/sharing>`.
     """
 
     _doc_type = "product"
@@ -450,8 +450,8 @@ class Product(CatalogObject):
             If this product was deleted.
 
         """
-        from .search import Search
         from .band import DerivedBand
+        from .search import Search
 
         return Search(
             DerivedBand,

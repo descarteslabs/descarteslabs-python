@@ -1,6 +1,6 @@
-from .workflow import Workflow
-from .versionedgraft import VersionedGraft
 from .job import Job
+from .versionedgraft import VersionedGraft
+from .workflow import Workflow
 
 
 def compute(
@@ -63,7 +63,7 @@ def compute(
         and retrying in response to RESOURCE EXHAUSTED errors. By default, most failures will trigger a small number
         of retries, but if you have reached your outstanding job limit, by default, the client will not retry. This
         parameter is unnecessary when making synchronous `compute` requests (ie. block=True, the default).
-        See the `compute section of the Workflows Guide </guides/workflows/compute.html>` for more information.
+        See the :doc:`compute section of the Workflows Guide </guides/workflows/compute>` for more information.
     **arguments: Any
         Values for all parameters that ``obj`` depends on (or arguments that ``obj`` takes,
         if it's a `.Function`). Can be given as Proxytypes, or as Python objects like numbers, lists,

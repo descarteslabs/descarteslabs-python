@@ -18,7 +18,7 @@ Catalog
 -------
 
 The Catalog API can be found as Python package ``descarteslabs.catalog``.  To install
-please refer to `Installation </installation.html>`_.
+please refer to :doc:`Installation </installation>`.
 
 .. _catalog_v2_compatibility_warnings:
 
