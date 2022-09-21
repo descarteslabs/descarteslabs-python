@@ -5,6 +5,8 @@ try:
 except ImportError:
     import collections as abc
 
+from .band import BandType
+
 # supported data types.
 # values must be ordered from smallest to largest, and
 # (arbitrarily) unsigned before signed, integer before float
@@ -36,20 +38,11 @@ data_type_ranges = {
 }
 
 
-class ScalingMode(Enum):
+class ScalingMode(str, Enum):
     RAW = "raw"
     DISPLAY = "display"
     AUTO = "auto"
     PHYSICAL = "physical"
-
-
-class BandType(Enum):
-    SPECTRAL = "spectral"
-    MASK = "mask"
-    CLASS = "class"
-    OTHER = "other"
-    # v1 compatibility
-    DERIVED = "other"
 
 
 class BandScale(object):
@@ -412,15 +405,8 @@ def properties_for_band(name, band, processing_level):
     """
     Gather up relevant properties for the band, applying processing level and defaults.
     """
-    try:
-        type_ = band.type
-    except AttributeError:
-        # DerivedBand
-        type_ = "other"
-    try:
-        band_type = BandType(type_)
-    except ValueError:
-        raise ValueError(f"Invalid band type '{type_}' for band '{name}'")
+    # DerivedBand has no type field but treat as generic
+    band_type = getattr(band, "type", BandType.GENERIC)
 
     # defaults on band base properties are real legacy
     data_type = band.data_type or "UInt16"

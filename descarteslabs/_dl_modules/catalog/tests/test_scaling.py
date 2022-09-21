@@ -1,7 +1,7 @@
 import pytest
 import unittest
 
-from ....catalog import (
+from .. import (
     SpectralBand,
     ClassBand,
     MaskBand,

@@ -9,13 +9,13 @@ from descarteslabs.exceptions import NotFoundError, BadRequestError
 
 from ..common.collection import Collection
 from ..common.geo import GeoContext, AOI
-from ..common.scaling import multiproduct_scaling_parameters, append_alpha_scaling
 from ..client.services.raster import Raster
 
 from .attributes import ResolutionUnit
 from .band import DerivedBand
 from .image_types import ResampleAlgorithm, DownloadFileFormat
 from .helpers import bands_to_list, cached_bands_by_product, download, is_path_like
+from .scaling import multiproduct_scaling_parameters, append_alpha_scaling
 
 
 class ImageCollection(Collection):
