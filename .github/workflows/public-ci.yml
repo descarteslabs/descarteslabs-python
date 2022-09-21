@@ -29,7 +29,7 @@ jobs:
         run: |
           mkdir tempdir
           pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/third_party" descarteslabs
-          rm -rf tempdir
+          rm -r tempdir
       - name: Test AWS
         env:
           TMPDIR: tempdir
@@ -37,7 +37,7 @@ jobs:
         run: |
           mkdir tempdir
           pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/third_party" --ignore="descarteslabs/_dl_modules/client/grpc" --ignore="descarteslabs/_dl_modules/client/services/catalog" --ignore="descarteslabs/_dl_modules/client/services/metadata" --ignore="descarteslabs/_dl_modules/client/services/places" --ignore="descarteslabs/_dl_modules/client/services/storage" --ignore="descarteslabs/_dl_modules/client/services/tasks" --ignore="descarteslabs/_dl_modules/client/services/vector" --ignore="descarteslabs/_dl_modules/common/tasks" --ignore="descarteslabs/_dl_modules/discover" --ignore="descarteslabs/_dl_modules/tables" --ignore="descarteslabs/_dl_modules/vectors" --ignore="descarteslabs/_dl_modules/workflows" descarteslabs
-          rm -rf tempdir
+          rm -r tempdir
 
   slack:
     runs-on: ubuntu-latest
