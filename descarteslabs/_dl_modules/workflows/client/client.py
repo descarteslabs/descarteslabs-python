@@ -4,26 +4,15 @@ import time
 import warnings
 
 import grpc
-
 from descarteslabs.config import get_settings
-from ...common.retry import (
-    Retry,
-    truncated_delay_generator,
-    _name_of_func,
-    _wraps,
-)
-from ...common.proto.job import job_pb2_grpc
-from ...common.proto.xyz import xyz_pb2_grpc
-from ...common.proto.workflow import workflow_pb2_grpc
+
+from ...client.grpc import GrpcClient, default_grpc_retry_predicate  # noqa: F401
 from ...common.proto.discover import discover_pb2_grpc
-
-from ...client.grpc import (  # noqa: F401
-    GrpcClient,
-    default_grpc_retry_predicate,
-)
-
+from ...common.proto.job import job_pb2_grpc
+from ...common.proto.workflow import workflow_pb2_grpc
+from ...common.proto.xyz import xyz_pb2_grpc
+from ...common.retry import Retry, _name_of_func, _wraps, truncated_delay_generator
 from .. import _channel
-
 
 # For lack of a better location for these:
 ALL_AUTHENTICATED_USERS = "allAuthenticatedUsers"
@@ -115,6 +104,22 @@ class _CreateJobRetry(Retry):
 class Client(GrpcClient):
     """Low-level gRPC client for interacting with the Workflows backend. Not intended for users to use directly.
 
+    Parameters
+    ----------
+    host : str, optional
+        The backend host to connect to.
+    port : int, optional
+        The backend port to connect to.
+    auth : Auth, optional
+        The authentication instance to use.
+    certificate : bytes, optional
+        The certificate to use when connecting to the backend service.
+    channel : grpc.Channel, optional
+        A pre-configured channel to use.
+    **grpc_client_kwargs : dict, optional
+        Additional arguments to use when creating the client instance.
+        Refer to :py:meth:`GrpcClient.__init__` to see available options.
+
     Examples
     --------
     >>> from descarteslabs.workflows import Client, Int
@@ -125,7 +130,15 @@ class Client(GrpcClient):
     <descarteslabs.workflows.models.workflow.Workflow object at 0x...>
     """
 
-    def __init__(self, host=None, auth=None, certificate=None, port=None, channel=None):
+    def __init__(
+        self,
+        host=None,
+        port=None,
+        auth=None,
+        certificate=None,
+        channel=None,
+        **grpc_client_kwargs,
+    ):
         if host is None:
             host = get_settings().workflows_host or _channel.DEFAULT_GRPC_HOST
 
@@ -141,6 +154,7 @@ class Client(GrpcClient):
             certificate=certificate,
             port=port,
             default_metadata=(("x-wf-channel", channel),),
+            **grpc_client_kwargs,
         )
 
         self._wf_channel = channel

@@ -6,6 +6,7 @@ from descarteslabs.auth import Auth
 import grpc
 
 from ...common.http import ProxyAuthentication
+from ...common.http.service import DefaultClientMixin
 from ...common.proto.health import health_pb2, health_pb2_grpc
 from ...common.retry import Retry, RetryError
 from ...common.retry.retry import _wraps
@@ -44,7 +45,7 @@ def default_grpc_retry_predicate(e):
         return code in _RETRYABLE_STATUS_CODES
 
 
-class GrpcClient:
+class GrpcClient(DefaultClientMixin):
     """Low-level gRPC client for interacting with the gRPC backends.
     Not intended for users to use directly.
 
@@ -102,6 +103,20 @@ class GrpcClient:
         self._certificate = certificate
         self._stubs = None
         self._api = None
+
+    def __getattr__(self, name: str):
+        """
+        Allow accessing API methods as if they were methods directly on the GrpcClient.
+        """
+
+        # prevent forwarding dunder attributes to API dictionary
+        if name.startswith("_"):
+            raise AttributeError(name)
+
+        try:
+            return self.api[name]
+        except KeyError:
+            raise AttributeError(name)
 
     @property
     def token(self):

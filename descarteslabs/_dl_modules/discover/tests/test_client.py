@@ -50,7 +50,7 @@ def test_discover_client(discover_grpc_client):
 
 
 def test_discover_client_default_client():
-    client = Discover()
+    client = Discover.get_default_client()
     assert isinstance(client._discover_client, DiscoverGrpcClient)
 
 

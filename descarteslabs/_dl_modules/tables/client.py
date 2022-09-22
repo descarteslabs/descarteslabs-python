@@ -52,30 +52,29 @@ Example:
     9  POINT (-70.26962 43.65628)         Parkside
 
 """
-from collections.abc import Iterable
+import datetime
 import io
 import json
 import os
 import time
-import datetime
 import uuid
-from enum import Enum
+import warnings
+from collections.abc import Iterable
 from copy import deepcopy
+from enum import Enum
 
 import numpy as np
-import requests
 import pandas as pd
-
-import warnings
-
-from .. import discover as disco
+import requests
 from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
 from descarteslabs.exceptions import BadRequestError
+
+from .. import discover as disco
+from ..client.deprecation import deprecate_func
 from ..client.services.storage import Storage
 from ..common.ibis.client import api as serializer
 from ..common.proto.vektorius import vektorius_pb2
-from ..client.deprecation import deprecate_func
 from ..discover import AssetType
 
 
@@ -106,8 +105,9 @@ class Tables(object):
         host=None,
         port=None,
         auth=None,
-        discover_client=None,
         database=None,
+        discover_client=None,
+        storage_client=None,
         **grpc_client_kwargs,
     ):
         """
@@ -119,23 +119,27 @@ class Tables(object):
             authenticated locally by token information on disk or by environment
             variables)
         :param database: Backend database
+        :param discover_client: Discover client instance
+        :param storage_client: Storage client instance
         """
         if host is None:
             host = get_settings().tables_host
+
         if port is None:
             port = int(get_settings().tables_port)
 
+        if auth is None:
+            auth = Auth.get_default_auth()
+
+        self.auth = auth
         self.connection = serializer.connect(
             host=host, port=port, auth=auth, **grpc_client_kwargs
         )
 
-        self.storage_client = Storage(auth=auth)
-        self.storage_type = "tmp"  # TODO "data"?
-
         self.database = database
-
-        self.auth = auth or Auth.get_default_auth()
         self.discover_client = discover_client or disco.Discover(auth=auth)
+        self.storage_client = storage_client or Storage(auth=auth)
+        self.storage_type = "tmp"  # TODO "data"?
 
     @property
     def dialect(self):
@@ -167,8 +171,8 @@ class Tables(object):
         """
 
         try:
-            from geopandas.array import GeometryDtype
             import fiona
+            from geopandas.array import GeometryDtype
         except ImportError:
             raise ImportError(
                 "Failed to import geospatial libraries, please install geopandas and fiona."

@@ -1,18 +1,18 @@
-from abc import ABC, abstractmethod
-
-from dataclasses import dataclass
 import re
-from typing import Generator, List, Optional, Union
-from enum import Enum
-from collections import UserDict
-
-import warnings
 import urllib
+import warnings
+from abc import ABC, abstractmethod
+from collections import UserDict
+from dataclasses import dataclass
+from enum import Enum
+from typing import Generator, List, Optional, Union
 
 from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
+
 from ..client.services.service import Service
 from ..common.discover import DiscoverGrpcClient
+from ..common.http.service import DefaultClientMixin
 from ..common.proto.discover import discover_pb2
 
 NAME_SEPARATOR = ":~/"
@@ -1451,23 +1451,31 @@ class Table(_DiscoverRequestBuilder):
         )
 
 
-class Discover:
-    """Discover is a client for interacting with assets such as Blobs and Folders."""
+class Discover(DefaultClientMixin):
+    """Discover is a client for interacting with assets such as Blobs and Folders.
+
+    Parameters
+    ==========
+    discover_client : DiscoverGrpcClient, optional
+        A pre-configured DiscoverGrpcClient instance.
+        If not specified, kwargs will be used instead to configure an instance.
+        If no arguments are given, it defaults to
+        :py:meth:`DiscoverGrpcClient.get_default_client()`.
+    **grpc_client_kwargs : dict, optional
+        Arguments to use when creating a DiscoverGrpcClient instance.
+        Refer to :py:meth:`DiscoverGrpcClient.__init__` to see available options.
+    """
 
     def __init__(
         self,
-        host: str = None,
         discover_client: DiscoverGrpcClient = None,
-        auth=None,
-        port=None,
+        **grpc_client_kwargs,
     ):
         if discover_client is None:
-            if host is None:
-                host = get_settings().discover_host
-            if port is None:
-                port = int(get_settings().discover_port)
+            discover_client = DiscoverGrpcClient.get_default_client()
+        elif grpc_client_kwargs:
+            discover_client = DiscoverGrpcClient(**grpc_client_kwargs)
 
-            discover_client = DiscoverGrpcClient(host, auth)
         self._discover_client = discover_client
 
     def blob(self, asset_name: str) -> Blob:
@@ -2333,9 +2341,7 @@ class Discover:
         return _IamClient.get_default_client().list_org_users(search)
 
 
-class _IamClient(Service):
-    _instance = None
-
+class _IamClient(Service, DefaultClientMixin):
     def __init__(self, url=None, auth=None, retries=None):
         if auth is None:
             auth = Auth.get_default_auth()
@@ -2355,24 +2361,6 @@ class _IamClient(Service):
             session.headers["Cookie"] = cookie_value
 
         return session
-
-    @classmethod
-    def get_default_client(cls):
-        """Retrieve the default IAM client."""
-
-        if cls._instance is None:
-            cls._instance = _IamClient()
-
-        return cls._instance
-
-    @classmethod
-    def set_default_client(cls, client):
-        """Change the default IAM client to the given IAM client."""
-
-        if not isinstance(client, cls):
-            raise TypeError(f"You must use a {cls.__name__} instance")
-
-        cls._instance = client
 
     def list_org_users(self, search=None):
         url = "/org/self"
