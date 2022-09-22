@@ -1,5 +1,6 @@
+from descarteslabs.config import get_settings
+
 from ...client.grpc import GrpcClient
-from ...config import get_settings
 from ..proto.discover import discover_pb2_grpc
 
 
