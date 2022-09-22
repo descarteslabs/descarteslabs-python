@@ -186,7 +186,7 @@ class IsNullExpression(Expression):
     def jsonapi_serialize(self, model=None, **kwargs):
         # note that this will not work on a CatalogObjectReference,
         # but not sure why that would ever be tested?
-        return (self.name, {"name": self.name, "op": "isnull"})
+        return {"name": self.name, "op": "isnull"}
 
 
 class IsNotNullExpression(Expression):
@@ -202,7 +202,7 @@ class IsNotNullExpression(Expression):
     def jsonapi_serialize(self, model=None, **kwargs):
         # note that this will not work on a CatalogObjectReference,
         # but not sure why that would ever be tested?
-        return (self.name, {"name": self.name, "op": "isnotnull"})
+        return {"name": self.name, "op": "isnotnull"}
 
 
 class LikeExpression(Expression):
