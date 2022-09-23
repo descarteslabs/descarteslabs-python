@@ -155,12 +155,7 @@ class Search(object):
         filters = []
 
         if self._filter_properties:
-            kwargs = {}
-            if V1_COMPATIBILITY in self._request_params:
-                kwargs[V1_COMPATIBILITY] = self._request_params[V1_COMPATIBILITY]
-            serialized = self._filter_properties.jsonapi_serialize(
-                self._model_cls, **kwargs
-            )
+            serialized = self._filter_properties.jsonapi_serialize(self._model_cls)
             # Flatten top-level "and" expressions since they are fairly common, e.g.
             # if you call filter() multiple times.
             if type(self._filter_properties) == AndExpression:

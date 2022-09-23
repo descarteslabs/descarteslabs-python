@@ -323,7 +323,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         return klass
 
     @classmethod
-    def _serialize_filter_attribute(cls, name, value, v1_compatibility=False):
+    def _serialize_filter_attribute(cls, name, value):
         """Serialize a single value for a filter.
 
         Allow the given value to be serialized using the serialization logic
@@ -350,14 +350,20 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             If the attribute is not serializable.
         """
         attribute_type = cls._get_attribute_type(name)
+
         if isinstance(attribute_type, ListAttribute):
+            # The type is contained in the list
             attribute_type = attribute_type._attribute_type
-        if (
-            v1_compatibility
-            and isinstance(attribute_type, CatalogObjectReference)
-            and isinstance(value, str)
-        ):
-            return (attribute_type.id_field, value)
+
+        if isinstance(attribute_type, CatalogObjectReference):
+            # This is a little tricky... If the value is an instance containing
+            # `id`, the name was already updated by the Expression to have `_id`
+            # appended to it, and the value will be converted to a string below.
+            # But if the value is a string, this hasn't happened yet and we need
+            # to update the name...
+            if value is None or isinstance(value, str):
+                return (attribute_type.id_field, value)
+
         return (name, attribute_type.serialize(value))
 
     def _set_modified(self, attr_name, changed=True, validate=True):

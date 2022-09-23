@@ -118,9 +118,9 @@ class EqExpression(Expression):
     def serialize(self):
         return {"eq": {self.name: self.value}}
 
-    def jsonapi_serialize(self, model=None, **kwargs):
+    def jsonapi_serialize(self, model=None):
         name, value = (
-            model._serialize_filter_attribute(self.name, self.value, **kwargs)
+            model._serialize_filter_attribute(self.name, self.value)
             if model
             else (self.name, self.value)
         )
@@ -136,9 +136,9 @@ class NeExpression(Expression):
     def serialize(self):
         return {"ne": {self.name: self.value}}
 
-    def jsonapi_serialize(self, model=None, **kwargs):
+    def jsonapi_serialize(self, model=None):
         name, value = (
-            model._serialize_filter_attribute(self.name, self.value, **kwargs)
+            model._serialize_filter_attribute(self.name, self.value)
             if model
             else (self.name, self.value)
         )
@@ -161,11 +161,11 @@ class RangeExpression(Expression):
     def serialize(self):
         return {"range": {self.name: self.parts}}
 
-    def jsonapi_serialize(self, model=None, **kwargs):
+    def jsonapi_serialize(self, model=None):
         serialized = []
         for op, val in self.parts.items():
             name, value = (
-                model._serialize_filter_attribute(self.name, val, **kwargs)
+                model._serialize_filter_attribute(self.name, val)
                 if model
                 else (self.name, val)
             )
@@ -183,10 +183,13 @@ class IsNullExpression(Expression):
         raise TypeError("'isnull' expression is not supported")
         # return {"isnull": self.name}
 
-    def jsonapi_serialize(self, model=None, **kwargs):
-        # note that this will not work on a CatalogObjectReference,
-        # but not sure why that would ever be tested?
-        return {"name": self.name, "op": "isnull"}
+    def jsonapi_serialize(self, model=None):
+        name = self.name
+
+        if model:
+            name, _ = model._serialize_filter_attribute(self.name, None)
+
+        return {"name": name, "op": "isnull"}
 
 
 class IsNotNullExpression(Expression):
@@ -199,10 +202,13 @@ class IsNotNullExpression(Expression):
         raise TypeError("'isnotnull' expression is not supported")
         # return {"isnotnull": self.name}
 
-    def jsonapi_serialize(self, model=None, **kwargs):
-        # note that this will not work on a CatalogObjectReference,
-        # but not sure why that would ever be tested?
-        return {"name": self.name, "op": "isnotnull"}
+    def jsonapi_serialize(self, model=None):
+        name = self.name
+
+        if model:
+            name, _ = model._serialize_filter_attribute(self.name, None)
+
+        return {"name": name, "op": "isnotnull"}
 
 
 class LikeExpression(Expression):
@@ -221,14 +227,14 @@ class LikeExpression(Expression):
     def serialize(self):
         return {"like": {self.name: self.value}}
 
-    def jsonapi_serialize(self, model=None, **kwargs):
+    def jsonapi_serialize(self, model=None):
         # catalog does not support this, and at present this method
         # is only used for Catalog V2. If it does start being used
         # for something else, we'll have to generate the error server
         # side
         raise TypeError("'like' expression is not supported")
         # name, value = (
-        #     model._serialize_filter_attribute(self.name, self.value, **kwargs)
+        #     model._serialize_filter_attribute(self.name, self.value)
         #     if model
         #     else (self.name, self.value)
         # )
@@ -259,12 +265,8 @@ class AndExpression(object):
     def serialize(self):
         return {"and": [x.serialize() for x in self.parts]}
 
-    def jsonapi_serialize(self, model=None, **kwargs):
-        return {
-            "and": [
-                part.jsonapi_serialize(model=model, **kwargs) for part in self.parts
-            ]
-        }
+    def jsonapi_serialize(self, model=None):
+        return {"and": [part.jsonapi_serialize(model=model) for part in self.parts]}
 
 
 class OrExpression(object):
@@ -291,10 +293,8 @@ class OrExpression(object):
     def serialize(self):
         return {"or": [x.serialize() for x in self.parts]}
 
-    def jsonapi_serialize(self, model=None, **kwargs):
-        return {
-            "or": [part.jsonapi_serialize(model=model, **kwargs) for part in self.parts]
-        }
+    def jsonapi_serialize(self, model=None):
+        return {"or": [part.jsonapi_serialize(model=model) for part in self.parts]}
 
 
 def range_expr(op):
@@ -434,9 +434,11 @@ class Properties(object):
         # keep sphinx happy
         if attr == "__qualname__":
             return self.__class__.__qualname__
+
         if not self.props:
             # implement the old GenericProperties
             return Property(attr)
+
         if attr in self.props:
             return Property(attr)
 
