@@ -1,8 +1,8 @@
 from datetime import datetime
 
 import pytest
-from descarteslabs.catalog import Product, MaskBand
-from descarteslabs.common.property_filtering import (
+from ....catalog import Product, MaskBand
+from .. import (
     GenericProperties,
     Properties,
     Property,
