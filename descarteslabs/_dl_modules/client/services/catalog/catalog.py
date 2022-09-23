@@ -259,7 +259,7 @@ class Catalog(Service):
                 tags:                  A list of searchable tags.
                 type:                  The data interpretation of
                                        the band. One of ["spectral",
-                                       "derived", "mask", "class"].
+                                       "mask", "class", "other"].
                 vendor_order:          The index of the band in the
                                        vendor's band tables. Useful
                                        for referencing the band to
@@ -823,7 +823,7 @@ class Catalog(Service):
                         tags:                  A list of searchable tags.
                         type:                  The data interpretation of the
                                                band. One of ["spectral",
-                                               "derived", "mask", "class"]
+                                               "mask", "class", "other"]
                         vendor_order:          The index of the band in the
                                                vendor's band tables. Useful
                                                for referencing the band to
@@ -902,7 +902,7 @@ class Catalog(Service):
                             which one is this in. Defaults to 0 (first file).
         :param str dtype: (Required) The data type used to store this band e.g Byte or Uint16 or Float32.
         :param list(int) data_range: (Required) A list specifying the min and max values for the data in this band.
-        :param str type: (Required) The data interpretation of the band. One of ['spectral', 'derived', 'mask', 'class']
+        :param str type: (Required) The data interpretation of the band. One of ['spectral', 'mask', 'class', 'other']
 
         :param int nodata: Pixel value indicating no data available.
         :param list(str) read: A list of groups, or user hashes to give read access to.
