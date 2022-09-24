@@ -1,3 +1,6 @@
+.. The automodule makes it possible to link here using :mod:
+.. automodule:: descarteslabs.tables
+
 Tables
 ------
 

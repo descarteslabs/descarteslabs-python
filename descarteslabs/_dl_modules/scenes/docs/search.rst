@@ -5,5 +5,5 @@ Search
 
 .. default-role:: any
 
-.. automodule:: descarteslabs.scenes._search
+.. automodule:: descarteslabs.scenes.search_api
   :members:

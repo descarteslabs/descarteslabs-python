@@ -5,6 +5,6 @@ Collection
 
 .. default-role:: any
 
-.. automodule:: descarteslabs.scenes.collection
+.. automodule:: descarteslabs.common.collection
   :autosummary:
   :members:

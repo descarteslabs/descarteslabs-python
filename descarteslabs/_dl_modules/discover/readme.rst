@@ -8,6 +8,7 @@ Discover
 
 |
 
+.. The automodule makes it possible to link here using :mod:
 .. automodule:: descarteslabs.discover
 
 .. default-role:: py:obj

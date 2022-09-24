@@ -5,7 +5,7 @@ GeoContext
 
 .. default-role:: any
 
-.. automodule:: descarteslabs.scenes.geocontext
+.. automodule:: descarteslabs.common.geo
   :autosummary:
   :members:
   :inherited-members:

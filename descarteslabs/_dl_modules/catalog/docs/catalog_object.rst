@@ -13,4 +13,4 @@ Catalog Client
 
 .. Don't include undoc members!
 .. autoclass:: descarteslabs.catalog.CatalogClient
-  :members:
+  :members: set_default_client, get_default_client
