@@ -12,31 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Datasets in the Descartes Labs catalog have many different resolutions and
-projections. In two different images, even covering the same place on Earth,
-the pixels ``(i, j)`` usually correspond to two different points on the ground.
-
-GeoContexts are a way to ensure multiple images from different sources
-are **spatially compatible**---that is, they all have the same shape
-(same width and height, in pixels), and the same pixel in each image
-corresponds to the same area on Earth.
-
-They do this by simply capturing all the spatial parameters that affect how
-imagery is rasterized---namely output resolution, coordinate reference system,
-and bounding box---in one object that can be passed into different method calls.
-In typical use, these contexts are created for you with reasonable defaults,
-so you only need to understand the different parameters when you need more control.
-
-The different subclasses of `GeoContext` implement different
-functionality.
-
-* `AOI` clips to arbitrary geometry, and lets you specify any output resolution
-  and projection.
-* `DLTile` helps you split large regions up into a grid of any spacing and
-  resolution, and represents a single tile in that grid, in UTM projection.
-"""
-
 
 import copy
 import threading
@@ -723,8 +698,9 @@ class DLTile(GeoContext):
     def __init__(self, dltile_dict, all_touched=False):
         """
         Constructs a DLTile from a parameter dictionary.
-        It is preferred to use the `DLTile.from_latlon`, `DLTile.from_shape`,
-        or `DLTile.from_key` class methods to construct a DLTile GeoContext.
+        It is preferred to use the
+        :meth:`DLTile.from_latlon, :meth:`DLTile.from_shape`, or :meth:`DLTile.from_key`
+        class methods to construct a DLTile GeoContext.
 
         Parameters
         ----------

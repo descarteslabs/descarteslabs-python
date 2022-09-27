@@ -75,6 +75,7 @@ Guide <catalog_v2_guide>`.
 
   ~descarteslabs.catalog.Image
   ~descarteslabs.catalog.ImageUpload
+  ~descarteslabs.catalog.ImageCollection
 
 :nontoc_heading:`Search`
 

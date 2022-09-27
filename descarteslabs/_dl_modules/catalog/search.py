@@ -243,11 +243,11 @@ class Search(object):
 
     def collect(self, **kwargs):
         """
-        Execute the search query and return the collection, the type of which is defined by the _model_cls
+        Execute the search query and return the appropriate collection.
 
         Returns
         -------
-        collection
+        ~descarteslabs.common.collection.Collection
             Collection of objects that match the type of document beng searched.
 
         Raises
@@ -412,15 +412,14 @@ class ImageSearch(Search):
 
         Parameters
         ----------
-        geometry : shapely.geometry.base.BaseGeometry, descarteslabs.common.geo.Geocontext, geojson-like
-            Geometry that found images must intersect.
+        geometry : shapely.geometry.base.BaseGeometry, ~descarteslabs.common.geo.GeoContext, geojson-like Geometry that found images must intersect.
 
         Returns
         -------
         Search
             A new instance of the :py:class:`~descarteslabs.catalog.ImageSearch`
             class that includes geometry filter.
-        """
+        """  # noqa: E501
         s = copy.deepcopy(self)
         name, value = self._model_cls._serialize_filter_attribute("geometry", geometry)
         s._request_params["intersects"] = json.dumps(
@@ -557,25 +556,25 @@ class ImageSearch(Search):
 
     def collect(self, geocontext=None, **kwargs):
         """
-         Execute the search query and return the collection, the type of which is defined by the _model_cls
+        Execute the search query and return the collection of the appropriate type.
 
-         Parameters
-         ----------
-         geocontext : shapely.geometry.base.BaseGeometry, descarteslabs.common.geo.Geocontext, geojson-like, default None  # noqa: E501
-             AOI for the ImageCollection.
+        Parameters
+        ----------
+        geocontext : shapely.geometry.base.BaseGeometry, descarteslabs.common.geo.Geocontext, geojson-like, default None  # noqa: E501
+            AOI for the ImageCollection.
 
         Returns
-         -------
-         collection
-             ImageCollection of Images returned from the search.
+        -------
+        ~descarteslabs.catalog.ImageCollection
+            ImageCollection of Images returned from the search.
 
-         Raises
-         ------
-         BadRequestError
-             If any of the query parameters or filters are invalid
-         ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
-             :ref:`Spurious exception <network_exceptions>` that can occur during a
-             network request.
+        Raises
+        ------
+        BadRequestError
+            If any of the query parameters or filters are invalid
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
         """
         if geocontext is None:
             geocontext = self._intersects

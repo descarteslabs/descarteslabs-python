@@ -24,11 +24,11 @@ import urllib3
 from descarteslabs.exceptions import BadRequestError, ProxyAuthenticationRequiredError
 
 from .....common.http.authorization import add_bearer
+from .....common.http import ProxyAuthentication
 from ....version import __version__
 from .. import (
     JsonApiService,
     JsonApiSession,
-    ProxyAuthentication,
     Service,
     Session,
     ThirdPartyService,

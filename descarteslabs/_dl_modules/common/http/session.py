@@ -176,9 +176,9 @@ class Session(requests.Session):
 
     You cannot control its instantiation, but you can derive from this class
     and pass it as the class to use when you instantiate a
-    :py:class:`descarteslabs.client.services.service.Service` or register it as the
+    :py:class:`~descarteslabs.client.services.service.Service` or register it as the
     default session class using
-    :py:meth:`descarteslabs.client.services.service.Service.set_default_session_class`.
+    :py:meth:`~descarteslabs.client.services.service.Service.set_default_session_class`.
 
     Notes
     =====

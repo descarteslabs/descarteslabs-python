@@ -376,8 +376,7 @@ class Image(NamedCatalogObject):
     @property
     def geocontext(self):
         """
-        Return an :class:`AOI GeoContext <descarteslabs.common.geo.geocontext.AOI>`
-        for loading this Image's original, unwarped data.
+        `~descarteslabs.common.geo.AOI`: A geocontext for loading this Image's original, unwarped data.
 
         These defaults are used:
 
@@ -390,16 +389,12 @@ class Image(NamedCatalogObject):
 
         .. note::
 
-            Using this :class:`~descarteslabs.common.geo.geocontext.GeoContext` will only
+            Using this :class:`~descarteslabs.common.geo.GeoContext` will only
             return original, unwarped data if the Image is axis-aligned ("north-up")
             within the CRS. If its ``geotrans`` applies a rotation, a warning will be raised.
             In that case, use `Raster.ndarray` or `Raster.raster` to retrieve
-            original data. (The :class:`~descarteslabs.common.geo.geocontext.GeoContext`
+            original data. (The :class:`~descarteslabs.common.geo.GeoContext`
             paradigm requires bounds for consistency, which are inherently axis-aligned.)
-
-        Returns
-        -------
-        geocontext: AOI
         """
         if self._geocontext is None:
             resolution = None
@@ -830,7 +825,7 @@ class Image(NamedCatalogObject):
 
         Parameters
         ----------
-        geom : GeoJSON-like dict, :class:`~descarteslabs.common.geo.geocontext.GeoContext`, or object with __geo_interface__  # noqa: E501
+        geom : GeoJSON-like dict, :class:`~descarteslabs.common.geo.geocontext.GeoContext`, or object with __geo_interface__
             Geometry to which to compare this Image's geometry
 
         Returns
@@ -845,7 +840,7 @@ class Image(NamedCatalogObject):
         >>> image = dl.catalog.Image.get("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")  # doctest: +SKIP
         >>> image.coverage(image.geometry.buffer(1))  # doctest: +SKIP
         0.258370644415335
-        """
+        """  # noqa: E501
 
         if isinstance(geom, GeoContext):
             shape = geom.geometry
@@ -1436,7 +1431,7 @@ class Image(NamedCatalogObject):
 
         See Also
         --------
-        :doc:`Catalog V2 Guide </guides/catalog_v2>` : This contains many examples of the use of
+        :doc:`Catalog V2 Guide <guides/catalog_v2>` : This contains many examples of the use of
         the ``scaling`` and ``data_type`` parameters.
         """
         bands = bands_to_list(bands)

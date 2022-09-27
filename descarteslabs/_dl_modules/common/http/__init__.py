@@ -1,8 +1,7 @@
-from .session import HTTPAdapter, NotFoundError, ProxyAuthentication, Session
+from .session import HTTPAdapter, ProxyAuthentication, Session
 
 __all__ = [
     "ProxyAuthentication",
     "Session",
-    "NotFoundError",
     "HTTPAdapter",
 ]

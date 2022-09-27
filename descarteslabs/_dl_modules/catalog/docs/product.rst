@@ -18,15 +18,18 @@ Product
   :members:
   :inherited-members:
   :undoc-members:
+  :exclude-members: v1_properties
 
 .. autoclass:: descarteslabs.catalog.DeletionTaskStatus
   :autosummary:
   :members:
   :inherited-members:
   :undoc-members:
+  :exclude-members: v1_properties
 
 .. autoclass:: descarteslabs.catalog.UpdatePermissionsTaskStatus
   :autosummary:
   :members:
   :inherited-members:
   :undoc-members:
+  :exclude-members: v1_properties

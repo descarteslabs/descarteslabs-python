@@ -14,13 +14,12 @@
 
 from .service import JsonApiService, JsonApiSession, Service, Session, ThirdPartyService
 
-from ....common.http import NotFoundError, ProxyAuthentication
+from ....exceptions import NotFoundError
 
 __all__ = [
     "JsonApiService",
     "JsonApiSession",
     "NotFoundError",
-    "ProxyAuthentication",
     "Service",
     "Session",
     "ThirdPartyService",
