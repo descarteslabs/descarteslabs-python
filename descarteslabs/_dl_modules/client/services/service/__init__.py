@@ -14,7 +14,7 @@
 
 from .service import JsonApiService, JsonApiSession, Service, Session, ThirdPartyService
 
-from ....exceptions import NotFoundError
+from descarteslabs.exceptions import NotFoundError
 
 __all__ = [
     "JsonApiService",
