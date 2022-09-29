@@ -1462,7 +1462,7 @@ class Discover(GrpcClient, DefaultClientMixin):
         The backend port to connect to. Defaults to the correct value.
         Only override when debugging.
     auth : Auth, optional
-        The authentication instance to use. Defaults to `Auth.get_default_client()`.
+        The authentication instance to use. Defaults to `Auth.get_default_auth()`.
     certificate : bytes, optional
         The certificate to use when connecting to the backend service.
     default_retry : Retry, int, optional

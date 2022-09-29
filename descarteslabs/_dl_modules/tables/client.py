@@ -120,7 +120,7 @@ class Tables(DefaultClientMixin):
             Only override when debugging.
         :param Auth auth: The authentication instance to use for the Tables client.
             Note that this does not apply to the default Discover and Storage clients.
-            Defaults to `Auth.get_default_client()`.
+            Defaults to `Auth.get_default_auth()`.
         :param database: Backend database.
         :param discover_client: Discover client instance.
             Defaults to `Discover.get_default_client()`

@@ -238,7 +238,7 @@ class Auth:
             The JWT client id. If provided it will take precedence over the
             corresponding environment variable, or the credentials retrieved through
             the file specified in ``token_info_path``. If this parameter is provided,
-            you **must** either provide a ``client_id`` or ``refresh_token`` (but not
+            you **must** either provide a ``client_secret`` or ``refresh_token`` (but not
             both). Access tokens retrieved this way will be cached without revealing
             the client secret.
         client_secret : str, optional

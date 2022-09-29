@@ -9,7 +9,8 @@ import pytest
 from descarteslabs.auth import Auth
 from descarteslabs.exceptions import BadRequestError
 
-from ...discover.client import AccessGrant, Asset, SymLink
+from ...discover.client import AccessGrant, Asset, Discover, SymLink
+from ...client.services.storage import Storage
 from ..client import JobStatus, Tables
 
 
@@ -216,6 +217,13 @@ def test_no_auth():
 
 def test_auth_differs():
     with warnings.catch_warnings(record=True) as caught_warnings:
-        Tables(auth=Auth(client_id="123"))  # Warning about authentication instance
+        him = Auth(client_id="123", client_secret="123", token_info_path=None)
+        her = Auth(client_id="ABC", client_secret="ABC", token_info_path=None)
+        Tables(
+            auth=him,
+            discover_client=Discover(auth=her),
+            storage_client=Storage(auth=her),
+        )  # Warning about authentication instance
         assert len(caught_warnings) == 1
         assert caught_warnings[0].category == UserWarning
+        assert "don't match" in str(caught_warnings[0].message)
