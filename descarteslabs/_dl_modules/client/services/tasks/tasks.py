@@ -40,6 +40,7 @@ from descarteslabs.config import get_settings
 from descarteslabs.exceptions import AuthError
 
 from ....common.dotdict import DotDict, DotList
+from ....common.http.service import DefaultClientMixin
 from ....common.tasks.constants import (
     DATA,
     DIST,
@@ -94,7 +95,7 @@ class BoundGlobalError(NameError):
     pass
 
 
-class Tasks(Service):
+class Tasks(Service, DefaultClientMixin):
     """
     The Tasks API allows you to easily execute parallel computations on cloud
     infrastructure with high-throughput access to imagery.

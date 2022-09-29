@@ -14,16 +14,19 @@
 
 import operator
 from functools import partial
+
 from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
-from ..service import Service
 from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
+
 from ....common.dotdict import DotDict, DotList
+from ....common.http.service import DefaultClientMixin
 from ...deprecation import deprecate_func
+from ..service import Service
 
 
-class Places(Service):
+class Places(Service, DefaultClientMixin):
     TIMEOUT = (9.5, 30)
     """Places and statistics service"""
 

@@ -73,6 +73,7 @@ from descarteslabs.exceptions import BadRequestError
 from .. import discover as disco
 from ..client.deprecation import deprecate_func
 from ..client.services.storage import Storage
+from ..common.http.service import DefaultClientMixin
 from ..common.ibis.client import api as serializer
 from ..common.proto.vektorius import vektorius_pb2
 from ..discover import AssetType
@@ -99,7 +100,7 @@ class JobStatus(str, Enum):
     FAILURE = _s.Name(_s.FAILURE)
 
 
-class Tables(object):
+class Tables(DefaultClientMixin):
     def __init__(
         self,
         host=None,
@@ -113,14 +114,18 @@ class Tables(object):
         """
         Tables client for interacting with tabular data.
 
-        :param str host: Service hostname.
-        :param int port: Service port.
-        :param Auth auth: A custom user authentication (defaults to the user
-            authenticated locally by token information on disk or by environment
-            variables)
-        :param database: Backend database
-        :param discover_client: Discover client instance
+        :param str host: The backend host to connect to. Defaults to the correct value.
+            Only override when debugging
+        :param int port: The backend port to connect to. Defaults to the correct value.
+            Only override when debugging.
+        :param Auth auth: The authentication instance to use for the Tables client.
+            Note that this does not apply to the default Discover and Storage clients.
+            Defaults to `Auth.get_default_client()`.
+        :param database: Backend database.
+        :param discover_client: Discover client instance.
+            Defaults to `Discover.get_default_client()`
         :param storage_client: Storage client instance
+            Defaults to `Storage.get_default_client()`
         """
         if host is None:
             host = get_settings().tables_host
@@ -137,9 +142,33 @@ class Tables(object):
         )
 
         self.database = database
-        self.discover_client = discover_client or disco.Discover(auth=auth)
-        self.storage_client = storage_client or Storage(auth=auth)
+        self.discover_client = discover_client or disco.Discover.get_default_client()
+        self.storage_client = storage_client or Storage.get_default_client()
         self.storage_type = "tmp"  # TODO "data"?
+
+        message = ""
+
+        if (
+            self.auth.client_id != self.discover_client.auth.client_id
+            or self.auth.client_secret != self.discover_client.auth.client_secret
+        ):
+            message = "the discover client"
+
+        if (
+            self.auth.client_id != self.storage_client.auth.client_id
+            or self.auth.client_secret != self.storage_client.auth.client_secret
+        ):
+            if message:
+                message = "both the discover client and the storage client"
+            else:
+                message = "the storage client"
+
+        if message:
+            warnings.warn(
+                "The given authentication instance and the authentication instance for"
+                f" {message} don't match",
+                stacklevel=2,
+            )
 
     @property
     def dialect(self):
@@ -249,8 +278,9 @@ class Tables(object):
 
         if not primary_key:
             warnings.warn(
-                f'Primary key not provided, adding a new "{DEFAULT_PK}" column as an auto-incrementing primary key.',
-                UserWarning,
+                f"Primary key not provided, adding a new '{DEFAULT_PK}' column "
+                "as an auto-incrementing primary key.",
+                stacklevel=2,
             )
             if DEFAULT_PK not in _internal_schema["properties"]:
                 _internal_schema["properties"][DEFAULT_PK] = "auto"

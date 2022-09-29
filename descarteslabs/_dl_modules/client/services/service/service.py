@@ -34,7 +34,6 @@ from urllib3.util.retry import Retry
 
 from ....common.http import Session
 from ....common.http.authorization import add_bearer
-from ....common.http.service import DefaultClientMixin
 from ....common.threading.local import ThreadLocalWrapper
 from ...version import __version__
 
@@ -80,7 +79,7 @@ class HttpHeaderValues:
 WrappedSession = Session
 
 
-class Service(DefaultClientMixin):
+class Service:
     """The default Descartes Labs HTTP Service used to communicate with its servers.
 
     This service has a default timeout and retry policy that retries HTTP requests

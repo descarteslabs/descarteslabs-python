@@ -7,13 +7,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Generator, List, Optional, Union
 
-from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
 
+from ..client.grpc import GrpcClient
 from ..client.services.service import Service
-from ..common.discover import DiscoverGrpcClient
 from ..common.http.service import DefaultClientMixin
-from ..common.proto.discover import discover_pb2
+from ..common.proto.discover import discover_pb2, discover_pb2_grpc
 
 NAME_SEPARATOR = ":~/"
 PATH_SEPARATOR = "/"
@@ -867,7 +866,7 @@ class Blob(_DiscoverRequestBuilder):
         # foo.txt, myfolder/foo.txt
         if len(parts) == 1:
             blob_name = parts[0].strip("~/")
-            namespace = self.discover._discover_client.auth.namespace
+            namespace = self.discover.auth.namespace
 
         # Case 2: User provides a user_sha and file name (asset name will be length 2)
         # 3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt, blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt
@@ -1266,7 +1265,7 @@ class Table(_DiscoverRequestBuilder):
         # foo.txt, myfolder/foo.txt
         if len(parts) == 1:
             table_name = parts[0].strip("~/")
-            namespace = self.discover._discover_client.auth.namespace
+            namespace = self.discover.auth.namespace
 
         # Case 2: User provides a user_sha and file name (asset name will be length 2)
         # 3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt, blob/3d7bf4b0b1f4e6283e5cbeaadddbc6de6f16dea1:~/foo.txt
@@ -1451,32 +1450,72 @@ class Table(_DiscoverRequestBuilder):
         )
 
 
-class Discover(DefaultClientMixin):
+class Discover(GrpcClient, DefaultClientMixin):
     """Discover is a client for interacting with assets such as Blobs and Folders.
 
     Parameters
-    ==========
-    discover_client : DiscoverGrpcClient, optional
-        A pre-configured DiscoverGrpcClient instance.
-        If not specified, kwargs will be used instead to configure an instance.
-        If no arguments are given, it defaults to
-        :py:meth:`DiscoverGrpcClient.get_default_client()`.
-    **grpc_client_kwargs : dict, optional
-        Arguments to use when creating a DiscoverGrpcClient instance.
-        Refer to :py:meth:`DiscoverGrpcClient.__init__` to see available options.
+    ----------
+    host : str, optional
+        The backend host to connect to. Defaults to the correct value.
+        Only override when debugging.
+    port : int, optional
+        The backend port to connect to. Defaults to the correct value.
+        Only override when debugging.
+    auth : Auth, optional
+        The authentication instance to use. Defaults to `Auth.get_default_client()`.
+    certificate : bytes, optional
+        The certificate to use when connecting to the backend service.
+    default_retry : Retry, int, optional
+        The retry instance or number of times to retry a connection before giving up.
+        Default is to retry 5 times for retryable status codes.
+    default_metadata : tuple, optional
+        Metadata (headers) to send to every RPC when called. The default is empty.
+    use_insecure_channel : bool, optional
+        If set, an insecure channel will be used. Default is secure; only use
+        insecure when debugging.
     """
 
     def __init__(
         self,
-        discover_client: DiscoverGrpcClient = None,
-        **grpc_client_kwargs,
+        host=None,
+        port=None,
+        auth=None,
+        certificate=None,
+        default_retry=None,
+        default_metadata=None,
+        use_insecure_channel=False,
     ):
-        if discover_client is None:
-            discover_client = DiscoverGrpcClient.get_default_client()
-        elif grpc_client_kwargs:
-            discover_client = DiscoverGrpcClient(**grpc_client_kwargs)
+        if host is None:
+            host = get_settings().discover_host
 
-        self._discover_client = discover_client
+        if port is None:
+            port = int(get_settings().discover_port)
+
+        super().__init__(
+            host=host,
+            auth=auth,
+            certificate=certificate,
+            port=port,
+            default_retry=default_retry,
+            default_metadata=default_metadata,
+            use_insecure_channel=use_insecure_channel,
+        )
+
+    def _populate_api(self):
+        self._add_stub("DiscoverAccessGrant", discover_pb2_grpc.AccessGrantApiStub)
+        self._add_stub("DiscoverAsset", discover_pb2_grpc.AssetApiStub)
+
+        self._add_api("DiscoverAccessGrant", "CreateAccessGrant")
+        self._add_api("DiscoverAccessGrant", "DeleteAccessGrant")
+        self._add_api("DiscoverAccessGrant", "ListAccessGrants")
+        self._add_api("DiscoverAccessGrant", "ListAccessGrantsStream")
+        self._add_api("DiscoverAccessGrant", "ReplaceAccessGrant")
+        self._add_api("DiscoverAsset", "CreateAsset")
+        self._add_api("DiscoverAsset", "GetAsset")
+        self._add_api("DiscoverAsset", "ListAssets")
+        self._add_api("DiscoverAsset", "MoveAsset")
+        self._add_api("DiscoverAsset", "UpdateAsset")
+        self._add_api("DiscoverAsset", "DeleteAsset")
 
     def blob(self, asset_name: str) -> Blob:
         """
@@ -1592,7 +1631,7 @@ class Discover(DefaultClientMixin):
             )
         )
 
-        response = self._discover_client.CreateAccessGrant(add_request)
+        response = self.CreateAccessGrant(add_request)
         access_grant = AccessGrant._from_proto(response)
 
         return access_grant
@@ -1641,7 +1680,7 @@ class Discover(DefaultClientMixin):
                 access=role,
             )
         )
-        self._discover_client.DeleteAccessGrant(remove_request)
+        self.DeleteAccessGrant(remove_request)
 
     def replace_access_grant(
         self,
@@ -1717,7 +1756,7 @@ class Discover(DefaultClientMixin):
             ),
         )
 
-        response = self._discover_client.ReplaceAccessGrant(replace_request)
+        response = self.ReplaceAccessGrant(replace_request)
         access_grant = AccessGrant._from_proto(response)
 
         return access_grant
@@ -1791,7 +1830,7 @@ class Discover(DefaultClientMixin):
                 asset_name=asset_name, page_token=next_page
             )
 
-            response = self._discover_client.ListAccessGrants(list_request)
+            response = self.ListAccessGrants(list_request)
             for grant in response.access_grants:
                 access_grants.append(
                     AccessGrant(grant.asset_name, grant.entity.id, grant.access)
@@ -1856,7 +1895,7 @@ class Discover(DefaultClientMixin):
             )
         )
 
-        response = self._discover_client.CreateAsset(create_request)
+        response = self.CreateAsset(create_request)
         asset = Asset._from_proto(response)
 
         return asset
@@ -1889,7 +1928,7 @@ class Discover(DefaultClientMixin):
 
         delete_request = discover_pb2.DeleteAssetRequest(asset_name=asset_name)
 
-        self._discover_client.DeleteAsset(delete_request)
+        self.DeleteAsset(delete_request)
 
     def get_asset(self, asset_name: str) -> Asset:
         """
@@ -1933,9 +1972,7 @@ class Discover(DefaultClientMixin):
         """
 
         asset = Asset._from_proto(
-            self._discover_client.GetAsset(
-                discover_pb2.GetAssetRequest(asset_name=asset_name)
-            )
+            self.GetAsset(discover_pb2.GetAssetRequest(asset_name=asset_name))
         )
 
         return asset
@@ -2016,7 +2053,7 @@ class Discover(DefaultClientMixin):
                 description=description,
             )
         )
-        response = self._discover_client.UpdateAsset(update_request)
+        response = self.UpdateAsset(update_request)
 
         return Asset._from_proto(response)
 
@@ -2070,7 +2107,7 @@ class Discover(DefaultClientMixin):
             destination_parent_name=new_parent_asset_name,
         )
 
-        self._discover_client.MoveAsset(move_request)
+        self.MoveAsset(move_request)
 
         return self.get_asset(asset_name)
 
@@ -2094,7 +2131,7 @@ class Discover(DefaultClientMixin):
                 filter=filters,
             )
 
-            resp = self._discover_client.ListAssets(list_request)
+            resp = self.ListAssets(list_request)
 
             if not resp.assets:
                 return
@@ -2338,18 +2375,16 @@ class Discover(DefaultClientMixin):
             If you don't have proper authorization.
         """
 
-        return _IamClient.get_default_client().list_org_users(search)
+        # This was bolted on incorrectly. We need to introduce a new call in Discover that
+        # returns the desired information. But for now, leave it, but hidden behind this
+        # internal client.
+        iam_client = _IamClient(auth=self.auth)
+        return iam_client.list_org_users(search)
 
 
-class _IamClient(Service, DefaultClientMixin):
-    def __init__(self, url=None, auth=None, retries=None):
-        if auth is None:
-            auth = Auth.get_default_auth()
-
-        if url is None:
-            url = get_settings().iam_url
-
-        super().__init__(url, auth=auth, retries=retries)
+class _IamClient(Service):
+    def __init__(self, auth):
+        super().__init__(get_settings().iam_url, auth=auth)
 
     @property
     def session(self):

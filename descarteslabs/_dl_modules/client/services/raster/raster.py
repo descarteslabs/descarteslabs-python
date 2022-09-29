@@ -30,6 +30,7 @@ from tqdm import tqdm
 from urllib3.exceptions import IncompleteRead, ProtocolError
 
 from ....common.dltile import Tile
+from ....common.http.service import DefaultClientMixin
 from ...deprecation import deprecate
 from ..service.service import Service
 from .geotiff_utils import make_geotiff
@@ -226,7 +227,7 @@ def _retry(req, headers=None):
         retry_count += 1
 
 
-class Raster(Service):
+class Raster(Service, DefaultClientMixin):
     """
     The Raster API retrieves data from the Descartes Labs Catalog. Direct use of
     the Raster API is not recommended. Consider using the Descartes Labs Scenes API instead.

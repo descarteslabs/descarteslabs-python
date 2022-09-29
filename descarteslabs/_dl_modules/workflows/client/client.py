@@ -7,11 +7,12 @@ import grpc
 from descarteslabs.config import get_settings
 
 from ...client.grpc import GrpcClient, default_grpc_retry_predicate  # noqa: F401
+from ...common.http.service import DefaultClientMixin
 from ...common.proto.discover import discover_pb2_grpc
 from ...common.proto.job import job_pb2_grpc
 from ...common.proto.workflow import workflow_pb2_grpc
 from ...common.proto.xyz import xyz_pb2_grpc
-from ...common.retry import Retry, _name_of_func, _wraps, truncated_delay_generator
+from ...common.retry import Retry, _name_of_func, truncated_delay_generator
 from .. import _channel
 
 # For lack of a better location for these:
@@ -76,7 +77,7 @@ class _CreateJobRetry(Retry):
             raise ValueError("Bad delay generator")
 
     def __call__(self, func):
-        @_wraps(func)
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             num_retries = kwargs.pop("num_retries", None)
             if num_retries is not None and not isinstance(num_retries, int):
@@ -101,17 +102,19 @@ class _CreateJobRetry(Retry):
         previous_exceptions.append(exception)
 
 
-class Client(GrpcClient):
+class Client(GrpcClient, DefaultClientMixin):
     """Low-level gRPC client for interacting with the Workflows backend. Not intended for users to use directly.
 
     Parameters
     ----------
     host : str, optional
-        The backend host to connect to.
+        The backend host to connect to. Defaults to the correct value.
+        Only override when debugging
     port : int, optional
-        The backend port to connect to.
+        The backend port to connect to. Defaults to the correct value.
+        Only override when debugging.
     auth : Auth, optional
-        The authentication instance to use.
+        The authentication instance to use. Defaults to `Auth.get_default_client()`.
     certificate : bytes, optional
         The certificate to use when connecting to the backend service.
     channel : grpc.Channel, optional
@@ -218,7 +221,11 @@ global_grpc_client = None
 
 
 def get_global_grpc_client():
+    client = Client.get_default_client()
+
     global global_grpc_client
-    if global_grpc_client is None:
-        global_grpc_client = Client()
-    return global_grpc_client
+
+    if global_grpc_client != client:
+        global_grpc_client = client
+
+    return client

@@ -1,4 +1,5 @@
 import os
+from functools import wraps
 
 import certifi
 from descarteslabs.auth import Auth
@@ -6,10 +7,8 @@ from descarteslabs.auth import Auth
 import grpc
 
 from ...common.http import ProxyAuthentication
-from ...common.http.service import DefaultClientMixin
 from ...common.proto.health import health_pb2, health_pb2_grpc
 from ...common.retry import Retry, RetryError
-from ...common.retry.retry import _wraps
 from ..version import __version__
 from .auth import TokenProviderMetadataPlugin
 from .exceptions import from_grpc_error
@@ -45,8 +44,9 @@ def default_grpc_retry_predicate(e):
         return code in _RETRYABLE_STATUS_CODES
 
 
-class GrpcClient(DefaultClientMixin):
+class GrpcClient:
     """Low-level gRPC client for interacting with the gRPC backends.
+
     Not intended for users to use directly.
 
     Examples
@@ -82,19 +82,23 @@ class GrpcClient(DefaultClientMixin):
 
         self.auth = auth
         self.host = host
+
         if not port:
             if use_insecure_channel:
                 port = 8000
             else:
                 port = 443
+
         self.port = port
 
         if default_metadata is None:
             default_metadata = ()
+
         self._default_metadata = default_metadata + (USER_AGENT_HEADER,)
 
         if default_retry is None:
             default_retry = Retry(predicate=default_grpc_retry_predicate, retries=5)
+
         self._default_retry = default_retry
 
         self._use_insecure_channel = use_insecure_channel
@@ -103,20 +107,6 @@ class GrpcClient(DefaultClientMixin):
         self._certificate = certificate
         self._stubs = None
         self._api = None
-
-    def __getattr__(self, name: str):
-        """
-        Allow accessing API methods as if they were methods directly on the GrpcClient.
-        """
-
-        # prevent forwarding dunder attributes to API dictionary
-        if name.startswith("_"):
-            raise AttributeError(name)
-
-        try:
-            return self.api[name]
-        except KeyError:
-            raise AttributeError(name)
 
     @property
     def token(self):
@@ -128,25 +118,13 @@ class GrpcClient(DefaultClientMixin):
         "The GRPC channel of the Client."
         if self._channel is None:
             self._channel = self._open_channel()
+
             if self._interceptors:
                 self._channel = grpc.intercept_channel(
                     self._channel, *self._interceptors
                 )
+
         return self._channel
-
-    def _determine_ssl_cert(self):
-        """Attempt to use an environment var and fallback to searching PATH with certifi."""
-
-        for env in [
-            "GRPC_CA_BUNDLE",
-            "SSL_CERT_FILE",
-            "REQUESTS_CA_BUNDLE",
-            "CURL_CA_BUNDLE",
-        ]:
-            cert_file = os.getenv(env, None)
-            if cert_file:
-                return cert_file
-        return certifi.where()
 
     @property
     def certificate(self):
@@ -154,6 +132,7 @@ class GrpcClient(DefaultClientMixin):
 
         if self._certificate is None:
             cert_file = self._determine_ssl_cert()
+
             with open(cert_file, "rb") as f:
                 self._certificate = f.read()
 
@@ -165,6 +144,7 @@ class GrpcClient(DefaultClientMixin):
 
         if self._api is None:
             self._initialize()
+
         return self._api
 
     def health(self, timeout=None):
@@ -190,13 +170,44 @@ class GrpcClient(DefaultClientMixin):
         if self._channel:
             self._channel.close()
             self._channel = None
+
         # stubs and apis hang on to channel
         if self._api is not None:
             del self._api
             self._api = None
+
         if self._stubs is not None:
             del self._stubs
             self._stubs = None
+
+    def __getattr__(self, name: str):
+        """Allow accessing API methods as if they were methods directly on the GrpcClient."""
+        try:
+            # Avoid recursion when referencing private attributes.
+            if not name.startswith("_"):
+                return self.api[name]
+        except KeyError:
+            pass
+
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{name}'"
+        ) from None
+
+    def _determine_ssl_cert(self):
+        """Attempt to use an environment var and fallback to searching PATH with certifi."""
+
+        for env in [
+            "GRPC_CA_BUNDLE",
+            "SSL_CERT_FILE",
+            "REQUESTS_CA_BUNDLE",
+            "CURL_CA_BUNDLE",
+        ]:
+            cert_file = os.getenv(env, None)
+
+            if cert_file:
+                return cert_file
+
+        return certifi.where()
 
     def _add_stub(self, name, stub):
         self._stubs[name] = stub(self.channel)
@@ -204,8 +215,10 @@ class GrpcClient(DefaultClientMixin):
     def _add_api(self, stub_name, func_name, default_retry=None, default_metadata=None):
         if default_retry is None:
             default_retry = self._default_retry
+
         if default_metadata is None:
             default_metadata = ()
+
         default_metadata = tuple(
             dict(self._default_metadata + default_metadata).items()
         )
@@ -306,7 +319,7 @@ class GrpcClient(DefaultClientMixin):
             )
 
     def _wrap_stub(self, func, default_retry, default_metadata):
-        @_wraps(func)
+        @wraps(func)
         def wrapper(*args, **kwargs):
             retry, kwargs = self._prepare_stub_kwargs(
                 default_retry, default_metadata, kwargs
@@ -337,8 +350,12 @@ class GrpcClient(DefaultClientMixin):
 
         # Merge and set default request headers
         # example: https://github.com/grpc/grpc/blob/master/examples/python/metadata/metadata_client.py
-        merged_metadata = dict(default_metadata + kwargs.get("metadata", ()))
+        on_behalf_of = kwargs.pop("on_behalf_of", None)
 
+        if on_behalf_of is not None:
+            default_metadata += (("x-on-behalf-of-user", on_behalf_of),)
+
+        merged_metadata = dict(default_metadata + kwargs.get("metadata", ()))
         kwargs["metadata"] = tuple(merged_metadata.items())
 
         return retry, kwargs
@@ -350,4 +367,9 @@ class GrpcClient(DefaultClientMixin):
         self.close()
 
     def __del__(self):
-        self.close()
+        # This can be called before the instance is initialized
+        # (when e.g. a required argument is missing)
+        try:
+            self.close()
+        except AttributeError:
+            pass

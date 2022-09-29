@@ -4,17 +4,18 @@ from tempfile import NamedTemporaryFile
 
 import lazy_object_proxy
 import numpy as np
-from requests.exceptions import RequestException
-
 from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
-from ...deprecation import check_deprecated_kwargs, deprecate, deprecate_func
 from descarteslabs.exceptions import NotFoundError, ServerError
+from requests.exceptions import RequestException
+
+from ....common.http.service import DefaultClientMixin
+from ...deprecation import check_deprecated_kwargs, deprecate, deprecate_func
 from ..metadata import Metadata
 from ..service import Service, ThirdPartyService
 
 
-class Catalog(Service):
+class Catalog(Service, DefaultClientMixin):
     """The Descartes Labs (DL) Catalog allows you to add georeferenced raster products
     into the Descartes Labs Platform. Catalog products can be used in other DL services
     like Raster and Tasks and Metadata.

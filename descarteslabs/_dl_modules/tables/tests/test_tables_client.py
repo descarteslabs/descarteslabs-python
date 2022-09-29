@@ -1,14 +1,16 @@
 import datetime
 import json
 import sys
+import warnings
 from unittest.mock import MagicMock, Mock
 
-import pytest
 import pandas as pd
-
+import pytest
+from descarteslabs.auth import Auth
 from descarteslabs.exceptions import BadRequestError
+
 from ...discover.client import AccessGrant, Asset, SymLink
-from ..client import Tables, JobStatus
+from ..client import JobStatus, Tables
 
 
 def mock_dict(d: dict) -> MagicMock:
@@ -26,6 +28,7 @@ def tables_client():
             "list_access_grants",
         ],
     )
+    discover_client.auth = auth
 
     return Tables(discover_client=discover_client, auth=auth)
 
@@ -203,3 +206,16 @@ def test_list_tables(tables_client: Tables):
     assert response["owner"] == ["Table 1"]
     assert response["editor"] == {"not-you@descarteslabs.com": ["Table 2"]}
     assert response["viewer"] == {"not-you@descarteslabs.com": ["Table 2"]}
+
+
+def test_no_auth():
+    with warnings.catch_warnings(record=True) as caught_warnings:
+        Tables()  # No warnings
+        assert len(caught_warnings) == 0
+
+
+def test_auth_differs():
+    with warnings.catch_warnings(record=True) as caught_warnings:
+        Tables(auth=Auth(client_id="123"))  # Warning about authentication instance
+        assert len(caught_warnings) == 1
+        assert caught_warnings[0].category == UserWarning

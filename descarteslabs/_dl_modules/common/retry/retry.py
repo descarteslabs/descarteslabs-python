@@ -9,21 +9,21 @@ _DEFAULT_DELAY_INITIAL = 0.1
 _DEFAULT_DELAY_MULTIPLIER = 2.0
 _DEFAULT_DELAY_MAXIMUM = 60
 _DEFAULT_DELAY_JITTER = (0, 1)
-_SAFE_VALID_ASSIGNMENTS = ("__doc__",)
 
 
 def _name_of_func(f):
     module = inspect.getmodule(f)
+
     if module is not None:
         module = module.__name__
     else:
         module = "<unknown>"
+
     return "{}.{}".format(module, getattr(f, "__name__", f))
 
 
 class Retry(object):
-    """
-    Retry class to wrap functions as a decorator or inline.
+    """Retry class to wrap functions as a decorator or inline.
 
     Example
     -------
@@ -55,8 +55,7 @@ class Retry(object):
         jitter=_DEFAULT_DELAY_JITTER,
         multiplier=_DEFAULT_DELAY_MULTIPLIER,
     ):
-        """
-        Instantiate a Retry object that can be used to wrap a callable.
+        """Instantiate a Retry object that can be used to wrap a callable.
 
         Parameters
         ----------
@@ -94,7 +93,7 @@ class Retry(object):
         self._multiplier = multiplier
 
     def __call__(self, func):
-        @_wraps(func)
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             target = functools.partial(func, *args, **kwargs)
             delay_generator = truncated_delay_generator(
@@ -111,13 +110,10 @@ class Retry(object):
     def _retry(self, func, delay_generator):
 
         deadline = self._deadline_datetime(self._deadline)
-
         retries = self._retries
-
         previous_exceptions = []
 
         for delay in delay_generator:
-
             try:
                 return func()
             except Exception as e:
@@ -127,7 +123,6 @@ class Retry(object):
             retries = self._check_retries(
                 retries, _name_of_func(func), deadline, previous_exceptions
             )
-
             time.sleep(delay)
         else:
             raise ValueError("Bad delay generator")
@@ -161,20 +156,20 @@ class Retry(object):
 
         if retries is not None:
             retries -= 1
+
         return retries
 
     @staticmethod
     def _deadline_datetime(deadline):
         if deadline is None:
             return None
+
         return datetime.datetime.utcnow() + datetime.timedelta(seconds=deadline)
 
 
 class RetryError(Exception):
-    """
-    Error raised when the number of retries has been exhausted or the
-    deadline has passed.
-    """
+    """Error raised when the number of retries has been exhausted or the
+    deadline has passed."""
 
     def __init__(self, message, exceptions):
         super(RetryError, self).__init__(message)
@@ -183,8 +178,7 @@ class RetryError(Exception):
 
     @property
     def exceptions(self):
-        """
-        Get a list of exceptions that occurred.
+        """Get a list of exceptions that occurred.
 
         Returns
         -------
@@ -201,8 +195,7 @@ class RetryError(Exception):
 def truncated_delay_generator(
     initial=None, maximum=None, jitter=None, multiplier=_DEFAULT_DELAY_MULTIPLIER
 ):
-    """
-    A generator for truncated exponential delay.
+    """A generator for truncated exponential delay.
 
     Parameters
     ----------
@@ -231,14 +224,3 @@ def truncated_delay_generator(
         yield delay
 
         delay *= multiplier
-
-
-def _wraps(wrapped):
-    """
-    A helper that handles functions not having all attributes in Python 2.
-    """
-
-    if isinstance(wrapped, functools.partial) or not hasattr(wrapped, "__name__"):
-        return functools.wraps(wrapped, assigned=_SAFE_VALID_ASSIGNMENTS)
-    else:
-        return functools.wraps(wrapped)

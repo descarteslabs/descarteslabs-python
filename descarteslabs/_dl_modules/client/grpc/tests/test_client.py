@@ -298,29 +298,3 @@ class TestProxyAuth(unittest.TestCase):
         assert host == "some-service:443"
         assert type(creds) == grpc.ChannelCredentials
         assert headers == expected_options
-
-
-class TestDefaultClient(unittest.TestCase):
-    class MyGrpcClient(GrpcClient):
-        """Test client to make sure the instance type is correct"""
-
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self._channel = mock.Mock()
-
-    def test_get_default_client(self):
-        GrpcClient.set_default_client(GrpcClient(host="blah"))
-        default_client = GrpcClient.get_default_client()
-        assert isinstance(default_client, GrpcClient)
-        assert GrpcClient.get_default_client() == default_client
-
-    def test_set_default_client(self):
-        host = "something"
-        TestDefaultClient.MyGrpcClient.set_default_client(
-            TestDefaultClient.MyGrpcClient(host=host)
-        )
-        assert TestDefaultClient.MyGrpcClient.get_default_client().host == host
-
-    def test_set_validates_type(self):
-        with pytest.raises(ValueError):
-            TestDefaultClient.MyGrpcClient.set_default_client(GrpcClient(host="blah"))

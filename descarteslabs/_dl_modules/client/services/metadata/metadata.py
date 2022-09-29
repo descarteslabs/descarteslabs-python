@@ -22,10 +22,11 @@ from ...deprecation import deprecate
 from ....common import property_filtering
 from ....common.dotdict import DotDict, DotList
 from ....common.dltile import Tile
+from ....common.http.service import DefaultClientMixin
 from ....common.shapely_support import shapely_to_geojson
 
 
-class Metadata(Service):
+class Metadata(Service, DefaultClientMixin):
     """
     Image Metadata Service
 

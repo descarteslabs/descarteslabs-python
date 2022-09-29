@@ -3,16 +3,14 @@
 
 from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
-from ..client.services.service.service import (
-    JsonApiService,
-    HttpRequestMethod,
-)
 
+from ..client.services.service.service import HttpRequestMethod, JsonApiService
+from ..common.http.service import DefaultClientMixin
 
 HttpRequestMethod = HttpRequestMethod
 
 
-class CatalogClient(JsonApiService):
+class CatalogClient(JsonApiService, DefaultClientMixin):
     """
     The CatalogClient handles the HTTP communication with the Descartes Labs catalog.
     It is almost sufficient to use the default client that is automatically retrieved

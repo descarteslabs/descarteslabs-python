@@ -18,10 +18,11 @@ from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
 from descarteslabs.exceptions import NotFoundError
 
+from ....common.http.service import DefaultClientMixin
 from ..service import Service, ThirdPartyService
 
 
-class Storage(Service):
+class Storage(Service, DefaultClientMixin):
     """
     The Storage API provides a mechanism to store arbitrary data and later retrieve it using
     simple key-value pair semantics.
