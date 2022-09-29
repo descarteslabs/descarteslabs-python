@@ -1,37 +1,34 @@
-import pytest
-import json
-from mock import patch
-import responses
-import textwrap
 import datetime
-from tempfile import NamedTemporaryFile
+import json
 import os.path
+import textwrap
 import warnings
-
-import shapely.geometry
-
-from pytz import utc
+from tempfile import NamedTemporaryFile
 
 import numpy as np
+import pytest
+import responses
+import shapely.geometry
+from mock import patch
+from pytz import utc
 
 from ...common.geo import AOI
 from ...common.shapely_support import shapely_to_geojson
-
-from .base import ClientTestCase
+from .. import image as image_module
 from ..attributes import (
     AttributeValidationError,
+    DocumentState,
     ListAttribute,
     MappingAttribute,
-    DocumentState,
 )
-from .. import image as image_module
 from ..image import Image
 from ..image_upload import ImageUploadStatus
 from ..product import Product
+from .base import ClientTestCase
 from .mock_data import (
     BANDS_BY_PRODUCT,
-    _image_get,
     _cached_bands_by_product,
+    _image_get,
     _raster_ndarray,
 )
 
@@ -817,6 +814,39 @@ class TestImage(ClientTestCase):
 
     @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
     @patch("descarteslabs.catalog.Image.exists", return_value=False)
+    def test_upload_ndarray_dtype(self, *mocks):
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
+        image = Image(
+            id="p1:image",
+            product=p,
+            acquired="2012-05-06",
+            geotrans=[42, 0, 0, 0, 0, 0],
+            projection="foo",
+        )
+
+        pytest.raises(
+            ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.int8)
+        )
+        pytest.raises(
+            ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.int64)
+        )
+        pytest.raises(
+            ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.uint64)
+        )
+
+    @patch("descarteslabs.catalog.Image.exists", return_value=False)
+    def test_upload_ndarray_bad_georef(self, *mocks):
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
+        image = Image(
+            id="p1:image",
+            product=p,
+            acquired="2012-05-06",
+            geotrans=[42, 0, 0, 0, 0, 0],
+        )
+        pytest.raises(ValueError, image.upload_ndarray, np.zeros((100, 100)))
+
+    @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
+    @patch("descarteslabs.catalog.Image.exists", return_value=False)
     def test_upload_ndarray_shape(self, *mocks):
         p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(
@@ -855,7 +885,8 @@ class TestImage(ClientTestCase):
 
     @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
     @patch("descarteslabs.catalog.Image.exists", return_value=False)
-    def test_upload_ndarray_dtype(self, *mocks):
+    @patch("numpy.save")
+    def test_upload_ndarray_moves_band_axis(self, mock_np_save, *mocks):
         p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(
             id="p1:image",
@@ -865,26 +896,73 @@ class TestImage(ClientTestCase):
             projection="foo",
         )
 
-        pytest.raises(
-            ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.int8)
-        )
-        pytest.raises(
-            ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.int64)
-        )
-        pytest.raises(
-            ValueError, image.upload_ndarray, np.zeros((1, 100, 100), np.uint64)
-        )
+        array = np.zeros((1, 100, 100))
+        with warnings.catch_warnings(record=True) as w:
+            image.upload_ndarray(array)
+            assert 0 == len(w)
 
+        assert mock_np_save.called
+
+        _, ndarray = mock_np_save.call_args.args
+        assert ndarray.shape == (100, 100, 1)
+
+    @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
     @patch("descarteslabs.catalog.Image.exists", return_value=False)
-    def test_upload_ndarray_bad_georef(self, *mocks):
+    @patch("numpy.save")
+    def test_upload_ndarray_multiple(self, mock_np_save, *mocks):
         p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(
             id="p1:image",
             product=p,
             acquired="2012-05-06",
             geotrans=[42, 0, 0, 0, 0, 0],
+            projection="foo",
         )
-        pytest.raises(ValueError, image.upload_ndarray, np.zeros((100, 100)))
+
+        # try a non iterable
+        class MyClass:
+            pass
+
+        with self.assertRaisesRegex(ValueError, "instance of ndarray or an Iterable"):
+            image.upload_ndarray(MyClass())
+
+        # try an interable custom class
+        class MyArray:
+            def __init__(self, *args):
+                self.data = list(args)
+
+            def __iter__(self):
+                return (x for x in self.data)
+
+            def __setitem__(self, key, value):
+                self.data[key] = value
+
+        array = np.zeros((1, 100, 100))
+        array2 = np.zeros((1, 50, 50))
+        image.upload_ndarray(MyArray(array, array2))
+
+        # try iterable but not ndarrays
+        with self.assertRaisesRegex(ValueError, "is not an ndarray"):
+            image.upload_ndarray(["something", "something else"])
+
+        # try a native list with ndarrays
+        array = np.zeros((1, 75, 75))
+        array2 = np.zeros((1, 25, 25))
+        image.upload_ndarray([array, array2])
+
+        assert mock_np_save.call_count == 4
+
+        shapes = [
+            ndarray.shape
+            for (_tmp_file, ndarray), _kwargs in mock_np_save.call_args_list
+        ]
+
+        assert shapes == [
+            (100, 100, 1),
+            (50, 50, 1),
+            (75, 75, 1),
+            (25, 25, 1),
+        ]
 
     @patch.object(Image, "get", _image_get)
     @patch.object(

@@ -1,9 +1,9 @@
-from enum import Enum
+import io
 import json
 import os.path
-import io
-from tempfile import NamedTemporaryFile
 import warnings
+from enum import Enum
+from tempfile import NamedTemporaryFile
 
 try:
     import collections.abc as abc
@@ -11,30 +11,27 @@ except ImportError:
     import collections as abc
 
 import numpy as np
-
 from affine import Affine
+from descarteslabs.exceptions import BadRequestError, NotFoundError
 
-from descarteslabs.exceptions import NotFoundError, BadRequestError
-
-from ..common.geo import GeoContext, AOI
+from ..client.services.raster import Raster
+from ..client.services.service import ThirdPartyService
+from ..common.geo import AOI, GeoContext
 from ..common.property_filtering import Properties
 from ..common.shapely_support import geometry_like_to_shapely
-from ..client.services.service import ThirdPartyService
-from ..client.services.raster import Raster
-
-from .catalog_base import DocumentState, check_deleted
-from .named_catalog_base import NamedCatalogObject
 from .attributes import (
     EnumAttribute,
-    GeometryAttribute,
-    Timestamp,
-    ListAttribute,
     File,
+    GeometryAttribute,
+    ListAttribute,
+    Timestamp,
     TupleAttribute,
     TypedAttribute,
 )
-from .image_types import ResampleAlgorithm, DownloadFileFormat
+from .catalog_base import DocumentState, check_deleted
 from .helpers import bands_to_list, cached_bands_by_product, download
+from .image_types import DownloadFileFormat, ResampleAlgorithm
+from .named_catalog_base import NamedCatalogObject
 from .scaling import scaling_parameters
 
 properties = Properties()
@@ -536,7 +533,7 @@ class Image(NamedCatalogObject):
         DeletedObjectError
             If this image was deleted.
         """
-        from .image_upload import ImageUploadType, ImageUploadOptions
+        from .image_upload import ImageUploadOptions, ImageUploadType
 
         if not self.id:
             raise ValueError("id field required")
@@ -622,10 +619,10 @@ class Image(NamedCatalogObject):
 
         Parameters
         ----------
-        ndarray : np.array
-            A numpy array with image data, either with 2 dimensions of shape
-            ``(x, y)`` for a single band or with 3 dimensions of shape
-            ``(band, x, y)`` for any number of bands.  If providing a 3d array
+        ndarray : np.array, Iterable(np.array)
+            A numpy array or list of numpy arrays with image data, either with 2
+            dimensions of shape ``(x, y)`` for a single band or with 3 dimensions of
+            shape ``(band, x, y)`` for any number of bands.  If providing a 3d array
             the first dimension must index the bands.  The ``dtype`` of the array must
             also be one of the following:
             [``uint8``, ``int8``, ``uint16``, ``int16``, ``uint32``, ``int32``,
@@ -669,7 +666,7 @@ class Image(NamedCatalogObject):
             be used to check the status or wait on the asynchronous upload process to
             complete.
         """
-        from .image_upload import ImageUploadType, ImageUploadOptions
+        from .image_upload import ImageUploadOptions, ImageUploadType
 
         if not self.id:
             raise ValueError("id field required")
@@ -703,31 +700,49 @@ class Image(NamedCatalogObject):
                 )
             )
 
-        if len(ndarray.shape) not in (2, 3):
+        if isinstance(ndarray, (np.ndarray, np.generic)):
+            ndarray = [ndarray]
+        elif not isinstance(ndarray, abc.Iterable):
             raise ValueError(
-                "The array must have 2 dimensions (shape '(x, y)') or 3 dimensions with the band "
-                "axis in the first dimension (shape '(band, x, y)'). The given array has shape "
-                "'{}' instead.".format(ndarray.shape)
+                "The array must be an instance of ndarray or an Iterable of ndarrays"
+                "such as a list."
             )
 
-        if len(ndarray.shape) == 3:
-            scale_factor = 5
-            scaled_band_dim = ndarray.shape[0] * scale_factor
-            if scaled_band_dim > ndarray.shape[1] or scaled_band_dim > ndarray.shape[2]:
-                warnings.warn(
-                    "The shape '{}' of the given 3d-array looks like it might not have the band "
-                    "axis as the first dimension. Verify that your array conforms to the shape "
-                    "'(band, x, y)'".format(ndarray.shape)
-                )
-            # v1 ingest expects (X,Y,bands)
-            ndarray = np.moveaxis(ndarray, 0, -1)
+        # validate the shape of each ndarray
+        # modify image data to shift axes to what ingest expects
+        for idx, image_data in enumerate(ndarray):
+            if not isinstance(image_data, (np.ndarray, np.generic)):
+                raise ValueError(f"The item at index {idx} is not an ndarray")
 
-        if ndarray.dtype.name not in self.SUPPORTED_DATATYPES:
-            raise ValueError(
-                "The array has an unsupported data type {}. Only the following data types are supported: {}".format(
-                    ndarray.dtype.name, ",".join(self.SUPPORTED_DATATYPES)
+            if len(image_data.shape) not in (2, 3):
+                raise ValueError(
+                    "The array must have 2 dimensions (shape '(x, y)') or 3 dimensions with the band "
+                    "axis in the first dimension (shape '(band, x, y)'). The given array has shape "
+                    "'{}' instead.".format(image_data.shape)
                 )
-            )
+
+            if image_data.dtype.name not in self.SUPPORTED_DATATYPES:
+                raise ValueError(
+                    "The array has an unsupported data type {}. Only the following data types are supported: {}".format(
+                        image_data.dtype.name, ",".join(self.SUPPORTED_DATATYPES)
+                    )
+                )
+
+            if len(image_data.shape) == 3:
+                scale_factor = 5
+                scaled_band_dim = image_data.shape[0] * scale_factor
+
+                if (
+                    scaled_band_dim > image_data.shape[1]
+                    or scaled_band_dim > image_data.shape[2]
+                ):
+                    warnings.warn(
+                        "The shape '{}' of the given 3d-array looks like it might not have the band "
+                        "axis as the first dimension. Verify that your array conforms to the shape "
+                        "'(band, x, y)'".format(image_data.shape)
+                    )
+                # v1 ingest expects (X,Y,bands)
+                ndarray[idx] = np.moveaxis(image_data, 0, -1)
 
         # default to raster_meta fields if not explicitly provided
         if raster_meta:
@@ -753,12 +768,16 @@ class Image(NamedCatalogObject):
         if overview_resampler:
             upload_options.overview_resampler = overview_resampler
 
-        upload_options.upload_size = ndarray.nbytes
+        # write all the ndarrays to files so that _do_upload can read them
+        files = []
+        upload_size = 0
 
-        with NamedTemporaryFile(delete=False) as tmp:
-            try:
-                np.save(tmp, ndarray, allow_pickle=False)
-
+        try:
+            for image_data in ndarray:
+                upload_size += image_data.nbytes
+                tmp = NamedTemporaryFile(delete=False)
+                files.append(tmp)
+                np.save(tmp, image_data, allow_pickle=False)
                 # From tempfile docs:
                 # Whether the name can be used to open the file a second time,
                 # while the named temporary file is still open, varies across
@@ -768,10 +787,18 @@ class Image(NamedCatalogObject):
                 # the path again in a cross platform compatible way.
                 # Cleanup is manual in the finally block.
                 tmp.close()
-                upload_options.image_files = [tmp.name]
-                return self._do_upload([tmp.name], upload_options)
-            finally:
-                os.unlink(tmp.name)
+
+            file_names = [f.name for f in files]
+            upload_options.upload_size = upload_size
+            upload_options.image_files = file_names
+
+            return self._do_upload(file_names, upload_options)
+        finally:
+            for file in files:
+                try:
+                    os.unlink(file.name)
+                except OSError:
+                    pass
 
     def image_uploads(self):
         """A search query for all uploads for this image created by this user.
