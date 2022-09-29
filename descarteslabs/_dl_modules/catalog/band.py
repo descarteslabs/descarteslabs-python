@@ -995,4 +995,4 @@ class DerivedBandCollection(Collection):
 
 
 # set here due to circular references
-DerivedBand._collection_type = DerivedBand
+DerivedBand._collection_type = DerivedBandCollection
