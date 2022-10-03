@@ -5,7 +5,7 @@ import textwrap
 import warnings
 
 from datetime import datetime
-from mock import patch
+from unittest.mock import patch
 
 from descarteslabs.exceptions import BadRequestError
 

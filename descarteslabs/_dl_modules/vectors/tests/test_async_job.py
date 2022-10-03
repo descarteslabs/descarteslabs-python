@@ -1,10 +1,6 @@
 import pytest
 import unittest
-
-try:
-    import mock
-except ImportError:
-    import unittest.mock as mock
+import unittest.mock as mock
 
 from ...common.dotdict import DotDict
 from ..async_job import CopyJob, DeleteJob

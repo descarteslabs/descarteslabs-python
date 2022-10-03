@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from . import xyz_pb2 as descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2
+from ..xyz import xyz_pb2 as descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
@@ -16,30 +16,30 @@ class XYZAPIStub(object):
             channel: A grpc.Channel.
         """
         self.CreateXYZ = channel.unary_unary(
-            "/descarteslabs.workflows.XYZAPI/CreateXYZ",
-            request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.CreateXYZRequest.SerializeToString,
-            response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
-        )
+                '/descarteslabs.workflows.XYZAPI/CreateXYZ',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.CreateXYZRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
+                )
         self.GetXYZ = channel.unary_unary(
-            "/descarteslabs.workflows.XYZAPI/GetXYZ",
-            request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZRequest.SerializeToString,
-            response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
-        )
+                '/descarteslabs.workflows.XYZAPI/GetXYZ',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
+                )
         self.ListXYZ = channel.unary_stream(
-            "/descarteslabs.workflows.XYZAPI/ListXYZ",
-            request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.ListXYZRequest.SerializeToString,
-            response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
-        )
+                '/descarteslabs.workflows.XYZAPI/ListXYZ',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.ListXYZRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
+                )
         self.DeleteXYZ = channel.unary_unary(
-            "/descarteslabs.workflows.XYZAPI/DeleteXYZ",
-            request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.DeleteXYZRequest.SerializeToString,
-            response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-        )
+                '/descarteslabs.workflows.XYZAPI/DeleteXYZ',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.DeleteXYZRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
         self.GetXYZSessionLogs = channel.unary_stream(
-            "/descarteslabs.workflows.XYZAPI/GetXYZSessionLogs",
-            request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZSessionLogsRequest.SerializeToString,
-            response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZLogRecord.FromString,
-        )
+                '/descarteslabs.workflows.XYZAPI/GetXYZSessionLogs',
+                request_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZSessionLogsRequest.SerializeToString,
+                response_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZLogRecord.FromString,
+                )
 
 
 class XYZAPIServicer(object):
@@ -48,213 +48,152 @@ class XYZAPIServicer(object):
     def CreateXYZ(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def GetXYZ(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def ListXYZ(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def DeleteXYZ(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def GetXYZSessionLogs(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
 
 def add_XYZAPIServicer_to_server(servicer, server):
     rpc_method_handlers = {
-        "CreateXYZ": grpc.unary_unary_rpc_method_handler(
-            servicer.CreateXYZ,
-            request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.CreateXYZRequest.FromString,
-            response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.SerializeToString,
-        ),
-        "GetXYZ": grpc.unary_unary_rpc_method_handler(
-            servicer.GetXYZ,
-            request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZRequest.FromString,
-            response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.SerializeToString,
-        ),
-        "ListXYZ": grpc.unary_stream_rpc_method_handler(
-            servicer.ListXYZ,
-            request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.ListXYZRequest.FromString,
-            response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.SerializeToString,
-        ),
-        "DeleteXYZ": grpc.unary_unary_rpc_method_handler(
-            servicer.DeleteXYZ,
-            request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.DeleteXYZRequest.FromString,
-            response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-        ),
-        "GetXYZSessionLogs": grpc.unary_stream_rpc_method_handler(
-            servicer.GetXYZSessionLogs,
-            request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZSessionLogsRequest.FromString,
-            response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZLogRecord.SerializeToString,
-        ),
+            'CreateXYZ': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateXYZ,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.CreateXYZRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.SerializeToString,
+            ),
+            'GetXYZ': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetXYZ,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.SerializeToString,
+            ),
+            'ListXYZ': grpc.unary_stream_rpc_method_handler(
+                    servicer.ListXYZ,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.ListXYZRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.SerializeToString,
+            ),
+            'DeleteXYZ': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteXYZ,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.DeleteXYZRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'GetXYZSessionLogs': grpc.unary_stream_rpc_method_handler(
+                    servicer.GetXYZSessionLogs,
+                    request_deserializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZSessionLogsRequest.FromString,
+                    response_serializer=descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZLogRecord.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-        "descarteslabs.workflows.XYZAPI", rpc_method_handlers
-    )
+            'descarteslabs.workflows.XYZAPI', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
-# This class is part of an EXPERIMENTAL API.
+ # This class is part of an EXPERIMENTAL API.
 class XYZAPI(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def CreateXYZ(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        insecure=False,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def CreateXYZ(request,
             target,
-            "/descarteslabs.workflows.XYZAPI/CreateXYZ",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.workflows.XYZAPI/CreateXYZ',
             descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.CreateXYZRequest.SerializeToString,
             descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetXYZ(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        insecure=False,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def GetXYZ(request,
             target,
-            "/descarteslabs.workflows.XYZAPI/GetXYZ",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.workflows.XYZAPI/GetXYZ',
             descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZRequest.SerializeToString,
             descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def ListXYZ(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        insecure=False,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_stream(
-            request,
+    def ListXYZ(request,
             target,
-            "/descarteslabs.workflows.XYZAPI/ListXYZ",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/descarteslabs.workflows.XYZAPI/ListXYZ',
             descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.ListXYZRequest.SerializeToString,
             descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZ.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def DeleteXYZ(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        insecure=False,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def DeleteXYZ(request,
             target,
-            "/descarteslabs.workflows.XYZAPI/DeleteXYZ",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/descarteslabs.workflows.XYZAPI/DeleteXYZ',
             descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.DeleteXYZRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetXYZSessionLogs(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        insecure=False,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_stream(
-            request,
+    def GetXYZSessionLogs(request,
             target,
-            "/descarteslabs.workflows.XYZAPI/GetXYZSessionLogs",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/descarteslabs.workflows.XYZAPI/GetXYZSessionLogs',
             descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.GetXYZSessionLogsRequest.SerializeToString,
             descarteslabs_dot_common_dot_proto_dot_xyz_dot_xyz__pb2.XYZLogRecord.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

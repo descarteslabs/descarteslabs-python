@@ -30,10 +30,7 @@ from pathlib import Path, PurePosixPath
 
 import responses
 
-try:
-    import mock
-except ImportError:
-    from unittest import mock
+from unittest import mock
 
 from descarteslabs.auth import Auth
 from .. import (

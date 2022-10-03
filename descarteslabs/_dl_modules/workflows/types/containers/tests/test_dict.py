@@ -1,6 +1,6 @@
 import operator
 import pytest
-import mock
+from unittest import mock
 
 from .....common.graft import client
 from .....common.graft import interpreter

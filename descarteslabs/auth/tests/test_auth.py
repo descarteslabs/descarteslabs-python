@@ -25,7 +25,7 @@ import responses
 from .. import auth as auth_module
 from ..auth import Auth
 from descarteslabs.exceptions import AuthError
-from mock import patch
+from unittest.mock import patch
 
 
 def token_response_callback(request):

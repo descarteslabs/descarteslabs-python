@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import responses
 import shapely.geometry
-from mock import patch
+from unittest.mock import patch
 from pytz import utc
 
 from ...common.geo import AOI
@@ -903,7 +903,7 @@ class TestImage(ClientTestCase):
 
         assert mock_np_save.called
 
-        _, ndarray = mock_np_save.call_args.args
+        _, ndarray = mock_np_save.call_args[0]
         assert ndarray.shape == (100, 100, 1)
 
     @patch("descarteslabs.catalog.Image._do_upload", return_value=True)

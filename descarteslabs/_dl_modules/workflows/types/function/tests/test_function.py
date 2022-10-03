@@ -1,6 +1,6 @@
 import operator
 import pytest
-import mock
+from unittest import mock
 import inspect
 import typing
 

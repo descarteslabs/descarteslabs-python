@@ -1,5 +1,5 @@
 import pytest
-import mock
+from unittest import mock
 
 from .....common.proto.widgets import widgets_pb2
 

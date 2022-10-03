@@ -14,6 +14,7 @@
 
 import pytest
 import unittest
+from unittest import mock
 
 from .. import (
     FeatureCollection,
@@ -24,7 +25,6 @@ from .. import (
     InvalidQueryException,
 )
 from ...common.dotdict import DotDict
-import mock
 
 from .fixtures import POINT
 

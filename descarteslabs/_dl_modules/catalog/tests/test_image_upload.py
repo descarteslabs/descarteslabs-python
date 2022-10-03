@@ -1,6 +1,6 @@
 import warnings
 import responses
-from mock import patch
+from unittest.mock import patch
 
 from datetime import datetime
 

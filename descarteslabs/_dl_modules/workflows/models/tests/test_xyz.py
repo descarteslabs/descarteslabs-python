@@ -1,9 +1,9 @@
 import datetime
 import logging
 import queue
+from unittest import mock
 
 import grpc
-import mock
 from google.protobuf.timestamp_pb2 import Timestamp
 
 from ....common.proto.xyz import xyz_pb2

@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 import json
 from ....common.graft import client as graft_client

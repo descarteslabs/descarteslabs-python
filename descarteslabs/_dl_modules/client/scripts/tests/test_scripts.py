@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-import mock
+from unittest import mock
 import os
 from io import StringIO
 from ..cli import parser, handle

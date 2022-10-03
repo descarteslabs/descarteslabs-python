@@ -17,7 +17,7 @@ import pytest
 import unittest
 import os
 import sys
-from mock import patch
+from unittest.mock import patch
 from tempfile import NamedTemporaryFile
 import responses
 import json

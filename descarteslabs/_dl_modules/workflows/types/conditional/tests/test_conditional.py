@@ -1,5 +1,5 @@
 import operator
-import mock
+from unittest import mock
 
 import pytest
 

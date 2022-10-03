@@ -1,5 +1,5 @@
 import json
-import mock
+from unittest import mock
 import pytest
 
 from ....common.proto.workflow import workflow_pb2

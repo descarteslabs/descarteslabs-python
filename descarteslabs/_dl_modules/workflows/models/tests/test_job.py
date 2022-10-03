@@ -1,6 +1,6 @@
 import json
+from unittest import mock
 
-import mock
 import pytest
 import responses
 
@@ -73,9 +73,9 @@ class TestJob:
 
         rpc = stub.return_value.CreateJob
         rpc.assert_called_once()
-        assert rpc.call_args.kwargs["timeout"] == Client.DEFAULT_TIMEOUT
+        assert rpc.call_args[1]["timeout"] == Client.DEFAULT_TIMEOUT
 
-        request = rpc.call_args.args[0]
+        request = rpc.call_args[0][0]
         assert isinstance(request, job_pb2.CreateJobRequest)
 
         graft = json.loads(request.serialized_graft)
@@ -115,7 +115,7 @@ class TestJob:
             job = Job(obj, ctx)
 
         rpc.assert_called_once()
-        ctx_json = rpc.call_args.args[0].geoctx_graft
+        ctx_json = rpc.call_args[0][0].geoctx_graft
         if ctx is None:
             assert ctx_json == ""
             assert job.geoctx is None
@@ -163,7 +163,7 @@ class TestJob:
         Job(types.Int(1), _ruster=ruster)
 
         rpc.assert_called_once()
-        request_no_ruster = rpc.call_args.args[0].no_ruster
+        request_no_ruster = rpc.call_args[0][0].no_ruster
 
         if ruster is False:
             assert request_no_ruster is True
@@ -178,7 +178,7 @@ class TestJob:
         Job(types.Int(1), _trace=trace)
 
         rpc.assert_called_once()
-        assert rpc.call_args.args[0].trace is trace
+        assert rpc.call_args[0][0].trace is trace
 
     @pytest.mark.parametrize("client", [mock.Mock(), None])
     def test_from_proto(self, stub, client):

@@ -22,7 +22,7 @@ import unittest
 from descarteslabs.exceptions import AuthError
 from ..cli import auth_handler
 from .. import cli
-from mock import patch
+from unittest.mock import patch
 
 
 class Args:
@@ -110,7 +110,6 @@ class Open:
 # expected behavior (i.e. no credentials present).
 #
 @patch("descarteslabs.auth.auth.makedirs_if_not_exists")
-@patch.object(cli, "os")
 class TestAuth(unittest.TestCase):
     def setUp(self):
         # Clean up the environment

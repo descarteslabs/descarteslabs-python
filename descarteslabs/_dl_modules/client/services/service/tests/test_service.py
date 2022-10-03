@@ -17,7 +17,7 @@ import unittest
 from http import HTTPStatus
 from io import BytesIO
 
-import mock
+from unittest import mock
 import requests
 import responses
 import urllib3
