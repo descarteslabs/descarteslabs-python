@@ -4,6 +4,7 @@ import shapely.geometry
 
 from ...common.collection import Collection
 from ...common.geo import AOI
+from ...common.property_filtering import Properties
 from .base import ClientTestCase
 from .. import properties as p
 from ..search import Search, ImageSearch
@@ -427,8 +428,16 @@ class TestSearch(ClientTestCase):
         assert request_params["text"] == "test"
 
     def test_default_includes(self):
-        s = ImageSearch(Image, client=self.client)
-        assert s._to_request() == ("/images", {"include": "product"})
+        s = ImageSearch(Image, client=self.client).filter(
+            Properties().product_id == "p1"
+        )
+        assert s._to_request() == (
+            "/images",
+            {
+                "filter": '[{"op":"eq","name":"product_id","val":"p1"}]',
+                "include": "product",
+            },
+        )
 
     @responses.activate
     def test_search_image_collection(self):
@@ -456,13 +465,10 @@ class TestSearch(ClientTestCase):
                 "data": [
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
                             "name": "my-image",
                             "product_id": "descarteslabs:my-product",
-                            "readers": [],
                             "created": "2019-06-12T20:31:48.542725Z",
                             "acquired": "2019-06-12T20:31:48.542725Z",
-                            "writers": [],
                             "files": [
                                 {
                                     "hash": "abcdefg0123456789",
@@ -501,12 +507,9 @@ class TestSearch(ClientTestCase):
                 "data": [
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
                             "name": "my-band",
                             "product_id": "descarteslabs:my-product",
-                            "readers": [],
                             "created": "2019-06-12T20:31:48.542725Z",
-                            "writers": [],
                             "resolution": {"value": 30, "unit": "meters"},
                             "type": "spectral",
                         },

@@ -5,12 +5,11 @@ import textwrap
 import warnings
 
 from datetime import datetime
-from unittest.mock import patch
 
 from descarteslabs.exceptions import BadRequestError
 
 from .. import properties
-from ..attributes import AttributeValidationError, ListAttribute
+from ..attributes import AttributeValidationError
 from ..band import DerivedBand
 from ..catalog_base import DocumentState, DeletedObjectError
 from ..image_upload import ImageUploadStatus
@@ -20,7 +19,6 @@ from ..product import (
     TaskState,
     TaskStatus,
     DeletionTaskStatus,
-    UpdatePermissionsTaskStatus,
 )
 from .base import ClientTestCase
 
@@ -419,177 +417,6 @@ class TestProduct(ClientTestCase):
         assert status_repr.strip("\n") == textwrap.dedent(match_str)
 
     @responses.activate
-    def test_update_related_acls_task(self):
-        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
-
-        self.mock_response(
-            responses.POST,
-            {
-                "data": {
-                    "type": "product_update_acls",
-                    "attributes": {"status": "RUNNING"},
-                    "id": "p1",
-                },
-                "jsonapi": {"version": "1.0"},
-            },
-            status=201,
-        )
-        r = p.update_related_objects_permissions(
-            owners=["org:descarteslabs"], readers=["group:public"]
-        )
-        assert r.status == TaskState.RUNNING
-        req = self.get_request(0)
-        assert (
-            req.url
-            == "https://example.com/catalog/v2/products/p1/update_related_objects_acls"
-        )
-
-        body_attributes = self.get_request_body(0)["data"]["attributes"]
-        assert body_attributes["readers"] == ["group:public"]
-        assert body_attributes["owners"] == ["org:descarteslabs"]
-        assert body_attributes["writers"] is None
-
-    @responses.activate
-    def test_update_related_acls_using_listattribute(self):
-        p = Product(
-            id="p1",
-            name="Test Product",
-            owners=["user:owner"],
-            readers=["user:reader"],
-            writers=["user:writer"],
-            client=self.client,
-            _saved=True,
-        )
-        self.mock_response(
-            responses.POST,
-            {
-                "data": {
-                    "type": "product_update_acls",
-                    "attributes": {"status": "RUNNING"},
-                    "id": "p1",
-                },
-                "jsonapi": {"version": "1.0"},
-            },
-            status=201,
-        )
-
-        assert isinstance(p.owners, ListAttribute)
-        assert isinstance(p.readers, ListAttribute)
-        p.update_related_objects_permissions(owners=p.owners, readers=p.readers)
-
-    @responses.activate
-    def test_update_related_acls_with_single_value(self):
-        owner = "org:descarteslabs"
-        reader = "group:public"
-        self.mock_response(
-            responses.POST,
-            {
-                "data": {
-                    "type": "product_update_acls",
-                    "attributes": {"status": "RUNNING"},
-                    "id": "p1",
-                },
-                "jsonapi": {"version": "1.0"},
-            },
-            status=201,
-        )
-
-        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
-        p.update_related_objects_permissions(owners=owner, readers=reader)
-        body_attributes = self.get_request_body(0)["data"]["attributes"]
-        assert body_attributes["owners"] == [owner]
-        assert body_attributes["readers"] == [reader]
-
-    @responses.activate
-    def test_update_acls_task_status(self):
-        p = Product(
-            id="p1",
-            name="Test Product",
-            readers=["group:public"],
-            client=self.client,
-            _saved=True,
-        )
-
-        self.mock_response(
-            responses.GET,
-            {
-                "data": {
-                    "type": "product_update_acls",
-                    "attributes": {
-                        "start_datetime": "2019-09-17T21:53:07.348000Z",
-                        "duration_in_seconds": 0.0153,
-                        "status": "SUCCESS",
-                        "objects_updated": 1,
-                        "errors": None,
-                    },
-                    "id": "descarteslabs:prod4",
-                },
-                "jsonapi": {"version": "1.0"},
-            },
-        )
-        r = p.get_update_permissions_status()
-        assert isinstance(r, UpdatePermissionsTaskStatus)
-        assert r.status == TaskState.SUCCEEDED
-
-        status_repr = repr(r)
-        match_str = """\
-            p1 update permissions task status: SUCCESS
-              - started: 2019-09-17T21:53:07.348000Z
-              - took 0.0153 seconds
-              - 1 objects updated"""
-        assert status_repr.strip("\n") == textwrap.dedent(match_str)
-
-    @responses.activate
-    @patch(
-        "descarteslabs.catalog.product.UpdatePermissionsTaskStatus._POLLING_INTERVAL", 1
-    )
-    def test_wait_for_completion(self):
-        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
-        self.mock_response(
-            responses.GET,
-            {
-                "data": {
-                    "type": "product_update_acls",
-                    "id": "p1",
-                    "attributes": {"status": "RUNNING"},
-                },
-                "jsonapi": {"version": "1.0"},
-            },
-        )
-        self.mock_response(
-            responses.GET,
-            {
-                "data": {
-                    "type": "product_update_acls",
-                    "id": "p1",
-                    "attributes": {"status": "RUNNING"},
-                },
-                "jsonapi": {"version": "1.0"},
-            },
-        )
-        self.mock_response(
-            responses.GET,
-            {
-                "data": {
-                    "type": "product_update_acls",
-                    "id": "p1",
-                    "attributes": {
-                        "status": "SUCCESS",
-                        "errors": None,
-                        "duration_in_seconds": 0.012133697,
-                        "objects_updated": 1,
-                        "start_datetime": "2019-09-18T00:27:43.230000Z",
-                    },
-                },
-                "jsonapi": {"version": "1.0"},
-            },
-        )
-        update_status = p.get_update_permissions_status()
-        assert update_status.status == TaskState.RUNNING
-        update_status.wait_for_completion()
-        assert update_status.status == TaskState.SUCCEEDED
-
-    @responses.activate
     def test_image_uploads(self):
         product_id = "p1"
 
@@ -937,14 +764,4 @@ class TestProduct(ClientTestCase):
         p = Product(id="p1", name="Product 1", client=self.client, _saved=True)
         with self.assertRaises(DeletedObjectError):
             p.get_delete_status()
-        assert p.state == DocumentState.DELETED
-
-        p = Product(id="p1", name="Product 1", client=self.client, _saved=True)
-        with self.assertRaises(DeletedObjectError):
-            p.update_related_objects_permissions(inherit=True)
-        assert p.state == DocumentState.DELETED
-
-        p = Product(id="p1", name="Product 1", client=self.client, _saved=True)
-        with self.assertRaises(DeletedObjectError):
-            p.get_update_permissions_status()
         assert p.state == DocumentState.DELETED

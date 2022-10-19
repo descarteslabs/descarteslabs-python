@@ -18,12 +18,6 @@ from .catalog_base import (
     check_deleted,
 )
 
-try:
-    import collections.abc as abc
-except ImportError:
-    import collections as abc
-
-
 properties = Properties()
 
 
@@ -61,7 +55,23 @@ class Product(CatalogObject):
     Using ``org:`` as an ``owner`` will assign those privileges only to administrators
     for that organization; using ``org:`` as a ``reader`` or ``writer`` assigns those
     privileges to everyone in that organization.  The `readers` and `writers` attributes
-    are only visible to the `owners`, you will not see them otherwise.
+    are only visible in full to the `owners`. If you are a `reader` or a `writer` those
+    attributes will only display the element of those lists by which you are gaining
+    read or write access.
+
+    Any user with ``owner`` privileges is able to read, modify, or delete the product,
+    including reading and modifying the ``owners``, ``writers``, and ``readers`` attributes.
+    Any user with ``owner`` privileges can also create, read, modify, or delete bands
+    and images for the product.
+
+    Any user with ``writer`` privileges is able to read or modify the product, but not
+    delete the product. A ``writer`` may create, read or modify bands and images for the
+    product. A ``writer`` can read the product ``owners`` and can only read the entry
+    in the ``writers`` and/or ``readers`` by which they gain access to the product.
+
+    Any user with ``reader`` privileges is able to read the product, bands, and images.
+    A ``reader`` can read the product ``owners`` and can only read the entry
+    in the ``writers`` and/or ``readers`` by which they gain access to the product.
 
     Also see :doc:`Sharing Resources </guides/sharing>`.
     """
@@ -91,6 +101,33 @@ class Product(CatalogObject):
         :py:meth:`Search.find_text`.
 
         *Searchable*
+        """,
+    )
+    owners = ListAttribute(
+        TypedAttribute(str),
+        doc="""list(str), optional: User, group, or organization IDs that own this product.
+
+        Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
+        delete, and change access to this product.  :ref:`See this note <product_note>`.
+
+        *Filterable*.
+        """,
+    )
+    readers = ListAttribute(
+        TypedAttribute(str),
+        doc="""list(str), optional: User, email, group, or organization IDs that can read this product.
+
+        Will be empty by default.  This attribute is only available in full to the `owners`
+        of the product.  :ref:`See this note <product_note>`.
+        """,
+    )
+    writers = ListAttribute(
+        TypedAttribute(str),
+        doc="""list(str), optional: User, group, or organization IDs that can edit this product.
+
+        Writers will also have read permission.  Writers will be empty by default.
+        See note below.  This attribute is only available in full to the `owners` of the product.
+        :ref:`See this note <product_note>`.
         """,
     )
     is_core = BooleanAttribute(
@@ -300,114 +337,6 @@ class Product(CatalogObject):
         )
         response = r.json()
         return DeletionTaskStatus(id=self.id, **response["data"]["attributes"])
-
-    @check_deleted
-    def update_related_objects_permissions(
-        self, owners=None, readers=None, writers=None, inherit=False
-    ):
-        """Update the owners, readers, and/or writers for all related bands and images.
-
-        Starts an asynchronous operation that updates the owners, readers, and/or
-        writers of all bands and images associated with this product. If the product
-        has a large number of associated images, this operation could take several
-        minutes, or even hours.
-
-        Parameters
-        ----------
-        owners : str or iterable(str), optional
-            An empty list, a single owner or a list of owners; see
-            `~CatalogObject.owners`.  If None, ignored.
-        readers : str or iterable(str), optional
-            An empty list, a single reader or a list of readers; see
-            `~CatalogObject.readers`.  If None, ignored.
-        writers : str or iterable(str), optional
-            An empty list, a single writer or a list of writers; see
-            `~CatalogObject.writers`.  If None, ignored.
-        inherit : bool, optional
-            Whether to inherit the values from the product for owners, readers, and/or
-            writers that have not been set in this request.  By default, this value
-            is ``False`` and if a parameter is not set, it will not change the
-            corresponding attribute in the related objects.  When set to ``True``, and
-            a parameter is not set, it is inherited from the product and applied to
-            all related objects.  If `inherit` is ``False``, at least one of the other
-            parameters must be given.  If `inherit` is ``True``, all other parameters
-            are optional.
-
-        Returns
-        -------
-        UpdatePermissionsTaskStatus
-            Returns :py:class:`UpdatePermissionsTaskStatus` if update task was
-            successfully started and ``None`` if there were no related objects
-            to update.
-
-        Raises
-        ------
-        ConflictError
-            If an update task is already in progress.
-        DeletedObjectError
-            If this product was deleted.
-        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
-            :ref:`Spurious exception <network_exceptions>` that can occur during a
-            network request.
-        """
-        attributes = {"owners": owners, "readers": readers, "writers": writers}
-        for name, parameter in attributes.items():
-            if parameter is not None:
-                if isinstance(parameter, str):
-                    attributes[name] = [parameter]
-                elif isinstance(parameter, abc.Iterable) and all(
-                    isinstance(value, str) for value in parameter
-                ):
-                    attributes[name] = list(parameter)
-                else:
-                    raise TypeError(
-                        "{} must be a string or iterable of strings".format(name)
-                    )
-        attributes["inherit"] = inherit
-
-        r = self._client.session.post(
-            "/products/{}/update_related_objects_acls".format(self.id),
-            json={"data": {"type": "product_update_acls", "attributes": attributes}},
-        )
-        if r.status_code == 201:
-            response = r.json()
-            return UpdatePermissionsTaskStatus(
-                id=self.id, _client=self._client, **response["data"]["attributes"]
-            )
-
-    @check_deleted
-    def get_update_permissions_status(self):
-        """Fetches the status of an update task.
-
-        Fetches the status of an update task started using
-        :py:meth:`update_related_objects_permissions`.
-
-        Returns
-        -------
-        UpdatePermissionsTaskStatus
-
-        Raises
-        ------
-        DeletedObjectError
-            If this product was deleted.
-        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
-            :ref:`Spurious exception <network_exceptions>` that can occur during a
-            network request.
-
-        Example
-        -------
-        >>> product = Product.get('product-id') # doctest: +SKIP
-        >>> product.update_related_objects_permissions() # doctest: +SKIP
-        >>> product.get_update_permissions_status() # doctest: +SKIP
-
-        """
-        r = self._client.session.get(
-            "/products/{}/update_related_objects_acls".format(self.id)
-        )
-        response = r.json()
-        return UpdatePermissionsTaskStatus(
-            id=self.id, _client=self._client, **response["data"]["attributes"]
-        )
 
     @check_deleted
     def bands(self, request_params=None):
@@ -702,38 +631,4 @@ class DeletionTaskStatus(TaskStatus):
         if self.objects_deleted:
             text += "\n  - {:,} objects deleted".format(self.objects_deleted)
 
-        return text
-
-
-class UpdatePermissionsTaskStatus(TaskStatus):
-    """The asynchronous task status for updating related objects' access control permissions
-
-    Attributes
-    ----------
-    product_id : str
-        The id of the product for which this task is running.
-    status : TaskState
-        The state of the task as explained in `TaskState`.
-    start_datetime : datetime
-        The date and time at which the task started running.
-    duration_in_seconds : float
-        The duration of the task.
-    objects_updated : int
-        The number of object (a combination of bands or images) that were updated.
-    errors: list
-        In case the status is ``FAILED`` this will contain a list of errors
-        that were encountered.  In all other states this will not be set.
-    """
-
-    _task_name = "update permissions task"
-    _url = "/products/{}/update_related_objects_acls"
-
-    def __init__(self, objects_updated=None, **kwargs):
-        super(UpdatePermissionsTaskStatus, self).__init__(**kwargs)
-        self.objects_updated = objects_updated
-
-    def __repr__(self):
-        text = super(UpdatePermissionsTaskStatus, self).__repr__()
-        if self.objects_updated:
-            text += "\n  - {:,} objects updated".format(self.objects_updated)
         return text

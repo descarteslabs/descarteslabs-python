@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 import copy
 import json
 import warnings
@@ -199,6 +200,7 @@ class Search(object):
             s._request_params["limit"] = self._limit
 
         filters = s._serialize_filters()
+        self._require_product_ids(filters)
         if filters:
             # urlencode encodes spaces in the json object which create an invalid filter value when
             # the server tries to parse it, so we have to remove spaces prior to encoding.
@@ -208,6 +210,37 @@ class Search(object):
             s._request_params["include"] = ",".join(self._model_cls._default_includes)
 
         return self._url, s._request_params
+
+    def _require_product_ids(self, filters):
+        from .product import Product
+        from .band import DerivedBand
+
+        if self._model_cls is Product or self._model_cls is DerivedBand:
+            return
+        if filters:
+            for filter in filters:
+                # will be either a simple product_id eq filter,
+                # or an "or" of all of the same.
+                if "or" in filter:
+                    ors = filter["or"]
+                    if ors and all(
+                        map(
+                            lambda x: isinstance(x, Mapping)
+                            and x.get("name") == "product_id"
+                            and x.get("op") == "eq",
+                            ors,
+                        )
+                    ):
+                        return
+                elif (
+                    isinstance(filter, Mapping)
+                    and filter.get("name") == "product_id"
+                    and filter.get("op") == "eq"
+                ):
+                    return
+        raise ValueError(
+            f"{self._model_cls.__name__} search requires filtering by product_id"
+        )
 
     def count(self):
         """Fetch the number of documents that match the search.
@@ -303,7 +336,7 @@ class Search(object):
                     _saved=True,
                     _relationships=doc.get("relationships"),
                     _related_objects=related_objects,
-                    **doc["attributes"]
+                    **doc["attributes"],
                 )
 
             next_link = response["links"].get("next")

@@ -4,6 +4,8 @@ import textwrap
 
 from descarteslabs.exceptions import NotFoundError
 
+from ...common.property_filtering import Properties
+
 from .base import ClientTestCase
 from ..attributes import AttributeValidationError, DocumentState
 from ..band import (
@@ -79,9 +81,6 @@ class TestBand(ClientTestCase):
             {
                 "data": {
                     "attributes": {
-                        "readers": [],
-                        "writers": [],
-                        "owners": ["org:descarteslabs"],
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                         "name": "blue",
@@ -127,9 +126,6 @@ class TestBand(ClientTestCase):
                 "data": [
                     {
                         "attributes": {
-                            "readers": [],
-                            "writers": [],
-                            "owners": ["org:descarteslabs"],
                             "modified": "2019-06-11T23:31:33.714883Z",
                             "created": "2019-06-11T23:31:33.714883Z",
                             "name": "blue",
@@ -142,9 +138,6 @@ class TestBand(ClientTestCase):
                     },
                     {
                         "attributes": {
-                            "readers": [],
-                            "writers": [],
-                            "owners": ["org:descarteslabs"],
                             "modified": "2019-06-11T23:31:33.714883Z",
                             "created": "2019-06-11T23:31:33.714883Z",
                             "name": "alpha",
@@ -160,7 +153,9 @@ class TestBand(ClientTestCase):
             },
         )
 
-        results = list(Band.search(client=self.client))
+        results = list(
+            Band.search(client=self.client).filter(Properties().product_id == "p1")
+        )
         assert 2 == len(results)
         assert isinstance(results[0], SpectralBand)
         assert isinstance(results[1], MaskBand)
@@ -413,9 +408,6 @@ class TestBand(ClientTestCase):
             {
                 "data": {
                     "attributes": {
-                        "readers": [],
-                        "writers": [],
-                        "owners": ["org:descarteslabs"],
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                         "name": "band",
@@ -541,9 +533,6 @@ class TestBand(ClientTestCase):
             {
                 "data": {
                     "attributes": {
-                        "readers": [],
-                        "writers": [],
-                        "owners": ["org:descarteslabs"],
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                         "name": "band",
@@ -593,7 +582,6 @@ class TestDerivedBand(ClientTestCase):
             {
                 "data": {
                     "attributes": {
-                        "owners": ["org:descarteslabs"],
                         "description": None,
                         "extra_properties": {},
                         "tags": None,
@@ -624,7 +612,6 @@ class TestDerivedBand(ClientTestCase):
                 "data": [
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
                             "description": None,
                             "extra_properties": {},
                             "tags": None,
@@ -640,7 +627,6 @@ class TestDerivedBand(ClientTestCase):
                     },
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
                             "description": None,
                             "extra_properties": {},
                             "tags": None,
@@ -705,7 +691,6 @@ class TestDerivedBand(ClientTestCase):
                         "data_type": "Float32",
                         "wavelength_nm_fwhm": None,
                         "type": "spectral",
-                        "readers": [],
                         "wavelength_nm_center": None,
                         "display_range": [0.0, 255.0],
                         "file_index": 0,
@@ -720,10 +705,8 @@ class TestDerivedBand(ClientTestCase):
                         "name": "b1",
                         "product_id": "p1",
                         "description": None,
-                        "owners": ["org:descarteslabs", "user:someone"],
                         "data_range": [0.0, 1962239500502.9294],
                         "resolution": None,
-                        "writers": [],
                     },
                     "relationships": {
                         "product": {"data": {"type": "product", "id": "p1"}}

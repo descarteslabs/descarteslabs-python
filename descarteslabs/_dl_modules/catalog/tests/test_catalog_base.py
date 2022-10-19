@@ -68,9 +68,6 @@ class TestCatalogObject(ClientTestCase):
             list(c._attribute_types.keys()),
             [
                 "id",
-                "owners",
-                "writers",
-                "readers",
                 "created",
                 "modified",
                 "extra_properties",
@@ -78,7 +75,6 @@ class TestCatalogObject(ClientTestCase):
                 "v1_properties",
             ],
         )
-        assert c.owners is None
         assert c.is_modified
 
     def test_constructor_no_id(self):
@@ -95,8 +91,8 @@ class TestCatalogObject(ClientTestCase):
         c = CatalogObject(id={})
         assert not c.is_modified
 
-        c.owners = ["user", "org"]
-        assert c.owners == ["user", "org"]
+        c.tags = ["foo", "bar"]
+        assert c.tags == ["foo", "bar"]
         assert c.is_modified
 
     def test_create_non_attr(self):
@@ -110,14 +106,12 @@ class TestCatalogObject(ClientTestCase):
             c.foo = "bad"
 
     def test_serialize(self):
-        c = CatalogObject(id="id", owners=["user", "org"], readers=["public"])
-        assert c.readers == ["public"]
+        c = CatalogObject(id="id", tags=["foo", "bar"])
+        assert c.tags == ["foo", "bar"]
         assert c.is_modified
-        assert {"id", "owners", "readers"} == c._modified
+        assert {"id", "tags"} == c._modified
 
-        self.assertDictEqual(
-            c.serialize(), dict(owners=["user", "org"], readers=["public"])
-        )
+        self.assertDictEqual(c.serialize(), dict(tags=["foo", "bar"]))
 
         self.assertDictEqual(
             c.serialize(jsonapi_format=True),
@@ -125,33 +119,29 @@ class TestCatalogObject(ClientTestCase):
                 data=dict(
                     id="id",
                     type=None,
-                    attributes=dict(owners=["user", "org"], readers=["public"]),
+                    attributes=dict(tags=["foo", "bar"]),
                 )
             ),
         )
 
     def test_clear_modified_attributes(self):
-        c = CatalogObject(
-            id="id", owners=["user", "org"], readers=["public"], _saved=True
-        )
+        c = CatalogObject(id="id", tags=["foo", "bar"], _saved=True)
         assert not c.is_modified
-        c.owners = ["org"]
+        c.tags = ["baz"]
         assert c.is_modified
-        assert c.serialize(modified_only=True) == {"owners": ["org"]}
+        assert c.serialize(modified_only=True) == {"tags": ["baz"]}
 
         c._clear_modified_attributes()
         assert not c.is_modified
 
     def test_list_properties(self):
-        c = CatalogObject(id="foo1", owners=["foo"], tags=["something"], _saved=True)
+        c = CatalogObject(id="foo1", tags=["something"], _saved=True)
         assert not c.is_modified
 
-        c.owners.append("bar")
         c.tags.append("nothing")
 
         assert c.is_modified
         assert c.serialize(modified_only=True) == {
-            "owners": ["foo", "bar"],
             "tags": ["something", "nothing"],
         }
 
@@ -406,10 +396,7 @@ class TestCatalogObject(ClientTestCase):
         assert not c.is_modified
         assert c.state == DocumentState.UNSAVED
 
-        c.update(owners=["owner"], writers=["writer"], tags=["tag"])
-        assert c.owners == ["owner"]
-        assert c.writers == ["writer"]
-        assert c.readers is None
+        c.update(tags=["tag"])
         assert c.tags == ["tag"]
         assert c.is_modified
 
@@ -420,10 +407,8 @@ class TestCatalogObject(ClientTestCase):
         assert c.state == DocumentState.SAVED
 
         with pytest.raises(AttributeValidationError):
-            c.update(owners=["owner"], writers=["writer"], created=["created"])
+            c.update(created=["created"])
 
-        assert c.owners is None
-        assert c.writers is None
         assert c.created == timestamp
         assert not c.is_modified
         assert c.state == DocumentState.SAVED
@@ -433,10 +418,9 @@ class TestCatalogObject(ClientTestCase):
         assert not c.is_modified
 
         with pytest.raises(AttributeError):
-            c.update(owners=["owner"], writers=["writer"], foo=["bar"])
+            c.update(tags=["foo"], foo=["bar"])
 
-        assert c.owners is None
-        assert c.writers is None
+        assert c.tags is None
         with pytest.raises(AttributeError):
             c.foo
         assert not c.is_modified
@@ -446,22 +430,20 @@ class TestCatalogObject(ClientTestCase):
         assert c._modified == set(("id",))
 
         with pytest.raises(AttributeValidationError):
-            c.update(owners=["owner"], writers="writer")
+            c.update(tags=123)
 
         assert c.id == "id"
-        assert c.owners is None
-        assert c.writers is None
+        assert c.tags is None
         assert c._modified == set(("id",))
 
     def test_update_ignore_errors(self):
         c = CatalogObject(id="id")
         assert c._modified == set(("id",))
 
-        c.update(owners=["owner"], writers="writer", ignore_errors=True)
+        c.update(tags=123, ignore_errors=True)
         assert c.id == "id"
-        assert c.owners == ["owner"]
-        assert c.writers is None
-        assert c._modified == set(("id", "owners"))
+        assert c.tags is None
+        assert c._modified == set(("id",))
 
     @responses.activate
     def test_update_deleted_object(self):
@@ -477,7 +459,7 @@ class TestCatalogObject(ClientTestCase):
         c.delete()
 
         with pytest.raises(DeletedObjectError):
-            c.update(owners=["owner"], writers="writer")
+            c.update(tags=["foo"])
 
     @responses.activate
     def test_rewritten_errors(self):
@@ -509,12 +491,10 @@ class TestCatalogObject(ClientTestCase):
             )
 
     def test_update_no_changes(self):
-        c = CatalogObject(
-            id="id", owners=["owner"], writers=["writer"], tags=["tag"], _saved=True
-        )
+        c = CatalogObject(id="id", tags=["tag"], _saved=True)
         assert not c.is_modified
 
-        c.update(owners=["owner"], writers=["writer"], tags=["tag"])
+        c.update(tags=["tag"])
         assert not c.is_modified
 
     @responses.activate

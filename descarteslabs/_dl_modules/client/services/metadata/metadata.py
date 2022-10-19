@@ -61,7 +61,7 @@ class Metadata(Service, DefaultClientMixin):
 
     def bands(
         self,
-        products=None,
+        products,
         limit=None,
         offset=None,
         wavelength=None,
@@ -72,7 +72,8 @@ class Metadata(Service, DefaultClientMixin):
     ):
         """Search for imagery data bands that you have access to.
 
-        :param list(str) products: A list of product(s) to return bands for.
+        :param list(str) products: A list of product(s) to return bands for. May
+          not be empty.
         :param int limit: Number of results to return.
         :param int offset: Index to start at when returning results.
         :param float wavelength: A wavelength in nm e.g 700 that the band sensor must measure.
@@ -83,6 +84,11 @@ class Metadata(Service, DefaultClientMixin):
             bands matching query (e.g. product id not available).
         :rtype: DotList(DotDict)
         """
+        if not products:
+            raise ValueError(
+                "One or more products must be specified to search for bands"
+            )
+
         params = ["limit", "offset", "products", "wavelength", "resolution", "tags"]
 
         args = locals()
@@ -229,7 +235,7 @@ class Metadata(Service, DefaultClientMixin):
     )
     def summary(
         self,
-        products=None,
+        products,
         sat_ids=None,
         date="acquired",
         interval=None,
@@ -248,7 +254,7 @@ class Metadata(Service, DefaultClientMixin):
     ):
         """Get a summary of the results for the specified spatio-temporal query.
 
-        :param list(str) products: Product identifier(s).
+        :param list(str) products: Product identifier(s). May not be empty.
         :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str interval: Part of the date to aggregate over (e.g. `day`).
@@ -413,7 +419,7 @@ class Metadata(Service, DefaultClientMixin):
     )
     def paged_search(
         self,
-        products=None,
+        products,
         sat_ids=None,
         date="acquired",
         place=None,
@@ -440,7 +446,7 @@ class Metadata(Service, DefaultClientMixin):
         Most clients should use :py:func:`features` instead, which batch searches into smaller requests
         and handles the paging for you.
 
-        :param list(str) products: Product Identifier(s).
+        :param list(str) products: Product Identifier(s). May not be empty.
         :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (default is `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
@@ -565,7 +571,7 @@ class Metadata(Service, DefaultClientMixin):
     )
     def search(
         self,
-        products=None,
+        products,
         sat_ids=None,
         date="acquired",
         place=None,
@@ -590,7 +596,7 @@ class Metadata(Service, DefaultClientMixin):
 
         If performing a large query, consider using the iterator :py:func:`features` instead.
 
-        :param list(str) products: Product Identifier(s).
+        :param list(str) products: Product Identifier(s). May not be empty.
         :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
@@ -685,7 +691,7 @@ class Metadata(Service, DefaultClientMixin):
     )
     def ids(
         self,
-        products=None,
+        products,
         sat_ids=None,
         date="acquired",
         place=None,
@@ -707,7 +713,7 @@ class Metadata(Service, DefaultClientMixin):
         """Search metadata given a spatio-temporal query. All parameters are
         optional.
 
-        :param list(str) products: Products identifier(s).
+        :param list(str) products: Products identifier(s). May not be empty.
         :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
         :param str place: A slug identifier to be used as a region of interest.
@@ -799,7 +805,7 @@ class Metadata(Service, DefaultClientMixin):
     )
     def features(
         self,
-        products=None,
+        products,
         sat_ids=None,
         date="acquired",
         place=None,
@@ -901,8 +907,8 @@ class Metadata(Service, DefaultClientMixin):
              'cloud_fraction', 'cloud_fraction_0', 'confidence_dlsr', 'cs_code',
              'descartes_version', 'file_md5s', 'file_sizes', 'files', 'fill_fraction',
              'geolocation_accuracy', 'geometry', 'geotrans', 'id', 'identifier', 'key',
-             'modified', 'owner_type', 'processed', 'product', 'proj4', 'projcs',
-             'published', 'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id',
+             'modified', 'processed', 'product', 'proj4', 'projcs', 'published',
+             'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id',
              'solar_azimuth_angle', 'solar_elevation_angle', 'storage_state',
              'sw_version', 'terrain_correction', 'tile_id']
         """

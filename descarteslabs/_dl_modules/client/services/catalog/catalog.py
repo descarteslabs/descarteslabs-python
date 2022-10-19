@@ -221,17 +221,6 @@ class Catalog(Service, DefaultClientMixin):
                                        used to store this band.
                 nodata:                Pixel value indicating no data
                                        available.
-                owner_type:            One of ["user", "core"].  "core"
-                                       bands are owned by Descartes Labs,
-                                       while "user" bands are owned by
-                                       individual users.
-                owners:                A list of groups, organizations
-                                       or users who own the product.
-                                       Access Control List identifiers
-                                       can have the following formats:
-                                       organizations, e.g. org:orgname.
-                                       groups, e.g. group:groupname.
-                                       user email, e.g. email:user@company.com.
                 physical_range:        If band represents a physical
                                        value e.g reflectance or
                                        radiance what are the possible
@@ -275,13 +264,6 @@ class Catalog(Service, DefaultClientMixin):
                                        is sensitive to.
                 wavelength_unit:       Must be "nm" if any wavelength
                                        params defined. Otherwise None.
-                writers:               A list of groups, organizations
-                                       or users having write access.
-                                       Access Control List identifiers
-                                       can have the following formats:
-                                       organizations, e.g. org:orgname.
-                                       groups, e.g. group:groupname.
-                                       user email, e.g. email:user@company.com.
 
         :raises ~descarteslabs.exceptions.RateLimitError: Raised when
             too many requests have been made within a given time period.
@@ -418,7 +400,7 @@ class Catalog(Service, DefaultClientMixin):
         :param str revisit: How often an AOI can expect updated data.
         :param str sensor: Name of the sensor used.
         :param str swath: How large an area the sensor captures at a given time.
-        :param list(str) writers: A list of groups, or user hashes to give read access to.
+        :param list(str) writers: A list of groups, or user hashes to give write access to.
 
         :rtype: dict
         :return: JSON API representation of the product. See :meth:`get_product`
@@ -481,7 +463,7 @@ class Catalog(Service, DefaultClientMixin):
         :param str revisit: How often an AOI can expect updated data.
         :param str sensor: Name of the sensor used.
         :param str swath: How large an area the sensor captures at a given time.
-        :param list(str) writers: A list of groups, or user hashes to give read access to.
+        :param list(str) writers: A list of groups, or user hashes to give write access to.
 
         :rtype: dict
         :return: JSON API representation of the product. See :meth:`get_product`
@@ -543,7 +525,7 @@ class Catalog(Service, DefaultClientMixin):
         :param str revisit: How often an AOI can expect updated data.
         :param str sensor: Name of the sensor used.
         :param str swath: How large an area the sensor captures at a given time.
-        :param list(str) writers: A list of groups, or user hashes to give read access to.
+        :param list(str) writers: A list of groups, or user hashes to give write access to.
 
         :rtype: dict
         :return: JSON API representation of the product. See :meth:`get_product`
@@ -732,10 +714,6 @@ class Catalog(Service, DefaultClientMixin):
 
                         modified:   Time that the band was modified
                                     in ISO-8601 UTC.
-                        owner_type: One of ["user", "core"].  "core"
-                                    bands are owned by Descartes
-                                    Labs, while "user" bands are
-                                    owned by individual users.
 
                     attributes: A dict which may contain the following keys:
 
@@ -789,13 +767,6 @@ class Catalog(Service, DefaultClientMixin):
                                                used to store this band.
                         nodata:                Pixel value indicating no data
                                                available.
-                        owners:                A list of groups, organizations
-                                               or users who own the product.
-                                               Access Control List identifiers
-                                               can have the following formats:
-                                               organizations, e.g. org:orgname.
-                                               groups, e.g. group:groupname.
-                                               user email, e.g. email:user@company.com.
                         physical_range:        If band represents a physical
                                                value e.g reflectance or
                                                radiance what are the possible
@@ -804,13 +775,6 @@ class Catalog(Service, DefaultClientMixin):
                                                processed if at all.
                         product:               ID of the product the band
                                                belongs to.
-                        read:                  A list of groups, organizations
-                                               or users having read access.
-                                               Access Control List identifiers
-                                               can have the following formats:
-                                               organizations, e.g. org:orgname.
-                                               groups, e.g. group:groupname.
-                                               user email, e.g. email:user@company.com.
                         res_factor:            Scaling of this band relative to
                                                the native band resolution.
                         resolution:            Resolution of this band.
@@ -839,13 +803,6 @@ class Catalog(Service, DefaultClientMixin):
                                                is sensitive to.
                         wavelength_unit:       Must be "nm" if any wavelength
                                                params defined. Otherwise None.
-                        writers:               A list of groups, organizations
-                                               or users having write access.
-                                               Access Control List identifiers
-                                               can have the following formats:
-                                               organizations, e.g. org:orgname.
-                                               groups, e.g. group:groupname.
-                                               user email, e.g. email:user@company.com.
 
         :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             band cannot be found.
@@ -906,8 +863,6 @@ class Catalog(Service, DefaultClientMixin):
         :param str type: (Required) The data interpretation of the band. One of ['spectral', 'mask', 'class', 'other']
 
         :param int nodata: Pixel value indicating no data available.
-        :param list(str) read: A list of groups, or user hashes to give read access to.
-                                     Defaults to the same as the parent product if not specified.
         :param str color: The color interpretation of this band.
                           One of ['Alpha', 'Black', 'Blue', 'Cyan', 'Gray', 'Green', 'Hue',
                           'Ligntness', 'Magenta', 'Palette', 'Red', 'Saturation',
@@ -946,14 +901,13 @@ class Catalog(Service, DefaultClientMixin):
         :param float wavelength_min: Minimum wavelength this band is sensitive to.
         :param float wavelength_max: Maximum wavelength this band is sensitive to.
         :param str wavelength_unit: Units the wavelength is expressed in, must be "nm" if provided.
-        :param list(str) writers: A list of groups, or user hashes to give read access to.
 
         :rtype: dict
         :return: JSON API representation of the band. See :meth:`get_band`
             for information about returned keys.
 
         :raises ~descarteslabs.exceptions.BadRequestError: Raised when
-            the request is malformed, e.g. the owners list is missing prefixes.
+            the request is malformed.
         :raises ~descarteslabs.exceptions.ConflictError: Raised when
             a band with the specified name already exists.
         :raises ~descarteslabs.exceptions.RateLimitError: Raised when
@@ -999,7 +953,7 @@ class Catalog(Service, DefaultClientMixin):
             for information about returned keys.
 
         :raises ~descarteslabs.exceptions.BadRequestError: Raised when
-            the request is malformed, e.g. the owners list is missing prefixes.
+            the request is malformed.
         :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             band cannot be found.
         :raises ~descarteslabs.exceptions.RateLimitError: Raised when
@@ -1037,7 +991,7 @@ class Catalog(Service, DefaultClientMixin):
             for information about returned keys.
 
         :raises ~descarteslabs.exceptions.BadRequestError: Raised when
-            the request is malformed, e.g. the owners list is missing prefixes.
+            the request is malformed.
         :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             band cannot be found.
         :raises ~descarteslabs.exceptions.RateLimitError: Raised when
@@ -1094,10 +1048,6 @@ class Catalog(Service, DefaultClientMixin):
 
                         modified:   Time that the image was modified
                                     in ISO-8601 UTC.
-                        owner_type: One of ["user", "core"].  "core"
-                                    images are owned by Descartes Labs,
-                                    while "user" images are owned by
-                                    individual users.
 
                     attributes: A dict which may contain the following keys:
 
@@ -1147,13 +1097,6 @@ class Catalog(Service, DefaultClientMixin):
                         pass:                   On which pass was this image taken.
                         identifier:             Vendor scene identifier.
                         incidence_angle:        Sensor incidence angle.
-                        owners:                 A list of groups, organizations
-                                                or users who own the product.
-                                                Access Control List identifiers
-                                                can have the following formats:
-                                                organizations, e.g. org:orgname.
-                                                groups, e.g. group:groupname.
-                                                user email, e.g. email:user@company.com.
                         product:                Product to which this image belongs.
                         processed:              Date which this image was processed.
                         proj4:                  proj.4 transformation parameters.
@@ -1161,13 +1104,6 @@ class Catalog(Service, DefaultClientMixin):
                         published:              Date the image was published.
                         raster_size:            Dimensions of image in pixels in
                                                 (width, height).
-                        read:                   A list of groups, organizations
-                                                or users having read access.
-                                                Access Control List identifiers
-                                                can have the following formats:
-                                                organizations, e.g. org:orgname.
-                                                groups, e.g. group:groupname.
-                                                user email, e.g. email:user@company.com.
                         reflectance_scale:      Scale factors converting TOA
                                                 radiances to TOA reflectances
                         relative_orbit:         Orbit number in revisit cycle.
@@ -1186,13 +1122,6 @@ class Catalog(Service, DefaultClientMixin):
                                                 the fields bucket, directory,
                                                 files, file_md5s, file_sizes.
                                                 Default is "available".
-                        writers:                A list of groups, organizations
-                                                or users having write access.
-                                                Access Control List identifiers
-                                                can have the following formats:
-                                                organizations, e.g. org:orgname.
-                                                groups, e.g. group:groupname.
-                                                user email, e.g. email:user@company.com.
 
         :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             image cannot be found.
@@ -1224,8 +1153,6 @@ class Catalog(Service, DefaultClientMixin):
         :param str product_id: (Required) Product to which this image belongs.
         :param str image_id: (Required) New image's id = <product_id>:<image_id>.
         :param bool add_namespace: (Deprecated) Add your user namespace to the ``product_id``.
-        :param list(str) read: A list of groups, or user hashes to give read access to.
-                                     Defaults to the same as the parent product if not specified.
         :param int absolute_orbit: Orbit number since mission start.
         :param str acquired: Date the imagery was acquired
         :param str archived: Date the imagery was archived.
@@ -1269,7 +1196,6 @@ class Catalog(Service, DefaultClientMixin):
         :param str storage_state: A string indicating whether data for the image is stored on the Descartes
             Labs platform. Allowed values are "available" and "remote". If `"remote"`, entry may not include the
             fields bucket, directory, files, file_md5s, file_sizes. Default is `"available"`.
-        :param list(str) writers: A list of groups, or user hashes to give read access to.
         :param dict extra_properties: User defined custom properties for this image.
             Up to 50 keys are allowed. The dict can only map strings to primitive types (str -> str|float|int).
 
@@ -1278,7 +1204,7 @@ class Catalog(Service, DefaultClientMixin):
             for information about returned keys.
 
         :raises ~descarteslabs.exceptions.BadRequestError: Raised when
-            the request is malformed, e.g. the owners list is missing prefixes.
+            the request is malformed.
         :raises ~descarteslabs.exceptions.ConflictError: Raised when
             a image with the specified ID already exists.
         :raises ~descarteslabs.exceptions.RateLimitError: Raised when
@@ -1322,7 +1248,7 @@ class Catalog(Service, DefaultClientMixin):
             for information about returned keys.
 
         :raises ~descarteslabs.exceptions.BadRequestError: Raised when
-            the request is malformed, e.g. the owners list is missing prefixes.
+            the request is malformed.
         :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             image cannot be found.
         :raises ~descarteslabs.exceptions.RateLimitError: Raised when
@@ -1368,7 +1294,7 @@ class Catalog(Service, DefaultClientMixin):
             for information about returned keys.
 
         :raises ~descarteslabs.exceptions.BadRequestError: Raised when
-            the request is malformed, e.g. the owners list is missing prefixes.
+            the request is malformed.
         :raises ~descarteslabs.exceptions.NotFoundError: Raised if the
             image cannot be found.
         :raises ~descarteslabs.exceptions.RateLimitError: Raised when

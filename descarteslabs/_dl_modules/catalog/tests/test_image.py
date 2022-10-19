@@ -13,6 +13,7 @@ from unittest.mock import patch
 from pytz import utc
 
 from ...common.geo import AOI
+from ...common.property_filtering import Properties
 from ...common.shapely_support import shapely_to_geojson
 from .. import image as image_module
 from ..attributes import (
@@ -54,9 +55,6 @@ class TestImage(ClientTestCase):
             {
                 "data": {
                     "attributes": {
-                        "readers": [],
-                        "writers": [],
-                        "owners": ["org:descarteslabs"],
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                         "name": "myimage",
@@ -85,12 +83,9 @@ class TestImage(ClientTestCase):
                 "data": [
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
                             "name": "myband",
                             "product_id": "p1",
-                            "readers": [],
                             "created": "2019-06-12T20:31:48.542725Z",
-                            "writers": [],
                             "resolution": {"value": 30, "unit": "meters"},
                             "type": "spectral",
                         },
@@ -236,9 +231,6 @@ class TestImage(ClientTestCase):
             {
                 "data": {
                     "attributes": {
-                        "readers": [],
-                        "writers": [],
-                        "owners": ["org:descarteslabs"],
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                         "name": "myimage",
@@ -265,7 +257,11 @@ class TestImage(ClientTestCase):
         )
 
     def test_search_intersects(self):
-        search = Image.search().intersects(self.geometry)
+        search = (
+            Image.search()
+            .intersects(self.geometry)
+            .filter(Properties().product_id == "p1")
+        )
         _, request_params = search._to_request()
         assert self.geometry == json.loads(request_params["intersects"])
 
@@ -280,7 +276,6 @@ class TestImage(ClientTestCase):
                         "product": {"data": {"type": "product", "id": "prod1"}}
                     },
                     "attributes": {
-                        "readers": ["group:public", "group:beta"],
                         "proj4": "+proj=utm +zone=29 +datum=WGS84 +units=m +no_defs ",
                         "satellite_id": "LANDSAT_8",
                         "product_id": "prod1",
@@ -306,7 +301,6 @@ class TestImage(ClientTestCase):
                         "geometry": self.geometry,
                         "geotrans": [330592.5, 15.0, 0.0, 8918707.5, 0.0, -15.0],
                         "x_pixels": 18240,
-                        "owners": ["org:descarteslabs"],
                         "published": "2017-05-16T18:45:16Z",
                         "acquired": "2017-05-16T14:07:26.108914Z",
                         "created": "2017-05-21T00:51:08Z",
@@ -461,9 +455,6 @@ class TestImage(ClientTestCase):
                     {
                         "data": {
                             "attributes": {
-                                "readers": [],
-                                "writers": [],
-                                "owners": ["org:descarteslabs"],
                                 "modified": "2019-06-11T23:31:33.714883Z",
                                 "created": "2019-06-11T23:31:33.714883Z",
                                 "name": image_name,
@@ -609,9 +600,6 @@ class TestImage(ClientTestCase):
                         {
                             "data": {
                                 "attributes": {
-                                    "readers": [],
-                                    "writers": [],
-                                    "owners": ["org:descarteslabs"],
                                     "modified": "2019-06-11T23:31:33.714883Z",
                                     "created": "2019-06-11T23:31:33.714883Z",
                                     "name": image_name,
@@ -763,9 +751,6 @@ class TestImage(ClientTestCase):
             {
                 "data": {
                     "attributes": {
-                        "readers": [],
-                        "writers": [],
-                        "owners": ["org:descarteslabs"],
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                         "name": image_name,

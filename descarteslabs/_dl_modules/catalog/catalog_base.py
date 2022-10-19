@@ -1011,33 +1011,6 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
 class CatalogObject(CatalogObjectBase):
     """A base class for all representations of objects in the Descartes Labs catalog."""
 
-    owners = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that own this object.
-
-        Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
-        delete, and change access to this object.  :ref:`See this note <product_note>`.
-
-        *Filterable*.
-        """,
-    )
-    readers = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that can read this object.
-
-        Will be empty by default.  This attribute is only available to the `owners`
-        of a catalog object.  :ref:`See this note <product_note>`.
-        """,
-    )
-    writers = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that can edit this object.
-
-        Writers will also have read permission.  Writers will be empty by default.
-        See note below.  This attribute is only available to the `owners` of a catalog
-        object.  :ref:`See this note <product_note>`.
-        """,
-    )
     extra_properties = ExtraPropertiesAttribute(
         doc="""dict, optional: A dictionary of up to 50 key/value pairs.
 

@@ -29,6 +29,13 @@ Changelog
 - Previously, the internal implementation of the `physical_range` attribute on various band types was inconsistent with
   that of `data_range` and `display_range`. It has now been made consistent, which means it will either not be set,
   or will contain a 2-tuple of float values. It is no longer possible to explicitly set it to `None`.
+- Access permissions for bands and images are now managed directly by the product. The `readers`, `writers`, and
+  `owners` attributes have been removed from all the `*Band` classes as well as the `Image` class. Also the
+  `Product.update_related_objects_permissions` and `Product.get_update_permissions_status` methods have been removed
+  as these are no longer necessary or supported.
+- All searches for bands (other than derived bands) and images must specify one or more product ids in the filtering.
+  This requirement can be met by using the `bands()` and `images()` methods of a product to limit the search to that
+  product, or through a `filter(properties.product_id==...)` clause on the search.
 
 ### Scenes
 
@@ -37,6 +44,12 @@ Changelog
   to Catalog V2 are included in the Catalog V2 guide. In the meantime the Scenes API has been completely reimplemented
   to use Catalog V2 under the hood. From a user perspective, existing code using the Scenes API should continue to
   function as normal, with the exception of a few differences around some little-used dark corners of the API.
+- the Scenes `search_bands` now enforces the use of a non-empty `products=` parameter value. This was previously
+  documented but not enforced.
+
+### Metadata
+
+- As with Catalog and Scenes, one or more products must now be specified when searching for bands or images.
 
 ### REST Clients
 

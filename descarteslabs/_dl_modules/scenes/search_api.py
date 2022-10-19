@@ -58,7 +58,7 @@ def search(
         with missing values filled in. Otherwise, the returned ``ctx`` will be
         an `AOI`, with this as its geometry.
     products : str or List[str]
-        Descartes Labs product identifiers
+        Descartes Labs product identifiers. May not be empty.
     start_datetime : str, datetime-like, optional
         Restrict to scenes acquired after this datetime
     end_datetime : str, datetime-like, optional
@@ -254,7 +254,7 @@ def get_band(band_id):
 
 @deprecate(removed=["bands", "offset", "metadata_client"])
 def search_bands(
-    products=None,
+    products,
     limit=None,
     wavelength=None,
     resolution=None,
@@ -264,8 +264,8 @@ def search_bands(
 
     Parameters
     ----------
-    products : list(str), optional
-        A list of product(s) to return bands for.
+    products : list(str)
+        A list of product(s) to return bands for. May not be empty.
     limit : int, optional
         Number of results to return.
     wavelength : float, optional
@@ -285,10 +285,11 @@ def search_bands(
         search = SpectralBand.search(request_params=REQUEST_PARAMS)
     else:
         search = Band.search(request_params=REQUEST_PARAMS)
-    if products:
-        if isinstance(products, str):
-            products = [products]
-        search = search.filter(properties.product_id.in_(products))
+    if not products:
+        raise ValueError("Products is a required parameter.")
+    elif isinstance(products, str):
+        products = [products]
+    search = search.filter(properties.product_id.in_(products))
     if wavelength:
         search = search.filter(properties.wavelength_nm_min <= wavelength).filter(
             properties.wavelength_nm_max >= wavelength

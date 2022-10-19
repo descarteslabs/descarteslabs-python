@@ -8,7 +8,6 @@ from .product import (
     Product,
     ProductCollection,
     TaskState,
-    UpdatePermissionsTaskStatus,
 )
 from .band import (
     Band,
@@ -109,5 +108,4 @@ __all__ = [
     "SummaryResult",
     "TaskState",
     "UnsavedObjectError",
-    "UpdatePermissionsTaskStatus",
 ]
