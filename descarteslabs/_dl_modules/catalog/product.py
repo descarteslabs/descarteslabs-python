@@ -212,6 +212,15 @@ class Product(CatalogObject):
         *Filterable, sortable*.
         """,
     )
+    product_tier = TypedAttribute(
+        str,
+        doc="""str: Product tier for this product.
+
+        This field can be set by privileged users only.
+
+        *Filterable, sortable*.
+        """,
+    )
 
     def named_id(self, name):
         """Return the ~descarteslabs.catalog.NamedCatalogObject.id` for the given named catalog object.

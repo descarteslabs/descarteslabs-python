@@ -608,6 +608,7 @@ class TestProduct(ClientTestCase):
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                         "is_core": True,
+                        "product_tier": "standard",
                     },
                     "type": "product",
                     "id": "product_id",
@@ -619,10 +620,14 @@ class TestProduct(ClientTestCase):
         product = Product()
         product.id = product_id
         product.is_core = "True"
+        product.product_tier = "standard"
 
-        self.assertEqual(product.serialize(), {"is_core": True})
+        self.assertEqual(
+            product.serialize(), {"is_core": True, "product_tier": "standard"}
+        )
         product.save()
         self.assertEqual(product.is_core, True)
+        self.assertEqual(product.product_tier, "standard")
 
     def test_namespace_id(self):
         class Client(object):

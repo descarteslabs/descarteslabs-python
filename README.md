@@ -36,6 +36,7 @@ Changelog
 - All searches for bands (other than derived bands) and images must specify one or more product ids in the filtering.
   This requirement can be met by using the `bands()` and `images()` methods of a product to limit the search to that
   product, or through a `filter(properties.product_id==...)` clause on the search.
+- Products have a new `product_tier` attribute, which can only be set or modified by privileged users.
 
 ### Scenes
 
