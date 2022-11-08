@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from descarteslabs.common.property_filtering import Properties
+from ...common.property_filtering import Properties
 
 from ..band import Band
 from ..image import Image
