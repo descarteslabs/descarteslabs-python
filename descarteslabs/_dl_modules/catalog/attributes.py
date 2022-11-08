@@ -452,7 +452,10 @@ class CatalogObjectReference(Attribute):
 
         See :meth:`Attribute.serialize`.
         """
-        return value.serialize(modified_only=False, jsonapi_format=jsonapi_format)
+        if hasattr(value, "serialize"):
+            return value.serialize(modified_only=False, jsonapi_format=jsonapi_format)
+        else:
+            return value
 
 
 class Timestamp(Attribute):
@@ -918,8 +921,10 @@ class MappingAttribute(ModelAttribute, AttributeEqualityMixin, metaclass=Attribu
         if isinstance(attrs, MappingAttribute):
             # mapping attribute objects hold their own state
             data = attrs._attributes
-        else:
+        elif isinstance(attrs, Mapping):
             data = attrs
+        else:
+            return attrs
 
         serialized = {}
         for name, value in data.items():
