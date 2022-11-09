@@ -78,6 +78,12 @@ class ConflictError(ClientError):
     status = 409
 
 
+class GoneError(ClientError):
+    """Client request to a URL which has been permanently removed."""
+
+    status = 410
+
+
 class RateLimitError(ClientError):
     """
     Client request exceeds rate limits.
