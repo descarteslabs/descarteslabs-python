@@ -498,7 +498,7 @@ class TestJob:
         )
         destination_proto = user_destination_to_proto("download")
         destination_proto.download.result_url = (
-            "https://storage.googleapis.com/dl-compute-dev-results"
+            "https://storage.googleapis.com/descarteslabs-compute-prod-results"
         )
 
         job = Job._from_proto(
@@ -534,7 +534,7 @@ class TestJob:
         format_proto = user_format_to_proto("json")
         destination_proto = user_destination_to_proto("download")
         destination_proto.download.result_url = (
-            "https://storage.googleapis.com/dl-compute-dev-results"
+            "https://storage.googleapis.com/descarteslabs-compute-prod-results"
         )
 
         job = Job._from_proto(
