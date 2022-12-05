@@ -2,7 +2,8 @@ import os
 import unittest
 from unittest.mock import patch, MagicMock, PropertyMock
 
-from descarteslabs.exceptions import AuthError
+from descarteslabs.auth import Auth
+from descarteslabs.exceptions import AuthError, ConfigError
 from .. import Settings
 
 
@@ -70,7 +71,7 @@ class TestSettings(unittest.TestCase):
         type(instance).payload = PropertyMock(side_effect=AuthError())
         mock_auth.return_value = instance
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ConfigError):
             Settings.select_env()
 
     # environment must be patched because select_env will alter it
@@ -99,3 +100,39 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(settings.current_env, os.environ.get("DESCARTESLABS_ENV"))
         self.assertEqual(id(settings), id(Settings._settings))
         self.assertEqual(id(settings), id(Settings.get_settings()))
+
+    def test_peek_settings(self):
+        env = "aws-testing"
+        assert os.environ["DESCARTESLABS_ENV"] == "testing"
+        settings = Settings.peek_settings(env)
+        assert os.environ["DESCARTESLABS_ENV"] == "testing"
+        assert settings.env == env
+        assert Settings._settings is None
+
+    def test_bad_env(self):
+        env = "non-existent"
+
+        with self.assertRaises(ConfigError):
+            Settings.peek_settings(env)
+
+        with self.assertRaises(ConfigError):
+            Settings.select_env(env)
+
+    def test_default_auth(self):
+        a = Auth()
+        a.domain == "http://gcp_url"
+
+    def test_auth_with_env(self):
+        with patch.dict(os.environ, {"DESCARTESLABS_ENV": "aws-testing"}):
+            a = Auth()
+            a.domain == "http://aws_url"
+
+    def test_auth_with_aws_config(self):
+        Settings.select_env("aws-testing")
+        a = Auth()
+        a.domain == "http://aws_url"
+
+    def test_auth_with_gcp_config(self):
+        Settings.select_env("testing")
+        a = Auth()
+        a.domain == "http://gcp_url"

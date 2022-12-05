@@ -19,6 +19,11 @@ Changelog
 =========
 ## [Unreleased]
 
+- The `Config` exceptions `RuntimeError` and `KeyError` were changed to `ConfigError` exceptions
+  from `descarteslabs.exceptions`.
+- `Auth` now retrieves its URL from the `Config` settings. If no valid configuration can be found,
+  it reverts to the commercial service (`https://iam.descarteslabs.com`).
+
 ### Catalog
 
 - Catalog V2 has been enhanced to provide substantially all the functionality of the Scenes API. The `Image` class now

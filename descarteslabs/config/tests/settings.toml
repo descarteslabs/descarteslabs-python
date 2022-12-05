@@ -1,5 +1,7 @@
 ["testing"]
 testing = "hello"
+iam_url = "https://gcp_url"
 
 ["aws-testing"]
 testing = "hello"
+iam_url = "https://aws_url"

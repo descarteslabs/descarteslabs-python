@@ -34,6 +34,12 @@ class OauthError(AuthError):
     pass
 
 
+class ConfigError(Exception):
+    """Configuration error during initial configuration of the library."""
+
+    pass
+
+
 class ServerError(Exception):
     """Server or service failure."""
 

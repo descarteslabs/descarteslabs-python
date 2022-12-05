@@ -15,17 +15,19 @@
 import base64
 import datetime
 import json
-import pytest
-import unittest
-import warnings
 import os
 import tempfile
+import unittest
+import warnings
+from unittest.mock import MagicMock, patch
 
+import pytest
 import responses
+
+from descarteslabs.exceptions import AuthError
+
 from .. import auth as auth_module
 from ..auth import Auth
-from descarteslabs.exceptions import AuthError
-from unittest.mock import patch
 
 
 def token_response_callback(request):
@@ -67,6 +69,10 @@ def to_bytes(s):
     return s
 
 
+domain = "https://some_domain"
+
+
+@patch("descarteslabs.auth.auth.get_default_domain", MagicMock(return_value=domain))
 class TestAuth(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -102,7 +108,7 @@ class TestAuth(unittest.TestCase):
     def test_get_token(self):
         responses.add(
             responses.POST,
-            "https://accounts.descarteslabs.com/token",
+            f"{domain}/token",
             json=dict(access_token="access_token"),
             status=200,
         )
@@ -115,7 +121,7 @@ class TestAuth(unittest.TestCase):
     def test_get_token_legacy(self):
         responses.add(
             responses.POST,
-            "https://accounts.descarteslabs.com/token",
+            f"{domain}/token",
             json=dict(id_token="id_token"),
             status=200,
         )
@@ -143,7 +149,7 @@ class TestAuth(unittest.TestCase):
     def test_get_token_schema_internal_only(self):
         responses.add_callback(
             responses.POST,
-            "https://accounts.descarteslabs.com/token",
+            f"{domain}/token",
             callback=token_response_callback,
         )
         auth = Auth(refresh_token="refresh_token", client_id="client_id")
@@ -160,7 +166,7 @@ class TestAuth(unittest.TestCase):
     def test_get_token_schema_legacy_internal_only(self):
         responses.add_callback(
             responses.POST,
-            "https://accounts.descarteslabs.com/token",
+            f"{domain}/token",
             callback=token_response_callback,
         )
         auth = Auth(
@@ -447,7 +453,7 @@ class TestAuth(unittest.TestCase):
         ).decode()
         responses.add(
             responses.POST,
-            "https://accounts.descarteslabs.com/token",
+            f"{domain}/token",
             json=dict(client_id="foo", client_secret="bar", id_token=token),
             status=200,
         )
@@ -478,6 +484,10 @@ class TestAuth(unittest.TestCase):
                 token_info_path=token_info_file.name,
             )
             assert a._token is None
+
+    def test_domain(self):
+        a = Auth()
+        assert a.domain == domain
 
 
 if __name__ == "__main__":

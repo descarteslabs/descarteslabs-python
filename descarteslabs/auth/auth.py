@@ -24,8 +24,9 @@ import threading
 import warnings
 from hashlib import sha1
 
-from descarteslabs.exceptions import AuthError, OauthError
 from urllib3.util.retry import Retry
+
+from descarteslabs.exceptions import AuthError, OauthError
 
 try:
     # public client
@@ -109,6 +110,17 @@ def makedirs_if_not_exists(path):
                 raise
 
 
+def get_default_domain():
+    # See if we know the environment we're in, and if so use the
+    # correct `iam_url`. Use a default if we don't know the environment
+    from descarteslabs.config import peek_settings
+
+    class DummyAuth:
+        payload = {}
+
+    return peek_settings(auth=DummyAuth()).iam_url
+
+
 class Auth:
     """Client used to authenticate with all Descartes Labs service APIs."""
 
@@ -153,7 +165,7 @@ class Auth:
 
     def __init__(
         self,
-        domain="https://accounts.descarteslabs.com",
+        domain=None,
         scope=None,
         leeway=500,
         token_info_path=_default_token_info_path,
@@ -214,7 +226,7 @@ class Auth:
         Parameters
         ----------
 
-        domain : str, default ``https://accounts.descarteslabs.com``
+        domain : str, default ``descarteslabs.config.get_settings().IAM_URL``
             The domain used for the credentials. You should normally never
             change this.
         scope : list(str), optional
@@ -468,8 +480,12 @@ class Auth:
 
         self._retry_config = retries
         self._init_session()
-        self.domain = domain
         self.leeway = leeway
+
+        if domain is None:
+            domain = get_default_domain()
+
+        self.domain = domain
 
     @classmethod
     def from_environment_or_token_json(cls, **kwargs):

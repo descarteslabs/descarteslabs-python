@@ -13,32 +13,31 @@
 # limitations under the License.
 
 
-import os
-import json
 import binascii
-
+import json
+import os
 from pprint import pprint
 
 from descarteslabs.auth.auth import (
-    Auth,
-    base64url_decode,
     DEFAULT_TOKEN_INFO_PATH,
-    DESCARTESLABS_TOKEN_INFO_PATH,
     DESCARTESLABS_CLIENT_ID,
     DESCARTESLABS_CLIENT_SECRET,
     DESCARTESLABS_REFRESH_TOKEN,
+    DESCARTESLABS_TOKEN_INFO_PATH,
+    Auth,
+    base64url_decode,
+    get_default_domain,
 )
+
 from ..version import __version__
-
-
-LOGIN_URL = "https://iam.descarteslabs.com/auth/refresh_token"
 
 
 def auth_handler(args):
     auth = Auth(_suppress_warning=True)
+    login_url = f"{get_default_domain()}/auth/refresh_token"
 
     if args.command == "login":
-        print(f"Follow this link to login:\n\n    {LOGIN_URL}\n")
+        print(f"Follow this link to login:\n\n    {login_url}\n")
 
         while True:
             try:
@@ -57,7 +56,7 @@ def auth_handler(args):
                 retry_message = f"""
 You entered the wrong token. Please go to
 
-    {LOGIN_URL}
+    {login_url}
 
 to retrieve your token"""
 
