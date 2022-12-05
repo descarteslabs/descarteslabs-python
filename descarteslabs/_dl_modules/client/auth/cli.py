@@ -26,10 +26,15 @@ from descarteslabs.auth.auth import (
     DESCARTESLABS_TOKEN_INFO_PATH,
     Auth,
     base64url_decode,
-    get_default_domain,
 )
 
 from ..version import __version__
+
+
+def get_default_domain():
+    from descarteslabs.auth.auth import get_default_domain as get_auth_domain
+
+    return get_auth_domain()
 
 
 def auth_handler(args):

@@ -111,7 +111,6 @@ class Open:
 # expected behavior (i.e. no credentials present).
 #
 @patch("descarteslabs.auth.auth.makedirs_if_not_exists")
-@patch("descarteslabs.client.auth.cli.get_default_domain", return_value="some_domain")
 @patch("descarteslabs.auth.auth.get_default_domain", return_value="some_domain")
 class TestAuth(unittest.TestCase):
     def setUp(self):
