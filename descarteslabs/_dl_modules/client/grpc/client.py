@@ -2,11 +2,12 @@ import os
 from functools import wraps
 
 import certifi
-from descarteslabs.auth import Auth
-
 import grpc
 
+from descarteslabs.auth import Auth
+
 from ...common.http import ProxyAuthentication
+from ...common.http import Retry as HttpRetry
 from ...common.proto.health import health_pb2, health_pb2_grpc
 from ...common.retry import Retry, RetryError
 from ..version import __version__
@@ -19,6 +20,10 @@ _RETRYABLE_STATUS_CODES = {
     grpc.StatusCode.RESOURCE_EXHAUSTED,
     grpc.StatusCode.UNKNOWN,
     grpc.StatusCode.DEADLINE_EXCEEDED,
+}
+
+_RETRY_AFTER_STATUS_CODES = {
+    grpc.StatusCode.PERMISSION_DENIED,
 }
 
 USER_AGENT_HEADER = ("user-agent", "dl-python/{}".format(__version__))
@@ -38,10 +43,25 @@ class GrpcOptionKeys:
 def default_grpc_retry_predicate(e):
     try:
         code = e.code()
-    except AttributeError:
+    except Exception:
         return False
-    else:
-        return code in _RETRYABLE_STATUS_CODES
+
+    try:
+        metadata = dict(e.trailing_metadata())
+    except Exception:
+        metadata = dict()
+
+    retry_after = metadata.get("retry-after")
+
+    if retry_after and code in _RETRY_AFTER_STATUS_CODES:
+        try:
+            delay = HttpRetry.parse_retry_after_header(retry_after)
+            return (True, delay)
+        except Exception:
+            # retry-header is malformed we cannot use it
+            pass
+
+    return code in _RETRYABLE_STATUS_CODES
 
 
 class GrpcClient:

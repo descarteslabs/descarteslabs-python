@@ -1,5 +1,7 @@
 from unittest import mock
+
 import pytest
+
 from .. import Retry, RetryError, truncated_delay_generator
 from ..retry import _DEFAULT_DELAY_INITIAL
 
@@ -117,6 +119,27 @@ def test__retry_deadline():
         )
 
     assert len(exc_info.value.exceptions) == 1
+
+
+def test__retry_delay_from_predicate():
+    def noop_generator():
+        assert False, "noop delay generator called"
+
+        # this cannot be reached but yield is required to make this a generator
+        while True:
+            yield 0
+
+    Retry(predicate=lambda e: (True, 0))._retry(
+        mock.Mock(side_effect=[FakeException, FakeException, True]), noop_generator()
+    )
+
+
+def test__handle_exception_returns_delay():
+    delay = Retry(predicate=lambda e: True)._handle_exception(FakeException, [])
+    assert delay is None
+
+    delay = Retry(predicate=lambda e: (True, 10))._handle_exception(FakeException, [])
+    assert delay == 10
 
 
 def test_RetryError_message():

@@ -1,70 +1,48 @@
-import random
-
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
+from urllib3.util.retry import Retry as Urllib3Retry
 
 
-class RequestsWithRetry(object):
-    """"""
+class Retry(Urllib3Retry):
+    """Retry configuration that extends `urllib3.util.retry` to support retry-after.
 
-    TIMEOUT = (1, 10)
+    This retry configuration class derives from
+    `urllib3.util.retry.Retry
+    <https://urllib3.readthedocs.io/en/stable/reference/urllib3.util.html#urllib3.util.Retry>`_.
 
-    RETRY_CONFIG = Retry(
-        total=3,
-        read=2,
-        backoff_factor=random.uniform(1, 3),
-        allowed_methods=frozenset(
-            ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"]
-        ),
-        status_forcelist=[500, 502, 503, 504],
-    )
+    Parameters
+    ----------
+    retry_after_status_codes : list
+        The http status codes that should support the
+        `Retry-After <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After>`_
+        header.
+    """
 
-    ADAPTER = HTTPAdapter(max_retries=RETRY_CONFIG)
+    DEFAULT_RETRY_AFTER_STATUS_CODES = frozenset([403, 413, 429, 503])
 
-    def __init__(self, base_url="", headers=None):
-        """
-        Initialize a client with a base url and session headers.
+    def __init__(self, retry_after_status_codes=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        Parameters
-        ----------
-        base_url : str
-        headers : dict
-            Update the session headers applied to every request made with this client.
-        """
-        self.base_url = base_url
-        self.headers = headers
-        self._session = None
+        if retry_after_status_codes is None:
+            retry_after_status_codes = self.DEFAULT_RETRY_AFTER_STATUS_CODES
 
-    @property
-    def session(self):
-        if self._session is None:
-            self._session = requests.Session()
-            self._session.mount(self.base_url, self.ADAPTER)
-            self._session.headers.update(self.headers)
+        if not isinstance(retry_after_status_codes, frozenset):
+            retry_after_status_codes = frozenset(retry_after_status_codes)
 
-        return self._session
+        self.retry_after_status_codes = retry_after_status_codes
 
-    def get(self, *args, **kwargs):
-        return self.request("GET", *args, **kwargs)
+    def is_retry(self, method, status_code, has_retry_after=True):
+        if not self._is_method_retryable(method):
+            return False
 
-    def post(self, *args, **kwargs):
-        return self.request("POST", *args, **kwargs)
+        if self.status_forcelist and status_code in self.status_forcelist:
+            return True
 
-    def put(self, *args, **kwargs):
-        return self.request("PUT", *args, **kwargs)
+        return (
+            self.total
+            and self.respect_retry_after_header
+            and has_retry_after
+            and (status_code in self.retry_after_status_codes)
+        )
 
-    def patch(self, *args, **kwargs):
-        return self.request("PATCH", *args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        return self.request("delete", *args, **kwargs)
-
-    def head(self, *args, **kwargs):
-        return self.request("head", *args, **kwargs)
-
-    def options(self, *args, **kwargs):
-        return self.request("options", *args, **kwargs)
-
-    def request(self, method, url, *args, **kwargs):
-        return self.session.request(method, self.base_url + url, *args, **kwargs)
+    @classmethod
+    def parse_retry_after_header(cls, retry_after):
+        return Retry.parse_retry_after(cls, retry_after)

@@ -24,16 +24,14 @@ import threading
 import warnings
 from hashlib import sha1
 
-from urllib3.util.retry import Retry
-
 from descarteslabs.exceptions import AuthError, OauthError
 
 try:
     # public client
-    from .._dl_modules.common.http import Session
+    from .._dl_modules.common.http import Retry, Session
 except ImportError:
     # inside monorepo
-    from ..common.http import Session
+    from ..common.http import Retry, Session
 
 
 # copied from descarteslabs/common/threading/local.py, but we need

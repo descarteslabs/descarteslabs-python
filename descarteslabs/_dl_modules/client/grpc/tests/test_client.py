@@ -1,3 +1,5 @@
+import email.utils
+import time
 import unittest
 from unittest import mock
 
@@ -7,7 +9,7 @@ import pytest
 from ....common.http.proxy import ProxyAuthentication
 from ....common.proto.health import health_pb2_grpc
 from ....common.retry import Retry
-from ..client import USER_AGENT_HEADER, GrpcClient
+from ..client import USER_AGENT_HEADER, GrpcClient, default_grpc_retry_predicate
 
 
 class FakeRpcError(grpc.RpcError):
@@ -298,3 +300,47 @@ class TestProxyAuth(unittest.TestCase):
         assert host == "some-service:443"
         assert type(creds) == grpc.ChannelCredentials
         assert headers == expected_options
+
+
+class TestRetryPredicate(unittest.TestCase):
+    def test_retry_after(self):
+        now = time.time() + 3600
+        date = email.utils.formatdate(now, usegmt=True)
+
+        err = mock.Mock()
+        err.code.side_effect = [
+            "unknown",
+            grpc.StatusCode.UNAVAILABLE,
+            grpc.StatusCode.PERMISSION_DENIED,
+            grpc.StatusCode.PERMISSION_DENIED,
+            grpc.StatusCode.PERMISSION_DENIED,
+        ]
+        err.trailing_metadata.side_effect = [
+            (("retry-after", "60")),
+            (),
+            (("x-some-header", "blah"), ("retry-after", "120")),
+            (("retry-after", date), ("content-type", "application/json")),
+            (("retry-after", "uh oh bye bye"), ("content-type", "application/json")),
+        ]
+
+        # unknown is not retryable
+        result = default_grpc_retry_predicate(err)
+        assert result is False
+
+        # normal retry status
+        result = default_grpc_retry_predicate(err)
+        assert result is True
+
+        # retry-after with seconds
+        result = default_grpc_retry_predicate(err)
+        assert result == (True, 120)
+
+        # retry-after with date
+        retryable, delay = default_grpc_retry_predicate(err)
+        assert retryable is True
+        assert delay > 3500
+        assert delay <= 3600
+
+        # retry-after bogus date
+        result = default_grpc_retry_predicate(err)
+        assert result is False

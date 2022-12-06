@@ -5,10 +5,11 @@ import warnings
 from http import HTTPStatus
 
 import requests
+
 from descarteslabs.config import get_settings
-from urllib3.util.retry import Retry
 
 from ...client.services.service.service import HttpRequestMethod, Service
+from ...common.http.retry import Retry
 from ...common.workflows.arrow_serialization import deserialize_pyarrow
 from ...common.workflows.outputs import field_name_to_mimetype, user_format_to_mimetype
 from .. import _channel

@@ -3,6 +3,7 @@ import functools
 import inspect
 import random
 import time
+from typing import Iterable
 
 _DEFAULT_RETRIES = 3
 _DEFAULT_DELAY_INITIAL = 0.1
@@ -64,9 +65,15 @@ class Retry(object):
         exceptions : tuple, optional
             A tuple of Exceptions that should always be retried.
         predicate : function, optional
-            A callable that takes an exception and returns true if retryable.
-            This can be used for cases where a generic exception with variable
-            attributes.
+            A callable that takes an exception and returns either a bool or a Tuple[bool, int].
+            If the bool value is true, the wrapped callable was determined to be retryable.
+            This can be used for cases with a generic exception with variable attributes.
+
+            If the return was a Tuple[bool, int], the int value will be used as the delay.
+            This can be used for cases where an exception should only be retried after some
+            variable amount of time.
+            This is typically used for handling `Retry-After` headers in which the server is
+            requesting the client wait for a specific amount of time.
         blacklist : tuple, optional
             A tuple of Exceptions that should never be retried.
         deadline : float, optional
@@ -108,28 +115,45 @@ class Retry(object):
         return wrapper
 
     def _retry(self, func, delay_generator):
-
         deadline = self._deadline_datetime(self._deadline)
         retries = self._retries
         previous_exceptions = []
 
-        for delay in delay_generator:
+        # delay generator can be a list and should
+        # be converted to an iterator to use with next
+        delay_generator = iter(delay_generator)
+
+        while True:
             try:
                 return func()
             except Exception as e:
-                self._handle_exception(e, previous_exceptions)
+                delay = self._handle_exception(e, previous_exceptions)
+
+            # predicate returned no delay use the generator
+            if delay is None:
+                try:
+                    delay = next(delay_generator)
+                except Exception:
+                    raise ValueError("Bad delay generator")
 
             # will raise RetryError if deadline or retries exceeded
             retries = self._check_retries(
                 retries, _name_of_func(func), deadline, previous_exceptions
             )
             time.sleep(delay)
-        else:
-            raise ValueError("Bad delay generator")
 
     def _handle_exception(self, exception, previous_exceptions):
-        if callable(self._predicate) and not self._predicate(exception):
-            raise
+        delay = None
+
+        if callable(self._predicate):
+            # a predicate can either return a bool
+            # or a an Iterable (tuple) containing a bool (if retryable) and a delay
+            retryable = self._predicate(exception)
+            if isinstance(retryable, Iterable):
+                retryable, delay, *_ = retryable
+
+            if not retryable:
+                raise
 
         if self._blacklist is not None and isinstance(exception, self._blacklist):
             raise
@@ -138,6 +162,8 @@ class Retry(object):
             raise
 
         previous_exceptions.append(exception)
+
+        return delay
 
     def _check_retries(self, retries, name, deadline, previous_exceptions):
         # Raise RetryError if deadline exceeded

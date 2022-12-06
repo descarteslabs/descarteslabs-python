@@ -30,9 +30,8 @@ from warnings import warn
 
 from descarteslabs.auth import Auth
 from descarteslabs.exceptions import ClientError, ServerError
-from urllib3.util.retry import Retry
 
-from ....common.http import Session
+from ....common.http import Retry, Session
 from ....common.http.authorization import add_bearer
 from ....common.threading.local import ThreadLocalWrapper
 from ...version import __version__
