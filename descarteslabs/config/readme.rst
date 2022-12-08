@@ -2,6 +2,7 @@
 
 Configuration
 --------------
+
 .. automodule:: descarteslabs.config
    :autosummary:
    :members:
