@@ -42,12 +42,13 @@ jobs:
   slack:
     runs-on: ubuntu-latest
     needs: [test]
-    if: ${{ always() && github.ref_name == 'master' }}
+    if: ${{ always() && github.ref_name == 'fix/slack-message' }}
     steps:
       - name: Webhook
         env:
           EMOJI: ${{ needs.test.result == 'success' && ':party-hat:' || ':boom:' }}
           STATUS: ${{ needs.test.result == 'success' && 'succeeded!' || 'failed.' }}
         run: |
-          PAYLOAD='{"text":"${{ env.EMOJI }} CI testing of ${{ github.event.repository.full_name }} has ${{ env.STATUS }}\nCommit <${{ github.event.commits[0].url }}|${{ github.sha }}> by ${{ github.event.commits[0].author.name }}: ${{ github.event.commits[0].message }}\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Test results>"}'
+          message=`echo '${{ github.event.commits[0].message }}' | sed "s/'/\\'/g"`
+          PAYLOAD='{"text":"${{ env.EMOJI }} CI testing of ${{ github.event.repository.full_name }} has ${{ env.STATUS }}\nCommit <${{ github.event.commits[0].url }}|${{ github.sha }}> by ${{ github.event.commits[0].author.name }}: '"$message"'\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Test results>"}'
           curl -s -X POST -H "Content-Type: application/json" -d "$PAYLOAD" ${{ secrets.slack_webhook }}
