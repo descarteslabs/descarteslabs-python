@@ -49,6 +49,10 @@ jobs:
           EMOJI: ${{ needs.test.result == 'success' && ':party-hat:' || ':boom:' }}
           STATUS: ${{ needs.test.result == 'success' && 'succeeded!' || 'failed.' }}
         run: |
-          message=`echo '${{ github.event.commits[0].message }}' | sed "s/'/\\'/g"`
+
+          message=`sed "s/'/\\\\\\\\'/g" <<'!'
+          ${{ github.event.commits[0].message }}
+          !
+          `
           PAYLOAD='{"text":"${{ env.EMOJI }} CI testing of ${{ github.event.repository.full_name }} has ${{ env.STATUS }}\nCommit <${{ github.event.commits[0].url }}|${{ github.sha }}> by ${{ github.event.commits[0].author.name }}: '"$message"'\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Test results>"}'
           curl -s -X POST -H "Content-Type: application/json" -d "$PAYLOAD" ${{ secrets.slack_webhook }}
