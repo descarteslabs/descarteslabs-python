@@ -110,10 +110,10 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(id(settings), id(Settings.get_settings()))
 
     def test_peek_settings(self):
+        current_env = os.environ["DESCARTESLABS_ENV"]
         env = "aws-testing"
-        assert os.environ["DESCARTESLABS_ENV"] == "testing"
         settings = Settings.peek_settings(env)
-        assert os.environ["DESCARTESLABS_ENV"] == "testing"
+        assert os.environ["DESCARTESLABS_ENV"] == current_env
         assert settings.env == env
         assert Settings._settings is None
 
