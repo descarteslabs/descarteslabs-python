@@ -17,7 +17,6 @@ from ..attributes import (
     DocumentState,
 )
 from ..catalog_base import (
-    CatalogClient,
     CatalogObject as OriginalCatalogObject,
     DeletedObjectError,
     UnsavedObjectError,
@@ -159,13 +158,12 @@ class TestCatalogObject(ClientTestCase):
             },
         )
 
-        foo = Foo.get("foo1", client=self.client)
+        foo = Foo.get("foo1")
         assert foo is not None
         assert foo.id == "foo1"
         assert foo.bar == "baz"
         assert foo.state == DocumentState.SAVED
 
-        CatalogClient.set_default_client(self.client)
         foo = Foo.get("foo1")
         assert foo._client is not None
 
@@ -191,11 +189,9 @@ class TestCatalogObject(ClientTestCase):
         )
 
         with pytest.raises(NotFoundError):
-            foos = Foo.get_many(["p1:foo", "p1:bar", "p1:missing"], client=self.client)
+            foos = Foo.get_many(["p1:foo", "p1:bar", "p1:missing"])
 
-        foos = Foo.get_many(
-            ["p1:foo", "p1:bar", "p1:missing"], ignore_missing=True, client=self.client
-        )
+        foos = Foo.get_many(["p1:foo", "p1:bar", "p1:missing"], ignore_missing=True)
         assert ["p1:foo", "p1:bar"] == [f.id for f in foos]
         assert ["baz", "qux"] == [f.bar for f in foos]
 
@@ -224,7 +220,7 @@ class TestCatalogObject(ClientTestCase):
             },
         )
 
-        foo = Foo.get("foo1", client=self.client)
+        foo = Foo.get("foo1")
         assert foo is not None
         assert foo.id == "foo1"
         assert foo.bar == "baz"
@@ -249,7 +245,7 @@ class TestCatalogObject(ClientTestCase):
             },
         )
 
-        foo = Foo(id="foo1", client=self.client)
+        foo = Foo(id="foo1")
         foo.bar = "baz"
         foo.save(request_params={"foo": "bar"})
         assert foo.state == DocumentState.SAVED
@@ -271,7 +267,7 @@ class TestCatalogObject(ClientTestCase):
             },
         )
 
-        foo = Foo(id="foo1", bar="baz", client=self.client, _saved=True)
+        foo = Foo(id="foo1", bar="baz", _saved=True)
         foo.save(request_params={"foo": "bar"})
         assert foo.state == DocumentState.SAVED
 
@@ -315,7 +311,7 @@ class TestCatalogObject(ClientTestCase):
     @responses.activate
     def test_delete_classmethod_notfound(self):
         self.mock_response(responses.DELETE, self.not_found_json, status=404)
-        assert not Foo.delete("nerp", client=self.client)
+        assert not Foo.delete("nerp")
 
     @responses.activate
     def test_delete_classmethod_conflict(self):
@@ -334,7 +330,7 @@ class TestCatalogObject(ClientTestCase):
             status=409,
         )
         with self.assertRaises(ConflictError):
-            Foo.delete("nerp", client=self.client)
+            Foo.delete("nerp")
 
     @responses.activate
     def test_delete_classmethod(self):
@@ -346,7 +342,7 @@ class TestCatalogObject(ClientTestCase):
             },
         )
 
-        assert Foo.delete("nerp", client=self.client)
+        assert Foo.delete("nerp")
 
     @responses.activate
     def test_delete_instancemethod(self):
@@ -357,20 +353,20 @@ class TestCatalogObject(ClientTestCase):
                 "jsonapi": {"version": "1.0"},
             },
         )
-        instance = Foo(id="nerp", client=self.client, _saved=True)
+        instance = Foo(id="nerp", _saved=True)
         instance.delete()
         assert instance.state == DocumentState.DELETED
         assert "* Deleted" in repr(instance)
 
     def test_delete_not_saved(self):
-        foo = Foo(id="nerp", client=self.client)
+        foo = Foo(id="nerp")
         with pytest.raises(UnsavedObjectError):
             foo.delete()
 
     @responses.activate
     def test_delete_instancemethod_notfound(self):
         self.mock_response(responses.DELETE, self.not_found_json, status=404)
-        foo = Foo(id="nerp", client=self.client, _saved=True)
+        foo = Foo(id="nerp", _saved=True)
         assert foo.state == DocumentState.SAVED
         with pytest.raises(DeletedObjectError):
             foo.delete()
@@ -385,7 +381,7 @@ class TestCatalogObject(ClientTestCase):
                 "jsonapi": {"version": "1.0"},
             },
         )
-        instance = Foo(id="merp", client=self.client, _saved=True)
+        instance = Foo(id="merp", _saved=True)
         instance.delete()
 
         with pytest.raises(DeletedObjectError):
@@ -455,7 +451,7 @@ class TestCatalogObject(ClientTestCase):
             },
         )
 
-        c = Foo(id="id", _saved=True, client=self.client)
+        c = Foo(id="id", _saved=True)
         c.delete()
 
         with pytest.raises(DeletedObjectError):
@@ -482,7 +478,7 @@ class TestCatalogObject(ClientTestCase):
         )
 
         try:
-            foo = Foo(id="nerp", client=self.client)
+            foo = Foo(id="nerp")
             foo.save()
             assert False
         except BadRequestError as error:
@@ -501,10 +497,10 @@ class TestCatalogObject(ClientTestCase):
     def test_get_or_create(self):
         self.mock_response(responses.GET, self.not_found_json, status=404)
 
-        foo = Foo.get("foo1", client=self.client)
+        foo = Foo.get("foo1")
         assert foo is None
 
-        foo = Foo.get_or_create("foo1", bar="baz", client=self.client)
+        foo = Foo.get_or_create("foo1", bar="baz")
         assert foo is not None
         assert foo.id == "foo1"
         assert foo.bar == "baz"
@@ -513,7 +509,7 @@ class TestCatalogObject(ClientTestCase):
     @responses.activate
     def test_deleted_notfound(self):
         self.mock_response(responses.PATCH, self.not_found_json, status=404)
-        instance = Foo(id="foo", client=self.client, _saved=True)
+        instance = Foo(id="foo", _saved=True)
         instance.bar = "something"
 
         with pytest.raises(DeletedObjectError):
@@ -521,7 +517,7 @@ class TestCatalogObject(ClientTestCase):
         assert instance.state == DocumentState.DELETED
 
         self.mock_response(responses.GET, self.not_found_json, status=404)
-        instance = Foo(id="foo", client=self.client, _saved=True)
+        instance = Foo(id="foo", _saved=True)
 
         with pytest.raises(DeletedObjectError):
             instance.reload()

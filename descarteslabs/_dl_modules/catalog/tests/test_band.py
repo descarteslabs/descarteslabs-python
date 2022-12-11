@@ -99,7 +99,7 @@ class TestBand(ClientTestCase):
             },
         )
 
-        b = Band.get("p1:blue", client=self.client)
+        b = Band.get("p1:blue")
         assert isinstance(b, SpectralBand)
         assert (0.0, 1.0) == b.physical_range
         assert 2000 == b.wavelength_nm_min
@@ -113,7 +113,7 @@ class TestBand(ClientTestCase):
               created: Tue Jun 11 23:31:33 2019"""
         assert b_repr.strip("\n") == textwrap.dedent(match_str)
 
-        b = SpectralBand.get("p1:blue", client=self.client)
+        b = SpectralBand.get("p1:blue")
         assert isinstance(b, SpectralBand)
         assert 2000 == b.wavelength_nm_min
 
@@ -153,9 +153,7 @@ class TestBand(ClientTestCase):
             },
         )
 
-        results = list(
-            Band.search(client=self.client).filter(Properties().product_id == "p1")
-        )
+        results = list(Band.search().filter(Properties().product_id == "p1"))
         assert 2 == len(results)
         assert isinstance(results[0], SpectralBand)
         assert isinstance(results[1], MaskBand)
@@ -427,11 +425,7 @@ class TestBand(ClientTestCase):
             },
         )
 
-        b = SpectralBand(
-            id=band_id,
-            processing_levels=pl,
-            client=self.client,
-        )
+        b = SpectralBand(id=band_id, processing_levels=pl)
         assert isinstance(
             b.processing_levels["surface_reflectance"][0], ProcessingStepAttribute
         )
@@ -552,11 +546,7 @@ class TestBand(ClientTestCase):
             },
         )
 
-        b = SpectralBand(
-            id=band_id,
-            derived_params=dp,
-            client=self.client,
-        )
+        b = SpectralBand(id=band_id, derived_params=dp)
         assert isinstance(b.derived_params, DerivedParamsAttribute)
         b.save()
         assert isinstance(b.derived_params, DerivedParamsAttribute)
@@ -599,7 +589,7 @@ class TestDerivedBand(ClientTestCase):
             },
         )
 
-        b = DerivedBand.get("prod1:alpha", client=self.client)
+        b = DerivedBand.get("prod1:alpha")
         assert b.bands == ["blue"]
         assert b.function_name == "test"
 
@@ -646,7 +636,7 @@ class TestDerivedBand(ClientTestCase):
             },
         )
 
-        derived_bands = list(DerivedBand.search(client=self.client))
+        derived_bands = list(DerivedBand.search())
         assert len(derived_bands) == 2
         assert isinstance(derived_bands[0], DerivedBand)
 
@@ -740,7 +730,7 @@ class TestDerivedBand(ClientTestCase):
                 "jsonapi": {"version": "1.0"},
             },
         )
-        b = SpectralBand(name="b1", product_id="p1", client=self.client, _saved=True)
+        b = SpectralBand(name="b1", product_id="p1", _saved=True)
         p = b.product
         assert p.id == "p1"
         b.reload()
@@ -763,10 +753,10 @@ class TestDerivedBand(ClientTestCase):
                 "jsonapi": {"version": "1.0"},
             },
         )
-        assert MaskBand.get("p1:b1", client=self.client) is None
-        assert DerivedBand.get("p1:b1", client=self.client) is None
-        assert SpectralBand.get("p1:b1", client=self.client) is not None
-        assert Band.get("p1:b1", client=self.client) is not None
+        assert MaskBand.get("p1:b1") is None
+        assert DerivedBand.get("p1:b1") is None
+        assert SpectralBand.get("p1:b1") is not None
+        assert Band.get("p1:b1") is not None
 
     @responses.activate
     def test_get_many_incorrect_band_type(self):
@@ -789,30 +779,14 @@ class TestDerivedBand(ClientTestCase):
         all_bands = ["p1:b1", "p1:b2", "p1:b3", "p1:b4"]
         more_bands = ["p1:b1", "p1:b2", "p1:b3", "p1:b4", "p1:b5"]
 
-        assert len(MaskBand.get_many(all_bands, client=self.client)) == 1
-        assert len(GenericBand.get_many(all_bands, client=self.client)) == 0
-        assert len(SpectralBand.get_many(all_bands, client=self.client)) == 2
-        assert len(Band.get_many(all_bands, client=self.client)) == 4
+        assert len(MaskBand.get_many(all_bands)) == 1
+        assert len(GenericBand.get_many(all_bands)) == 0
+        assert len(SpectralBand.get_many(all_bands)) == 2
+        assert len(Band.get_many(all_bands)) == 4
 
         with self.assertRaises(NotFoundError):
-            GenericBand.get_many(more_bands, client=self.client)
+            GenericBand.get_many(more_bands)
 
-        assert (
-            len(
-                GenericBand.get_many(
-                    more_bands, ignore_missing=True, client=self.client
-                )
-            )
-            == 0
-        )
-        assert (
-            len(
-                MicrowaveBand.get_many(
-                    more_bands, ignore_missing=True, client=self.client
-                )
-            )
-            == 1
-        )
-        assert (
-            len(Band.get_many(more_bands, ignore_missing=True, client=self.client)) == 4
-        )
+        assert len(GenericBand.get_many(more_bands, ignore_missing=True)) == 0
+        assert len(MicrowaveBand.get_many(more_bands, ignore_missing=True)) == 1
+        assert len(Band.get_many(more_bands, ignore_missing=True)) == 4

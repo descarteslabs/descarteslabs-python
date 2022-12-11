@@ -17,7 +17,7 @@ from ..product import Product
 class TestSearch(ClientTestCase):
     def setUp(self):
         super(TestSearch, self).setUp()
-        self.search = Search(Product, client=self.client)
+        self.search = Search(Product)
 
     def sort_filters(self, filters):
         """
@@ -333,23 +333,21 @@ class TestSearch(ClientTestCase):
             ),
         }
 
-        s = Search(Image, client=self.client).filter(
-            p.geometry == shapely.geometry.shape(geometry)
-        )
+        s = Search(Image).filter(p.geometry == shapely.geometry.shape(geometry))
         filters = s._serialize_filters()
         assert filters[0]["val"] == geometry
 
     def test_filter_object(self):
         my_product = Product(id="my_product")
 
-        s = ImageSearch(Image, client=self.client)
+        s = ImageSearch(Image)
         s = s.filter(p.product == my_product)
         filters = s._serialize_filters()
         assert filters[0]["name"] == "product_id"
         assert filters[0]["op"] == "eq"
         assert filters[0]["val"] == my_product.id
 
-        s = ImageSearch(Image, client=self.client)
+        s = ImageSearch(Image)
         s = s.filter(p.product != my_product)
         filters = s._serialize_filters()
         assert filters[0]["name"] == "product_id"
@@ -428,9 +426,7 @@ class TestSearch(ClientTestCase):
         assert request_params["text"] == "test"
 
     def test_default_includes(self):
-        s = ImageSearch(Image, client=self.client).filter(
-            Properties().product_id == "p1"
-        )
+        s = ImageSearch(Image).filter(Properties().product_id == "p1")
         assert s._to_request() == (
             "/images",
             {
@@ -442,7 +438,7 @@ class TestSearch(ClientTestCase):
     @responses.activate
     def test_search_image_collection(self):
         my_product = Product(id="descarteslabs:my_product")
-        s = ImageSearch(Image, client=self.client)
+        s = ImageSearch(Image)
         s = s.filter(p.product == my_product)
         aoi = {
             "type": "Polygon",

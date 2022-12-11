@@ -196,7 +196,6 @@ class TestImageUpload(ClientTestCase):
                 name="image_name", product_id="product_id", acquired="2020-01-01"
             ),
             image_upload_options=ImageUploadOptions(upload_type=ImageUploadType.FILE),
-            client=self.client,
         )
         assert u.image_id == "product_id:image_name"
         assert u.image_upload_options.upload_type == ImageUploadType.FILE
@@ -460,7 +459,6 @@ class TestImageUpload(ClientTestCase):
                 name="image_name", product_id="product_id", acquired="2020-01-01"
             ),
             image_upload_options=ImageUploadOptions(upload_type=ImageUploadType.FILE),
-            client=self.client,
         )
         u.save()
         u.status = ImageUploadStatus.PENDING
@@ -591,7 +589,6 @@ class TestImageUpload(ClientTestCase):
                 name="image_name", product_id="product_id", acquired="2020-01-01"
             ),
             image_upload_options=ImageUploadOptions(upload_type=ImageUploadType.FILE),
-            client=self.client,
         )
 
         u.save()
