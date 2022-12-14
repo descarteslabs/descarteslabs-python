@@ -99,7 +99,7 @@ class TestProduct(ClientTestCase):
             },
         )
 
-        r = list(Product.search())
+        r = list(Product.search(client=self.client))
         assert len(r) == 1
         product = r[0]
         assert responses.calls[0].request.url == self.url + "/products"
@@ -124,7 +124,7 @@ class TestProduct(ClientTestCase):
             },
         )
 
-        r = list(Product.search())
+        r = list(Product.search(client=self.client))
         assert r == []
 
     @responses.activate
@@ -154,7 +154,7 @@ class TestProduct(ClientTestCase):
             },
         )
 
-        p = Product(id="p1", name="Test Product")
+        p = Product(id="p1", name="Test Product", client=self.client)
         assert p.state == DocumentState.UNSAVED
         p.save()
         assert responses.calls[0].request.url == self.url + "/products"
@@ -179,7 +179,7 @@ class TestProduct(ClientTestCase):
             },
             status=400,
         )
-        p = Product(id="p", name="Test Product")
+        p = Product(id="p", name="Test Product", client=self.client)
         with pytest.raises(BadRequestError):
             p.save()
 
@@ -207,7 +207,7 @@ class TestProduct(ClientTestCase):
             },
         )
 
-        p1 = Product.get("descarteslabs:my-product")
+        p1 = Product.get("descarteslabs:my-product", client=self.client)
         assert p1.state == DocumentState.SAVED
 
         p1_repr = repr(p1)
@@ -264,6 +264,7 @@ class TestProduct(ClientTestCase):
         p = Product(
             id="descarteslabs:my-product",
             name="My Product",
+            client=self.client,
             _saved=True,
         )
         self.mock_response(
@@ -279,7 +280,9 @@ class TestProduct(ClientTestCase):
 
     @responses.activate
     def test_delete_non_existent(self):
-        p = Product(id="ne-my-product", name="Non-existent", _saved=True)
+        p = Product(
+            id="ne-my-product", name="Non-existent", client=self.client, _saved=True
+        )
         self.mock_response(responses.DELETE, self.not_found_json, status=404)
 
         with pytest.raises(DeletedObjectError):
@@ -289,7 +292,7 @@ class TestProduct(ClientTestCase):
     def test_exists(self):
         # head request, no JSON is returned
         self.mock_response(responses.HEAD, {})
-        assert Product.exists("my-id:id")
+        assert Product.exists("my-id:id", client=self.client)
         assert (
             responses.calls[0].request.url
             == "https://example.com/catalog/v2/products/my-id:id"
@@ -298,7 +301,7 @@ class TestProduct(ClientTestCase):
     @responses.activate
     def test_exists_false(self):
         self.mock_response(responses.HEAD, self.not_found_json, status=404)
-        assert not Product.exists("my-id:id")
+        assert not Product.exists("my-id:id", client=self.client)
         assert (
             responses.calls[0].request.url
             == "https://example.com/catalog/v2/products/my-id:id"
@@ -329,12 +332,12 @@ class TestProduct(ClientTestCase):
             },
         )
 
-        p = Product.get("descarteslabs:my-product")
+        p = Product.get("descarteslabs:my-product", client=self.client)
         assert not hasattr(p, "foobar")
 
     @responses.activate
     def test_create_product_delete_task(self):
-        p = Product(id="p1", name="Test Product")
+        p = Product(id="p1", name="Test Product", client=self.client)
         self.mock_response(
             responses.POST,
             {
@@ -358,7 +361,7 @@ class TestProduct(ClientTestCase):
 
     @responses.activate
     def test_no_objects_to_delete(self):
-        p = Product(id="p1", name="Test Product")
+        p = Product(id="p1", name="Test Product", client=self.client)
         self.mock_response(
             responses.POST,
             {
@@ -382,7 +385,7 @@ class TestProduct(ClientTestCase):
 
     @responses.activate
     def test_get_delete_status(self):
-        p = Product(id="p1", name="Test Product")
+        p = Product(id="p1", name="Test Product", client=self.client)
         self.mock_response(
             responses.GET,
             {
@@ -471,7 +474,7 @@ class TestProduct(ClientTestCase):
             },
         )
 
-        product = Product.get(product_id)
+        product = Product.get(product_id, client=self.client)
 
         uploads = list(product.image_uploads())
 
@@ -537,7 +540,7 @@ class TestProduct(ClientTestCase):
                 "jsonapi": {"version": "1.0"},
             },
         )
-        p = Product(id="p1", name="Test Product", _saved=True)
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         derived_bands = list(p.derived_bands())
         assert responses.calls[
             0
@@ -549,7 +552,7 @@ class TestProduct(ClientTestCase):
 
     @responses.activate
     def test_derived_bands_filters(self):
-        p = Product(id="p1", name="Test Product", _saved=True)
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         self.mock_response(
             responses.PUT,
             {
@@ -614,7 +617,7 @@ class TestProduct(ClientTestCase):
             },
         )
 
-        product = Product()
+        product = Product(client=self.client)
         product.id = product_id
         product.is_core = "True"
         product.product_tier = "standard"
@@ -685,7 +688,7 @@ class TestProduct(ClientTestCase):
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            Product.get("product_id")
+            Product.get("product_id", client=self.client)
 
         assert w[0].category is FutureWarning
         assert str(w[0].message) == "This is a test of a FutureWarning"
@@ -740,7 +743,7 @@ class TestProduct(ClientTestCase):
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            p = Product.get("product_id")
+            p = Product.get("product_id", client=self.client)
             assert isinstance(p, Product)
             assert p.id == "product_id"
 
@@ -749,21 +752,21 @@ class TestProduct(ClientTestCase):
     @responses.activate
     def test_deleted_band_image(self):
         self.mock_response(responses.GET, self.not_found_json, status=404)
-        p = Product(id="p1", name="Product 1", _saved=True)
-        p.get_band("p1:b1")
-        p.get_image("p1:i1")
+        p = Product(id="p1", name="Product 1", client=self.client, _saved=True)
+        p.get_band("p1:b1", client=self.client)
+        p.get_image("p1:i1", client=self.client)
 
     @responses.activate
     def test_deleted(self):
         self.mock_response(responses.POST, self.not_found_json, status=404)
         self.mock_response(responses.GET, self.not_found_json, status=404)
 
-        p = Product(id="p1", name="Product 1", _saved=True)
+        p = Product(id="p1", name="Product 1", client=self.client, _saved=True)
         with self.assertRaises(DeletedObjectError):
             p.delete_related_objects()
         assert p.state == DocumentState.DELETED
 
-        p = Product(id="p1", name="Product 1", _saved=True)
+        p = Product(id="p1", name="Product 1", client=self.client, _saved=True)
         with self.assertRaises(DeletedObjectError):
             p.get_delete_status()
         assert p.state == DocumentState.DELETED

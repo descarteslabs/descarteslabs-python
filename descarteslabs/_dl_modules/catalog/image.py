@@ -550,7 +550,7 @@ class Image(NamedCatalogObject):
                 )
             )
 
-        if not overwrite and Image.exists(self.id):
+        if not overwrite and Image.exists(self.id, self._client):
             raise ValueError(
                 "Image {} already exists in the catalog. Please either use a new image id or overwrite=True".format(
                     self.id
@@ -686,7 +686,7 @@ class Image(NamedCatalogObject):
                 )
             )
 
-        if not overwrite and Image.exists(self.id):
+        if not overwrite and Image.exists(self.id, self._client):
             raise ValueError(
                 "Image {} already exists in the catalog. Please either use a new image id or overwrite=True".format(
                     self.id

@@ -261,7 +261,9 @@ class Product(CatalogObject):
         """
         from .band import Band
 
-        return Band.get(self.named_id(name), request_params=request_params)
+        return Band.get(
+            self.named_id(name), request_params=request_params, client=client
+        )
 
     @check_deleted
     def get_image(self, name, client=None, request_params=None):
@@ -285,7 +287,9 @@ class Product(CatalogObject):
         """
         from .image import Image
 
-        return Image.get(self.named_id(name), request_params=request_params)
+        return Image.get(
+            self.named_id(name), request_params=request_params, client=client
+        )
 
     @check_deleted
     def delete_related_objects(self):
@@ -345,7 +349,9 @@ class Product(CatalogObject):
             "/products/{}/delete_related_objects".format(self.id)
         )
         response = r.json()
-        return DeletionTaskStatus(id=self.id, **response["data"]["attributes"])
+        return DeletionTaskStatus(
+            id=self.id, _client=self._client, **response["data"]["attributes"]
+        )
 
     @check_deleted
     def bands(self, request_params=None):

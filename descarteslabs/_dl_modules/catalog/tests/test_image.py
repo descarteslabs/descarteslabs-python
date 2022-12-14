@@ -112,7 +112,7 @@ class TestImage(ClientTestCase):
             },
         )
 
-        i = Image.get("p1:myimage")
+        i = Image.get("p1:myimage", client=self.client)
         assert "p1" == i.product.id
         assert shapely.geometry.shape(self.geometry) == i.geometry
 
@@ -248,7 +248,7 @@ class TestImage(ClientTestCase):
             },
         )
 
-        i = Image.get("p1:myimage")
+        i = Image.get("p1:myimage", client=self.client)
         assert (
             datetime.datetime.strptime(
                 "2019-08-20T08:08:16.123456Z", "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -323,7 +323,7 @@ class TestImage(ClientTestCase):
             },
         )
 
-        i = Image.get("p1:myimage")
+        i = Image.get("p1:myimage", client=self.client)
         assert len(i.files) == 2
         assert isinstance(i.files, ListAttribute)
         assert isinstance(i.files[0], MappingAttribute)
@@ -470,7 +470,10 @@ class TestImage(ClientTestCase):
                 )
 
                 image = Image(
-                    name=image_name, product_id=product_id, acquired="2001-01-01"
+                    name=image_name,
+                    product_id=product_id,
+                    acquired="2001-01-01",
+                    client=self.client,
                 )
 
                 upload = image.upload(f.name)
@@ -612,7 +615,10 @@ class TestImage(ClientTestCase):
                     )
 
                     image = Image(
-                        name=image_name, product_id=product_id, acquired="2001-01-01"
+                        name=image_name,
+                        product_id=product_id,
+                        acquired="2001-01-01",
+                        client=self.client,
                     )
 
                     upload = image.upload([f1.name, f2.name])
@@ -640,7 +646,7 @@ class TestImage(ClientTestCase):
     @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
     @patch("descarteslabs.catalog.Image.exists", return_value=False)
     def test_upload_warnings(self, *mocks):
-        p = Product(id="p1", name="Test Product", _saved=True)
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(id="p1:image", product=p, acquired="2012-05-06", projection="foo")
 
         with warnings.catch_warnings(record=True) as w:
@@ -759,7 +765,12 @@ class TestImage(ClientTestCase):
             },
         )
 
-        image = Image(name=image_name, product_id=product_id, acquired="2001-01-01")
+        image = Image(
+            name=image_name,
+            product_id=product_id,
+            acquired="2001-01-01",
+            client=self.client,
+        )
 
         ary = np.zeros((10, 10), dtype=np.dtype(np.uint16))
         raster_meta = {
@@ -789,7 +800,7 @@ class TestImage(ClientTestCase):
     @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
     @patch("descarteslabs.catalog.Image.exists", return_value=False)
     def test_upload_ndarray_dtype(self, *mocks):
-        p = Product(id="p1", name="Test Product", _saved=True)
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(
             id="p1:image",
             product=p,
@@ -810,7 +821,7 @@ class TestImage(ClientTestCase):
 
     @patch("descarteslabs.catalog.Image.exists", return_value=False)
     def test_upload_ndarray_bad_georef(self, *mocks):
-        p = Product(id="p1", name="Test Product", _saved=True)
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(
             id="p1:image",
             product=p,
@@ -822,7 +833,7 @@ class TestImage(ClientTestCase):
     @patch("descarteslabs.catalog.Image._do_upload", return_value=True)
     @patch("descarteslabs.catalog.Image.exists", return_value=False)
     def test_upload_ndarray_shape(self, *mocks):
-        p = Product(id="p1", name="Test Product", _saved=True)
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(
             id="p1:image",
             product=p,
@@ -861,7 +872,7 @@ class TestImage(ClientTestCase):
     @patch("descarteslabs.catalog.Image.exists", return_value=False)
     @patch("numpy.save")
     def test_upload_ndarray_moves_band_axis(self, mock_np_save, *mocks):
-        p = Product(id="p1", name="Test Product", _saved=True)
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(
             id="p1:image",
             product=p,
@@ -884,7 +895,7 @@ class TestImage(ClientTestCase):
     @patch("descarteslabs.catalog.Image.exists", return_value=False)
     @patch("numpy.save")
     def test_upload_ndarray_multiple(self, mock_np_save, *mocks):
-        p = Product(id="p1", name="Test Product", _saved=True)
+        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
         image = Image(
             id="p1:image",
             product=p,

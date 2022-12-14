@@ -60,12 +60,12 @@ def check_deleted(f):
 
 def check_derived(f):
     @wraps(f)
-    def wrapper(self, *args, **kwargs):
-        if self._url is None:
+    def wrapper(cls, *args, **kwargs):
+        if cls._url is None:
             raise TypeError(
                 "This method is only available for a derived class of 'CatalogObject'"
             )
-        return f(self, *args, **kwargs)
+        return f(cls, *args, **kwargs)
 
     return wrapper
 

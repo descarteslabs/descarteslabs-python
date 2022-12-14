@@ -15,7 +15,7 @@ from .base import ClientTestCase
 class TestImageSummary(ClientTestCase):
     def setUp(self):
         super(TestImageSummary, self).setUp()
-        self.search = Image.search()
+        self.search = Image.search(client=self.client)
 
     def mock_response(self, method, json, status=200, **kwargs):
         responses.add(method, self.match_url, json=json, status=status, **kwargs)

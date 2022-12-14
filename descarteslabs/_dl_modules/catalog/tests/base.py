@@ -41,7 +41,6 @@ class ClientTestCase(unittest.TestCase):
         self.client = CatalogClient(
             url=self.url, auth=Auth(jwt_token=public_token, token_info_path=None)
         )
-        CatalogClient.set_default_client(self.client)
         self.match_url = re.compile(self.url)
 
     def mock_response(self, method, json, status=200, **kwargs):
