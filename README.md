@@ -57,6 +57,12 @@ Changelog
 
 - As with Catalog and Scenes, one or more products must now be specified when searching for bands or images.
 
+### DLTile
+
+- An off-by-1/2-pixel problem was identified in the coordinate transforms underlying
+  `DLTile.rowcol_to_latlon` and `DLTile.latlon_to_rowcol`. The problem has been corrected,
+  and you can expect to see slight differences in the results of these two methods.
+
 ### REST Clients
 
 - All the REST client types, such as `Metadata` and `Raster`, now support `get_default_client()` and `set_default_client()`

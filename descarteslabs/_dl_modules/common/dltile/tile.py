@@ -471,10 +471,10 @@ class Tile:
             utm_coordinates = lonlat_to_utm(
                 np.stack((lon, lat), axis=-1), zone=self.zone
             )
-            return np.round(utm_to_rowcol(utm_coordinates, tile=self)).astype(int)
+            return np.floor(utm_to_rowcol(utm_coordinates, tile=self)).astype(int)
         else:
             utm_coordinates = lonlat_to_utm(np.array([(lon, lat)]), zone=self.zone)
-            return np.round(utm_to_rowcol(utm_coordinates, tile=self)[0]).astype(int)
+            return np.floor(utm_to_rowcol(utm_coordinates, tile=self)[0]).astype(int)
 
     def rowcol_to_lonlat(
         self,

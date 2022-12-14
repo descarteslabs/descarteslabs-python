@@ -320,7 +320,7 @@ def rowcol_to_utm(indices, tile):
     row = indices[:, 0]
     col = indices[:, 1]
 
-    east = (col + min_col) * tile.resolution + FALSE_EASTING
-    north = (max_row - row) * tile.resolution
+    east = (col + min_col + 0.5) * tile.resolution + FALSE_EASTING
+    north = (max_row - row - 0.5) * tile.resolution
 
     return np.stack((east, north), axis=-1)

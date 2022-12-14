@@ -1048,7 +1048,7 @@ class DLTile(GeoContext):
         >>> from descarteslabs.geo import DLTile
         >>> tile = DLTile.from_key("2048:0:30.0:15:3:80")
         >>> tile.rowcol_to_latlon(row=56, col=1111)
-        [(44.89479253978484,), (-90.24352536949974,)]
+        [(44.894653081367544,), (-90.24334206726267,)]
         """
 
         lonlat = Tile.from_key(self.key).rowcol_to_lonlat(row=row, col=col)
@@ -1081,7 +1081,7 @@ class DLTile(GeoContext):
         >>> from descarteslabs.geo import DLTile
         >>> tile = DLTile.from_key("2048:0:30.0:15:3:80")
         >>> tile.latlon_to_rowcol(lat=44.8, lon=-90.2)
-        [(403,), (1238,)]
+        [(403,), (1237,)]
         """
 
         rowcol = Tile.from_key(self.key).lonlat_to_rowcol(lat=lat, lon=lon)
