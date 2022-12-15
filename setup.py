@@ -109,7 +109,7 @@ def do_setup():
             "cachetools>=3.1.1",
             "cloudpickle==0.4.0;python_version<'3.8'",
             "cloudpickle==1.6.0;python_version>='3.8'",
-            "dynaconf==3.1.1",
+            "dynaconf>=3.1.11",
             "geojson>=2.5.0",
             "grpcio>=1.35.0,<2",
             "imagecodecs>=2021.5.20",
@@ -121,6 +121,8 @@ def do_setup():
             "pyarrow>=3.0.0",
             "pytz>=2021.1",
             "requests>=2.27.1,<3",
+            # It is not obvious but dynaconf requires pkg_resources from setuptools.
+            "setuptools>=65.6.3",
             "shapely>=1.8.1,<2",
             "tifffile==2021.4.8",
             "tqdm>=4.32.1",

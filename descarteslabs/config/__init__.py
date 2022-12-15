@@ -283,8 +283,6 @@ class Settings(dynaconf.Dynaconf):
                 env_switcher=selector,
                 # Prefix to overwrite loaded settings, e.g,. {envvar_prefix}_MY_SETTING.
                 envvar_prefix=envvar_prefix,
-                # Raise an exception when a settings file can't load.
-                silent_errors_for_dynaconf=False,
             )
         except Exception as e:
             restore_env()
@@ -304,21 +302,6 @@ class Settings(dynaconf.Dynaconf):
             raise ConfigError(message) from None
 
         return settings
-
-    # These are work-arounds a bug in Dynaconf
-    def __getitem__(self, key):
-        super().__getitem__(key)
-        return getattr(self, key)
-
-    def get(self, key, default=None):
-        return getattr(self, key, default)
-
-    def as_dict(self, env=None, internal=False):
-        as_dict = self.__getattr__("as_dict")  # super() won't work
-        return {
-            key: getattr(self, key)
-            for key in as_dict(env=env, internal=internal).keys()
-        }
 
 
 get_settings = Settings.get_settings
