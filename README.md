@@ -31,6 +31,7 @@ Changelog
 ### Tables
 
 - Allow multiple columns to be used as a composite key when creating a table.
+- Added "auto" datatype to schemas as an auto incrementing counter.
 
 ## [1.9.1] - 2021-12-20
 

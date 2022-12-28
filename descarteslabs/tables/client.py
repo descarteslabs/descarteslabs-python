@@ -63,6 +63,8 @@ import numpy as np
 import requests
 import pandas as pd
 
+import warnings
+
 import descarteslabs.discover as discover
 from descarteslabs.client.auth import Auth
 from descarteslabs.client.exceptions import BadRequestError
@@ -202,21 +204,42 @@ class Tables(object):
 
         return schema, srid
 
-    def create_table(self, table_name, schema, srid, primary_key):
+    def create_table(self, table_name, schema, srid, primary_key=None):
         """
         Create a table
 
         :param str table_name: name of table
         :param str schema: schema mapping
         :param int srid: spatial reference identifier
-        :param str|list primary_key: column name(s) to use as primary key
+        :param str|list primary_key: column name(s) to use as primary key. If None, a default key is used.
 
         :return: table name
         :rtype: str
         """
 
+        DEFAULT_PK = "auto_id"
+
+        if not primary_key:
+            warnings.warn(
+                f'Primary key not provided, adding a new "{DEFAULT_PK}" column as an auto-incrementing primary key.',
+                UserWarning,
+            )
+            if DEFAULT_PK not in schema["properties"]:
+                schema["properties"][DEFAULT_PK] = "auto"
+                primary_key = DEFAULT_PK
+            else:
+                raise BadRequestError(
+                    f'Primary key "{DEFAULT_PK}" already exists in schema; specify primary key manually.'
+                )
+
         if not isinstance(primary_key, list):
             primary_key = [primary_key]
+
+        # if primary key/s is/are not present in the schema then there's no point
+        # in continuing
+        for pk in primary_key:
+            if pk not in schema["properties"]:
+                raise BadRequestError(f'Could not find primary key "{pk}" in schema.')
 
         # TODO can we avoid reaching into the `ibis` serializer
         # just to access the vektorius gRPC client method?
