@@ -827,7 +827,7 @@ class ThirdPartyService:
         self._session = ThreadLocalWrapper(self._build_session)
 
     @property
-    def session(self):
+    def session(self) -> Session:
         return self._session.get()
 
     def _build_session(self):
