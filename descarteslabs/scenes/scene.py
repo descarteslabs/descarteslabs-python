@@ -359,6 +359,7 @@ class Scene(object):
         processing_level=None,
         scaling=None,
         data_type=None,
+        progress=None,
         raster_client=None,
     ):
         """
@@ -425,6 +426,8 @@ class Scene(object):
         data_type : None, str
             Output data type. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
+        progress : None, bool
+            Controls display of a progress bar.
         raster_client : Raster, optional
             Unneeded in general use; lets you use a specific client instance
             with non-default auth and parameters.
@@ -525,6 +528,7 @@ class Scene(object):
             mask_nodata=mask_nodata,
             mask_alpha=mask_alpha,
             drop_alpha=drop_alpha,
+            progress=progress,
             **raster_params
         )
 
@@ -575,6 +579,7 @@ class Scene(object):
         scaling=None,
         data_type=None,
         nodata=None,
+        progress=None,
         raster_client=None,
     ):
         """
@@ -626,6 +631,8 @@ class Scene(object):
             description of this parameter.
         nodata : None, number
             NODATA value for a geotiff file. Will be assigned to any masked pixels.
+        progress : None, bool
+            Controls display of a progress bar.
         raster_client : Raster, optional
             Unneeded in general use; lets you use a specific client instance
             with non-default auth and parameters.
@@ -680,6 +687,7 @@ class Scene(object):
             processing_level=processing_level,
             scales=scales,
             nodata=nodata,
+            progress=progress,
             raster_client=raster_client,
         )
 

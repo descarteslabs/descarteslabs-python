@@ -485,6 +485,7 @@ class TestSceneCollectionDownload(unittest.TestCase):
                 processing_level=None,
                 scaling=None,
                 data_type="UInt16",
+                progress=None,
                 raster_client=self.scenes._raster_client,
             )
 
@@ -507,6 +508,7 @@ class TestSceneCollectionDownload(unittest.TestCase):
                 processing_level=None,
                 scaling=None,
                 data_type="UInt16",
+                progress=None,
                 raster_client=self.scenes._raster_client,
             )
 

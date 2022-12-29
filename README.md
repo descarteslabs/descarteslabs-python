@@ -33,6 +33,12 @@ Changelog
 - Allow multiple columns to be used as a composite key when creating a table.
 - Added "auto" datatype to schemas as an auto incrementing counter.
 
+### Scenes
+- Added the `progress=` parameter to the various rastering methods such as `Scene.ndarray`,
+  `Scene.download`, `SceneCollection.mosaic`, `SceneCollection.stack`, `SceneCollection.download`
+  and `SceneCollection.download_mosaic`. This can be used to enable or disable the display
+  of progress bars.
+
 ## [1.9.1] - 2021-12-20
 
 ### Raster

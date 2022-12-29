@@ -102,6 +102,7 @@ class SceneCollection(Collection):
         processing_level=None,
         scaling=None,
         data_type=None,
+        progress=None,
         max_workers=None,
     ):
         """
@@ -180,6 +181,8 @@ class SceneCollection(Collection):
         data_type : None, str
             Output data type. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
+        progress : None, bool
+            Controls display of a progress bar.
         max_workers : int, default None
             Maximum number of threads to use to parallelize individual ndarray
             calls to each Scene.
@@ -222,6 +225,7 @@ class SceneCollection(Collection):
             raster_info=raster_info,
             resampler=resampler,
             processing_level=processing_level,
+            progress=progress,
         )
 
         if bands_axis == 0 or bands_axis == -4:
@@ -333,6 +337,7 @@ class SceneCollection(Collection):
         processing_level=None,
         scaling=None,
         data_type=None,
+        progress=None,
         raster_info=False,
     ):
         """
@@ -396,6 +401,8 @@ class SceneCollection(Collection):
         data_type : None, str
             Output data type. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
+        progress : None, bool
+            Controls display of a progress bar.
 
 
         Returns
@@ -453,6 +460,7 @@ class SceneCollection(Collection):
             mask_alpha=mask_alpha,
             drop_alpha=drop_alpha,
             masked=mask_nodata or mask_alpha,
+            progress=progress,
             **raster_params
         )
         try:
@@ -494,6 +502,7 @@ class SceneCollection(Collection):
         processing_level=None,
         scaling=None,
         data_type=None,
+        progress=None,
         max_workers=None,
     ):
         """
@@ -542,6 +551,8 @@ class SceneCollection(Collection):
         data_type : None, str
             Output data type. Please see :meth:`scaling_parameters` for a full
             description of this parameter.
+        progress : None, bool
+            Controls display of a progress bar.
         max_workers : int, default None
             Maximum number of threads to use to parallelize individual ``download``
             calls to each Scene.
@@ -660,6 +671,7 @@ class SceneCollection(Collection):
             processing_level=processing_level,
             scaling=scales,
             data_type=data_type,
+            progress=progress,
             raster_client=self._raster_client,
         )
         try:
@@ -702,6 +714,7 @@ class SceneCollection(Collection):
         data_type=None,
         mask_alpha=None,
         nodata=None,
+        progress=None,
     ):
         """
         Download all scenes as a single image file.
@@ -759,6 +772,8 @@ class SceneCollection(Collection):
             mask_alpha is set to False.
         nodata : None, number
             NODATA value for a geotiff file. Will be assigned to any masked pixels.
+        progress : None, bool
+            Controls display of a progress bar.
 
         Returns
         -------
@@ -812,6 +827,7 @@ class SceneCollection(Collection):
             resampler=resampler,
             processing_level=processing_level,
             nodata=nodata,
+            progress=progress,
             raster_client=self._raster_client,
         )
 

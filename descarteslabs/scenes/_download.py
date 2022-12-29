@@ -45,6 +45,7 @@ def _download(
     processing_level=None,
     scales=None,
     nodata=None,
+    progress=None,
     raster_client=None,
 ):
     """
@@ -88,6 +89,7 @@ def _download(
         output_format=format,
         outfile_basename=os.path.splitext(dest)[0],
         nodata=nodata,
+        progress=progress,
         **raster_params
     )
 
