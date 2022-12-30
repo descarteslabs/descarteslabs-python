@@ -19,6 +19,11 @@ Changelog
 =========
 ## [Unreleased]
 
+### Python Versions Supported
+
+- Added support for Python 3.9.
+- Removed support for Python 3.6 which is now officially End Of Life.
+
 ### Discover
 
 - Added support for organizational sharing. You can now share using the `Organization` type:
