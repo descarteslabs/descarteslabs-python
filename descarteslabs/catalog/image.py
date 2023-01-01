@@ -417,6 +417,9 @@ class Image(NamedCatalogObject):
             If True, then permit overwriting of an existing image with the same id
             in the catalog. Defaults to False. Note that in all cases, the image
             object must have a state of `~descarteslabs.catalog.DocumentState.UNSAVED`.
+            USE WITH CAUTION: This can cause data cache inconsistencies in the platform,
+            and should only be used for infrequent needs to update the image file
+            contents. You can expect inconsistencies to endure for a period afterwards.
 
         Returns
         -------
@@ -549,6 +552,9 @@ class Image(NamedCatalogObject):
             If True, then permit overwriting of an existing image with the same id
             in the catalog. Defaults to False. Note that in all cases, the image
             object must have a state of `~descarteslabs.catalog.DocumentState.UNSAVED`.
+            USE WITH CAUTION: This can cause data cache inconsistencies in the platform,
+            and should only be used for infrequent needs to update the image file
+            contents. You can expect inconsistencies to endure for a period afterwards.
 
         Raises
         ------
