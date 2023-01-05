@@ -20,7 +20,7 @@ class Settings(dynaconf.Dynaconf):
     Based on the ``Dynaconf`` package. This settings class supports configuration from
     named "environments" in a ``settings.toml`` file as well as environment variables
     with names that are prefixed with ``DESCARTESLABS_`` (or the prefix specified
-    in the `envvar_prefix`).
+    in the ``envvar_prefix``).
 
     For the full capabilities of ``Dynaconf`` please consult https://www.dynaconf.com/.
 
