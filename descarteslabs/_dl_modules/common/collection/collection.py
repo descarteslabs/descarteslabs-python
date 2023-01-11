@@ -20,6 +20,7 @@ import itertools
 import collections
 
 from ...client.deprecation import deprecate
+from ...common.property_filtering.filtering import Expression
 
 
 # TODO: maybe subclass collections.UserList?
@@ -122,16 +123,22 @@ class Collection(object):
         item access, and calls) are applied to each item in the
         :class:`~descarteslabs.common.collection.Collection`.
 
+        Yields
+        ------
+        Any
+            The result of an item with all operations following
+            :attr:`~descarteslabs.common.collection.Collection.each` applied to it.
+
         Notes
         -----
-            * Add :meth:`~descarteslabs.common.collection.Eacher.combine`
-              at the end of the operations chain to combine the results into a
-              list by default, or any container type passed into
-              :meth:`~descarteslabs.common.collection.Eacher.combine`
-            * Use
-              :meth:`pipe(f, *args, **kwargs) <descarteslabs.common.collection.Eacher.pipe>`
-              to yield ``f(x, *args, **kwargs)`` for each item ``x`` yielded by the
-              preceeding operations chain
+        * Add :meth:`~descarteslabs.common.collection.Eacher.combine`
+          at the end of the operations chain to combine the results into a
+          list by default, or any container type passed into
+          :meth:`~descarteslabs.common.collection.Eacher.combine`
+        * Use
+          :meth:`pipe(f, *args, **kwargs) <descarteslabs.common.collection.Eacher.pipe>`
+          to yield ``f(x, *args, **kwargs)`` for each item ``x`` yielded by the
+          preceeding operations chain
 
         Examples
         --------
@@ -154,16 +161,24 @@ class Collection(object):
         4
         >>> list(c.each.capitalize().pipe(len).combine(set))
         [3, 4, 5]
-
-        Yields
-        ------
-            item with all operations following :attr:`~descarteslabs.common.collection.Collection.each` applied to it
-
         """
         return Eacher(iter(self._list))
 
     def map(self, f):
-        "Returns a :class:`~descarteslabs.common.collection.Collection` of ``f`` applied to each item"
+        """Returns a :class:`~descarteslabs.common.collection.Collection` of ``f`` applied to each item.
+
+        Parameters
+        ----------
+        f : callable
+            Apply function ``f`` to each element of the collection and return the result
+            as a collection.
+
+        Returns
+        -------
+        Collection
+            A collection with the results of the function ``f`` applied to each element
+            of the original collection.
+        """
 
         res = (f(x) for x in self._list)
         item_type = getattr(self, "_item_type", None)
@@ -173,9 +188,38 @@ class Collection(object):
             return Collection(res)
 
     def filter(self, predicate):
-        "Returns a :class:`~descarteslabs.common.collection.Collection` of items for which ``predicate(item)`` is True"
+        """Returns a :class:`~descarteslabs.common.collection.Collection` filtered by predicate.
 
-        res = (x for x in self._list if predicate(x))
+        Predicate can either be a ``callable`` or an
+        :py:class:`~descarteslabs.common.property_filtering.filtering.Expression`
+        from :ref:`property_filtering`.
+
+        If the predicate is a ``callable``, :py:meth:`filter` will return all items
+        for which ``predicate(item)`` is ``True``.
+
+        If the predicate is an
+        :py:class:`~descarteslabs.common.property_filtering.filtering.Expression`,
+        :py:meth:`filter` will return all items
+        for which ``predicate.evaluate(item)`` is ``True``.
+
+        Parameters
+        ----------
+        predicate : callable or Expression
+            Either a callable or a :ref:`property_filtering` `Expression` which is
+            called or evaluated for each item in the list.
+
+        Returns
+        -------
+        Collection
+            A new collection with only those items for which the predicate returned
+            or evaluated to ``True``.
+        """
+
+        if isinstance(predicate, Expression):
+            res = (x for x in self._list if predicate.evaluate(x))
+        else:
+            res = (x for x in self._list if predicate(x))
+
         return self._cast_and_copy_attrs_to(res)
 
     def sorted(self, *predicates, **reverse):
@@ -185,6 +229,22 @@ class Collection(object):
 
         Each predicate can be a key function, or a string of dot-chained attributes
         to use as sort keys. The reverse flag returns results in descending order.
+
+        Parameters
+        ----------
+        predicates : callable or str
+            Any positional arguments are predicates. If the predicate is a string,
+            it denotes an attribute for each element, potentially with levels separated
+            by a dot. If the predicate is a callable, it must return the value to sort
+            by for each given element.
+        reverse : bool
+            The sort is ascending by default, by setting ``reverse`` to
+            ``True``, the sort will be descending.
+
+        Returns
+        -------
+        Collection
+            The sorted collection.
 
         Examples
         --------
@@ -214,14 +274,55 @@ class Collection(object):
         res = sorted(self, key=predicate, **reverse)
         return self._cast_and_copy_attrs_to(res)
 
-    def groupby(self, *predicates):
+    def sort(self, field, ascending=True):
         """
+        Returns a :class:`~descarteslabs.common.collection.Collection`,
+        sorted by the given field and direction.
+
+        Parameters
+        ----------
+        field : str
+            The name of the field to sort by
+        ascending : bool
+            Sorts results in ascending order if True (the default),
+            and in descending order if False.
+
+        Returns
+        -------
+        Collection
+            The sorted collection.
+
+        Example
+        -------
+        >>> from descarteslabs.catalog import Product
+        >>> collection = Product.search().collect() # doctest: +SKIP
+        >>> sorted_collection = collection.sort("created", ascending=False) # doctest: +SKIP
+        >>> sorted_collection # doctest: +SKIP
+        """
+        return self.sorted(field, reverse=not ascending)
+
+    def groupby(self, *predicates):
+        """Groups items by predicates.
+
         Groups items by predicates and yields tuple of ``(group, items)``
         for each group, where ``items`` is a
         :class:`~descarteslabs.common.collection.Collection`.
 
         Each predicate can be a key function, or a string of dot-chained attributes
         to use as sort keys.
+
+        Parameters
+        ----------
+        predicates : callable or str
+            Any positional arguments are predicates. If the predicate is a string,
+            it denotes an attribute for each element, potentially with levels separated
+            by a dot. If the predicate is a callable, it must return the value to sort
+            by for each given element.
+
+        Yields
+        ------
+        Tuple[str, Collection]
+            A tuple of ``(group, Collection)`` for each group.
 
         Examples
         --------
@@ -262,7 +363,15 @@ class Collection(object):
             yield group, self._cast_and_copy_attrs_to(items)
 
     def append(self, x):
-        "Append x to the end of this :class:`~descarteslabs.common.collection.Collection`"
+        """Append x to the end of this :class:`~descarteslabs.common.collection.Collection`.
+
+        The type of the item must match the type of the collection.
+
+        Parameters
+        ----------
+        x : Any
+            Add an item to the collection
+        """
 
         item_type = getattr(self, "_item_type", None)
         if item_type is not None and not isinstance(x, item_type):
@@ -271,7 +380,15 @@ class Collection(object):
         self._list.append(x)
 
     def extend(self, x):
-        "Extend this :class:`~descarteslabs.common.collection.Collection` by appending elements from the iterable"
+        """Extend this :class:`~descarteslabs.common.collection.Collection` by appending elements from the iterable.
+
+        The type of the items in the list must all match the type of the collection.
+
+        Parameters
+        ----------
+        x : List[Any]
+            Extend a collection with the items from the list.
+        """
 
         item_type = getattr(self, "_item_type", None)
         if item_type is not None and not all(
@@ -316,17 +433,17 @@ class Eacher(object):
 
     @deprecate(renamed={"collection": "op"})
     def combine(self, op=list):
-        "``self.combine(collection) <--> op(iter(self))``"
+        "self.combine(collection) <--> op(iter(self))"
 
         return op(iter(self))
 
     def collect(self, collection=Collection):
-        "``self.combine(collection) <--> collection(iter(self))``"
+        "self.collect(collection) <--> collection(iter(self))"
 
         return collection(iter(self))
 
     def pipe(self, callable, *args, **kwargs):
-        "``self.pipe(f, *args, **kwargs) <--> f(x, *args, **kwargs) for x in self``"
+        "self.pipe(f, *args, **kwargs) <--> f(x, *args, **kwargs) for x in self"
 
         return Eacher(callable(x, *args, **kwargs) for x in self)
 

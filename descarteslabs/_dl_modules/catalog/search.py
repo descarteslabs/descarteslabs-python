@@ -78,7 +78,7 @@ class Search(object):
         """Sort the returned results by the given field.
 
         Multiple sort fields are not supported, so
-        Successive calls to `sort` will overwrite the previous sort parameter.
+        successive calls to `sort` will overwrite the previous sort parameter.
 
         Parameters
         ----------

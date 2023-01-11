@@ -13,6 +13,9 @@
 # limitations under the License.
 
 
+import re
+
+
 class Expression(object):
     """An expression is the result of a filtering operation.
 
@@ -126,6 +129,9 @@ class EqExpression(Expression):
         )
         return {"op": "eq", "name": name, "val": value}
 
+    def evaluate(self, obj):
+        return getattr(obj, self.name) == self.value
+
 
 class NeExpression(Expression):
     """Whether a property value is not equal to the given value."""
@@ -143,6 +149,9 @@ class NeExpression(Expression):
             else (self.name, self.value)
         )
         return {"op": "ne", "name": name, "val": value}
+
+    def evaluate(self, obj):
+        return getattr(obj, self.name) != self.value
 
 
 class RangeExpression(Expression):
@@ -172,6 +181,23 @@ class RangeExpression(Expression):
             serialized.append({"name": name, "op": op, "val": value})
         return serialized[0] if len(serialized) == 1 else {"and": serialized}
 
+    def evaluate(self, obj):
+        result = True
+
+        for op, val in self.parts.items():
+            if op == "gte":
+                result = result and getattr(obj, self.name) >= val
+            elif op == "gt":
+                result = result and getattr(obj, self.name) > val
+            elif op == "lte":
+                result = result and getattr(obj, self.name) <= val
+            elif op == "lt":
+                result = result and getattr(obj, self.name) < val
+            else:
+                raise ValueError("Unknown operation")
+
+        return result
+
 
 class IsNullExpression(Expression):
     """Whether a property value is ``None`` or ``[]``."""
@@ -191,6 +217,9 @@ class IsNullExpression(Expression):
 
         return {"name": name, "op": "isnull"}
 
+    def evaluate(self, obj):
+        return getattr(obj, self.name) is None
+
 
 class IsNotNullExpression(Expression):
     """Whether a property value is not ``None`` or ``[]``."""
@@ -209,6 +238,9 @@ class IsNotNullExpression(Expression):
             name, _ = model._serialize_filter_attribute(self.name, None)
 
         return {"name": name, "op": "isnotnull"}
+
+    def evaluate(self, obj):
+        return getattr(obj, self.name) is not None
 
 
 class LikeExpression(Expression):
@@ -240,6 +272,10 @@ class LikeExpression(Expression):
         # )
         # return (name, {"name": name, "op": "ilike", "val": value})
 
+    def evaluate(self, obj):
+        expr = re.escape(self.value).replace("_", ".").replace("%", ".*")
+        return re.match(f"^{expr}$", getattr(obj, self.name)) is not None
+
 
 class AndExpression(object):
     """``True`` if both expressions are ``True``, ``False`` otherwise."""
@@ -268,6 +304,13 @@ class AndExpression(object):
     def jsonapi_serialize(self, model=None):
         return {"and": [part.jsonapi_serialize(model=model) for part in self.parts]}
 
+    def evaluate(self, obj):
+        for part in self.parts:
+            if not part.evaluate(obj):
+                return False
+
+        return True
+
 
 class OrExpression(object):
     """``True`` if either expression is ``True``, ``False`` otherwise."""
@@ -295,6 +338,13 @@ class OrExpression(object):
 
     def jsonapi_serialize(self, model=None):
         return {"or": [part.jsonapi_serialize(model=model) for part in self.parts]}
+
+    def evaluate(self, obj):
+        for part in self.parts:
+            if part.evaluate(obj):
+                return True
+
+        return False
 
 
 def range_expr(op):
