@@ -27,6 +27,13 @@ def _import_matplotlib_pyplot():
     except ImportError:
         raise ImportError("The matplotlib package is required for displaying images.")
     try:
+        # a change in matplotlib at some point causes certain runtime failures
+        # unless these are previously imported
+        import matplotlib.backends
+        import matplotlib.backends.backend_agg  # noqa F401
+    except ImportError:
+        pass
+    try:
         import matplotlib.pyplot
     except RuntimeError as e:
         if matplotlib.get_backend() == "MacOSX":

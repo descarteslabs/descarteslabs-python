@@ -447,6 +447,8 @@ class TileLayerControllerRow(LayerControllerRow):
 
 def get_matplotlib():
     try:
+        import matplotlib.backends
+        import matplotlib.backends.backend_agg  # noqa F401
         import matplotlib.pyplot
 
         return matplotlib
