@@ -41,6 +41,17 @@ class TestDisplay(unittest.TestCase):
         ax.set_title.assert_called_with("foo")
 
     @mock.patch.object(_display, "_import_matplotlib_pyplot")
+    def test_display_multi_cols(self, mock_matplotlib_importer):
+        mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
+            mock_matplotlib_importer, 5
+        )
+
+        img = np.arange(6).reshape((3, 2))
+        display(img, img, img, img, img, ncols=2)
+
+        mock_plt.subplots.assert_called_with(3, 2, figsize=(10, 15), squeeze=False)
+
+    @mock.patch.object(_display, "_import_matplotlib_pyplot")
     def test_display_3d_masked(self, mock_matplotlib_importer):
         mock_plt, mock_fig, mock_axs = self.make_mock_subplots(
             mock_matplotlib_importer, 1

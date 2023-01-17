@@ -1,3 +1,3 @@
-from ._display import display, save_image
+from ._display import LayoutDirection, display, save_image
 
-__all__ = ["display", "save_image"]
+__all__ = ["LayoutDirection", "display", "save_image"]

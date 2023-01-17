@@ -18,6 +18,9 @@ Displays ndarrays as images, but is easier to use and more flexible than matplot
 
 from __future__ import division
 
+import math
+from enum import Enum
+
 import numpy as np
 
 
@@ -50,6 +53,15 @@ def _import_matplotlib_pyplot():
     return matplotlib
 
 
+class LayoutDirection(str, Enum):
+    left_to_right = "left-to-right"
+    top_to_bottom = "top-to-bottom"
+
+    @classmethod
+    def directions(cls):
+        return [attr for attr in dir(cls) if not attr.startswith("_")]
+
+
 def display(*imgs, **kwargs):
     """
     Display 2D and 3D ndarrays as images with matplotlib.
@@ -63,7 +75,7 @@ def display(*imgs, **kwargs):
     Parameters
     ----------
     *imgs: 1 or more ndarrays
-        When multiple images are given, each is displayed on its own row.
+        When multiple images are given, each is displayed on its own row by default.
     bands_axis: int, default 0
         Axis which contains bands in each array.
     title: str, or sequence of str; optional
@@ -91,6 +103,15 @@ def display(*imgs, **kwargs):
 
         To use a Colormap, the input images must have a single band. The Colormap
         will be ignored for images with more than one band.
+    figsize: tuple(int), default (size, (size / ncols) * nrows)
+        Width, height in inches.
+    nrows: int, default is the number of images
+        Number of rows if there are multiple images.
+    ncols: int, default 1
+        Number of columns if there are multiple images.
+    layout_direction: str, default "left-to-right"
+        If ncols is greated than 1, it determines whether the layout is left-to-right
+        for the images, or top-to-bottom.
 
     Raises
     ------
@@ -117,6 +138,19 @@ def save_image(filename, *imgs, **kwargs):
     _display_or_save(filename, *imgs, **kwargs)
 
 
+def _flatten(axs, left_to_right=True):
+    # Flatten the images into a single stream
+    if left_to_right:
+        for axcol in axs:
+            for ax in axcol:
+                yield ax
+    else:
+        # top to bottom
+        for col in range(len(axs[0])):
+            for axcol in axs:
+                yield axcol[col]
+
+
 def _display_or_save(filename, *imgs, **kwargs):
     if len(imgs) == 0:
         return
@@ -127,6 +161,12 @@ def _display_or_save(filename, *imgs, **kwargs):
     robust = kwargs.pop("robust", True)
     interpolation = kwargs.pop("interpolation", "bilinear")
     colormap_name = kwargs.pop("colormap", None)
+    figsize = kwargs.pop("figsize", None)
+    nrows = kwargs.pop("nrows", None)
+    ncols = kwargs.pop("ncols", 1)
+    layout_direction = LayoutDirection(
+        kwargs.pop("layoutdirection", LayoutDirection.left_to_right)
+    )
 
     if len(kwargs) > 0:
         raise TypeError(
@@ -152,8 +192,13 @@ def _display_or_save(filename, *imgs, **kwargs):
     # TODO: leaves huge gaps between images that aren't very square
     # would need to calculate figsize better based on shapes of each img
     # or use seaborn?
-    figsize = (size, size * len(imgs))
-    fig, axs = plt.subplots(len(imgs), 1, figsize=figsize, squeeze=False)
+    if nrows is None:
+        nrows = math.ceil(len(imgs) / ncols)
+
+    if figsize is None:
+        figsize = size, (size / ncols) * nrows
+
+    fig, axs = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
 
     if isinstance(titles, (list, tuple, np.ndarray)):
         if len(titles) != len(imgs):
@@ -165,9 +210,9 @@ def _display_or_save(filename, *imgs, **kwargs):
     if colormap_name:
         colormap = plt.cm.get_cmap(colormap_name)
 
-    for ax, img, title in zip(axs, imgs, titles):
-        ax = ax[0]
-
+    for ax, img, title in zip(
+        _flatten(axs, layout_direction == LayoutDirection.left_to_right), imgs, titles
+    ):
         if not isinstance(img, np.ndarray):
             raise TypeError("Expected ndarray, instead got {}".format(type(img)))
 
