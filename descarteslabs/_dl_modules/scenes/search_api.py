@@ -30,6 +30,18 @@ from .scenecollection import SceneCollection
 from .helpers import REQUEST_PARAMS
 
 
+# map from v1 field names to v2 field names for sort
+IMAGE_FIELD_MAP = {
+    "cloud_fraction_0": "alt_cloud_fraction",
+    "descartes_version": "processing_pipeline_id",
+    "identifier": "provider_id",
+    "key": "name",
+    "processed": "created",
+    "proj4": "projection",
+    "sat_id": "satellite_id",
+}
+
+
 @deprecate(removed=["randomized", "raster_client", "metadata_client"])
 def search(
     aoi,
@@ -156,7 +168,9 @@ def search(
             search = search.filter(q)
 
     if sort_field != "acquired" or sort_order != "asc":
-        search = search.sort(sort_field, sort_order == "asc")
+        search = search.sort(
+            IMAGE_FIELD_MAP.get(sort_field, sort_field), sort_order == "asc"
+        )
 
     if limit:
         search = search.limit(limit)
