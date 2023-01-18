@@ -454,8 +454,8 @@ class Band(NamedCatalogObject):
       :attr:`~SpectralBand.wavelength_nm_min`,
       :attr:`~SpectralBand.wavelength_nm_max`,
       :attr:`~SpectralBand.wavelength_nm_fwhm`,
-      :attr:`~descarteslabs.catalog.GenericBand.processing_levels`,
-      :attr:`~descarteslabs.catalog.GenericBand.derived_params`.
+      :attr:`~SpectralBand.processing_levels`,
+      :attr:`~SpectralBand.derived_params`.
     * `MicrowaveBand`: A band that lies in the microwave spectrum, often from SAR or
       passive radar sensors. Specific attributes:
       :attr:`~MicrowaveBand.frequency`,
@@ -470,7 +470,8 @@ class Band(NamedCatalogObject):
       classification categories (e.g. a land use classification). A visualization with
       straight pixel values is typically not useful, so commonly a
       :attr:`~ClassBand.colormap` is used. Specific attributes:
-      :attr:`~ClassBand.colormap`, :attr:`~ClassBand.colormap_name`,
+      :attr:`~ClassBand.colormap`,
+      :attr:`~ClassBand.colormap_name`,
       :attr:`~ClassBand.class_labels`.
     * `GenericBand`: A generic type for bands that are not represented by the other band
       types, e.g., mapping physical values like temperature or angles. Specific
@@ -479,8 +480,8 @@ class Band(NamedCatalogObject):
       :attr:`~GenericBand.colormap_name`,
       :attr:`~GenericBand.physical_range`,
       :attr:`~GenericBand.physical_range_unit`,
-      :attr:`~descarteslabs.catalog.GenericBand.processing_levels`,
-      :attr:`~descarteslabs.catalog.GenericBand.derived_params`.
+      :attr:`~GenericBand.processing_levels`,
+      :attr:`~GenericBand.derived_params`.
     """
 
     _DOC_DESCRIPTION = """A description with further details on the band.
