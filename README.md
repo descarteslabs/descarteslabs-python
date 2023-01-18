@@ -57,6 +57,11 @@ Changelog
 
 - As with Catalog and Scenes, one or more products must now be specified when searching for bands or images.
 
+### Raster
+
+- The Raster client API now requires a `bands=` parameter for all rastering operations, such as `raster`, `ndarray`
+  and `stack`. It no longer defaults to all bands defined on the product.
+
 ### DLTile
 
 - An off-by-1/2-pixel problem was identified in the coordinate transforms underlying

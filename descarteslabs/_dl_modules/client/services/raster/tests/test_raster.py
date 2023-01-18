@@ -110,7 +110,7 @@ class RasterTest(unittest.TestCase):
         expected_array = np.zeros((1, 2, 2))
         content = self.create_blosc_response(expected_metadata, expected_array)
         self.mock_response(responses.POST, json=None, body=content, stream=True)
-        array, meta = self.raster.ndarray(["fakeid"])
+        array, meta = self.raster.ndarray(["fakeid"], bands=["red"])
         assert expected_metadata == meta
         np.testing.assert_array_equal(expected_array.transpose((1, 2, 0)), array)
 
@@ -122,7 +122,7 @@ class RasterTest(unittest.TestCase):
             expected_metadata, expected_array[0:1, :, :], expected_array[1:2, :, :]
         )
         self.mock_response(responses.POST, json=None, body=content, stream=True)
-        array, meta = self.raster.ndarray(["fakeid"])
+        array, meta = self.raster.ndarray(["fakeid"], bands=["red"])
         assert expected_metadata == meta
         np.testing.assert_array_equal(expected_array.transpose((1, 2, 0)), array)
 
@@ -136,14 +136,14 @@ class RasterTest(unittest.TestCase):
         )
         self.mock_response(responses.POST, json=None, body=content, stream=True)
         with self.assertRaises(ServerError):
-            self.raster.ndarray(["fakeid"])
+            self.raster.ndarray(["fakeid"], bands=["red"])
 
         content = self.create_blosc_response(
             expected_metadata, expected_array[0:1, :, :], "{"
         )
         self.mock_response(responses.POST, json=None, body=content, stream=True)
         with self.assertRaises(ServerError):
-            self.raster.ndarray(["fakeid"])
+            self.raster.ndarray(["fakeid"], bands=["red"])
 
     @responses.activate
     def do_stack(self, **stack_args):
@@ -183,15 +183,15 @@ class RasterTest(unittest.TestCase):
         dimensions = (128, 128)
 
         with pytest.raises(ValueError):
-            self.raster.stack(keys)
+            self.raster.stack(keys, bands=["red"])
         with pytest.raises(ValueError):
-            self.raster.stack(keys, resolution=resolution)
+            self.raster.stack(keys, bands=["red"], resolution=resolution)
         with pytest.raises(ValueError):
-            self.raster.stack(keys, dimensions=dimensions)
+            self.raster.stack(keys, bands=["red"], dimensions=dimensions)
         with pytest.raises(ValueError):
-            self.raster.stack(keys, bounds=bounds)
+            self.raster.stack(keys, bands=["red"], bounds=bounds)
         with pytest.raises(ValueError):
-            self.raster.stack(keys, resolution=resolution, place=place)
+            self.raster.stack(keys, bands=["red"], resolution=resolution, place=place)
 
 
 class UtilitiesTest(unittest.TestCase):

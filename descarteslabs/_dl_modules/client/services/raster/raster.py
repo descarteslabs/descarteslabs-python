@@ -256,7 +256,7 @@ class Raster(Service, DefaultClientMixin):
     def raster(
         self,
         inputs,
-        bands=None,
+        bands,
         scales=None,
         data_type=None,
         output_format="GTiff",
@@ -288,7 +288,7 @@ class Raster(Service, DefaultClientMixin):
             each respective image's alpha band is `1` (pixels where the alpha band is not
             `1` are "transparent" in the overlap between images). If a pixel is fully
             masked considering all combined alpha bands it will be `0` in all non-alpha
-            bands. Not specifying bands returns all bands in the product.
+            bands.
         :param scales: List of tuples specifying the scaling to be applied to each band.
             A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
             meaning values in the source range ``src_min`` to ``src_max`` will be scaled
@@ -420,7 +420,7 @@ class Raster(Service, DefaultClientMixin):
     def ndarray(
         self,
         inputs,
-        bands=None,
+        bands,
         scales=None,
         data_type=None,
         srs=None,
@@ -451,7 +451,7 @@ class Raster(Service, DefaultClientMixin):
             each respective image's alpha band is `1` (pixels where the alpha band is not
             `1` are "transparent" in the overlap between images). If a pixel is fully
             masked considering all combined alpha bands it will be `0` in all non-alpha
-            bands. Not specifying bands returns all bands in the product.
+            bands.
         :param scales: List of tuples specifying the scaling to be applied to each band.
             A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
             meaning values in the source range ``src_min`` to ``src_max`` will be scaled
@@ -570,7 +570,7 @@ class Raster(Service, DefaultClientMixin):
     def stack(
         self,
         inputs,
-        bands=None,
+        bands,
         scales=None,
         data_type="UInt16",
         srs=None,
@@ -609,7 +609,7 @@ class Raster(Service, DefaultClientMixin):
             each respective image's alpha band is `1` (pixels where the alpha band is not
             `1` are "transparent" in the overlap between images). If a pixel is fully
             masked considering all combined alpha bands it will be `0` in all non-alpha
-            bands. Not specifying bands returns all bands in the product.
+            bands.
         :param scales: List of tuples specifying the scaling to be applied to each band.
             A tuple has 4 elements in the order ``(src_min, src_max, out_min, out_max)``,
             meaning values in the source range ``src_min`` to ``src_max`` will be scaled
