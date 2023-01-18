@@ -1,13 +1,12 @@
 """
-==================================================
+============================
 Create time stacks of images
-==================================================
+============================
 
-The Scenes API returns a series of metadata. This
-example demonstrates how to aggregate the
-returned scenes by date.
+This example demonstrates how to aggregate the images returned from a Catalog V2 image search by date.
 """
-from descarteslabs.scenes import search
+from descarteslabs.catalog import Product, properties as p
+from descarteslabs.utils import display
 
 # Define a bounding box around Taos in a GeoJSON
 taos = {
@@ -24,42 +23,50 @@ taos = {
 }
 
 ################################################
-# Create a SceneCollection
-scenes, ctx = search(
-    taos,
-    products=["usgs:landsat:oli-tirs:c2:l1:v0"],
-    start_datetime="2018-01-01",
-    end_datetime="2018-12-31",
-    cloud_fraction=0.7,
-    limit=500,
+# Create an ImageCollection.
+search = (
+    Product.get("usgs:landsat:oli-tirs:c2:l1:v0").images()
+    .intersects(taos)
+    .filter("2018-01-01" <= p.acquired < "2018-12-31")
+    .filter(p.cloud_fraction < 0.7)
+    .sort("acquired")
+    .limit(500)
 )
-print("There are {} scenes in the collection.".format(len(scenes)))
+images = search.collect()
+print("There are {} images in the collection.".format(len(images)))
 
 ################################################
-# To create subcollections using the Scenes API, we have
-# the built in methods :meth:`SceneCollection.groupby <descarteslabs.scenes.scenecollection.SceneCollection.groupby>`
-# and :meth:`SceneCollection.filter <descarteslabs.scenes.scenecollection.SceneCollection.filter>`
-
-# If we want to create multiple subsets based
-# on those properties, we can use the
-# :meth:`SceneCollection.groupby <descarteslabs.scenes.scenecollection.SceneCollection.groupby>` method
-for (year, month), month_scenes in scenes.groupby(
-    "properties.date.year", "properties.date.month"
+# To create subcollections using the ImageCollection API, we have
+# the built in methods
+# :meth:`ImageCollection.groupby <descarteslabs.catalog.ImageCollection.groupby>`
+# and :meth:`ImageCollection.filter <descarteslabs.catalog.ImageCollection.filter>`.
+#
+# If we want to create multiple subsets based on those properties, we can use the
+# :meth:`ImageCollection.groupby <descarteslabs.catalog.ImageCollection.groupby>` method.
+for (year, month), month_images in images.groupby(
+    "acquired.year", "acquired.month"
 ):
-    print("{}: {} scenes".format(month, len(month_scenes)))
+    print("{}: {} images".format(month, len(month_images)))
 
 ################################################
 # You can further group the subsets using the built in
-# :meth:`SceneCollection.filter <descarteslabs.scenes.scenecollection.SceneCollection.filter>` method
-spring_scenes = scenes.filter(
-    lambda s: s.properties.date.month > 2 and s.properties.date.month < 6
+# :meth:`ImageCollection.filter <descarteslabs.catalog.ImageCollection.filter>` method.
+spring_images = images.filter(
+    lambda i: i.acquired.month > 2 and i.acquired.month < 6
 )
-fall_scenes = scenes.filter(
-    lambda s: s.properties.date.month > 8 and s.properties.date.month < 12
+fall_images = images.filter(
+    lambda i: i.acquired.month > 8 and i.acquired.month < 12
 )
 
 print(
-    "There are {} Spring scenes & {} Fall scenes.".format(
-        len(spring_scenes), len(fall_scenes)
+    "There are {} Spring images & {} Fall images.".format(
+        len(spring_images), len(fall_images)
     )
 )
+
+################################################
+# Mosaic and display these two image collections.
+spring_arr = spring_images.mosaic("red green blue", resolution=120)
+
+fall_arr = fall_images.mosaic("red green blue", resolution=120)
+display(spring_arr, fall_arr, size=4, title=["Spring", "Fall"])

@@ -32,8 +32,9 @@ def deploy_keras_model(dltile, src_product_id, dest_product_id):
     model = tf.keras.applications.resnet50.ResNet50()
     scene = next(
         Image.search()
-        .filter((p.product_id == src_product_id))
+        .filter(p.product_id == src_product_id)
         .intersects(raster_client.dltile(dltile))
+        .sort("acquired")
         .limit(1)
     )
     tile, meta = raster_client.ndarray(

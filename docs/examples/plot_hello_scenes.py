@@ -1,7 +1,7 @@
 """
-==================================================
+==============
 Scenes Example
-==================================================
+==============
 
 This example makes a simple request to our raster service
 and displays the image.
@@ -20,9 +20,10 @@ img, meta = scene.ndarray(
     raster_info=True,
 )
 
-# visualize the image
+#################################################
+# Visualize the image.
 display(img, size=2)
 
-##############################
+#################################################
 # We can also view the metadata returned by raster.
 pprint(meta)

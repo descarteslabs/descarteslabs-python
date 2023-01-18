@@ -8,8 +8,8 @@ Product
   :nosignatures:
 
   ~descarteslabs.catalog.Product
+  ~descarteslabs.catalog.ProductCollection
   ~descarteslabs.catalog.DeletionTaskStatus
-  ~descarteslabs.catalog.UpdatePermissionsTaskStatus
 
 -----
 
@@ -20,14 +20,13 @@ Product
   :undoc-members:
   :exclude-members: v1_properties
 
-.. autoclass:: descarteslabs.catalog.DeletionTaskStatus
+.. autoclass:: descarteslabs.catalog.ProductCollection
   :autosummary:
   :members:
   :inherited-members:
   :undoc-members:
-  :exclude-members: v1_properties
 
-.. autoclass:: descarteslabs.catalog.UpdatePermissionsTaskStatus
+.. autoclass:: descarteslabs.catalog.DeletionTaskStatus
   :autosummary:
   :members:
   :inherited-members:

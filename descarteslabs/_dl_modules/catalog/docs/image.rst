@@ -8,6 +8,7 @@ Image
   :nosignatures:
 
   ~descarteslabs.catalog.Image
+  ~descarteslabs.catalog.ImageCollection
   ~descarteslabs.catalog.ImageUpload
 
 -----
@@ -19,6 +20,13 @@ Image
   :undoc-members:
   :exclude-members: brightness_temperature_k1_k2, c6s_dlsr, confidence_dlsr,
     radiance_gain_bias, reflectance_gain_bias, temperature_gain_bias, v1_properties
+
+
+.. autoclass:: descarteslabs.catalog.ImageCollection
+  :autosummary:
+  :members:
+  :inherited-members:
+  :undoc-members:
 
 
 .. autoclass:: descarteslabs.catalog.ImageUpload

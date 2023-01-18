@@ -1,14 +1,15 @@
 """
-==================================================
+===============================
 Composite Multi-Product Imagery
-==================================================
+===============================
 
 Composite imagery from two data sources and
 display as a single image.
 
 """
 
-from descarteslabs.scenes import search, display
+from descarteslabs.catalog import Image, properties as p
+from descarteslabs.utils import display
 import numpy as np
 
 # Define a bounding box around Taos in a GeoJSON
@@ -26,35 +27,34 @@ taos = {
     ],
 }
 
-# Create a SceneCollection
-scenes, ctx = search(
-    taos,
-    products=["landsat:LC08:01:RT:TOAR", "sentinel-2:L1C"],
-    start_datetime="2018-05-01",
-    end_datetime="2018-06-01",
-    cloud_fraction=0.2,
-    limit=15,
+# Create an ImageCollection
+search = (
+    Image.search()
+    .intersects(taos)
+    .filter(p.product_id.any_of(["landsat:LC08:01:RT:TOAR", "sentinel-2:L1C"]))
+    .filter("2018-05-01" <= p.acquired < "2018-06-01")
+    .filter(p.cloud_fraction < 0.2)
+    .sort("acquired")
+    .limit(15)
 )
+images = search.collect()
 
 #####################################################
-# See which Scenes we have, and how many per product:
+# See which images we have, and how many per product:
 
-print(scenes)
+print(images)
 
 #########################################
-# And if you're curious, which scene IDs:
+# And if you're curious, which image IDs:
 
-print(scenes.each.properties.id)
+print(images.each.id)
 
 #######################################
-# Make a median composite of the scenes
+# Make a median composite of the images
 
-# Make a lower-resolution GeoContext
-ctx_lowres = ctx.assign(resolution=60)
+# Request a stack of all the images using the same GeoContext with lower resolution
+arr_stack = images.stack("red green blue", resolution=60, data_type="Float64")
 
-# Request a NumPy stack of all the scenes using the same GeoContext
-arr_stack = scenes.stack("red green blue", ctx_lowres)
-
-# Composite the scenes based on the median pixel value
+# Composite the images based on the median pixel value
 composite = np.ma.median(arr_stack, axis=0)
 display(composite, title="Taos Composite", size=2)

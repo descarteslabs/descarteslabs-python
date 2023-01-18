@@ -14,6 +14,7 @@ Bands
   ~descarteslabs.catalog.ClassBand
   ~descarteslabs.catalog.GenericBand
   ~descarteslabs.catalog.DerivedBand
+  ~descarteslabs.catalog.BandCollection
 
 -----
 
@@ -69,3 +70,9 @@ Bands
   :inherited-members:
   :undoc-members:
   :exclude-members: processing_levels, derived_params, v1_properties
+
+.. autoclass:: descarteslabs.catalog.BandCollection
+  :autosummary:
+  :members:
+  :inherited-members:
+  :undoc-members:

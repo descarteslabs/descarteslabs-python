@@ -1,15 +1,17 @@
 """
-==================================================
+=====================
 Save image to GeoTIFF
-==================================================
+=====================
 
 This example demonstrates how to save an image
 to your local machine in GeoTiff format.
 """
 
-from descarteslabs.scenes import search
+import os
+from descarteslabs.catalog import Product, properties as p
 
-# Create an aoi feature to clip imagery to
+#################################################
+# Create an aoi feature to clip imagery.
 box = {
     "type": "Polygon",
     "coordinates": [
@@ -23,19 +25,24 @@ box = {
     ],
 }
 
-# find the scenes
-scenes, ctx = search(
-    aoi=box,
-    products=["landsat:LC08:01:RT:TOAR"],
-    start_datetime="2018-06-02",
-    end_datetime="2018-06-03",
+#################################################
+# Find the images.
+search = (
+    Product.get("landsat:LC08:01:RT:TOAR").images()
+    .intersects(box)
+    .filter("2018-06-02" <= p.acquired < "2018-06-03")
+    .sort("acquired")
 )
+images = search.collect()
 
-# mosaic and download
-scenes.download_mosaic(
+#################################################
+# Mosaic and download.
+files = images.download_mosaic(
     bands=["red", "green", "blue", "alpha"],
-    ctx=ctx.assign(resolution=60),
+    resolution=60,
     dest="save-local.tif",
     scaling=[[0, 5500], [0, 5500], [0, 5500], None],
     data_type="Byte",
 )
+
+print(files)
