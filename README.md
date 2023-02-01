@@ -19,13 +19,11 @@ Changelog
 =========
 ## [Unreleased]
 
-- The `Config` exceptions `RuntimeError` and `KeyError` were changed to `ConfigError` exceptions
-  from `descarteslabs.exceptions`.
-- `Auth` now retrieves its URL from the `Config` settings. If no valid configuration can be found,
-  it reverts to the commercial service (`https://iam.descarteslabs.com`).
+## [1.12.0] - 2023-02-01
 
 ### Catalog
 
+- Catalog V2 is now fully supported on the AWS platform, including user ingest.
 - Catalog V2 has been enhanced to provide substantially all the functionality of the Scenes API. The `Image` class now
   includes methods such as `ndarray` and `download`. A new `ImageCollection` class has been added, mirroring `SceneCollection`.
   The various `Search` objects now support a new `collect` method which will return appropriate `Collection` types
@@ -42,6 +40,8 @@ Changelog
   This requirement can be met by using the `bands()` and `images()` methods of a product to limit the search to that
   product, or through a `filter(properties.product_id==...)` clause on the search.
 - Products have a new `product_tier` attribute, which can only be set or modified by privileged users.
+- The `Image.upload_ndarray` will now accept either an ndarray or a list of ndarrays, allowing multiple files per image.
+  The band definitions for the product must correspond to the order and properties of the multiple ndarrays.
 
 ### Scenes
 
@@ -50,11 +50,13 @@ Changelog
   to Catalog V2 are included in the Catalog V2 guide. In the meantime the Scenes API has been completely reimplemented
   to use Catalog V2 under the hood. From a user perspective, existing code using the Scenes API should continue to
   function as normal, with the exception of a few differences around some little-used dark corners of the API.
-- the Scenes `search_bands` now enforces the use of a non-empty `products=` parameter value. This was previously
+- The Scenes `search_bands` now enforces the use of a non-empty `products=` parameter value. This was previously
   documented but not enforced.
 
 ### Metadata
 
+- With the addition of the Scenes functionality to Catalog V2, you are strongly encouraged to migrate your Metadata-based
+  code to use Catalog V2 instead. Metadata will be deprecated in a future release.
 - As with Catalog and Scenes, one or more products must now be specified when searching for bands or images.
 
 ### Raster
@@ -72,19 +74,39 @@ Changelog
 
 - All the REST client types, such as `Metadata` and `Raster`, now support `get_default_client()` and `set_default_client()`
   instances. This functionality was previously limited to the Catalog V2 `CatalogClient`. Whenever such a client is required,
-  the client libraries use `get_default_client()` rather than using the default constructor. This makes it easy to comprehensively redirect the library to use a specially configured client when necessary.
+  the client libraries use `get_default_client()` rather than using the default constructor. This makes it easy to
+  comprehensively redirect the library to use a specially configured client when necessary.
+
+### Geo package
+
+- The `GeoContext` types that originally were part of the Scenes package are now available in the new `descarteslabs.geo` package,
+  with no dependencies on Scenes. This is the preferred location from which to import these classes.
 
 ### Utils package
 
 - The `descarteslabs.utils` package, added in the previous release for the AWS client only, now exists in the GCP client
   as well, and is the preferred location to pick up the `DotDict` and `DotList` classes, the `display` and `save_image` functions,
   and the `Properties` class for property filtering in Catalog V2.
+- The `display` method now has added support for multi-image plots, see the API documentation for the `figsize`, `nrows`,
+  `ncols` and `layout_direction` parameters.
 
 ### Property filtering
 
 - The `property_filtering.GenericProperties` class has been replaced with `property_filtering.Properties`, but remains
   for back compatibility.
-- Add `isnull` and `isnotnull` to property filtering.
+- Property filters now support `isnull` and `isnotnull` operations. This can be very useful for properties which may or
+  may not be present, e.g. `properties.cloud_fraction.isnull | properties.cloud_fraction <= 0.2`.
+
+### Configuration and Authentication
+
+- The `Config` exceptions `RuntimeError` and `KeyError` were changed to `ConfigError` exceptions
+  from `descarteslabs.exceptions`.
+- `Auth` now retrieves its URL from the `Config` settings. If no valid configuration can be found,
+  it reverts to the commercial service (`https://iam.descarteslabs.com`).
+
+### General
+- Dependencies for the descarteslabs library have been updated, but remain constrained to continue to support Python 3.7.
+- Numerous bug fixes.
 
 ## [1.11.0] - 2022-07-20
 
