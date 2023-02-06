@@ -360,7 +360,8 @@ def make_rasterio_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress, n
         # each "chunk" corresponds to a raster block (ie tile) by design
         for chunk, (_, window) in zip(chunk_iter, dst.block_windows()):
             # swap axis order from (rows, cols, bands) to (bands, rows, cols)
-            arr = np.transpose(chunk, [2, 0, 1])
+            # single bands come back as 2d
+            arr = np.transpose(np.atleast_3d(chunk), [2, 0, 1])
             dst.write(arr, window=window)
 
 

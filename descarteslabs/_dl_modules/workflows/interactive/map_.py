@@ -551,7 +551,7 @@ class Map(ipyleaflet.Map):
         -------
         geoctx: descarteslabs.geo.AOI
         """
-        from ..common.geo import AOI
+        from ...common.geo import AOI
 
         bounds = [self.west, self.south, self.east, self.north]
         if bounds == [0, 0, 0, 0]:
