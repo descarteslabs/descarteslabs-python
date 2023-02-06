@@ -19,6 +19,17 @@ Changelog
 =========
 ## [Unreleased]
 
+## [1.12.1] - 2023-02-06
+
+### Workflows
+
+- Fixed a bug causing `descarteslabs.workflows.map.geocontext()` to fail with an import error. This problem
+  also affected the autoscaling feature of workflows map layers.
+
+### Catalog/Scenes/Raster
+
+- Fixed a bug causing downloads of single-band images to fail when utilizing rasterio.
+
 ## [1.12.0] - 2023-02-01
 
 ### Catalog
