@@ -1,4 +1,0 @@
-# My requirements
-foo
-
-bar[baz]

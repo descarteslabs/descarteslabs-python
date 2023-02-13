@@ -231,7 +231,6 @@ class Metadata(Service, DefaultClientMixin):
             "end_time": "end_datetime",
             "part": "interval",
         },
-        deprecated=["place"],
     )
     def summary(
         self,
@@ -239,7 +238,6 @@ class Metadata(Service, DefaultClientMixin):
         sat_ids=None,
         date="acquired",
         interval=None,
-        place=None,
         geom=None,
         start_datetime=None,
         end_datetime=None,
@@ -268,7 +266,6 @@ class Metadata(Service, DefaultClientMixin):
             * ``hour`` or ``h``
             * ``minute`` or ``m``
             * ``product``
-        :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest or a Shapely shape object.
         :param str start_datetime: Desired starting timestamp, in any common format.
         :param str end_datetime: Desired ending timestamp, in any common format.
@@ -337,13 +334,6 @@ class Metadata(Service, DefaultClientMixin):
                 'products': ['landsat:LC08:PRE:TOAR']
             }
         """
-        if place:
-            from ..places import Places
-
-            places = Places(_suppress_deprecation_warnings=True)
-            places.auth = self.auth
-            shape = places.shape(place, geom="low")
-            geom = json.dumps(shape["geometry"])
 
         if dltile is not None:
             if isinstance(dltile, str):
@@ -415,14 +405,13 @@ class Metadata(Service, DefaultClientMixin):
             "start_time": "start_datetime",
             "end_time": "end_datetime",
         },
-        deprecated=["offset", "place"],
+        deprecated=["offset"],
     )
     def paged_search(
         self,
         products,
         sat_ids=None,
         date="acquired",
-        place=None,
         geom=None,
         start_datetime=None,
         end_datetime=None,
@@ -449,7 +438,6 @@ class Metadata(Service, DefaultClientMixin):
         :param list(str) products: Product Identifier(s). May not be empty.
         :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (default is `acquired`).
-        :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest or a Shapely shape object.
         :param str start_datetime: Desired starting timestamp, in any common format.
         :param str end_datetime: Desired ending timestamp, in any common format.
@@ -476,13 +464,6 @@ class Metadata(Service, DefaultClientMixin):
         :return: GeoJSON ``FeatureCollection`` containing at most `limit` features.
         :rtype: DotDict
         """
-        if place:
-            from ..places import Places
-
-            places = Places(_suppress_deprecation_warnings=True)
-            places.auth = self.auth
-            shape = places.shape(place, geom="low")
-            geom = json.dumps(shape["geometry"])
 
         if dltile is not None:
             if isinstance(dltile, str):
@@ -567,14 +548,12 @@ class Metadata(Service, DefaultClientMixin):
             "start_time": "start_datetime",
             "end_time": "end_datetime",
         },
-        deprecated=["place"],
     )
     def search(
         self,
         products,
         sat_ids=None,
         date="acquired",
-        place=None,
         geom=None,
         start_datetime=None,
         end_datetime=None,
@@ -599,7 +578,6 @@ class Metadata(Service, DefaultClientMixin):
         :param list(str) products: Product Identifier(s). May not be empty.
         :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
-        :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
         :param str start_datetime: Desired starting timestamp, in any common format.
         :param str end_datetime: Desired ending timestamp, in any common format.
@@ -659,7 +637,6 @@ class Metadata(Service, DefaultClientMixin):
             products=products,
             sat_ids=sat_ids,
             date=date,
-            place=place,
             geom=geom,
             start_datetime=start_datetime,
             end_datetime=end_datetime,
@@ -674,7 +651,6 @@ class Metadata(Service, DefaultClientMixin):
             sort_order=sort_order,
             randomize=randomize,
             batch_size=1000 if limit is None else min(limit, 1000),
-            _suppress_deprecation_warnings=["place"],
             **kwargs
         )
         limited_features = itertools.islice(features_iter, limit)
@@ -687,14 +663,12 @@ class Metadata(Service, DefaultClientMixin):
             "start_time": "start_datetime",
             "end_time": "end_datetime",
         },
-        deprecated=["place"],
     )
     def ids(
         self,
         products,
         sat_ids=None,
         date="acquired",
-        place=None,
         geom=None,
         start_datetime=None,
         end_datetime=None,
@@ -716,7 +690,6 @@ class Metadata(Service, DefaultClientMixin):
         :param list(str) products: Products identifier(s). May not be empty.
         :param list(str) sat_ids: Satellite identifier(s).
         :param str date: The date field to use for search (e.g. `acquired`).
-        :param str place: A slug identifier to be used as a region of interest.
         :param str geom: A GeoJSON or WKT region of interest.
         :param str start_datetime: Desired starting timestamp, in any common format.
         :param str end_datetime: Desired ending timestamp, in any common format.
@@ -773,7 +746,6 @@ class Metadata(Service, DefaultClientMixin):
             sat_ids=sat_ids,
             products=products,
             date=date,
-            place=place,
             geom=geom,
             start_datetime=start_datetime,
             end_datetime=end_datetime,
@@ -788,7 +760,6 @@ class Metadata(Service, DefaultClientMixin):
             sort_field=sort_field,
             sort_order=sort_order,
             randomize=randomize,
-            _suppress_deprecation_warnings=["place"],
             **kwargs
         )
 
@@ -801,14 +772,12 @@ class Metadata(Service, DefaultClientMixin):
             "start_time": "start_datetime",
             "end_time": "end_datetime",
         },
-        deprecated=["place"],
     )
     def features(
         self,
         products,
         sat_ids=None,
         date="acquired",
-        place=None,
         geom=None,
         start_datetime=None,
         end_datetime=None,
@@ -855,7 +824,6 @@ class Metadata(Service, DefaultClientMixin):
                 sat_ids=sat_ids,
                 products=products,
                 date=date,
-                place=place,
                 geom=geom,
                 start_datetime=start_datetime,
                 end_datetime=end_datetime,
@@ -871,7 +839,6 @@ class Metadata(Service, DefaultClientMixin):
                 sort_order=sort_order,
                 randomize=randomize,
                 continuation_token=continuation_token,
-                _suppress_deprecation_warnings=["place"],
                 **kwargs
             )
 

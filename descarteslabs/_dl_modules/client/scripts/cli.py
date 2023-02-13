@@ -20,7 +20,6 @@ import argparse
 from ..auth.cli import auth_handler
 from ..services.metadata.cli import metadata_handler
 from ..services.raster.cli import scales, raster_handler
-from ..services.places.cli import places_handler
 from ..version import __version__
 
 
@@ -64,27 +63,6 @@ metadata_parser.add_argument(
     action="store_true",
 )
 
-# Places Group
-places_parser = subparsers.add_parser("places")
-places_parser.add_argument(
-    "command",
-    choices=["find", "shape", "prefix", "placetypes"],
-    help="The action to take.",
-)
-places_parser.add_argument("argument", nargs="?")
-
-places_parser.add_argument("-url", help="The url of the service")
-places_parser.add_argument(
-    "-placetype", default=None, help="The placetype of the response"
-)
-places_parser.add_argument(
-    "-geom",
-    default="low",
-    choices=["low", "medium", "high", "None"],
-    help="Resolution of shape",
-)
-places_parser.add_argument("-output", default="geojson")
-
 # Raster Group
 raster_parser = subparsers.add_parser("raster")
 raster_parser.add_argument("inputs", type=str, nargs="+")
@@ -106,16 +84,12 @@ def handle(args):
         auth_handler(args)
     elif args.group == "metadata":
         metadata_handler(args)
-    elif args.group == "places":
-        places_handler(args)
     elif args.group == "raster":
         raster_handler(args)
     elif args.group == "version":
         print(__version__)
     else:
-        print(
-            "invalid command: choose from 'auth', 'metadata', 'places', 'raster', 'version'"
-        )
+        print("invalid command: choose from 'auth', 'metadata', 'raster', 'version'")
 
 
 if __name__ == "__main__":

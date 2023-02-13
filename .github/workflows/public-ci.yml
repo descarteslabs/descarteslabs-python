@@ -22,14 +22,6 @@ jobs:
         run: |
           pip wheel --no-deps --wheel-dir wheels -e .
           pip install -e .[complete,tests]
-      - name: Test GCP
-        env:
-          TMPDIR: tempdir
-          DESCARTESLABS_ENV: testing
-        run: |
-          mkdir tempdir
-          pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/third_party" descarteslabs
-          rm -r tempdir
       - name: Test AWS
         env:
           TMPDIR: tempdir

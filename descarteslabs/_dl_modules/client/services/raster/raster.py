@@ -31,7 +31,6 @@ from urllib3.exceptions import IncompleteRead, ProtocolError
 
 from ....common.dltile import Tile
 from ....common.http.service import DefaultClientMixin
-from ...deprecation import deprecate
 from ..service.service import Service
 from .geotiff_utils import make_geotiff
 
@@ -252,7 +251,6 @@ class Raster(Service, DefaultClientMixin):
 
         super(Raster, self).__init__(url, auth=auth)
 
-    @deprecate(deprecated=["place"])
     def raster(
         self,
         inputs,
@@ -266,7 +264,6 @@ class Raster(Service, DefaultClientMixin):
         bounds=None,
         bounds_srs=None,
         cutline=None,
-        place=None,
         align_pixels=False,
         resampler=None,
         dltile=None,
@@ -312,7 +309,6 @@ class Raster(Service, DefaultClientMixin):
             Incompatible with `resolution`.
         :param str cutline: A GeoJSON object to be used as a cutline, or WKT string.
                             GeoJSON coordinates must be in WGS84 lat-lon.
-        :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
         :param str bounds_srs:
             Override the coordinate system in which bounds are expressed.
@@ -346,7 +342,6 @@ class Raster(Service, DefaultClientMixin):
             resolution=resolution,
             dimensions=dimensions,
             cutline=cutline,
-            place=place,
             bounds=bounds,
             bounds_srs=bounds_srs,
             align_pixels=align_pixels,
@@ -416,7 +411,6 @@ class Raster(Service, DefaultClientMixin):
 
         return _retry(retry_req, headers=headers)
 
-    @deprecate(deprecated=["place"])
     def ndarray(
         self,
         inputs,
@@ -427,7 +421,6 @@ class Raster(Service, DefaultClientMixin):
         resolution=None,
         dimensions=None,
         cutline=None,
-        place=None,
         bounds=None,
         bounds_srs=None,
         align_pixels=False,
@@ -473,7 +466,6 @@ class Raster(Service, DefaultClientMixin):
             Incompatible with `resolution`.
         :param str cutline: A GeoJSON object to be used as a cutline, or WKT string.
                             GeoJSON coordinates must be in WGS84 lat-lon.
-        :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
         :param str bounds_srs:
             Override the coordinate system in which bounds are expressed.
@@ -508,7 +500,6 @@ class Raster(Service, DefaultClientMixin):
             resolution=resolution,
             dimensions=dimensions,
             cutline=cutline,
-            place=place,
             bounds=bounds,
             bounds_srs=bounds_srs,
             align_pixels=align_pixels,
@@ -566,7 +557,6 @@ class Raster(Service, DefaultClientMixin):
                 arr, meta = future.result()
                 yield i, arr, meta
 
-    @deprecate(deprecated=["place"])
     def stack(
         self,
         inputs,
@@ -577,7 +567,6 @@ class Raster(Service, DefaultClientMixin):
         resolution=None,
         dimensions=None,
         cutline=None,
-        place=None,
         bounds=None,
         bounds_srs=None,
         align_pixels=False,
@@ -631,7 +620,6 @@ class Raster(Service, DefaultClientMixin):
             Incompatible with `resolution`.
         :param str cutline: A GeoJSON object to be used as a cutline, or WKT string.
                             GeoJSON coordinates must be in WGS84 lat-lon.
-        :param str place: A slug identifier to be used as a cutline.
         :param tuple bounds: ``(min_x, min_y, max_x, max_y)`` in target SRS.
         :param str bounds_srs:
             Override the coordinate system in which bounds are expressed.
@@ -681,14 +669,6 @@ class Raster(Service, DefaultClientMixin):
                 raise ValueError("Must set `srs`")
             if bounds is None:
                 raise ValueError("Must set `bounds`")
-
-        if place is not None:
-            from ..places import Places
-
-            shape = Places(auth=self.auth, _suppress_deprecation_warnings=True).shape(
-                place, geom="low"
-            )
-            cutline = json.dumps(shape["geometry"])
 
         params = dict(
             bands=bands,
@@ -747,7 +727,6 @@ class Raster(Service, DefaultClientMixin):
         resolution,
         dimensions,
         cutline,
-        place,
         bounds,
         bounds_srs,
         align_pixels,
@@ -759,14 +738,6 @@ class Raster(Service, DefaultClientMixin):
     ):
 
         cutline = as_json_string(cutline)
-
-        if place is not None:
-            from ..places import Places
-
-            shape = Places(auth=self.auth, _suppress_deprecation_warnings=True).shape(
-                place, geom="low"
-            )
-            cutline = json.dumps(shape["geometry"])
 
         if type(inputs) is str:
             inputs = [inputs]
