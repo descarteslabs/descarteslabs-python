@@ -42,38 +42,63 @@ class ImageCollection(Collection):
 
         if len(self) > 0 and isinstance(geocontext, AOI):
             # possibly update from contained images
-            assign_geocontext = {}
-            if geocontext.resolution is None and geocontext.shape is None:
-                product_bands = self._product_bands()
-                resolutions = filter(
-                    None,
-                    (
-                        # hack for degrees
-                        band.resolution.value
-                        * (
-                            1
-                            if band.resolution.unit == ResolutionUnit.METERS
-                            else 111_139
-                        )
-                        for product_id in product_bands
-                        for band in product_bands[product_id].values()
-                        if not isinstance(band, DerivedBand)
-                    ),
-                )
-                try:
-                    assign_geocontext["resolution"] = min(resolutions)
-                except ValueError:
-                    assign_geocontext[
-                        "resolution"
-                    ] = None  # from min of an empty sequence; no band defines resolution
-
             if geocontext.crs is None:
-                assign_geocontext["crs"] = collections.Counter(
+                crs = collections.Counter(
                     i.cs_code or i.projection for i in self._list
                 ).most_common(1)[0][0]
+                geocontext = geocontext.assign(crs=crs)
 
-            if assign_geocontext:
-                geocontext = geocontext.assign(**assign_geocontext)
+            if geocontext.resolution is None and geocontext.shape is None:
+                product_bands = self._product_bands()
+
+                # The resolution must be in the same units as the CRS. However,
+                # we don't have any means here to determine the units of the CRS.
+                # Instead the best we can do is trust the band resolution definitions.
+                resolution = None
+
+                # gather up all the resolutions for all the bands
+                resolutions = [
+                    band.resolution
+                    for product_id in product_bands
+                    for band in product_bands[product_id].values()
+                    if not isinstance(band, DerivedBand)
+                    and band.resolution is not None
+                    and band.resolution.value
+                ]
+
+                if resolutions:
+                    # determine whether degrees or meters is more common
+                    unit_counter = collections.Counter(
+                        resolution.unit
+                        for resolution in resolutions
+                        if resolution.unit is not None
+                    )
+                    if len(unit_counter) > 0:
+                        unit = unit_counter.most_common(1)[0][0]
+                    else:
+                        unit = ResolutionUnit.METERS
+
+                    # define factors to convert to most common unit
+                    if unit == ResolutionUnit.DEGREES:
+                        factors = {
+                            ResolutionUnit.METERS: 1 / 111111,
+                            ResolutionUnit.DEGREES: 1,
+                        }
+                    else:
+                        factors = {
+                            ResolutionUnit.METERS: 1,
+                            ResolutionUnit.DEGREES: 111111,
+                        }
+
+                    # find the minimum of all values
+                    values = (
+                        resolution.value
+                        * factors[resolution.unit or ResolutionUnit.METERS]
+                        for resolution in resolutions
+                    )
+                    resolution = min(values)
+
+                geocontext = geocontext.assign(resolution=resolution)
 
         self._geocontext = geocontext
 
