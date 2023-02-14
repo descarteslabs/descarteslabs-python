@@ -135,6 +135,7 @@ default_domain = "@format prod.{this.DOMAIN}"
 gcp_client = true
 platform_url = "@format https://platform.{this.DOMAIN}"
 
+iam_url = "@format https://iam.{this.DOMAIN}"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
 raster_url = "http://ruster.ruster:8000"
 
@@ -148,6 +149,7 @@ default_domain = "@format stage.{this.DOMAIN}"
 gcp_client = true
 platform_url = "@format https://platform.{this.DOMAIN}"
 
+iam_url = "@format https://iam.{this.DOMAIN}"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
 raster_url = "http://ruster.ruster:8000"
 
