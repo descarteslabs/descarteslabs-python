@@ -143,7 +143,9 @@ class Metadata(Service, DefaultClientMixin):
         Example::
 
             >>> from descarteslabs.client.services.metadata import Metadata
-            >>> bands = Metadata().get_bands_by_id('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1')
+            >>> bands = Metadata().get_bands_by_id(
+            ...     'usgs:landsat:lc08:c1:l1:v0:LC08_L1TP_027031_20160706_20170222_01_T1'
+            ... )
             >>> ndvi_info = bands['derived:ndvi'] # View NDVI band information
             >>> ndvi_info['physical_range']
             [-1.0, 1.0]
@@ -218,7 +220,7 @@ class Metadata(Service, DefaultClientMixin):
             >>> from descarteslabs.client.services.metadata import Metadata
             >>> products = Metadata().available_products()
             >>> products  # doctest: +SKIP
-            ['landsat:LC08:PRE:TOAR']
+            ['usgs:landsat:lc08:c1:l1:v0']
         """
         return DotList(p.id for p in self.products())
 
@@ -309,32 +311,32 @@ class Metadata(Service, DefaultClientMixin):
             ...     "type": "Polygon"
             ... }
             >>> Metadata().summary(geom=iowa_geom,
-            ...                    products=['landsat:LC08:PRE:TOAR'],
+            ...                    products=['usgs:landsat:lc08:c1:l1:v0'],
             ...                    start_datetime='2016-07-06',
             ...                    end_datetime='2016-07-07',
             ...                    interval='hour',
             ...                    pixels=True)
             {
-                'bytes': 290740659,
-                'count': 3,
-                'items': [
-                  {
-                    'bytes': 191795912,
-                    'count': 2,
-                    'date': '2016-07-06T16:00:00.000Z',
-                    'pixels': 500639616,
-                    'timestamp': 1467820800
-                  },
-                  {
-                    'bytes': 98944747,
-                    'count': 1,
-                    'date': '2016-07-06T17:00:00.000Z',
-                    'pixels': 251142720,
-                    'timestamp': 1467824400
-                  }
-                ],
-                'pixels': 751782336,
-                'products': ['landsat:LC08:PRE:TOAR']
+            'bytes': 3015472547,
+            'count': 3,
+            'items': [
+                {
+                'bytes': 2029177781,
+                'count': 2,
+                'date': '2016-07-06T16:00:00.000Z',
+                'pixels': 124845602,
+                'timestamp': 1467820800
+                },
+                {
+                'bytes': 986294766,
+                'count': 1,
+                'date': '2016-07-06T17:00:00.000Z',
+                'pixels': 62580321,
+                'timestamp': 1467824400
+                }
+            ],
+            'pixels': 187425923,
+            'products': ['usgs:landsat:lc08:c1:l1:v0']
             }
         """
         if place:
@@ -648,12 +650,12 @@ class Metadata(Service, DefaultClientMixin):
             ... }
             >>> scenes = Metadata().search(
             ...     geom=iowa_geom,
-            ...     products=['landsat:LC08:PRE:TOAR'],
+            ...     products=['usgs:landsat:lc08:c1:l1:v0'],
             ...     start_datetime='2016-07-01',
             ...     end_datetime='2016-07-31T23:59:59'
             ... )
             >>> len(scenes['features'])  # doctest: +SKIP
-            2
+            38
         """
         features_iter = self.features(
             products=products,
@@ -760,14 +762,14 @@ class Metadata(Service, DefaultClientMixin):
             ...     "type": "Polygon"
             ... }
             >>> ids = Metadata().ids(geom=iowa_geom,
-            ...                      products=['landsat:LC08:PRE:TOAR'],
+            ...                      products=['usgs:landsat:lc08:c1:l1:v0'],
             ...                      start_datetime='2016-07-01',
             ...                      end_datetime='2016-07-31T23:59:59')
             >>> len(ids)  # doctest: +SKIP
-            2
+            38
 
             >>> ids  # doctest: +SKIP
-            ['landsat:LC08:PRE:TOAR:meta_LC80260322016197_v1', 'landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1']
+            ['usgs:landsat:lc08:c1:l1:v0:LC08_L1GT_029031_20160704_20170221_01_T2', ...]
         """
         result = self.search(
             sat_ids=sat_ids,
@@ -836,8 +838,8 @@ class Metadata(Service, DefaultClientMixin):
 
             >>> from descarteslabs.client.services.metadata import Metadata
             >>> features = Metadata().features(
-            ...     "landsat:LC08:PRE:TOAR",
-            ...     start_datetime='2016-01-01',
+            ...     "usgs:landsat:lc08:c1:l1:v0",
+            ...     start_datetime="2016-01-01",
             ...     end_datetime="2016-03-01"
             ... )
             >>> total = 0
@@ -845,7 +847,7 @@ class Metadata(Service, DefaultClientMixin):
             ...     total += 1
 
             >>> total # doctest: +SKIP
-            31898
+            48381
         """
 
         continuation_token = None
@@ -899,18 +901,16 @@ class Metadata(Service, DefaultClientMixin):
         Example::
 
             >>> from descarteslabs.client.services.metadata import Metadata
-            >>> meta = Metadata().get('landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1')
+            >>> meta = Metadata().get('usgs:landsat:lc08:c1:l1:v0:LC08_L1TP_027031_20160706_20170222_01_T1')
             >>> keys = list(meta.keys())
             >>> keys.sort()
             >>> keys  # doctest: +SKIP
-            ['acquired', 'area', 'bits_per_pixel', 'bright_fraction', 'bucket',
-             'cloud_fraction', 'cloud_fraction_0', 'confidence_dlsr', 'cs_code',
-             'descartes_version', 'file_md5s', 'file_sizes', 'files', 'fill_fraction',
-             'geolocation_accuracy', 'geometry', 'geotrans', 'id', 'identifier', 'key',
-             'modified', 'processed', 'product', 'proj4', 'projcs', 'published',
-             'raster_size', 'reflectance_scale', 'roll_angle', 'sat_id',
-             'solar_azimuth_angle', 'solar_elevation_angle', 'storage_state',
-             'sw_version', 'terrain_correction', 'tile_id']
+            ['acquired', 'bits_per_pixel', 'brightness_temperature_k1_k2', 'bucket',
+             'cloud_fraction', 'cloud_fraction_0', 'cs_code', 'directory', 'extra_properties',
+             'file_md5s', 'file_sizes', 'files', 'geometry', 'geotrans', 'id', 'key',
+             'modified', 'processed', 'product', 'radiance_gain_bias', 'raster_size',
+             'reflectance_gain_bias', 'reflectance_scale', 'sat_id', 'solar_azimuth_angle',
+             'solar_elevation_angle', 'storage_state']
         """
         r = self.session.get("/get/{}".format(image_id))
         return DotDict(r.json())
