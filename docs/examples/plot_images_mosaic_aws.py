@@ -23,7 +23,8 @@ tile = DLTile.from_latlon(
 # Search for Sentinel-2 imagery collected between
 # August 13 - August 21, 2017 over the AOI
 search = (
-    Product.get("esa:sentinel-2:l1c:v1").images()
+    Product.get("esa:sentinel-2:l1c:v1")
+    .images()
     .intersects(tile)
     .filter("2020-08-13" <= p.acquired < "2020-08-22")
     .sort("acquired")

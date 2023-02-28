@@ -28,7 +28,8 @@ box = {
 #################################################
 # Find the images.
 search = (
-    Product.get("landsat:LC08:01:RT:TOAR").images()
+    Product.get("landsat:LC08:01:RT:TOAR")
+    .images()
     .intersects(box)
     .filter("2018-06-02" <= p.acquired < "2018-06-03")
     .sort("acquired")

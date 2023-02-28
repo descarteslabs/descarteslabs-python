@@ -31,7 +31,9 @@ taos = {
 search = (
     Image.search()
     .intersects(taos)
-    .filter(p.product_id.any_of(["usgs:landsat:oli-tirs:c2:l1:v0", "esa:sentinel-2:l1c:v1"]))
+    .filter(
+        p.product_id.any_of(["usgs:landsat:oli-tirs:c2:l1:v0", "esa:sentinel-2:l1c:v1"])
+    )
     .filter("2018-05-01" <= p.acquired < "2018-06-01")
     .filter(p.cloud_fraction < 0.2)
     .sort("acquired")

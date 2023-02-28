@@ -1117,5 +1117,5 @@ iowa_geom = {
             [-94.015492, 40.573914],
         ]
     ],
-    "type": u"Polygon",
+    "type": "Polygon",
 }

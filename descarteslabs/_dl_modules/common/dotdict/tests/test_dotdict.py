@@ -308,7 +308,7 @@ class TestIndentedRepr(unittest.TestCase):
         assert (
             idr.indent == 2
         ), "indented repr indent has changed, other tests will fail"
-        obj = [{u"key": 1.01, "bool": False, (1, (2, 3)): {"a", "b", "c"}}, [4, 5, 6]]
+        obj = [{"key": 1.01, "bool": False, (1, (2, 3)): {"a", "b", "c"}}, [4, 5, 6]]
         unicode_prefix = ""
         set_start = "{"
         set_end = "}"

@@ -214,7 +214,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         if id:
             self.id = id
 
-        for (name, val) in kwargs.items():
+        for name, val in kwargs.items():
             # Only silently ignore unknown attributes if data came from service
             attribute_definition = (
                 self._attribute_types.get(name)
@@ -246,7 +246,6 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             self._clear_modified_attributes()
 
     def __repr__(self):
-
         name = getattr(self, "name", None)
         if name is None:
             name = ""
@@ -422,7 +421,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         original_values = dict(self._attributes)
         original_modified = set(self._modified)
 
-        for (name, val) in kwargs.items():
+        for name, val in kwargs.items():
             try:
                 # A non-existent attribute will raise an AttributeError
                 attribute_definition = self._get_attribute_type(name)

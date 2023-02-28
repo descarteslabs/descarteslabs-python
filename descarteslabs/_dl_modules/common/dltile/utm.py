@@ -34,7 +34,7 @@ THIRD_FLATTENING = FLATTENING / (2 - FLATTENING)
 RECTIFYING_RADIUS = (
     EARTH_MAJOR_AXIS
     / (1 + THIRD_FLATTENING)
-    * (1.0 + 1.0 / 4.0 * THIRD_FLATTENING ** 2 + 1.0 / 64.0 * THIRD_FLATTENING ** 4)
+    * (1.0 + 1.0 / 4.0 * THIRD_FLATTENING**2 + 1.0 / 64.0 * THIRD_FLATTENING**4)
 )
 
 # Numbers outside these ranges are surely outside their UTM zone
@@ -178,9 +178,9 @@ def lonlat_to_utm(points, zone=None, ref_lon=None):
     n = THIRD_FLATTENING
     N = 2 * np.sqrt(n) / (1.0 + n)
 
-    a1 = 1.0 / 2.0 * n - 2.0 / 3.0 * n ** 2 + 5.0 / 16.0 * n ** 3
-    a2 = 13.0 / 48.0 * n ** 2 - 3.0 / 5.0 * n ** 3
-    a3 = 61.0 / 240.0 * n ** 3
+    a1 = 1.0 / 2.0 * n - 2.0 / 3.0 * n**2 + 5.0 / 16.0 * n**3
+    a2 = 13.0 / 48.0 * n**2 - 3.0 / 5.0 * n**3
+    a3 = 61.0 / 240.0 * n**3
 
     lon = points[:, 0]
     lat = points[:, 1]
@@ -189,7 +189,7 @@ def lonlat_to_utm(points, zone=None, ref_lon=None):
 
     sinlat = np.sin(radlat)
     t = np.sinh(np.arctanh(sinlat) - N * np.arctanh(N * sinlat))
-    etap = np.arctanh(np.sin(radlon) / np.sqrt(1 + t ** 2))
+    etap = np.arctanh(np.sin(radlon) / np.sqrt(1 + t**2))
     xip = np.arctan(t / np.cos(radlon))
 
     easting = FALSE_EASTING + POINT_SCALE_FACTOR * RECTIFYING_RADIUS * (
@@ -244,13 +244,13 @@ def utm_to_lonlat(points, zone):
     # projection system to a precision of millimeters.
     n = THIRD_FLATTENING
 
-    b1 = 1.0 / 2.0 * n - 2.0 / 3.0 * n ** 2 + 37.0 / 96.0 * n ** 3
-    b2 = 1.0 / 48.0 * n ** 2 + 1.0 / 15.0 * n ** 3
-    b3 = 17.0 / 480.0 * n ** 3
+    b1 = 1.0 / 2.0 * n - 2.0 / 3.0 * n**2 + 37.0 / 96.0 * n**3
+    b2 = 1.0 / 48.0 * n**2 + 1.0 / 15.0 * n**3
+    b3 = 17.0 / 480.0 * n**3
 
-    d1 = 2.0 * n - 2.0 / 3.0 * n ** 2 - 2.0 * n ** 3
-    d2 = 7.0 / 3.0 * n ** 2 - 8.0 / 5.0 * n ** 3
-    d3 = 56.0 / 15.0 * n ** 3
+    d1 = 2.0 * n - 2.0 / 3.0 * n**2 - 2.0 * n**3
+    d2 = 7.0 / 3.0 * n**2 - 8.0 / 5.0 * n**3
+    d3 = 56.0 / 15.0 * n**3
 
     easting = points[:, 0]
     northing = points[:, 1]

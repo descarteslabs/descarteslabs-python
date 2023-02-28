@@ -72,10 +72,12 @@ paris = {
 }
 
 search = (
-    Product.get("esa:sentinel-2:l1c:v1").images()
+    Product.get("esa:sentinel-2:l1c:v1")
+    .images()
     .intersects(paris)
     .filter("2020-06-24" < p.acquired < "2020-06-30")
-    .filter(p.cloud_fraction < 0.1).limit(2)
+    .filter(p.cloud_fraction < 0.1)
+    .limit(2)
 )
 images = search.collect()
 

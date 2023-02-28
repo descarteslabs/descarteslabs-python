@@ -577,7 +577,7 @@ class TaskStatus(object):
         new_values = response["data"]["attributes"]
 
         self.status = TaskState(new_values.pop("status"))
-        for (key, value) in new_values.items():
+        for key, value in new_values.items():
             setattr(self, key, value)
 
     def wait_for_completion(self, timeout=None):

@@ -25,7 +25,8 @@ taos = {
 ################################################
 # Create an ImageCollection.
 search = (
-    Product.get("landsat:LC08:01:RT:TOAR").images()
+    Product.get("landsat:LC08:01:RT:TOAR")
+    .images()
     .intersects(taos)
     .filter("2018-01-01" <= p.acquired < "2018-12-31")
     .filter(p.cloud_fraction < 0.7)
@@ -43,20 +44,14 @@ print("There are {} images in the collection.".format(len(images)))
 #
 # If we want to create multiple subsets based on those properties, we can use the
 # :meth:`ImageCollection.groupby <descarteslabs.catalog.ImageCollection.groupby>` method.
-for (year, month), month_images in images.groupby(
-    "acquired.year", "acquired.month"
-):
+for (year, month), month_images in images.groupby("acquired.year", "acquired.month"):
     print("{}: {} images".format(month, len(month_images)))
 
 ################################################
 # You can further group the subsets using the built in
 # :meth:`ImageCollection.filter <descarteslabs.catalog.ImageCollection.filter>` method.
-spring_images = images.filter(
-    lambda i: i.acquired.month > 2 and i.acquired.month < 6
-)
-fall_images = images.filter(
-    lambda i: i.acquired.month > 8 and i.acquired.month < 12
-)
+spring_images = images.filter(lambda i: i.acquired.month > 2 and i.acquired.month < 6)
+fall_images = images.filter(lambda i: i.acquired.month > 8 and i.acquired.month < 12)
 
 print(
     "There are {} Spring images & {} Fall images.".format(

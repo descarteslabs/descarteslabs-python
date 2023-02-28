@@ -12,7 +12,6 @@ from ..scaling import scaling_parameters, multiproduct_scaling_parameters
 
 
 class TestScaling(unittest.TestCase):
-
     RGBA_BANDS = {
         "red": SpectralBand(
             id="foo:red",
@@ -545,7 +544,6 @@ class TestScaling(unittest.TestCase):
 
 
 class TestMultiProductScaling(unittest.TestCase):
-
     RGBA_BANDS = {
         "red": SpectralBand(
             id="foo:red",

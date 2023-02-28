@@ -221,7 +221,7 @@ class TestImage(ClientTestCase):
             assert "The GeoContext will *not* return this Image's original data" in str(
                 warning.message
             )
-        diagonal = np.sqrt(2 ** 2 + 2 ** 2)
+        diagonal = np.sqrt(2**2 + 2**2)
         assert geocontext.bounds == (0, -diagonal / 2, diagonal, diagonal / 2)
 
     @responses.activate

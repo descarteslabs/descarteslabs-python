@@ -1416,7 +1416,7 @@ class ListAttribute(ModelAttribute, MutableSequence):
         if len(self) != len(other):
             return False
 
-        for (i1, i2) in zip(self, other):
+        for i1, i2 in zip(self, other):
             if i1 != i2:
                 return False
 

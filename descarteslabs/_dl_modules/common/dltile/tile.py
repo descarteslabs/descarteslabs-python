@@ -336,7 +336,7 @@ class Tile:
 
     @property
     def polygon(self) -> geo.Polygon:
-        """ Shapely polygon """
+        """Shapely polygon"""
         x_min, y_min, x_max, y_max = self.utm_bounds
         utm_points = np.array(
             [
@@ -352,7 +352,7 @@ class Tile:
 
     @property
     def center(self) -> geo.Point:
-        """ Shapely centroid """
+        """Shapely centroid"""
         return self.polygon.centroid
 
     @property
@@ -448,7 +448,7 @@ class Tile:
 
     @property
     def feature(self) -> dict:
-        """ GeoJSON Feature """
+        """GeoJSON Feature"""
         return dict(
             type="Feature",
             geometry=self.polygon,

@@ -736,7 +736,6 @@ class Raster(Service, DefaultClientMixin):
         output_window,
         pass_through_params,
     ):
-
         cutline = as_json_string(cutline)
 
         if type(inputs) is str:

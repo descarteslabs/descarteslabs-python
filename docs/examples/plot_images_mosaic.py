@@ -23,7 +23,8 @@ tile = DLTile.from_latlon(
 # Search for Sentinel-2 imagery collected between
 # August 13 - August 21, 2017 over the AOI
 search = (
-    Product.get("sentinel-2:L1C").images()
+    Product.get("sentinel-2:L1C")
+    .images()
     .intersects(tile)
     .filter("2017-08-13" <= p.acquired < "2017-08-22")
     .sort("acquired")
@@ -38,7 +39,7 @@ print(images)
 
 # Retrieve each image separately using stack
 rasters = images.stack(
-    "nir red green", 
+    "nir red green",
     scaling=[[0, 6000, 0, 255], [0, 4000, 0, 255], [0, 4000, 0, 255]],
     data_type="Byte",
 )

@@ -284,7 +284,6 @@ class TestRaster(unittest.TestCase):
             os.unlink(filename)
 
     def test_geotiff_simple(self):
-
         input_id = "landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1"
 
         filename, metadata = self.raster.raster(

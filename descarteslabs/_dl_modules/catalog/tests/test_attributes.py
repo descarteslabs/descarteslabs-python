@@ -272,7 +272,6 @@ class TestAttributes(unittest.TestCase):
             hash(Mapping())
 
     def test_list_attributes(self):
-
         nested1 = Nested(foo="zap", dt="2019-02-01T00:00:00.0000Z", validate=False)
         nested2 = Nested(foo="zip", dt="2019-02-02T00:00:00.0000Z", validate=False)
 
