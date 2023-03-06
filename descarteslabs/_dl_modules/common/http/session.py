@@ -7,6 +7,7 @@ import requests.compat
 import requests.utils
 import urllib3
 import urllib3.exceptions
+
 from descarteslabs.exceptions import (
     BadRequestError,
     ConflictError,
@@ -15,6 +16,7 @@ from descarteslabs.exceptions import (
     NotFoundError,
     ProxyAuthenticationRequiredError,
     RateLimitError,
+    RequestCancellationError,
     ServerError,
 )
 
@@ -271,12 +273,18 @@ class Session(requests.Session):
 
         headers[HttpHeaderKeys.RequestGroup] = uuid.uuid4().hex
         request_url = self.base_url + url
-        resp = super(Session, self).request(
-            method,
-            request_url,
-            headers=headers,
-            **kwargs,
-        )
+
+        try:
+            resp = super(Session, self).request(
+                method,
+                request_url,
+                headers=headers,
+                **kwargs,
+            )
+        except IndexError:
+            # self._read_status() in http/client returns an IndexError when the request
+            # is cancelled.
+            raise RequestCancellationError()
 
         if (
             resp.status_code >= HTTPStatus.OK

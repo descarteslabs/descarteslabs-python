@@ -123,3 +123,7 @@ class GatewayTimeoutError(ServerError):
     """Timeout from the gateway after failing to route request to destination service."""
 
     status = 504
+
+
+class RequestCancellationError(ClientError):
+    """Client cancelled the request and no status or response was received."""
