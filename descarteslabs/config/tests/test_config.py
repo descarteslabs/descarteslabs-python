@@ -8,9 +8,6 @@ from descarteslabs.exceptions import AuthError, ConfigError
 from .. import Settings
 
 
-# prevent any actual setup of `descarteslabs`
-@patch("descarteslabs.config._aws_init._setup_aws", lambda: None)
-@patch("descarteslabs.config._gcp_init._setup_gcp", lambda: None)
 class TestSettings(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -34,18 +31,18 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(id(settings), id(Settings._settings))
         self.assertEqual(id(settings), id(Settings.get_settings()))
 
-    @patch.dict(os.environ, {"DESCARTESLABS_ENV": "gcp-production"})
+    @patch.dict(os.environ, {"DESCARTESLABS_ENV": "aws-production"})
     def test_select_env_from_env(self):
         settings = Settings.select_env()
-        self.assertEqual(settings.current_env, "gcp-production")
+        self.assertEqual(settings.current_env, "aws-production")
         self.assertEqual(id(settings), id(Settings._settings))
         self.assertEqual(id(settings), id(Settings.get_settings()))
 
     # environment must be patched because select_env will alter it
     @patch.dict(os.environ, clear=True)
     def test_select_env_from_string(self):
-        settings = Settings.select_env("gcp-production")
-        self.assertEqual(settings.current_env, "gcp-production")
+        settings = Settings.select_env("aws-production")
+        self.assertEqual(settings.current_env, "aws-production")
         self.assertEqual(id(settings), id(Settings._settings))
         self.assertEqual(id(settings), id(Settings.get_settings()))
 
@@ -56,10 +53,10 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(settings.current_env, os.environ.get("DESCARTESLABS_ENV"))
         self.assertEqual(settings.testing, "hello")
         self.assertEqual(
-            settings.gcp_client, os.environ.get("DESCARTESLABS_ENV") == "testing"
+            settings.aws_client, os.environ.get("DESCARTESLABS_ENV") == "testing"
         )
         self.assertEqual(
-            settings.aws_client, os.environ.get("DESCARTESLABS_ENV") == "aws-testing"
+            settings.gcp_client, os.environ.get("DESCARTESLABS_ENV") == "gcp-testing"
         )
 
     # environment must be patched because select_env will alter it
@@ -218,145 +215,57 @@ class VerifyValues(unittest.TestCase):
             "USAGE_URL": "https://platform.dev.aws.descarteslabs.com/usage/v1",
             "YAAS_URL": "https://platform.dev.aws.descarteslabs.com/yaas/v1",
         },
-        "gcp-compute-production": {
-            "AWS_CLIENT": False,
-            "GCP_CLIENT": True,
-            "LOG_LEVEL": "WARNING",
-            "METADATA_URL": "https://platform.descarteslabs.com/metadata/v1",
-            "PLATFORM_URL": "https://platform.descarteslabs.com",
-            "RASTER_URL": "http://ruster.ruster:8000",
-            "WORKFLOWS_HOST": "workflows-api.prod.descarteslabs.com",
-            "WORKFLOWS_HOST_HTTP": "workflows.prod.descarteslabs.com",
-            "WORKFLOWS_PORT": "443",
-        },
-        "gcp-compute-stage": {
-            "AWS_CLIENT": False,
-            "GCP_CLIENT": True,
-            "LOG_LEVEL": "WARNING",
-            "METADATA_URL": "https://platform.descarteslabs.com/metadata/v1",
-            "PLATFORM_URL": "https://platform.descarteslabs.com",
-            "RASTER_URL": "http://ruster.ruster:8000",
-            "WORKFLOWS_HOST": "workflows-api.stage.descarteslabs.com",
-            "WORKFLOWS_HOST_HTTP": "workflows.stage.descarteslabs.com",
-            "WORKFLOWS_PORT": "443",
-        },
         "gcp-prerelease": {
-            "ANNOTATION_URL": "https://annotation-prerelease.descarteslabs.com",
             "AWS_CLIENT": False,
-            "CATALOG_URL": "https://platform-prerelease.descarteslabs.com/metadata/v1/catalog",
             "CATALOG_V2_URL": "https://platform-prerelease.descarteslabs.com/metadata/v1/catalog/v2",
-            "CURRIER_HOST": "platform-prerelease.descarteslabs.com",
-            "CURRIER_PORT": "443",
-            "DISCOVER_HOST": "platform-prerelease.descarteslabs.com",
-            "DISCOVER_PORT": "443",
             "GCP_CLIENT": True,
             "GRPC_HOST": "platform-prerelease.descarteslabs.com",
             "GRPC_PORT": "443",
             "IAM_URL": "https://iam-prerelease.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
             "METADATA_URL": "https://platform-prerelease.descarteslabs.com/metadata/v1",
-            "PLACES_URL": "https://platform.descarteslabs.com/waldo/v2",
             "PLATFORM_URL": "https://platform-prerelease.descarteslabs.com",
             "RASTER_URL": "https://platform-prerelease.descarteslabs.com/raster/v2",
-            "SHARING_URL": "https://sharing.descarteslabs.com",
-            "STORAGE_URL": "https://platform-prerelease.descarteslabs.com/storage/v1",
-            "TABLES_HOST": "platform-prerelease.descarteslabs.com",
-            "TABLES_PORT": "443",
-            "TASKS_URL": "https://platform.descarteslabs.com/tasks/v2",
-            "VECTOR_URL": "https://platform-prerelease.descarteslabs.com/vector/v2",
-            "WORKFLOWS_HOST": "workflows-api.prod.descarteslabs.com",
-            "WORKFLOWS_HOST_HTTP": "workflows.prod.descarteslabs.com",
-            "WORKFLOWS_PORT": "443",
             "YAAS_URL": "https://platform-prerelease.descarteslabs.com/yaas/v1",
         },
         "gcp-production": {
-            "ANNOTATION_URL": "https://annotation.descarteslabs.com",
             "AWS_CLIENT": False,
-            "CATALOG_URL": "https://platform.descarteslabs.com/metadata/v1/catalog",
             "CATALOG_V2_URL": "https://platform.descarteslabs.com/metadata/v1/catalog/v2",
-            "CURRIER_HOST": "platform.descarteslabs.com",
-            "CURRIER_PORT": "443",
-            "DISCOVER_HOST": "platform.descarteslabs.com",
-            "DISCOVER_PORT": "443",
             "GCP_CLIENT": True,
             "GRPC_HOST": "platform.descarteslabs.com",
             "GRPC_PORT": "443",
             "IAM_URL": "https://iam.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
             "METADATA_URL": "https://platform.descarteslabs.com/metadata/v1",
-            "PLACES_URL": "https://platform.descarteslabs.com/waldo/v2",
             "PLATFORM_URL": "https://platform.descarteslabs.com",
             "RASTER_URL": "https://platform.descarteslabs.com/raster/v2",
-            "SHARING_URL": "https://sharing.descarteslabs.com",
-            "STORAGE_URL": "https://platform.descarteslabs.com/storage/v1",
-            "TABLES_HOST": "platform.descarteslabs.com",
-            "TABLES_PORT": "443",
-            "TASKS_URL": "https://platform.descarteslabs.com/tasks/v1",
-            "VECTOR_URL": "https://platform.descarteslabs.com/vector/v2",
-            "WORKFLOWS_HOST": "workflows-api.prod.descarteslabs.com",
-            "WORKFLOWS_HOST_HTTP": "workflows.prod.descarteslabs.com",
-            "WORKFLOWS_PORT": "443",
             "YAAS_URL": "https://platform.descarteslabs.com/yaas/v1",
         },
         "gcp-stage": {
-            "ANNOTATION_URL": "https://annotation.stage.descarteslabs.com",
             "AWS_CLIENT": False,
-            "CATALOG_URL": "https://platform.stage.descarteslabs.com/metadata/v1/catalog",
             "CATALOG_V2_URL": "https://platform.stage.descarteslabs.com/metadata/v1/catalog/v2",
-            "CURRIER_HOST": "platform.stage.descarteslabs.com",
-            "CURRIER_PORT": "443",
-            "DISCOVER_HOST": "platform.stage.descarteslabs.com",
-            "DISCOVER_PORT": "443",
             "GCP_CLIENT": True,
             "GRPC_HOST": "platform.stage.descarteslabs.com",
             "GRPC_PORT": "443",
             "IAM_URL": "https://iam.stage.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
             "METADATA_URL": "https://platform.stage.descarteslabs.com/metadata/v1",
-            "PLACES_URL": "https://platform.descarteslabs.com/waldo/v2",
             "PLATFORM_URL": "https://platform.stage.descarteslabs.com",
             "RASTER_URL": "https://platform.stage.descarteslabs.com/raster/v2",
-            "SHARING_URL": "https://sharing.descarteslabs.com",
-            "STORAGE_URL": "https://platform.stage.descarteslabs.com/storage/v1",
-            "TABLES_HOST": "platform.stage.descarteslabs.com",
-            "TABLES_PORT": "443",
-            "TASKS_URL": "https://platform.descarteslabs.com/tasks/default",
-            "VECTOR_URL": "https://platform.stage.descarteslabs.com/vector/v2",
-            "WORKFLOWS_HOST": "workflows-api.stage.descarteslabs.com",
-            "WORKFLOWS_HOST_HTTP": "workflows.stage.descarteslabs.com",
-            "WORKFLOWS_PORT": "443",
             "YAAS_URL": "https://platform.stage.descarteslabs.com/yaas/v1",
         },
         "testing": {
-            "ANNOTATION_URL": "https://annotation-prerelease.descarteslabs.com",
-            "AWS_CLIENT": False,
-            "CATALOG_URL": "https://platform.descarteslabs.com/metadata/v1/catalog",
-            "CATALOG_V2_URL": "https://platform.descarteslabs.com/metadata/v1/catalog/v2",
-            "CURRIER_HOST": "platform.descarteslabs.com",
-            "CURRIER_PORT": "443",
-            "DISCOVER_HOST": "platform.descarteslabs.com",
-            "DISCOVER_PORT": "443",
-            "GCP_CLIENT": True,
-            "GRPC_HOST": "platform.descarteslabs.com",
-            "GRPC_PORT": "443",
-            "IAM_URL": "https://iam.descarteslabs.com",
+            "AWS_CLIENT": True,
+            "CATALOG_V2_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1/catalog/v2",
+            "GCP_CLIENT": False,
+            "IAM_URL": "https://iam.dev.aws.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
-            "METADATA_URL": "https://platform.descarteslabs.com/metadata/v1",
-            "PLACES_URL": "https://platform.descarteslabs.com/waldo/v2",
-            "PLATFORM_URL": "https://platform.descarteslabs.com",
-            "RASTER_URL": "https://platform.descarteslabs.com/raster/v2",
-            "SHARING_URL": "https://sharing.descarteslabs.com",
-            "STORAGE_URL": "https://platform.descarteslabs.com/storage/v1",
-            "TABLES_HOST": "platform.descarteslabs.com",
-            "TABLES_PORT": "443",
+            "METADATA_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1",
+            "PLATFORM_URL": "https://platform.dev.aws.descarteslabs.com",
+            "RASTER_URL": "https://platform.dev.aws.descarteslabs.com/raster/v2",
             "TESTING": True,
-            "TASKS_URL": "https://platform.descarteslabs.com/tasks/v1",
-            "VECTOR_URL": "https://platform.descarteslabs.com/vector/v2",
-            "WORKFLOWS_HOST": "workflows-api.prod.descarteslabs.com",
-            "WORKFLOWS_HOST_HTTP": "workflows.prod.descarteslabs.com",
-            "WORKFLOWS_PORT": "443",
-            "USAGE_URL": "https://platform.descarteslabs.com/usage/v1",
-            "YAAS_URL": "https://platform.descarteslabs.com/yaas/v1",
+            "USAGE_URL": "https://platform.dev.aws.descarteslabs.com/usage/v1",
+            "YAAS_URL": "https://platform.dev.aws.descarteslabs.com/yaas/v1",
         },
     }
 

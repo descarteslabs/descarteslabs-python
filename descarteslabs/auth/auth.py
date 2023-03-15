@@ -28,7 +28,7 @@ from descarteslabs.exceptions import AuthError, OauthError
 
 try:
     # public client
-    from .._dl_modules.common.http import Retry, Session
+    from ..core.common.http import Retry, Session
 except ImportError:
     # inside monorepo
     from ..common.http import Retry, Session

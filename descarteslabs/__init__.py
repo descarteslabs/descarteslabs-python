@@ -17,25 +17,17 @@ by providing:
     * A Python client library to access these systems
 """
 
-import sys
+# This enables the use of namespace packages for descarteslabs
+# while still maintaining this __init__.py here in the core
+# client package
+from pkgutil import extend_path
 
-# these must be imported prior to installing the Finder and Module below
-from descarteslabs import auth  # noqa: F401
+__path__ = extend_path(__path__, __name__)  # noqa F821
+
+from descarteslabs import auth
 from descarteslabs import config
 from descarteslabs import exceptions
-
-from descarteslabs.config._helpers import (
-    DescartesLabsFinder,
-    DescartesLabsModule,
-)
-
-
-# install the special Finder
-_finder = DescartesLabsFinder()
-sys.meta_path.append(_finder)
-
-# install the special Module
-sys.modules[__name__] = DescartesLabsModule(sys.modules[__name__])
+from descarteslabs.core.client.version import __version__
 
 select_env = config.select_env
 get_settings = config.get_settings
@@ -45,6 +37,7 @@ GCP_ENVIRONMENT = config.GCP_ENVIRONMENT
 __author__ = "Descartes Labs"
 
 __all__ = [
+    "__version__",
     "AWS_ENVIRONMENT",
     "GCP_ENVIRONMENT",
     "auth",

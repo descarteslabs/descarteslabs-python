@@ -11,26 +11,10 @@ grpc_host = "@format {this.DEFAULT_HOST}"
 grpc_port = "443"
 platform_url = "@format https://{this.DEFAULT_HOST}"
 
-annotation_url = "@format https://annotation.{this.DOMAIN}"
-catalog_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog"
 catalog_v2_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog/v2"
-currier_host = "@format {this.GRPC_HOST}"
-currier_port = "@format {this.GRPC_PORT}"
-discover_host = "@format {this.GRPC_HOST}"
-discover_port = "@format {this.GRPC_PORT}"
 iam_url = "@format https://iam.{this.DOMAIN}"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
-places_url = "@format {this.PLATFORM_URL}/waldo/v2"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
-sharing_url = "@format https://sharing.{this.DOMAIN}"
-storage_url = "@format {this.PLATFORM_URL}/storage/v1"
-tables_host = "@format {this.GRPC_HOST}"
-tables_port = "@format {this.GRPC_PORT}"
-tasks_url = "@format {this.PLATFORM_URL}/tasks/v1"
-vector_url = "@format {this.PLATFORM_URL}/vector/v2"
-workflows_host = "@format workflows-api.prod.{this.DOMAIN}"
-workflows_host_http = "@format workflows.prod.{this.DOMAIN}"
-workflows_port = "@format {this.GRPC_PORT}"
 yaas_url = "@format {this.PLATFORM_URL}/yaas/v1"
 
 [gcp-prerelease]
@@ -40,26 +24,10 @@ grpc_host = "@format {this.DEFAULT_HOST}"
 grpc_port = "443"
 platform_url = "@format https://{this.DEFAULT_HOST}"
 
-annotation_url = "@format https://annotation-prerelease.{this.DOMAIN}"
-catalog_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog"
 catalog_v2_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog/v2"
-currier_host = "@format {this.GRPC_HOST}"
-currier_port = "@format {this.GRPC_PORT}"
-discover_host = "@format {this.GRPC_HOST}"
-discover_port = "@format {this.GRPC_PORT}"
 iam_url = "@format https://iam-prerelease.{this.DOMAIN}"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
-places_url = "@format https://platform.{this.DOMAIN}/waldo/v2"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
-sharing_url = "@format https://sharing.{this.DOMAIN}"
-storage_url = "@format {this.PLATFORM_URL}/storage/v1"
-tables_host = "@format {this.GRPC_HOST}"
-tables_port = "@format {this.GRPC_PORT}"
-tasks_url = "@format https://platform.{this.DOMAIN}/tasks/v2"
-vector_url = "@format {this.PLATFORM_URL}/vector/v2"
-workflows_host = "@format workflows-api.prod.{this.DOMAIN}"
-workflows_host_http = "@format workflows.prod.{this.DOMAIN}"
-workflows_port = "@format {this.GRPC_PORT}"
 yaas_url = "@format {this.PLATFORM_URL}/yaas/v1"
 
 [gcp-stage]
@@ -70,27 +38,10 @@ grpc_host = "@format {this.DEFAULT_HOST}"
 grpc_port = "443"
 platform_url = "@format https://{this.DEFAULT_HOST}"
 
-annotation_url = "@format https://annotation.{this.DEFAULT_DOMAIN}"
-catalog_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog"
 catalog_v2_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog/v2"
 iam_url = "@format https://iam.{this.DEFAULT_DOMAIN}"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
-places_url = "@format https://platform.{this.DOMAIN}/waldo/v2"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
-sharing_url = "@format https://sharing.{this.DOMAIN}"
-storage_url = "@format {this.PLATFORM_URL}/storage/v1"
-# actually not sure about the "dev" tasks
-currier_host = "@format {this.GRPC_HOST}"
-currier_port = "@format {this.GRPC_PORT}"
-discover_host = "@format {this.GRPC_HOST}"
-discover_port = "@format {this.GRPC_PORT}"
-tables_host = "@format {this.GRPC_HOST}"
-tables_port = "@format {this.GRPC_PORT}"
-tasks_url = "@format https://platform.{this.DOMAIN}/tasks/default"
-vector_url = "@format {this.PLATFORM_URL}/vector/v2"
-workflows_host = "@format workflows-api.{this.DEFAULT_DOMAIN}"
-workflows_host_http = "@format workflows.{this.DEFAULT_DOMAIN}"
-workflows_port = "@format {this.GRPC_PORT}"
 yaas_url = "@format {this.PLATFORM_URL}/yaas/v1"
 
 [aws-production]
@@ -129,64 +80,21 @@ raster_url = "@format {this.PLATFORM_URL}/raster/v2"
 usage_url = "@format {this.PLATFORM_URL}/usage/v1"
 yaas_url = "@format {this.PLATFORM_URL}/yaas/v1"
 
-# for use in the workflows backend
-[gcp-compute-production]
-default_domain = "@format prod.{this.DOMAIN}"
-gcp_client = true
-platform_url = "@format https://platform.{this.DOMAIN}"
-
-metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
-raster_url = "http://ruster.ruster:8000"
-
-workflows_host = "@format workflows-api.{this.DEFAULT_DOMAIN}"
-workflows_host_http = "@format workflows.{this.DEFAULT_DOMAIN}"
-workflows_port = "443"
-
-# for use in the workflows backend
-[gcp-compute-stage]
-default_domain = "@format stage.{this.DOMAIN}"
-gcp_client = true
-platform_url = "@format https://platform.{this.DOMAIN}"
-
-metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
-raster_url = "http://ruster.ruster:8000"
-
-workflows_host = "@format workflows-api.{this.DEFAULT_DOMAIN}"
-workflows_host_http = "@format workflows.{this.DEFAULT_DOMAIN}"
-workflows_port = "443"
-
 [testing]
-default_host = "@format platform.{this.DOMAIN}"
-gcp_client = true
-grpc_host = "@format {this.DEFAULT_HOST}"
-grpc_port = "443"
-platform_url = "@format https://{this.DEFAULT_HOST}"
+aws_client = true
+default_domain = "@format dev.aws.{this.DOMAIN}"
+platform_url = "@format https://platform.{this.DEFAULT_DOMAIN}"
 testing = true
 
-annotation_url = "@format https://annotation-prerelease.{this.DOMAIN}"
-catalog_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog"
 catalog_v2_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog/v2"
-currier_host = "@format {this.GRPC_HOST}"
-currier_port = "@format {this.GRPC_PORT}"
-discover_host = "@format {this.GRPC_HOST}"
-discover_port = "@format {this.GRPC_PORT}"
-iam_url = "@format https://iam.{this.DOMAIN}"
+iam_url = "@format https://iam.{this.DEFAULT_DOMAIN}"
 metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
-places_url = "@format {this.PLATFORM_URL}/waldo/v2"
 raster_url = "@format {this.PLATFORM_URL}/raster/v2"
-sharing_url = "@format https://sharing.{this.DOMAIN}"
-storage_url = "@format {this.PLATFORM_URL}/storage/v1"
-tables_host = "@format {this.GRPC_HOST}"
-tables_port = "@format {this.GRPC_PORT}"
-tasks_url = "@format {this.PLATFORM_URL}/tasks/v1"
 usage_url = "@format {this.PLATFORM_URL}/usage/v1"
-vector_url = "@format {this.PLATFORM_URL}/vector/v2"
-workflows_host = "@format workflows-api.prod.{this.DOMAIN}"
-workflows_host_http = "@format workflows.prod.{this.DOMAIN}"
-workflows_port = "@format {this.GRPC_PORT}"
 yaas_url = "@format {this.PLATFORM_URL}/yaas/v1"
 
 [aws-testing]
+# testing is now for aws but keep this until it is removed everywhere
 aws_client = true
 default_domain = "@format dev.aws.{this.DOMAIN}"
 platform_url = "@format https://platform.{this.DEFAULT_DOMAIN}"
