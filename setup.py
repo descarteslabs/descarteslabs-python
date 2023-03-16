@@ -26,9 +26,9 @@ with open("descarteslabs/__init__.py", "rb") as f:
 
 DOCLINES = __doc__.split("\n")
 
-# Parse version out of descarteslabs/client/version.py
+# Parse version out of descarteslabs/core/client/version.py
 _version_re = re.compile(r"__version__\s+=\s+(.*)")
-with open("descarteslabs/_dl_modules/client/version.py", "rb") as f:
+with open("descarteslabs/core/client/version.py", "rb") as f:
     version = str(
         ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
     )
@@ -49,19 +49,8 @@ def check_setuptools():
 def do_setup():
     viz_requires = [
         "matplotlib>=3.1.2",
-        "ipyleaflet>=0.13.3,<1",
-        "ipywidgets>=7.5.1,<8",
-        "traitlets==5.0.5,<6",
-        "markdown2>=2.4.0,<3",
-    ]
-    tables_requires = [
-        "ibis-framework==1.4.0",
-        "geopandas>=0.10.2;'linux' in sys_platform",
-        "pandas>=1.3.5",
     ]
     tests_requires = [
-        "hypothesis[numpy]==5.7.0",
-        "mock",
         "pytest==6.0.0",
         "responses==0.12.1",
         "freezegun==0.3.12",
@@ -79,6 +68,8 @@ def do_setup():
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
+            "Programming Language :: Python :: 3.11",
         ],
         license="Apache 2.0",
         download_url=(
@@ -91,15 +82,12 @@ def do_setup():
         package_data={
             "descarteslabs": [
                 "config/settings.toml",
-                "_dl_modules/client/services/tasks/tests/data/dl_test_package/package/*.pyx",
-                "_dl_modules/client/services/tasks/tests/data/dl_test_package/*.json",
-                "_dl_modules/client/services/tasks/tests/data/*.txt",
             ]
         },
         include_package_data=True,
         entry_points={
             "console_scripts": [
-                "descarteslabs = descarteslabs._dl_modules.client.scripts.__main__:main"
+                "descarteslabs = descarteslabs.core.client.scripts.__main__:main"
             ]
         },
         python_requires="~=3.7",
@@ -107,31 +95,28 @@ def do_setup():
             "affine>=2.2.2",
             "blosc>=1.10.6",
             "cachetools>=3.1.1,<5",
-            "cloudpickle==0.4.0;python_version<'3.8'",
-            "cloudpickle==1.6.0;python_version>='3.8'",
             "dynaconf>=3.1.11",
             "geojson>=2.5.0",
-            "grpcio>=1.35.0,<2",
             "imagecodecs>=2021.5.20",
             "lazy_object_proxy>=1.7.1",
             "mercantile>=1.1.3",
-            "numpy>=1.21.6,<1.23.0",
+            "numpy>=1.21.6,<1.23.0;python_version<'3.8'",
+            "numpy>=1.21.6;python_version>='3.8' and python_version<'3.11'",
+            "numpy>=1.23.2;python_version>='3.11'",
             "Pillow>=9.2.0",
-            "protobuf>=3.19.5,<4",
-            "pyarrow>=3.0.0",
             "pytz>=2021.1",
             "requests>=2.28.1,<3",
             # It is not obvious but dynaconf requires pkg_resources from setuptools.
             "setuptools>=65.6.3",
             "shapely>=1.8.1,<2",
+            "strenum>=0.4.8;python_version<'3.11'",
             "tifffile==2021.4.8",
             "tqdm>=4.32.1",
         ],
         extras_require={
             "visualization": viz_requires,
-            "tables": tables_requires,
-            "complete": viz_requires + tables_requires,
-            "tests": tests_requires + tables_requires,
+            "complete": viz_requires,
+            "tests": tests_requires,
         },
         data_files=[("docs/descarteslabs", ["README.md"])],
     )

@@ -19,6 +19,29 @@ Changelog
 =========
 ## [Unreleased]
 
+## [2.0.0rc0] - 2023-03-16
+
+- This is an internal-only release. There is as of yet no updated documentation. However, the user-facing client APIs remain fully compatible with v1.12.1.
+
+### Supported platforms
+
+- Deprecated support for Python 3.7 (will end of life in July).
+- Added support for Python 3.10 and Python 3.11
+- AWS-only client. For the time being, the AWS client can be used to communicate with the legacy GCP platform (e.g. `DESCARTESLABS_ENV=gcp-production`) but only supports those services that are supported on AWS (`catalog` and `scenes`). This support may break at any point in the future, so it is strictly transitional.
+
+### Dependencies
+
+- Removed many dependencies no longer required due to the removal of GCP-only features.
+
+### Configuration
+
+- Major overhaul of the internals of the config process. To prepare for supporting other clients using namespaced packages within the `descarteslabs` package, the top level has been cleaned up, and most all the real code is down inside `descarteslabs.core`. However end users should never have to import anything from `descarteslabs.core`. No more magic packages means that `pylint` will work well with code using `descarteslabs`.
+- GCP environments only support `catalog` and `scenes`. All other GCP-only features have been removed.
+
+### Catalog
+
+- A bug in the code handling the default context for image collections when working with a product with a CRS based on degrees rather than meters has been fixed. Resolutions should always be specified in the units used by the CRS.
+
 ## [1.12.1] - 2023-02-06
 
 ### Workflows

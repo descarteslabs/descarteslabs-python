@@ -8,10 +8,10 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.7', '3.8', '3.9']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install CI deps
@@ -25,10 +25,10 @@ jobs:
       - name: Test AWS
         env:
           TMPDIR: tempdir
-          DESCARTESLABS_ENV: aws-testing
+          DESCARTESLABS_ENV: testing
         run: |
           mkdir tempdir
-          pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/third_party" --ignore="descarteslabs/_dl_modules/client/grpc" --ignore="descarteslabs/_dl_modules/client/services/catalog" --ignore="descarteslabs/_dl_modules/client/services/metadata" --ignore="descarteslabs/_dl_modules/client/services/places" --ignore="descarteslabs/_dl_modules/client/services/storage" --ignore="descarteslabs/_dl_modules/client/services/tasks" --ignore="descarteslabs/_dl_modules/client/services/vector" --ignore="descarteslabs/_dl_modules/common/tasks" --ignore="descarteslabs/_dl_modules/discover" --ignore="descarteslabs/_dl_modules/tables" --ignore="descarteslabs/_dl_modules/vectors" --ignore="descarteslabs/_dl_modules/workflows" descarteslabs
+          pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/core/third_party" --ignore="descarteslabs/core/client/services/metadata" descarteslabs
           rm -r tempdir
 
   slack:
