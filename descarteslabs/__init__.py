@@ -29,6 +29,11 @@ from descarteslabs import config
 from descarteslabs import exceptions
 from descarteslabs.core.client.version import __version__
 
+from descarteslabs import geo
+from descarteslabs import utils
+from descarteslabs import catalog
+from descarteslabs import scenes
+
 select_env = config.select_env
 get_settings = config.get_settings
 AWS_ENVIRONMENT = config.AWS_ENVIRONMENT
@@ -41,8 +46,12 @@ __all__ = [
     "AWS_ENVIRONMENT",
     "GCP_ENVIRONMENT",
     "auth",
+    "catalog",
     "config",
     "exceptions",
+    "geo",
     "get_settings",
+    "scenes",
     "select_env",
+    "utils",
 ]
