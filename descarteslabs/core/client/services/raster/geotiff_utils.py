@@ -308,7 +308,7 @@ def convert_to_geotiff_tags(
 
 
 def make_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress, nodata):
-    if "rasterio" in sys.modules:
+    if rasterio is not None:
         make_rasterio_geotiff(
             outfile, chunk_iter, metadata, blosc_meta, compress, nodata
         )
@@ -324,7 +324,7 @@ def make_rasterio_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress, n
 
     :param outfile: string, path to output geotiff file.
     :param chunk_iter: Iterator yielding "chunks", a 3D array of (rows, cols, bands) representing one
-        geotiff block. Streamed from the npz service. The order and length of the chunk sequenmce
+        geotiff block. Streamed from the npz service. The order and length of the chunk sequence
         must match that of the underlying blocks on disk. npz and all our tiff writers
         agree on the correct order.
     :param metadata: dict of image and per-band metdata
@@ -341,14 +341,6 @@ def make_rasterio_geotiff(outfile, chunk_iter, metadata, blosc_meta, compress, n
         compress = "LZW"
 
     crs = CRS.from_proj4(metadata["coordinateSystem"]["proj4"])
-
-    # must remove blocksize if image dimensions are smaller than a block
-    if (
-        geotiff_profile["height"] < geotiff_profile["blockysize"]
-        and geotiff_profile["width"] < geotiff_profile["blockxsize"]
-    ):
-        del geotiff_profile["blockxsize"]
-        del geotiff_profile["blockysize"]
 
     with rasterio.open(
         outfile, mode="w", compress=compress, nodata=nodata, crs=crs, **geotiff_profile
