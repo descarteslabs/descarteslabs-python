@@ -3,8 +3,7 @@ from threading import Lock
 
 import dynaconf
 
-from descarteslabs.auth import Auth
-from descarteslabs.exceptions import AuthError, ConfigError
+from descarteslabs.exceptions import ConfigError
 
 GCP_ENVIRONMENT = "gcp-production"  #: Standard GCP environment
 AWS_ENVIRONMENT = "aws-production"  #: Standard AWS environment
@@ -54,9 +53,7 @@ class Settings(dynaconf.Dynaconf):
     _lock = Lock()
 
     @classmethod
-    def select_env(
-        cls, env=None, settings_file=None, envvar_prefix="DESCARTESLABS", auth=None
-    ):
+    def select_env(cls, env=None, settings_file=None, envvar_prefix="DESCARTESLABS"):
         """
         Configure the Descartes Labs client.
 
@@ -66,8 +63,8 @@ class Settings(dynaconf.Dynaconf):
             Name of the environment to configure. Must appear in
             ``descarteslabs/config/settings.toml`` If not supplied will be determined
             from the `DESCARTESLABS_ENV` environment variable (or use the prefix
-            specified in the `envvar_prefix`_ENV), if set, otherwise from the user's
-            authenticated permissions.
+            specified in the `envvar_prefix`_ENV), if set. Otherwise defaults to
+            `aws-production`.
         settings_file : str, optional
             If supplied, will be consulted for additional configuration overrides. These
             are applied over those in the ``descarteslabs/config/settings.toml`` file,
@@ -78,10 +75,6 @@ class Settings(dynaconf.Dynaconf):
             overrides. Environment variables with a leading prefix of
             ``"<envvar_prefix>_"`` will override the settings in the resulting
             configuration after the settings file(s) have been consulted.
-        auth : Auth, optional
-            If ``env`` is not supplied, then consult the user's authenticated
-            permissions using this ``Auth`` instance. If not supplied, then a
-            default ``Auth`` instance is constructed.
 
         Returns
         -------
@@ -110,7 +103,6 @@ class Settings(dynaconf.Dynaconf):
                         env=env,
                         settings_file=settings_file,
                         envvar_prefix=envvar_prefix,
-                        auth=auth,
                     )
 
         if settings is not None and env is not None and env != settings.ENV:
@@ -151,9 +143,7 @@ class Settings(dynaconf.Dynaconf):
         return settings
 
     @classmethod
-    def peek_settings(
-        cls, env=None, settings_file=None, envvar_prefix="DESCARTESLABS", auth=None
-    ):
+    def peek_settings(cls, env=None, settings_file=None, envvar_prefix="DESCARTESLABS"):
         """Retrieve the settings without configuring the client.
 
         Unlike :py:meth:`~Settings.get_settings` and :py:meth:`~Settings.select_env`
@@ -170,7 +160,6 @@ class Settings(dynaconf.Dynaconf):
             env=env,
             settings_file=settings_file,
             envvar_prefix=envvar_prefix,
-            auth=auth,
         )
 
         # Return the environ back to its original state
@@ -182,21 +171,17 @@ class Settings(dynaconf.Dynaconf):
         return settings
 
     @classmethod
-    def _select_env(
-        cls, env=None, settings_file=None, envvar_prefix="DESCARTESLABS", auth=None
-    ):
+    def _select_env(cls, env=None, settings_file=None, envvar_prefix="DESCARTESLABS"):
         # Assign to the global instance.
         cls._settings = cls._get_settings(
-            env=env, settings_file=settings_file, envvar_prefix=envvar_prefix, auth=auth
+            env=env, settings_file=settings_file, envvar_prefix=envvar_prefix
         )
 
         # And return the settings object.
         return cls._settings
 
     @classmethod
-    def _get_settings(
-        cls, env=None, settings_file=None, envvar_prefix="DESCARTESLABS", auth=None
-    ):
+    def _get_settings(cls, env=None, settings_file=None, envvar_prefix="DESCARTESLABS"):
         # Get the settings. If the settings are retrieved successfully, the os.environ
         # will contain the selector for the given settings.
         selector = f"{envvar_prefix}_ENV"
@@ -212,25 +197,7 @@ class Settings(dynaconf.Dynaconf):
             os.environ[selector] = env
         elif not os.environ.get(selector):
             # Default it.
-            if auth is None:
-                auth = Auth(_suppress_warning=True)
-
-            try:
-                groups = auth.payload.get("groups", {})
-            except AuthError:
-                raise ConfigError(
-                    "Cannot determine your client configuration. Either set the "
-                    "DESCARTESLABS_ENV environment variable to the desired "
-                    "environment or login using 'descarteslabs auth login' in "
-                    "order to proceed. See "
-                    "https://docs.descarteslabs.com/configuration.html#environments "
-                    "for more information."
-                )
-
-            if "aws-customer" in groups:
-                os.environ[selector] = "aws-production"
-            else:
-                os.environ[selector] = "gcp-production"
+            os.environ[selector] = "aws-production"
 
         builtin_settings_file = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "settings.toml"

@@ -116,7 +116,7 @@ def get_default_domain():
     class DummyAuth:
         payload = {}
 
-    return peek_settings(auth=DummyAuth()).iam_url
+    return peek_settings().iam_url
 
 
 class Auth:
