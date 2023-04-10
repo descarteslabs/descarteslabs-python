@@ -19,10 +19,25 @@ Changelog
 =========
 ## [Unreleased]
 
+## [2.0.0rc1] - 2023-04-10
+
+- This is an internal-only release. There is as of yet no updated documentation. However, the user-facing client APIs remain fully compatible with v1.12.1.
+
+### Compute
+
+- Added support for managed batch compute under the `compute` module.
+
+### Auth and Configuration
+
+- Removed the check on the Auth for configuration, since it is all AWS all the time.
+
+### Raster Client
+
+- Fixed a bug in the handling of small blocks (less than 512 x 512) that caused rasterio to generate bad download files (the desired image block would appear as a smaller sub-block rather than filling the resulting raster).
+
 ## [2.0.0rc0] - 2023-03-16
 
 - This is an internal-only release. There is as of yet no updated documentation. However, the user-facing client APIs remain fully compatible with v1.12.1.
-- Added support for managed batch compute under the `compute` module.
 
 ### Supported platforms
 
