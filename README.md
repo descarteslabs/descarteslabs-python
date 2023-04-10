@@ -22,6 +22,7 @@ Changelog
 ## [2.0.0rc0] - 2023-03-16
 
 - This is an internal-only release. There is as of yet no updated documentation. However, the user-facing client APIs remain fully compatible with v1.12.1.
+- Added support for managed batch compute under the `compute` module.
 
 ### Supported platforms
 
