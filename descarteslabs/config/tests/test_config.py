@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from descarteslabs.auth import Auth
 from descarteslabs.exceptions import ConfigError
+
 from .. import Settings
 
 
@@ -140,6 +141,7 @@ class VerifyValues(unittest.TestCase):
         "aws-dev": {
             "AWS_CLIENT": True,
             "CATALOG_V2_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1/catalog/v2",
+            "COMPUTE_URL": "https://platform.dev.aws.descarteslabs.com/compute/v1",
             "GCP_CLIENT": False,
             "IAM_URL": "https://iam.dev.aws.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
@@ -152,6 +154,7 @@ class VerifyValues(unittest.TestCase):
         "aws-production": {
             "AWS_CLIENT": True,
             "CATALOG_V2_URL": "https://platform.production.aws.descarteslabs.com/metadata/v1/catalog/v2",
+            "COMPUTE_URL": "https://platform.production.aws.descarteslabs.com/compute/v1",
             "GCP_CLIENT": False,
             "IAM_URL": "https://iam.production.aws.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
@@ -164,6 +167,7 @@ class VerifyValues(unittest.TestCase):
         "aws-staging": {
             "AWS_CLIENT": True,
             "CATALOG_V2_URL": "https://platform.staging.aws.descarteslabs.com/metadata/v1/catalog/v2",
+            "COMPUTE_URL": "https://platform.staging.aws.descarteslabs.com/compute/v1",
             "GCP_CLIENT": False,
             "IAM_URL": "https://iam.staging.aws.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
@@ -176,6 +180,7 @@ class VerifyValues(unittest.TestCase):
         "aws-testing": {
             "AWS_CLIENT": True,
             "CATALOG_V2_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1/catalog/v2",
+            "COMPUTE_URL": "https://platform.dev.aws.descarteslabs.com/compute/v1",
             "GCP_CLIENT": False,
             "IAM_URL": "https://iam.dev.aws.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
@@ -228,6 +233,7 @@ class VerifyValues(unittest.TestCase):
         "testing": {
             "AWS_CLIENT": True,
             "CATALOG_V2_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1/catalog/v2",
+            "COMPUTE_URL": "https://platform.dev.aws.descarteslabs.com/compute/v1",
             "GCP_CLIENT": False,
             "IAM_URL": "https://iam.dev.aws.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
