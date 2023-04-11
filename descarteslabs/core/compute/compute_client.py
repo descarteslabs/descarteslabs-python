@@ -1,8 +1,8 @@
 from typing import Optional
 
+from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
 
-from ..auth import Auth
 from ..client.services.service import Service
 from ..common.http.service import DefaultClientMixin
 
