@@ -1,3 +1,3 @@
 from .compute import Function, Job
 
-__all__ = [Job, Function]
+__all__ = ["Job", "Function"]
