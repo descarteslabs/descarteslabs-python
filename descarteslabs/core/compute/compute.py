@@ -50,7 +50,11 @@ class Serializable:
 
 class ComputeObject(object):
     def __init__(self):
-        self._state = State.NEW
+        # check if object is new or persisted
+        if self.id:
+            self._state = State.SAVED
+        else:
+            self._state = State.NEW
 
     def __setattr__(self, name, value):
         super(ComputeObject, self).__setattr__("_state", State.MODIFIED)
@@ -136,7 +140,7 @@ class Job(ComputeObject):
         """
         client = ComputeClient.get_default_client()
         response = client.session.get(f"/jobs/{id}")
-        return cls(**response.json(), _state=State.SAVED)
+        return cls(**response.json())
 
     @classmethod
     def list(cls, function_id, page_size=100) -> Iterable["Job"]:
@@ -160,7 +164,7 @@ class Job(ComputeObject):
         paginator = client.paginate(f"/functions/{function_id}/jobs", params=params)
 
         for data in paginator:
-            yield cls(**data, _state=State.SAVED)
+            yield cls(**data)
 
     def refresh(self) -> None:
         client = ComputeClient.get_default_client()
@@ -542,7 +546,7 @@ class Function(ComputeObject):
         """
         client = ComputeClient.get_default_client()
         response = client.session.get(f"/functions/{id}")
-        return cls(**response.json(), _state=State.SAVED)
+        return cls(**response.json())
 
     @classmethod
     def list(cls, status=None, page_size=100):
@@ -565,7 +569,7 @@ class Function(ComputeObject):
         paginator = client.paginate("/functions", params=params)
 
         for data in paginator:
-            yield cls(**data, _state=State.SAVED)
+            yield cls(**data)
 
     @property
     def jobs(self) -> Iterable[Job]:
