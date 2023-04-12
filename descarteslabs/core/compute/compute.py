@@ -25,7 +25,7 @@ class State(StrEnum):
 class FunctionStatus(StrEnum):
     AWAITING_BUNDLE = "awaiting_bundle"
     BUILDING = "building"
-    PENDING = "pending"
+    BUILD_FAILED = "build_failed"
     RUNNING = "running"
     SUCCESS = "success"
     FAILURE = "failure"
