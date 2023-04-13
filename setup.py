@@ -95,6 +95,7 @@ def do_setup():
             "affine>=2.2.2",
             "blosc>=1.10.6",
             "cachetools>=3.1.1,<5",
+            "dill>=0.3.6",
             "dynaconf>=3.1.11",
             "geojson>=2.5.0",
             "imagecodecs>=2021.5.20",

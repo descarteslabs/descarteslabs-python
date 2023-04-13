@@ -1,5 +1,4 @@
 import glob
-import inspect
 import io
 import json
 import os
@@ -10,6 +9,7 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile
 from typing import Callable, Dict, Iterable, List, Optional, Type
 
+import dill
 from strenum import StrEnum
 
 from ..client.services.service import ThirdPartyService
@@ -397,7 +397,7 @@ class Function(ComputeObject):
         if function.__name__ == "<lambda>":
             raise ValueError("Cannot execute lambda functions. Use `def` instead.")
 
-        src = inspect.getsource(function).strip()
+        src = dill.source.getsource(function).strip()
         main = f"{src}\n\n\nmain = {function.__name__}\n"
 
         if self._requirements:
