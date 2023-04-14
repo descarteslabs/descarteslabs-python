@@ -7,8 +7,8 @@ from ...common.geo import AOI
 from ...common.property_filtering import Properties
 from .base import ClientTestCase
 from .. import properties as p
-from ..search import Search, ImageSearch
-from ..image import Image
+from ..search import Search
+from ..image import Image, ImageSearch
 from ..image_collection import ImageCollection
 from ..attributes import DocumentState
 from ..product import Product

@@ -9,7 +9,7 @@ from .catalog_client import CatalogClient
 from ..common.property_filtering.filtering import AndExpression
 from ..common.property_filtering.filtering import Expression  # noqa: F401
 
-from .attributes import parse_iso_datetime, serialize_datetime
+from .attributes import serialize_datetime
 
 
 V1_COMPATIBILITY = "v1_compatibility"
@@ -215,7 +215,7 @@ class Search(object):
         from .product import Product
         from .band import DerivedBand
 
-        if self._model_cls is Product or self._model_cls is DerivedBand:
+        if self._model_cls in (Product, DerivedBand):
             return
         if filters:
             for filter in filters:
@@ -417,22 +417,14 @@ class AggregateDateField(StrEnum):
     PUBLISHED = "published"
 
 
-class ImageSearch(Search):
-    # Be aware that the `|` characters below add whitespace.  The first one is needed
-    # avoid the `Inheritance` section from appearing before the auto summary.
-    """A search request that iterates over its search results for images.
-
-    The `ImageSearch` is identical to `Search` but with a couple of summary methods:
-    :py:meth:`summary` and :py:meth:`summary_interval`; and an additional method
-    :py:meth:`intersects` for geometry.
-    """
-
-    _unsupported_summary_params = ["sort"]
+class GeoSearch(Search):
+    """A search request that supports an :py:meth:`intersects` method for searching
+    geometries."""
 
     def __init__(
         self, model, client=None, url=None, includes=True, request_params=None
     ):
-        super(ImageSearch, self).__init__(
+        super(GeoSearch, self).__init__(
             model, client, url, includes, request_params=request_params
         )
         self._intersects = None
@@ -450,7 +442,7 @@ class ImageSearch(Search):
         Returns
         -------
         Search
-            A new instance of the :py:class:`~descarteslabs.catalog.ImageSearch`
+            A new instance of the :py:class:`~descarteslabs.catalog.GeoSearch`
             class that includes geometry filter.
         """  # noqa: E501
         s = copy.deepcopy(self)
@@ -461,6 +453,21 @@ class ImageSearch(Search):
         )
         s._intersects = copy.deepcopy(geometry)
         return s
+
+
+class SummarySearchMixin(Search):
+    # Be aware that the `|` characters below add whitespace.  The first one is needed
+    # avoid the `Inheritance` section from appearing before the auto summary.
+    """A search request that add support for summary methods.
+
+    The `SummarySearch` is identical to `Search` but with a couple of summary methods:
+    :py:meth:`summary` and :py:meth:`summary_interval`.
+    """
+
+    _unsupported_summary_params = ["sort"]
+    # must be set in derived class
+    SummaryResult = None
+    DEFAULT_AGGREGATE_DATE_FIELD = None
 
     def _summary_request(self):
         # don't modify existing search params
@@ -478,7 +485,7 @@ class ImageSearch(Search):
         return params
 
     def summary(self):
-        """Get summary statistics about the current `ImageSearch` query.
+        """Get summary statistics about the current `Search` query.
 
         Returns
         -------
@@ -507,11 +514,11 @@ class ImageSearch(Search):
         r = self._client.session.put(summary_url, json=self._summary_request())
         response = r.json()
 
-        return SummaryResult(**response["data"]["attributes"])
+        return self.SummaryResult(**response["data"]["attributes"])
 
     def summary_interval(
         self,
-        aggregate_date_field="acquired",
+        aggregate_date_field=None,
         interval="year",
         start_datetime=None,
         end_datetime=None,
@@ -525,7 +532,8 @@ class ImageSearch(Search):
             The date field to use for aggregating summary results over time.  Valid
             inputs are `~AggregateDateField.ACQUIRED`, `~AggregateDateField.CREATED`,
             `~AggregateDateField.MODIFIED`, `~AggregateDateField.PUBLISHED`.  The
-            default is `~AggregateDateField.ACQUIRED`.
+            default is `~AggregateDateField.ACQUIRED`. Field must be defined for
+            the class.
         interval : str or Interval, optional
             The time interval to use for aggregating summary results.  Valid inputs
             are `~Interval.YEAR`, `~Interval.QUARTER`, `~Interval.MONTH`,
@@ -567,7 +575,9 @@ class ImageSearch(Search):
         >>> print([(i.interval_start, i.count) for i in interval_results]) # doctest: +SKIP
         """
         s = copy.deepcopy(self)
-        summary_url = "{}/summary/{}/{}".format(s._url, aggregate_date_field, interval)
+        summary_url = "{}/summary/{}/{}".format(
+            s._url, aggregate_date_field or self.DEFAULT_AGGREGATE_DATE_FIELD, interval
+        )
 
         # The service will calculate start/end if not given
         if start_datetime is not None:
@@ -585,73 +595,4 @@ class ImageSearch(Search):
         r = self._client.session.put(summary_url, json=s._summary_request())
         response = r.json()
 
-        return [SummaryResult(**d["attributes"]) for d in response["data"]]
-
-    def collect(self, geocontext=None, **kwargs):
-        """
-        Execute the search query and return the collection of the appropriate type.
-
-        Parameters
-        ----------
-        geocontext : shapely.geometry.base.BaseGeometry, descarteslabs.common.geo.Geocontext, geojson-like, default None  # noqa: E501
-            AOI for the ImageCollection.
-
-        Returns
-        -------
-        ~descarteslabs.catalog.ImageCollection
-            ImageCollection of Images returned from the search.
-
-        Raises
-        ------
-        BadRequestError
-            If any of the query parameters or filters are invalid
-        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
-            :ref:`Spurious exception <network_exceptions>` that can occur during a
-            network request.
-        """
-        if geocontext is None:
-            geocontext = self._intersects
-        if geocontext is not None:
-            kwargs["geocontext"] = geocontext
-
-        return super(ImageSearch, self).collect(**kwargs)
-
-
-class SummaryResult(object):
-    """
-    The readonly data returned by :py:meth:`ImageSearch.summary` or
-    :py:meth:`ImageSearch.summary_interval`.
-
-    Attributes
-    ----------
-    count : int
-        Number of images in the summary.
-    bytes : int
-        Total number of bytes of data across all images in the summary.
-    products : list(str)
-        List of IDs for the products included in the summary.
-    interval_start: datetime
-        For interval summaries only, a datetime representing the start of the interval period.
-
-    """
-
-    def __init__(
-        self, count=None, bytes=None, products=None, interval_start=None, **kwargs
-    ):
-        self.count = count
-        self.bytes = bytes
-        self.products = products
-        self.interval_start = (
-            parse_iso_datetime(interval_start) if interval_start else None
-        )
-
-    def __repr__(self):
-        text = [
-            "\nSummary for {} images:".format(self.count),
-            " - Total bytes: {:,}".format(self.bytes),
-        ]
-        if self.products:
-            text.append(" - Products: {}".format(", ".join(self.products)))
-        if self.interval_start:
-            text.append(" - Interval start: {}".format(self.interval_start))
-        return "\n".join(text)
+        return [self.SummaryResult(**d["attributes"]) for d in response["data"]]

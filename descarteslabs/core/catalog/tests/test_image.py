@@ -355,7 +355,7 @@ class TestImage(ClientTestCase):
             },
         ]
 
-    @patch.object(image_module.Image, "_gcs_upload_service")
+    @patch.object(image_module.Image, "_upload_service")
     @patch.object(image_upload_module.ImageUpload, "_POLLING_INTERVALS", [1])
     @responses.activate
     def test_upload(self, upload_mock):
@@ -497,7 +497,7 @@ class TestImage(ClientTestCase):
         # when the new ingest is completed, we may implement the reload
         # of the updated Image...
 
-    @patch.object(image_module.Image, "_gcs_upload_service")
+    @patch.object(image_module.Image, "_upload_service")
     @patch.object(image_upload_module.ImageUpload, "_POLLING_INTERVALS", [1])
     @responses.activate
     def test_upload_multi_file(self, upload_mock):
@@ -656,7 +656,7 @@ class TestImage(ClientTestCase):
             assert 1 == len(w)
             assert "cs_code" in str(w[0].message)
 
-    @patch.object(image_module.Image, "_gcs_upload_service")
+    @patch.object(image_module.Image, "_upload_service")
     @patch.object(image_upload_module.ImageUpload, "_POLLING_INTERVALS", [1])
     @responses.activate
     def test_upload_ndarray(self, upload_mock):

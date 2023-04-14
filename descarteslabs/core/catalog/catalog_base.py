@@ -18,6 +18,7 @@ from .attributes import (
     TypedAttribute,
 )
 from .catalog_client import CatalogClient, HttpRequestMethod
+from .search import Search
 
 
 class DeletedObjectError(Exception):
@@ -720,8 +721,6 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
                 print(result.name) # doctest: +SKIP
 
         """
-        from .search import Search
-
         return Search(cls, client=client, request_params=request_params)
 
     @check_deleted

@@ -87,6 +87,21 @@ class DocumentState(StrEnum):
     DELETED = "deleted"
 
 
+class StorageState(StrEnum):
+    """The storage state for an image.
+
+    Attributes
+    ----------
+    AVAILABLE : enum
+        The data has been uploaded and can be retrieved or rastered.
+    REMOTE : enum
+        The data is has not been uploaded, but its location is known.
+    """
+
+    AVAILABLE = "available"
+    REMOTE = "remote"
+
+
 class Attribute(object):
     """A description of an attribute as received from the Descartes Labs catalog or
     set by the end-user.
@@ -296,7 +311,7 @@ class TypedAttribute(Attribute):
         value : object
             Any Python object
         validate : bool
-            Whether or not the value should be validated.  This value is ``True`` be
+            Whether or not the value should be validated.  This value is ``True`` by
             default, and this method can raise an `AttributeValidationError` in that
             case.
 
@@ -358,8 +373,9 @@ class CatalogObjectReference(Attribute):
         The class for the CatalogObject instance that this attribute will hold a
         reference to.
     require_unsaved : bool, optional
-        Whether the reference is allowed even if the CatalogObject instance is not in
-        the `SAVED` state.  ``False`` by default.
+        If ``True``, the referenced CatalogObject instance must be in the `UNSAVED` state
+        when assigned.  If ``False``, then the referenced CatalogOjbect must not be in the
+        `UNSAVED` state.  ``False`` by default.
     **kwargs : optional
         See `Attribute`.
     """
@@ -413,6 +429,8 @@ class CatalogObjectReference(Attribute):
         if validate:
             self._raise_if_immutable_or_readonly("set", obj)
 
+        value = self.deserialize(value, validate=validate)
+
         if value is not None:
             if not isinstance(value, self.reference_class):
                 raise AttributeValidationError(
@@ -458,6 +476,71 @@ class CatalogObjectReference(Attribute):
             return value.serialize(modified_only=False, jsonapi_format=jsonapi_format)
         else:
             return value
+
+    def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        Deserializes a value for this attribute from a plain python type, possibly
+        generated through JSONAPI deserialization as it comes from the Descartes Labs
+        catalog.  Optionally indicates whether the data should be validated.
+
+        Parameters
+        ----------
+        value : object
+            Any Python object
+        validate : bool
+            Whether or not the value should be validated.  This value is ``True`` by
+            default, and this method can raise an `AttributeValidationError` in that
+            case.
+
+        Returns
+        -------
+        object
+            Any Python object.
+
+        Raises
+        ------
+        AttributeValidationError
+            When `validate` is ``True`` and a validation error was encountered.
+        """
+        if isinstance(value, self.reference_class):
+            return value
+
+        if (
+            type(value) is not dict
+            or "data" not in value
+            or "attributes" not in value["data"]
+        ):
+            raise AttributeValidationError(
+                "A CatalogObjectResource expects a {} or a JSONApi Resource object: {}".format(
+                    self.reference_class.__name__,
+                    self._attribute_name,
+                )
+            )
+
+        if value["data"]["type"] != self.reference_class._doc_type:
+            raise AttributeValidationError(
+                "CatalogObjectResource expects a doc type of {} but received {}: {}".format(
+                    self.reference_class._doc_type,
+                    value["type"],
+                    self._attribute_name,
+                )
+            )
+
+        # Note that the JSONAPI spec doesn't really allow nested resources. As such, we simply
+        # do not allow relationships at this level.
+        if "links" in value or "relationships" in value:
+            raise AttributeValidationError(
+                "A CatalogObjectResource does not support links or relationships: {}".format(
+                    self._attribute_name,
+                )
+            )
+
+        # we force unsaved state, as that is the only current use case, and because
+        # if it were a proper resource, it would have to be treated as a related object.
+        return self.reference_class(
+            _saved=False, id=value["data"].get("id"), **value["data"]["attributes"]
+        )
 
 
 class Timestamp(Attribute):
@@ -1296,7 +1379,7 @@ class ListAttribute(ModelAttribute, MutableSequence):
             self._attribute_type,
             validate=validate,
             items=values,
-            **self._get_attr_params()
+            **self._get_attr_params(),
         )
 
     # MutableSequence methods
@@ -1647,7 +1730,7 @@ class TupleAttribute(Attribute):
         coerce=False,
         min_length=None,
         max_length=None,
-        **kwargs
+        **kwargs,
     ):
         super(TupleAttribute, self).__init__(**kwargs)
 

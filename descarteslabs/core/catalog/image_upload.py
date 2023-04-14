@@ -1,7 +1,8 @@
-import time
+from concurrent.futures import TimeoutError
 import itertools
-import urllib3.exceptions
 import requests.exceptions
+import time
+import urllib3.exceptions
 import warnings
 
 from strenum import StrEnum
@@ -19,8 +20,7 @@ from .attributes import (
     TypedAttribute,
 )
 from .image import Image
-
-from concurrent.futures import TimeoutError
+from .search import Search
 
 
 class ImageUploadType(StrEnum):
@@ -407,8 +407,6 @@ class ImageUpload(CatalogObjectBase):
         ...     print(result) # doctest: +SKIP
 
         """
-        from .search import Search
-
         return Search(cls, client=client, includes=includes)
 
     def wait_for_completion(self, timeout=None, warn_transient_errors=True):

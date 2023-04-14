@@ -26,7 +26,7 @@ from .band import (
     ProcessingStepAttribute,
     SpectralBand,
 )
-from .image import Image, StorageState
+from .image import Image, ImageSearch, ImageSummaryResult
 from .image_types import ResampleAlgorithm, DownloadFileFormat
 from .image_upload import (
     ImageUpload,
@@ -39,7 +39,13 @@ from .image_upload import (
     OverviewResampler,
 )
 from .image_collection import ImageCollection
-from .search import ImageSearch, Search, Interval, AggregateDateField, SummaryResult
+from .search import (
+    AggregateDateField,
+    GeoSearch,
+    Interval,
+    Search,
+    SummarySearchMixin,
+)
 from .catalog_base import (
     CatalogClient,
     CatalogObject,
@@ -53,6 +59,7 @@ from .attributes import (
     File,
     Resolution,
     ResolutionUnit,
+    StorageState,
 )
 
 from ..common.property_filtering import Properties
@@ -79,6 +86,7 @@ __all__ = [
     "DownloadFileFormat",
     "File",
     "GenericBand",
+    "GeoSearch",
     "Image",
     "ImageCollection",
     "ImageSearch",
@@ -89,6 +97,7 @@ __all__ = [
     "ImageUploadOptions",
     "ImageUploadStatus",
     "ImageUploadType",
+    "ImageSummaryResult",
     "Interval",
     "MaskBand",
     "MicrowaveBand",
@@ -105,7 +114,7 @@ __all__ = [
     "Search",
     "SpectralBand",
     "StorageState",
-    "SummaryResult",
+    "SummarySearchMixin",
     "TaskState",
     "UnsavedObjectError",
 ]

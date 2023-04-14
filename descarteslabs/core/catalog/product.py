@@ -18,6 +18,8 @@ from .catalog_base import (
     _new_abstract_class,
     check_deleted,
 )
+from .search import Search
+
 
 properties = Properties()
 
@@ -396,7 +398,6 @@ class Product(CatalogObject):
 
         """
         from .band import DerivedBand
-        from .search import Search
 
         return Search(
             DerivedBand,

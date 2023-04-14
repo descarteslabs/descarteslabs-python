@@ -11,7 +11,6 @@ except ImportError:
 
 from affine import Affine
 import numpy as np
-from strenum import StrEnum
 
 from descarteslabs.exceptions import BadRequestError, NotFoundError
 
@@ -25,32 +24,102 @@ from .attributes import (
     File,
     GeometryAttribute,
     ListAttribute,
+    StorageState,
     Timestamp,
     TupleAttribute,
     TypedAttribute,
+    parse_iso_datetime,
 )
 from .catalog_base import DocumentState, check_deleted
 from .helpers import bands_to_list, cached_bands_by_product, download
 from .image_types import DownloadFileFormat, ResampleAlgorithm
 from .named_catalog_base import NamedCatalogObject
 from .scaling import scaling_parameters
+from .search import AggregateDateField, GeoSearch, SummarySearchMixin
 
 properties = Properties()
 
 
-class StorageState(StrEnum):
-    """The storage state for an image.
+class ImageSummaryResult(object):
+    """
+    The readonly data returned by :py:meth:`SummaySearch.summary` or
+    :py:meth:`SummaySearch.summary_interval`.
 
     Attributes
     ----------
-    AVAILABLE : enum
-        The image data has been uploaded and can be rastered.
-    REMOTE : enum
-        The image data is has not been uploaded, but its location is known.
+    count : int
+        Number of images in the summary.
+    bytes : int
+        Total number of bytes of data across all images in the summary.
+    products : list(str)
+        List of IDs for the products included in the summary.
+    interval_start: datetime
+        For interval summaries only, a datetime representing the start of the interval period.
+
     """
 
-    AVAILABLE = "available"
-    REMOTE = "remote"
+    def __init__(
+        self, count=None, bytes=None, products=None, interval_start=None, **kwargs
+    ):
+        self.count = count
+        self.bytes = bytes
+        self.products = products
+        self.interval_start = (
+            parse_iso_datetime(interval_start) if interval_start else None
+        )
+
+    def __repr__(self):
+        text = [
+            "\nSummary for {} images:".format(self.count),
+            " - Total bytes: {:,}".format(self.bytes),
+        ]
+        if self.products:
+            text.append(" - Products: {}".format(", ".join(self.products)))
+        if self.interval_start:
+            text.append(" - Interval start: {}".format(self.interval_start))
+        return "\n".join(text)
+
+
+class ImageSearch(SummarySearchMixin, GeoSearch):
+    # Be aware that the `|` characters below add whitespace.  The first one is needed
+    # avoid the `Inheritance` section from appearing before the auto summary.
+    """A search request that iterates over its search results for images.
+
+    The `ImageSearch` is identical to `Search` but with a couple of summary methods:
+    :py:meth:`summary` and :py:meth:`summary_interval`.
+    """
+
+    SummaryResult = ImageSummaryResult
+    DEFAULT_AGGREGATE_DATE_FIELD = AggregateDateField.ACQUIRED
+
+    def collect(self, geocontext=None, **kwargs):
+        """
+        Execute the search query and return the collection of the appropriate type.
+
+        Parameters
+        ----------
+        geocontext : shapely.geometry.base.BaseGeometry, descarteslabs.common.geo.Geocontext, geojson-like, default None  # noqa: E501
+            AOI for the ImageCollection.
+
+        Returns
+        -------
+        ~descarteslabs.catalog.ImageCollection
+            ImageCollection of Images returned from the search.
+
+        Raises
+        ------
+        BadRequestError
+            If any of the query parameters or filters are invalid
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
+        """
+        if geocontext is None:
+            geocontext = self._intersects
+        if geocontext is not None:
+            kwargs["geocontext"] = geocontext
+
+        return super(ImageSearch, self).collect(**kwargs)
 
 
 class Image(NamedCatalogObject):
@@ -80,7 +149,7 @@ class Image(NamedCatalogObject):
     _url = "/images"
     _default_includes = ["product"]
     # _collection_type set below due to circular import problems
-    _gcs_upload_service = ThirdPartyService()
+    _upload_service = ThirdPartyService()
 
     # Geo referencing
     geometry = GeometryAttribute(
@@ -487,8 +556,6 @@ class Image(NamedCatalogObject):
         ...     print(result.name) # doctest: +SKIP
 
         """
-        from .search import ImageSearch
-
         return ImageSearch(cls, client=client, request_params=request_params)
 
     @check_deleted
@@ -827,6 +894,8 @@ class Image(NamedCatalogObject):
 
         upload.save()
 
+        headers = {"content-type": "application/octet-stream"}
+
         for file, upload_url in zip(files, upload.resumable_urls):
             if isinstance(file, io.IOBase):
                 if "b" not in file.mode:
@@ -837,7 +906,7 @@ class Image(NamedCatalogObject):
                 f = io.open(file, "rb")
 
             try:
-                self._gcs_upload_service.session.put(upload_url, data=f)
+                self._upload_service.session.put(upload_url, data=f, headers=headers)
             finally:
                 f.close()
 

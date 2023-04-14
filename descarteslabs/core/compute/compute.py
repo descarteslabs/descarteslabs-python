@@ -512,7 +512,10 @@ class Function(ComputeObject):
             s3_client = ThirdPartyService()
             upload_url = response_json["bundle_upload_url"]
             code_bundle = io.open(code_bundle_path, "rb")
-            s3_client.session.put(upload_url, data=code_bundle)
+            headers = {
+                "content-type": "application/octet-stream",
+            }
+            s3_client.session.put(upload_url, data=code_bundle, headers=headers)
 
             # Complete the upload with compute
             response = client.session.post(f"/functions/{self.id}/bundle")

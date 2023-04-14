@@ -835,7 +835,7 @@ class ThirdPartyService:
         session.initialize()
         session.headers.update(
             {
-                HttpHeaderKeys.ContentType: HttpHeaderValues.ApplicationOctetStream,
+                # HttpHeaderKeys.ContentType: HttpHeaderValues.ApplicationOctetStream,
                 HttpHeaderKeys.UserAgent: "{}/{}".format(
                     HttpHeaderValues.DlPython, __version__
                 ),
