@@ -243,6 +243,26 @@ class IsNotNullExpression(Expression):
         return getattr(obj, self.name) is not None
 
 
+class PrefixExpression(Expression):
+    """Whether a string property value starts with the given string prefix."""
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def serialize(self):
+        return {"prefix": {self.name: self.value}}
+
+    def jsonapi_serialize(self, model=None):
+        if model:
+            name, _ = model._serialize_filter_attribute(self.name, None)
+
+        return {"op": "prefix", "name": name, "val": self.value}
+
+    def evaluate(self, obj):
+        return getattr(obj, self.name).startswith(self.value)
+
+
 class LikeExpression(Expression):
     """Whether a property value matches the given wildcard expression.
 
@@ -394,6 +414,12 @@ class Property(object):
 
     def __repr__(self):
         return "<Property {}>".format(self.name)
+
+    def prefix(self, prefix):
+        """Compare against a prefix string."""
+        return PrefixExpression(self.name, prefix)
+
+    startswith = prefix
 
     def like(self, wildcard):
         """Compare against a wildcard string.
