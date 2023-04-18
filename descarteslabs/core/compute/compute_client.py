@@ -71,3 +71,12 @@ class ComputeClient(Service, DefaultClientMixin):
                 log = f"{log_date} {log}"
 
             yield log
+
+    def set_credentials(self):
+        self.session.post(
+            "/credentials",
+            json={
+                "client_id": self.auth.client_id,
+                "client_secret": self.auth.client_secret,
+            },
+        )

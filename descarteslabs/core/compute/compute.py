@@ -511,6 +511,75 @@ class Function(ComputeObject):
 
         return data_files
 
+    @classmethod
+    def get(cls, id: str):
+        """Get Function by id.
+
+        Parameters
+        ----------
+        id : str
+            Id of function to get.
+
+        Example
+        -------
+        >>> from descarteslabs.compute import Function
+        >>> fn = Function.get(<func_id>)
+        <Function name="test_name" image=test_image cpus=1 memory=16 maximum_concurrency=5 timeout=3 retries=1
+        """
+        client = ComputeClient.get_default_client()
+        response = client.session.get(f"/functions/{id}")
+        return cls(**response.json())
+
+    @classmethod
+    def list(cls, status=None, page_size=100):
+        """Lists all Functions for a user.
+
+        Parameters
+        ----------
+        status : `FunctionStatus`, optional
+            Status of the Function.
+        page_size : int, default=100
+            Maximum number of results per page.
+
+        Example
+        -------
+        >>> from descarteslabs.compute import Function
+        >>> fn = Function.list()
+        """
+        client = ComputeClient.get_default_client()
+        params = {"status": status, "page_size": page_size}
+        paginator = client.paginate("/functions", params=params)
+
+        for data in paginator:
+            yield cls(**data)
+
+    @classmethod
+    def update_credentials(cls):
+        """Updates the credentials for the Functions and Jobs run by this user.
+
+        These credentials are used by other Descarteslabs services.
+
+        If the user invalidates existing credentials and needs to update them,
+        you should call this method.
+
+        Notes
+        -----
+        Credentials are automatically updated when a new Function is created.
+        """
+        client = ComputeClient.get_default_client()
+        client.set_credentials()
+
+    @property
+    def jobs(self) -> Iterable[Job]:
+        return Job.list(self.id)
+
+    def build_log(self):
+        """Retrieves the build log for the function."""
+        client = ComputeClient.get_default_client()
+        response = client.session.get(f"/functions/{self.id}/log")
+
+        print(gzip.decompress(response.content).decode())
+
     def save(self):
         """Creates the Function if it does not already exist.
         If the Function does exist, updates it.
@@ -557,6 +626,8 @@ class Function(ComputeObject):
         }
 
         if self._state == State.NEW:
+            self.update_credentials()
+
             code_bundle_path = self._bundle()
             response = client.session.post(
                 "/functions", json=client._remove_nulls(payload)
@@ -587,59 +658,6 @@ class Function(ComputeObject):
 
         self._load_from_json(response.json())
         self._state = State.SAVED
-
-    @classmethod
-    def get(cls, id: str):
-        """Get Function by id.
-
-        Parameters
-        ----------
-        id : str
-            Id of function to get.
-
-        Example
-        -------
-        >>> from descarteslabs.compute import Function
-        >>> fn = Function.get(<func_id>)
-        <Function name="test_name" image=test_image cpus=1 memory=16 maximum_concurrency=5 timeout=3 retries=1
-        """
-        client = ComputeClient.get_default_client()
-        response = client.session.get(f"/functions/{id}")
-        return cls(**response.json())
-
-    @classmethod
-    def list(cls, status=None, page_size=100):
-        """Lists all Functions for a user.
-
-        Parameters
-        ----------
-        status : `FunctionStatus`, optional
-            Status of the Function.
-        page_size : int, default=100
-            Maximum number of results per page.
-
-        Example
-        -------
-        >>> from descarteslabs.compute import Function
-        >>> fn = Function.list()
-        """
-        client = ComputeClient.get_default_client()
-        params = {"status": status, "page_size": page_size}
-        paginator = client.paginate("/functions", params=params)
-
-        for data in paginator:
-            yield cls(**data)
-
-    @property
-    def jobs(self) -> Iterable[Job]:
-        return Job.list(self.id)
-
-    def build_log(self):
-        """Retrieves the build log for the function."""
-        client = ComputeClient.get_default_client()
-        response = client.session.get(f"/functions/{self.id}/log")
-
-        print(gzip.decompress(response.content).decode())
 
     def map(self, args, *iterargs) -> List[Job]:
         """Submits multiple jobs efficiently with positional args to each function call.
