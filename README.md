@@ -11,7 +11,7 @@ Data science teams can use our scaling infrastructure to design models faster th
 
 Please visit [https://descarteslabs.com](https://descarteslabs.com) for more information about the Descartes Labs Platform and to request access.
 
-The `descarteslabs` python package, available at [https://pypi.org/project/descarteslabs/](https://pypi.org/project/descarteslabs/), provides client-side access to the Descartes Labs Platform for our customers. You must be a registered customer with access to our Descartes Labs Platform before you can make use of this package with our platform.
+The `descarteslabs` python package, available at [https://pypi.org/project/descarteslabs/](https://pypi.org/project/descarteslabs/), provides client-side access to the Descartes Labs Platform for our customers. You must be a registered customer with access to the platform before you can make use of this package.
 
 The documentation for the latest release can be found at [https://docs.descarteslabs.com](https://docs.descarteslabs.com). For any issues please request Customer Support at [https://support.descarteslabs.com](https://support.descarteslabs.com).
 

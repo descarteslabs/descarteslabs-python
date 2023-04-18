@@ -1,4 +1,6 @@
 import glob
+import gzip
+import inspect
 import io
 import json
 import os
@@ -9,7 +11,6 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile
 from typing import Callable, Dict, Iterable, List, Optional, Type
 
-import dill
 from strenum import StrEnum
 
 from ..client.services.service import ThirdPartyService
@@ -57,7 +58,14 @@ class ComputeObject(object):
             self._state = State.NEW
 
     def __setattr__(self, name, value):
-        super(ComputeObject, self).__setattr__("_state", State.MODIFIED)
+        # Occurs in the case a user creates a function and
+        # modifies some attributes directly before save is called
+        if getattr(self, "id", None):
+            state = State.MODIFIED
+        else:
+            state = State.NEW
+
+        super(ComputeObject, self).__setattr__("_state", state)
         super(ComputeObject, self).__setattr__(name, value)
 
 
@@ -175,7 +183,7 @@ class Job(ComputeObject):
     def result(self, cast_type: Optional[Type[Serializable]] = None):
         """Retrieves the result of the job."""
         client = ComputeClient.get_default_client()
-        response = client.session.get(f"/jobs/{self.id}/result")
+        response = client.session.get(f"/jobs/{self.id}/result", stream=True)
         result = response.content
 
         if not result:
@@ -186,12 +194,12 @@ class Job(ComputeObject):
             if deserialize and callable(deserialize):
                 return deserialize(result)
             else:
-                raise ValueError("Must implement Serializable.")
-        else:
-            try:
-                return json.loads(result)
-            except Exception:
-                return result
+                raise ValueError(f"Type {cast_type} must implement Serializable.")
+
+        try:
+            return json.loads(result)
+        except Exception:
+            return result
 
     def wait_for_completion(self, timeout=None, interval=10):
         """Waits until Job is completed.
@@ -204,6 +212,7 @@ class Job(ComputeObject):
         interval : int, default=10
             Interval for how often to check if jobs have been completed.
         """
+        print(f"Job {self.id} starting status {self.status}")
         last_status = self.status
         start_time = time.time()
 
@@ -234,11 +243,12 @@ class Job(ComputeObject):
         """Creates the Job if it does not already exist.
         If the Job does exist, updates it.
         """
-        client = ComputeClient.get_default_client()
-
         if self._state == State.SAVED:
             return
-        elif self._state == State.MODIFIED:
+
+        client = ComputeClient.get_default_client()
+
+        if self._state == State.MODIFIED:
             payload = {
                 "args": self.args,
                 "kwargs": self.kwargs,
@@ -260,10 +270,22 @@ class Job(ComputeObject):
         self._load_from_json(response.json())
         self._state = State.SAVED
 
-    def log(self):
-        # need s3 set up, log path in job needs to be set to the bucket
-        # credentials stuff
-        raise NotImplementedError()
+    def log(self, timestamps: bool = True):
+        """Retrieves the log for the job.
+
+        Parameters
+        ----------
+        timestamps : bool, True
+            If set, log timestamps will be included and converted to the users system
+            timezone from UTC.
+
+            You may consider disabling this if you use a structured logger.
+        """
+        client = ComputeClient.get_default_client()
+        logs = client.iter_log_lines(f"/jobs/{self.id}/log", timestamps=timestamps)
+
+        for log in logs:
+            print(log)
 
 
 class Function(ComputeObject):
@@ -372,7 +394,7 @@ class Function(ComputeObject):
             f"<Function name={self.name} id={self.id} image={self.image} "
             f"cpus={self.cpus} memory={self.memory} "
             f"maximum_concurrency={self.maximum_concurrency} status={self.status} "
-            f"timeout={self.timeout} retries={self.retry_count}"
+            f"timeout={self.timeout} retries={self.retry_count}>"
         )
 
     def _load_from_json(self, data: dict):
@@ -397,7 +419,21 @@ class Function(ComputeObject):
         if function.__name__ == "<lambda>":
             raise ValueError("Cannot execute lambda functions. Use `def` instead.")
 
-        src = dill.source.getsource(function).strip()
+        try:
+            src = inspect.getsource(function)
+        except Exception:
+            # Unable to retrieve the source try dill
+            try:
+                import dill
+
+                src = dill.source.getsource(function)
+            except ImportError:
+                raise ValueError(
+                    "Unable to retrieve the source of interactively defined objects."
+                    " To support this install dill: pip install dill"
+                )
+
+        src = src.strip()
         main = f"{src}\n\n\nmain = {function.__name__}\n"
 
         if self._requirements:
@@ -489,18 +525,23 @@ class Function(ComputeObject):
         >>> fn.memory = 4096  # 4 Gi
         >>> fn.save()
         """
+
+        if self._state == State.SAVED:
+            # Object already exists on the server without changes locally
+            return
+
         client = ComputeClient.get_default_client()
+        payload = {
+            "name": self.name,
+            "image": self.image,
+            "cpus": self.cpus,
+            "memory": self.memory,
+            "maximum_concurrency": self.maximum_concurrency,
+            "timeout": self.timeout,
+            "retry_count": self.retry_count,
+        }
 
         if self._state == State.NEW:
-            payload = {
-                "name": self.name,
-                "image": self.image,
-                "cpus": self.cpus,
-                "memory": self.memory,
-                "maximum_concurrency": self.maximum_concurrency,
-                "timeout": self.timeout,
-                "retry_count": self.retry_count,
-            }
             code_bundle_path = self._bundle()
             response = client.session.post(
                 "/functions", json=client._remove_nulls(payload)
@@ -521,7 +562,7 @@ class Function(ComputeObject):
             response = client.session.post(f"/functions/{self.id}/bundle")
             self._load_from_json(response.json())
         elif self._state == State.MODIFIED:
-            response = client.session.patch(f"/functions/{self.id}", json=self.__dict__)
+            response = client.session.patch(f"/functions/{self.id}", json=payload)
             self._load_from_json(response.json())
         else:
             raise ValueError(
@@ -578,6 +619,13 @@ class Function(ComputeObject):
     def jobs(self) -> Iterable[Job]:
         return Job.list(self.id)
 
+    def build_log(self):
+        """Retrieves the build log for the function."""
+        client = ComputeClient.get_default_client()
+        response = client.session.get(f"/functions/{self.id}/log")
+
+        print(gzip.decompress(response.content).decode())
+
     def map(self, args, *iterargs) -> List[Job]:
         """Submits multiple jobs efficiently with positional args to each function call.
         Preferred over repeatedly calling the function when submitting multiple jobs.
@@ -611,6 +659,7 @@ class Function(ComputeObject):
         return [Job(**job) for job in response.json()]
 
     def refresh(self):
+        """Updates the Function instance with data from the server."""
         client = ComputeClient.get_default_client()
 
         response = client.session.get(f"/functions/{self.id}")
@@ -642,6 +691,7 @@ class Function(ComputeObject):
         interval : int, default=10
             Interval for how often to check if jobs have been completed.
         """
+        print(f"Function {self.name} starting status {self.status}")
         last_status = self.status
         start_time = time.time()
 

@@ -1,4 +1,6 @@
-from typing import Optional
+import json
+from datetime import datetime, timezone
+from typing import Iterator, Optional
 
 from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
@@ -37,3 +39,21 @@ class ComputeClient(Service, DefaultClientMixin):
 
     def _remove_nulls(self, data: dict) -> dict:
         return {k: v for k, v in data.items() if v}
+
+    def iter_log_lines(self, url: str, timestamps: bool = True) -> Iterator[str]:
+        response = self.session.get(url, stream=True)
+        lines = response.iter_lines()
+
+        for line in lines:
+            structured_log = json.loads(line)
+            timestamp, log = structured_log["date"], structured_log["log"]
+            log_date = (
+                datetime.fromisoformat(timestamp[:-1] + "+00:00")
+                .replace(tzinfo=timezone.utc)
+                .astimezone()  # Convert to users timezone
+            )
+
+            if timestamps:
+                log = f"{log_date} {log}"
+
+            yield log
