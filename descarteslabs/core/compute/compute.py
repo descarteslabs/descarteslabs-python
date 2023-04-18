@@ -409,6 +409,7 @@ class Function(ComputeObject):
         self.status = data.get("status", self.status)
         self.timeout = data.get("timeout", self.timeout)
         self.retry_count = data.get("retry_count", self.retry_count)
+        self._state = State.SAVED
 
     def _bundle(self) -> str:
         function = self._function
