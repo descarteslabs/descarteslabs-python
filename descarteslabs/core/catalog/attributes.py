@@ -102,7 +102,7 @@ class DocumentState(StrEnum):
 
 
 class StorageState(StrEnum):
-    """The storage state for an image.
+    """The storage state for an image or blob.
 
     Attributes
     ----------

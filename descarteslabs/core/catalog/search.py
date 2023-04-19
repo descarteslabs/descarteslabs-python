@@ -228,8 +228,9 @@ class Search(object):
     def _require_product_ids(self, filters):
         from .product import Product
         from .band import DerivedBand
+        from .blob import Blob
 
-        if self._model_cls in (Product, DerivedBand):
+        if self._model_cls in (Product, DerivedBand, Blob):
             return
         if filters:
             for filter in filters:
@@ -444,7 +445,7 @@ class GeoSearch(Search):
         self._intersects = None
 
     def intersects(self, geometry):
-        """Filter images to those that intersect the given geometry.
+        """Filter images or blobs to those that intersect the given geometry.
 
         Successive calls to `intersects` override the previous intersection
         geometry.

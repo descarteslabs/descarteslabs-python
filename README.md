@@ -19,6 +19,16 @@ Changelog
 =========
 ## [Unreleased]
 
+### Catalog
+
+- Added support for data storage. The `Blob` class provides mechanism to upload, index, share, and retrieve arbitrary byte sequences (e.g. files). `Blob`s can be searched by namespace and name, geospatial coordinates (points, polygons, etc.), and tags. `Blob`s can be downloaded to a local file, or retrieved directly as a Python `bytes` object. `Blob`s support the same sharing mechanisms as `Product`s, with `owners`, `writers`, and `readers` attributes.
+- Added support to `Property` for `prefix` filtering.
+
+### Compute
+
+- Added method to update user credentials for a `Function`.
+- Added methods to retrieve build and job logs.
+
 ## [2.0.0rc1] - 2023-04-10
 
 - This is an internal-only release. There is as of yet no updated documentation. However, the user-facing client APIs remain fully compatible with v1.12.1.
