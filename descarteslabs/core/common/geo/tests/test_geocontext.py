@@ -22,6 +22,13 @@ import warnings
 
 import shapely.geometry
 
+try:
+    # shapely 2.x
+    from shapely import translate
+except ImportError:
+    # shapely 1.X
+    from shapely.affinity import translate
+
 from .. import geocontext
 from ..geocontext import EARTH_CIRCUMFERENCE_WGS84
 
@@ -159,7 +166,7 @@ class TestAOI(unittest.TestCase):
         geom = shapely.geometry.Point(-90, 30).buffer(1).envelope
         ctx = geocontext.AOI(geometry=geom, resolution=40)
 
-        geom_overlaps = shapely.affinity.translate(geom, xoff=1)
+        geom_overlaps = translate(geom, xoff=1)
         assert geom.intersects(geom_overlaps)
         ctx_overlap = ctx.assign(geometry=geom_overlaps)
         assert ctx_overlap.bounds == ctx.bounds
@@ -167,7 +174,7 @@ class TestAOI(unittest.TestCase):
         ctx_updated = ctx.assign(geometry=geom_overlaps, bounds="update")
         assert ctx_updated.bounds == geom_overlaps.bounds
 
-        geom_doesnt_overlap = shapely.affinity.translate(geom, xoff=3)
+        geom_doesnt_overlap = translate(geom, xoff=3)
         with pytest.raises(ValueError, match="Geometry and bounds do not intersect"):
             ctx.assign(geometry=geom_doesnt_overlap)
         ctx_doesnt_overlap_updated = ctx.assign(

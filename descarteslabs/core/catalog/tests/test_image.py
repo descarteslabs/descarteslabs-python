@@ -155,7 +155,7 @@ class TestImage(ClientTestCase):
         assert shape == i.geometry
 
         with pytest.raises(AttributeValidationError):
-            i.geometry = {"type": "Polygon"}
+            i.geometry = {"type": "Lollipop"}
         with pytest.raises(AttributeValidationError):
             i.geometry = 2
 

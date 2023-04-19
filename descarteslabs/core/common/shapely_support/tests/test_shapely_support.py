@@ -154,6 +154,7 @@ class ShapelySupportTest(unittest.TestCase):
         as_shapely = geometry_like_to_shapely(fc)
         assert isinstance(as_shapely, shapely.geometry.GeometryCollection)
         for converted, shape in zip(
-            list(as_shapely), list(shapely.geometry.GeometryCollection(shapes))
+            list(as_shapely.geoms),
+            list(shapely.geometry.GeometryCollection(shapes).geoms),
         ):
             assert converted.__geo_interface__ == shape.__geo_interface__
