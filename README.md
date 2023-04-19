@@ -19,6 +19,8 @@ Changelog
 =========
 ## [Unreleased]
 
+## [2.0.0rc2] - 2023-04-19
+
 ### Catalog
 
 - Added support for data storage. The `Blob` class provides mechanism to upload, index, share, and retrieve arbitrary byte sequences (e.g. files). `Blob`s can be searched by namespace and name, geospatial coordinates (points, polygons, etc.), and tags. `Blob`s can be downloaded to a local file, or retrieved directly as a Python `bytes` object. `Blob`s support the same sharing mechanisms as `Product`s, with `owners`, `writers`, and `readers` attributes.
@@ -28,6 +30,10 @@ Changelog
 
 - Added method to update user credentials for a `Function`.
 - Added methods to retrieve build and job logs.
+
+### General
+
+- Added support for Shapely=2.X.
 
 ## [2.0.0rc1] - 2023-04-10
 

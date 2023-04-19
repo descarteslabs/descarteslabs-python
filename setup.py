@@ -95,7 +95,7 @@ def do_setup():
         install_requires=[
             "affine>=2.2.2",
             "blosc>=1.10.6",
-            "cachetools>=3.1.1,<5",
+            "cachetools>=3.1.1",
             "dill>=0.3.6",
             "dynaconf>=3.1.11",
             "geojson>=2.5.0",
