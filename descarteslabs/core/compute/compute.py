@@ -659,13 +659,13 @@ class Function(ComputeObject):
         self._load_from_json(response.json())
         self._state = State.SAVED
 
-    def map(self, args, *iterargs) -> List[Job]:
+    def map(self, args, iterargs=None) -> List[Job]:
         """Submits multiple jobs efficiently with positional args to each function call.
         Preferred over repeatedly calling the function when submitting multiple jobs.
 
         Parameters
         ----------
-        args : iterable, optional
+        args : iterable
             An iterable of arguments. A job will be submitted with each element as the
             first positional argument to the function.
         kwargs : List[iterable], optional
