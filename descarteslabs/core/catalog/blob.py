@@ -381,6 +381,11 @@ class Blob(CatalogObject):
             object and already open, must be binary mode and readable. Open file-like
             objects remain open on return and must be closed by the caller.
 
+        Returns
+        -------
+        Blob
+            The uploaded instance.
+
         Raises
         ------
         ValueError
@@ -441,6 +446,11 @@ class Blob(CatalogObject):
         data : str or bytes
             Data to be uploaded. A str will be default encoded to bytes.
 
+        Returns
+        -------
+        Blob
+            The uploaded instance.
+
         Raises
         ------
         ValueError
@@ -467,7 +477,8 @@ class Blob(CatalogObject):
             data = data.encode()
         elif not isinstance(data, bytes):
             raise ValueError("Invalid data value: must be string or bytes")
-        self._do_upload(data)
+
+        return self._do_upload(data)
 
     # the upload implementation is broken out so it can be used from multiple methods
     def _do_upload(self, src):
@@ -504,6 +515,8 @@ class Blob(CatalogObject):
             saved=True,
             **upload.storage._attributes,
         )
+
+        return self
 
     @check_deleted
     def download(self, file, range=None):
