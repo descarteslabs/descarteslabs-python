@@ -1101,7 +1101,6 @@ class Image(NamedCatalogObject):
                 ) from None
         if all_touched is not None:
             geocontext = geocontext.assign(all_touched=all_touched)
-        print(geocontext)
 
         return self._ndarray(
             bands,
