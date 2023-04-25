@@ -965,6 +965,7 @@ class Image(NamedCatalogObject):
         self,
         bands,
         geocontext=None,
+        crs=None,
         resolution=None,
         all_touched=None,
         mask_nodata=True,
@@ -1004,10 +1005,13 @@ class Image(NamedCatalogObject):
         geocontext : :class:`~descarteslabs.common.geo.geocontext.GeoContext`, default None
             A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading this Image.
             If ``None`` then the default geocontext of the image will be used.
+        crs : str, default None
+            if not None, update the gecontext with this value to set the output CRS.
         resolution : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to set the output resolution
+            in the units native to the specified or defaulted output CRS.
         all_touched : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to control rastering behavior.
         mask_nodata : bool, default True
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
@@ -1083,15 +1087,21 @@ class Image(NamedCatalogObject):
         """
         if geocontext is None:
             geocontext = self.geocontext
-        if resolution is not None:
+        if crs is not None or resolution is not None:
             try:
-                geocontext = geocontext.assign(resolution=resolution)
+                params = {}
+                if crs is not None:
+                    params["crs"] = crs
+                if resolution is not None:
+                    params["resolution"] = resolution
+                geocontext = geocontext.assign(**params)
             except TypeError:
                 raise ValueError(
-                    f"{type(geocontext)} geocontext does not support modifying resolution"
+                    f"{type(geocontext)} geocontext does not support modifying crs or resolution"
                 ) from None
         if all_touched is not None:
             geocontext = geocontext.assign(all_touched=all_touched)
+        print(geocontext)
 
         return self._ndarray(
             bands,
@@ -1218,6 +1228,7 @@ class Image(NamedCatalogObject):
         self,
         bands,
         geocontext=None,
+        crs=None,
         resolution=None,
         all_touched=None,
         dest=None,
@@ -1242,10 +1253,13 @@ class Image(NamedCatalogObject):
         geocontext : :class:`~descarteslabs.common.geo.geocontext.GeoContext`, default None
             A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading this image.
             If ``None`` then use the default context for the image.
+        crs : str, default None
+            if not None, update the gecontext with this value to set the output CRS.
         resolution : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to set the output resolution
+            in the units native to the specified or defaulted output CRS.
         all_touched : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to control rastering behavior.
         dest : str or path-like object, default None
             Where to write the image file.
 
@@ -1319,12 +1333,17 @@ class Image(NamedCatalogObject):
         """
         if geocontext is None:
             geocontext = self.geocontext
-        if resolution is not None:
+        if crs is not None or resolution is not None:
             try:
-                geocontext = geocontext.assign(resolution=resolution)
+                params = {}
+                if crs is not None:
+                    params["crs"] = crs
+                if resolution is not None:
+                    params["resolution"] = resolution
+                geocontext = geocontext.assign(**params)
             except TypeError:
                 raise ValueError(
-                    f"{type(geocontext)} geocontext does not support modifying resolution"
+                    f"{type(geocontext)} geocontext does not support modifying crs or resolution"
                 ) from None
         if all_touched is not None:
             geocontext = geocontext.assign(all_touched=all_touched)

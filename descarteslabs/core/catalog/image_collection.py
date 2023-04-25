@@ -161,6 +161,7 @@ class ImageCollection(Collection):
         self,
         bands,
         geocontext=None,
+        crs=None,
         resolution=None,
         all_touched=None,
         flatten=None,
@@ -196,10 +197,13 @@ class ImageCollection(Collection):
             A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading each image.
             If ``None`` then the default context of the collection will be used. If
             this is ``None``, a ValueError is raised.
+        crs : str, default None
+            if not None, update the gecontext with this value to set the output CRS.
         resolution : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to set the output resolution
+            in the units native to the specified or defaulted output CRS.
         all_touched : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to control rastering behavior.
         flatten : str, Sequence[str], callable, or Sequence[callable], default None
             "Flatten" groups of images in the stack into a single layer by mosaicking
             each group (such as images from the same day), then stacking the mosaics.
@@ -300,12 +304,17 @@ class ImageCollection(Collection):
                 raise ValueError(
                     "No geocontext supplied, and no default geocontext is defined for this ImageCollection"
                 )
-        if resolution is not None:
+        if crs is not None or resolution is not None:
             try:
-                geocontext = geocontext.assign(resolution=resolution)
+                params = {}
+                if crs is not None:
+                    params["crs"] = crs
+                if resolution is not None:
+                    params["resolution"] = resolution
+                geocontext = geocontext.assign(**params)
             except TypeError:
                 raise ValueError(
-                    f"{type(geocontext)} geocontext does not support modifying resolution"
+                    f"{type(geocontext)} geocontext does not support modifying crs or resolution"
                 ) from None
         if all_touched is not None:
             geocontext = geocontext.assign(all_touched=all_touched)
@@ -416,6 +425,7 @@ class ImageCollection(Collection):
         self,
         bands,
         geocontext=None,
+        crs=None,
         resolution=None,
         all_touched=None,
         mask_nodata=True,
@@ -452,10 +462,13 @@ class ImageCollection(Collection):
             A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading each image.
             If ``None`` then the default context of the collection will be used. If
             this is ``None``, a ValueError is raised.
+        crs : str, default None
+            if not None, update the gecontext with this value to set the output CRS.
         resolution : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to set the output resolution
+            in the units native to the specified or defaulted output CRS.
         all_touched : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to control rastering behavior.
         mask_nodata : bool, default True
             Whether to mask out values in each band that equal
             that band's ``nodata`` sentinel value.
@@ -531,12 +544,17 @@ class ImageCollection(Collection):
                 raise ValueError(
                     "No geocontext supplied, and no default geocontext is defined for this ImageCollection"
                 )
-        if resolution is not None:
+        if crs is not None or resolution is not None:
             try:
-                geocontext = geocontext.assign(resolution=resolution)
+                params = {}
+                if crs is not None:
+                    params["crs"] = crs
+                if resolution is not None:
+                    params["resolution"] = resolution
+                geocontext = geocontext.assign(**params)
             except TypeError:
                 raise ValueError(
-                    f"{type(geocontext)} geocontext does not support modifying resolution"
+                    f"{type(geocontext)} geocontext does not support modifying crs or resolution"
                 ) from None
         if all_touched is not None:
             geocontext = geocontext.assign(all_touched=all_touched)
@@ -606,6 +624,7 @@ class ImageCollection(Collection):
         self,
         bands,
         geocontext=None,
+        crs=None,
         resolution=None,
         all_touched=None,
         dest=None,
@@ -630,10 +649,13 @@ class ImageCollection(Collection):
             A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading each image.
             If ``None`` then the default context of the collection will be used. If
             this is ``None``, a ValueError is raised.
+        crs : str, default None
+            if not None, update the gecontext with this value to set the output CRS.
         resolution : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to set the output resolution
+            in the units native to the specified or defaulted output CRS.
         all_touched : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to control rastering behavior.
         dest : str, path-like, or sequence of str or path-like, default None
             Directory or sequence of paths to which to write the image files.
 
@@ -736,12 +758,17 @@ class ImageCollection(Collection):
                 raise ValueError(
                     "No geocontext supplied, and no default geocontext is defined for this ImageCollection"
                 )
-        if resolution is not None:
+        if crs is not None or resolution is not None:
             try:
-                geocontext = geocontext.assign(resolution=resolution)
+                params = {}
+                if crs is not None:
+                    params["crs"] = crs
+                if resolution is not None:
+                    params["resolution"] = resolution
+                geocontext = geocontext.assign(**params)
             except TypeError:
                 raise ValueError(
-                    f"{type(geocontext)} geocontext does not support modifying resolution"
+                    f"{type(geocontext)} geocontext does not support modifying crs or resolution"
                 ) from None
         if all_touched is not None:
             geocontext = geocontext.assign(all_touched=all_touched)
@@ -828,6 +855,7 @@ class ImageCollection(Collection):
         self,
         bands,
         geocontext=None,
+        crs=None,
         resolution=None,
         all_touched=None,
         dest=None,
@@ -855,10 +883,13 @@ class ImageCollection(Collection):
             A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading each image.
             If ``None`` then the default context of the collection will be used. If
             this is ``None``, a ValueError is raised.
+        crs : str, default None
+            if not None, update the gecontext with this value to set the output CRS.
         resolution : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to set the output resolution
+            in the units native to the specified or defaulted output CRS.
         all_touched : float, default None
-            if not None, update the geocontext with this value
+            if not None, update the geocontext with this value to control rastering behavior.
         dest : str or path-like object, default None
             Where to write the image file.
 
@@ -944,12 +975,17 @@ class ImageCollection(Collection):
                 raise ValueError(
                     "No geocontext supplied, and no default geocontext is defined for this ImageCollection"
                 )
-        if resolution is not None:
+        if crs is not None or resolution is not None:
             try:
-                geocontext = geocontext.assign(resolution=resolution)
+                params = {}
+                if crs is not None:
+                    params["crs"] = crs
+                if resolution is not None:
+                    params["resolution"] = resolution
+                geocontext = geocontext.assign(**params)
             except TypeError:
                 raise ValueError(
-                    f"{type(geocontext)} geocontext does not support modifying resolution"
+                    f"{type(geocontext)} geocontext does not support modifying crs or resolution"
                 ) from None
         if all_touched is not None:
             geocontext = geocontext.assign(all_touched=all_touched)
