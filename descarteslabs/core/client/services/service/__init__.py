@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .service import JsonApiService, JsonApiSession, Service, Session, ThirdPartyService
-
 from descarteslabs.exceptions import NotFoundError
 
+from .api_service import ApiService, ApiSession
+from .service import JsonApiService, JsonApiSession, Service, Session, ThirdPartyService
+
 __all__ = [
+    "ApiService",
+    "ApiSession",
     "JsonApiService",
     "JsonApiSession",
     "NotFoundError",

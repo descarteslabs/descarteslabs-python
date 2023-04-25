@@ -111,7 +111,7 @@ class Service:
         A Descartes Labs :py:class:`~descarteslabs.auth.Auth` instance.  If not
         provided, a default one will be instantiated.
     retries: int or urllib3.util.retry.Retry
-        If a number, it's the number of retries that will be attempled.  If a
+        If a number, it's the number of retries that will be attempted.  If a
         :py:class:`urllib3.util.retry.Retry` instance, it will determine the retry
         behavior.  If not provided, the default retry policy as described above will
         be used.
@@ -381,6 +381,9 @@ class JsonApiSession(Session):
             authentication was not handled or was invalid.
         ConflictError
             A 409 HTTP response status code was encountered.
+        ValidationError
+            A 422 HTTP response status code was encountered.
+            ValidationError extends BadRequestError for backward compatibility.
         RateLimitError
             A 429 HTTP response status code was encountered.
         GatewayTimeoutError
@@ -446,18 +449,18 @@ class JsonApiSession(Session):
 
                 for error in errors:
                     line = ""
-                    seperator = ""
+                    separator = ""
 
                     if self.KEY_TITLE in error:
                         line += error[self.KEY_TITLE]
-                        seperator = ": "
+                        separator = ": "
                     elif self.KEY_STATUS in error:
                         line += error[self.KEY_STATUS]
-                        seperator = ": "
+                        separator = ": "
 
                     if self.KEY_DETAIL in error:
-                        line += seperator + error[self.KEY_DETAIL].strip(".")
-                        seperator = ": "
+                        line += separator + error[self.KEY_DETAIL].strip(".")
+                        separator = ": "
 
                     if self.KEY_SOURCE in error:
                         source = error[self.KEY_SOURCE]
@@ -465,7 +468,7 @@ class JsonApiSession(Session):
                             source = source[self.KEY_POINTER].split("/")[-1]
                         elif self.KEY_PARAMETER in source:
                             source = source[self.KEY_PARAMETER]
-                        line += seperator + source
+                        line += separator + source
 
                     if self.KEY_ID in error:
                         line += " ({})".format(error[self.KEY_ID])
@@ -491,7 +494,7 @@ class JsonApiSession(Session):
 
 
 class JsonApiService(Service):
-    """A JsonApi oriented default Descateslabs Labs HTTP Service.
+    """A JsonApi oriented default Descartes Labs HTTP Service.
 
     For details see the :py:class:`Service`.  This service adheres to the `JsonApi
     standard <https://jsonapi.org/format/>`_ and interprets responses as needed.
@@ -515,7 +518,7 @@ class JsonApiService(Service):
         A Descartes Labs :py:class:`~descarteslabs.auth.Auth` instance.  If not
         provided, a default one will be instantiated.
     retries: int or urllib3.util.retry.Retry If a number, it's the number of retries
-        that will be attempled.  If a :py:class:`urllib3.util.retry.Retry` instance,
+        that will be attempted.  If a :py:class:`urllib3.util.retry.Retry` instance,
         it will determine the retry behavior.  If not provided, the default retry
         policy as described above will be used.
 
@@ -694,7 +697,7 @@ class JsonApiService(Service):
         else:
             if len(ids_list) != len(attributes_list):
                 raise ValueError(
-                    "Different number of resources given than IDs: {} vs {}".foramt(
+                    "Different number of resources given than IDs: {} vs {}".format(
                         len(attributes_list), len(ids_list)
                     )
                 )

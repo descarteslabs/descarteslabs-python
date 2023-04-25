@@ -32,6 +32,7 @@ from descarteslabs.exceptions import (
     RateLimitError,
     RequestCancellationError,
     ServerError,
+    ValidationError,
 )
 
 from .proxy import ProxyAuthentication
@@ -269,6 +270,9 @@ class Session(requests.Session):
             A 409 HTTP response status code was encountered.
         GoneError
             A 410 HTTP response status code was encountered.
+        ValidationError
+            A 422 HTTP response status code was encountered.
+            ValidationError extends BadRequestError for backward compatibility.
         RateLimitError
             A 429 HTTP response status code was encountered.
         GatewayTimeoutError
@@ -322,7 +326,8 @@ class Session(requests.Session):
         elif resp.status_code == HTTPStatus.GONE:
             raise GoneError(resp.text)
         elif resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
-            raise BadRequestError(resp.text)
+            # For backward compatibility, ValidationError extends BadRequestError
+            raise ValidationError(resp.text)
         elif resp.status_code == HTTPStatus.TOO_MANY_REQUESTS:
             raise RateLimitError(
                 resp.text, retry_after=resp.headers.get(HttpHeaderKeys.RetryAfter)

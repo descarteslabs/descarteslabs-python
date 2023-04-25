@@ -183,7 +183,7 @@ class Job(ComputeObject):
         """
         client = ComputeClient.get_default_client()
         params = {"page_size": page_size}
-        paginator = client.paginate(f"/functions/{function_id}/jobs", params=params)
+        paginator = client.iter_pages(f"/functions/{function_id}/jobs", params=params)
 
         for data in paginator:
             yield cls(**data)
@@ -548,7 +548,7 @@ class Function(ComputeObject):
         """
         client = ComputeClient.get_default_client()
         params = {"status": status, "page_size": page_size}
-        paginator = client.paginate("/functions", params=params)
+        paginator = client.iter_pages("/functions", params=params)
 
         for data in paginator:
             yield cls(**data)
@@ -648,6 +648,7 @@ class Function(ComputeObject):
             response = client.session.post(f"/functions/{self.id}/bundle")
             self._load_from_json(response.json())
         elif self._state == State.MODIFIED:
+            payload.pop("image")
             response = client.session.patch(f"/functions/{self.id}", json=payload)
             self._load_from_json(response.json())
         else:

@@ -47,9 +47,15 @@ class ServerError(Exception):
 
 
 class BadRequestError(ClientError):
-    """Client request with invalid or incorrect parameters."""
+    """Client request with incorrect parameters."""
 
     status = 400
+
+
+class ValidationError(BadRequestError):
+    """Client request with invalid parameters."""
+
+    status = 422
 
 
 class NotFoundError(ClientError):
