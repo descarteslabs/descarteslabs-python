@@ -267,7 +267,7 @@ class Job(ComputeObject):
                 "args": self.args,
                 "kwargs": self.kwargs,
             }
-            response = client.session.patch("/jobs/{self.id}", json=payload)
+            response = client.session.patch(f"/jobs/{self.id}", json=payload)
         elif self._state == State.NEW:
             payload = {
                 "function_id": self.function_id,
@@ -277,7 +277,7 @@ class Job(ComputeObject):
             response = client.session.post("/jobs", json=client._remove_nulls(payload))
         else:
             raise ValueError(
-                "Unexpected Job state {self._state}."
+                f"Unexpected Job state {self._state}."
                 f'Reload the job from the server: Job.get("{self.id}")'
             )
 
@@ -653,7 +653,7 @@ class Function(ComputeObject):
             self._load_from_json(response.json())
         else:
             raise ValueError(
-                "Unexpected Function state {self._state}."
+                f"Unexpected Function state {self._state}."
                 f'Reload the function from the server: Function.get("{self.id}")'
             )
 
