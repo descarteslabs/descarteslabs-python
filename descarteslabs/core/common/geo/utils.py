@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from math import floor
+
 
 def polygon_from_bounds(bounds):
     "Return a GeoJSON Polygon dict from a (minx, miny, maxx, maxy) tuple"
@@ -29,13 +31,13 @@ def polygon_from_bounds(bounds):
     }
 
 
-def valid_latlon_bounds(bounds):
+def valid_latlon_bounds(bounds, tol=0.001):
     "Return whether bounds fall within [-180, 180] for x and [-90, 90] for y"
     return (
-        -180 <= bounds[0] <= 180
-        and -90 <= bounds[1] <= 90
-        and -180 <= bounds[2] <= 180
-        and -90 <= bounds[3] <= 90
+        -180 <= round_if_close_to_int(bounds[0], tol) <= 180
+        and -90 <= round_if_close_to_int(bounds[1], tol) <= 90
+        and -180 <= round_if_close_to_int(bounds[2], tol) <= 180
+        and -90 <= round_if_close_to_int(bounds[3], tol) <= 90
     )
 
 
@@ -72,3 +74,12 @@ def is_wgs84_crs(crs):
         or lower_crs.startswith('geodcrs["wgs 84"')
         or lower_crs.startswith('geodeticcrs["wgs 84"')
     )
+
+
+def round_if_close_to_int(value, tol=0.001):
+    closest_int = int(floor(value + 0.5))
+
+    if abs(value - closest_int) < tol:
+        return closest_int
+    else:
+        return value

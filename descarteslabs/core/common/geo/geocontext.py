@@ -469,32 +469,6 @@ class AOI(GeoContext):
         return new
 
     def _validate(self):
-        # test that bounds are sane
-        if self._bounds is not None:
-            shapely_support.check_valid_bounds(self._bounds)
-
-        # rough check that bounds values actually make sense for bounds_crs
-        if self._bounds_crs is not None and self._bounds is not None:
-            if is_geographic_crs(self._bounds_crs):
-                if not valid_latlon_bounds(self._bounds):
-                    raise ValueError(
-                        "Bounds must be in lat-lon coordinates, "
-                        "but the given bounds are outside [-90, 90] for y or [-180, 180] for x."
-                    )
-            else:
-                if valid_latlon_bounds(self._bounds):
-                    # Warn that bounds are probably in the wrong CRS.
-                    # But we can't be sure without a proper tool for working with CRSs,
-                    # since bounds that look like valid lat-lon coords
-                    # *could* be valid in a different CRS, though unlikely.
-                    warnings.warn(
-                        "You might have the wrong `bounds_crs` set.\n"
-                        "Bounds appear to be in lat-lon decimal degrees, but the `bounds_crs` "
-                        "does not seem to be a geographic coordinate reference system "
-                        "(i.e. its units are not degrees, but meters, feet, etc.).\n\n"
-                        "If this is unexpected, set `bounds_crs='EPSG:4326'`."
-                    )
-
         # validate shape
         if self._shape is not None:
             if not isinstance(self._shape, (list, tuple)) or len(self._shape) != 2:
@@ -514,6 +488,39 @@ class AOI(GeoContext):
         # can't set both resolution and shape
         if self._resolution is not None and self._shape is not None:
             raise ValueError("Cannot set both resolution and shape")
+
+        # test that bounds are sane
+        if self._bounds is not None:
+            shapely_support.check_valid_bounds(self._bounds)
+
+        # rough check that bounds values actually make sense for bounds_crs
+        if self._bounds_crs is not None and self._bounds is not None:
+            if is_geographic_crs(self._bounds_crs):
+                # some whole-globe products are funky around the dateline. Try
+                # to allow up to a 1/2 pixel slop there. This will generally only
+                # occur with AOIs created automatically from Image properties.
+                if self._resolution and self._crs and is_geographic_crs(self._crs):
+                    tol = self._resolution / 2
+                else:
+                    tol = 0.001
+                if not valid_latlon_bounds(self._bounds, tol):
+                    raise ValueError(
+                        "Bounds must be in lat-lon coordinates, "
+                        "but the given bounds are outside [-90, 90] for y or [-180, 180] for x."
+                    )
+            else:
+                if valid_latlon_bounds(self._bounds):
+                    # Warn that bounds are probably in the wrong CRS.
+                    # But we can't be sure without a proper tool for working with CRSs,
+                    # since bounds that look like valid lat-lon coords
+                    # *could* be valid in a different CRS, though unlikely.
+                    warnings.warn(
+                        "You might have the wrong `bounds_crs` set.\n"
+                        "Bounds appear to be in lat-lon decimal degrees, but the `bounds_crs` "
+                        "does not seem to be a geographic coordinate reference system "
+                        "(i.e. its units are not degrees, but meters, feet, etc.).\n\n"
+                        "If this is unexpected, set `bounds_crs='EPSG:4326'`."
+                    )
 
         # check that bounds and geometry actually intersect (if bounds in wgs84)
         if (
