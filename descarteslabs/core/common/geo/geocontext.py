@@ -501,6 +501,14 @@ class AOI(GeoContext):
                 # occur with AOIs created automatically from Image properties.
                 if self._resolution and self._crs and is_geographic_crs(self._crs):
                     tol = self._resolution / 2
+                elif self._shape is not None:
+                    tol = (
+                        max(
+                            self._bounds[2] - self._bounds[0] / self._shape[1],
+                            self._bounds[3] - self._bounds[1] / self._shape[0],
+                        )
+                        / 2
+                    )
                 else:
                     tol = 0.001
                 if not valid_latlon_bounds(self._bounds, tol):
