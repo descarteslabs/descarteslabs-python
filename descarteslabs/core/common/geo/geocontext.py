@@ -504,8 +504,8 @@ class AOI(GeoContext):
                 elif self._shape is not None:
                     tol = (
                         max(
-                            self._bounds[2] - self._bounds[0] / self._shape[1],
-                            self._bounds[3] - self._bounds[1] / self._shape[0],
+                            (self._bounds[2] - self._bounds[0]) / self._shape[1],
+                            (self._bounds[3] - self._bounds[1]) / self._shape[0],
                         )
                         / 2
                     )
