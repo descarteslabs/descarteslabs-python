@@ -15,7 +15,7 @@ on:
 
 jobs:
   publish:
-    runs-on: [self-hosted, organization-runner, awscli, docker]
+    runs-on: [self-hosted, paas, awscli, docker, ecr-push]
     steps:
       # Checkout the source code from this repository
       - name: Checkout Source Code
