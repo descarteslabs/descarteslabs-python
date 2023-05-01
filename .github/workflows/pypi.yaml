@@ -1,0 +1,50 @@
+# Release the Descartes Labs Python Client to PyPI
+name: Publish to PyPI
+
+on:
+  # Trigger manually (via Github Web UI)
+  workflow_dispatch:
+  # Trigger when a Github Release is created
+  release:
+    types:
+      - published
+  # Trigger when pushed to this branch
+  push:
+    branches:
+      - infra-2227
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the source code from this repository
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+
+      # Setup the Python environment
+      - name: "Setup Python Environment: ${{ matrix.python-version }}"
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Build the Python wheel packages
+      - name: Build Python Packages
+        run: |
+          pip install twine
+
+          python3 setup.py bdist_wheel
+          python3 setup.py sdist
+
+      # Upload the Python wheel packages to PyPI
+      - name: Upload to PyPI
+        env:
+          # note: switch repository to "pypi" once reviewed and tested thoroughly
+          TWINE_REPOSITORY: testpypi
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          echo "Would upload these files to PyPI:"
+          ls -laR dist
+
+          # NOTE: currently disabled pending code review
+          #twine upload dist/*
