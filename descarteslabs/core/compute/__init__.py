@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .compute import Function, Job
+from .compute import Function, FunctionStatus, Job, JobStatus
 
-__all__ = ["Job", "Function"]
+__all__ = ["Function", "Job", "JobStatus", "FunctionStatus"]
