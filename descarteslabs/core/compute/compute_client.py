@@ -33,9 +33,6 @@ class ComputeClient(ApiService, DefaultClientMixin):
 
         super().__init__(url, auth=auth, retries=retries)
 
-    def _remove_nulls(self, data: dict) -> dict:
-        return {k: v for k, v in data.items() if v}
-
     def iter_log_lines(self, url: str, timestamps: bool = True) -> Iterator[str]:
         response = self.session.get(url, stream=True)
         lines = response.iter_lines()
