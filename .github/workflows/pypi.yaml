@@ -22,10 +22,10 @@ jobs:
         uses: actions/checkout@v3
 
       # Setup the Python environment
-      - name: "Setup Python Environment: ${{ matrix.python-version }}"
+      - name: "Setup Python Environment"
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.9"
 
       # Build the Python wheel packages
       - name: Build Python Packages
