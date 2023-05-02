@@ -96,6 +96,8 @@ class TestDocument(unittest.TestCase):
     def test_set_from_server(self):
         now = datetime.utcnow()
         doc = MyDocument(name="local", once="1", default=now)
+        # 2000-01-01, if set to 0 astimezone on windows in python 3.8 will error
+        timestamp = 946710000
         assert doc.once == 1
 
         data = {
@@ -103,7 +105,7 @@ class TestDocument(unittest.TestCase):
             "name": "server",
             "local": "server",
             "once": 2,
-            "default": datetime.fromtimestamp(0).isoformat(),
+            "default": datetime.fromtimestamp(timestamp).isoformat(),
             "created_at": now.isoformat(),
         }
         doc._load_from_remote(data)
@@ -111,7 +113,7 @@ class TestDocument(unittest.TestCase):
         assert doc.name == "server"
         assert doc.local == "local"
         assert doc.once == 2
-        assert doc.default == datetime.fromtimestamp(0, tz=timezone.utc)
+        assert doc.default == datetime.fromtimestamp(timestamp, tz=timezone.utc)
         assert doc.created_at == now.replace(tzinfo=timezone.utc)
 
     def test_to_dict(self):

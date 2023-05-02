@@ -263,7 +263,6 @@ class DatetimeAttribute(Attribute):
             value = datetime.fromisoformat(value)
 
         if isinstance(value, datetime):
-            print("set datetime", value, value.tzinfo)
             if not value.tzinfo:
                 value.replace(tzinfo=self.remote_timezone)
 
