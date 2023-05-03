@@ -47,7 +47,7 @@ class GeoContext(object):
     Specifically, a fully-defined GeoContext specifies:
 
     * geometry to use as a cutline (WGS84), and/or bounds
-    * resolution (m)
+    * resolution (m) or a shape defining the extent in pixels
     * EPSG code of the output coordinate reference system
     * whether to align pixels to the output CRS
       (see docstring for `AOI.align_pixels` for more information)
@@ -180,7 +180,7 @@ class AOI(GeoContext):
         geometry=None,
         resolution=None,
         crs=None,
-        align_pixels=True,
+        align_pixels=None,
         bounds=None,
         bounds_crs="EPSG:4326",
         shape=None,
@@ -190,27 +190,32 @@ class AOI(GeoContext):
         Parameters
         ----------
         geometry: GeoJSON-like dict, object with ``__geo_interface__``; optional
-            Clip imagery to this geometry.
+            When searching, filter for elements which intersect this geometry.
+            When rastering, clip imagery to this geometry.
             Coordinates must be WGS84 (lat-lon).
             If :const:`None`, imagery will just be clipped to
             :py:attr:`~descarteslabs.common.gecontext.AOI.bounds`.
         resolution: float, optional
-            Distance, in units of the CRS, that the edge of each pixel
-            represents on the ground.
+            Distance, in native units of the CRS, that the edge of each pixel
+            represents on the ground. Do not assume this to always be either
+            degrees or meters.
             Can only specify one of `resolution` and `shape`.
         crs: str, optional
             Coordinate Reference System into which imagery will be projected,
             expressed as an EPSG code (like :const:`EPSG:4326`), a PROJ.4 definition,
-            or an OGC CRS Well-Known Text string
-        align_pixels: bool, optional, default True
-            If True, this ensures that, in different images rasterized
+            or an OGC CRS Well-Known Text string.
+        align_pixels: bool, optional, default True if resolution is not None
+            If :const:`True`, this ensures that, in different images rasterized
             with this same AOI GeoContext, pixels ``(i, j)`` correspond
             to the same area in space. This is accomplished by snapping the
             coordinates of the origin (top-left corner of top-left pixel)
-            to a non-fractional interval of `resolution`.
+            to a non-fractional interval of `resolution`. Note that in cases
+            where `shape` has been specified, this may lead to the resulting
+            image being one pixel larger in each dimension, so the the entire
+            bounds is included.
 
-            If `align_pixels` is False, when using imagery with different
-            native resolutions and/or projections, pixels at the same indicies
+            If `align_pixels` is :const:`False`, when using imagery with different
+            native resolutions and/or projections, pixels at the same indices
             can be misaligned by a fraction of `resolution`
             (i.e. correspond to *slighly* different coordinates in space).
 
@@ -233,7 +238,9 @@ class AOI(GeoContext):
         shape: 2-tuple, optional
             ``(rows, columns)``, in pixels, the output raster should fit within;
             the longer side of the raster will be min(shape).
-            Can only specify one of `resolution` and `shape`.
+            Can only specify one of `resolution` and `shape`. Note that when
+            `align_pixels` is :const:`True`, the actual resulting raster may
+            be one pixel larger in each direction.
         all_touched: bool, default False
             If True, this ensures that any source pixel which intersects the
             AOI GeoContext contributes to the raster result. Normally this mode is
@@ -297,7 +304,9 @@ class AOI(GeoContext):
         this same AOI GeoContext, pixels ``(i, j)`` correspond to the
         same area in space. This is accomplished by snapping the coordinates of
         the origin (top-left corner of top-left pixel) to a non-fractional
-        interval of `resolution`.
+        interval of `resolution`. Note that in cases where `shape` has been
+        specified, this may lead to the resulting image being one pixel larger
+        in each dimension, so the the entire bounds is included.
 
         If `align_pixels` is False, when using imagery with different native
         resolutions and/or projections, pixels at the same indicies can be
@@ -309,7 +318,10 @@ class AOI(GeoContext):
         resolution and projection.
         """
 
-        return self._align_pixels
+        if self._align_pixels is None:
+            return self._resolution is not None
+        else:
+            return self._align_pixels
 
     @property
     def bounds(self):
@@ -365,8 +377,7 @@ class AOI(GeoContext):
             raise ValueError("AOI must have CRS specified")
         if self._resolution is None and self._shape is None:
             raise ValueError("AOI must have one of resolution or shape specified")
-        if self._align_pixels is None:
-            raise ValueError("AOI must have align_pixels specified")
+        # align_pixels will always be True or False based on resolution
         # all_touched doesn't affect the spatial equivalence
 
         with self._geometry_lock_:
@@ -386,7 +397,7 @@ class AOI(GeoContext):
             "resolution": self._resolution,
             "srs": self._crs,
             "bounds_srs": self._bounds_crs,
-            "align_pixels": self._align_pixels,
+            "align_pixels": self.align_pixels,
             "bounds": self._bounds,
             "dimensions": dimensions,
         }
@@ -442,7 +453,7 @@ class AOI(GeoContext):
             must be in that CRS as well.
 
             If you assign
-            :py:attr:`~descarteslabs.common.geo.geocontext.AOI.bounds`
+            :py:attr:`~descarteslabs.common.geo.geocontext.AOI.geometry`
             without changing
             :py:attr:`~descarteslabs.common.geo.geocontext.AOI.bounds`,
             the new AOI GeoContext will produce rasters with the same
@@ -495,7 +506,10 @@ class AOI(GeoContext):
 
         # rough check that bounds values actually make sense for bounds_crs
         if self._bounds_crs is not None and self._bounds is not None:
-            if is_geographic_crs(self._bounds_crs):
+            is_geographic, lon_wrap = is_geographic_crs(
+                self._bounds_crs, with_lon_wrap=True
+            )
+            if is_geographic:
                 # some whole-globe products are funky around the dateline. Try
                 # to allow up to a 1/2 pixel slop there. This will generally only
                 # occur with AOIs created automatically from Image properties.
@@ -511,7 +525,7 @@ class AOI(GeoContext):
                     )
                 else:
                     tol = 0.001
-                if not valid_latlon_bounds(self._bounds, tol):
+                if not valid_latlon_bounds(self._bounds, tol, lon_wrap=lon_wrap):
                     raise ValueError(
                         "Bounds must be in lat-lon coordinates, "
                         "but the given bounds are outside [-90, 90] for y or [-180, 180] for x."
@@ -635,6 +649,13 @@ class AOI(GeoContext):
         if geometry != "unchanged":
             self._geometry = geometry
         if resolution != "unchanged":
+            # To avoid breaking existing code, avoid a conflict with shape.
+            # getattr() to handle pre-init cases.
+            if (
+                getattr(self, "_resolution", None) is None
+                and getattr(self, "_shape", None) is not None
+            ):
+                self._shape = None
             self._resolution = resolution
         if crs != "unchanged":
             self._crs = crs

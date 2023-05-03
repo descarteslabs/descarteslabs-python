@@ -121,18 +121,30 @@ class TestAOI(unittest.TestCase):
         bounds_wgs84 = (-94.37053769704536, 40.703737, -93.52300099792355, 41.3717716)
         resolution = 40
         crs = "EPSG:32615"
-        align_pixels = False
 
-        ctx = geocontext.AOI(geom, resolution, crs, align_pixels)
+        ctx = geocontext.AOI(geom, resolution=resolution, crs=crs)
         raster_params = ctx.raster_params
         expected = {
             "cutline": geom,
             "resolution": resolution,
             "srs": crs,
             "bounds_srs": "EPSG:4326",
-            "align_pixels": align_pixels,
+            "align_pixels": True,
             "bounds": bounds_wgs84,
             "dimensions": None,
+        }
+        assert raster_params == expected
+
+        ctx = geocontext.AOI(geom, crs=crs, shape=(512, 512))
+        raster_params = ctx.raster_params
+        expected = {
+            "cutline": geom,
+            "resolution": None,
+            "srs": crs,
+            "bounds_srs": "EPSG:4326",
+            "align_pixels": False,
+            "bounds": bounds_wgs84,
+            "dimensions": (512, 512),
         }
         assert raster_params == expected
 

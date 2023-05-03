@@ -31,29 +31,46 @@ def polygon_from_bounds(bounds):
     }
 
 
-def valid_latlon_bounds(bounds, tol=0.001):
+def valid_latlon_bounds(bounds, tol=0.001, lon_wrap=0):
     "Return whether bounds fall within [-180, 180] for x and [-90, 90] for y"
     return (
-        -180 <= round_if_close_to_int(bounds[0], tol) <= 180
+        (-180 + lon_wrap) <= round_if_close_to_int(bounds[0], tol) <= (180 + lon_wrap)
         and -90 <= round_if_close_to_int(bounds[1], tol) <= 90
-        and -180 <= round_if_close_to_int(bounds[2], tol) <= 180
+        and (-180 + lon_wrap)
+        <= round_if_close_to_int(bounds[2], tol)
+        <= (180 + lon_wrap)
         and -90 <= round_if_close_to_int(bounds[3], tol) <= 90
     )
 
 
-def is_geographic_crs(crs):
-    if not isinstance(crs, str):
-        return False
-    lower_crs = crs.lower()
-    return (
-        lower_crs
-        == "epsg:4326"  # WGS84 geodetic CRS. Other geodetic EPSG codes (e.g. NAD27) are incorrectly rejected.
-        or lower_crs.startswith("+proj=longlat")  # PROJ.4
-        # OGC WKT
-        or lower_crs.startswith("geogcs[")  # deprecated
-        or lower_crs.startswith("geodcrs[")
-        or lower_crs.startswith("geodeticcrs[")
-    )
+def is_geographic_crs(crs, with_lon_wrap=False):
+    is_geographic = False
+    lon_wrap = 0
+    if isinstance(crs, str):
+        crs = crs.lower()
+        if crs == "epsg:4326":
+            # WGS84 geodetic CRS. Other geodetic EPSG codes (e.g. NAD27) are incorrectly rejected.
+            is_geographic = True
+        elif crs.startswith("+proj=longlat"):
+            # PROJ.4
+            is_geographic = True
+            for word in crs.split():
+                if word.startswith("+lon_wrap"):
+                    try:
+                        lon_wrap = float(word.split("=", 1)[1])
+                    except Exception:
+                        pass
+                    break
+        elif (
+            crs.startswith("geogcs[")  # deprecated
+            or crs.startswith("geodcrs[")
+            or crs.startswith("geodeticcrs[")
+        ):
+            is_geographic = True
+    if with_lon_wrap:
+        return is_geographic, lon_wrap
+    else:
+        return is_geographic
 
 
 def is_wgs84_crs(crs):

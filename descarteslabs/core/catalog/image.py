@@ -478,10 +478,11 @@ class Image(NamedCatalogObject):
             paradigm requires bounds for consistency, which are inherently axis-aligned.)
         """
         if self._geocontext is None:
-            resolution = None
+            shape = None
             bounds = None
             bounds_crs = None
             crs = self.cs_code or self.projection
+            resolution = None
 
             geotrans = self.geotrans
             if geotrans is not None:
@@ -497,17 +498,8 @@ class Image(NamedCatalogObject):
                         "`descarteslabs.client.services.raster.Raster.ndarray(image.id, ...)`."
                     )
 
-                scaling1, scaling2 = geotrans._scaling
-                if scaling1 == scaling2:
-                    resolution = scaling1
-                else:
-                    # if pixels aren't square (unlikely), we won't just pick a resolution---user has to figure that out.
-                    warnings.warn(
-                        "Image has non-square pixels, so no single resolution can be assigned. "
-                        "Use `shape` instead for more predictable results."
-                    )
-
                 if self.x_pixels is not None and self.y_pixels is not None:
+                    # prefer to raster by image shape, to best preserve original data.
                     # upper-left, upper-right, lower-left, lower-right in pixel coordinates
                     pixel_corners = [
                         (0, 0),
@@ -519,6 +511,17 @@ class Image(NamedCatalogObject):
                     xs, ys = zip(*geo_corners)
                     bounds = (min(xs), min(ys), max(xs), max(ys))
                     bounds_crs = crs
+                    shape = (self.y_pixels, self.x_pixels)
+                else:
+                    x_res, y_res = geotrans._scaling
+                    if x_res != y_res:
+                        # if pixels aren't square (unlikely), we won't just pick a resolution,
+                        # the user has to figure that out.
+                        raise ValueError(
+                            "Image has no size and non-square pixels, so resolution is ambiguous. "
+                            "You must manually define a geocontext for this image."
+                        )
+                    resolution = x_res
 
             self._geocontext = AOI(
                 geometry=self.geometry,
@@ -526,6 +529,7 @@ class Image(NamedCatalogObject):
                 bounds=bounds,
                 bounds_crs=bounds_crs,
                 crs=crs,
+                shape=shape,
                 align_pixels=False,
             )
 

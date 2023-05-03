@@ -19,6 +19,21 @@ Changelog
 =========
 ## [Unreleased]
 
+### Geo
+
+- The defaulting of `align_pixels` has changed slightly for the `AOI` class. Previously it always defaulted to
+  `True`. Now the default is `True` if `resolution` is set, `False` otherwise. This ensures that when specifying
+  a `shape` and a `bounds` rather than a resolution,the `shape` is actually honored.
+- When assigning a `resolution` to an `AOI`, any existing `shape` attribute is automatically unset, since the
+  two attributes are mutually exclusive.
+- The validation of bounds for a geographic CRS has been slightly modified to account for some of the irregularities
+  of whole-globe image products, correcting unintended failures in the past.
+
+### Catalog
+
+- The default `geocontext` for image objects no longer specifies a `resolution` but rather a `shape`, to ensure
+  that default rastering preserves the original data and alignment (i.e. no warping of the source image). 
+
 ## [2.0.0rc2] - 2023-04-19
 
 ### Catalog
