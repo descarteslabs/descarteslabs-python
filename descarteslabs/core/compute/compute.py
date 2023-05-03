@@ -98,7 +98,7 @@ class Job(Document):
         Parameters
         ----------
         function_id : str
-            Id of the Function. You can retrieve it, but this is not settable.
+            The id of the Function. A function must first be created to create a job.
         args : List, optional
             A list of positional arguments to pass to the function.
         kwargs : Dict, optional
@@ -116,12 +116,12 @@ class Job(Document):
 
     @classmethod
     def get(cls, id) -> "Job":
-        """Retrieves Job from id.
+        """Retrieves the Job by id.
 
         Parameters
         ----------
         id : str
-            Id of Job to get.
+            The id of the Job to fetch.
 
         Example
         -------
@@ -134,13 +134,20 @@ class Job(Document):
         return cls(response.json(), saved=True)
 
     @classmethod
-    def list(cls, function_id, page_size=100) -> Iterable["Job"]:
-        """Retrieves an iterable of all jobs for a given function id.
+    def list(
+        cls,
+        function_id: str = None,
+        status: Union[JobStatus, List[JobStatus]] = None,
+        page_size: int = 100,
+    ) -> Iterable["Job"]:
+        """Retrieves an iterable of all jobs matching the given parameters.
 
         Parameters
         ----------
-        function_id : str
-            Id of function to list associated jobs.
+        function_id : str, None
+            If set, only jobs for the given function will be included.
+        status : Union[JobStatus, List[JobStatus]], None
+            If set, only jobs matching one of the provided statuses will be included.
         page_size : int, default=100
             Maximum number of results per page.
 
@@ -152,20 +159,43 @@ class Job(Document):
         """
         client = ComputeClient.get_default_client()
         params = {"page_size": page_size}
-        paginator = client.iter_pages(f"/functions/{function_id}/jobs", params=params)
+
+        if function_id:
+            params["function_id"] = function_id
+
+        if status:
+            if not isinstance(status, list):
+                status = [status]
+
+            params["status"] = status
+
+        print("params", params)
+
+        paginator = client.iter_pages("/jobs", params=params)
 
         for data in paginator:
             yield cls(**data, saved=True)
 
     def refresh(self) -> None:
-        """Updates the Job with the latest information from the server."""
+        """Update the Job instance with the latest information from the server."""
         client = ComputeClient.get_default_client()
 
         response = client.session.get(f"/jobs/{self.id}")
         self._load_from_remote(response.json())
 
     def result(self, cast_type: Optional[Type[Serializable]] = None):
-        """Retrieves the result of the Job."""
+        """Retrieves the result of the Job.
+
+        Parameters
+        ----------
+        cast_type: Type[Serializable], None
+            If set, the result will be deserialized to the given type.
+
+        Raises
+        ------
+        ValueError
+            When `cast_type` does not implement Serializable.
+        """
         client = ComputeClient.get_default_client()
         response = client.session.get(f"/jobs/{self.id}/result", stream=True)
         result = response.content
@@ -174,7 +204,8 @@ class Job(Document):
             return None
 
         if cast_type:
-            deserialize = getattr(cast_type, "serialize", None)
+            deserialize = getattr(cast_type, "deserialize", None)
+
             if deserialize and callable(deserialize):
                 return deserialize(result)
             else:
@@ -186,13 +217,13 @@ class Job(Document):
             return result
 
     def wait_for_completion(self, timeout=None, interval=10):
-        """Waits until Job is completed.
+        """Waits until the Job is completed.
 
         Parameters
         ----------
         timeout : int, default=None
-            Maximum time to wait before timing out. If not set, this will hang until
-            completion.
+            Maximum time to wait before timing out.
+            If not set, the call will block until job completion.
         interval : int, default=10
             Interval for how often to check if jobs have been completed.
         """
@@ -225,7 +256,9 @@ class Job(Document):
 
     def save(self):
         """Creates the Job if it does not already exist.
-        If the Job does exist, updates it.
+
+        If the job already exists, it will be updated on the server if modifications
+        were made to the Job instance.
         """
         if self.state == DocumentState.SAVED:
             return
@@ -314,7 +347,8 @@ class Function(Document):
         doc="The base image used to create the Function.",
     )
     cpus: float = Attribute(
-        Cpus, doc="The number of cpus to request when executing the Function."
+        Cpus,
+        doc="The number of cpus to request when executing the Function.",
     )
     memory: int = Attribute(
         Memory,
@@ -325,14 +359,17 @@ class Function(Document):
         doc="The maximum number of Jobs that execute at the same time for this Function.",
     )
     status: FunctionStatus = Attribute(
-        FunctionStatus, readonly=True, doc="The status of the Function."
+        FunctionStatus,
+        readonly=True,
+        doc="The status of the Function.",
     )
     timeout: int = Attribute(
         int,
         doc="The number of seconds Jobs can run before timing out for this Function.",
     )
     retry_count: int = Attribute(
-        int, doc="The total number of retries requested for a Job before it failed."
+        int,
+        doc="The total number of retries requested for a Job before it failed.",
     )
 
     def __init__(
@@ -370,7 +407,7 @@ class Function(Document):
         maximum_concurrency : str
             The maximum number of jobs to run in parallel.
         timeout : int, optional
-            Maximum runtime for a single job in seconds. Job will be killed if it exceceds
+            Maximum runtime for a single job in seconds. Job will be killed if it exceeds
             this limit.
         retry_count : int, optional
             Number of times to retry a job if it fails.
@@ -533,13 +570,17 @@ class Function(Document):
         return cls(**response.json(), saved=True)
 
     @classmethod
-    def list(cls, status=None, page_size=100):
+    def list(
+        cls,
+        status: Union[FunctionStatus, List[FunctionStatus], None] = None,
+        page_size: int = 100,
+    ):
         """Lists all Functions for a user.
 
         Parameters
         ----------
-        status : `FunctionStatus`, optional
-            Status of the Function.
+        status : FunctionStatus, List[FunctionStatus], optional
+            Functions with any of the specified statuses will be included.
         page_size : int, default=100
             Maximum number of results per page.
 
@@ -549,7 +590,14 @@ class Function(Document):
         >>> fn = Function.list()
         """
         client = ComputeClient.get_default_client()
-        params = {"status": status, "page_size": page_size}
+        params = {"page_size": page_size}
+
+        if status:
+            if not isinstance(status, list):
+                status = [status]
+
+            params["status"] = status
+
         paginator = client.iter_pages("/functions", params=params)
 
         for data in paginator:
@@ -585,11 +633,14 @@ class Function(Document):
 
     def save(self):
         """Creates the Function if it does not already exist.
-        If the Function does exist, updates it.
+
+        If the Function already exists, it will be updated on the server if the Function
+        instance was modified.
 
         Examples
         --------
         Create a Function without creating jobs:
+
         >>> from descarteslabs.compute import Function
         >>> def test_func():
         ...     print("Hello :)")
@@ -607,6 +658,7 @@ class Function(Document):
         >>> fn.save()
 
         Updating a Function:
+
         >>> from descarteslabs.compute import Function
         >>> fn = Function.get(<func_id>)
         >>> fn.memory = 4096  # 4 Gi
@@ -656,7 +708,9 @@ class Function(Document):
 
     def map(self, args, iterargs=None) -> List[Job]:
         """Submits multiple jobs efficiently with positional args to each function call.
-        Preferred over repeatedly calling the function when submitting multiple jobs.
+
+        Preferred over repeatedly calling the function, such as in a loop, when submitting
+        multiple jobs.
 
         Parameters
         ----------
@@ -702,9 +756,13 @@ class Function(Document):
             yield job.result(cast_type=cast_type)
 
     def results(self, cast_type: Type[Serializable] = None):
-        """In the future, Jay wants syntactic sugar for something like this:
-            Function.jobs.filter(lambda j: j.status == "SUCCESS").iter_results()
-        Right now, results() just stuffs iter_results into a list. Limited to 1 MB.
+        """Retrieves all the job results for the Function as a list.
+
+        Notes
+        -----
+        This immediately downloads all results into a list and could run out of memory.
+        If the result set is large, strongly consider using :py:meth:`Function.refresh`
+        instead.
         """
         return list(self.iter_results(cast_type=cast_type))
 
