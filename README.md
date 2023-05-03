@@ -17,7 +17,7 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
-## [Unreleased]
+## [2.0.0rc3]
 
 ### Geo
 
@@ -32,7 +32,14 @@ Changelog
 ### Catalog
 
 - The default `geocontext` for image objects no longer specifies a `resolution` but rather a `shape`, to ensure
-  that default rastering preserves the original data and alignment (i.e. no warping of the source image). 
+  that default rastering preserves the original data and alignment (i.e. no warping of the source image).
+- The `Blob.upload` and `Blob.upload_data` methods now return `self`, so they can be used in a fluent style.
+- As with `resolution`, you can now pass a `crs` parameter to the rastering methods (e.g. `Image.ndarray`,
+  `ImageCollection.stack`, etc.) to override the `crs` of the default geocontext.
+
+### Compute
+
+- A bevy of fixes to the client.
 
 ## [2.0.0rc2] - 2023-04-19
 
