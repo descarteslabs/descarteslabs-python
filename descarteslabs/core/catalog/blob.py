@@ -91,7 +91,7 @@ class BlobSummaryResult(object):
             " - Total bytes: {:,}".format(self.bytes),
         ]
         if self.namespaces:
-            text.append(" - Namespaces: {}".format(", ".join(self.products)))
+            text.append(" - Namespaces: {}".format(", ".join(self.namespaces)))
         if self.interval_start:
             text.append(" - Interval start: {}".format(self.interval_start))
         return "\n".join(text)
@@ -152,12 +152,12 @@ class Blob(CatalogObject):
 
     Any user with ``writer`` privileges is able to read the blob attributes or data,
     or modify the blob attributes, but not delete the blob. A ``writer`` can read the
-    product ``owners`` and can only read the entry in the ``writers`` and/or ``readers``
-    by which they gain access to the product.
+    ``owners`` and can only read the entry in the ``writers`` and/or ``readers``
+    by which they gain access to the blob.
 
     Any user with ``reader`` privileges is able to read the blob attributes or data.
-    A ``reader`` can read the product ``owners`` and can only read the entry
-    in the ``writers`` and/or ``readers`` by which they gain access to the product.
+    A ``reader`` can read the ``owners`` and can only read the entry
+    in the ``writers`` and/or ``readers`` by which they gain access to the blob.
 
     Also see :doc:`Sharing Resources </guides/sharing>`.
     """
@@ -263,29 +263,29 @@ class Blob(CatalogObject):
     )
     owners = ListAttribute(
         TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that own this product.
+        doc="""list(str), optional: User, group, or organization IDs that own this blob.
 
         Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
-        delete, and change access to this product.  :ref:`See this note <product_note>`.
+        delete, and change access to this blob.  :ref:`See this note <blob_note>`.
 
         *Filterable*.
         """,
     )
     readers = ListAttribute(
         TypedAttribute(str),
-        doc="""list(str), optional: User, email, group, or organization IDs that can read this product.
+        doc="""list(str), optional: User, email, group, or organization IDs that can read this blob.
 
         Will be empty by default.  This attribute is only available in full to the `owners`
-        of the product.  :ref:`See this note <product_note>`.
+        of the blob.  :ref:`See this note <blob_note>`.
         """,
     )
     writers = ListAttribute(
         TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that can edit this product.
+        doc="""list(str), optional: User, group, or organization IDs that can edit this blob.
 
         Writers will also have read permission.  Writers will be empty by default.
-        See note below.  This attribute is only available in full to the `owners` of the product.
-        :ref:`See this note <product_note>`.
+        See note below.  This attribute is only available in full to the `owners` of the blob.
+        :ref:`See this note <blob_note>`.
         """,
     )
 
@@ -310,7 +310,8 @@ class Blob(CatalogObject):
 
         Example
         -------
-        >>> product_id = Product.namespace_id("my-product")
+        >>> namespace = Blob.namespace_id("myproject") # doctest: +SKIP
+        'myorg:myproject' # doctest: +SKIP
         """
         if client is None:
             client = CatalogClient.get_default_client()
@@ -325,6 +326,65 @@ class Blob(CatalogObject):
             return namespace_id
 
         return f"{prefix}:{namespace_id}"
+
+    @classmethod
+    def get(
+        cls,
+        id=None,
+        storage_type=StorageType.DATA,
+        namespace=None,
+        name=None,
+        client=None,
+        request_params=None,
+    ):
+        """Get an existing Blob from the Descartes Labs catalog.
+
+        If the Blob is found, it will be returned in the
+        `~descarteslabs.catalog.DocumentState.SAVED` state.  Subsequent changes will
+        put the instance in the `~descarteslabs.catalog.DocumentState.MODIFIED` state,
+        and you can use :py:meth:`save` to commit those changes and update the Descartes
+        Labs catalog object.  Also see the example for :py:meth:`save`.
+
+        Exactly one of the ``id`` and ``name`` parameters must be specified. If ``name``
+        is specified, it is used together with the ``storage_type`` and ``namespace``
+        parameters to form the corresponding ``id``.
+
+        Parameters
+        ----------
+        id : str, optional
+            The id of the object you are requesting. Required unless ``name`` is supplied.
+        storage_type : StorageType, optional
+            The storage type of the Blob you wish to retrieve. Defaults to ``data``. Ignored
+            unless ``name`` is specified.
+        namespace : str, optional
+            The namespace of the Blob you wish to retrieve. Defaults to the user's org name.
+            Ignored unless ``name`` is specified.
+        name : str, optional
+            The name of the Blob you wish to retrieve. Required if ``id`` is not specified.
+            May not be specified if ``id`` is specified.
+        client : CatalogClient, optional
+            A `CatalogClient` instance to use for requests to the Descartes Labs
+            catalog.  The
+            :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+            be used if not set.
+
+        Returns
+        -------
+        :py:class:`~descarteslabs.catalog.CatalogObject` or None
+            The object you requested, or ``None`` if an object with the given `id`
+            does not exist in the Descartes Labs catalog.
+
+        Raises
+        ------
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
+        """
+        if (not id and not name) or (id and name):
+            raise TypeError("Must specify exactly one of id or name parameters")
+        if not id:
+            id = f"{storage_type}/{Blob.namespace_id(namespace)}/{name}"
+        return super(cls, Blob).get(id)
 
     @classmethod
     def search(cls, client=None, request_params=None):
