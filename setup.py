@@ -114,6 +114,7 @@ def do_setup():
             "strenum>=0.4.8",
             "tifffile==2021.4.8",
             "tqdm>=4.32.1",
+            "urllib3>=1.26.12,<2",
         ],
         extras_require={
             "visualization": viz_requires,
