@@ -16,7 +16,7 @@ from descarteslabs.utils import display
 tile = DLTile.from_latlon(43.7230, 10.3966, resolution=20.0, tilesize=1024, pad=0)
 
 #################################################
-# Use the Catalog V2 API to search for imagery
+# Use the Catalog API to search for imagery
 # available over the area of interest.
 search = (
     Product.get("usgs:landsat:oli-tirs:c2:l1:v0")

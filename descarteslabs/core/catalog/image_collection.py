@@ -1073,7 +1073,7 @@ class ImageCollection(Collection):
 
         See Also
         --------
-        :doc:`Catalog V2 Guide </guides/catalog_v2>` : This contains many examples of the use of
+        :doc:`Catalog Guide </guides/catalog>` : This contains many examples of the use of
         the ``scaling`` and ``data_type`` parameters.
         """
         bands = bands_to_list(bands)

@@ -1479,7 +1479,7 @@ class Image(NamedCatalogObject):
         the output data type. As such, if the input and output ranges are
         the same, it is effectively a no-op equivalent to ``None``.
 
-        The support for scaling parameters in the Catalog V2 API includes
+        The support for scaling parameters in the Catalog API includes
         the concept of an automated scaling mode. The four supported modes
         are as follows.
 
@@ -1559,12 +1559,12 @@ class Image(NamedCatalogObject):
             scale values, one for each band, but can be useful if a
             single general-purpose mapping is defined for all possible
             or relevant bands and then reused across many calls to the
-            different methods in the Catalog V2 API which accept a ``scaling``
+            different methods in the Catalog API which accept a ``scaling``
             parameter.
 
         See Also
         --------
-        :doc:`Catalog V2 Guide <guides/catalog_v2>` : This contains many examples of the use of
+        :doc:`Catalog Guide <guides/catalog>` : This contains many examples of the use of
         the ``scaling`` and ``data_type`` parameters.
         """
         bands = bands_to_list(bands)

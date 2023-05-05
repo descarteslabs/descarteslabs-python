@@ -1,7 +1,7 @@
 """
-===================================
-Compositing Imagery with Catalog V2
-===================================
+================================
+Compositing Imagery with Catalog
+================================
 
 Most often, our area of interest (AOI) does not conform to the arbitrary boundaries
 of an image as collected by the satellite. The Scenes API enables us to
