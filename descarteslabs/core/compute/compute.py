@@ -731,14 +731,14 @@ class Function(Document):
             json={"function_id": self.id, "bulk_args": args, "bulk_kwargs": iterargs},
         )
 
-        return [Job(**job) for job in response.json()]
+        return [Job(**job, saved=True) for job in response.json()]
 
     def rerun(self):
         """Submits all the failed and timed out jobs to be rerun."""
         client = ComputeClient.get_default_client()
 
         response = client.session.post("/jobs/rerun", json={"function_id": self.id})
-        return [Job(**job) for job in response.json()]
+        return [Job(**job, saved=True) for job in response.json()]
 
     def refresh(self):
         """Updates the Function instance with data from the server."""
