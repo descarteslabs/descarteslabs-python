@@ -17,6 +17,15 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
+
+## [Unreleased]
+
+### Catalog
+
+- The defaulting of the `namespace` value for `Blob`s has changed slightly. If no namespace is specified,
+  it will default to `<org>:<hash>` with the user's org name and unique user hash. Otherwise, any other value,
+  as before, will be prefixed with the user's org name if it isn't already so.
+
 ## [2.0.0rc3]
 
 ### Geo

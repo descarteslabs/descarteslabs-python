@@ -176,7 +176,7 @@ class Blob(CatalogObject):
         a restricted alphabet (``a-zA-Z0-9:._-``), and must begin with the user's
         org name, or their unique user hash if the user has no org. The required
         prefix is seperated from the rest of the namespace name (if any) by a ``:``.
-        If not provided, the namespace will default to the users org (if any) or
+        If not provided, the namespace will default to the users org (if any) and
         the unique user hash. The combined length of the ``namespace`` and the
         ``name`` cannot exceed 979 bytes.
 
@@ -315,17 +315,23 @@ class Blob(CatalogObject):
         """
         if client is None:
             client = CatalogClient.get_default_client()
-        prefix = client.auth.payload.get("org")
-        if prefix is None:
-            prefix = client.auth.namespace  # defaults to the user namespace
+        org = client.auth.payload.get("org")
+        namespace = client.auth.namespace
 
         if not namespace_id:
-            return prefix
-
-        if namespace_id == prefix or namespace_id.startswith(prefix + ":"):
+            if org:
+                return f"{org}:{namespace}"
+            else:
+                return namespace
+        elif org:
+            if namespace_id == org or namespace_id.startswith(org + ":"):
+                return namespace_id
+            else:
+                return f"{org}:{namespace_id}"
+        elif namespace_id == namespace or namespace_id.startswith(namespace + ":"):
             return namespace_id
-
-        return f"{prefix}:{namespace_id}"
+        else:
+            return f"{namespace}:{namespace_id}"
 
     @classmethod
     def get(
@@ -357,8 +363,8 @@ class Blob(CatalogObject):
             The storage type of the Blob you wish to retrieve. Defaults to ``data``. Ignored
             unless ``name`` is specified.
         namespace : str, optional
-            The namespace of the Blob you wish to retrieve. Defaults to the user's org name.
-            Ignored unless ``name`` is specified.
+            The namespace of the Blob you wish to retrieve. Defaults to the user's org name
+            (if any) plus the unique user hash. Ignored unless ``name`` is specified.
         name : str, optional
             The name of the Blob you wish to retrieve. Required if ``id`` is not specified.
             May not be specified if ``id`` is specified.
