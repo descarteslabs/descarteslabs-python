@@ -131,7 +131,7 @@ class Job(Document):
         """
         client = ComputeClient.get_default_client()
         response = client.session.get(f"/jobs/{id}")
-        return cls(response.json(), saved=True)
+        return cls(**response.json(), saved=True)
 
     @classmethod
     def list(
@@ -168,8 +168,6 @@ class Job(Document):
                 status = [status]
 
             params["status"] = status
-
-        print("params", params)
 
         paginator = client.iter_pages("/jobs", params=params)
 
