@@ -18,13 +18,25 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## [Unreleased]
+## [2.0.0rc4]
 
 ### Catalog
 
 - The defaulting of the `namespace` value for `Blob`s has changed slightly. If no namespace is specified,
   it will default to `<org>:<hash>` with the user's org name and unique user hash. Otherwise, any other value,
   as before, will be prefixed with the user's org name if it isn't already so.
+- `Blob.get` no longer requires a full id. Alternatively, you can give it a `name` and optionally a `namespace`
+  and a `storage_type`, and it will retrieve the `Blob`.
+- Fixed a bug causing summaries of `Blob` searches to fail.
+
+### Compute
+
+- `Function.map` and `Function.rerun` now save the created `Job`s before returning.
+- `Job.get` return values fixed, and removed an extraneous debug print.
+
+### General
+
+- Updated requirements to avoid `urllib3>=2.0.0` which break all kinds of things.
 
 ## [2.0.0rc3]
 
