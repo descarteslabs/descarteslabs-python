@@ -2,7 +2,7 @@ import gzip
 import json
 import random
 import string
-from collections import Iterator
+from collections.abc import Iterator
 from datetime import timezone
 
 import responses
