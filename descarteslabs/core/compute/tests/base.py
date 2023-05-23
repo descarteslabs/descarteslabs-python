@@ -11,7 +11,8 @@ from requests import PreparedRequest
 
 from descarteslabs.auth import Auth
 from descarteslabs.compute import FunctionStatus, JobStatus
-from descarteslabs.compute.compute_client import ComputeClient
+
+from ..compute_client import ComputeClient
 
 
 def make_uuid():
