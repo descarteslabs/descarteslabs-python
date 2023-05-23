@@ -85,7 +85,6 @@ class FunctionTestCase(BaseTestCase):
 class TestCreateFunction(FunctionTestCase):
     def setUp(self):
         super().setUp()
-        self.mock_token()
         self.mock_credentials()
 
     @responses.activate
@@ -190,10 +189,6 @@ class TestCreateFunction(FunctionTestCase):
 
 
 class TestListFunctions(FunctionTestCase):
-    def setUp(self):
-        super().setUp()
-        self.mock_token()
-
     @responses.activate
     def test_list_function_empty(self):
         self.mock_response(responses.GET, "/functions", json=self.make_page([]))
@@ -247,10 +242,6 @@ class TestListFunctions(FunctionTestCase):
 
 
 class TestGetFunction(FunctionTestCase):
-    def setUp(self):
-        super().setUp()
-        self.mock_token()
-
     @responses.activate
     def test_get_missing(self):
         self.mock_response(responses.GET, "/functions/missing-id", status=404)
@@ -269,10 +260,6 @@ class TestGetFunction(FunctionTestCase):
 
 
 class TestFunction(FunctionTestCase):
-    def setUp(self):
-        super().setUp()
-        self.mock_token()
-
     @responses.activate
     def test_build_log(self):
         log_lines = ["test", "log"]

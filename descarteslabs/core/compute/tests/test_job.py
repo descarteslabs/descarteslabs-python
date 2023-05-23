@@ -8,13 +8,7 @@ from descarteslabs.compute import Job, JobStatus
 from .base import BaseTestCase
 
 
-class JobTestCase(BaseTestCase):
-    def setUp(self):
-        super().setUp()
-        self.mock_token()
-
-
-class TestCreateJob(JobTestCase):
+class TestCreateJob(BaseTestCase):
     @responses.activate
     def test_create(self):
         params = dict(function_id="some-fn", args=[1, 2], kwargs={"key": "blah"})
@@ -29,11 +23,7 @@ class TestCreateJob(JobTestCase):
         self.assertDictContainsSubset(params, job.to_dict())
 
 
-class TestListJobs(JobTestCase):
-    def setUp(self):
-        super().setUp()
-        self.mock_token()
-
+class TestListJobs(BaseTestCase):
     @responses.activate
     def test_list_jobs(self):
         self.mock_response(
@@ -76,7 +66,7 @@ class TestListJobs(JobTestCase):
         self.assert_url_called("/jobs?page_size=100&status=pending&status=running", 1)
 
 
-class TestJob(JobTestCase):
+class TestJob(BaseTestCase):
     @responses.activate
     def test_get(self):
         self.mock_response(

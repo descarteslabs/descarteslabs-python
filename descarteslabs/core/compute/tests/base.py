@@ -1,4 +1,7 @@
+import base64
+import json
 import json as jsonlib
+import time
 import uuid
 from datetime import datetime
 from unittest import TestCase
@@ -6,7 +9,9 @@ from unittest import TestCase
 import responses
 from requests import PreparedRequest
 
+from descarteslabs.auth import Auth
 from descarteslabs.compute import FunctionStatus, JobStatus
+from descarteslabs.compute.compute_client import ComputeClient
 
 
 def make_uuid():
@@ -15,21 +20,29 @@ def make_uuid():
 
 class BaseTestCase(TestCase):
     compute_url = "https://platform.dev.aws.descarteslabs.com/compute/v1"
-    iam_url = "https://iam.dev.aws.descarteslabs.com"
 
     def setUp(self):
         responses.mock.assert_all_requests_are_fired = True
         self.now = datetime.utcnow()
 
+        payload = (
+            base64.b64encode(
+                json.dumps(
+                    {
+                        "aud": "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+                        "exp": time.time() + 3600,
+                    }
+                ).encode()
+            )
+            .decode()
+            .strip("=")
+        )
+        token = f"header.{payload}.signature"
+        auth = Auth(jwt_token=token, token_info_path=None)
+        ComputeClient.set_default_client(ComputeClient(auth=auth))
+
     def tearDown(self):
         responses.mock.assert_all_requests_are_fired = False
-
-    def mock_token(self):
-        responses.add(
-            responses.POST,
-            f"{self.iam_url}/token",
-            '{"access_token":"h.e30.s"}',
-        )
 
     def mock_credentials(self):
         responses.add(responses.POST, f"{self.compute_url}/credentials")
