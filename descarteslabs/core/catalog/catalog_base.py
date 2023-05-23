@@ -980,7 +980,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
 
         query_params = {}
         if method not in (HttpRequestMethod.POST, HttpRequestMethod.PUT):
-            url += "/" + id
+            url += "/" + urllib.parse.quote(id)
             if request_params:
                 query_params.update(**request_params)
         elif request_params:
