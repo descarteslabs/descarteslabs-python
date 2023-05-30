@@ -46,14 +46,19 @@ class StorageType(StrEnum):
 
     Attributes
     ----------
+    COMPUTE : enum
+        Compute service job results.
     DATA : enum
-        Arbitrary user-managed data. This is the only storage type which
-        may be uploaded by end users.
+        Arbitrary user-managed data. This type may be uploaded by users.
+    DYNCOMP : enum
+        Saved Dynamic Compute objects. This type may be uploaded by users.
     LOGS : enum
-        Compute job log output (text files).
+        Compute service job log output (text files).
     """
 
+    COMPUTE = "compute"
     DATA = "data"
+    DYNCOMP = "dyncomp"
     LOGS = "logs"
 
 
