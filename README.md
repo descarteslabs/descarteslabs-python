@@ -18,7 +18,20 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## [2.0.0rc4]
+## [2.0.0rc5] - 2023-06-01
+
+### Catalog
+
+- Loosen up the restrictions on the allowed alphabet for Blob names. Now almost any printable
+  character is accepted save for newlines and commas.
+- Added new storage types for Blobs: `StorageType.COMPUTE` (for Compute job results) and
+  `StorageType.DYNCOMP` (for saved `dynamic-compute` operations).
+
+### Compute
+
+- Added testing of the client.
+
+## [2.0.0rc4] - 2023-05-17
 
 ### Catalog
 
@@ -38,7 +51,7 @@ Changelog
 
 - Updated requirements to avoid `urllib3>=2.0.0` which break all kinds of things.
 
-## [2.0.0rc3]
+## [2.0.0rc3] - 2023-05-03
 
 ### Geo
 
