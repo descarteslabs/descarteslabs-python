@@ -109,9 +109,24 @@ def coordinate_transform(function):
             transformed_points = _transform(points, *args, **kwargs)
             return geo.mapping(transformed_points)
 
+        elif isinstance(points, geo.MultiPoint):
+            return geo.MultiPoint(
+                [_transform(geom, *args, **kwargs) for geom in points.geoms]
+            )
+
+        elif isinstance(points, geo.MultiLineString):
+            return geo.MultiLineString(
+                [_transform(geom, *args, **kwargs) for geom in points.geoms]
+            )
+
         elif isinstance(points, geo.MultiPolygon):
             return geo.MultiPolygon(
-                [_transform(polygon, *args, **kwargs) for polygon in points]
+                [_transform(geom, *args, **kwargs) for geom in points.geoms]
+            )
+
+        elif isinstance(points, geo.GeometryCollection):
+            return geo.GeometryCollection(
+                [_transform(geom, *args, **kwargs) for geom in points.geoms]
             )
 
         elif isinstance(points, Sequence):

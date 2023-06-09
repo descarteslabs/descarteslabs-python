@@ -403,6 +403,41 @@ class TestDLTIle(unittest.TestCase):
         assert type(dltiles1[1]) == str
         assert len(dltiles1) == len(dltiles2)
 
+    def test_iter_from_shape_multi(self):
+        params = {"resolution": 1.5, "tilesize": 512, "pad": 0, "keys_only": True}
+        shape = {
+            "type": "Feature",
+            "geometry": {
+                "type": "MultiPolygon",
+                "coordinates": [
+                    [
+                        [
+                            [-122.51140471760839, 37.77130087547876],
+                            [-122.45475646845254, 37.77475476721895],
+                            [-122.45303985468301, 37.76657207194229],
+                            [-122.51057242081689, 37.763446782666094],
+                            [-122.51140471760839, 37.77130087547876],
+                        ]
+                    ],
+                    [
+                        [
+                            [-123.51140471760839, 37.77130087547876],
+                            [-123.45475646845254, 37.77475476721895],
+                            [-123.45303985468301, 37.76657207194229],
+                            [-123.51057242081689, 37.763446782666094],
+                            [-123.51140471760839, 37.77130087547876],
+                        ]
+                    ],
+                ],
+            },
+            "properties": None,
+        }
+        dltiles1 = [tile for tile in geocontext.DLTile.iter_from_shape(shape, **params)]
+        dltiles2 = geocontext.DLTile.from_shape(shape, **params)
+        assert type(dltiles1[0]) == str
+        assert type(dltiles1[1]) == str
+        assert len(dltiles1) == len(dltiles2)
+
     def test_subtile(self):
         tile = geocontext.DLTile.from_key("2048:0:30.0:15:3:80")
         tiles = [t for t in tile.subtile(8, keys_only=True)]
