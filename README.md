@@ -18,6 +18,58 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## [2.0.0] - 2023-06-12
+
+(Release notes from all the 2.0.0 release candidates are summarized here for completeness.)
+
+### Supported platforms
+
+- Deprecated support for Python 3.7 (will end of life in July).
+- Added support for Python 3.10 and Python 3.11
+- AWS-only client. For the time being, the AWS client can be used to communicate with the legacy GCP platform (e.g. `DESCARTESLABS_ENV=gcp-production`) but only supports those services that are supported on AWS (`catalog` and `scenes`). This support may break at any point in the future, so it is strictly transitional.
+
+### Dependencies
+
+- Removed many dependencies no longer required due to the removal of GCP-only features.
+- Added support for Shapely 2.X. Note that user code may also be affected by breaking changes in
+  Shapely 2.X. Use of Shapely 1.8 is still supported.
+- Updated requirements to avoid `urllib3>=2.0.0` which breaks all kinds of things.
+
+### Configuration
+
+- Major overhaul of the internals of the config process. To support other clients using namespaced packages within the `descarteslabs` package, the top level has been cleaned up, and most all the real code is down inside `descarteslabs.core`. End users should never have to import anything from `descarteslabs.core`. No more magic packages means that `pylint` will work well with code using `descarteslabs`.
+- Configuration no longer depends upon the authorized user.
+
+### Catalog
+
+- Added support for data storage. The `Blob` class provides mechanism to upload, index, share, and retrieve arbitrary byte sequences (e.g. files). `Blob`s can be searched by namespace and name, geospatial coordinates (points, polygons, etc.), and tags. `Blob`s can be downloaded to a local file, or retrieved directly as a Python `bytes` object. `Blob`s support the same sharing mechanisms as `Product`s, with `owners`, `writers`, and `readers` attributes.
+- Added support to `Property` for `prefix` filtering.
+- The default `geocontext` for image objects no longer specifies a `resolution` but rather a `shape`, to ensure
+  that default rastering preserves the original data and alignment (i.e. no warping of the source image).
+- As with `resolution`, you can now pass a `crs` parameter to the rastering methods (e.g. `Image.ndarray`,
+  `ImageCollection.stack`, etc.) to override the `crs` of the default geocontext.
+- A bug in the code handling the default context for image collections when working with a product with a CRS based on degrees rather than meters has been fixed. Resolutions should always be specified in the units used by the CRS.
+
+### Compute
+
+- Added support for managed batch compute under the `compute` module.
+
+### Raster Client
+
+- Fixed a bug in the handling of small blocks (less than 512 x 512) that caused rasterio to generate bad download files (the desired image block would appear as a smaller sub-block rather than filling the resulting raster).
+
+### Geo
+
+- The defaulting of `align_pixels` has changed slightly for the `AOI` class. Previously it always defaulted to
+  `True`. Now the default is `True` if `resolution` is set, `False` otherwise. This ensures that when specifying
+  a `shape` and a `bounds` rather than a resolution,the `shape` is actually honored.
+- When assigning a `resolution` to an `AOI`, any existing `shape` attribute is automatically unset, since the
+  two attributes are mutually exclusive.
+- The validation of bounds for a geographic CRS has been slightly modified to account for some of the
+  irregularities of whole-globe image products, correcting unintended failures in the past.
+- Fixed problem handling MultiPolygon and GeometryCollection when using Shapely 2.0.
+
+
 ## [2.0.0rc5] - 2023-06-01
 
 ### Catalog
