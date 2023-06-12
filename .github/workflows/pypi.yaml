@@ -43,12 +43,14 @@ jobs:
           python3 setup.py bdist_wheel
           python3 setup.py sdist
 
-      # Upload the Python wheel packages to PyPI
+      # Upload the Python wheel packages to PyPI using an API Token
+      # https://pypi.org/help/#apitoken
+      # https://github.com/descarteslabs/paas-infrastructure/blob/main/foundation/operations/pypi.tf
       - name: Upload to PyPI
         if: inputs.publish
         env:
-          TWINE_REPOSITORY: ${{ inputs.repository }}
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          TWINE_REPOSITORY: "${{ inputs.repository }}"
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: "${{ secrets.PYPI_API_TOKEN }}"
         run: |
           twine upload dist/*
