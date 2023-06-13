@@ -27,7 +27,7 @@ from descarteslabs.config import get_settings
 from descarteslabs.exceptions import ServerError
 from PIL import Image
 from tqdm import tqdm
-from urllib3.exceptions import IncompleteRead, ProtocolError
+from urllib3.exceptions import IncompleteRead, ProtocolError, ReadTimeoutError
 
 from ....common.dltile import Tile
 from ....common.http.service import DefaultClientMixin
@@ -209,9 +209,10 @@ def _retry(req, headers=None):
 
         try:
             return req(headers=headers)
-        except (IncompleteRead, ProtocolError, ServerError):
+        except (IncompleteRead, ProtocolError, ReadTimeoutError, ServerError):
             # IncompleteRead: Response length doesn’t match expected Content-Length
             # ProtocolError: Something unexpected happened mid-request/response
+            # ReadTimeoutError: timeout occurred while reading response from server
             # ServerError: the usual retryable bad status >= 500. Normally won't
             # occur thanks to the client Retry configuration.
             if retry_count == MAX_RETRIES:
