@@ -18,6 +18,12 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## [2.0.1] - 2023-06-14
+
+### Raster
+
+- Due to recent changes in `urllib3`, rastering operations were failing to retry certain errors which ought to be retried, causing more failures to propagate to the user than was desirable. This is now fixed.
+
 ## [2.0.0] - 2023-06-12
 
 (Release notes from all the 2.0.0 release candidates are summarized here for completeness.)
