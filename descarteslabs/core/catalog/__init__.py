@@ -40,7 +40,7 @@ from .band import (
     ProcessingStepAttribute,
     SpectralBand,
 )
-from .blob import Blob, BlobSearch, BlobSummaryResult, StorageType
+from .blob import Blob, BlobCollection, BlobSearch, BlobSummaryResult, StorageType
 from .image import Image, ImageSearch, ImageSummaryResult
 from .image_types import ResampleAlgorithm, DownloadFileFormat
 from .image_upload import (
@@ -88,6 +88,7 @@ __all__ = [
     "BandCollection",
     "BandType",
     "Blob",
+    "BlobCollection",
     "BlobSearch",
     "BlobSummaryResult",
     "CatalogClient",
