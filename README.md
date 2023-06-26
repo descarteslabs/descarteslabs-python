@@ -18,6 +18,17 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## [2.0.2] - 2023-06-26
+
+### Catalog
+
+- Allow data type `int32` in geotiff downloads.
+- `BlobCollection` now importable from `descarteslabs.catalog`.
+
+### Documentation
+
+- Added API documentation for dynamic compute and vector
+
 ## [2.0.1] - 2023-06-14
 
 ### Raster
