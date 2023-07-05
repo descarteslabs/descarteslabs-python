@@ -174,6 +174,15 @@ class Job(Document):
         for data in paginator:
             yield cls(**data, saved=True)
 
+    def delete(self):
+        """Deletes the Job."""
+        if self.state == DocumentState.NEW:
+            raise ValueError("Cannot delete a Job that has not been saved")
+
+        client = ComputeClient.get_default_client()
+        client.session.delete(f"/jobs/{self.id}")
+        self._deleted = True
+
     def refresh(self) -> None:
         """Update the Job instance with the latest information from the server."""
         client = ComputeClient.get_default_client()
@@ -628,6 +637,19 @@ class Function(Document):
         response = client.session.get(f"/functions/{self.id}/log")
 
         print(gzip.decompress(response.content).decode())
+
+    def delete(self):
+        """Deletes the Function and all associated Jobs."""
+        if self.state == DocumentState.NEW:
+            raise ValueError("Cannot delete a Function that has not been saved")
+
+        client = ComputeClient.get_default_client()
+
+        for job in self.jobs:
+            job.delete()
+
+        client.session.delete(f"/functions/{self.id}")
+        self._deleted = True
 
     def save(self):
         """Creates the Function if it does not already exist.

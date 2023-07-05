@@ -272,6 +272,85 @@ class TestFunction(FunctionTestCase):
         fn.build_log()
 
     @responses.activate
+    def test_delete(self):
+        self.mock_response(
+            responses.GET,
+            "/jobs",
+            json=self.make_page(
+                [
+                    self.make_job(id="1", status=JobStatus.SUCCESS),
+                    self.make_job(id="2", status=JobStatus.SUCCESS),
+                    self.make_job(id="3", status=JobStatus.RUNNING),
+                    self.make_job(id="4", status=JobStatus.FAILURE),
+                ]
+            ),
+        )
+        self.mock_response(responses.DELETE, "/jobs/1", status=204)
+        self.mock_response(responses.DELETE, "/jobs/2", status=204)
+        self.mock_response(responses.DELETE, "/jobs/3", status=204)
+        self.mock_response(responses.DELETE, "/jobs/4", status=204)
+        self.mock_response(responses.DELETE, "/functions/some-id", status=204)
+
+        fn = Function(id="some-id", saved=True)
+        fn.delete()
+        self.assert_url_called("/functions/some-id")
+        assert fn._deleted is True
+        assert fn.state == "deleted"
+
+        with self.assertRaises(AttributeError) as ctx:
+            fn.id
+        assert "Function has been deleted" in str(ctx.exception)
+
+    @responses.activate
+    def test_delete_new(self):
+        fn = Function(id="some-id", saved=True)
+        fn._saved = False
+
+        with self.assertRaises(ValueError) as ctx:
+            fn.delete()
+        assert "has not been saved" in str(ctx.exception)
+        assert fn._deleted is False
+        assert fn.state == "new"
+
+    @responses.activate
+    def test_delete_no_jobs(self):
+        self.mock_response(responses.GET, "/jobs", json=self.make_page([]))
+        self.mock_response(responses.DELETE, "/functions/some-id", status=204)
+
+        fn = Function(id="some-id", saved=True)
+        fn.delete()
+        self.assert_url_called("/functions/some-id")
+        assert fn._deleted is True
+        assert fn.state == "deleted"
+
+        with self.assertRaises(AttributeError) as ctx:
+            fn.id
+        assert "Function has been deleted" in str(ctx.exception)
+
+    @responses.activate
+    def test_delete_failed(self):
+        self.mock_response(
+            responses.GET,
+            "/jobs",
+            json=self.make_page(
+                [
+                    self.make_job(id="1", status=JobStatus.SUCCESS),
+                ]
+            ),
+        )
+        self.mock_response(responses.DELETE, "/jobs/1", status=400)
+
+        fn = Function(id="some-id", saved=True)
+
+        with self.assertRaises(Exception):
+            fn.delete()
+
+        self.assert_url_called("/jobs/1")
+        assert fn._deleted is False
+        assert fn.state == "saved"
+        assert fn.id == "some-id"
+
+    @responses.activate
     def test_rerun(self):
         self.mock_response(
             responses.POST,
@@ -436,3 +515,12 @@ class TestFunctionNoApi(BaseTestCase):
         fn = Function(id="some-id", saved=True)
         fn.save()
         assert len(responses.calls) == 0
+
+    @responses.activate
+    def test_deleted(self):
+        fn = Function(id="some-id", saved=True)
+        fn._deleted = True
+
+        with self.assertRaises(AttributeError) as ctx:
+            fn.save()
+        assert "Function has been deleted" in str(ctx.exception)

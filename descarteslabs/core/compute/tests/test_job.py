@@ -92,6 +92,38 @@ class TestJob(BaseTestCase):
         }
 
     @responses.activate
+    def test_delete(self):
+        self.mock_response(responses.DELETE, "/jobs/some-id")
+        job = Job(id="some-id", function_id="some-fn", saved=True)
+        job.delete()
+        self.assert_url_called("/jobs/some-id")
+        assert job._deleted is True
+        assert job.state == "deleted"
+
+    @responses.activate
+    def test_delete_new(self):
+        job = Job(id="some-id", function_id="some-fn", saved=True)
+        job._saved = False
+
+        with self.assertRaises(ValueError) as ctx:
+            job.delete()
+        assert "has not been saved" in str(ctx.exception)
+        assert job._deleted is False
+        assert job.state == "new"
+
+    @responses.activate
+    def test_delete_failed(self):
+        self.mock_response(responses.DELETE, "/jobs/some-id", status=400)
+        job = Job(id="some-id", function_id="some-fn", saved=True)
+
+        with self.assertRaises(Exception):
+            job.delete()
+
+        self.assert_url_called("/jobs/some-id")
+        assert job._deleted is False
+        assert job.state == "saved"
+
+    @responses.activate
     def test_result_empty(self):
         self.mock_response(responses.GET, "/jobs/some-id/result", body=None)
         job = Job(id="some-id", function_id="some-fn", saved=True)
@@ -205,3 +237,12 @@ class TestJobNoApi(BaseTestCase):
         job = Job(id="some-id", function_id="some-fn", saved=True)
         job.save()
         assert len(responses.calls) == 0
+
+    @responses.activate
+    def test_deleted(self):
+        job = Job(id="some-id", function_id="some-fn", saved=True)
+        job._deleted = True
+
+        with self.assertRaises(AttributeError) as ctx:
+            job.save()
+        assert "Job has been deleted" in str(ctx.exception)

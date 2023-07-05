@@ -127,6 +127,14 @@ class TestDocument(unittest.TestCase):
             "created_at": None,
         }
 
+    def test_deleted(self):
+        doc = MyDocument(name="local", once="1")
+        doc._deleted = True
+
+        with self.assertRaises(AttributeError) as ctx:
+            doc.name
+        assert "MyDocument has been deleted" == str(ctx.exception)
+
 
 class TestDatetimeAttribute(unittest.TestCase):
     def test_local_time(self):

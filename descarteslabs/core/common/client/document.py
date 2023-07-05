@@ -37,6 +37,18 @@ class Document(object):
         self._saved = saved
         self._deleted = False
 
+    def __getattribute__(self, name: str) -> Any:
+        try:
+            deleted = object.__getattribute__(self, "_deleted")
+        except AttributeError:
+            deleted = False
+
+        if deleted and name != "state" and not name.startswith("_"):
+            class_name = object.__getattribute__(self, "__class__").__name__
+            raise AttributeError(f"{class_name} has been deleted")
+
+        return object.__getattribute__(self, name)
+
     def _clear_modified(self):
         """Clears the list of modified attributes."""
         self._modified = set()

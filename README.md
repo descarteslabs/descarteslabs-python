@@ -18,6 +18,15 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## [Unreleased]
+
+### Compute
+
+- Allow deletion of `Function` objects.
+  - Deleting a Function will deleted all associated Jobs.
+- Allow deletion of `Job` objects.
+  - Deleting a Job will delete all associated resources (logs, results, etc). 
+
 ## [2.0.2] - 2023-06-26
 
 ### Catalog
@@ -817,7 +826,7 @@ You should _NOT_ install version 1.1.0; 1.1.1 should be used instead in all circ
 ## [1.0.0] - 2020-01-20
 
 | As of January 1st, 2020, the client library no longer supports Python 2. For more information, please contact support@descarteslabs.com. For help with porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html. |
-| --------- |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
 ### Catalog client
 - There is an entirely new backend supporting asynchronous uploads of image files and ndarrays with
