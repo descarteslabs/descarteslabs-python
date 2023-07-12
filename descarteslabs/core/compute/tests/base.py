@@ -2,6 +2,7 @@ import base64
 import json
 import json as jsonlib
 import time
+import urllib.parse
 import uuid
 from datetime import datetime
 from unittest import TestCase
@@ -111,15 +112,18 @@ class BaseTestCase(TestCase):
 
         return function
 
-    def assert_url_called(self, uri, times=1, json=None, body=None):
+    def assert_url_called(self, uri, times=1, json=None, body=None, params=None):
         if json and body:
             raise ValueError("Using json and body together does not make sense")
 
-        calls = [call for call in responses.calls if call.request.url.endswith(uri)]
+        url = f"{self.compute_url}{uri}"
+        calls = [call for call in responses.calls if call.request.url.startswith(url)]
         assert calls, f"No requests were made to uri: {uri}"
 
         data = json or body
         matches = []
+        calls_with_params = set()
+
         for call in calls:
             request: PreparedRequest = call.request
 
@@ -128,7 +132,37 @@ class BaseTestCase(TestCase):
             else:
                 request_data = request.body
 
-            if data is None or request_data == data:
+            if params is not None:
+                request_params = {}
+
+                for key, value in urllib.parse.parse_qsl(
+                    urllib.parse.urlsplit(request.url).query
+                ):
+                    try:
+                        value = jsonlib.loads(value)
+                    except jsonlib.JSONDecodeError:
+                        value = value
+
+                    if key in request_params:
+                        values = request_params[key]
+
+                        if not isinstance(values, list):
+                            values = [values]
+
+                        values.append(value)
+                    else:
+                        values = value
+
+                    request_params[key] = values
+
+                if request_params:
+                    calls_with_params.add(jsonlib.dumps(request_params))
+            else:
+                request_params = None
+
+            if (data is None or request_data == data) and (
+                params is None or request_params == params
+            ):
                 matches.append(call)
 
         count = len(matches)
@@ -136,5 +170,11 @@ class BaseTestCase(TestCase):
 
         if data is not None:
             msg += f" with data: {data}"
+
+        if params is not None:
+            msg += f" with params: {params}"
+
+            if calls_with_params:
+                msg += "\n\nParams:\n" + "\n".join(calls_with_params)
 
         assert count == times, msg

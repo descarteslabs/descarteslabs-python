@@ -16,26 +16,33 @@
 A list-based sequence with helper methods, which serves as the base class for `SceneCollection`.
 """
 
-import itertools
 import collections
+import itertools
+from typing import Generic, TypeVar
 
 from ...client.deprecation import deprecate
 from ...common.property_filtering.filtering import Expression
 
+T = TypeVar("T")
+
 
 # TODO: maybe subclass collections.UserList?
-class Collection(object):
+class Collection(Generic[T]):
     """
     List-based sequence with convenience methods for mapping and filtering,
     and NumPy-style fancy indexing
     """
 
-    def __init__(self, iterable=None):
+    def __init__(self, iterable=None, item_type=None):
         if iterable is None:
             self._list = []
         else:
             self._list = list(iterable)
-            item_type = getattr(self, "_item_type", None)
+            if item_type is not None:
+                self._item_type = item_type
+            else:
+                item_type = getattr(self, "_item_type", None)
+
             if item_type is not None:
                 if not all(map(lambda i: isinstance(i, item_type), self._list)):
                     raise ValueError(

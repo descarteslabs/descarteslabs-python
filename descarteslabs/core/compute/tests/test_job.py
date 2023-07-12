@@ -51,7 +51,7 @@ class TestListJobs(BaseTestCase):
         self.assert_url_called("/jobs?page_cursor=page2", 1)
 
     @responses.activate
-    def test_list_jobs_filters(self):
+    def test_list_jobs_compatible(self):
         self.mock_response(
             responses.GET,
             "/jobs",
@@ -59,11 +59,22 @@ class TestListJobs(BaseTestCase):
         )
         list(Job.list(status=JobStatus.PENDING, function_id="some-fn"))
         self.assert_url_called(
-            "/jobs?page_size=100&function_id=some-fn&status=pending", 1
+            "/jobs",
+            params={
+                "page_size": 100,
+                "status": "pending",
+                "function_id": "some-fn",
+            },
         )
 
         list(Job.list(status=[JobStatus.PENDING, JobStatus.RUNNING]))
-        self.assert_url_called("/jobs?page_size=100&status=pending&status=running", 1)
+        self.assert_url_called(
+            "/jobs",
+            params={
+                "page_size": 100,
+                "status": ["pending", "running"],
+            },
+        )
 
 
 class TestJob(BaseTestCase):

@@ -24,12 +24,18 @@ import warnings
 import zipfile
 from datetime import datetime
 from tempfile import NamedTemporaryFile
-from typing import Callable, Dict, Iterable, List, Optional, Type, Union
+from typing import Callable, Dict, List, Optional, Type, Union
 
 from strenum import StrEnum
 
 from ..client.services.service import ThirdPartyService
-from ..common.client import Attribute, DatetimeAttribute, Document, DocumentState
+from ..common.client import (
+    Attribute,
+    DatetimeAttribute,
+    Document,
+    DocumentState,
+    Search,
+)
 from .compute_client import ComputeClient
 
 
@@ -66,21 +72,35 @@ class Serializable:
 class Job(Document):
     """A single invocation of a Function."""
 
-    id: str = Attribute(str, readonly=True, doc="The ID of the Job.")
+    id: str = Attribute(
+        str, filterable=True, readonly=True, sortable=True, doc="The ID of the Job."
+    )
     function_id: str = Attribute(
-        str, mutable=False, doc="The ID of the Function the Job belongs to."
+        str,
+        filterable=True,
+        mutable=False,
+        doc="The ID of the Function the Job belongs to.",
     )
     creation_date: datetime = DatetimeAttribute(
-        readonly=True, doc="The date the Job was created."
+        filterable=True,
+        readonly=True,
+        sortable=True,
+        doc="The date the Job was created.",
     )
     args: Optional[List] = Attribute(list, doc="The arguments provided to the Job.")
     kwargs: Optional[Dict] = Attribute(dict, doc="The parameters provided to the Job.")
     runtime: Optional[int] = Attribute(
-        int, readonly=True, doc="The time it took the Job to complete."
+        int,
+        filterable=True,
+        readonly=True,
+        sortable=True,
+        doc="The time it took the Job to complete.",
     )
     status: JobStatus = Attribute(
         JobStatus,
+        filterable=True,
         readonly=True,
+        sortable=True,
         doc="""The current status of the Job.
 
         The status may occasionally need to be refreshed by calling :py:meth:`Job.refresh`
@@ -134,20 +154,13 @@ class Job(Document):
         return cls(**response.json(), saved=True)
 
     @classmethod
-    def list(
-        cls,
-        function_id: str = None,
-        status: Union[JobStatus, List[JobStatus]] = None,
-        page_size: int = 100,
-    ) -> Iterable["Job"]:
+    def list(cls, page_size: int = 100, **params) -> Search["Job"]:
         """Retrieves an iterable of all jobs matching the given parameters.
+
+        If you would like to filter Jobs, use :py:meth:`Job.search`.
 
         Parameters
         ----------
-        function_id : str, None
-            If set, only jobs for the given function will be included.
-        status : Union[JobStatus, List[JobStatus]], None
-            If set, only jobs matching one of the provided statuses will be included.
         page_size : int, default=100
             Maximum number of results per page.
 
@@ -157,22 +170,28 @@ class Job(Document):
         >>> fn = Job.list(<function_id>)
         [Job <job-id1>: pending, Job <job-id2>: pending, Job <job-id3>: pending]
         """
-        client = ComputeClient.get_default_client()
-        params = {"page_size": page_size}
+        params = {"page_size": page_size, **params}
+        search = Job.search().param(**params)
 
-        if function_id:
-            params["function_id"] = function_id
+        # Deprecation: remove this in a future release
+        if "function_id" in params or "status" in params:
+            examples = []
 
-        if status:
-            if not isinstance(status, list):
-                status = [status]
+            if "function_id" in params:
+                examples.append(f"Job.function_id == '{params['function_id']}'")
 
-            params["status"] = status
+            if "status" in params:
+                if not isinstance(params["status"], list):
+                    params["status"] = [params["status"]]
 
-        paginator = client.iter_pages("/jobs", params=params)
+                examples.append(f"Job.status.in_({params['status']})")
 
-        for data in paginator:
-            yield cls(**data, saved=True)
+            warnings.warn(
+                "The `function_id` parameter is deprecated. "
+                "Use `Job.search().filter({})` instead.".format(" & ".join(examples))
+            )
+
+        return search
 
     def delete(self):
         """Deletes the Job."""
@@ -222,6 +241,21 @@ class Job(Document):
             return json.loads(result)
         except Exception:
             return result
+
+    @classmethod
+    def search(cls) -> Search["Job"]:
+        """Creates a search for Jobs.
+
+        The search is lazy and will be executed when the search is iterated over or
+        :py:meth:`Search.collect` is called.
+
+        Example
+        -------
+        >>> from descarteslabs.compute import Job, JobStatus
+        >>> jobs: List[Job] = Job.search().filter(Job.status == JobStatus.SUCCESS).collect()
+        Collection([Job <job-id1>: success, <job-id2>: success])
+        """
+        return Search(Job, ComputeClient.get_default_client(), url="/jobs")
 
     def wait_for_completion(self, timeout=None, interval=10):
         """Waits until the Job is completed.
@@ -342,41 +376,76 @@ class Memory(int):
 class Function(Document):
     """The serverless cloud function that you can call directly or submit many jobs to."""
 
-    id: str = Attribute(str, readonly=True, doc="The ID of the Function.")
-    creation_date: datetime = DatetimeAttribute(
+    id: str = Attribute(
+        str,
+        filterable=True,
         readonly=True,
+        sortable=True,
+        doc="The ID of the Function.",
+    )
+    creation_date: datetime = DatetimeAttribute(
+        filterable=True,
+        readonly=True,
+        sortable=True,
         doc="""The date the Function was created.""",
     )
-    name: str = Attribute(str, doc="The name of the Function.")
+    name: str = Attribute(
+        str,
+        filterable=True,
+        sortable=True,
+        doc="The name of the Function.",
+    )
     image: str = Attribute(
         str,
+        filterable=True,
         mutable=False,
         doc="The base image used to create the Function.",
     )
     cpus: float = Attribute(
         Cpus,
+        filterable=True,
+        sortable=True,
         doc="The number of cpus to request when executing the Function.",
     )
     memory: int = Attribute(
         Memory,
+        filterable=True,
+        sortable=True,
         doc="The amount of memory, in megabytes, to request when executing the Function.",
     )
     maximum_concurrency: int = Attribute(
         int,
+        filterable=True,
+        sortable=True,
         doc="The maximum number of Jobs that execute at the same time for this Function.",
     )
     status: FunctionStatus = Attribute(
         FunctionStatus,
+        filterable=True,
         readonly=True,
+        sortable=True,
         doc="The status of the Function.",
     )
     timeout: int = Attribute(
         int,
+        filterable=True,
+        sortable=True,
         doc="The number of seconds Jobs can run before timing out for this Function.",
     )
     retry_count: int = Attribute(
         int,
+        filterable=True,
+        sortable=True,
         doc="The total number of retries requested for a Job before it failed.",
+    )
+
+    job_statistics: Dict = Attribute(
+        dict,
+        readonly=True,
+        doc=(
+            "Statistics about the Job statuses for this Function. This attribute will only be "
+            "available if includes='job.statistics' is specified in the request."
+        ),
     )
 
     def __init__(
@@ -558,13 +627,18 @@ class Function(Document):
         return data_files
 
     @classmethod
-    def get(cls, id: str):
+    def get(cls, id: str, **params):
         """Get Function by id.
 
         Parameters
         ----------
         id : str
             Id of function to get.
+        include : List[str], optional
+            List of additional attributes to include in the response.
+            Allowed values are:
+
+            - "job.statistics": Include statistics about the Job statuses for this Function.
 
         Example
         -------
@@ -573,42 +647,53 @@ class Function(Document):
         <Function name="test_name" image=test_image cpus=1 memory=16 maximum_concurrency=5 timeout=3 retries=1
         """
         client = ComputeClient.get_default_client()
-        response = client.session.get(f"/functions/{id}")
+        response = client.session.get(f"/functions/{id}", params=params)
         return cls(**response.json(), saved=True)
 
     @classmethod
-    def list(
-        cls,
-        status: Union[FunctionStatus, List[FunctionStatus], None] = None,
-        page_size: int = 100,
-    ):
+    def list(cls, page_size: int = 100, **params) -> Search["Function"]:
         """Lists all Functions for a user.
+
+        If you would like to filter Functions, use :py:meth:`Function.search`.
 
         Parameters
         ----------
-        status : FunctionStatus, List[FunctionStatus], optional
-            Functions with any of the specified statuses will be included.
         page_size : int, default=100
             Maximum number of results per page.
+        include : List[str], optional
+            List of additional attributes to include in the response.
+            Allowed values are:
+
+            - "job.statistics": Include statistics about the Job statuses for this Function.
 
         Example
         -------
         >>> from descarteslabs.compute import Function
         >>> fn = Function.list()
         """
-        client = ComputeClient.get_default_client()
-        params = {"page_size": page_size}
+        params = {"page_size": page_size, **params}
+        return cls.search().param(**params)
 
-        if status:
-            if not isinstance(status, list):
-                status = [status]
+    @classmethod
+    def search(cls) -> Search["Function"]:
+        """Creates a search for Functions.
 
-            params["status"] = status
+        The search is lazy and will be executed when the search is iterated over or
+        :py:meth:`Search.collect` is called.
 
-        paginator = client.iter_pages("/functions", params=params)
-
-        for data in paginator:
-            yield cls(**data, saved=True)
+        Example
+        -------
+        >>> from descarteslabs.compute import Function, FunctionStatus
+        >>> fns: List[Function] = (
+        ...     Function.search()
+        ...     .filter(Function.status.in_([
+        ...         FunctionStatus.BUILDING, FunctionStatus.AWAITING_BUNDLE
+        ...     ])
+        ...     .collect()
+        ... )
+        Collection([Function <fn-id1>: building, Function <fn-id2>: awaiting_bundle])
+        """
+        return Search(Function, ComputeClient.get_default_client(), url="/functions")
 
     @classmethod
     def update_credentials(cls):
@@ -627,9 +712,9 @@ class Function(Document):
         client.set_credentials()
 
     @property
-    def jobs(self) -> Iterable[Job]:
+    def jobs(self) -> Search[Job]:
         """Returns all the Jobs for the Function."""
-        return Job.list(self.id)
+        return Job.search().filter(Job.function_id == self.id)
 
     def build_log(self):
         """Retrieves the build log for the Function."""
@@ -764,15 +849,17 @@ class Function(Document):
         """Updates the Function instance with data from the server."""
         client = ComputeClient.get_default_client()
 
-        response = client.session.get(f"/functions/{self.id}")
+        if self.job_statistics:
+            params = {"include": ["job.statistics"]}
+        else:
+            params = {}
+
+        response = client.session.get(f"/functions/{self.id}", params=params)
         self._load_from_remote(response.json())
 
     def iter_results(self, cast_type: Type[Serializable] = None):
         """Iterates over all successful job results."""
-        # TODO: optimize by filtering on server
-        for job in self.jobs:
-            if job.status != JobStatus.SUCCESS:
-                continue
+        for job in self.jobs.filter(Job.status == JobStatus.SUCCESS):
             yield job.result(cast_type=cast_type)
 
     def results(self, cast_type: Type[Serializable] = None):

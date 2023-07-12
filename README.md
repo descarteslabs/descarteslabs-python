@@ -26,6 +26,9 @@ Changelog
   - Deleting a Function will deleted all associated Jobs.
 - Allow deletion of `Job` objects.
   - Deleting a Job will delete all associated resources (logs, results, etc). 
+- Added attribute filter to `Function` and `Job` objects.
+  - Attributes marked `filterable=True` can be used to filter objects on the compute backend api.
+  - Minor optimization to `Job.iter_results` which now uses backend filters to load successful jobs. 
 
 ## [2.0.2] - 2023-06-26
 

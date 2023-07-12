@@ -15,13 +15,17 @@
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Callable, Type, TypeVar, Union
 
+from descarteslabs.common.property_filtering import Property
+
+from .sort import Sort
+
 if TYPE_CHECKING:
     from .document import Document
 
 T = TypeVar("T")
 
 
-class Attribute(object):
+class Attribute(Property):
     """An attribute defined on a Document."""
 
     def __init__(
@@ -29,8 +33,10 @@ class Attribute(object):
         type: Type[T] = None,
         default: Union[T, Callable] = None,
         doc: str = None,
+        filterable: bool = False,
         mutable: bool = True,
         readonly: bool = False,
+        sortable: bool = False,
         sticky: bool = False,
     ):
         """Defines a document attribute.
@@ -55,23 +61,30 @@ class Attribute(object):
             fetched.
         doc : str, None
             Sets the doc string for the attribute.
+        filterable: bool, False
+            If set, the attribute can be used as a filter.
         mutable : bool, True
             If not set, the attribute will be immutable and can only be set once.
         readonly : bool, False
             If set, the attribute cannot be modified by the user.
             This is designed for attributes set and managed exclusively by the server.
+        sortable : bool, False
+            If set, the attribute can be used to sort results.
         sticky : bool, False
             If set, the attribute exists on the client only.
             This attribute will be ignored when set by the server.
         """
+        super().__init__(None)
 
         if sticky and readonly:
             raise ValueError("Using sticky and readonly together does not make sense.")
 
         self.type = type
         self.default = default
+        self.filterable = filterable
         self.mutable = mutable
         self.readonly = readonly
+        self.sortable = sortable
         self.sticky = sticky
 
         if doc is None and type:
@@ -171,6 +184,15 @@ class Attribute(object):
 
         instance._attributes.pop(self.name, None)
 
+    def __neg__(self):
+        return self._to_sort(ascending=False)
+
+    def _to_sort(self, ascending: bool = True):
+        if not self.sortable:
+            raise ValueError(f"Cannot sort on property: {self.name}")
+
+        return Sort(self.name, ascending)
+
     def _raise_immutable(self, operation: str, instance: "Document"):
         """Raises an error when an attribute cannot be modified."""
         if self.readonly:
@@ -198,6 +220,17 @@ class Attribute(object):
     def serialize(self, value):
         """Serializes a value to a JSON encodable type."""
         return value
+
+    def __repr__(self):
+        return (
+            "<Attribute name={} filterable={} mutable={} readonly={} sticky={}>".format(
+                repr(self.name),
+                self.filterable,
+                self.mutable,
+                self.readonly,
+                self.sticky,
+            )
+        )
 
 
 class DatetimeAttribute(Attribute):

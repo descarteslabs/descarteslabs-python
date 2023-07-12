@@ -2,7 +2,7 @@ import gzip
 import json
 import random
 import string
-from collections.abc import Iterator
+from collections.abc import Iterable
 from datetime import timezone
 
 import responses
@@ -193,7 +193,7 @@ class TestListFunctions(FunctionTestCase):
     def test_list_function_empty(self):
         self.mock_response(responses.GET, "/functions", json=self.make_page([]))
         fn_iter = Function.list()
-        assert isinstance(fn_iter, Iterator)
+        assert isinstance(fn_iter, Iterable)
         assert list(fn_iter) == []
 
     @responses.activate
@@ -228,10 +228,10 @@ class TestListFunctions(FunctionTestCase):
             "/functions",
             json=self.make_page([self.generate_function()]),
         )
-        next(Function.list(status=FunctionStatus.BUILDING))
+        list(Function.list(status=FunctionStatus.BUILDING))
         self.assert_url_called("/functions?page_size=100&status=building", 1)
 
-        next(
+        list(
             Function.list(
                 status=[FunctionStatus.BUILDING, FunctionStatus.AWAITING_BUNDLE]
             )
@@ -426,8 +426,6 @@ class TestFunction(FunctionTestCase):
                 [
                     self.make_job(id="1", status=JobStatus.SUCCESS),
                     self.make_job(id="2", status=JobStatus.SUCCESS),
-                    self.make_job(id="3", status=JobStatus.RUNNING),
-                    self.make_job(id="4", status=JobStatus.FAILURE),
                 ]
             ),
         )
@@ -436,6 +434,15 @@ class TestFunction(FunctionTestCase):
 
         fn = Function(id="some-id", saved=True)
         assert fn.results() == [1, 2]
+        self.assert_url_called(
+            "/jobs",
+            params={
+                "filter": [
+                    {"op": "eq", "name": "function_id", "val": "some-id"},
+                    {"op": "eq", "name": "status", "val": "success"},
+                ]
+            },
+        )
 
     @responses.activate
     def test_wait_for_completion(self):

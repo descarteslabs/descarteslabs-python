@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from enum import auto
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 from strenum import LowercaseStrEnum
 
@@ -102,6 +102,25 @@ class Document(object):
             The response json to populate the document with.
         """
         self._fill(data, ignore_missing=True, remote=True)
+
+    @classmethod
+    def _serialize_filter_attribute(cls, name: str, value: Any) -> Tuple[str, Any]:
+        """Serializes a filter attribute.
+
+        Parameters
+        ----------
+        name : str
+            The name of the attribute.
+        value : Any
+            The value of the attribute.
+
+        Returns
+        -------
+        Tuple[str, Any]
+            The serialized attribute name and value.
+        """
+        attribute: Attribute = getattr(cls, name)
+        return (attribute.name, attribute.serialize(attribute.deserialize(value)))
 
     def update(self, ignore_missing=False, **kwargs):
         """Updates the document setting multiple attributes at a time.

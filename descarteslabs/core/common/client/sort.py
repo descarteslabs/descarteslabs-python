@@ -12,8 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .attributes import Attribute, DatetimeAttribute
-from .document import Document, DocumentState
-from .search import Search
 
-__all__ = ["Attribute", "DatetimeAttribute", "Document", "DocumentState", "Search"]
+class Sort(object):
+    def __init__(self, name: str, ascending: bool):
+        self.name = name
+        self.ascending = ascending
+
+    def to_string(self):
+        return "{}{}".format("-" if not self.ascending else "", self.name)
+
+    def __repr__(self) -> str:
+        direction = "asc" if self.ascending else "desc"
+        return f"Sort({repr(self.name)}, {repr(direction)})"

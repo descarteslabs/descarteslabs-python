@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import functools
 import re
 
 
@@ -101,6 +102,9 @@ class Expression(object):
             return name + "_id", value.id
         else:
             return name, value
+
+    def jsonapi_serialize(self, model=None):
+        raise NotImplementedError
 
 
 # A convention was added to allow for serialization of catalog V2 attributes
@@ -269,7 +273,7 @@ class LikeExpression(Expression):
     The wildcard expression can contain ``%`` for zero or more characters and
     ``_`` for a single character.
 
-    This can only be used in expressions for the ``Vector`` product.
+    This expression is not supported by the `Catalog` service.
     """
 
     def __init__(self, name, value):
@@ -280,28 +284,25 @@ class LikeExpression(Expression):
         return {"like": {self.name: self.value}}
 
     def jsonapi_serialize(self, model=None):
-        # catalog does not support this, and at present this method
-        # is only used for Catalog V2. If it does start being used
-        # for something else, we'll have to generate the error server
-        # side
-        raise TypeError("'like' expression is not supported")
-        # name, value = (
-        #     model._serialize_filter_attribute(self.name, self.value)
-        #     if model
-        #     else (self.name, self.value)
-        # )
-        # return (name, {"name": name, "op": "ilike", "val": value})
+        name, value = (
+            model._serialize_filter_attribute(self.name, self.value)
+            if model
+            else (self.name, self.value)
+        )
+        return (name, {"name": name, "op": "ilike", "val": value})
 
     def evaluate(self, obj):
         expr = re.escape(self.value).replace("_", ".").replace("%", ".*")
         return re.match(f"^{expr}$", getattr(obj, self.name)) is not None
 
 
-class AndExpression(object):
-    """``True`` if both expressions are ``True``, ``False`` otherwise."""
-
+class LogicalExpression(object):
     def __init__(self, parts):
         self.parts = parts
+
+
+class AndExpression(LogicalExpression):
+    """``True`` if both expressions are ``True``, ``False`` otherwise."""
 
     def __and__(self, other):
         if isinstance(other, AndExpression):
@@ -332,11 +333,8 @@ class AndExpression(object):
         return True
 
 
-class OrExpression(object):
+class OrExpression(LogicalExpression):
     """``True`` if either expression is ``True``, ``False`` otherwise."""
-
-    def __init__(self, parts):
-        self.parts = parts
 
     def __or__(self, other):
         if isinstance(other, OrExpression):
@@ -377,6 +375,22 @@ def range_expr(op):
     return f
 
 
+def check_can_filter(fn):
+    """Decorator to check whether a property can be filtered on.
+
+    This is used by Documents in some object oriented clients.
+    """
+
+    @functools.wraps(fn)
+    def wrapper(self, *args, **kwargs):
+        if getattr(self, "filterable", True):
+            return fn(self, *args, **kwargs)
+        else:
+            raise ValueError(f"Cannot filter on property: {self.name}")
+
+    return wrapper
+
+
 class Property(object):
     """A filter property that can be used in an expression.
 
@@ -401,26 +415,31 @@ class Property(object):
         self.name = name
         self.parts = parts or {}
 
-    __ge__ = range_expr("gte")
-    __gt__ = range_expr("gt")
-    __le__ = range_expr("lte")
-    __lt__ = range_expr("lt")
+    __ge__ = check_can_filter(range_expr("gte"))
+    __gt__ = check_can_filter(range_expr("gt"))
+    __le__ = check_can_filter(range_expr("lte"))
+    __lt__ = check_can_filter(range_expr("lt"))
 
+    @check_can_filter
     def __eq__(self, other):
         return EqExpression(self.name, other)
 
+    @check_can_filter
     def __ne__(self, other):
         return NeExpression(self.name, other)
 
+    @check_can_filter
     def __repr__(self):
         return "<Property {}>".format(self.name)
 
+    @check_can_filter
     def prefix(self, prefix):
         """Compare against a prefix string."""
         return PrefixExpression(self.name, prefix)
 
     startswith = prefix
 
+    @check_can_filter
     def like(self, wildcard):
         """Compare against a wildcard string.
 
@@ -439,6 +458,7 @@ class Property(object):
         """
         return LikeExpression(self.name, wildcard)
 
+    @check_can_filter
     def any_of(self, iterable):
         """The property must have any of the given values.
 
@@ -462,6 +482,7 @@ class Property(object):
     in_ = any_of
 
     @property
+    @check_can_filter
     def isnull(self):
         """Whether a property value is ``None`` or ``[]``.
 
@@ -470,6 +491,7 @@ class Property(object):
         return IsNullExpression(self.name)
 
     @property
+    @check_can_filter
     def isnotnull(self):
         """Whether a property value is not ``None`` or ``[]``.
 

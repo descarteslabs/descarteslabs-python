@@ -15,12 +15,9 @@
 from datetime import datetime
 
 import pytest
-from ....catalog import Product, MaskBand
-from .. import (
-    GenericProperties,
-    Properties,
-    Property,
-)
+
+from ....catalog import MaskBand, Product
+from .. import GenericProperties, Properties, Property
 
 
 def v1_expression(expression, expected_expression):
@@ -129,8 +126,8 @@ def test_like_expression():
 
     v1_expression(expression, dict(like=dict(description=value)))
 
-    with pytest.raises(TypeError):
-        expression.jsonapi_serialize()
+    expected = dict(name=name, op="like", val=value)
+    expression.jsonapi_serialize() == expected
 
 
 def test_any_of_expression():
