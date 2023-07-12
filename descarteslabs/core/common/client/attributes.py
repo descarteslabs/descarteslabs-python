@@ -15,8 +15,7 @@
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Callable, Type, TypeVar, Union
 
-from descarteslabs.common.property_filtering import Property
-
+from ..property_filtering import Property
 from .sort import Sort
 
 if TYPE_CHECKING:
