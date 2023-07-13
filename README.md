@@ -20,6 +20,8 @@ Changelog
 
 ## [Unreleased]
 
+## [2.0.3] - 2023-07-13
+
 ### Compute
 
 - Allow deletion of `Function` objects.
