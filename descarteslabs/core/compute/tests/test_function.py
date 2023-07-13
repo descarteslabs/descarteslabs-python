@@ -126,7 +126,7 @@ class TestCreateFunction(FunctionTestCase):
     @unittest.skipIf(sys.version_info >= (3, 11), "Python >= 3.11 not supported")
     def test_create_function(self):
         params = {
-            "image": "python3:8",
+            "image": "python3.8",
             "cpus": 1,
             "memory": 8 * 1024,
             "maximum_concurrency": 1,
@@ -154,7 +154,7 @@ class TestCreateFunction(FunctionTestCase):
     @unittest.skipIf(sys.version_info >= (3, 11), "Python >= 3.11 not supported")
     def test_call_creates_function(self):
         params = {
-            "image": "python3:8",
+            "image": "python3.8",
             "cpus": 1,
             "memory": 8 * 1024,
             "maximum_concurrency": 1,
