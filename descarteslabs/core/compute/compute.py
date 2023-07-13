@@ -12,13 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import builtins
+import dis
 import glob
 import gzip
+import importlib
 import inspect
 import io
 import json
 import os
 import re
+import sys
 import time
 import warnings
 import zipfile
@@ -26,6 +30,7 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile
 from typing import Callable, Dict, List, Optional, Type, Union
 
+import pkg_resources
 from strenum import StrEnum
 
 from ..client.services.service import ThirdPartyService
@@ -37,6 +42,19 @@ from ..common.client import (
     Search,
 )
 from .compute_client import ComputeClient
+
+ENTRYPOINT = "__dlentrypoint__.py"
+DATA = "data"
+REQUIREMENTS = "requirements.txt"
+
+
+class BoundGlobalError(NameError):
+    """
+    Raised when a global is referenced in a function where it won't be available
+    when executed remotely.
+    """
+
+    pass
 
 
 class FunctionStatus(StrEnum):
@@ -438,7 +456,6 @@ class Function(Document):
         sortable=True,
         doc="The total number of retries requested for a Job before it failed.",
     )
-
     job_statistics: Dict = Attribute(
         dict,
         readonly=True,
@@ -448,11 +465,16 @@ class Function(Document):
         ),
     )
 
+    _ENTRYPOINT_TEMPLATE = "{source}\n\n\nmain = {function_name}\n"
+    _IMPORT_TEMPLATE = "from {module} import {obj}"
+    _SYS_PACKAGES = ".*(?:site|dist)-packages"
+
     def __init__(
         self,
         function: Callable = None,
         requirements: List[str] = None,
-        # include_data: List[str] = None,
+        include_data: List[str] = None,
+        include_modules: List[str] = None,
         name: str = None,
         image: str = None,
         cpus: Cpus = None,
@@ -470,7 +492,7 @@ class Function(Document):
         requirements : List[str], optional
             A list of Python dependencies required by this function.
         include_data : List[str], optional
-            Non-Python data files to include in the task group.
+            Non-Python data files to include in the compute function.
         name : str, optional
             Name of the function, will take name of function if not provided.
         image : str
@@ -515,13 +537,19 @@ class Function(Document):
         >>> fn()
         Job <job id>: "pending"
         """
+
         self._function = function
         self._requirements = requirements
-        # self._include_data = include_data
+        self._include_data = include_data
+        self._include_modules = include_modules
 
-        # if user doesn't give a name, use the name of the function
+        # if name is not provided and function is a string, use the name of the function
+        # if name is not provided and function is a callable, set the name to __name__
         if not name and self._function:
-            name = self._function.__name__
+            if isinstance(self._function, str):
+                name = self._function.split(".")[-1]
+            else:
+                name = self._function.__name__
 
         super().__init__(
             name=name,
@@ -540,61 +568,369 @@ class Function(Document):
         job.save()
         return job
 
-    def _bundle(self) -> str:
+    def _sys_paths(self):
+        """Get the system paths."""
+
+        if not hasattr(self, "_cached_sys_paths"):
+            # use longest matching path entries.
+            self._cached_sys_paths = sorted(
+                map(os.path.abspath, sys.path), key=len, reverse=True
+            )
+        return self._cached_sys_paths
+
+    def _get_globals(self, func):
+        """Get the globals for a function."""
+
+        # Disassemble the function and capture the output
+        buffer = io.StringIO()
+        save_stdout = sys.stdout
+
+        try:
+            sys.stdout = buffer
+            dis.dis(func)
+        finally:
+            sys.stdout = save_stdout
+
+        # Search for LOAD_GLOBAL instruction and capture the var name
+        search_expr = ".* LOAD_GLOBAL .*\\((.*)\\)"
+        compiled_search = re.compile(search_expr)
+
+        # Non-builtin globals are collected here
+        globs = set()
+
+        for line in buffer.getvalue().split("\n"):
+            result = compiled_search.match(line)
+
+            if result:
+                name = result.group(1)
+
+                if not hasattr(builtins, name):
+                    globs.add(name)
+
+        return sorted(globs)
+
+    def _find_object(self, name):
+        """Search for an object as specified by a fully qualified name.
+        The fully qualified name must refer to an object that can be resolved
+        through the module search path.
+
+        Parameters
+        ----------
+        name : str
+            Fully qualified name of the object to search for.
+            Must refer to an object that can be resolved through the module search path.
+
+        Returns
+        -------
+        object
+            The object specified by the fully qualified name.
+        module_path : list
+            The fully qualified module path.
+        object_path : list
+            The fully qualified object path.
+        """
+
+        module_path = []
+        object_path = []
+
+        obj = None
+        parts = name.split(".")
+
+        for part in parts:
+            error = None
+
+            if hasattr(obj, part):
+                # Could be any object (module, class, etc.)
+                obj = getattr(obj, part)
+
+                if inspect.ismodule(obj) and not object_path:
+                    module_path.append(part)
+                else:
+                    object_path.append(part)
+            else:
+                # If not found, assume it's a module that must be loaded
+                if object_path:
+                    error = "'{}' has no attribute '{}'".format(type(obj), part)
+                    raise NameError(
+                        "Cannot resolve function name '{}': {}".format(name, error)
+                    )
+                else:
+                    module_path.append(part)
+
+                    current_module_path = ".".join(module_path)
+                    try:
+                        obj = importlib.import_module(current_module_path)
+                    except Exception as ex:
+                        traceback = sys.exc_info()[2]
+                        raise NameError(
+                            "Cannot resolve function name '{}', error importing module {}: {}".format(
+                                name, current_module_path, ex
+                            )
+                        ).with_traceback(traceback)
+
+        # When we're at the end, we should have found a valid object
+        return obj, module_path, object_path
+
+    def _bundle(self):
+        """Bundle the function and its dependencies into a zip file."""
+
         function = self._function
+        include_modules = self._include_modules
+        requirements = self._requirements
 
         if not function:
             raise ValueError("Function not provided!")
 
-        if function.__name__ == "<lambda>":
-            raise ValueError("Cannot execute lambda functions. Use `def` instead.")
-
-        try:
-            src = inspect.getsource(function)
-        except Exception:
-            # Unable to retrieve the source try dill
-            try:
-                import dill
-
-                src = dill.source.getsource(function)
-            except ImportError:
-                raise ValueError(
-                    "Unable to retrieve the source of interactively defined functions."
-                    " To support this install dill: pip install dill"
-                )
-
-        src = src.strip()
-        main = f"{src}\n\n\nmain = {function.__name__}\n"
-
-        if self._requirements:
-            requirements = "\n".join(self._requirements) + "\n"
-        else:
-            requirements = None
-
-        # include_data = self._data_globs_to_paths()
+        data_files = self._data_globs_to_paths()
 
         try:
             with NamedTemporaryFile(delete=False, suffix=".zip", mode="wb") as f:
                 with zipfile.ZipFile(
                     f, mode="w", compression=zipfile.ZIP_DEFLATED
                 ) as bundle:
-                    bundle.writestr("function.py", main)
+                    self._write_main_function(function, bundle)
+                    self._write_data_files(data_files, bundle)
 
-                    # TODO: include data
-                    # for file_path in include_data:
-                    #     bundle.write(file_path, os.path.relpath(file_path, "data"))
+                    if include_modules:
+                        self._write_include_modules(self._include_modules, bundle)
 
                     if requirements:
-                        bundle.writestr("requirements.txt", requirements)
-
+                        bundle.writestr(
+                            REQUIREMENTS, self._bundle_requirements(requirements)
+                        )
             return f.name
         except Exception:
             if os.path.exists(f.name):
                 os.remove(f.name)
             raise
 
+    def _write_main_function(self, f, archive):
+        """Write the main function to the archive."""
+
+        is_named_function = isinstance(f, str)
+
+        if is_named_function:
+            f, module_path, function_path = self._find_object(f)
+
+            if not callable(f):
+                raise ValueError(
+                    "Compute main function must be a callable: `{}`".format(f)
+                )
+
+            # Simply import the module
+            source = self._IMPORT_TEMPLATE.format(
+                module=".".join(module_path), obj=function_path[0]
+            )
+            function_name = ".".join(function_path)
+        else:
+            # make sure function_name is set
+            function_name = f.__name__
+
+            if not inspect.isfunction(f):
+                raise ValueError(
+                    "Compute main function must be user-defined function: `{}`".format(
+                        f
+                    )
+                )
+
+            # We can't get the code for a given lambda
+            if f.__name__ == "<lambda>":
+                raise ValueError(
+                    "Compute main function cannot be a lambda expression: `{}`".format(
+                        f
+                    )
+                )
+
+            # Furthermore, the given function cannot refer to globals
+            bound_globals = self._get_globals(f)
+
+            if bound_globals:
+                raise BoundGlobalError(
+                    "Illegal reference to one or more global variables in your "
+                    "function: {}".format(bound_globals)
+                )
+
+            try:
+                source = inspect.getsource(f).strip()
+            except Exception:
+                try:
+                    import dill
+
+                    source = dill.source.getsource(f).strip()
+                except ImportError:
+                    raise ValueError(
+                        "Unable to retrieve the source of interactively defined functions."
+                        " To support this install dill: pip install dill"
+                    )
+
+        entrypoint_source = self._ENTRYPOINT_TEMPLATE.format(
+            source=source, function_name=function_name
+        )
+        archive.writestr(ENTRYPOINT, entrypoint_source)
+
+    def _write_data_files(self, data_files, archive):
+        """Write the data files to the archive."""
+
+        for path, archive_path in data_files:
+            archive.write(path, archive_path)
+
+    def _find_module_file(self, mod_name):
+        """Search for module file in python path. Raise ImportError if not found."""
+
+        try:
+            mod = importlib.import_module(mod_name)
+            mod_file = mod.__file__.replace(".pyc", ".py", 1)
+            return mod_file
+
+        except ImportError as ie:
+            # Search for possible pyx file
+            mod_basename = "{}.pyx".format(mod_name.replace(".", "/"))
+            for s in sys.path:
+                mod_file_option = os.path.join(s, mod_basename)
+                if os.path.isfile(mod_file_option):
+                    # Check that found cython source not in CWD (causes build problems)
+                    if os.getcwd() == os.path.dirname(os.path.abspath(mod_file_option)):
+                        raise ValueError(
+                            "Cannot include cython modules from working directory: `{}`.".format(
+                                mod_file_option
+                            )
+                        )
+                    else:
+                        return mod_file_option
+
+            # Raise caught ImportError if we still haven't found the module
+            raise ie
+
+    def _write_include_modules(self, include_modules, archive):
+        """Write the included modules to the archive."""
+
+        for mod_name in include_modules:
+            mod_file = self._find_module_file(mod_name)
+
+            # detect system packages from distribution or virtualenv locations.
+            if re.match(self._SYS_PACKAGES, mod_file) is not None:
+                raise ValueError(
+                    "Cannot include system modules: `{}`.".format(mod_file)
+                )
+
+            if not os.path.exists(mod_file):
+                raise IOError(
+                    "Source code for module is missing, only byte code exists: `{}`.".format(
+                        mod_name
+                    )
+                )
+            sys_path = self._sys_path_prefix(mod_file)
+
+            self._include_init_files(os.path.dirname(mod_file), archive, sys_path)
+            archive_names = archive.namelist()
+            # this is a package, get all decendants if they exist.
+            if os.path.basename(mod_file) == "__init__.py":
+                for dirpath, dirnames, filenames in os.walk(os.path.dirname(mod_file)):
+                    for file_ in [f for f in filenames if f.endswith((".py", ".pyx"))]:
+                        path = os.path.join(dirpath, file_)
+                        arcname = self._archive_path(path, None, sys_path)
+                        if arcname not in archive_names:
+                            archive.write(path, arcname=arcname)
+            else:
+                archive.write(
+                    mod_file, arcname=self._archive_path(mod_file, None, sys_path)
+                )
+
+    def _include_init_files(self, dir_path, archive, sys_path):
+        """Include __init__.py files for all parent directories."""
+
+        relative_dir_path = os.path.relpath(dir_path, sys_path)
+        archive_names = archive.namelist()
+        # have we walked this path before?
+        if os.path.join(relative_dir_path, "__init__.py") not in archive_names:
+            partial_path = ""
+            for path_part in relative_dir_path.split(os.sep):
+                partial_path = os.path.join(partial_path, path_part)
+                rel_init_location = os.path.join(partial_path, "__init__.py")
+                abs_init_location = os.path.join(sys_path, rel_init_location)
+                if not os.path.exists(abs_init_location):
+                    raise IOError(
+                        "Source code for module is missing: `{}`.".format(
+                            abs_init_location
+                        )
+                    )
+                if rel_init_location not in archive_names:
+                    archive.write(abs_init_location, arcname=rel_init_location)
+
+    def _bundle_requirements(self, requirements):
+        """Bundle the requirements into the archive."""
+
+        if not pkg_resources:
+            warnings.warn(
+                "Your Python does not have a recent version of `setuptools`. "
+                "For a better experience update your environment by running `pip install -U setuptools`."
+            )
+        if isinstance(requirements, str):
+            return self._requirements_file(requirements)
+        else:
+            return self._requirements_list(requirements)
+
+    def _requirements_file(self, requirements):
+        """Read the requirements file and validate it."""
+
+        if not os.path.isfile(requirements):
+            raise ValueError(
+                "Requirements file at {} not found. Did you mean to specify a single requirement? "
+                "Pass it wrapped in a list.".format(requirements)
+            )
+        with open(requirements) as f:
+            requirements_string = f.read()
+        if pkg_resources:
+            try:
+                list(pkg_resources.parse_requirements(requirements_string))
+            except ValueError as ex:
+                raise ValueError(
+                    "Invalid Python requirement in file: {}".format(str(ex))
+                )
+        return requirements_string
+
+    def _requirements_list(self, requirements):
+        """Validate the requirements list."""
+
+        if pkg_resources:
+            bad_requirements = []
+            for requirement in requirements:
+                try:
+                    pkg_resources.Requirement.parse(requirement)
+                except ValueError:
+                    bad_requirements.append(requirement)
+            if bad_requirements:
+                raise ValueError(
+                    "Invalid Python requirements: {}".format(",".join(bad_requirements))
+                )
+        return "\n".join(requirements)
+
+    def _sys_path_prefix(self, path):
+        """Get the system path prefix for a given path."""
+
+        absolute_path = os.path.abspath(path)
+        for sys_path in self._sys_paths():
+            if absolute_path.startswith(sys_path):
+                return sys_path
+        else:
+            raise IOError("Location is not on system path: `{}`".format(path))
+
+    def _archive_path(self, path, archive_prefix, sys_path):
+        """Get the archive path for a given path."""
+
+        if archive_prefix:
+            return os.path.join(archive_prefix, os.path.relpath(path, sys_path))
+        else:
+            return os.path.relpath(path, sys_path)
+
     def _data_globs_to_paths(self) -> List[str]:
+        """Convert data globs to absolute paths."""
+
         data_files = []
+
+        # if there are no data files, return empty list
+        if not self._include_data:
+            return data_files
 
         for pattern in self._include_data:
             is_glob = glob.has_magic(pattern)
@@ -620,7 +956,14 @@ class Function(Document):
                             )
                         )
                     else:
-                        data_files.append(path)
+                        data_files.append(
+                            (
+                                path,
+                                self._archive_path(
+                                    path, None, sys_path=self._sys_path_prefix(path)
+                                ),
+                            ),
+                        )
                 else:
                     raise ValueError(f"Data file does not exist: {path}")
 

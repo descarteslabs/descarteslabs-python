@@ -185,7 +185,9 @@ class TestCreateFunction(FunctionTestCase):
         fn = Function(lambda: 1)
         with self.assertRaises(ValueError) as ctx:
             fn.save()
-        assert "Cannot execute lambda functions" in str(ctx.exception)
+        assert "Compute main function cannot be a lambda expression" in str(
+            ctx.exception
+        )
 
 
 class TestListFunctions(FunctionTestCase):

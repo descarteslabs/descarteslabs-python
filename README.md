@@ -28,7 +28,10 @@ Changelog
   - Deleting a Job will delete all associated resources (logs, results, etc). 
 - Added attribute filter to `Function` and `Job` objects.
   - Attributes marked `filterable=True` can be used to filter objects on the compute backend api.
-  - Minor optimization to `Job.iter_results` which now uses backend filters to load successful jobs. 
+  - Minor optimization to `Job.iter_results` which now uses backend filters to load successful jobs.
+- `Function` bundling has been enhanced.
+  - New `include_modules` and `include_data` parameters allow for multiple other modules, non-code data files, etc to be added to the code bundle.
+  - The `requirements` parameter has been improved to allow a user to pass a path to their own `requirements.txt` file instead of a list of strings.
 
 ## [2.0.2] - 2023-06-26
 
