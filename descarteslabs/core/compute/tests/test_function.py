@@ -2,6 +2,8 @@ import gzip
 import json
 import random
 import string
+import sys
+import unittest
 from collections.abc import Iterable
 from datetime import timezone
 
@@ -121,6 +123,7 @@ class TestCreateFunction(FunctionTestCase):
         assert "Must be a valid docker image" in str(ctx.exception)
 
     @responses.activate
+    @unittest.skipIf(sys.version_info >= (3, 11), "Python >= 3.11 not supported")
     def test_create_function(self):
         params = {
             "image": "python3:8",
@@ -148,6 +151,7 @@ class TestCreateFunction(FunctionTestCase):
         self.assertDictContainsSubset(params, fn.to_dict())
 
     @responses.activate
+    @unittest.skipIf(sys.version_info >= (3, 11), "Python >= 3.11 not supported")
     def test_call_creates_function(self):
         params = {
             "image": "python3:8",
