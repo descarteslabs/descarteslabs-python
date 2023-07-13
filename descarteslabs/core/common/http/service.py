@@ -45,3 +45,12 @@ class DefaultClientMixin:
             raise ValueError(f"client must be an instance of {cls.__name__}")
 
         cls._instance = client
+
+    @classmethod
+    def clear_all_default_clients(cls):
+        """Clear all default clients of this class and all its subclasses."""
+
+        cls._instance = None
+
+        for subclass in cls.__subclasses__():
+            subclass.clear_all_default_clients()

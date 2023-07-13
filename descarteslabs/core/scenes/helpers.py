@@ -6,9 +6,11 @@ from ..common.property_filtering import Properties
 
 REQUEST_PARAMS = {"v1_compatibility": True}
 
+BANDS_BY_PRODUCT_CACHE = cachetools.TTLCache(maxsize=256, ttl=600)
+
 
 # this is just like the one in catalog, except it uses v1 properties and DotDict
-@cachetools.cached(cachetools.TTLCache(maxsize=256, ttl=600), key=lambda p, c: p)
+@cachetools.cached(BANDS_BY_PRODUCT_CACHE, key=lambda p, c: p)
 def cached_bands_by_product(product_id, client):
     bands = DotDict(
         {

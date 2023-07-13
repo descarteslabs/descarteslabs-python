@@ -32,3 +32,17 @@ if sys.version_info >= (3, 12):
         sys.version_info.major, sys.version_info.minor
     )
     warnings.warn(msg, FutureWarning)
+
+
+def clear_client_state():
+    """Clear all cached client state."""
+    from .auth import Auth
+    from ..common.http.service import DefaultClientMixin
+    from ..scenes.helpers import BANDS_BY_PRODUCT_CACHE
+
+    Auth.set_default_auth(None)
+    DefaultClientMixin.clear_all_default_clients()
+    BANDS_BY_PRODUCT_CACHE.clear()
+
+
+__all__ = ["clear_client_state"]
