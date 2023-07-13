@@ -289,7 +289,7 @@ class LikeExpression(Expression):
             if model
             else (self.name, self.value)
         )
-        return (name, {"name": name, "op": "ilike", "val": value})
+        return {"name": name, "op": "ilike", "val": value}
 
     def evaluate(self, obj):
         expr = re.escape(self.value).replace("_", ".").replace("%", ".*")

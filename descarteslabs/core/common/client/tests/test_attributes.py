@@ -93,6 +93,30 @@ class TestDocument(unittest.TestCase):
             doc.id = "123"
         assert "Unable to set readonly attribute 'id'" == str(ctx.exception)
 
+    def test_init_from_server(self):
+        now = datetime.utcnow()
+        # 2000-01-01, if set to 0 astimezone on windows in python 3.8 will error
+        timestamp = 946710000
+        data = {
+            "id": 1,
+            "name": "server",
+            "local": "server",
+            "once": 2,
+            "default": datetime.fromtimestamp(timestamp).isoformat(),
+            "created_at": now.isoformat(),
+            "extra": "should be ignored",
+        }
+
+        doc = MyDocument(**data, saved=True)
+        assert doc.id == 1
+        assert doc.name == "server"
+        assert doc.local == "local"
+        assert doc.once == 2
+        assert doc.default == datetime.fromtimestamp(timestamp, tz=timezone.utc)
+        assert doc.created_at == now.replace(tzinfo=timezone.utc)
+        with self.assertRaises(AttributeError):
+            doc.extra
+
     def test_set_from_server(self):
         now = datetime.utcnow()
         doc = MyDocument(name="local", once="1", default=now)

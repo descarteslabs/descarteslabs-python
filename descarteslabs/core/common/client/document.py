@@ -33,7 +33,12 @@ class Document(object):
     def __init__(self, saved=False, **kwargs) -> None:
         self._attributes = dict()
         self._modified = set()
-        self._fill(kwargs, remote=saved)
+
+        if saved:
+            self._load_from_remote(kwargs)
+        else:
+            self._fill(kwargs, remote=saved)
+
         self._saved = saved
         self._deleted = False
 
