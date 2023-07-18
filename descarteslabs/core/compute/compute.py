@@ -39,6 +39,7 @@ from ..common.client import (
     DatetimeAttribute,
     Document,
     DocumentState,
+    ListAttribute,
     Search,
 )
 from .compute_client import ComputeClient
@@ -87,6 +88,14 @@ class Serializable:
         raise NotImplementedError()
 
 
+class JobSearch(Search["Job"]):
+    def rerun(self):
+        response = self._client.session.post(
+            "/jobs/rerun", json=self._serialize(json_encode=False)
+        )
+        return [Job(**job, saved=True) for job in response.json()]
+
+
 class Job(Document):
     """A single invocation of a Function."""
 
@@ -123,6 +132,11 @@ class Job(Document):
 
         The status may occasionally need to be refreshed by calling :py:meth:`Job.refresh`
         """,
+    )
+    tags: List[str] = ListAttribute(
+        str,
+        filterable=True,
+        doc="A list of tags associated with the Job.",
     )
 
     def __init__(
@@ -172,7 +186,7 @@ class Job(Document):
         return cls(**response.json(), saved=True)
 
     @classmethod
-    def list(cls, page_size: int = 100, **params) -> Search["Job"]:
+    def list(cls, page_size: int = 100, **params) -> JobSearch:
         """Retrieves an iterable of all jobs matching the given parameters.
 
         If you would like to filter Jobs, use :py:meth:`Job.search`.
@@ -261,7 +275,7 @@ class Job(Document):
             return result
 
     @classmethod
-    def search(cls) -> Search["Job"]:
+    def search(cls) -> JobSearch:
         """Creates a search for Jobs.
 
         The search is lazy and will be executed when the search is iterated over or
@@ -273,7 +287,7 @@ class Job(Document):
         >>> jobs: List[Job] = Job.search().filter(Job.status == JobStatus.SUCCESS).collect()
         Collection([Job <job-id1>: success, <job-id2>: success])
         """
-        return Search(Job, ComputeClient.get_default_client(), url="/jobs")
+        return JobSearch(Job, ComputeClient.get_default_client(), url="/jobs")
 
     def wait_for_completion(self, timeout=None, interval=10):
         """Waits until the Job is completed.
@@ -562,9 +576,24 @@ class Function(Document):
             **extra,
         )
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, tags: List[str] = None, **kwargs):
+        """Execute the function with the given arguments.
+
+        This call will return a long running job that can be used to monitor the state
+        of the job.
+
+        Returns
+        -------
+        Job
+            The Job that was submitted.
+
+        Parameters
+        ----------
+        tags : List[str], optional
+            A list of tags to apply to the Job.
+        """
         self.save()
-        job = Job(function_id=self.id, args=args, kwargs=kwargs)
+        job = Job(function_id=self.id, args=args, kwargs=kwargs, tags=tags)
         job.save()
         return job
 
@@ -1055,7 +1084,7 @@ class Function(Document):
         client.set_credentials()
 
     @property
-    def jobs(self) -> Search[Job]:
+    def jobs(self) -> JobSearch:
         """Returns all the Jobs for the Function."""
         return Job.search().filter(Job.function_id == self.id)
 
@@ -1154,7 +1183,7 @@ class Function(Document):
 
         self._load_from_remote(response.json())
 
-    def map(self, args, iterargs=None) -> List[Job]:
+    def map(self, args, iterargs=None, tags: List[str] = None) -> List[Job]:
         """Submits multiple jobs efficiently with positional args to each function call.
 
         Preferred over repeatedly calling the function, such as in a loop, when submitting
@@ -1165,28 +1194,32 @@ class Function(Document):
         args : iterable
             An iterable of arguments. A job will be submitted with each element as the
             first positional argument to the function.
-        kwargs : List[iterable], optional
+        iterargs : List[iterable], optional
             If additional iterable arguments are passed, the function must take that
             many arguments and is applied to the items from all iterables in parallel.
+        tags : List[str], optional
+            A list of tags to apply to all jobs submitted.
         """
         client = ComputeClient.get_default_client()
 
         # save in case the function doesn't exist yet
         self.save()
 
-        response = client.session.post(
-            "/jobs/bulk",
-            json={"function_id": self.id, "bulk_args": args, "bulk_kwargs": iterargs},
-        )
+        payload = {
+            "function_id": self.id,
+            "bulk_args": args,
+            "bulk_kwargs": iterargs,
+        }
 
+        if tags:
+            payload["tags"] = tags
+
+        response = client.session.post("/jobs/bulk", json=payload)
         return [Job(**job, saved=True) for job in response.json()]
 
     def rerun(self):
         """Submits all the failed and timed out jobs to be rerun."""
-        client = ComputeClient.get_default_client()
-
-        response = client.session.post("/jobs/rerun", json={"function_id": self.id})
-        return [Job(**job, saved=True) for job in response.json()]
+        return self.jobs.rerun()
 
     def refresh(self):
         """Updates the Function instance with data from the server."""

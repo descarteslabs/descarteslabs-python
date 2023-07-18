@@ -24,6 +24,7 @@ from .sort import Sort
 if TYPE_CHECKING:
     from ...client.services.service import ApiService
 
+AnySearch = TypeVar("AnySearch", bound="Search")
 T = TypeVar("T")
 
 
@@ -63,7 +64,7 @@ class Search(Generic[T]):
 
         return result
 
-    def __iter__(self) -> Iterator[T]:
+    def __iter__(self: AnySearch) -> Iterator[T]:
         """
         Execute the search query and make a generator for iterating through the returned results
 
@@ -92,7 +93,7 @@ class Search(Generic[T]):
         for document in documents:
             yield self._document(**document, saved=True)
 
-    def collect(self, **kwargs) -> Collection[T]:
+    def collect(self: AnySearch, **kwargs) -> Collection[T]:
         """
         Execute the search query and return the appropriate collection.
 
@@ -111,7 +112,7 @@ class Search(Generic[T]):
         """
         return Collection(self, item_type=self._document)
 
-    def count(self) -> int:
+    def count(self: AnySearch) -> int:
         """Fetch the number of documents that match the search.
 
         Returns
@@ -137,7 +138,9 @@ class Search(Generic[T]):
         response = self._client.session.get(self._url, params=instance._serialize())
         return response.json()["meta"]["total"]
 
-    def filter(self, expression: Union[Expression, LogicalExpression]) -> "Search[T]":
+    def filter(
+        self: AnySearch, expression: Union[Expression, LogicalExpression]
+    ) -> AnySearch:
         """Filter results by the values of various fields.
 
         Successive calls to `filter` will add the new filter(s) using the
@@ -191,7 +194,7 @@ class Search(Generic[T]):
 
         return instance
 
-    def limit(self, limit: int) -> "Search[T]":
+    def limit(self: AnySearch, limit: int) -> AnySearch:
         """Limit the number of search results returned by the search execution.
 
         Successive calls to `limit` will overwrite the previous limit parameter.
@@ -209,7 +212,7 @@ class Search(Generic[T]):
         instance._limit = limit
         return instance
 
-    def param(self, **params) -> "Search[T]":
+    def param(self: AnySearch, **params) -> AnySearch:
         """Add additional parameters to the search request.
 
         Parameters
@@ -225,7 +228,7 @@ class Search(Generic[T]):
         instance._params.update(params)
         return instance
 
-    def sort(self, *sorts: List[Union[Attribute, Sort]]) -> "Search[T]":
+    def sort(self: AnySearch, *sorts: List[Union[Attribute, Sort]]) -> AnySearch:
         """Sort the returned results by the given fields.
 
         Parameters
@@ -257,7 +260,7 @@ class Search(Generic[T]):
 
         return instance
 
-    def _serialize(self):
+    def _serialize(self, json_encode: bool = True) -> dict:
         params = self._params.copy()
 
         if self._filters:
@@ -270,9 +273,12 @@ class Search(Generic[T]):
             else:
                 filters.append(filter)
 
-            params["filter"] = json.dumps(
-                filters, separators=(",", ":"), sort_keys=True
-            )
+            if json_encode:
+                params["filter"] = json.dumps(
+                    filters, separators=(",", ":"), sort_keys=True
+                )
+            else:
+                params["filter"] = filters
 
         if self._limit is not None:
             params["limit"] = self._limit

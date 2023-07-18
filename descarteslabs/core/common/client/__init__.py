@@ -12,8 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .attributes import Attribute, DatetimeAttribute
+from .attributes import Attribute, DatetimeAttribute, ListAttribute
 from .document import Document, DocumentState
 from .search import Search
 
-__all__ = ["Attribute", "DatetimeAttribute", "Document", "DocumentState", "Search"]
+__all__ = [
+    "Attribute",
+    "DatetimeAttribute",
+    "Document",
+    "DocumentState",
+    "ListAttribute",
+    "Search",
+]

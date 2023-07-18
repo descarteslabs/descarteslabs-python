@@ -22,6 +22,24 @@ class TestCreateJob(BaseTestCase):
         assert job.creation_date == self.now.replace(tzinfo=timezone.utc)
         self.assertDictContainsSubset(params, job.to_dict())
 
+    @responses.activate
+    def test_create_with_tags(self):
+        params = dict(
+            function_id="some-fn",
+            args=[1, 2],
+            kwargs={"key": "blah"},
+            tags=["tag1", "tag2"],
+        )
+        self.mock_job_create(params)
+
+        job = Job(**params)
+        assert job.state == "new"
+        job.save()
+        assert job.state == "saved"
+        assert job.id
+        assert job.creation_date == self.now.replace(tzinfo=timezone.utc)
+        self.assertDictContainsSubset(params, job.to_dict())
+
 
 class TestListJobs(BaseTestCase):
     @responses.activate
@@ -100,6 +118,7 @@ class TestJob(BaseTestCase):
             "kwargs": {"first": "blah", "second": "blah"},
             "runtime": None,
             "status": JobStatus.PENDING,
+            "tags": [],
         }
 
     @responses.activate

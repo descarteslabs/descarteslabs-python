@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 
 import pytz
 
-from .. import Attribute, DatetimeAttribute, Document, DocumentState
+from .. import Attribute, DatetimeAttribute, Document, DocumentState, ListAttribute
 
 
 class MyDocument(Document):
@@ -201,3 +201,117 @@ class TestDatetimeAttribute(unittest.TestCase):
         now = datetime.utcnow()
         doc = ValidationTest(date=now.timestamp())
         assert doc.date == now.replace(tzinfo=timezone.utc)
+
+
+class TestListAttribute(unittest.TestCase):
+    def test_append(self):
+        class ListTest(Document):
+            items: list = ListAttribute(int)
+
+        doc = ListTest(items=[1, 2], saved=True)
+        doc.items.append(3)
+        assert doc.items == [1, 2, 3]
+        assert doc.is_modified
+        assert doc.to_dict()["items"] == [1, 2, 3]
+
+    def test_append_readonly(self):
+        class ListTest(Document):
+            items: list = ListAttribute(int, readonly=True)
+
+        doc = ListTest(items=[1, 2], saved=True)
+        with self.assertRaises(ValueError) as ctx:
+            doc.items.append(3)
+        assert "Unable to append readonly attribute 'items'" == str(ctx.exception)
+        assert doc.items == [1, 2]
+
+    def test_delete(self):
+        class ListTest(Document):
+            items: list = ListAttribute(int)
+
+        doc = ListTest(items=[1, 2], saved=True)
+        del doc.items[0]
+        assert doc.items == [2]
+        assert doc.is_modified
+        assert doc.to_dict()["items"] == [2]
+
+    def test_add_assign(self):
+        class ListTest(Document):
+            items: list = ListAttribute(int)
+
+        doc = ListTest(items=[1, 2], saved=True)
+        doc.items += [3]
+        assert doc.items == [1, 2, 3]
+        assert doc.is_modified
+        assert doc.to_dict()["items"] == [1, 2, 3]
+
+        doc._clear_modified()
+        doc.items += []
+        assert doc.items == [1, 2, 3]
+        assert doc.is_modified is False
+        assert doc.to_dict()["items"] == [1, 2, 3]
+
+    def test_clear(self):
+        class ListTest(Document):
+            items: list = ListAttribute(int)
+
+        doc = ListTest(items=[1, 2], saved=True)
+        doc.items.clear()
+        assert doc.items == []
+        assert doc.is_modified
+        assert doc.to_dict()["items"] == []
+
+    def test_extend(self):
+        class ListTest(Document):
+            items: list = ListAttribute(int)
+
+        doc = ListTest(items=[1, 2], saved=True)
+        doc.items.extend([3, 4])
+        assert doc.items == [1, 2, 3, 4]
+        assert doc.is_modified
+        assert doc.to_dict()["items"] == [1, 2, 3, 4]
+
+    def test_insert(self):
+        class ListTest(Document):
+            items: list = ListAttribute(int)
+
+        doc = ListTest(items=[1, 2], saved=True)
+        doc.items.insert(0, 0)
+        assert doc.items == [0, 1, 2]
+        assert doc.is_modified
+        assert doc.to_dict()["items"] == [0, 1, 2]
+
+    def test_pop(self):
+        class ListTest(Document):
+            items: list = ListAttribute(int)
+
+        doc = ListTest(items=[1, 2, 3], saved=True)
+        assert doc.items.pop() == 3
+        assert doc.items == [1, 2]
+        assert doc.is_modified
+        assert doc.to_dict()["items"] == [1, 2]
+
+        doc._clear_modified()
+        assert doc.items.pop(0) == 1
+        assert doc.items == [2]
+        assert doc.is_modified
+        assert doc.to_dict()["items"] == [2]
+
+    def test_remove(self):
+        class ListTest(Document):
+            items: list = ListAttribute(int)
+
+        doc = ListTest(items=[1, 2, 3], saved=True)
+        doc.items.remove(2)
+        assert doc.items == [1, 3]
+        assert doc.is_modified
+        assert doc.to_dict()["items"] == [1, 3]
+
+    def test_serializes_type(self):
+        class ListTest(Document):
+            items: list = ListAttribute(str)
+
+        doc = ListTest(items=[1, 2, 3], saved=True)
+        assert doc.to_dict()["items"] == ["1", "2", "3"]
+        doc.items.append(4)
+        assert doc.is_modified
+        assert doc.to_dict()["items"] == ["1", "2", "3", "4"]

@@ -122,6 +122,7 @@ class BaseTestCase(TestCase):
 
         data = json or body
         matches = []
+        calls_with_data = []
         calls_with_params = set()
 
         for call in calls:
@@ -131,6 +132,9 @@ class BaseTestCase(TestCase):
                 request_data = jsonlib.loads(request.body)
             else:
                 request_data = request.body
+
+            if request_data:
+                calls_with_data.append(request.body.decode())
 
             if params is not None:
                 request_params = {}
@@ -170,6 +174,9 @@ class BaseTestCase(TestCase):
 
         if data is not None:
             msg += f" with data: {data}"
+
+            if calls_with_data:
+                msg += "\n\nData:\n" + "\n".join(calls_with_data)
 
         if params is not None:
             msg += f" with params: {params}"

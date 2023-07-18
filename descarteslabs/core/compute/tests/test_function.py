@@ -375,7 +375,10 @@ class TestFunction(FunctionTestCase):
         assert job.creation_date == self.now.replace(tzinfo=timezone.utc)
         assert job.function_id == "some-id"
         assert job.status == JobStatus.PENDING
-        self.assert_url_called("/jobs/rerun", json={"function_id": "some-id"})
+        self.assert_url_called(
+            "/jobs/rerun",
+            json={"filter": [{"op": "eq", "name": "function_id", "val": "some-id"}]},
+        )
 
     @responses.activate
     def test_refresh(self):
@@ -421,6 +424,28 @@ class TestFunction(FunctionTestCase):
             "bulk_args": [[1, 2], [3, 4]],
             "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
             "function_id": "some-id",
+        }
+
+    @responses.activate
+    def test_map_with_tags(self):
+        self.mock_response(
+            responses.POST,
+            "/jobs/bulk",
+            json=[self.make_job(args=[1, 2]), self.make_job(args=[3, 4])],
+        )
+
+        fn = Function(id="some-id", saved=True)
+        fn.map(
+            [[1, 2], [3, 4]],
+            iterargs=[{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+            tags=["tag1", "tag2"],
+        )
+        request = responses.calls[-1].request
+        assert json.loads(request.body) == {
+            "bulk_args": [[1, 2], [3, 4]],
+            "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+            "function_id": "some-id",
+            "tags": ["tag1", "tag2"],
         }
 
     @responses.activate

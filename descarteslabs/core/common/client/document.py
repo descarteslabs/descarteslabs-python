@@ -125,7 +125,7 @@ class Document(object):
             The serialized attribute name and value.
         """
         attribute: Attribute = getattr(cls, name)
-        return (attribute.name, attribute.serialize(attribute.deserialize(value)))
+        return (attribute.name, attribute._serialize_to_filter(value))
 
     def update(self, ignore_missing=False, **kwargs):
         """Updates the document setting multiple attributes at a time.

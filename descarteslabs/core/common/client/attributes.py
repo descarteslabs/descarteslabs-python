@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import UserList
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Callable, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Type, TypeVar, Union
 
 from ..property_filtering import Property
 from .sort import Sort
@@ -110,7 +111,7 @@ class Attribute(Property):
     def _doc_type(self) -> str:
         return "{} or {}".format(self.type.__name__, self.default)
 
-    def __set_name__(self, owner, name):
+    def __set_name__(self, owner: "Document", name: "str"):
         """Called when an attribute is defined on a document."""
         if not hasattr(owner, "_attributes"):
             setattr(owner, "_attributes", dict())
@@ -137,7 +138,9 @@ class Attribute(Property):
             else:
                 default = self.default
 
-            instance._attributes[self.name] = self.deserialize(default)
+            instance._attributes[self.name] = self.deserialize(
+                default, instance=instance
+            )
 
         return instance._attributes.get(self.name)
 
@@ -160,7 +163,7 @@ class Attribute(Property):
             self._raise_immutable("set", instance)
 
         if self.type and value is not None:
-            value = self.deserialize(value)
+            value = self.deserialize(value, instance)
 
         # Only update the value if it has changed
         if (self.name not in instance._attributes and value is None) or (
@@ -206,8 +209,26 @@ class Attribute(Property):
                 "Unable to {} immutable attribute '{}'".format(operation, self.name)
             )
 
-    def deserialize(self, value) -> T:
-        """Deserializes a value to the type in the attribute."""
+    def _set_modified(self, instance: "Document", changed: bool = True):
+        """Marks the attribute as modified."""
+        if changed:
+            instance._modified.add(self.name)
+
+    def _serialize_to_filter(self, value: Any):
+        """Serializes a value to a filter expression value."""
+        return self.serialize(value)
+
+    def deserialize(self, value: Any, instance: "Document" = None) -> T:
+        """Deserializes a value to the type in the attribute.
+
+        Parameters
+        ----------
+        value : Any
+            The value to deserialize into a native Python type.
+        instance : Document, None
+            The document instance the value is being deserialized for.
+            When a value is set on a document, the instance will not be None.
+        """
         if value is None or isinstance(value, self.type):
             return value
 
@@ -280,7 +301,7 @@ class DatetimeAttribute(Attribute):
             **extra,
         )
 
-    def deserialize(self, value: str) -> T:
+    def deserialize(self, value: str, instance: "Document" = None) -> T:
         """Deserialize a server datetime."""
         if value is None:
             return None
@@ -308,3 +329,141 @@ class DatetimeAttribute(Attribute):
             return value
 
         return value.astimezone(tz=self.remote_timezone).isoformat()
+
+
+class ListAttribute(Attribute):
+    """Represents a list attribute on a document."""
+
+    def __init__(
+        self,
+        type: Type[T] = None,
+        default: Union[T, Callable] = None,
+        mutable: bool = True,
+        readonly: bool = False,
+        sticky: bool = False,
+        **extra,
+    ):
+        """Defines a list attribute.
+
+        Parameters
+        ----------
+        type : Type[T], None
+            The type of the items in the list.
+        default : Any, Callable, None
+            The default value for the attribute when no value is defined.
+            If a callable is provided, it will be called once when the attribute is first
+            fetched.
+        mutable : bool, True
+            If not set, the attribute will be immutable and can only be set once.
+        readonly : bool, False
+            If set, the attribute cannot be modified by the user.
+            This is designed for attributes set and managed exclusively by the server.
+        sticky : bool, False
+            If set, the attribute exists on the client only.
+            This attribute will be ignored when set by the server.
+        """
+        super().__init__(
+            type=type,
+            default=default or [],
+            mutable=mutable,
+            readonly=readonly,
+            sticky=sticky,
+            **extra,
+        )
+
+    def deserialize(self, value: Any, instance: "Document" = None) -> T:
+        """Deserialize a list of values."""
+        if value is None:
+            return None
+
+        if not isinstance(value, Iterable):
+            raise ValueError("Expected a list of values")
+
+        if isinstance(self.type, Attribute):
+            return MutableList(
+                self, instance, [self.type.deserialize(v, instance) for v in value]
+            )
+
+        return MutableList(self, instance, [self.type(v) for v in value])
+
+    def serialize(self, value):
+        """Serialize a list of values."""
+        if isinstance(self.type, Attribute):
+            return [v.serialize(v) for v in value]
+
+        if isinstance(value, MutableList):
+            return value.data
+
+        return value
+
+    def _serialize_to_filter(self, value: Any):
+        if isinstance(self.type, Attribute):
+            return self.type._serialize_to_filter(value)
+
+        return self.type(value)
+
+
+class MutableList(UserList):
+    """A mutable list that tracks changes and notifies the document."""
+
+    def __init__(self, attribute: Attribute, document: "Document", data: Iterable):
+        super().__init__(data)
+        self._attribute = attribute
+        self._document = document
+
+    def __delitem__(self, key):
+        self._attribute._raise_immutable("delete", self._document)
+        super().__delitem__(key)
+        self._attribute._set_modified(self._document)
+
+    def __iadd__(self, other: Iterable):
+        self._attribute._raise_immutable("add", self._document)
+        other = [self._attribute.type(o) for o in other]
+        result = super().__iadd__(other)
+        self._attribute._set_modified(self._document, changed=bool(other))
+        return result
+
+    def __setitem__(self, key, value):
+        self._attribute._raise_immutable("set", self._document)
+        value = self._attribute.type(value)
+        changed = self.__getitem__(key) != value
+        super().__setitem__(key, value)
+        self._attribute._set_modified(self._document, changed=changed)
+
+    def append(self, item):
+        self._attribute._raise_immutable("append", self._document)
+        item = self._attribute.type(item)
+        super().append(item)
+        self._attribute._set_modified(self._document)
+
+    def clear(self):
+        self._attribute._raise_immutable("clear", self._document)
+        super().clear()
+        self._attribute._set_modified(self._document)
+
+    def extend(self, other: Iterable):
+        self._attribute._raise_immutable("extend", self._document)
+        other = [self._attribute.type(o) for o in other]
+        result = super().extend(other)
+        self._attribute._set_modified(self._document, changed=bool(other))
+        return result
+
+    def insert(self, i, item):
+        self._attribute._raise_immutable("insert", self._document)
+        item = self._attribute.type(item)
+        super().insert(i, item)
+        self._attribute._set_modified(self._document)
+
+    def pop(self, i=-1):
+        self._attribute._raise_immutable("pop", self._document)
+        result = super().pop(i)
+        self._attribute._set_modified(self._document)
+        return result
+
+    def remove(self, item):
+        self._attribute._raise_immutable("remove", self._document)
+        super().remove(item)
+        self._attribute._set_modified(self._document)
+
+    def __repr__(self):
+        return repr(self.data)
