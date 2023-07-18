@@ -28,7 +28,7 @@ import warnings
 import zipfile
 from datetime import datetime
 from tempfile import NamedTemporaryFile
-from typing import Callable, Dict, List, Optional, Type, Union
+from typing import Callable, Dict, List, Optional, Set, Type, Union
 
 import pkg_resources
 from strenum import StrEnum
@@ -607,36 +607,20 @@ class Function(Document):
             )
         return self._cached_sys_paths
 
-    def _get_globals(self, func):
+    def _get_globals(self, func) -> Set[str]:
         """Get the globals for a function."""
+        instructions: List[dis.Instruction] = dis.get_instructions(func)
+        globals = set()
 
-        # Disassemble the function and capture the output
-        buffer = io.StringIO()
-        save_stdout = sys.stdout
+        for i in instructions:
+            if inspect.iscode(i.argval):
+                # The function can have nested functions with their own globals
+                # so we need to recursively disassemble those as well
+                globals.update(self._get_globals(i.argval))
+            elif i.opname == "LOAD_GLOBAL" and not hasattr(builtins, i.argval):
+                globals.add(i.argval)
 
-        try:
-            sys.stdout = buffer
-            dis.dis(func)
-        finally:
-            sys.stdout = save_stdout
-
-        # Search for LOAD_GLOBAL instruction and capture the var name
-        search_expr = ".* LOAD_GLOBAL .*\\((.*)\\)"
-        compiled_search = re.compile(search_expr)
-
-        # Non-builtin globals are collected here
-        globs = set()
-
-        for line in buffer.getvalue().split("\n"):
-            result = compiled_search.match(line)
-
-            if result:
-                name = result.group(1)
-
-                if not hasattr(builtins, name):
-                    globs.add(name)
-
-        return sorted(globs)
+        return globals
 
     def _find_object(self, name):
         """Search for an object as specified by a fully qualified name.

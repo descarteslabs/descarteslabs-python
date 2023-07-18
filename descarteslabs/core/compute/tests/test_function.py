@@ -2,8 +2,6 @@ import gzip
 import json
 import random
 import string
-import sys
-import unittest
 from collections.abc import Iterable
 from datetime import timezone
 
@@ -123,7 +121,6 @@ class TestCreateFunction(FunctionTestCase):
         assert "Must be a valid docker image" in str(ctx.exception)
 
     @responses.activate
-    @unittest.skipIf(sys.version_info >= (3, 11), "Python >= 3.11 not supported")
     def test_create_function(self):
         params = {
             "image": "python3.8",
@@ -151,7 +148,6 @@ class TestCreateFunction(FunctionTestCase):
         self.assertDictContainsSubset(params, fn.to_dict())
 
     @responses.activate
-    @unittest.skipIf(sys.version_info >= (3, 11), "Python >= 3.11 not supported")
     def test_call_creates_function(self):
         params = {
             "image": "python3.8",
@@ -191,6 +187,32 @@ class TestCreateFunction(FunctionTestCase):
             fn.save()
         assert "Compute main function cannot be a lambda expression" in str(
             ctx.exception
+        )
+
+    @responses.activate
+    def test_function_nested_globals(self):
+        params = {
+            "image": "python3.8",
+            "cpus": 1,
+            "memory": 8 * 1024,
+            "maximum_concurrency": 1,
+            "timeout": 60,
+            "retry_count": 1,
+        }
+
+        def test_compute_fn(a, b):
+            def catch_this():
+                print("failed to prevent nested global:", make_uuid())
+                print(f"{a} to the power of {b}")
+
+            return a**b
+
+        fn = Function(test_compute_fn, **params)
+        with self.assertRaises(NameError) as ctx:
+            fn.save()
+        assert str(ctx.exception) == (
+            "Illegal reference to one or more global variables in your function:"
+            " {'make_uuid'}"
         )
 
 
