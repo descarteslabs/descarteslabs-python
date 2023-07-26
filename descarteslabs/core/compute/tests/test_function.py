@@ -1,7 +1,9 @@
 import gzip
 import json
+import os
 import random
 import string
+import zipfile
 from collections.abc import Iterable
 from datetime import timezone
 
@@ -214,6 +216,95 @@ class TestCreateFunction(FunctionTestCase):
             "Illegal reference to one or more global variables in your function:"
             " {'make_uuid'}"
         )
+
+
+class TestFunctionBundle(FunctionTestCase):
+    def test_function_bundling(self):
+        # Test with list of requirements, explicitly specified modules and explicitly
+        # specified data file
+        params = {
+            "image": "python3.8:latest",
+            "cpus": 1,
+            "memory": 8 * 1024,
+            "maximum_concurrency": 1,
+            "timeout": 60,
+            "retry_count": 1,
+            "requirements": [
+                "descarteslabs[complete]>=2.0.3",
+                "geopandas==0.13.2",
+            ],
+            "include_modules": [
+                "descarteslabs.compute.tests.test_function",
+                "descarteslabs.compute.tests.test_job",
+            ],
+            "include_data": ["descarteslabs/compute/tests/data/test_data1.csv"],
+        }
+
+        files_to_be_bundled = [
+            "__dlentrypoint__.py",
+            "descarteslabs/compute/tests/data/test_data1.csv",
+            "descarteslabs/__init__.py",
+            "descarteslabs/compute/__init__.py",
+            "descarteslabs/compute/tests/__init__.py",
+            "descarteslabs/compute/tests/test_function.py",
+            "descarteslabs/compute/tests/test_job.py",
+            "requirements.txt",
+        ]
+
+        def test_compute_fn(a, b):
+            print(f"{a} to the power of {b}")
+            return a**b
+
+        fn = Function(test_compute_fn, **params)
+        bundle_path = fn._bundle()
+
+        with zipfile.ZipFile(os.path.abspath(bundle_path)) as file:
+            contents = zipfile.ZipFile(bundle_path).namelist()
+
+        for file in files_to_be_bundled:
+            assert file in contents
+
+        assert "descarteslabs/compute/tests/base.py" not in contents
+
+    def test_function_bundling_requirements_file(self):
+        # Test with requirements file, full module and all (*) contents of data folder
+        params = {
+            "image": "python3.8:latest",
+            "cpus": 1,
+            "memory": 8 * 1024,
+            "maximum_concurrency": 1,
+            "timeout": 60,
+            "retry_count": 1,
+            "requirements": "descarteslabs/compute/tests/requirements.txt",
+            "include_modules": ["descarteslabs.compute.tests"],
+            "include_data": ["descarteslabs/compute/tests/data/*"],
+        }
+
+        files_to_be_bundled = [
+            "__dlentrypoint__.py",
+            "descarteslabs/compute/tests/data/test_data1.csv",
+            "descarteslabs/compute/tests/data/test_data2.json",
+            "descarteslabs/__init__.py",
+            "descarteslabs/compute/__init__.py",
+            "descarteslabs/compute/tests/__init__.py",
+            "descarteslabs/compute/tests/base.py",
+            "descarteslabs/compute/tests/test_job.py",
+            "descarteslabs/compute/tests/test_function.py",
+            "requirements.txt",
+        ]
+
+        def test_compute_fn(a, b):
+            print(f"{a} to the power of {b}")
+            return a**b
+
+        fn = Function(test_compute_fn, **params)
+        bundle_path = fn._bundle()
+
+        with zipfile.ZipFile(os.path.abspath(bundle_path)) as file:
+            contents = zipfile.ZipFile(bundle_path).namelist()
+
+        for file in files_to_be_bundled:
+            assert file in contents
 
 
 class TestListFunctions(FunctionTestCase):

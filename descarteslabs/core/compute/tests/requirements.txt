@@ -1,0 +1,4 @@
+numpy==1.24.2
+pandas==2.0.0
+geopandas==0.12.2
+geojson==3.0.1
