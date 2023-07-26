@@ -219,9 +219,49 @@ class TestCreateFunction(FunctionTestCase):
 
 
 class TestFunctionBundle(FunctionTestCase):
+    def get_module_paths(self):
+        # Get the path to the module
+
+        parts = ["descarteslabs"] + __file__.split("descarteslabs")[-1].strip(
+            "/"
+        ).split("/")
+
+        # Construct the module path and module in dot notation
+        module_path = "/".join(parts[:-1])
+        module_dot = ".".join(parts[:-1])
+
+        # Return the module path, module in dot notation and the parts of the path
+        return module_path, module_dot, parts
+
+    def get_init_files(self, parts):
+        # Return list of paths to the __init__.py files
+
+        init_files = []
+
+        # Don't need the last part of the path because it's the current file name
+        parts.remove(parts[-1])
+
+        # Construct list of paths to the __init__.py files for each sub-module
+        for i in range(len(parts)):
+            init_files.append("/".join(parts[: i + 1] + ["__init__.py"]))
+
+        return init_files
+
     def test_function_bundling(self):
         # Test with list of requirements, explicitly specified modules and explicitly
         # specified data file
+
+        module_path, module_dot, parts = self.get_module_paths()
+
+        # Add the paths to the __init__.py files
+        files_to_be_bundled = [
+            "__dlentrypoint__.py",
+            f"{module_path}/data/test_data1.csv",
+            f"{module_path}/test_function.py",
+            f"{module_path}/test_job.py",
+            "requirements.txt",
+        ] + self.get_init_files(parts)
+
         params = {
             "image": "python3.8:latest",
             "cpus": 1,
@@ -234,22 +274,11 @@ class TestFunctionBundle(FunctionTestCase):
                 "geopandas==0.13.2",
             ],
             "include_modules": [
-                "descarteslabs.compute.tests.test_function",
-                "descarteslabs.compute.tests.test_job",
+                f"{module_dot}.test_function",
+                f"{module_dot}.test_job",
             ],
-            "include_data": ["descarteslabs/compute/tests/data/test_data1.csv"],
+            "include_data": [f"{module_path}/data/test_data1.csv"],
         }
-
-        files_to_be_bundled = [
-            "__dlentrypoint__.py",
-            "descarteslabs/compute/tests/data/test_data1.csv",
-            "descarteslabs/__init__.py",
-            "descarteslabs/compute/__init__.py",
-            "descarteslabs/compute/tests/__init__.py",
-            "descarteslabs/compute/tests/test_function.py",
-            "descarteslabs/compute/tests/test_job.py",
-            "requirements.txt",
-        ]
 
         def test_compute_fn(a, b):
             print(f"{a} to the power of {b}")
@@ -268,6 +297,20 @@ class TestFunctionBundle(FunctionTestCase):
 
     def test_function_bundling_requirements_file(self):
         # Test with requirements file, full module and all (*) contents of data folder
+
+        module_path, module_dot, parts = self.get_module_paths()
+
+        # Add the paths to the __init__.py files
+        files_to_be_bundled = [
+            "__dlentrypoint__.py",
+            f"{module_path}/data/test_data1.csv",
+            f"{module_path}/data/test_data2.json",
+            f"{module_path}/base.py",
+            f"{module_path}/test_job.py",
+            f"{module_path}/test_function.py",
+            "requirements.txt",
+        ] + self.get_init_files(parts)
+
         params = {
             "image": "python3.8:latest",
             "cpus": 1,
@@ -275,23 +318,10 @@ class TestFunctionBundle(FunctionTestCase):
             "maximum_concurrency": 1,
             "timeout": 60,
             "retry_count": 1,
-            "requirements": "descarteslabs/compute/tests/requirements.txt",
-            "include_modules": ["descarteslabs.compute.tests"],
-            "include_data": ["descarteslabs/compute/tests/data/*"],
+            "requirements": f"{module_path}/requirements.txt",
+            "include_modules": [module_dot],
+            "include_data": [f"{module_path}/data/*"],
         }
-
-        files_to_be_bundled = [
-            "__dlentrypoint__.py",
-            "descarteslabs/compute/tests/data/test_data1.csv",
-            "descarteslabs/compute/tests/data/test_data2.json",
-            "descarteslabs/__init__.py",
-            "descarteslabs/compute/__init__.py",
-            "descarteslabs/compute/tests/__init__.py",
-            "descarteslabs/compute/tests/base.py",
-            "descarteslabs/compute/tests/test_job.py",
-            "descarteslabs/compute/tests/test_function.py",
-            "requirements.txt",
-        ]
 
         def test_compute_fn(a, b):
             print(f"{a} to the power of {b}")
