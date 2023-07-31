@@ -18,6 +18,18 @@ import pytest
 
 from ....catalog import MaskBand, Product
 from .. import GenericProperties, Properties, Property
+from ..filtering import (
+    AndExpression,
+    EqExpression,
+    Expression,
+    IsNotNullExpression,
+    IsNullExpression,
+    LikeExpression,
+    NeExpression,
+    OrExpression,
+    PrefixExpression,
+    RangeExpression,
+)
 
 
 def v1_expression(expression, expected_expression):
@@ -55,9 +67,7 @@ def test_isnull_expression():
 
     assert expression.name == name
 
-    with pytest.raises(TypeError):
-        expression.serialize()
-
+    v1_expression(expression, dict(isnull=name))
     v2_expression(expression, dict(name=name, op="isnull"))
 
 
@@ -88,10 +98,7 @@ def test_isnotnull_expression():
     expression = property.isnotnull
 
     assert expression.name == name
-
-    with pytest.raises(TypeError):
-        expression.serialize()
-
+    v1_expression(expression, dict(isnotnull=name))
     v2_expression(expression, dict(name=name, op="isnotnull"))
 
 
@@ -347,3 +354,130 @@ def test_range_expression_no_attribute():
 
         with pytest.raises(AttributeError):
             expression.jsonapi_serialize(Product)
+
+
+def test_parse_expression():
+    filters = [
+        # Eq
+        {"op": "eq", "name": "field", "val": "value"},
+        {"eq": {"field": "value"}},
+        # Ne
+        {"op": "ne", "name": "field", "val": "value"},
+        {"ne": {"field": "value"}},
+        # Range
+        {"range": {"field": {"gte": 1, "lte": 2}}},
+        {"op": "lt", "name": "field", "val": 10},
+        # Null
+        {"isnull": "field"},
+        {"op": "isnull", "name": "field"},
+        # Not Null
+        {"isnotnull": "field"},
+        {"op": "isnotnull", "name": "field"},
+        # Prefix
+        {"prefix": {"field": "value"}},
+        {"op": "prefix", "name": "field", "val": "value"},
+        # Like
+        {"like": {"field": "value"}},
+        {"op": "ilike", "name": "field", "val": "value"},
+    ]
+    expression = Expression.parse(filters)
+    assert isinstance(expression, AndExpression)
+    assert len(expression.parts) == len(filters)
+
+    # Eq
+    assert isinstance(expression.parts[0], EqExpression)
+    assert expression.parts[0].name == "field"
+    assert expression.parts[0].value == "value"
+
+    assert isinstance(expression.parts[1], EqExpression)
+    assert expression.parts[1].name == "field"
+    assert expression.parts[1].value == "value"
+
+    # Ne
+    assert isinstance(expression.parts[2], NeExpression)
+    assert expression.parts[2].name == "field"
+    assert expression.parts[2].value == "value"
+
+    assert isinstance(expression.parts[3], NeExpression)
+    assert expression.parts[3].name == "field"
+    assert expression.parts[3].value == "value"
+
+    # Range
+    assert isinstance(expression.parts[4], RangeExpression)
+    assert expression.parts[4].name == "field"
+    assert expression.parts[4].parts == {"gte": 1, "lte": 2}
+
+    assert isinstance(expression.parts[5], RangeExpression)
+    assert expression.parts[5].name == "field"
+    assert expression.parts[5].parts == {"lt": 10}
+
+    # Null
+    assert isinstance(expression.parts[6], IsNullExpression)
+    assert expression.parts[6].name == "field"
+
+    assert isinstance(expression.parts[7], IsNullExpression)
+    assert expression.parts[7].name == "field"
+
+    # Not Null
+    assert isinstance(expression.parts[8], IsNotNullExpression)
+    assert expression.parts[8].name == "field"
+
+    assert isinstance(expression.parts[9], IsNotNullExpression)
+    assert expression.parts[9].name == "field"
+
+    # Prefix
+    assert isinstance(expression.parts[10], PrefixExpression)
+    assert expression.parts[10].name == "field"
+    assert expression.parts[10].value == "value"
+
+    assert isinstance(expression.parts[11], PrefixExpression)
+    assert expression.parts[11].name == "field"
+    assert expression.parts[11].value == "value"
+
+    # Like
+    assert isinstance(expression.parts[12], LikeExpression)
+    assert expression.parts[12].name == "field"
+    assert expression.parts[12].value == "value"
+
+    assert isinstance(expression.parts[13], LikeExpression)
+    assert expression.parts[13].name == "field"
+    assert expression.parts[13].value == "value"
+
+
+def test_parse_nested():
+    filters = [
+        {
+            "and": [
+                {"op": "eq", "name": "field1", "val": "value1"},
+                {
+                    "or": [
+                        {"op": "eq", "name": "field2", "val": "value2"},
+                        {"op": "eq", "name": "field3", "val": "value3"},
+                    ]
+                },
+            ]
+        }
+    ]
+    expression = Expression.parse(filters)
+    assert isinstance(expression, AndExpression)
+    assert len(expression.parts) == 1
+
+    sub_and = expression.parts[0]
+    assert isinstance(sub_and, AndExpression)
+    assert len(sub_and.parts) == 2
+
+    assert isinstance(sub_and.parts[0], EqExpression)
+    assert sub_and.parts[0].name == "field1"
+    assert sub_and.parts[0].value == "value1"
+
+    sub_or = sub_and.parts[1]
+    assert isinstance(sub_or, OrExpression)
+    assert len(sub_or.parts) == 2
+
+    assert isinstance(sub_or.parts[0], EqExpression)
+    assert sub_or.parts[0].name == "field2"
+    assert sub_or.parts[0].value == "value2"
+
+    assert isinstance(sub_or.parts[1], EqExpression)
+    assert sub_or.parts[1].name == "field3"
+    assert sub_or.parts[1].value == "value3"

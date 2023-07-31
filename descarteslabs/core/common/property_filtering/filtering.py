@@ -14,7 +14,12 @@
 
 
 import functools
+import inspect
+import json
 import re
+from typing import Any, Dict, List, Tuple, Type, TypeVar, Union
+
+AnyExpression = TypeVar("AnyExpression", bound="Expression")
 
 
 class Expression(object):
@@ -85,6 +90,107 @@ class Expression(object):
     <class 'descarteslabs.common.property_filtering.filtering.IsNullExpression'>
     """
 
+    __abstract__: bool = False
+    _aliases: List[str] = None
+    _registry: Dict[str, Type[AnyExpression]] = dict()
+    _operator: str = None
+
+    def __init_subclass__(cls) -> None:
+        # Do not register base classes
+        if cls.__dict__.get("__abstract__", False):
+            return
+
+        operator = cls._operator
+
+        if not operator:
+            operator = cls.__name__.replace("Expression", "").lower()
+            setattr(cls, "_operator", operator)
+
+        to_add = cls._aliases or []
+        to_add.append(operator)
+
+        # Register the operator and all aliases
+        for operator in to_add:
+            if operator in cls._registry:
+                other_expression = cls._registry[operator]
+
+                raise ValueError(
+                    "Expression {} already exists with operator {}".format(
+                        other_expression, operator
+                    )
+                )
+
+            cls._registry[operator] = cls
+
+    def jsonapi_serialize(self, model=None):
+        raise NotImplementedError
+
+    @classmethod
+    def parse(
+        cls, data: Union[str, Dict[str, Any], List[Dict[str, Any]]]
+    ) -> AnyExpression:
+        """Parses a serialized filter into a series of expression objects.
+
+        Parameters
+        ----------
+        data: str or dict
+            The serialized filter expression. This can be a JSON string or a dict.
+        """
+        if isinstance(data, str):
+            data = json.loads(data)
+
+        if not isinstance(data, (list, dict)):
+            raise ValueError("Invalid filter expression")
+
+        if isinstance(data, list):
+            return AndExpression([Expression._parse_filter_part(item) for item in data])
+
+        return Expression._parse_filter_part(data)
+
+    @classmethod
+    def _parse_filter_part(cls, data: Dict[str, Any]) -> AnyExpression:
+        """Parses a single filter expression."""
+        op, value = cls._parse_operator(data)
+
+        if op in cls._registry:
+            return cls._registry[op]._parse(value)
+        else:
+            raise ValueError(f"Unknown filter operator: {op}")
+
+    @classmethod
+    def _parse_operator(self, data: Dict[str, Any]):
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid filter expected dict found: {data}")
+
+        op = data.get("op")
+
+        if op:
+            # This is a json api expression
+            return op, data
+        else:
+            # This is a standard expression
+            if len(data.keys()) == 1:
+                op = list(data.keys())[0]
+                value = data[op]
+
+                return op, value
+            else:
+                raise ValueError(f"Invalid filter expression: {data}")
+
+    @classmethod
+    def _parse(cls, *args) -> AnyExpression:
+        """Parse the input into a specific expression type.
+
+        Must be implemented by subclasses.
+        """
+        raise NotImplementedError(f"{cls.__name__}: {args}")
+
+
+class OpExpression(Expression):
+    """Base class for expressions that have an operator and a value."""
+
+    __abstract__ = True
+
     def __and__(self, other):
         return AndExpression([self]) & other
 
@@ -103,8 +209,64 @@ class Expression(object):
         else:
             return name, value
 
-    def jsonapi_serialize(self, model=None):
-        raise NotImplementedError
+    @classmethod
+    def _parse(cls, data: Dict[str, Any]) -> AnyExpression:
+        signature = inspect.signature(cls)
+        num_params = len(signature.parameters)
+
+        if isinstance(data, dict) and "op" in data:
+            # Json api expression
+            name, val = cls._parse_jsonapi_filter(data)
+        else:
+            # Standard expression
+            name, val = cls._parse_filter(data)
+
+        if name is None:
+            raise ValueError(
+                f"Invalid {cls._operator} expression missing field name: {data}"
+            )
+
+        # Some expressions only take the name and no value
+        if num_params == 1:
+            return cls(name)
+        else:
+            if val is None:
+                raise ValueError(
+                    f"Invalid {cls._operator} expression missing value: {data}"
+                )
+
+            return cls(name, val)
+
+    @classmethod
+    def _parse_filter(cls, data: Any) -> Tuple[str, Any]:
+        if not isinstance(data, dict):
+            raise ValueError(
+                f"Invalid {cls._operator} value expected dict found: {data}"
+            )
+
+        if len(data.keys()) != 1:
+            # There must be exactly one field name
+            raise ValueError(f"Invalid {cls._operator} expression: {data}")
+
+        return list(data.items())[0]
+
+    @classmethod
+    def _parse_jsonapi_filter(cls, data: Dict[str, Any]) -> Tuple[str, Any]:
+        return data.get("name"), data.get("val")
+
+
+class LogicalExpression(Expression):
+    """Base class for logical expressions that have sub expressions."""
+
+    __abstract__ = True
+
+    def __init__(self, parts):
+        self.parts = parts
+
+    @classmethod
+    def _parse(cls, data: List[Dict[str, Any]]) -> AnyExpression:
+        parts = [Expression.parse(expr) for expr in data]
+        return cls(parts)
 
 
 # A convention was added to allow for serialization of catalog V2 attributes
@@ -116,7 +278,7 @@ class Expression(object):
 # that into the `id` field of the object.
 
 
-class EqExpression(Expression):
+class EqExpression(OpExpression):
     """Whether a property value is equal to the given value."""
 
     def __init__(self, name, value):
@@ -137,7 +299,7 @@ class EqExpression(Expression):
         return getattr(obj, self.name) == self.value
 
 
-class NeExpression(Expression):
+class NeExpression(OpExpression):
     """Whether a property value is not equal to the given value."""
 
     def __init__(self, name, value):
@@ -158,7 +320,7 @@ class NeExpression(Expression):
         return getattr(obj, self.name) != self.value
 
 
-class RangeExpression(Expression):
+class RangeExpression(OpExpression):
     """Whether a property value is within the given range.
 
     A range can have a single value that must be ``>``, ``>=``,
@@ -166,6 +328,8 @@ class RangeExpression(Expression):
     has two values, the property value must be between the given
     range values.
     """
+
+    _aliases = ["gt", "gte", "lt", "lte"]
 
     def __init__(self, name, parts):
         self.name = name
@@ -202,16 +366,20 @@ class RangeExpression(Expression):
 
         return result
 
+    @classmethod
+    def _parse_jsonapi_filter(cls, data: Dict[str, Any]) -> AnyExpression:
+        """Override parsing to handle json api special case"""
+        return data.get("name"), {data["op"]: data.get("val")}
 
-class IsNullExpression(Expression):
+
+class IsNullExpression(OpExpression):
     """Whether a property value is ``None`` or ``[]``."""
 
     def __init__(self, name):
         self.name = name
 
     def serialize(self):
-        raise TypeError("'isnull' expression is not supported")
-        # return {"isnull": self.name}
+        return {self._operator: self.name}
 
     def jsonapi_serialize(self, model=None):
         name = self.name
@@ -219,21 +387,29 @@ class IsNullExpression(Expression):
         if model:
             name, _ = model._serialize_filter_attribute(self.name, None)
 
-        return {"name": name, "op": "isnull"}
+        return {"name": name, "op": self._operator}
 
     def evaluate(self, obj):
         return getattr(obj, self.name) is None
 
+    @classmethod
+    def _parse_filter(cls, data: Any) -> Tuple[str, Any]:
+        if not isinstance(data, str):
+            raise ValueError(
+                f"Invalid {cls._operator} value expected str found: {data}"
+            )
 
-class IsNotNullExpression(Expression):
+        return data, None
+
+
+class IsNotNullExpression(OpExpression):
     """Whether a property value is not ``None`` or ``[]``."""
 
     def __init__(self, name):
         self.name = name
 
     def serialize(self):
-        raise TypeError("'isnotnull' expression is not supported")
-        # return {"isnotnull": self.name}
+        return {self._operator: self.name}
 
     def jsonapi_serialize(self, model=None):
         name = self.name
@@ -241,13 +417,22 @@ class IsNotNullExpression(Expression):
         if model:
             name, _ = model._serialize_filter_attribute(self.name, None)
 
-        return {"name": name, "op": "isnotnull"}
+        return {"name": name, "op": self._operator}
 
     def evaluate(self, obj):
         return getattr(obj, self.name) is not None
 
+    @classmethod
+    def _parse_filter(cls, data: Any) -> Tuple[str, Any]:
+        if not isinstance(data, str):
+            raise ValueError(
+                f"Invalid {cls._operator} value expected str found: {data}"
+            )
 
-class PrefixExpression(Expression):
+        return data, None
+
+
+class PrefixExpression(OpExpression):
     """Whether a string property value starts with the given string prefix."""
 
     def __init__(self, name, value):
@@ -267,7 +452,7 @@ class PrefixExpression(Expression):
         return getattr(obj, self.name).startswith(self.value)
 
 
-class LikeExpression(Expression):
+class LikeExpression(OpExpression):
     """Whether a property value matches the given wildcard expression.
 
     The wildcard expression can contain ``%`` for zero or more characters and
@@ -275,6 +460,8 @@ class LikeExpression(Expression):
 
     This expression is not supported by the `Catalog` service.
     """
+
+    _aliases = ["ilike"]
 
     def __init__(self, name, value):
         self.name = name
@@ -294,11 +481,6 @@ class LikeExpression(Expression):
     def evaluate(self, obj):
         expr = re.escape(self.value).replace("_", ".").replace("%", ".*")
         return re.match(f"^{expr}$", getattr(obj, self.name)) is not None
-
-
-class LogicalExpression(object):
-    def __init__(self, parts):
-        self.parts = parts
 
 
 class AndExpression(LogicalExpression):
