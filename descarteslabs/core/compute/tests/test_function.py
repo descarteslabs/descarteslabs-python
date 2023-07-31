@@ -230,7 +230,7 @@ class TestFunctionBundle(FunctionTestCase):
         if os.name == "nt":
             parts = ["descarteslabs"] + __file__.split("descarteslabs")[-1].split("\\")
             # remove empty elements
-            # parts = parts.remove("")
+            parts = [i for i in parts if i]
             print(f"PARTS FOR WINDOWS -> {parts}")
 
         # Construct the module path and module in dot notation
