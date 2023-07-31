@@ -226,8 +226,14 @@ class TestFunctionBundle(FunctionTestCase):
             "/"
         ).split("/")
 
+        # If the OS is Windows, the path will be different
+        if os.name == "nt":
+            parts = ["descarteslabs"] + __file__.split("descarteslabs")[-1].strip(
+                "\\"
+            ).split("\\")
+
         # Construct the module path and module in dot notation
-        module_path = "/".join(parts[:-1])
+        module_path = os.path.join(*parts[:-1])
         module_dot = ".".join(parts[:-1])
 
         # Return the module path, module in dot notation and the parts of the path
@@ -243,7 +249,7 @@ class TestFunctionBundle(FunctionTestCase):
 
         # Construct list of paths to the __init__.py files for each sub-module
         for i in range(len(parts)):
-            init_files.append("/".join(parts[: i + 1] + ["__init__.py"]))
+            init_files.append(os.path.join(*parts[: i + 1], "__init__.py"))
 
         return init_files
 
@@ -256,9 +262,9 @@ class TestFunctionBundle(FunctionTestCase):
         # Add the paths to the __init__.py files
         files_to_be_bundled = [
             "__dlentrypoint__.py",
-            f"{module_path}/data/test_data1.csv",
-            f"{module_path}/test_function.py",
-            f"{module_path}/test_job.py",
+            os.path.join(module_path, "data", "test_data1.csv"),
+            os.path.join(module_path, "test_function.py"),
+            os.path.join(module_path, "test_job.py"),
             "requirements.txt",
         ] + self.get_init_files(parts)
 
@@ -277,7 +283,7 @@ class TestFunctionBundle(FunctionTestCase):
                 f"{module_dot}.test_function",
                 f"{module_dot}.test_job",
             ],
-            "include_data": [f"{module_path}/data/test_data1.csv"],
+            "include_data": [os.path.join(module_path, "data", "test_data1.csv")],
         }
 
         def test_compute_fn(a, b):
@@ -293,7 +299,7 @@ class TestFunctionBundle(FunctionTestCase):
         for file in files_to_be_bundled:
             assert file in contents
 
-        assert "descarteslabs/compute/tests/base.py" not in contents
+        assert os.path.join(module_path, "base.py") not in contents
 
     def test_function_bundling_requirements_file(self):
         # Test with requirements file, full module and all (*) contents of data folder
@@ -303,11 +309,11 @@ class TestFunctionBundle(FunctionTestCase):
         # Add the paths to the __init__.py files
         files_to_be_bundled = [
             "__dlentrypoint__.py",
-            f"{module_path}/data/test_data1.csv",
-            f"{module_path}/data/test_data2.json",
-            f"{module_path}/base.py",
-            f"{module_path}/test_job.py",
-            f"{module_path}/test_function.py",
+            os.path.join(module_path, "data", "test_data1.csv"),
+            os.path.join(module_path, "data", "test_data2.json"),
+            os.path.join(module_path, "base.py"),
+            os.path.join(module_path, "test_function.py"),
+            os.path.join(module_path, "test_job.py"),
             "requirements.txt",
         ] + self.get_init_files(parts)
 
@@ -318,9 +324,9 @@ class TestFunctionBundle(FunctionTestCase):
             "maximum_concurrency": 1,
             "timeout": 60,
             "retry_count": 1,
-            "requirements": f"{module_path}/requirements.txt",
+            "requirements": os.path.join(module_path, "requirements.txt"),
             "include_modules": [module_dot],
-            "include_data": [f"{module_path}/data/*"],
+            "include_data": [os.path.join(module_path, "data", "*")],
         }
 
         def test_compute_fn(a, b):
