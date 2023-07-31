@@ -113,6 +113,9 @@ class TestJob(BaseTestCase):
         assert job.to_dict() == {
             "args": [1, 2],
             "creation_date": self.now.replace(tzinfo=timezone.utc).isoformat(),
+            "error_reason": None,
+            "execution_count": None,
+            "exit_code": None,
             "function_id": "function-id",
             "id": "some-id",
             "kwargs": {"first": "blah", "second": "blah"},

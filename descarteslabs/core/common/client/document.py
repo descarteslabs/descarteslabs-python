@@ -207,13 +207,8 @@ class Document(object):
         return data
 
     def __repr__(self) -> str:
-        indent = "    "
-        separator = f"\n{indent}"
-
         attributes = self._get_attributes()
         pairs = [
             "{}={}".format(key, repr(getattr(self, key))) for key in attributes.keys()
         ]
-        return "<{}{}{}>".format(
-            self.__class__.__name__, separator, separator.join(pairs)
-        )
+        return "{}({})".format(self.__class__.__name__, ", ".join(pairs))

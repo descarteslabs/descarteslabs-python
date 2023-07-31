@@ -115,6 +115,25 @@ class Job(Document):
         doc="The date the Job was created.",
     )
     args: Optional[List] = Attribute(list, doc="The arguments provided to the Job.")
+    error_reason: Optional[str] = Attribute(
+        str,
+        readonly=True,
+        doc="The reason the Job failed.",
+    )
+    execution_count: Optional[int] = Attribute(
+        int,
+        filterable=True,
+        readonly=True,
+        sortable=True,
+        doc="The number of attempts made to execute this job.",
+    )
+    exit_code: Optional[int] = Attribute(
+        int,
+        filterable=True,
+        readonly=True,
+        sortable=True,
+        doc="The exit code of the Job.",
+    )
     kwargs: Optional[Dict] = Attribute(dict, doc="The parameters provided to the Job.")
     runtime: Optional[int] = Attribute(
         int,
@@ -157,9 +176,6 @@ class Job(Document):
             A dictionary of named arguments to pass to the function.
         """
         super().__init__(function_id=function_id, args=args, kwargs=kwargs, **extra)
-
-    def __repr__(self) -> str:
-        return f"Job {self.id}: {self.status}"
 
     @property
     def function(self) -> "Function":
@@ -300,16 +316,22 @@ class Job(Document):
         interval : int, default=10
             Interval for how often to check if jobs have been completed.
         """
-        print(f"Job {self.id} starting status {self.status}")
+        print(f"Job {self.id}: status '{self.status}' attempt {self.execution_count}")
         last_status = self.status
+        last_attempt = self.execution_count
         start_time = time.time()
 
         while True:
             self.refresh()
 
-            if self.status != last_status:
-                print(f"Job {self.id} updated from {last_status} to {self.status}")
+            if self.status != last_status or self.execution_count != last_attempt:
+                print(
+                    "Job {}: status '{}' -> '{}' attempt {}".format(
+                        self.id, last_status, self.status, self.execution_count
+                    )
+                )
                 last_status = self.status
+                last_attempt = self.execution_count
 
             if self.status in [JobStatus.SUCCESS, JobStatus.FAILURE, JobStatus.TIMEOUT]:
                 break
@@ -1244,7 +1266,7 @@ class Function(Document):
         interval : int, default=10
             Interval for how often to check if jobs have been completed.
         """
-        print(f"Function {self.name} starting status {self.status}")
+        print(f"Function {self.name}: status '{self.status}'")
         last_status = self.status
         start_time = time.time()
 
@@ -1253,7 +1275,7 @@ class Function(Document):
 
             if self.status != last_status:
                 print(
-                    f"Function {self.name} updated from {last_status} to {self.status}"
+                    f"Function {self.name}: status '{last_status}' -> '{self.status}'"
                 )
                 last_status = self.status
 
