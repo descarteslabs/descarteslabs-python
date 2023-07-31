@@ -297,6 +297,7 @@ class TestFunctionBundle(FunctionTestCase):
             contents = zipfile.ZipFile(bundle_path).namelist()
 
         print(f"FILES TO BE BUNDLED -> {files_to_be_bundled}")
+        print(f"CONTENTS -> {contents}")
         for file in files_to_be_bundled:
             print(f"FILE -> {file}")
             print(file in contents)
