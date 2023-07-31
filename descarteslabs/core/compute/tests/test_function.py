@@ -268,8 +268,6 @@ class TestFunctionBundle(FunctionTestCase):
             "requirements.txt",
         ] + self.get_init_files(parts)
 
-        print(files_to_be_bundled)
-
         params = {
             "image": "python3.8:latest",
             "cpus": 1,
@@ -299,6 +297,7 @@ class TestFunctionBundle(FunctionTestCase):
             contents = zipfile.ZipFile(bundle_path).namelist()
 
         for file in files_to_be_bundled:
+            print(f"FILE -> {file}")
             assert file in contents
 
         assert os.path.join(module_path, "base.py") not in contents
