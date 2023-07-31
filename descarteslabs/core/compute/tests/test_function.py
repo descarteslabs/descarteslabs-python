@@ -228,6 +228,7 @@ class TestFunctionBundle(FunctionTestCase):
 
         # If the OS is Windows, the path will be different
         if os.name == "nt":
+            print(f"FILE IN WINDOWS -> {__file__}")
             parts = ["descarteslabs"] + __file__.split("descarteslabs")[-1].strip(
                 "\\"
             ).split("\\")
