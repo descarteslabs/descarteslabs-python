@@ -231,7 +231,6 @@ class TestFunctionBundle(FunctionTestCase):
             parts = ["descarteslabs"] + __file__.split("descarteslabs")[-1].split("\\")
             # remove empty elements
             parts = [i for i in parts if i]
-            print(f"PARTS FOR WINDOWS -> {parts}")
 
         # Construct the module path and module in dot notation
         module_path = os.path.join(*parts[:-1])
@@ -268,6 +267,8 @@ class TestFunctionBundle(FunctionTestCase):
             os.path.join(module_path, "test_job.py"),
             "requirements.txt",
         ] + self.get_init_files(parts)
+
+        print(files_to_be_bundled)
 
         params = {
             "image": "python3.8:latest",
