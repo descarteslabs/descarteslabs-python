@@ -302,7 +302,6 @@ class TestFunctionBundle(FunctionTestCase):
             print(file in contents)
 
         assert os.path.join(module_path, "base.py") not in contents
-        assert False
 
     def test_function_bundling_requirements_file(self):
         # Test with requirements file, full module and all (*) contents of data folder
