@@ -296,11 +296,13 @@ class TestFunctionBundle(FunctionTestCase):
         with zipfile.ZipFile(os.path.abspath(bundle_path)) as file:
             contents = zipfile.ZipFile(bundle_path).namelist()
 
+        print(f"FILES TO BE BUNDLED -> {files_to_be_bundled}")
         for file in files_to_be_bundled:
             print(f"FILE -> {file}")
-            assert file in contents
+            print(file in contents)
 
         assert os.path.join(module_path, "base.py") not in contents
+        assert False
 
     def test_function_bundling_requirements_file(self):
         # Test with requirements file, full module and all (*) contents of data folder
