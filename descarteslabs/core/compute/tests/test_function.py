@@ -314,7 +314,6 @@ class TestFunctionBundle(FunctionTestCase):
             os.path.join(module_path, "base.py"),
             os.path.join(module_path, "test_function.py"),
             os.path.join(module_path, "test_job.py"),
-            os.path.join(module_path, "_main_tests.py"),
             "requirements.txt",
         ] + self.get_init_files(parts)
 
@@ -340,9 +339,16 @@ class TestFunctionBundle(FunctionTestCase):
         with zipfile.ZipFile(os.path.abspath(bundle_path)):
             contents = zipfile.ZipFile(bundle_path).namelist()
 
-        print(contents)
         expected = {path.replace(r"\\", "/") for path in files_to_be_bundled}
-        assert expected == set(contents)
+
+        contents = set(contents)
+
+        # Remove the _main_tests.py file from the expected contents because it is
+        # dynamically generated
+        if os.path.join(module_path, "_main_tests.py") in contents:
+            contents.remove(os.path.join(module_path, "_main_tests.py"))
+
+        assert expected == contents
 
 
 class TestListFunctions(FunctionTestCase):
