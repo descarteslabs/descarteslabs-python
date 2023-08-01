@@ -249,7 +249,7 @@ class TestFunctionBundle(FunctionTestCase):
 
         # Construct list of paths to the __init__.py files for each sub-module
         for i in range(len(parts)):
-            init_files.append(os.path.join(*parts[: i + 1], "__init__.py"))
+            init_files.append("/".join(parts[: i + 1] + ["__init__.py"]))
 
         return init_files
 
