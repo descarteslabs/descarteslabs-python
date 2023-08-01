@@ -298,6 +298,9 @@ class TestFunctionBundle(FunctionTestCase):
 
         expected = {path.replace(r"\\", "/") for path in files_to_be_bundled}
         assert expected == set(contents)
+        import pprint
+        pprint.pprint(contents)
+        pprint.pprint(expected)
 
         assert os.path.join(module_path, "base.py") not in contents
 
@@ -347,7 +350,9 @@ class TestFunctionBundle(FunctionTestCase):
         # dynamically generated
         if os.path.join(module_path, "_main_tests.py") in contents:
             contents.remove(os.path.join(module_path, "_main_tests.py"))
-
+        import pprint
+        pprint.pprint(contents)
+        pprint.pprint(expected)
         assert expected == contents
 
 
