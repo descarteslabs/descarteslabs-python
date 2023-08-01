@@ -259,15 +259,19 @@ class TestFunctionBundle(FunctionTestCase):
 
         module_path, module_dot, parts = self.get_module_paths()
 
+        # Construct the module path with forward slashes, regardless of OS
+        # This is needed for the bundle check to work with ZipFile
+        module_path_forward_slash = "/".join(parts[:-1])
+
         # Add the paths to the __init__.py files
         files_to_be_bundled = [
             "__dlentrypoint__.py",
             # os.path.join(module_path, "data", "test_data1.csv"),
             # os.path.join(module_path, "test_function.py"),
             # os.path.join(module_path, "test_job.py"),
-            f"{module_path}/data/test_data1.csv",
-            f"{module_path}/test_function.py",
-            f"{module_path}/test_job.py",
+            f"{module_path_forward_slash}/data/test_data1.csv",
+            f"{module_path_forward_slash}/test_function.py",
+            f"{module_path_forward_slash}/test_job.py",
             "requirements.txt",
         ] + self.get_init_files(parts)
 
@@ -299,18 +303,23 @@ class TestFunctionBundle(FunctionTestCase):
         with zipfile.ZipFile(os.path.abspath(bundle_path)):
             contents = zipfile.ZipFile(bundle_path).namelist()
 
-        expected = {path.replace(r"\\\\", "/") for path in files_to_be_bundled}
+        # expected = {path.replace(r"\\\\", "/") for path in files_to_be_bundled}
         import pprint
-        pprint.pprint(contents)
-        pprint.pprint(expected)
 
-        assert expected == set(contents)
+        pprint.pprint(contents)
+        pprint.pprint(files_to_be_bundled)
+
+        assert sorted(files_to_be_bundled) == sorted(set(contents))
         assert os.path.join(module_path, "base.py") not in contents
 
     def test_function_bundling_requirements_file(self):
         # Test with requirements file, full module and all (*) contents of data folder
 
         module_path, module_dot, parts = self.get_module_paths()
+
+        # Construct the module path with forward slashes, regardless of OS
+        # This is needed for the bundle check to work with ZipFile
+        module_path_forward_slash = "/".join(parts[:-1])
 
         # Add the paths to the __init__.py files
         files_to_be_bundled = [
@@ -320,11 +329,11 @@ class TestFunctionBundle(FunctionTestCase):
             # os.path.join(module_path, "base.py"),
             # os.path.join(module_path, "test_function.py"),
             # os.path.join(module_path, "test_job.py"),
-            f"{module_path}/data/test_data1.csv",
-            f"{module_path}/data/test_data2.json",
-            f"{module_path}/base.py",
-            f"{module_path}/test_function.py",
-            f"{module_path}/test_job.py",
+            f"{module_path_forward_slash}/data/test_data1.csv",
+            f"{module_path_forward_slash}/data/test_data2.json",
+            f"{module_path_forward_slash}/base.py",
+            f"{module_path_forward_slash}/test_function.py",
+            f"{module_path_forward_slash}/test_job.py",
             "requirements.txt",
         ] + self.get_init_files(parts)
 
@@ -359,6 +368,7 @@ class TestFunctionBundle(FunctionTestCase):
         if os.path.join(module_path, "_main_tests.py") in contents:
             contents.remove(os.path.join(module_path, "_main_tests.py"))
         import pprint
+
         pprint.pprint(contents)
         pprint.pprint(expected)
         assert expected == contents
