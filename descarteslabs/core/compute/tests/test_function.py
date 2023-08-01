@@ -296,12 +296,12 @@ class TestFunctionBundle(FunctionTestCase):
         with zipfile.ZipFile(os.path.abspath(bundle_path)):
             contents = zipfile.ZipFile(bundle_path).namelist()
 
-        expected = {path.replace(r"\\", "/") for path in files_to_be_bundled}
-        assert expected == set(contents)
+        expected = {path.replace(r"\\\\", "/") for path in files_to_be_bundled}
         import pprint
         pprint.pprint(contents)
         pprint.pprint(expected)
 
+        assert expected == set(contents)
         assert os.path.join(module_path, "base.py") not in contents
 
     def test_function_bundling_requirements_file(self):
@@ -342,7 +342,7 @@ class TestFunctionBundle(FunctionTestCase):
         with zipfile.ZipFile(os.path.abspath(bundle_path)):
             contents = zipfile.ZipFile(bundle_path).namelist()
 
-        expected = {path.replace(r"\\", "/") for path in files_to_be_bundled}
+        expected = {path.replace(r"\\\\", "/") for path in files_to_be_bundled}
 
         contents = set(contents)
 
