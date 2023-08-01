@@ -293,12 +293,11 @@ class TestFunctionBundle(FunctionTestCase):
         fn = Function(test_compute_fn, **params)
         bundle_path = fn._bundle()
 
-        with zipfile.ZipFile(os.path.abspath(bundle_path)) as file:
+        with zipfile.ZipFile(os.path.abspath(bundle_path)):
             contents = zipfile.ZipFile(bundle_path).namelist()
 
-        for file in files_to_be_bundled:
-            path = file.replace(r'\\', '/')
-            assert path in contents
+        expected = {path.replace(r"\\", "/") for path in files_to_be_bundled}
+        assert expected == set(contents)
 
         assert os.path.join(module_path, "base.py") not in contents
 
@@ -315,6 +314,7 @@ class TestFunctionBundle(FunctionTestCase):
             os.path.join(module_path, "base.py"),
             os.path.join(module_path, "test_function.py"),
             os.path.join(module_path, "test_job.py"),
+            os.path.join(module_path, "_main_tests.py"),
             "requirements.txt",
         ] + self.get_init_files(parts)
 
@@ -337,12 +337,12 @@ class TestFunctionBundle(FunctionTestCase):
         fn = Function(test_compute_fn, **params)
         bundle_path = fn._bundle()
 
-        with zipfile.ZipFile(os.path.abspath(bundle_path)) as file:
+        with zipfile.ZipFile(os.path.abspath(bundle_path)):
             contents = zipfile.ZipFile(bundle_path).namelist()
 
-        for file in files_to_be_bundled:
-            path = file.replace(r'\\', '/')
-            assert path in contents
+        print(contents)
+        expected = {path.replace(r"\\", "/") for path in files_to_be_bundled}
+        assert expected == set(contents)
 
 
 class TestListFunctions(FunctionTestCase):
