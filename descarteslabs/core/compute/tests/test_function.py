@@ -226,8 +226,14 @@ class TestFunctionBundle(FunctionTestCase):
             "/"
         ).split("/")
 
+        # If the OS is Windows, the path will be different
+        if os.name == "nt":
+            parts = ["descarteslabs"] + __file__.split("descarteslabs")[-1].split("\\")
+            # remove empty elements
+            parts = [i for i in parts if i]
+
         # Construct the module path and module in dot notation
-        module_path = "/".join(parts[:-1])
+        module_path = os.path.join(*parts[:-1])
         module_dot = ".".join(parts[:-1])
 
         # Return the module path, module in dot notation and the parts of the path
@@ -253,12 +259,17 @@ class TestFunctionBundle(FunctionTestCase):
 
         module_path, module_dot, parts = self.get_module_paths()
 
+        # Construct the module path with forward slashes, regardless of OS
+        # This is needed for the bundle check to work with ZipFile
+        module_path_forward_slash = "/".join(parts[:-1])
+
         # Add the paths to the __init__.py files
+        # Must use forward slashes for the ZipFile check to work
         files_to_be_bundled = [
             "__dlentrypoint__.py",
-            f"{module_path}/data/test_data1.csv",
-            f"{module_path}/test_function.py",
-            f"{module_path}/test_job.py",
+            f"{module_path_forward_slash}/data/test_data1.csv",
+            f"{module_path_forward_slash}/test_function.py",
+            f"{module_path_forward_slash}/test_job.py",
             "requirements.txt",
         ] + self.get_init_files(parts)
 
@@ -277,7 +288,7 @@ class TestFunctionBundle(FunctionTestCase):
                 f"{module_dot}.test_function",
                 f"{module_dot}.test_job",
             ],
-            "include_data": [f"{module_path}/data/test_data1.csv"],
+            "include_data": [os.path.join(module_path, "data", "test_data1.csv")],
         }
 
         def test_compute_fn(a, b):
@@ -287,27 +298,32 @@ class TestFunctionBundle(FunctionTestCase):
         fn = Function(test_compute_fn, **params)
         bundle_path = fn._bundle()
 
-        with zipfile.ZipFile(os.path.abspath(bundle_path)) as file:
+        with zipfile.ZipFile(os.path.abspath(bundle_path)):
             contents = zipfile.ZipFile(bundle_path).namelist()
 
-        for file in files_to_be_bundled:
-            assert file in contents
+        assert sorted(files_to_be_bundled) == sorted(set(contents))
 
-        assert "descarteslabs/compute/tests/base.py" not in contents
+        # Check that the base.py file is not in the bundle since we didn't specify it
+        assert os.path.join(module_path, "base.py") not in contents
 
     def test_function_bundling_requirements_file(self):
         # Test with requirements file, full module and all (*) contents of data folder
 
         module_path, module_dot, parts = self.get_module_paths()
 
+        # Construct the module path with forward slashes, regardless of OS
+        # This is needed for the bundle check to work with ZipFile
+        module_path_forward_slash = "/".join(parts[:-1])
+
         # Add the paths to the __init__.py files
+        # Must use forward slashes for the ZipFile check to work
         files_to_be_bundled = [
             "__dlentrypoint__.py",
-            f"{module_path}/data/test_data1.csv",
-            f"{module_path}/data/test_data2.json",
-            f"{module_path}/base.py",
-            f"{module_path}/test_job.py",
-            f"{module_path}/test_function.py",
+            f"{module_path_forward_slash}/data/test_data1.csv",
+            f"{module_path_forward_slash}/data/test_data2.json",
+            f"{module_path_forward_slash}/base.py",
+            f"{module_path_forward_slash}/test_function.py",
+            f"{module_path_forward_slash}/test_job.py",
             "requirements.txt",
         ] + self.get_init_files(parts)
 
@@ -318,9 +334,9 @@ class TestFunctionBundle(FunctionTestCase):
             "maximum_concurrency": 1,
             "timeout": 60,
             "retry_count": 1,
-            "requirements": f"{module_path}/requirements.txt",
+            "requirements": os.path.join(module_path, "requirements.txt"),
             "include_modules": [module_dot],
-            "include_data": [f"{module_path}/data/*"],
+            "include_data": [os.path.join(module_path, "data", "*")],
         }
 
         def test_compute_fn(a, b):
@@ -330,11 +346,17 @@ class TestFunctionBundle(FunctionTestCase):
         fn = Function(test_compute_fn, **params)
         bundle_path = fn._bundle()
 
-        with zipfile.ZipFile(os.path.abspath(bundle_path)) as file:
+        with zipfile.ZipFile(os.path.abspath(bundle_path)):
             contents = zipfile.ZipFile(bundle_path).namelist()
 
-        for file in files_to_be_bundled:
-            assert file in contents
+        contents = set(contents)
+
+        # Remove the _main_tests.py file from the expected contents because it is
+        # dynamically generated
+        if os.path.join(module_path, "_main_tests.py") in contents:
+            contents.remove(os.path.join(module_path, "_main_tests.py"))
+
+        assert sorted(files_to_be_bundled) == sorted(contents)
 
 
 class TestListFunctions(FunctionTestCase):
