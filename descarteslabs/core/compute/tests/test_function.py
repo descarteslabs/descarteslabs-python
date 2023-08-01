@@ -262,9 +262,12 @@ class TestFunctionBundle(FunctionTestCase):
         # Add the paths to the __init__.py files
         files_to_be_bundled = [
             "__dlentrypoint__.py",
-            os.path.join(module_path, "data", "test_data1.csv"),
-            os.path.join(module_path, "test_function.py"),
-            os.path.join(module_path, "test_job.py"),
+            # os.path.join(module_path, "data", "test_data1.csv"),
+            # os.path.join(module_path, "test_function.py"),
+            # os.path.join(module_path, "test_job.py"),
+            f"{module_path}/data/test_data1.csv",
+            f"{module_path}/test_function.py",
+            f"{module_path}/test_job.py",
             "requirements.txt",
         ] + self.get_init_files(parts)
 
@@ -312,11 +315,16 @@ class TestFunctionBundle(FunctionTestCase):
         # Add the paths to the __init__.py files
         files_to_be_bundled = [
             "__dlentrypoint__.py",
-            os.path.join(module_path, "data", "test_data1.csv"),
-            os.path.join(module_path, "data", "test_data2.json"),
-            os.path.join(module_path, "base.py"),
-            os.path.join(module_path, "test_function.py"),
-            os.path.join(module_path, "test_job.py"),
+            # os.path.join(module_path, "data", "test_data1.csv"),
+            # os.path.join(module_path, "data", "test_data2.json"),
+            # os.path.join(module_path, "base.py"),
+            # os.path.join(module_path, "test_function.py"),
+            # os.path.join(module_path, "test_job.py"),
+            f"{module_path}/data/test_data1.csv",
+            f"{module_path}/data/test_data2.json",
+            f"{module_path}/base.py",
+            f"{module_path}/test_function.py",
+            f"{module_path}/test_job.py",
             "requirements.txt",
         ] + self.get_init_files(parts)
 
