@@ -296,11 +296,9 @@ class TestFunctionBundle(FunctionTestCase):
         with zipfile.ZipFile(os.path.abspath(bundle_path)) as file:
             contents = zipfile.ZipFile(bundle_path).namelist()
 
-        print(f"FILES TO BE BUNDLED -> {files_to_be_bundled}")
-        print(f"CONTENTS -> {contents}")
         for file in files_to_be_bundled:
-            print(f"FILE -> {file}")
-            print(file in contents)
+            path = file.replace(r'\\', '/')
+            assert path in contents
 
         assert os.path.join(module_path, "base.py") not in contents
 
@@ -343,7 +341,8 @@ class TestFunctionBundle(FunctionTestCase):
             contents = zipfile.ZipFile(bundle_path).namelist()
 
         for file in files_to_be_bundled:
-            assert file in contents
+            path = file.replace(r'\\', '/')
+            assert path in contents
 
 
 class TestListFunctions(FunctionTestCase):
