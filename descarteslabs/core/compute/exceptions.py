@@ -12,18 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .compute_client import ComputeClient
-from .function import Function, FunctionStatus, Search
-from .job import Job, JobSearch, JobStatus
-from .result import Serializable
 
-__all__ = [
-    "ComputeClient",
-    "Function",
-    "FunctionStatus",
-    "Job",
-    "JobSearch",
-    "JobStatus",
-    "Search",
-    "Serializable",
-]
+class BoundGlobalError(NameError):
+    """
+    Raised when a global is referenced in a function where it won't be available
+    when executed remotely.
+    """
+
+    pass
