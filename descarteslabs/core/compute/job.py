@@ -115,6 +115,24 @@ class Job(Document):
         doc="A list of tags associated with the Job.",
     )
 
+    # Lazy attributes
+    provisioning_time: Optional[int] = Attribute(
+        int,
+        readonly=True,
+        doc=(
+            "The time it took to provision the Job. This attribute will only be available "
+            "if include='timings' is specified in the request by setting params.",
+        ),
+    )
+    pull_time: Optional[int] = Attribute(
+        int,
+        readonly=True,
+        doc=(
+            "The time it took to load the user code in the Job. This attribute will only"
+            " be available if include='timings' is specified in the request by setting params.",
+        ),
+    )
+
     def __init__(
         self,
         function_id: str,
@@ -142,13 +160,18 @@ class Job(Document):
         return Function.get(self.function_id)
 
     @classmethod
-    def get(cls, id) -> "Job":
+    def get(cls, id, **params) -> "Job":
         """Retrieves the Job by id.
 
         Parameters
         ----------
         id : str
             The id of the Job to fetch.
+        include : List[str], optional
+            List of additional attributes to include in the response.
+            Allowed values are:
+
+            - "timings": Include additional debugging timing information about the Job.
 
         Example
         -------
@@ -157,7 +180,7 @@ class Job(Document):
         Job <job-id>: pending
         """
         client = ComputeClient.get_default_client()
-        response = client.session.get(f"/jobs/{id}")
+        response = client.session.get(f"/jobs/{id}", params=params)
         return cls(**response.json(), saved=True)
 
     @classmethod
@@ -213,7 +236,12 @@ class Job(Document):
         """Update the Job instance with the latest information from the server."""
         client = ComputeClient.get_default_client()
 
-        response = client.session.get(f"/jobs/{self.id}")
+        if self.pull_time or self.provisioning_time:
+            params = {"include": ["timings"]}
+        else:
+            params = {}
+
+        response = client.session.get(f"/jobs/{self.id}", params=params)
         self._load_from_remote(response.json())
 
     def result(self, cast_type: Optional[Type[Serializable]] = None):

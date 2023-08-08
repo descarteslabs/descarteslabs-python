@@ -122,6 +122,8 @@ class TestJob(BaseTestCase):
             "runtime": None,
             "status": JobStatus.PENDING,
             "tags": [],
+            "provisioning_time": None,
+            "pull_time": None,
         }
 
     @responses.activate
