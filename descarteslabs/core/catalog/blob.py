@@ -364,6 +364,7 @@ class Blob(CatalogObject):
         ----------
         id : str, optional
             The id of the object you are requesting. Required unless ``name`` is supplied.
+            May not be specified if ``name`` is specified.
         storage_type : StorageType, optional
             The storage type of the Blob you wish to retrieve. Defaults to ``data``. Ignored
             unless ``name`` is specified.
@@ -772,6 +773,64 @@ class Blob(CatalogObject):
                 response.close()
 
         return self._do_download(dest=generator)
+
+    @classmethod
+    def get_data(
+        cls,
+        id=None,
+        storage_type=StorageType.DATA,
+        namespace=None,
+        name=None,
+        client=None,
+        range=None,
+    ):
+        """Downloads storage blob data.
+
+        Downloads data for a given blob id and returns as a bytes object.
+
+        Parameters
+        ----------
+        id : str, optional
+            The id of the object you are requesting. Required unless ``name`` is supplied.
+            May not be specified if ``name`` is specified.
+        storage_type : StorageType, optional
+            The storage type of the Blob you wish to retrieve. Defaults to ``data``. Ignored
+            unless ``name`` is specified.
+        namespace : str, optional
+            The namespace of the Blob you wish to retrieve. Defaults to the user's org name
+            (if any) plus the unique user hash. Ignored unless ``name`` is specified.
+        name : str, optional
+            The name of the Blob you wish to retrieve. Required if ``id`` is not specified.
+            May not be specified if ``id`` is specified.
+        client : Client, optional
+            Client instance. If not given, the default client will be used.
+        range : str or list, optional
+            Range(s) of blob to be downloaded. Can either be a string in the standard
+            HTTP Range header format (e.g. "bytes=0-99"), or a list or tuple containing
+            one or two integers (e.g. ``(0, 99)``), or a list or tuple of the same
+            (e.g. ``((0, 99), (200-299))``). A list or tuple of one integer implies
+            no upper bound; in this case the integer can be negative, indicating the
+            count back from the end of the blob.
+
+        Returns
+        -------
+        bytes
+            The data retrieved from the Blob.
+
+        Raises
+        ------
+        ValueError
+            If any improper arguments are supplied.
+        NotFoundError
+            If the Blob does not exist.
+        DeletedObjectError
+            If this blob was deleted.
+        """
+        if (not id and not name) or (id and name):
+            raise TypeError("Must specify exactly one of id or name parameters")
+        if not id:
+            id = f"{storage_type}/{cls.namespace_id(namespace)}/{name}"
+        return cls(id=id, client=client)._do_download(range=range)
 
     def _do_download(self, dest=None, range=None):
         download = BlobDownload.get(id=self.id, client=self._client)
