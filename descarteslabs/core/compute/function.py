@@ -580,15 +580,7 @@ class Function(Document):
                 "Pass it wrapped in a list.".format(requirements)
             )
         with open(requirements) as f:
-            requirements_string = f.read()
-        if pkg_resources:
-            try:
-                list(pkg_resources.parse_requirements(requirements_string))
-            except ValueError as ex:
-                raise ValueError(
-                    "Invalid Python requirement in file: {}".format(str(ex))
-                )
-        return requirements_string
+            return self._requirements_list([line.strip() for line in f.readlines()])
 
     def _requirements_list(self, requirements):
         """Validate the requirements list."""
@@ -599,6 +591,16 @@ class Function(Document):
                 try:
                     pkg_resources.Requirement.parse(requirement)
                 except ValueError:
+                    # comment or pip-specific option not understood by pkg_resources
+                    if requirement.startswith("#") or requirement.startswith("-"):
+                        continue
+                    # e.g. torch-2.0.1+cpu which pkg_resource doesn't understand
+                    if "+" in requirement:
+                        try:
+                            pkg_resources.Requirement.parse(requirement.rsplit("+")[0])
+                            continue
+                        except ValueError:
+                            pass
                     bad_requirements.append(requirement)
             if bad_requirements:
                 raise ValueError(
