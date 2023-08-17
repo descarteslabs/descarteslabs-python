@@ -12,9 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .filtering import Properties, Property
+from .filtering import (
+    EqExpression,
+    Expression,
+    LikeExpression,
+    NeExpression,
+    Properties,
+    Property,
+    RangeExpression,
+)
 
 # for backwards compatibility
 GenericProperties = Properties
 
-__all__ = ["GenericProperties", "Properties", "Property"]
+__all__ = [
+    "EqExpression",
+    "Expression",
+    "GenericProperties",
+    "LikeExpression",
+    "NeExpression",
+    "Properties",
+    "Property",
+    "RangeExpression",
+]
