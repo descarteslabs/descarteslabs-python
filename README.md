@@ -20,6 +20,13 @@ Changelog
 
 ## [Unreleased]
 
+## Compute
+
+- Changes to the `Function.map()` method, with the parameter name change of `iterargs` changed to `kwargs`
+  (the old name is still honored but deprecated), corrected documentation, and enhancements to support more
+  general iterators and mappings, allowing for a more functional programming style.
+
+
 ## [2.0.3] - 2023-07-13
 
 ### Compute

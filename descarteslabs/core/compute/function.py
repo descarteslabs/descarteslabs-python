@@ -27,11 +27,12 @@ import warnings
 import zipfile
 from datetime import datetime
 from tempfile import NamedTemporaryFile
-from typing import Callable, Dict, List, Set, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Type, Union
 
 import pkg_resources
 from strenum import StrEnum
 
+from ..client.deprecation import deprecate
 from ..client.services.service import ThirdPartyService
 from ..common.client import (
     Attribute,
@@ -857,20 +858,41 @@ class Function(Document):
 
         self._load_from_remote(response.json())
 
-    def map(self, args, iterargs=None, tags: List[str] = None) -> List[Job]:
+    @deprecate(renamed={"iterargs": "kwargs"})
+    def map(
+        self,
+        args: Iterable[Iterable[Any]],
+        kwargs: Iterable[Mapping[str, Any]] = None,
+        tags: List[str] = None,
+    ) -> List[Job]:
         """Submits multiple jobs efficiently with positional args to each function call.
 
         Preferred over repeatedly calling the function, such as in a loop, when submitting
         multiple jobs.
 
+        If supplied, the length of ``kwargs`` must match the length of ``args``. All parameter
+        values must be JSON serializable.
+
+        As an example, if the function takes two positional arguments and has a keyword
+        argument ``x``, you can submit multiple jobs like this:
+
+        >>> async_func.map([['a', 'b'], ['c', 'd']], [{'x': 1}, {'x': 2}])  # doctest: +SKIP
+
+        is equivalent to:
+
+        >>> async_func('a', 'b', x=1)  # doctest: +SKIP
+        >>> async_func('c', 'd', x=2)  # doctest: +SKIP
+
         Parameters
         ----------
-        args : iterable
-            An iterable of arguments. A job will be submitted with each element as the
-            first positional argument to the function.
-        iterargs : List[iterable], optional
-            If additional iterable arguments are passed, the function must take that
-            many arguments and is applied to the items from all iterables in parallel.
+        args : Iterable[Iterable[Any]]
+            An iterable of iterables of arguments. For each outer element, a job will be submitted
+            with each of its elements as the positional arguments to the function. The length of
+            each element of the outer iterable must match the number of positional arguments to
+            the function.
+        kwargs : Iterable[Mapping[str, Any]], optional
+            An iterable of Mappings with keyword arguments. For each outer element, the Mapping will
+            be expanded into keyword arguments for the function.
         tags : List[str], optional
             A list of tags to apply to all jobs submitted.
         """
@@ -879,10 +901,18 @@ class Function(Document):
         # save in case the function doesn't exist yet
         self.save()
 
+        args = [list(iterable) for iterable in args]
+        if kwargs is not None:
+            kwargs = [dict(mapping) for mapping in kwargs]
+            if len(kwargs) != len(args):
+                raise ValueError(
+                    "The number of kwargs must match the number of args. "
+                    f"Got {len(args)} args and {len(kwargs)} kwargs."
+                )
         payload = {
             "function_id": self.id,
             "bulk_args": args,
-            "bulk_kwargs": iterargs,
+            "bulk_kwargs": kwargs,
         }
 
         if tags:

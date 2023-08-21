@@ -582,7 +582,60 @@ class TestFunction(FunctionTestCase):
         fn = Function(id="some-id", saved=True)
         fn.map(
             [[1, 2], [3, 4]],
+            kwargs=[{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+        )
+        request = responses.calls[-1].request
+        assert json.loads(request.body) == {
+            "bulk_args": [[1, 2], [3, 4]],
+            "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+            "function_id": "some-id",
+        }
+
+    @responses.activate
+    def test_map_deprecated(self):
+        self.mock_response(
+            responses.POST,
+            "/jobs/bulk",
+            json=[self.make_job(args=[1, 2]), self.make_job(args=[3, 4])],
+        )
+
+        fn = Function(id="some-id", saved=True)
+        fn.map(
+            [[1, 2], [3, 4]],
             iterargs=[{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+        )
+        request = responses.calls[-1].request
+        assert json.loads(request.body) == {
+            "bulk_args": [[1, 2], [3, 4]],
+            "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+            "function_id": "some-id",
+        }
+
+    @responses.activate
+    def test_map_with_generators(self):
+        self.mock_response(
+            responses.POST,
+            "/jobs/bulk",
+            json=[self.make_job(args=[1, 2]), self.make_job(args=[3, 4])],
+        )
+
+        fn = Function(id="some-id", saved=True)
+
+        def generator():
+            for i in range(2):
+                yield range(i * 2 + 1, i * 2 + 3)
+
+        def kwgenerator():
+            def inner(t):
+                yield ("first", t(1))
+                yield ("second", t(2))
+
+            yield inner(int)
+            yield inner(float)
+
+        fn.map(
+            generator(),
+            kwgenerator(),
         )
         request = responses.calls[-1].request
         assert json.loads(request.body) == {
@@ -602,7 +655,7 @@ class TestFunction(FunctionTestCase):
         fn = Function(id="some-id", saved=True)
         fn.map(
             [[1, 2], [3, 4]],
-            iterargs=[{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+            kwargs=[{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
             tags=["tag1", "tag2"],
         )
         request = responses.calls[-1].request
