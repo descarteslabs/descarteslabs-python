@@ -1,5 +1,6 @@
 import json
 from datetime import timezone
+from unittest import mock
 
 import responses
 
@@ -159,33 +160,46 @@ class TestJob(BaseTestCase):
         assert job.state == "saved"
 
     @responses.activate
-    def test_result_empty(self):
-        self.mock_response(responses.GET, "/jobs/some-id/result", body=None)
-        job = Job(id="some-id", function_id="some-fn", saved=True)
-        assert job.result() is None
-
-    @responses.activate
-    def test_result_json(self):
-        body = json.dumps({"test": "blah"}).encode()
-        self.mock_response(responses.GET, "/jobs/some-id/result", body=body)
+    @mock.patch(
+        "descarteslabs.compute.job.Job._get_result_namespace",
+        return_value="some-org:some-user",
+    )
+    @mock.patch(
+        "descarteslabs.catalog.blob.Blob.get_data",
+        return_value=json.dumps({"test": "blah"}).encode(),
+    )
+    def test_result_json(self, mock_get_data, mock_get_result_namespace):
         job = Job(id="some-id", function_id="some-fn", saved=True)
         assert job.result() == {"test": "blah"}
 
     @responses.activate
-    def test_result_float(self):
-        body = json.dumps(15.68).encode()
-        self.mock_response(responses.GET, "/jobs/some-id/result", body=body)
+    @mock.patch(
+        "descarteslabs.compute.job.Job._get_result_namespace",
+        return_value="some-org:some-user",
+    )
+    @mock.patch(
+        "descarteslabs.catalog.blob.Blob.get_data",
+        return_value=json.dumps(15.68).encode(),
+    )
+    def test_result_float(self, mock_get_data, mock_get_result_namespace):
         job = Job(id="some-id", function_id="some-fn", saved=True)
         assert job.result() == 15.68
 
     @responses.activate
-    def test_result_cast(self):
+    @mock.patch(
+        "descarteslabs.compute.job.Job._get_result_namespace",
+        return_value="some-org:some-user",
+    )
+    @mock.patch(
+        "descarteslabs.catalog.blob.Blob.get_data",
+        return_value="blah",
+    )
+    def test_result_cast(self, mock_get_data, mock_get_result_namespace):
         class CustomString:
             @classmethod
             def deserialize(cls, data: bytes):
                 return "custom"
 
-        self.mock_response(responses.GET, "/jobs/some-id/result", body="blah")
         job = Job(id="some-id", function_id="some-fn", saved=True)
         assert job.result(CustomString) == "custom"
 

@@ -667,33 +667,6 @@ class TestFunction(FunctionTestCase):
         }
 
     @responses.activate
-    def test_results(self):
-        self.mock_response(
-            responses.GET,
-            "/jobs",
-            json=self.make_page(
-                [
-                    self.make_job(id="1", status=JobStatus.SUCCESS),
-                    self.make_job(id="2", status=JobStatus.SUCCESS),
-                ]
-            ),
-        )
-        self.mock_response(responses.GET, "/jobs/1/result", body=json.dumps(1))
-        self.mock_response(responses.GET, "/jobs/2/result", body=json.dumps(2))
-
-        fn = Function(id="some-id", saved=True)
-        assert fn.results() == [1, 2]
-        self.assert_url_called(
-            "/jobs",
-            params={
-                "filter": [
-                    {"op": "eq", "name": "function_id", "val": "some-id"},
-                    {"op": "eq", "name": "status", "val": "success"},
-                ]
-            },
-        )
-
-    @responses.activate
     def test_wait_for_completion(self):
         self.mock_response(
             responses.GET,

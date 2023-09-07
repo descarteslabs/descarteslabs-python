@@ -19,7 +19,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Dict, List, Optional, Type
 
 from strenum import StrEnum
-
+from ..catalog import Blob, CatalogClient, DeletedObjectError, StorageType
 from ..common.client import (
     Attribute,
     DatetimeAttribute,
@@ -152,6 +152,17 @@ class Job(Document):
         """
         super().__init__(function_id=function_id, args=args, kwargs=kwargs, **extra)
 
+    def _get_result_namespace(self):
+        """Returns the namespace for the Job result blob."""
+        client = ComputeClient.get_default_client()
+        auth = client.auth
+
+        namespace = f"{auth.namespace}"
+        if auth.payload["org"]:
+            namespace = f"{auth.payload['org']}:{namespace}"
+
+        return namespace
+
     @property
     def function(self) -> "Function":
         """Returns the Function the Job belongs to."""
@@ -257,9 +268,19 @@ class Job(Document):
         ValueError
             When `cast_type` does not implement Serializable.
         """
-        client = ComputeClient.get_default_client()
-        response = client.session.get(f"/jobs/{self.id}/result", stream=True)
-        result = response.content
+        try:
+            client = CatalogClient(auth=ComputeClient.get_default_client().auth)
+
+            result = Blob.get_data(
+                name=f"{self.function_id}/{self.id}",
+                namespace=self._get_result_namespace(),
+                storage_type=StorageType.COMPUTE,
+                client=client,
+            )
+        except ValueError:
+            raise
+        except DeletedObjectError:
+            raise
 
         if not result:
             return None
