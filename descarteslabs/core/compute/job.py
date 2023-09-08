@@ -19,6 +19,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Dict, List, Optional, Type
 
 from strenum import StrEnum
+
+from descarteslabs.exceptions import NotFoundError
+
 from ..catalog import Blob, CatalogClient, DeletedObjectError, StorageType
 from ..common.client import (
     Attribute,
@@ -277,6 +280,8 @@ class Job(Document):
                 storage_type=StorageType.COMPUTE,
                 client=client,
             )
+        except NotFoundError:
+            return None
         except ValueError:
             raise
         except DeletedObjectError:

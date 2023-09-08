@@ -16,6 +16,8 @@ import io
 
 from strenum import StrEnum
 
+from descarteslabs.exceptions import NotFoundError
+
 from ..client.services.service import ThirdPartyService
 from ..common.collection import Collection
 from ..common.property_filtering import Properties
@@ -30,13 +32,8 @@ from .attributes import (
     parse_iso_datetime,
 )
 from .blob_download import BlobDownload
-from .catalog_base import (
-    CatalogClient,
-    CatalogObject,
-    check_deleted,
-)
+from .catalog_base import CatalogClient, CatalogObject, check_deleted
 from .search import AggregateDateField, GeoSearch, SummarySearchMixin
-
 
 properties = Properties()
 
@@ -834,6 +831,11 @@ class Blob(CatalogObject):
 
     def _do_download(self, dest=None, range=None):
         download = BlobDownload.get(id=self.id, client=self._client)
+
+        # BlobDownload.get() returns None if the blob does not exist
+        # raise a NotFoundError in this case
+        if not download:
+            raise NotFoundError("Blob {} does not exist".format(self.id))
 
         headers = {}
         if self.hash:
