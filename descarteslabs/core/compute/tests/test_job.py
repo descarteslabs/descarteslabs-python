@@ -1,9 +1,10 @@
 import json
 from datetime import timezone
-from unittest import mock
+from unittest.mock import patch
 
 import responses
 
+from descarteslabs.catalog import Blob
 from descarteslabs.compute import Job, JobStatus
 
 from .base import BaseTestCase
@@ -160,46 +161,34 @@ class TestJob(BaseTestCase):
         assert job.state == "saved"
 
     @responses.activate
-    @mock.patch(
-        "descarteslabs.compute.job.Job._get_result_namespace",
-        return_value="some-org:some-user",
-    )
-    @mock.patch(
-        "descarteslabs.catalog.blob.Blob.get_data",
-        return_value=json.dumps({"test": "blah"}).encode(),
-    )
+    @patch.object(Job, "_get_result_namespace")
+    @patch.object(Blob, "get_data")
     def test_result_json(self, mock_get_data, mock_get_result_namespace):
+        mock_get_data.return_value = {"test": "blah"}
+        mock_get_result_namespace.return_value = ("some-org:some-user",)
         job = Job(id="some-id", function_id="some-fn", saved=True)
         assert job.result() == {"test": "blah"}
 
     @responses.activate
-    @mock.patch(
-        "descarteslabs.compute.job.Job._get_result_namespace",
-        return_value="some-org:some-user",
-    )
-    @mock.patch(
-        "descarteslabs.catalog.blob.Blob.get_data",
-        return_value=json.dumps(15.68).encode(),
-    )
+    @patch.object(Job, "_get_result_namespace")
+    @patch.object(Blob, "get_data")
     def test_result_float(self, mock_get_data, mock_get_result_namespace):
+        mock_get_data.return_value = json.dumps(15.68).encode()
+        mock_get_result_namespace.return_value = ("some-org:some-user",)
         job = Job(id="some-id", function_id="some-fn", saved=True)
         assert job.result() == 15.68
 
     @responses.activate
-    @mock.patch(
-        "descarteslabs.compute.job.Job._get_result_namespace",
-        return_value="some-org:some-user",
-    )
-    @mock.patch(
-        "descarteslabs.catalog.blob.Blob.get_data",
-        return_value="blah",
-    )
+    @patch.object(Job, "_get_result_namespace")
+    @patch.object(Blob, "get_data")
     def test_result_cast(self, mock_get_data, mock_get_result_namespace):
         class CustomString:
             @classmethod
             def deserialize(cls, data: bytes):
                 return "custom"
 
+        mock_get_data.return_value = "blah"
+        mock_get_result_namespace.return_value = ("some-org:some-user",)
         job = Job(id="some-id", function_id="some-fn", saved=True)
         assert job.result(CustomString) == "custom"
 
