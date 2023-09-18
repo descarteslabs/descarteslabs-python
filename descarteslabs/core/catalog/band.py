@@ -810,8 +810,8 @@ class MaskBand(Band):
 
         This enables special behavior for this band during rastering.  If this is
         ``True`` and the band appears as the last band in a raster operation (such as
-        :meth:`descarteslabs.scenes.scenecollection.SceneCollection.mosaic` or
-        :meth:`descarteslabs.scenes.scenecollection.SceneCollection.stack`) pixels
+        :meth:`descarteslabs.catalog.imagecollection.ImageCollection.mosaic` or
+        :meth:`descarteslabs.catalog.imagecollection.ImageCollection.stack`) pixels
         with a value of 0 in this band will be treated as transparent.
         """
     )

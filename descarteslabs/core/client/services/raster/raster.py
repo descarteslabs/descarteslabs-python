@@ -231,7 +231,7 @@ def _retry(req, headers=None):
 class Raster(Service, DefaultClientMixin):
     """
     The Raster API retrieves data from the Descartes Labs Catalog. Direct use of
-    the Raster API is not recommended. Consider using the Descartes Labs Scenes API instead.
+    the Raster API is not recommended. Consider using the Descartes Labs Catalog API instead.
     """
 
     # https://requests.readthedocs.io/en/master/user/advanced/#timeouts
@@ -487,7 +487,7 @@ class Raster(Service, DefaultClientMixin):
         :param bool progress: Display a progress bar.
 
         :return: A tuple of ``(np_array, metadata)``. The first element (``np_array``) is
-            the rastered scene as a NumPy array. The second element (``metadata``) is a
+            the rastered image as a NumPy array. The second element (``metadata``) is a
             dictionary containing details about the raster operation that happened. These
             details can be useful for debugging but shouldn't otherwise be relied on (there
             are no guarantees that certain keys will be present).
@@ -631,7 +631,7 @@ class Raster(Service, DefaultClientMixin):
             ``bilinear``, ``cubic``, ``cubicsplice``, ``lanczos``, ``average``, ``mode``,
             ``max``, ``min``, ``med``, ``q1``, ``q3``).
         :param str order: Order of the returned array. `image` returns arrays as
-            ``(scene, row, column, band)`` while `gdal` returns arrays as ``(scene, band, row, column)``.
+            ``(image, row, column, band)`` while `gdal` returns arrays as ``(image, band, row, column)``.
         :param str dltile: a dltile key used to specify the resolution, bounds, and srs.
         :param str processing_level: How the processing level of the underlying data
             should be adjusted, one of ``toa`` (top of atmosphere) and ``surface``. For
@@ -645,8 +645,8 @@ class Raster(Service, DefaultClientMixin):
 
         :return: A tuple of ``(stack, metadata)``.
 
-            * ``stack``: 4D ndarray. The axes are ordered ``(scene, band, y, x)``
-              (or ``(scene, y, x, band)`` if ``order="gdal"``). The scenes in the outermost
+            * ``stack``: 4D ndarray. The axes are ordered ``(image, band, y, x)``
+              (or ``(image, y, x, band)`` if ``order="gdal"``). The images in the outermost
               axis are in the same order as the list of identifiers given as ``inputs``.
             * ``metadata``: List[dict] of the rasterization metadata for each element in ``inputs``.
               As with the metadata returned by :meth:`ndarray` and :meth:`raster`, these dictionaries
@@ -774,35 +774,3 @@ class Raster(Service, DefaultClientMixin):
             params["srs"] = tile_params["cs_code"]
 
         return params
-
-    def dltile(self, key):
-        """
-        This method has been removed and is no longer included in the documentation.
-        """
-        raise NotImplementedError(
-            "dltile is removed, use descarteslabs.scenes.DLTile.from_key instead"
-        )
-
-    def dltile_from_latlon(self, lat, lon, resolution, tilesize, pad):
-        """
-        This method has been removed and is no longer included in the documentation.
-        """
-        raise NotImplementedError(
-            "dltile_from_latlon is removed, use descarteslabs.scenes.DLTile.from_latlon instead"
-        )
-
-    def dltiles_from_shape(self, resolution, tilesize, pad, shape):
-        """
-        This method has been removed and is no longer included in the documentation.
-        """
-        raise NotImplementedError(
-            "dltiles_from_shape is removed, use descarteslabs.scenes.DLTile.from_shape instead"
-        )
-
-    def iter_tiles_from_shape(self, resolution, tilesize, pad, shape):
-        """
-        This method has been removed and is no longer included in the documentation.
-        """
-        raise NotImplementedError(
-            "iter_tiles_from_shape is removed, use descarteslabs.scenes.DLTile.iter_from_shape instead"
-        )

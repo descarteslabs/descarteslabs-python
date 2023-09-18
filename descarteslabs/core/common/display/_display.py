@@ -42,7 +42,7 @@ def _import_matplotlib_pyplot():
         if matplotlib.get_backend() == "MacOSX":
             raise RuntimeError(
                 "Python is not installed as a framework; the Mac OS X backend will not work.\n"
-                "To resolve this, *before* calling dl.scenes.display(), execute this code:\n\n"
+                "To resolve this, *before* calling dl.utils.display(), execute this code:\n\n"
                 "import matplotlib\n"
                 "matplotlib.use('TkAgg')\n"
                 "import matplotlib.pyplot as plt\n\n"

@@ -40,7 +40,7 @@ class GeoContext(object):
     Specifies spatial parameters to use when loading a raster
     from the Descartes Labs catalog.
 
-    Two Scenes loaded with the same GeoContext will result in images
+    Two Images loaded with the same GeoContext will result in images
     with the same shape (in pixels), covering the same spatial extent,
     regardless of the dimensions or projection of the original data.
 
@@ -158,11 +158,11 @@ class AOI(GeoContext):
 
     .. code-block:: python
 
-        cutline_aoi = dl.scenes.AOI(my_geometry, resolution=40)
+        cutline_aoi = dl.geo.AOI(my_geometry, resolution=40)
         aoi_with_cutline_disabled = cutline_aoi.assign(geometry=None)
-        no_cutline_aoi = dl.scenes.AOI(geometry=None, resolution=15, bounds=(-40, 35, -39, 36))
-        aoi_without_auto_bounds = dl.scenes.AOI(geometry=my_geometry, resolution=15, bounds=(-40, 35, -39, 36))
-        aoi_with_specific_pixel_dimensions = dl.scenes.AOI(geometry=my_geometry, shape=(200, 400))
+        no_cutline_aoi = dl.geo.AOI(geometry=None, resolution=15, bounds=(-40, 35, -39, 36))
+        aoi_without_auto_bounds = dl.geo.AOI(geometry=my_geometry, resolution=15, bounds=(-40, 35, -39, 36))
+        aoi_with_specific_pixel_dimensions = dl.geo.AOI(geometry=my_geometry, shape=(200, 400))
     """
 
     __slots__ = (
@@ -691,12 +691,13 @@ class DLTile(GeoContext):
     ...    resolution=10,
     ...    pad=0
     ... )
-    >>> scenes, ctx = dl.scenes.search(tile, "landsat:LC08:PRE:TOAR")  # doctest: +SKIP
-    >>> Scenes  # doctest: +SKIP
-        SceneCollection of 93 scenes
-          * Dates: Apr 19, 2013 to Apr 14, 2017
-          * Products: landsat:LC08:PRE:TOAR: 93
-    >>> ctx     # doctest: +SKIP
+    >>> product = dl.catalog.Product.get("usgs:landsat:oli-tirs:c2:l2:v0")  # doctest: +SKIP
+    >>> images = product.images().intersects(tile).collect()  # doctest: +SKIP
+    >>> images  # doctest: +SKIP
+            ImageCollection of 558 images
+            * Dates: Mar 18, 2013 to Sep 14, 2023
+            * Products: usgs:landsat:oli-tirs:c2:l2:v0: 558
+    >>> images.geocontext     # doctest: +SKIP
     DLTile(key='512:0:10.0:13:-17:771',
        resolution=10.0,
        tilesize=512,
@@ -704,14 +705,14 @@ class DLTile(GeoContext):
        crs='EPSG:32613',
        bounds=(412960.0, 3947520.0, 418080.0, 3952640.0),
        bounds_crs='EPSG:32613',
-       geometry=<shapely.geom...x7f121488c890>,
+       geometry=<POLYGON ((-1....962 35.71...>,
        zone=13,
        ti=-17,
        tj=771,
-       geotrans=[
-      412960.0,...  0,
-      -10.0
-    ], ...
+       geotrans=(412960.0, 10.0, 0.0, 3952640.0, 0.0, -10.0),
+       proj4='+proj=utm +z...s=m +no_defs ',
+       wkt='PROJCS["WGS ...SG","32613"]]',
+       all_touched=False)
     """
 
     __slots__ = (

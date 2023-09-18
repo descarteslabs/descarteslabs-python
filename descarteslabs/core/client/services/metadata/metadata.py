@@ -271,7 +271,7 @@ class Metadata(Service, DefaultClientMixin):
         :param str end_datetime: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
-        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param float fill_fraction: Minimum image fill fraction, calculated as valid/total pixels.
         :param str storage_state: Filter results based on `storage_state` value. Allowed values are `"available"`,
             `"remote"`, or `None`, which returns all results regardless of `storage_state` value.
         :param ~descarteslabs.common.property_filtering.filtering.Expression q:
@@ -443,7 +443,7 @@ class Metadata(Service, DefaultClientMixin):
         :param str end_datetime: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
-        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param float fill_fraction: Minimum image fill fraction, calculated as valid/total pixels.
         :param str storage_state: Filter results based on `storage_state` value. Allowed values are
             `"available"`, `"remote"`, or `None`, which returns all results regardless of
             `storage_state` value.
@@ -583,7 +583,7 @@ class Metadata(Service, DefaultClientMixin):
         :param str end_datetime: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
-        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param float fill_fraction: Minimum image fill fraction, calculated as valid/total pixels.
         :param str storage_state: Filter results based on `storage_state` value. Allowed values are
             `"available"`, `"remote"`, or `None`, which returns all results regardless of
             `storage_state` value.
@@ -695,7 +695,7 @@ class Metadata(Service, DefaultClientMixin):
         :param str end_datetime: Desired ending timestamp, in any common format.
         :param float cloud_fraction: Maximum cloud fraction, calculated by data provider.
         :param float cloud_fraction_0: Maximum cloud fraction, calculated by cloud mask pixels.
-        :param float fill_fraction: Minimum scene fill fraction, calculated as valid/total pixels.
+        :param float fill_fraction: Minimum image fill fraction, calculated as valid/total pixels.
         :param str storage_state: Filter results based on `storage_state` value. Allowed values are
             `"available"`, `"remote"`, or `None`, which returns all results regardless of
             `storage_state` value.

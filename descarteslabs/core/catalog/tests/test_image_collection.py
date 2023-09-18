@@ -64,9 +64,6 @@ class TestImageCollection(unittest.TestCase):
         img_stack = ic.stack("nir red", bands_axis=-1)
         assert img_stack.shape == (2, 122, 120, 2)
 
-        # no_alpha = scenes.stack("nir", mask_alpha=False)
-        # # assert raster not called with alpha once mocks exist
-
         no_mask = ic.stack("nir", mask_alpha=False, mask_nodata=False)
         assert not hasattr(no_mask, "mask")
         assert no_mask.shape == (2, 1, 122, 120)
@@ -186,9 +183,6 @@ class TestImageCollection(unittest.TestCase):
         assert mosaic_only_alpha.shape == (1, 122, 120)
         assert ((mosaic_only_alpha.data == 0) == mosaic_only_alpha.mask).all()
 
-        # no_alpha = scenes.mosaic("nir", mask_alpha=False)
-        # # assert raster not called with alpha once mocks exist
-
         no_mask = ic.mosaic("nir", mask_alpha=False, mask_nodata=False)
         assert not hasattr(no_mask, "mask")
         assert no_mask.shape == (1, 122, 120)
@@ -262,7 +256,7 @@ class TestImageCollection(unittest.TestCase):
         )
         assert hasattr(masked_alt_alpha_band, "mask")
 
-        # errors when alternate alpha band is provided but not available in the scene
+        # errors when alternate alpha band is provided but not available in the image
         with pytest.raises(ValueError):
             ic.mosaic(["Clear_sky_days", "Clear_sky_nights"], mask_alpha="alt-alpha")
 
@@ -271,14 +265,14 @@ class TestImageCollection(unittest.TestCase):
         polygon = shapely.geometry.Point(0.0, 0.0).buffer(3)
         geocontext = AOI(geometry=polygon)
 
-        scenes = ImageCollection(
+        images = ImageCollection(
             [
                 Image(id="foo:bar", geometry=polygon),
                 Image(id="foo:baz", geometry=polygon.buffer(-0.1)),
             ]
         )
 
-        assert len(scenes.filter_coverage(geocontext)) == 1
+        assert len(images.filter_coverage(geocontext)) == 1
 
     @patch.object(Image, "get", _image_get)
     @patch.object(
@@ -310,7 +304,7 @@ class TestImageCollection(unittest.TestCase):
     "cached_bands_by_product",
     _cached_bands_by_product,
 )
-class TestSceneCollectionDownload(unittest.TestCase):
+class TestImageCollectionDownload(unittest.TestCase):
     def setUp(self):
         with patch.object(Image, "get", _image_get):
             images = [

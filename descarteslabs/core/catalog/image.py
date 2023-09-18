@@ -933,7 +933,6 @@ class Image(NamedCatalogObject):
 
         return upload
 
-    # Scenes functionality
     def coverage(self, geom):
         """
         The fraction of a geometry-like object covered by this Image's geometry.
