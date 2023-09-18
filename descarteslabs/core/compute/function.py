@@ -185,6 +185,7 @@ class Function(Document):
         maximum_concurrency: int = None,
         timeout: int = None,
         retry_count: int = None,
+        client: ComputeClient = None,
         **extra,
     ):  # check to see if we need more validation here (type conversions)
         """
@@ -241,6 +242,7 @@ class Function(Document):
         Job <job id>: "pending"
         """
 
+        self._client = client or ComputeClient.get_default_client()
         self._function = function
         self._requirements = requirements
         self._include_data = include_data
@@ -674,13 +676,16 @@ class Function(Document):
         return data_files
 
     @classmethod
-    def get(cls, id: str, **params):
+    def get(cls, id: str, client: ComputeClient = None, **params):
         """Get Function by id.
 
         Parameters
         ----------
         id : str
             Id of function to get.
+        client: ComputeClient, None
+            If set, the result will be retrieved using the configured client.
+            Otherwise, the default client will be used.
         include : List[str], optional
             List of additional attributes to include in the response.
             Allowed values are:
@@ -693,12 +698,14 @@ class Function(Document):
         >>> fn = Function.get(<func_id>)
         <Function name="test_name" image=test_image cpus=1 memory=16 maximum_concurrency=5 timeout=3 retries=1
         """
-        client = ComputeClient.get_default_client()
+        client = client or ComputeClient.get_default_client()
         response = client.session.get(f"/functions/{id}", params=params)
-        return cls(**response.json(), saved=True)
+        return cls(**response.json(), client=client, saved=True)
 
     @classmethod
-    def list(cls, page_size: int = 100, **params) -> Search["Function"]:
+    def list(
+        cls, page_size: int = 100, client: ComputeClient = None, **params
+    ) -> Search["Function"]:
         """Lists all Functions for a user.
 
         If you would like to filter Functions, use :py:meth:`Function.search`.
@@ -707,6 +714,9 @@ class Function(Document):
         ----------
         page_size : int, default=100
             Maximum number of results per page.
+        client: ComputeClient, None
+            If set, the result will be retrieved using the configured client.
+            Otherwise, the default client will be used.
         include : List[str], optional
             List of additional attributes to include in the response.
             Allowed values are:
@@ -719,10 +729,10 @@ class Function(Document):
         >>> fn = Function.list()
         """
         params = {"page_size": page_size, **params}
-        return cls.search().param(**params)
+        return cls.search(client=client).param(**params)
 
     @classmethod
-    def search(cls) -> Search["Function"]:
+    def search(cls, client: ComputeClient = None) -> Search["Function"]:
         """Creates a search for Functions.
 
         The search is lazy and will be executed when the search is iterated over or
@@ -740,10 +750,11 @@ class Function(Document):
         ... )
         Collection([Function <fn-id1>: building, Function <fn-id2>: awaiting_bundle])
         """
-        return Search(Function, ComputeClient.get_default_client(), url="/functions")
+        client = client or ComputeClient.get_default_client()
+        return Search(Function, client, url="/functions")
 
     @classmethod
-    def update_credentials(cls):
+    def update_credentials(cls, client: ComputeClient = None):
         """Updates the credentials for the Functions and Jobs run by this user.
 
         These credentials are used by other Descarteslabs services.
@@ -755,18 +766,17 @@ class Function(Document):
         -----
         Credentials are automatically updated when a new Function is created.
         """
-        client = ComputeClient.get_default_client()
+        client = client or ComputeClient.get_default_client()
         client.set_credentials()
 
     @property
     def jobs(self) -> JobSearch:
         """Returns all the Jobs for the Function."""
-        return Job.search().filter(Job.function_id == self.id)
+        return Job.search(client=self._client).filter(Job.function_id == self.id)
 
     def build_log(self):
         """Retrieves the build log for the Function."""
-        client = ComputeClient.get_default_client()
-        response = client.session.get(f"/functions/{self.id}/log")
+        response = self._client.session.get(f"/functions/{self.id}/log")
 
         print(gzip.decompress(response.content).decode())
 
@@ -775,12 +785,10 @@ class Function(Document):
         if self.state == DocumentState.NEW:
             raise ValueError("Cannot delete a Function that has not been saved")
 
-        client = ComputeClient.get_default_client()
-
         for job in self.jobs:
             job.delete()
 
-        client.session.delete(f"/functions/{self.id}")
+        self._client.session.delete(f"/functions/{self.id}")
         self._deleted = True
 
     def save(self):
@@ -821,13 +829,11 @@ class Function(Document):
             # Document already exists on the server without changes locally
             return
 
-        client = ComputeClient.get_default_client()
-
         if self.state == DocumentState.NEW:
             self.update_credentials()
 
             code_bundle_path = self._bundle()
-            response = client.session.post(
+            response = self._client.session.post(
                 "/functions", json=self.to_dict(exclude_none=True)
             )
             response_json = response.json()
@@ -843,10 +849,10 @@ class Function(Document):
             s3_client.session.put(upload_url, data=code_bundle, headers=headers)
 
             # Complete the upload with compute
-            response = client.session.post(f"/functions/{self.id}/bundle")
+            response = self._client.session.post(f"/functions/{self.id}/bundle")
             self._load_from_remote(response.json())
         elif self.state == DocumentState.MODIFIED:
-            response = client.session.patch(
+            response = self._client.session.patch(
                 f"/functions/{self.id}", json=self.to_dict(only_modified=True)
             )
             self._load_from_remote(response.json())
@@ -896,8 +902,6 @@ class Function(Document):
         tags : List[str], optional
             A list of tags to apply to all jobs submitted.
         """
-        client = ComputeClient.get_default_client()
-
         # save in case the function doesn't exist yet
         self.save()
 
@@ -918,7 +922,7 @@ class Function(Document):
         if tags:
             payload["tags"] = tags
 
-        response = client.session.post("/jobs/bulk", json=payload)
+        response = self._client.session.post("/jobs/bulk", json=payload)
         return [Job(**data, saved=True) for data in response.json()]
 
     def rerun(self):
@@ -927,14 +931,12 @@ class Function(Document):
 
     def refresh(self):
         """Updates the Function instance with data from the server."""
-        client = ComputeClient.get_default_client()
-
         if self.job_statistics:
             params = {"include": ["job.statistics"]}
         else:
             params = {}
 
-        response = client.session.get(f"/functions/{self.id}", params=params)
+        response = self._client.session.get(f"/functions/{self.id}", params=params)
         self._load_from_remote(response.json())
 
     def iter_results(self, cast_type: Type[Serializable] = None):

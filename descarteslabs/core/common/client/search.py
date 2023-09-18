@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import copy
+import inspect
 import json
 from typing import TYPE_CHECKING, Generic, Iterator, List, TypeVar, Union
 
@@ -88,10 +89,16 @@ class Search(Generic[T]):
         >>> search = Function.search().filter(Function.status == "success")
         >>> list(search) # doctest: +SKIP
         """
+        accepts_client = (
+            "client" in inspect.signature(self._document.__init__).parameters
+        )
         documents = self._client.iter_pages(self._url, params=self._serialize())
 
         for document in documents:
-            yield self._document(**document, saved=True)
+            if accepts_client:
+                yield self._document(**document, client=self._client, saved=True)
+            else:
+                yield self._document(**document, saved=True)
 
     def collect(self: AnySearch, **kwargs) -> Collection[T]:
         """

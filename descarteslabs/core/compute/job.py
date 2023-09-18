@@ -22,7 +22,7 @@ from strenum import StrEnum
 
 from descarteslabs.exceptions import NotFoundError
 
-from ..catalog import Blob, CatalogClient, DeletedObjectError, StorageType
+from ..catalog import Blob, DeletedObjectError, StorageType
 from ..common.client import (
     Attribute,
     DatetimeAttribute,
@@ -53,7 +53,7 @@ class JobSearch(Search["Job"]):
         response = self._client.session.post(
             "/jobs/rerun", json=self._serialize(json_encode=False)
         )
-        return [Job(**job, saved=True) for job in response.json()]
+        return [Job(**job, client=self._client, saved=True) for job in response.json()]
 
 
 class Job(Document):
@@ -141,6 +141,7 @@ class Job(Document):
         function_id: str,
         args: Optional[List] = None,
         kwargs: Optional[Dict] = None,
+        client: ComputeClient = None,
         **extra,
     ):
         """
@@ -152,14 +153,16 @@ class Job(Document):
             A list of positional arguments to pass to the function.
         kwargs : Dict, optional
             A dictionary of named arguments to pass to the function.
+        client: ComputeClient, optional
+            The compute client to use for requests.
+            If not set, the default client will be used.
         """
+        self._client = client or ComputeClient.get_default_client()
         super().__init__(function_id=function_id, args=args, kwargs=kwargs, **extra)
 
     def _get_result_namespace(self):
         """Returns the namespace for the Job result blob."""
-        client = ComputeClient.get_default_client()
-        auth = client.auth
-
+        auth = self._client.auth
         namespace = f"{auth.namespace}"
         if auth.payload["org"]:
             namespace = f"{auth.payload['org']}:{namespace}"
@@ -174,13 +177,16 @@ class Job(Document):
         return Function.get(self.function_id)
 
     @classmethod
-    def get(cls, id, **params) -> "Job":
+    def get(cls, id, client: ComputeClient = None, **params) -> "Job":
         """Retrieves the Job by id.
 
         Parameters
         ----------
         id : str
             The id of the Job to fetch.
+        client: ComputeClient, None
+            If set, the result will be retrieved using the configured client.
+            Otherwise, the default client will be used.
         include : List[str], optional
             List of additional attributes to include in the response.
             Allowed values are:
@@ -193,9 +199,9 @@ class Job(Document):
         >>> job = Job.get(<job-id>)
         Job <job-id>: pending
         """
-        client = ComputeClient.get_default_client()
+        client = client or ComputeClient.get_default_client()
         response = client.session.get(f"/jobs/{id}", params=params)
-        return cls(**response.json(), saved=True)
+        return cls(**response.json(), client=client, saved=True)
 
     @classmethod
     def list(cls, page_size: int = 100, **params) -> JobSearch:
@@ -242,43 +248,48 @@ class Job(Document):
         if self.state == DocumentState.NEW:
             raise ValueError("Cannot delete a Job that has not been saved")
 
-        client = ComputeClient.get_default_client()
-        client.session.delete(f"/jobs/{self.id}")
+        self._client.session.delete(f"/jobs/{self.id}")
         self._deleted = True
 
-    def refresh(self) -> None:
+    def refresh(self, client: ComputeClient = None) -> None:
         """Update the Job instance with the latest information from the server."""
-        client = ComputeClient.get_default_client()
-
         if self.pull_time or self.provisioning_time:
             params = {"include": ["timings"]}
         else:
             params = {}
 
-        response = client.session.get(f"/jobs/{self.id}", params=params)
+        response = self._client.session.get(f"/jobs/{self.id}", params=params)
         self._load_from_remote(response.json())
 
-    def result(self, cast_type: Optional[Type[Serializable]] = None):
+    def result(
+        self,
+        cast_type: Optional[Type[Serializable]] = None,
+        client: ComputeClient = None,
+    ):
         """Retrieves the result of the Job.
 
         Parameters
         ----------
         cast_type: Type[Serializable], None
             If set, the result will be deserialized to the given type.
+        client: ComputeClient, None
+            If set, the result will be retrieved using the configured client.
+            Otherwise, the default client will be used.
 
         Raises
         ------
         ValueError
             When `cast_type` does not implement Serializable.
         """
-        try:
-            client = CatalogClient(auth=ComputeClient.get_default_client().auth)
+        if not client:
+            client = self._client
 
+        try:
             result = Blob.get_data(
                 name=f"{self.function_id}/{self.id}",
                 namespace=self._get_result_namespace(),
                 storage_type=StorageType.COMPUTE,
-                client=client,
+                client=client.catalog_client,
             )
         except NotFoundError:
             return None
@@ -304,7 +315,7 @@ class Job(Document):
             return result
 
     @classmethod
-    def search(cls) -> JobSearch:
+    def search(cls, client: ComputeClient = None) -> JobSearch:
         """Creates a search for Jobs.
 
         The search is lazy and will be executed when the search is iterated over or
@@ -316,7 +327,8 @@ class Job(Document):
         >>> jobs: List[Job] = Job.search().filter(Job.status == JobStatus.SUCCESS).collect()
         Collection([Job <job-id1>: success, <job-id2>: success])
         """
-        return JobSearch(Job, ComputeClient.get_default_client(), url="/jobs")
+        client = client or ComputeClient.get_default_client()
+        return JobSearch(Job, client, url="/jobs")
 
     def wait_for_completion(self, timeout=None, interval=10):
         """Waits until the Job is completed.
@@ -371,14 +383,12 @@ class Job(Document):
         if self.state == DocumentState.SAVED:
             return
 
-        client = ComputeClient.get_default_client()
-
         if self.state == DocumentState.MODIFIED:
-            response = client.session.patch(
+            response = self._client.session.patch(
                 f"/jobs/{self.id}", json=self.to_dict(only_modified=True)
             )
         elif self.state == DocumentState.NEW:
-            response = client.session.post(
+            response = self._client.session.post(
                 "/jobs", json=self.to_dict(exclude_none=True)
             )
         else:
@@ -400,8 +410,9 @@ class Job(Document):
 
             You may consider disabling this if you use a structured logger.
         """
-        client = ComputeClient.get_default_client()
-        logs = client.iter_log_lines(f"/jobs/{self.id}/log", timestamps=timestamps)
+        logs = self._client.iter_log_lines(
+            f"/jobs/{self.id}/log", timestamps=timestamps
+        )
 
         for log in logs:
             print(log)

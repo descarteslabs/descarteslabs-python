@@ -19,18 +19,23 @@ from typing import Iterator
 from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
 
+from ..catalog import CatalogClient
 from ..client.services.service import ApiService
 from ..common.http.service import DefaultClientMixin
 
 
 class ComputeClient(ApiService, DefaultClientMixin):
-    def __init__(self, url=None, auth=None, retries=None):
+    def __init__(self, url=None, auth=None, catalog_client=None, retries=None):
         if auth is None:
             auth = Auth.get_default_auth()
+
+        if catalog_client is None:
+            catalog_client = CatalogClient(auth=auth)
 
         if url is None:
             url = get_settings().compute_url
 
+        self.catalog_client = catalog_client
         super().__init__(url, auth=auth, retries=retries)
 
     def iter_log_lines(self, url: str, timestamps: bool = True) -> Iterator[str]:
