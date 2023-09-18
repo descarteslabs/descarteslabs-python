@@ -12,23 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from functools import wraps
-from types import MethodType
 import json
 import urllib.parse
+from functools import wraps
+from types import MethodType
 
 from descarteslabs.exceptions import NotFoundError
+
 from ..client.deprecation import deprecate
 from ..common.collection import Collection
 from .attributes import (
+    AttributeEqualityMixin,
     AttributeMeta,
     AttributeValidationError,
-    AttributeEqualityMixin,
     CatalogObjectReference,
     DocumentState,
-    Timestamp,
-    ListAttribute,
     ExtraPropertiesAttribute,
+    ListAttribute,
+    Timestamp,
     TypedAttribute,
 )
 from .catalog_client import CatalogClient, HttpRequestMethod
@@ -1026,7 +1027,7 @@ class CatalogObject(CatalogObjectBase):
     extra_properties = ExtraPropertiesAttribute(
         doc="""dict, optional: A dictionary of up to 50 key/value pairs.
 
-        The keys of this dictonary must be strings, and the values of this dictionary
+        The keys of this dictionary must be strings, and the values of this dictionary
         can be strings or numbers.  This allows for more structured custom metadata
         to be associated with objects.
         """

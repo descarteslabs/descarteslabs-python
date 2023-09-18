@@ -15,10 +15,11 @@
 from .compute_client import ComputeClient
 from .function import Function, FunctionStatus, Search
 from .job import Job, JobSearch, JobStatus
-from .result import Serializable
+from .result import ComputeResult, Serializable
 
 __all__ = [
     "ComputeClient",
+    "ComputeResult",
     "Function",
     "FunctionStatus",
     "Job",
