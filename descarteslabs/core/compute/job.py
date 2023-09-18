@@ -22,7 +22,7 @@ from strenum import StrEnum
 
 from descarteslabs.exceptions import NotFoundError
 
-from ..catalog import Blob, DeletedObjectError, StorageType
+from ..catalog import Blob, CatalogClient, DeletedObjectError, StorageType
 from ..common.client import (
     Attribute,
     DatetimeAttribute,
@@ -264,7 +264,7 @@ class Job(Document):
     def result(
         self,
         cast_type: Optional[Type[Serializable]] = None,
-        client: ComputeClient = None,
+        catalog_client: CatalogClient = None,
     ):
         """Retrieves the result of the Job.
 
@@ -272,7 +272,7 @@ class Job(Document):
         ----------
         cast_type: Type[Serializable], None
             If set, the result will be deserialized to the given type.
-        client: ComputeClient, None
+        catalog_client: CatalogClient, None
             If set, the result will be retrieved using the configured client.
             Otherwise, the default client will be used.
 
@@ -281,15 +281,15 @@ class Job(Document):
         ValueError
             When `cast_type` does not implement Serializable.
         """
-        if not client:
-            client = self._client
+        if not catalog_client:
+            catalog_client = self._client.catalog_client
 
         try:
             result = Blob.get_data(
                 name=f"{self.function_id}/{self.id}",
                 namespace=self._get_result_namespace(),
                 storage_type=StorageType.COMPUTE,
-                client=client.catalog_client,
+                client=catalog_client,
             )
         except NotFoundError:
             return None
