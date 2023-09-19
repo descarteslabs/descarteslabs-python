@@ -93,7 +93,6 @@ image = Image(
     name="Paris", product=product, acquired="2020-06-24", acquired_end="2020-06-30"
 )
 
-# this line must be defeated until upload enabled in aws-production
 upload = image.upload_ndarray(ndarray_mosaic, raster_meta=raster_info)
 upload.wait_for_completion()
 print(upload.status)
