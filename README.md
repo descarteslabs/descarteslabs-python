@@ -22,10 +22,16 @@ Changelog
 
 ## Compute
 
+- *Breaking Change* The base images for compute have been put on a diet. They are now themselves built
+  from "slim" Python images, and they no longer include the wide variety of extra packages that were
+  formerly included (e.g. TensorFlow, SciKit Learn, PyTorch). This has reduced the base image size by
+  an order of magnitude, making job startup overhead commensurately faster. Any functions which
+  require such additional packages can add them in as needed via the `requirements=` parameter. While
+  this will increase image size, it will generally still be much better than the prior "Everything and the kitchen sink" approach.
+  
 - Changes to the `Function.map()` method, with the parameter name change of `iterargs` changed to `kwargs`
   (the old name is still honored but deprecated), corrected documentation, and enhancements to support more
   general iterators and mappings, allowing for a more functional programming style.
-
 
 ## [2.0.3] - 2023-07-13
 
