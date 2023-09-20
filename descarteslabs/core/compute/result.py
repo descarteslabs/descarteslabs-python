@@ -49,6 +49,22 @@ class ComputeResult:
         When returned from a compute function, the result will be serialized and stored
         in the Storage service with the given attributes.
 
+        Notes
+        -----
+        Results that are None and have no attributes will not be stored. If you want to
+        store a None result with attributes, you can do so by passing in a None value
+        as well as any attributes you wish to set.
+
+        Examples
+        --------
+        Result with raw binary data:
+        >>> from descarteslabs.services.compute import ComputeResult
+        >>> result = ComputeResult(value=b"result", description="result description")
+
+        Null result with attributes:
+        >>> from descarteslabs.services.compute import ComputeResult
+        >>> result = ComputeResult(None, geometry=geometry, tags=["tag1", "tag2"])
+
         Parameters
         ----------
         value: bytes, Serializable, or Any
@@ -73,6 +89,17 @@ class ComputeResult:
             The tags to set on the catalog object for the result.
         """
         type_ = type(value)
+
+        # The result is null and should not be stored if all attributes are null
+        # otherwise, we'll allow a user to store a null result with attributes.
+        self.isnull = (
+            value is None
+            and description is None
+            and expires is None
+            and extra_properties is None
+            and geometry is None
+            and tags is None
+        )
 
         # If the result is already bytes
         if isinstance(value, bytes):
