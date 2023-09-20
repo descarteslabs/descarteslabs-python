@@ -18,20 +18,60 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## [Unreleased]
+## [2.1.0] - 2023-09-21
+
+## General
+
+- Following our lifecycle policy, client versions v1.11.0 and earlier are no longer supported. They may
+  cease to work with the Platform at any time.
+  
+## Catalog
+
+- The Catalog `Blob` class now has a `get_data()` method which can be used to retrieve the blob
+  data directly given the id, without having to first retrieve the `Blob` metadata.
 
 ## Compute
 
-- *Breaking Change* The base images for compute have been put on a diet. They are now themselves built
-  from "slim" Python images, and they no longer include the wide variety of extra packages that were
+- *Breaking Change* The base images for Compute have been put on a diet. They are now themselves built
+  from "slim" Python images, and they no longer include the wide variety of extra Python packages that were
   formerly included (e.g. TensorFlow, SciKit Learn, PyTorch). This has reduced the base image size by
-  an order of magnitude, making job startup overhead commensurately faster. Any functions which
-  require such additional packages can add them in as needed via the `requirements=` parameter. While
-  this will increase image size, it will generally still be much better than the prior "Everything and the kitchen sink" approach.
-  
+  an order of magnitude, making function build times and job startup overhead commensurately faster.
+  Any functions which require such additional packages can add them in as needed via the `requirements=`
+  parameter. While doing so will increase image size, it will generally still be much better than the prior
+  "Everything and the kitchen sink" approach. Existing Functions with older images will continue
+  to work as always, but any newly minted `Function`` using the new client will be using one of the new
+  slim images.
+
+- Base images are now available for Python3.10 and Python3.11, in addition to Python3.8 and Python3.9.
+
+- Job results and logs are now integrated with Catalog Storage, so that results and logs can be
+  searched and retrieved directly using the Catalog client as well as using the methods in the Compute
+  client.
+
+- The new `ComputeResult` class can be used to wrap results from a `Function`, allowing the user to
+  specify additional attributes for the result which will be stored in the Catalog `Blob` metadata for
+  the result. This allows the function to specify properties such as `geometry`, `description`,
+  `expires` and `extra_attributes` for the result `Blob`. The use of `ComputeResult` is not required.
+
+- A `Job` can now be assigned arbitrary tags (strings), and searched based on them.
+
+- A `Job` can now be retried on errors, and jobs track error reasons, exit codes, and execution counts.
+
+- `Function` and `Job` objects can now be filtered by class attributes (ex. `Job.search().filter(Job.status == JobStatus.PENDING).collect()`).
+
+- The `requirements=` parameter to `Function` objects now supports more `pip` magic, allowing the use
+  of special `pip` controls such as `-f`. Also parsing of package versions has been loosened to allow
+  some more unusual version designators.
+
 - Changes to the `Function.map()` method, with the parameter name change of `iterargs` changed to `kwargs`
   (the old name is still honored but deprecated), corrected documentation, and enhancements to support more
   general iterators and mappings, allowing for a more functional programming style.
+
+- The compute package was restructured to make all the useful and relevant classes available at the top level.
+
+## Utils
+
+- Property filters can now be deserialized as well as serialized.
 
 ## [2.0.3] - 2023-07-13
 
