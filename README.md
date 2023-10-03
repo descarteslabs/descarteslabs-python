@@ -32,6 +32,12 @@ Changelog
 
 ## Compute
 
+- *Breaking Change* The status values for `Function` and `Job` objects have changed, to provide a
+  better experience managing the flow of jobs. Please see the updated Compute guide for a full explanation.
+  Because of the required changes to the back end, older clients (i.e. v2.0.3) are supported in a
+  best effort manner. Upgrading to this new client release is strongly advised for all users of the
+  Compute service.
+
 - *Breaking Change* The base images for Compute have been put on a diet. They are now themselves built
   from "slim" Python images, and they no longer include the wide variety of extra Python packages that were
   formerly included (e.g. TensorFlow, SciKit Learn, PyTorch). This has reduced the base image size by
@@ -57,8 +63,33 @@ Changelog
 
 - A `Job` can now be retried on errors, and jobs track error reasons, exit codes, and execution counts.
 
-- `Function` and `Job` objects can now be filtered by class attributes (ex. `Job.search().filter(Job.status == JobStatus.PENDING).collect()`).
+- `Function` and `Job` objects can now be filtered by class attributes (ex. 
+  `Job.search().filter(Job.status == JobStatus.PENDING).collect()`).
 
+- The `Job.cancel()` method can now be used to cancel the execution of a job which is currently
+  pending or running. Pending jobs will immediately transition to `JobStatus.CANCELED` status,
+  while running jobs will pass through `JobStatus.CANCEL` (waiting for the cancelation to be
+  signaled to the execution engine), `JobStatus.CANCELING` (waiting for the execution to terminate),
+  and `JobStatus.CANCELED` (once the job is no longer executing). Cancelation of running jobs is
+  not guaranteed; a job may terminate successfully, or with a failure or timeout, before it can
+  be canceled.
+
+- The `Job.result()` method will raise an exception if the job does not have a status of
+  `JobStatus.SUCCESS`. If `Job.result()` yields an `None` value, this means that there was no
+  result (i.e. the execution returned a `None`).
+
+- The `Job.result_blob()` will return the Catalog Storage Blob holding the result, if any.
+
+- The `Function.wait_for_completion()` and new `Function.as_completed()` methods provide a richer
+  set of functionality for waiting on and handling job completion.
+
+- The `Function.build_log()` method now returns the log contents as a string, rather than printing
+  the log contents.
+
+- The `Job.log()` method now returns the log contents as a list of strings, rather than printing the log
+  contents. Because logs can be unbounded in size, there's also a new `Job.iter_log()` method which returns
+  an iterator over the log lines.
+  
 - The `requirements=` parameter to `Function` objects now supports more `pip` magic, allowing the use
   of special `pip` controls such as `-f`. Also parsing of package versions has been loosened to allow
   some more unusual version designators.

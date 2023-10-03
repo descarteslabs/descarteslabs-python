@@ -19,6 +19,7 @@ import gzip
 import importlib
 import inspect
 import io
+import itertools
 import os
 import re
 import sys
@@ -27,7 +28,18 @@ import warnings
 import zipfile
 from datetime import datetime
 from tempfile import NamedTemporaryFile
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Type,
+    Union,
+)
 
 import pkg_resources
 from strenum import StrEnum
@@ -47,15 +59,17 @@ from .job import Job, JobSearch, JobStatus
 from .result import Serializable
 
 
+MAX_FUNCTION_IDS_PER_REQUEST = 128
+
+
 class FunctionStatus(StrEnum):
     "The status of the Function."
 
     AWAITING_BUNDLE = "awaiting_bundle"
     BUILDING = "building"
     BUILD_FAILED = "build_failed"
-    RUNNING = "running"
-    SUCCESS = "success"
-    FAILURE = "failure"
+    READY = "ready"
+    STOPPED = "stopped"
 
 
 class Cpus(float):
@@ -155,6 +169,24 @@ class Function(Document):
         filterable=True,
         sortable=True,
         doc="The total number of retries requested for a Job before it failed.",
+    )
+    enabled: bool = Attribute(
+        bool,
+        filterable=True,
+        sortable=True,
+        doc="Whether the Function accepts job submissions and reruns.",
+    )
+    auto_start: bool = Attribute(
+        bool,
+        filterable=True,
+        sortable=True,
+        doc="Whether the Function will be placed into READY status once building is complete.",
+    )
+    modified_date: datetime = DatetimeAttribute(
+        filterable=True,
+        readonly=True,
+        sortable=True,
+        doc="""The date the Function was last modified or processed a job submission.""",
     )
     job_statistics: Dict = Attribute(
         dict,
@@ -597,6 +629,8 @@ class Function(Document):
                     # comment or pip-specific option not understood by pkg_resources
                     if requirement.startswith("#") or requirement.startswith("-"):
                         continue
+                    if requirement.startswith("https://"):
+                        continue
                     # e.g. torch-2.0.1+cpu which pkg_resource doesn't understand
                     if "+" in requirement:
                         try:
@@ -772,13 +806,23 @@ class Function(Document):
     @property
     def jobs(self) -> JobSearch:
         """Returns all the Jobs for the Function."""
+        if self.state != DocumentState.SAVED:
+            raise ValueError(
+                "Cannot search for jobs for a Function that has not been saved"
+            )
+
         return Job.search(client=self._client).filter(Job.function_id == self.id)
 
     def build_log(self):
         """Retrieves the build log for the Function."""
+        if self.state != DocumentState.SAVED:
+            raise ValueError(
+                "Cannot retrieve logs for a Function that has not been saved"
+            )
+
         response = self._client.session.get(f"/functions/{self.id}/log")
 
-        print(gzip.decompress(response.content).decode())
+        return gzip.decompress(response.content).decode()
 
     def delete(self):
         """Deletes the Function and all associated Jobs."""
@@ -790,6 +834,16 @@ class Function(Document):
 
         self._client.session.delete(f"/functions/{self.id}")
         self._deleted = True
+
+    def disable(self):
+        """Disables the Function so that new jobs cannot be submitted."""
+        self.enabled = False
+        self.save()
+
+    def enable(self):
+        """Enables the Function so that new jobs may be submitted."""
+        self.enabled = True
+        self.save()
 
     def save(self):
         """Creates the Function if it does not already exist.
@@ -862,6 +916,24 @@ class Function(Document):
                 f'Reload the function from the server: Function.get("{self.id}")'
             )
 
+    def start(self):
+        """Starts Function so that pending jobs can be executed."""
+        if self.state != DocumentState.SAVED:
+            raise ValueError("Cannot start a Function that has not been saved")
+
+        response = self._client.session.patch(
+            f"/functions/{self.id}", json={"status": FunctionStatus.READY.value}
+        )
+        self._load_from_remote(response.json())
+
+    def stop(self):
+        """Stops Function so that pending jobs cannot be executed."""
+        if self.state != DocumentState.SAVED:
+            raise ValueError("Cannot start a Function that has not been saved")
+
+        response = self._client.session.patch(
+            f"/functions/{self.id}", json={"status": FunctionStatus.STOPPED.value}
+        )
         self._load_from_remote(response.json())
 
     @deprecate(renamed={"iterargs": "kwargs"})
@@ -902,8 +974,8 @@ class Function(Document):
         tags : List[str], optional
             A list of tags to apply to all jobs submitted.
         """
-        # save in case the function doesn't exist yet
-        self.save()
+        if self.state != DocumentState.SAVED:
+            raise ValueError("Cannot execute a Function that has not been saved")
 
         args = [list(iterable) for iterable in args]
         if kwargs is not None:
@@ -925,13 +997,107 @@ class Function(Document):
         response = self._client.session.post("/jobs/bulk", json=payload)
         return [Job(**data, saved=True) for data in response.json()]
 
-    def rerun(self):
-        """Submits all the failed and timed out jobs to be rerun."""
-        return self.jobs.rerun()
+    def cancel_jobs(self, query: Optional[JobSearch] = None, job_ids: List[str] = None):
+        """Cancels all jobs for the Function matching the given query.
 
-    def refresh(self):
+        If both `query` and `job_ids` are None, all jobs for the Function will be canceled.
+        If both are provided, they will be combined with an AND operator. Any jobs matched
+        by `query` or `job_ids` which are not associated with this function will be ignored.
+
+        Parameters
+        ----------
+        query : JobSearch, optional
+            Query to filter jobs to cancel.
+        job_ids : List[str], optional
+            List of job ids to cancel.
+        """
+        if self.state != DocumentState.SAVED:
+            raise ValueError(
+                "Cannot cancel jobs for a Function that has not been saved"
+            )
+
+        if query is None:
+            query = self.jobs
+        else:
+            query = query.filter(Job.function_id == self.id)
+        if job_ids:
+            query = query.filter(Job.id.in_(job_ids))
+
+        return query.cancel()
+
+    def rerun(self, query: Optional[JobSearch] = None, job_ids: List[str] = None):
+        """Submits all the unsuccessful jobs matching the query to be rerun.
+
+        If both `query` and `job_ids` are None, all rerunnable jobs for the Function
+        will be rerun. If both are provided, they will be combined with an AND operator.
+        Any jobs matched by `query` or `job_ids` which are not associated with
+        this function will be ignored.
+
+        Parameters
+        ----------
+        query : JobSearch, optional
+            Query to filter jobs to rerun.
+        job_ids : List[str], optional
+            List of job ids to rerun.
+        """
+        if self.state != DocumentState.SAVED:
+            raise ValueError("Cannot execute a Function that has not been saved")
+
+        if query is None:
+            query = self.jobs
+        else:
+            query = query.filter(Job.function_id == self.id)
+        if job_ids:
+            query = query.filter(Job.id.in_(job_ids))
+
+        return query.rerun()
+
+    def delete_jobs(
+        self,
+        query: Optional[JobSearch] = None,
+        job_ids: List[str] = None,
+        delete_results: bool = False,
+    ):
+        """Deletes all non-running jobs for the Function matching the given query.
+
+        If both `query` and `job_ids` are None, all jobs for the Function will be deleted.
+        If both are provided, they will be combined with an AND operator. Any jobs matched
+        by `query` or `job_ids` which are not associated with this function will be ignored.
+
+        Also deletes any job log blobs for the jobs. Use `delete_results=True` to delete the
+        job result blobs as well.
+
+        Parameters
+        ----------
+        query : JobSearch, optional
+            Query to filter jobs to delete.
+        job_ids : List[str], optional
+            List of job ids to delete.
+        delete_results : bool, default=False
+            If True, deletes the job result blobs as well.
+        """
+        if self.state != DocumentState.SAVED:
+            raise ValueError(
+                "Cannot cancel jobs for a Function that has not been saved"
+            )
+
+        if query is None:
+            query = self.jobs
+        else:
+            query = query.filter(Job.function_id == self.id)
+        if job_ids:
+            query = query.filter(Job.id.in_(job_ids))
+
+        return query.delete()
+
+    def refresh(self, includes: Optional[str] = None):
         """Updates the Function instance with data from the server."""
-        if self.job_statistics:
+        if self.state == DocumentState.NEW:
+            raise ValueError("Cannot refresh a Function that has not been saved")
+
+        if includes:
+            params = {"include": includes}
+        elif includes is None and self.job_statistics:
             params = {"include": ["job.statistics"]}
         else:
             params = {}
@@ -941,6 +1107,11 @@ class Function(Document):
 
     def iter_results(self, cast_type: Type[Serializable] = None):
         """Iterates over all successful job results."""
+        if self.state != DocumentState.SAVED:
+            raise ValueError(
+                "Cannot retrieve results for a Function that has not been saved"
+            )
+
         for job in self.jobs.filter(Job.status == JobStatus.SUCCESS):
             yield job.result(cast_type=cast_type)
 
@@ -955,32 +1126,118 @@ class Function(Document):
         """
         return list(self.iter_results(cast_type=cast_type))
 
+    def as_completed(self, jobs: Iterable[Job], timeout=None, interval=10):
+        """Yields jobs as they complete.
+
+        Completion includes success, failure, timeout, and canceled.
+
+        Can be used in any iterable context.
+
+        Parameters
+        ----------
+        jobs : Iterable[Job]
+            The jobs to wait for completion. Jobs must be associated with this Function.
+        timeout : int, default=None
+            Maximum time to wait before timing out. If not set, this will continue
+            polling until all jobs have completed.
+        interval : int, default=10
+            Interval in seconds for how often to check if jobs have been completed.
+        """
+        if self.state != DocumentState.SAVED:
+            raise ValueError(
+                "Cannot retrieve jobs for a Function that has not been saved"
+            )
+
+        job_ids = set()
+        for job in jobs:
+            if job.function_id != self.id:
+                raise ValueError(
+                    f"Job {job.id} is not associated with Function {self.id}"
+                )
+            job_ids.add(job.id)
+
+        current_interval = interval
+        chunk_size = MAX_FUNCTION_IDS_PER_REQUEST
+        start_time = time.time()
+        while job_ids:
+            self.refresh()
+            if self.status == FunctionStatus.BUILD_FAILED:
+                raise RuntimeError(
+                    f"Function {self.name} failed to build. Check the build log for more details."
+                )
+
+            hits = set()
+            query_ids = {job_id for job_id in job_ids}
+            # refresh the job state, but only a chunk at a time
+            while query_ids:
+                chunk_ids = set(
+                    itertools.islice(query_ids, min(chunk_size, len(query_ids)))
+                )
+                query_ids -= chunk_ids
+
+                for job in Job.search(client=self._client).filter(
+                    Job.id.in_(list(chunk_ids)) & Job.status.in_(JobStatus.terminal())
+                ):
+                    hits.add(job.id)
+                    yield job
+
+            job_ids -= hits
+
+            if hits:
+                current_interval = interval
+
+            if timeout:
+                t = timeout - (time.time() - start_time)
+                if t <= 0:
+                    raise TimeoutError(
+                        f"Function {self.name} did not complete before timeout!"
+                    )
+
+                t = min(t, current_interval)
+            else:
+                t = current_interval
+
+            # Don't sleep as long as we are picking up hits
+            if not hits:
+                time.sleep(t)
+
+                current_interval = min(current_interval * 2, 60)
+
     def wait_for_completion(self, timeout=None, interval=10):
         """Waits until all submitted jobs for a given Function are completed.
+
+        Completion includes success, failure, timeout, and canceled.
 
         Parameters
         ----------
         timeout : int, default=None
-            Maximum time to wait before timing out. If not set, this will hang until
-            completion.
+            Maximum time to wait before timing out. If not set, this method will
+            block indefinitely.
         interval : int, default=10
-            Interval for how often to check if jobs have been completed.
+            Interval in seconds for how often to check if jobs have been completed.
         """
-        print(f"Function {self.name}: status '{self.status}'")
-        last_status = self.status
+        if self.state != DocumentState.SAVED:
+            raise ValueError("Cannot wait for a Function that has not been saved")
+
         start_time = time.time()
 
         while True:
-            self.refresh()
+            self.refresh(includes=["job.statistics"])
 
-            if self.status != last_status:
-                print(
-                    f"Function {self.name}: status '{last_status}' -> '{self.status}'"
+            if self.status == FunctionStatus.BUILD_FAILED:
+                raise RuntimeError(
+                    f"Function {self.name} failed to build. Check the build log for more details."
                 )
-                last_status = self.status
 
-            if self.status in [FunctionStatus.SUCCESS, FunctionStatus.FAILURE]:
-                break
+            if self.status in [FunctionStatus.READY, FunctionStatus.STOPPED]:
+                job_statistics = getattr(self, "job_statistics", {})
+                if (
+                    job_statistics.get("pending", 0) == 0
+                    and job_statistics.get("running", 0) == 0
+                    and job_statistics.get("cancel", 0) == 0
+                    and job_statistics.get("canceling", 0) == 0
+                ):
+                    break
 
             if timeout:
                 t = timeout - (time.time() - start_time)

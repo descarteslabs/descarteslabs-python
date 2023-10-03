@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import responses
 
-from descarteslabs.catalog import Blob
+from descarteslabs.catalog import Blob, StorageType
 from descarteslabs.compute import Job, JobStatus
 
 from .base import BaseTestCase
@@ -121,6 +121,8 @@ class TestJob(BaseTestCase):
             "function_id": "function-id",
             "id": "some-id",
             "kwargs": {"first": "blah", "second": "blah"},
+            "last_completion_date": None,
+            "last_execution_date": None,
             "runtime": None,
             "status": JobStatus.PENDING,
             "tags": [],
@@ -164,9 +166,11 @@ class TestJob(BaseTestCase):
     @patch.object(Job, "_get_result_namespace")
     @patch.object(Blob, "get_data")
     def test_result_json(self, mock_get_data, mock_get_result_namespace):
-        mock_get_data.return_value = {"test": "blah"}
-        mock_get_result_namespace.return_value = ("some-org:some-user",)
-        job = Job(id="some-id", function_id="some-fn", saved=True)
+        mock_get_data.return_value = json.dumps({"test": "blah"}).encode()
+        mock_get_result_namespace.return_value = "some-org:some-user"
+        job = Job(
+            id="some-id", function_id="some-fn", status=JobStatus.SUCCESS, saved=True
+        )
         assert job.result() == {"test": "blah"}
 
     @responses.activate
@@ -174,8 +178,10 @@ class TestJob(BaseTestCase):
     @patch.object(Blob, "get_data")
     def test_result_float(self, mock_get_data, mock_get_result_namespace):
         mock_get_data.return_value = json.dumps(15.68).encode()
-        mock_get_result_namespace.return_value = ("some-org:some-user",)
-        job = Job(id="some-id", function_id="some-fn", saved=True)
+        mock_get_result_namespace.return_value = "some-org:some-user"
+        job = Job(
+            id="some-id", function_id="some-fn", status=JobStatus.SUCCESS, saved=True
+        )
         assert job.result() == 15.68
 
     @responses.activate
@@ -188,13 +194,39 @@ class TestJob(BaseTestCase):
                 return "custom"
 
         mock_get_data.return_value = "blah"
-        mock_get_result_namespace.return_value = ("some-org:some-user",)
-        job = Job(id="some-id", function_id="some-fn", saved=True)
+        mock_get_result_namespace.return_value = "some-org:some-user"
+        job = Job(
+            id="some-id", function_id="some-fn", status=JobStatus.SUCCESS, saved=True
+        )
         assert job.result(CustomString) == "custom"
 
         with self.assertRaises(ValueError) as ctx:
             job.result(bool)
         assert "must implement Serializable" in str(ctx.exception)
+
+    @patch.object(Job, "refresh")
+    def test_result_not_completed(self, mock_refresh):
+        job = Job(
+            id="some-id", function_id="some-fn", status=JobStatus.RUNNING, saved=True
+        )
+        with self.assertRaises(ValueError) as ctx:
+            job.result()
+        assert "not completed" in str(ctx.exception)
+        assert mock_refresh.call_count == 1
+
+    @responses.activate
+    @patch.object(Job, "_get_result_namespace")
+    @patch.object(Blob, "get", Blob)
+    def test_result_blob(self, mock_get_result_namespace):
+        mock_get_result_namespace.return_value = "some-org:some-user"
+        job = Job(
+            id="some-id", function_id="some-fn", status=JobStatus.SUCCESS, saved=True
+        )
+        blob = job.result_blob()
+        assert isinstance(blob, Blob)
+        assert blob.namespace == "some-org:some-user"
+        assert blob.name == "some-fn/some-id"
+        assert blob.storage_type == StorageType.COMPUTE
 
     @responses.activate
     def test_log(self):

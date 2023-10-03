@@ -498,6 +498,9 @@ class AndExpression(LogicalExpression):
 
     __rand__ = __and__
 
+    def __or__(self, other):
+        return OrExpression([self]) | other
+
     def __repr__(self):
         return "<AndExpression {}>".format(self.parts)
 
@@ -517,6 +520,9 @@ class AndExpression(LogicalExpression):
 
 class OrExpression(LogicalExpression):
     """``True`` if either expression is ``True``, ``False`` otherwise."""
+
+    def __and__(self, other):
+        return AndExpression([self]) & other
 
     def __or__(self, other):
         if isinstance(other, OrExpression):

@@ -43,17 +43,41 @@ class JobStatus(StrEnum):
 
     PENDING = "pending"
     RUNNING = "running"
+    CANCEL = "cancel"
+    CANCELING = "canceling"
     SUCCESS = "success"
     FAILURE = "failure"
     TIMEOUT = "timeout"
+    CANCELED = "canceled"
+
+    @classmethod
+    def terminal(cls):
+        return [
+            cls.SUCCESS,
+            cls.FAILURE,
+            cls.TIMEOUT,
+            cls.CANCELED,
+        ]
 
 
 class JobSearch(Search["Job"]):
+    def cancel(self):
+        response = self._client.session.post(
+            "/jobs/cancel", json=self._serialize(json_encode=False)
+        )
+        return [Job(**job, client=self._client, saved=True) for job in response.json()]
+
     def rerun(self):
         response = self._client.session.post(
             "/jobs/rerun", json=self._serialize(json_encode=False)
         )
         return [Job(**job, client=self._client, saved=True) for job in response.json()]
+
+    def delete(self, delete_results: bool = False):
+        json = self._serialize(json_encode=False)
+        json["delete_results"] = delete_results
+        response = self._client.session.post("/jobs/delete", json=json)
+        return response.json()
 
 
 class Job(Document):
@@ -95,6 +119,18 @@ class Job(Document):
         doc="The exit code of the Job.",
     )
     kwargs: Optional[Dict] = Attribute(dict, doc="The parameters provided to the Job.")
+    last_completion_date: Optional[datetime] = DatetimeAttribute(
+        filterable=True,
+        readonly=True,
+        sortable=True,
+        doc="The date the Job was last completed or canceled.",
+    )
+    last_execution_date: Optional[datetime] = DatetimeAttribute(
+        filterable=True,
+        readonly=True,
+        sortable=True,
+        doc="The date the Job was last executed.",
+    )
     runtime: Optional[int] = Attribute(
         int,
         filterable=True,
@@ -159,6 +195,17 @@ class Job(Document):
         """
         self._client = client or ComputeClient.get_default_client()
         super().__init__(function_id=function_id, args=args, kwargs=kwargs, **extra)
+
+    # support use of jobs in sets
+    def __hash__(self):
+        return hash(self.id)
+
+    # support use of jobs in sets
+    def __eq__(self, other):
+        if not isinstance(other, Job):
+            return False
+
+        return self.id == other.id
 
     def _get_result_namespace(self):
         """Returns the namespace for the Job result blob."""
@@ -243,12 +290,37 @@ class Job(Document):
 
         return search
 
-    def delete(self):
-        """Deletes the Job."""
+    def cancel(self):
+        """Cancels the Job.
+
+        If the Job is already canceled or completed, this will do nothing.
+
+        If the Job is still pending, it will be canceled immediately.
+
+        If the job is running, it will be canceled as soon as possible. However, it may
+        complete before the cancel request is processed.
+        """
+        if self.state != DocumentState.SAVED:
+            raise ValueError("Cannot cancel a Job that has not been saved")
+
+        response = self._client.session.post(f"/jobs/{self.id}/cancel")
+        self._load_from_remote(response.json())
+
+    def delete(self, delete_result: bool = False):
+        """Deletes the Job.
+
+        Also deletes any job log blob for the job. Use `delete_result=True` to delete the
+        job result blob as well.
+
+        Parameters
+        ----------
+        delete_result : bool, False
+            If set, the result of the job will also be deleted.
+        """
         if self.state == DocumentState.NEW:
             raise ValueError("Cannot delete a Job that has not been saved")
 
-        self._client.session.delete(f"/jobs/{self.id}")
+        self._client.session.delete(f"/jobs/{self.id}?delete_results={delete_result}")
         self._deleted = True
 
     def refresh(self, client: ComputeClient = None) -> None:
@@ -279,8 +351,23 @@ class Job(Document):
         Raises
         ------
         ValueError
-            When `cast_type` does not implement Serializable.
+            When job has not completed successfully or
+            when `cast_type` does not implement Serializable.
         """
+        if self.status != JobStatus.SUCCESS:
+            # just check if maybe it is meanwhile done.
+            self.refresh()
+            if self.status != JobStatus.SUCCESS:
+                if self.status in JobStatus.terminal():
+                    raise ValueError(
+                        f"Job {self.id} has not completed successfully, status is {self.status}"
+                    )
+                else:
+                    raise ValueError(
+                        f"Job {self.id} has not completed, status is {self.status}. "
+                        "Please wait for the job to complete."
+                    )
+
         if not catalog_client:
             catalog_client = self._client.catalog_client
 
@@ -314,6 +401,50 @@ class Job(Document):
         except Exception:
             return result
 
+    def result_blob(
+        self,
+        catalog_client: CatalogClient = None,
+    ):
+        """Retrieves the Catalog Blob holding the result of the Job.
+
+        If there is no result Blob, `None` will be returned.
+
+        Parameters
+        ----------
+        catalog_client: CatalogClient, None
+            If set, the result will be retrieved using the configured client.
+            Otherwise, the default client will be used.
+
+        Raises
+        ------
+        ValueError
+            When job has not completed successfully or
+            when `cast_type` does not implement Serializable.
+        """
+        if self.status != JobStatus.SUCCESS:
+            # just check if maybe it is meanwhile done.
+            self.refresh()
+            if self.status != JobStatus.SUCCESS:
+                if self.status in JobStatus.terminal():
+                    raise ValueError(
+                        f"Job {self.id} has not completed successfully, status is {self.status}"
+                    )
+                else:
+                    raise ValueError(
+                        f"Job {self.id} has not completed, status is {self.status}. "
+                        "Please wait for the job to complete."
+                    )
+
+        if not catalog_client:
+            catalog_client = self._client.catalog_client
+
+        return Blob.get(
+            name=f"{self.function_id}/{self.id}",
+            namespace=self._get_result_namespace(),
+            storage_type=StorageType.COMPUTE,
+            client=catalog_client,
+        )
+
     @classmethod
     def search(cls, client: ComputeClient = None) -> JobSearch:
         """Creates a search for Jobs.
@@ -339,26 +470,14 @@ class Job(Document):
             Maximum time to wait before timing out.
             If not set, the call will block until job completion.
         interval : int, default=10
-            Interval for how often to check if jobs have been completed.
+            Interval in seconds for how often to check if jobs have been completed.
         """
-        print(f"Job {self.id}: status '{self.status}' attempt {self.execution_count}")
-        last_status = self.status
-        last_attempt = self.execution_count
         start_time = time.time()
 
         while True:
             self.refresh()
 
-            if self.status != last_status or self.execution_count != last_attempt:
-                print(
-                    "Job {}: status '{}' -> '{}' attempt {}".format(
-                        self.id, last_status, self.status, self.execution_count
-                    )
-                )
-                last_status = self.status
-                last_attempt = self.execution_count
-
-            if self.status in [JobStatus.SUCCESS, JobStatus.FAILURE, JobStatus.TIMEOUT]:
+            if self.status in JobStatus.terminal():
                 break
 
             if timeout:
@@ -399,8 +518,8 @@ class Job(Document):
 
         self._load_from_remote(response.json())
 
-    def log(self, timestamps: bool = True):
-        """Retrieves the log for the job.
+    def iter_log(self, timestamps: bool = True):
+        """Retrieves the log for the job, returning an iterator over the lines.
 
         Parameters
         ----------
@@ -410,9 +529,19 @@ class Job(Document):
 
             You may consider disabling this if you use a structured logger.
         """
-        logs = self._client.iter_log_lines(
+        return self._client.iter_log_lines(
             f"/jobs/{self.id}/log", timestamps=timestamps
         )
 
-        for log in logs:
-            print(log)
+    def log(self, timestamps: bool = True):
+        """Retrieves the log for the job, returning a string.
+
+        Parameters
+        ----------
+        timestamps : bool, True
+            If set, log timestamps will be included and converted to the users system
+            timezone from UTC.
+
+            You may consider disabling this if you use a structured logger.
+        """
+        return "\n".join(self.iter_log(timestamps=timestamps))

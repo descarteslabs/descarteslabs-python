@@ -79,7 +79,7 @@ class FunctionTestCase(BaseTestCase):
             "maximum_concurrency": random.randint(1, 10),
             "timeout": random.randint(60, 900),
             "retry_count": random.randint(1, 10),
-            "status": str(FunctionStatus.RUNNING),
+            "status": str(FunctionStatus.READY),
         }
         return function
 
@@ -522,6 +522,54 @@ class TestFunction(FunctionTestCase):
         assert fn.id == "some-id"
 
     @responses.activate
+    def test_cancel_jobs(self):
+        self.mock_response(
+            responses.POST,
+            "/jobs/cancel",
+            json=[
+                self.make_job(
+                    function_id="some-id", args=[1, 2], status=JobStatus.CANCELED
+                )
+            ],
+        )
+
+        fn = Function(id="some-id", saved=True)
+        jobs = fn.cancel_jobs()
+        assert isinstance(jobs, list)
+        job = jobs[0]
+        assert job.state == "saved"
+        assert job.id
+        assert job.args == [1, 2]
+        assert job.kwargs is None
+        assert job.creation_date == self.now.replace(tzinfo=timezone.utc)
+        assert job.function_id == "some-id"
+        assert job.status == JobStatus.CANCELED
+        self.assert_url_called(
+            "/jobs/cancel",
+            json={"filter": [{"op": "eq", "name": "function_id", "val": "some-id"}]},
+        )
+
+    @responses.activate
+    def test_delete_jobs(self):
+        self.mock_response(
+            responses.POST,
+            "/jobs/delete",
+            json=["some-job-id"],
+        )
+
+        fn = Function(id="some-id", saved=True)
+        jobs = fn.delete_jobs()
+        assert isinstance(jobs, list)
+        assert jobs[0] == "some-job-id"
+        self.assert_url_called(
+            "/jobs/delete",
+            json={
+                "filter": [{"op": "eq", "name": "function_id", "val": "some-id"}],
+                "delete_results": False,
+            },
+        )
+
+    @responses.activate
     def test_rerun(self):
         self.mock_response(
             responses.POST,
@@ -555,7 +603,7 @@ class TestFunction(FunctionTestCase):
             "memory": 2048,
             "maximum_concurrency": 1,
             "retry_count": 1,
-            "status": FunctionStatus.RUNNING,
+            "status": FunctionStatus.READY,
             "timeout": 60,
         }
 
@@ -667,6 +715,114 @@ class TestFunction(FunctionTestCase):
         }
 
     @responses.activate
+    def test_as_completed(self):
+        self.mock_response(
+            responses.GET,
+            "/functions/some-id",
+            json=self.make_function(
+                id="some-id",
+                name="compute-test",
+                status=FunctionStatus.READY,
+                job_statistics={
+                    "pending": 1,
+                    "running": 1,
+                },
+            ),
+        )
+
+        self.mock_response(
+            responses.GET,
+            "/functions/some-id",
+            json=self.make_function(
+                id="some-id",
+                name="compute-test",
+                status=FunctionStatus.READY,
+                job_statistics={
+                    "pending": 0,
+                    "running": 1,
+                },
+            ),
+        )
+
+        self.mock_response(
+            responses.GET,
+            "/functions/some-id",
+            json=self.make_function(
+                id="some-id",
+                name="compute-test",
+                status=FunctionStatus.READY,
+                job_statistics={
+                    "pending": 0,
+                    "running": 0,
+                },
+            ),
+        )
+
+        job1 = Job(
+            **self.make_job(
+                id="job-1",
+                function_id="some-id",
+                args=[1, 2],
+                status=JobStatus.RUNNING,
+                saved=True,
+            )
+        )
+        job2 = Job(
+            **self.make_job(
+                id="job-2",
+                function_id="some-id",
+                args=[3, 4],
+                status=JobStatus.PENDING,
+                saved=True,
+            )
+        )
+
+        self.mock_response(
+            responses.GET,
+            "/jobs",
+            json={
+                "meta": {"page_cursor": None},
+                "data": [
+                    self.make_job(id="job-1", args=[1, 2], status=JobStatus.SUCCESS)
+                ],
+            },
+        )
+
+        self.mock_response(
+            responses.GET,
+            "/jobs",
+            json={
+                "meta": {"page_cursor": None},
+                "data": [],
+            },
+        )
+
+        self.mock_response(
+            responses.GET,
+            "/jobs",
+            json={
+                "meta": {"page_cursor": None},
+                "data": [
+                    self.make_job(id="job-2", args=[3, 4], status=JobStatus.FAILURE)
+                ],
+            },
+        )
+
+        fn = Function(
+            id="some-id",
+            name="compute-test",
+            status=FunctionStatus.READY,
+            saved=True,
+        )
+
+        completed = [
+            job for job in fn.as_completed([job1, job2], timeout=10, interval=1)
+        ]
+        assert len(completed) == 2
+        assert completed[0].id == "job-1"
+        assert completed[1].id == "job-2"
+
+    @responses.activate
     def test_wait_for_completion(self):
         self.mock_response(
             responses.GET,
@@ -674,7 +830,10 @@ class TestFunction(FunctionTestCase):
             json=self.make_function(
                 id="some-id",
                 name="compute-test",
-                status=FunctionStatus.RUNNING,
+                status=FunctionStatus.READY,
+                job_statistics={
+                    "running": 1,
+                },
             ),
         )
         self.mock_response(
@@ -683,7 +842,10 @@ class TestFunction(FunctionTestCase):
             json=self.make_function(
                 id="some-id",
                 name="compute-test",
-                status=FunctionStatus.SUCCESS,
+                status=FunctionStatus.READY,
+                job_statistics={
+                    "running": 0,
+                },
             ),
         )
 
@@ -695,7 +857,7 @@ class TestFunction(FunctionTestCase):
         )
         fn.wait_for_completion(interval=0.1, timeout=5)
         assert fn.state == "saved"
-        assert fn.status == FunctionStatus.SUCCESS
+        assert fn.status == FunctionStatus.READY
 
     @responses.activate
     def test_wait_for_completion_timeout(self):
@@ -705,7 +867,11 @@ class TestFunction(FunctionTestCase):
             json=self.make_function(
                 id="some-id",
                 name="compute-test",
-                status=FunctionStatus.RUNNING,
+                status=FunctionStatus.READY,
+                job_statistics={
+                    "pending": 1,
+                    "running": 1,
+                },
             ),
         )
 
