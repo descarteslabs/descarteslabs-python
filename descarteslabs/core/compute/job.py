@@ -17,7 +17,6 @@ import time
 import warnings
 from datetime import datetime
 from typing import TYPE_CHECKING, Dict, List, Optional, Type
-
 from strenum import StrEnum
 
 from descarteslabs.exceptions import NotFoundError
@@ -207,12 +206,14 @@ class Job(Document):
 
         return self.id == other.id
 
-    def _get_result_namespace(self):
+    def _get_result_namespace(self) -> str:
         """Returns the namespace for the Job result blob."""
-        auth = self._client.auth
-        namespace = f"{auth.namespace}"
-        if auth.payload["org"]:
-            namespace = f"{auth.payload['org']}:{namespace}"
+        namespace = self._client.get_namespace(self.function_id)
+
+        if not namespace:
+            # Fetching the function from the server will set the namespace
+            # during hydration in Function.__init__
+            namespace = self.function.namespace
 
         return namespace
 
@@ -372,10 +373,9 @@ class Job(Document):
             catalog_client = self._client.catalog_client
 
         try:
+            namespace = self._get_result_namespace()
             result = Blob.get_data(
-                name=f"{self.function_id}/{self.id}",
-                namespace=self._get_result_namespace(),
-                storage_type=StorageType.COMPUTE,
+                id=f"{StorageType.COMPUTE}/{namespace}/{self.function_id}/{self.id}",
                 client=catalog_client,
             )
         except NotFoundError:

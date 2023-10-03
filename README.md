@@ -80,6 +80,8 @@ Changelog
 
 - The `Job.result_blob()` will return the Catalog Storage Blob holding the result, if any.
 
+- The `Function` object now has attributes `namespace` and `owner`.
+
 - The `Function.wait_for_completion()` and new `Function.as_completed()` methods provide a richer
   set of functionality for waiting on and handling job completion.
 

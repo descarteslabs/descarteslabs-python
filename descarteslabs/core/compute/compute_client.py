@@ -14,7 +14,7 @@
 
 import json
 from datetime import datetime, timezone
-from typing import Iterator
+from typing import Iterator, Optional
 
 from descarteslabs.auth import Auth
 from descarteslabs.config import get_settings
@@ -25,6 +25,8 @@ from ..common.http.service import DefaultClientMixin
 
 
 class ComputeClient(ApiService, DefaultClientMixin):
+    _namespace_cache = dict()
+
     def __init__(self, url=None, auth=None, catalog_client=None, retries=None):
         if auth is None:
             auth = Auth.get_default_auth()
@@ -64,3 +66,15 @@ class ComputeClient(ApiService, DefaultClientMixin):
                 "client_secret": self.auth.client_secret,
             },
         )
+
+    def get_namespace(self, function_id: str) -> Optional[str]:
+        if function_id in self._namespace_cache:
+            return self._namespace_cache[function_id]
+
+        return None
+
+    def set_namespace(self, function_id: str, namespace: str):
+        if not (function_id or namespace):
+            return
+
+        self._namespace_cache[function_id] = namespace

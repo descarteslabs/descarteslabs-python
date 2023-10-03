@@ -151,6 +151,18 @@ class Function(Document):
         sortable=True,
         doc="The maximum number of Jobs that execute at the same time for this Function.",
     )
+    namespace: str = Attribute(
+        str,
+        filterable=True,
+        readonly=True,
+        doc="The storage namespace for the Function.",
+    )
+    owner: str = Attribute(
+        str,
+        filterable=True,
+        readonly=True,
+        doc="The owner of the Function.",
+    )
     status: FunctionStatus = Attribute(
         FunctionStatus,
         filterable=True,
@@ -287,6 +299,11 @@ class Function(Document):
                 name = self._function.split(".")[-1]
             else:
                 name = self._function.__name__
+
+        # When a Function is hydrated from the server, register the namespace
+        # with the client so that it can be used for subsequent calls.
+        if "id" in extra and "namespace" in extra:
+            self._client.set_namespace(extra["id"], extra["namespace"])
 
         super().__init__(
             name=name,
