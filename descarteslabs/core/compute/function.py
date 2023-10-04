@@ -44,6 +44,7 @@ from typing import (
 import pkg_resources
 from strenum import StrEnum
 
+from descarteslabs.exceptions import ConflictError
 from ..client.deprecation import deprecate
 from ..client.services.service import ThirdPartyService
 from ..common.client import (
@@ -257,6 +258,9 @@ class Function(Document):
             this limit.
         retry_count : int, optional
             Number of times to retry a job if it fails.
+        client : ComputeClient, optional
+            If set, operations on the function will be performed using the configured client.
+            Otherwise, the default client will be used.
 
         Examples
         --------
@@ -319,7 +323,7 @@ class Function(Document):
     def __call__(self, *args, tags: List[str] = None, **kwargs):
         """Execute the function with the given arguments.
 
-        This call will return a long running job that can be used to monitor the state
+        This call will return a Job object that can be used to monitor the state
         of the job.
 
         Returns
@@ -329,8 +333,12 @@ class Function(Document):
 
         Parameters
         ----------
+        args : Any, optional
+            Positional arguments to pass to the function.
         tags : List[str], optional
             A list of tags to apply to the Job.
+        kwargs : Any, optional
+            Keyword arguments to pass to the function.
         """
         self.save()
         job = Job(function_id=self.id, args=args, kwargs=kwargs, tags=tags)
@@ -734,7 +742,7 @@ class Function(Document):
         ----------
         id : str
             Id of function to get.
-        client: ComputeClient, None
+        client: ComputeClient, optional
             If set, the result will be retrieved using the configured client.
             Otherwise, the default client will be used.
         include : List[str], optional
@@ -765,7 +773,7 @@ class Function(Document):
         ----------
         page_size : int, default=100
             Maximum number of results per page.
-        client: ComputeClient, None
+        client: ComputeClient, optional
             If set, the result will be retrieved using the configured client.
             Otherwise, the default client will be used.
         include : List[str], optional
@@ -788,6 +796,12 @@ class Function(Document):
 
         The search is lazy and will be executed when the search is iterated over or
         :py:meth:`Search.collect` is called.
+
+        Parameters
+        ----------
+        client: ComputeClient, optional
+            If set, the result will be retrieved using the configured client.
+            Otherwise, the default client will be used.
 
         Example
         -------
@@ -816,13 +830,20 @@ class Function(Document):
         Notes
         -----
         Credentials are automatically updated when a new Function is created.
+
+        Parameters
+        ----------
+        client: ComputeClient, optional
+            If set, the operation will be performed using the configured client.
+            Otherwise, the default client will be used.
+
         """
         client = client or ComputeClient.get_default_client()
         client.set_credentials()
 
     @property
     def jobs(self) -> JobSearch:
-        """Returns all the Jobs for the Function."""
+        """Returns a JobSearch for all the Jobs for the Function."""
         if self.state != DocumentState.SAVED:
             raise ValueError(
                 "Cannot search for jobs for a Function that has not been saved"
@@ -842,12 +863,18 @@ class Function(Document):
         return gzip.decompress(response.content).decode()
 
     def delete(self):
-        """Deletes the Function and all associated Jobs."""
+        """Deletes the Function and all associated Jobs.
+
+        If any jobs are in a running state, the deletion will fail.
+        """
         if self.state == DocumentState.NEW:
             raise ValueError("Cannot delete a Function that has not been saved")
 
         for job in self.jobs:
-            job.delete()
+            try:
+                job.delete()
+            except ConflictError:
+                pass
 
         self._client.session.delete(f"/functions/{self.id}")
         self._deleted = True
@@ -855,12 +882,14 @@ class Function(Document):
     def disable(self):
         """Disables the Function so that new jobs cannot be submitted."""
         self.enabled = False
-        self.save()
+        if self.state != DocumentState.NEW:
+            self.save()
 
     def enable(self):
         """Enables the Function so that new jobs may be submitted."""
         self.enabled = True
-        self.save()
+        if self.state != DocumentState.NEW:
+            self.save()
 
     def save(self):
         """Creates the Function if it does not already exist.
@@ -1095,7 +1124,7 @@ class Function(Document):
         """
         if self.state != DocumentState.SAVED:
             raise ValueError(
-                "Cannot cancel jobs for a Function that has not been saved"
+                "Cannot delete jobs for a Function that has not been saved"
             )
 
         if query is None:
@@ -1108,7 +1137,16 @@ class Function(Document):
         return query.delete()
 
     def refresh(self, includes: Optional[str] = None):
-        """Updates the Function instance with data from the server."""
+        """Updates the Function instance with data from the server.
+
+        Parameters
+        ----------
+        includes : Optional[str], optional
+            List of additional attributes to include in the response.
+            Allowed values are:
+
+            - "job.statistics": Include statistics about the Job statuses for this Function.
+        """
         if self.state == DocumentState.NEW:
             raise ValueError("Cannot refresh a Function that has not been saved")
 
@@ -1123,7 +1161,13 @@ class Function(Document):
         self._load_from_remote(response.json())
 
     def iter_results(self, cast_type: Type[Serializable] = None):
-        """Iterates over all successful job results."""
+        """Iterates over all successful job results.
+
+        Parameters
+        ----------
+        cast_type : Type[Serializable], optional
+            If set, the results will be cast to the given type.
+        """
         if self.state != DocumentState.SAVED:
             raise ValueError(
                 "Cannot retrieve results for a Function that has not been saved"
@@ -1138,8 +1182,13 @@ class Function(Document):
         Notes
         -----
         This immediately downloads all results into a list and could run out of memory.
-        If the result set is large, strongly consider using :py:meth:`Function.refresh`
+        If the result set is large, strongly consider using :py:meth:`Function.iter_results`
         instead.
+
+        Parameters
+        ----------
+        cast_type : Type[Serializable], optional
+            If set, the results will be cast to the given type.
         """
         return list(self.iter_results(cast_type=cast_type))
 

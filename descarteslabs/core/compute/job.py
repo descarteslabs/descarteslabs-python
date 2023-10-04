@@ -232,7 +232,7 @@ class Job(Document):
         ----------
         id : str
             The id of the Job to fetch.
-        client: ComputeClient, None
+        client: ComputeClient, optional
             If set, the result will be retrieved using the configured client.
             Otherwise, the default client will be used.
         include : List[str], optional
@@ -252,7 +252,9 @@ class Job(Document):
         return cls(**response.json(), client=client, saved=True)
 
     @classmethod
-    def list(cls, page_size: int = 100, **params) -> JobSearch:
+    def list(
+        cls, page_size: int = 100, client: ComputeClient = None, **params
+    ) -> JobSearch:
         """Retrieves an iterable of all jobs matching the given parameters.
 
         If you would like to filter Jobs, use :py:meth:`Job.search`.
@@ -261,6 +263,9 @@ class Job(Document):
         ----------
         page_size : int, default=100
             Maximum number of results per page.
+        client: ComputeClient, optional
+            If set, the result will be retrieved using the configured client.
+            Otherwise, the default client will be used.
 
         Example
         -------
@@ -269,7 +274,7 @@ class Job(Document):
         [Job <job-id1>: pending, Job <job-id2>: pending, Job <job-id3>: pending]
         """
         params = {"page_size": page_size, **params}
-        search = Job.search().param(**params)
+        search = Job.search(client=client).param(**params)
 
         # Deprecation: remove this in a future release
         if "function_id" in params or "status" in params:
@@ -325,7 +330,14 @@ class Job(Document):
         self._deleted = True
 
     def refresh(self, client: ComputeClient = None) -> None:
-        """Update the Job instance with the latest information from the server."""
+        """Update the Job instance with the latest information from the server.
+
+        Parameters
+        ----------
+        client: ComputeClient, optional
+            If set, the result will be retrieved using the configured client.
+            Otherwise, the default client will be used.
+        """
         if self.pull_time or self.provisioning_time:
             params = {"include": ["timings"]}
         else:
@@ -346,8 +358,8 @@ class Job(Document):
         cast_type: Type[Serializable], None
             If set, the result will be deserialized to the given type.
         catalog_client: CatalogClient, None
-            If set, the result will be retrieved using the configured client.
-            Otherwise, the default client will be used.
+            If set, the result will be retrieved using the configured catalog client.
+            Otherwise, the default catalog client will be used.
 
         Raises
         ------
@@ -452,6 +464,12 @@ class Job(Document):
         The search is lazy and will be executed when the search is iterated over or
         :py:meth:`Search.collect` is called.
 
+        Parameters
+        ----------
+        client: ComputeClient, optional
+            If set, the result will be retrieved using the configured client.
+            Otherwise, the default client will be used.
+
         Example
         -------
         >>> from descarteslabs.compute import Job, JobStatus
@@ -535,6 +553,8 @@ class Job(Document):
 
     def log(self, timestamps: bool = True):
         """Retrieves the log for the job, returning a string.
+
+        As logs can potentially be unbounded, consider using :py:meth:`Job.iter_log`.
 
         Parameters
         ----------

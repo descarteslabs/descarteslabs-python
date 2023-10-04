@@ -78,8 +78,11 @@ Changelog
   `JobStatus.SUCCESS`. If `Job.result()` yields an `None` value, this means that there was no
   result (i.e. the execution returned a `None`).
 
-- The `Job.result_blob()` will return the Catalog Storage Blob holding the result, if any.
+- The `Job.result_blob()` method will return the Catalog Storage Blob holding the result, if any.
 
+- The `Job.delete()` method will delete any job logs, but will not delete the job result unless
+  the `delete_results` parameter is supplied.
+  
 - The `Function` object now has attributes `namespace` and `owner`.
 
 - The `Function.wait_for_completion()` and new `Function.as_completed()` methods provide a richer

@@ -26,6 +26,9 @@ AnyTags = Union[Set[str], List[str]]
 
 
 class Serializable:
+    """Interface for serializing objects to bytes as
+    a result of a Function invocation."""
+
     def serialize(self) -> bytes:
         raise NotImplementedError()
 
