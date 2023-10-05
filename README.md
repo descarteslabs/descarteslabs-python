@@ -18,6 +18,13 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## [Unreleased]
+
+## Compute
+
+- Filtering on datetime attributes (such as `Function.created_at`) didn't previously work with anything
+  but `datetime` instances. Now it also handles iso format strings and unix timestamps (int or float).
+
 ## [2.1.0] - 2023-10-04
 
 ## General

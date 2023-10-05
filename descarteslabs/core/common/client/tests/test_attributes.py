@@ -196,11 +196,23 @@ class TestDatetimeAttribute(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             doc = ValidationTest(date={})
-        assert "Expected iso formatted date or unix timestamp" in str(ctx.exception)
+        assert "Expected datetime, iso formatted date or unix timestamp" in str(
+            ctx.exception
+        )
 
         now = datetime.utcnow()
         doc = ValidationTest(date=now.timestamp())
         assert doc.date == now.replace(tzinfo=timezone.utc)
+
+    def test_serialize_filter(self):
+        with self.assertRaises(ValueError) as ctx:
+            DatetimeAttribute()._serialize_to_filter({})
+        assert "Expected datetime, iso formatted date or unix timestamp" in str(
+            ctx.exception
+        )
+
+        value = DatetimeAttribute()._serialize_to_filter("2023-01-01")
+        assert value == datetime(2023, 1, 1, tzinfo=timezone.utc).isoformat()
 
 
 class TestListAttribute(unittest.TestCase):

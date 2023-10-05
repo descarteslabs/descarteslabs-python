@@ -307,9 +307,8 @@ class DatetimeAttribute(Attribute):
             return None
 
         if isinstance(value, (int, float)):
-            value = datetime.fromtimestamp(value, tz=self.remote_timezone)
-
-        if isinstance(value, str):
+            value = datetime.fromtimestamp(value, tz=timezone.utc)
+        elif isinstance(value, str):
             if value.endswith("Z"):
                 value = value[:-1] + "+00:00"
 
@@ -321,14 +320,22 @@ class DatetimeAttribute(Attribute):
 
             return value.astimezone(tz=self.timezone)
         else:
-            raise ValueError("Expected iso formatted date or unix timestamp")
+            raise ValueError("Expected datetime, iso formatted date or unix timestamp")
 
     def serialize(self, value: datetime):
         """Serialize a datetime in local time to server time in iso format."""
         if value is None:
             return value
 
-        return value.astimezone(tz=self.remote_timezone).isoformat()
+        # any value which is not a datetime must be coming from e.g. a filter expression
+        # so we need to convert it to a datetime.
+        if not isinstance(value, datetime):
+            value = self.deserialize(value)
+
+        if isinstance(value, datetime):
+            return value.astimezone(tz=self.remote_timezone).isoformat()
+        else:
+            raise ValueError("Expected datetime, iso formatted date or unix timestamp")
 
 
 class ListAttribute(Attribute):
