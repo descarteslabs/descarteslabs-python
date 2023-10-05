@@ -18,7 +18,7 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## [2.1.0] - 2023-09-21
+## [2.1.0] - 2023-10-04
 
 ## General
 
@@ -43,8 +43,8 @@ Changelog
   formerly included (e.g. TensorFlow, SciKit Learn, PyTorch). This has reduced the base image size by
   an order of magnitude, making function build times and job startup overhead commensurately faster.
   Any functions which require such additional packages can add them in as needed via the `requirements=`
-  parameter. While doing so will increase image size, it will generally still be much better than the prior
-  "Everything and the kitchen sink" approach. Existing Functions with older images will continue
+  parameter. While doing so will increase image size, it will generally still be much smaller and faster
+  than the prior "Everything and the kitchen sink" approach. Existing Functions with older images will continue
   to work as always, but any newly minted `Function`` using the new client will be using one of the new
   slim images.
 
@@ -52,12 +52,14 @@ Changelog
 
 - Job results and logs are now integrated with Catalog Storage, so that results and logs can be
   searched and retrieved directly using the Catalog client as well as using the methods in the Compute
-  client.
+  client. Results are organized under `storage_type=StorageType.COMPUTE`, while logs are organized under
+  `storage_type=StorageType.LOGS`.
 
 - The new `ComputeResult` class can be used to wrap results from a `Function`, allowing the user to
   specify additional attributes for the result which will be stored in the Catalog `Blob` metadata for
   the result. This allows the function to specify properties such as `geometry`, `description`,
-  `expires` and `extra_attributes` for the result `Blob`. The use of `ComputeResult` is not required.
+  `expires`, `extra_attributes`, `writers` and `readers` for the result `Blob`. The use of
+  `ComputeResult` is not required.
 
 - A `Job` can now be assigned arbitrary tags (strings), and searched based on them.
 
