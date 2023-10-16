@@ -18,7 +18,7 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## [Unreleased]
+## [2.1.1] - 2023-10-16
 
 ## Compute
 
