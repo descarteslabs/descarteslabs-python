@@ -18,6 +18,14 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## Unreleased
+
+## Compute
+
+- `Function.delete_jobs` was failing to implement the `delete_results` parameter, so job result blobs
+  were not being deleted. This has been fixed.
+- Add `delete_results` parameter to `Function.delete` for consistency.
+
 ## [2.1.1] - 2023-10-16
 
 ## Compute

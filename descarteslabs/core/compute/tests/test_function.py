@@ -570,6 +570,26 @@ class TestFunction(FunctionTestCase):
         )
 
     @responses.activate
+    def test_delete_jobs_delete_results(self):
+        self.mock_response(
+            responses.POST,
+            "/jobs/delete",
+            json=["some-job-id"],
+        )
+
+        fn = Function(id="some-id", saved=True)
+        jobs = fn.delete_jobs(delete_results=True)
+        assert isinstance(jobs, list)
+        assert jobs[0] == "some-job-id"
+        self.assert_url_called(
+            "/jobs/delete",
+            json={
+                "filter": [{"op": "eq", "name": "function_id", "val": "some-id"}],
+                "delete_results": True,
+            },
+        )
+
+    @responses.activate
     def test_rerun(self):
         self.mock_response(
             responses.POST,

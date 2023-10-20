@@ -862,17 +862,22 @@ class Function(Document):
 
         return gzip.decompress(response.content).decode()
 
-    def delete(self):
+    def delete(self, delete_results: bool = False):
         """Deletes the Function and all associated Jobs.
 
         If any jobs are in a running state, the deletion will fail.
+
+        Parameters
+        ----------
+        delete_results : bool, default=False
+            If True, deletes the job result blobs as well.
         """
         if self.state == DocumentState.NEW:
             raise ValueError("Cannot delete a Function that has not been saved")
 
         for job in self.jobs:
             try:
-                job.delete()
+                job.delete(delete_result=delete_results)
             except ConflictError:
                 pass
 
@@ -1134,7 +1139,7 @@ class Function(Document):
         if job_ids:
             query = query.filter(Job.id.in_(job_ids))
 
-        return query.delete()
+        return query.delete(delete_results=delete_results)
 
     def refresh(self, includes: Optional[str] = None):
         """Updates the Function instance with data from the server.
