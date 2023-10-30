@@ -125,6 +125,7 @@ class TestJob(BaseTestCase):
             "last_execution_date": None,
             "runtime": None,
             "status": JobStatus.PENDING,
+            "statistics": None,
             "tags": [],
             "provisioning_time": None,
             "pull_time": None,

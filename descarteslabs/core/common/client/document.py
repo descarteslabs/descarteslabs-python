@@ -201,7 +201,15 @@ class Document(object):
             if exclude_none and value is None:
                 continue
 
-            value = attribute.serialize(value)
+            if isinstance(value, Document):
+                value = value.to_dict(
+                    only_modified=only_modified,
+                    exclude_readonly=exclude_readonly,
+                    exclude_none=exclude_none,
+                )
+            else:
+                value = attribute.serialize(value)
+
             data[key] = value
 
         return data

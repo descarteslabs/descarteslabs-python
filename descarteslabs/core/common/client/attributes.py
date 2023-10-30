@@ -163,7 +163,7 @@ class Attribute(Property):
             self._raise_immutable("set", instance)
 
         if self.type and value is not None:
-            value = self.deserialize(value, instance)
+            value = self.deserialize(value, instance, force=force)
 
         # Only update the value if it has changed
         if (self.name not in instance._attributes and value is None) or (
@@ -218,7 +218,9 @@ class Attribute(Property):
         """Serializes a value to a filter expression value."""
         return self.serialize(value)
 
-    def deserialize(self, value: Any, instance: "Document" = None) -> T:
+    def deserialize(
+        self, value: Any, instance: "Document" = None, force: bool = False
+    ) -> T:
         """Deserializes a value to the type in the attribute.
 
         Parameters
@@ -232,8 +234,20 @@ class Attribute(Property):
         if value is None or isinstance(value, self.type):
             return value
 
+        from .document import Document
+
         try:
-            return self.type(value)
+            if issubclass(self.type, Document):
+                # Support nested documents
+                if isinstance(value, dict):
+                    return self.type(**value, saved=force)
+                elif isinstance(value, Iterable):
+                    return self.type(*value, saved=force)
+                else:
+                    return self.type(value, saved=force)
+            else:
+                # Support single or native values
+                return self.type(value)
         except (ValueError, TypeError) as e:
             raise ValueError(f"Unable to assign {type(value)} to type {self.type}: {e}")
 
@@ -301,7 +315,9 @@ class DatetimeAttribute(Attribute):
             **extra,
         )
 
-    def deserialize(self, value: str, instance: "Document" = None) -> T:
+    def deserialize(
+        self, value: str, instance: "Document" = None, force: bool = False
+    ) -> T:
         """Deserialize a server datetime."""
         if value is None:
             return None
@@ -378,7 +394,9 @@ class ListAttribute(Attribute):
             **extra,
         )
 
-    def deserialize(self, value: Any, instance: "Document" = None) -> T:
+    def deserialize(
+        self, value: Any, instance: "Document" = None, force: bool = False
+    ) -> T:
         """Deserialize a list of values."""
         if value is None:
             return None

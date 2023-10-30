@@ -17,6 +17,7 @@ import time
 import warnings
 from datetime import datetime
 from typing import TYPE_CHECKING, Dict, List, Optional, Type
+
 from strenum import StrEnum
 
 from descarteslabs.exceptions import NotFoundError
@@ -31,6 +32,7 @@ from ..common.client import (
     Search,
 )
 from .compute_client import ComputeClient
+from .job_statistics import JobStatistics
 from .result import Serializable
 
 if TYPE_CHECKING:
@@ -145,6 +147,14 @@ class Job(Document):
         doc="""The current status of the Job.
 
         The status may occasionally need to be refreshed by calling :py:meth:`Job.refresh`
+        """,
+    )
+    statistics: Optional[Dict] = Attribute(
+        JobStatistics,
+        readonly=True,
+        doc="""The runtime utilization statistics for the Job.
+
+        The statistics include the cpu, memory, and network usage of the Job.
         """,
     )
     tags: List[str] = ListAttribute(
