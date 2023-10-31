@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from descarteslabs.common.client import Attribute, Document, ListAttribute
+from ..common.client import Attribute, Document, ListAttribute
 
 
 class CpuStatistics(Document):
