@@ -1034,7 +1034,7 @@ class CatalogObject(CatalogObjectBase):
     )
     tags = ListAttribute(
         TypedAttribute(str),
-        doc="""list, optional: A list of up to 20 tags.
+        doc="""list, optional: A list of up to 32 tags, each up to 1000 bytes long.
 
         The tags may support the classification and custom filtering of objects.
 
