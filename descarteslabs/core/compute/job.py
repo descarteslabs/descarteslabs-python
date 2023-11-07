@@ -149,7 +149,7 @@ class Job(Document):
         The status may occasionally need to be refreshed by calling :py:meth:`Job.refresh`
         """,
     )
-    statistics: Optional[Dict] = Attribute(
+    statistics: Optional[JobStatistics] = Attribute(
         JobStatistics,
         readonly=True,
         doc="""The runtime utilization statistics for the Job.
