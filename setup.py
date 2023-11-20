@@ -115,7 +115,7 @@ def do_setup():
             "tifffile==2023.4.12;python_version=='3.8'",
             "tifffile>=2023.9.26;python_version>='3.9'",
             "tqdm>=4.32.1",
-            "urllib3>=1.26.12,<2",
+            "urllib3>=1.26.18,<2",
         ],
         extras_require={
             "visualization": viz_requires,
