@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import uuid
 from http import HTTPStatus
 
@@ -36,6 +37,10 @@ from descarteslabs.exceptions import (
 )
 
 from .proxy import ProxyAuthentication
+
+# Disable warnings for retries etc
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+logging.getLogger("urllib3").propagate = False
 
 
 class HttpHeaderKeys:
