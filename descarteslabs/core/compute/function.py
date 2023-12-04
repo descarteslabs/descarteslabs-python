@@ -27,7 +27,6 @@ import time
 import uuid
 import warnings
 import zipfile
-from collections import UserList
 from datetime import datetime
 from tempfile import NamedTemporaryFile
 from typing import (
@@ -146,7 +145,7 @@ class JobBulkCreateError:
         )
 
 
-class JobBulkCreateResult(UserList[Job]):
+class JobBulkCreateResult(List[Job]):
     """The result of a bulk job submission."""
 
     def __init__(self):
