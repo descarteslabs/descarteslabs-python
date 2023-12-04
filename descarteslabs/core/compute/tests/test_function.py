@@ -1,4 +1,5 @@
 import gzip
+import itertools
 import json
 import os
 import random
@@ -8,6 +9,7 @@ from collections.abc import Iterable
 from datetime import timezone
 
 import responses
+from requests import PreparedRequest
 
 from descarteslabs import exceptions
 from descarteslabs.compute import Function, FunctionStatus, Job, JobStatus
@@ -648,16 +650,98 @@ class TestFunction(FunctionTestCase):
         )
 
         fn = Function(id="some-id", saved=True)
-        fn.map(
+        result = fn.map(
             [[1, 2], [3, 4]],
             kwargs=[{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
         )
+        assert result.is_success
+        assert len(result) == 2
+        for job in result:
+            assert isinstance(job, Job)
+
         request = responses.calls[-1].request
-        assert json.loads(request.body) == {
+        request_json: dict = json.loads(request.body)
+        assert request_json.pop("reference_id") is not None
+        assert request_json == {
             "bulk_args": [[1, 2], [3, 4]],
             "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
             "function_id": "some-id",
         }
+
+    @responses.activate
+    def test_map_batching(self):
+        def request_callback(request: PreparedRequest):
+            payload: dict = json.loads(request.body)
+            jobs = []
+
+            args = payload["bulk_args"] or []
+            kwargs = payload["bulk_kwargs"] or []
+
+            for args, kwargs in itertools.zip_longest(args, kwargs):
+                jobs.append(self.make_job(args=args, kwargs=kwargs))
+
+            return (200, {}, json.dumps(jobs))
+
+        responses.add_callback(
+            responses.POST,
+            f"{self.compute_url}/jobs/bulk",
+            callback=request_callback,
+        )
+
+        fn = Function(id="some-id", saved=True)
+        result = fn.map([[n, n + 1] for n in range(3000)])
+        assert result.is_success is True, result.errors
+        assert len(result) == 3000
+        reference_ids = {
+            json.loads(call.request.body)["reference_id"] for call in responses.calls
+        }
+        assert len(reference_ids) == 3
+
+    @responses.activate
+    def test_map_errors(self):
+        global call_count
+        call_count = 0
+
+        def request_callback(request: PreparedRequest):
+            global call_count
+            call_count += 1
+
+            if call_count > 1:
+                return (500, {}, None)
+
+            payload: dict = json.loads(request.body)
+            jobs = []
+
+            args = payload["bulk_args"] or []
+            kwargs = payload["bulk_kwargs"] or []
+
+            for args, kwargs in itertools.zip_longest(args, kwargs):
+                jobs.append(self.make_job(args=args, kwargs=kwargs))
+
+            return (200, {}, json.dumps(jobs))
+
+        responses.add_callback(
+            responses.POST,
+            f"{self.compute_url}/jobs/bulk",
+            callback=request_callback,
+        )
+
+        fn = Function(id="some-id", saved=True)
+        result = fn.map(
+            [[1, 2], [3, 4]],
+            kwargs=[{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+            batch_size=1,
+        )
+        assert result.is_success is False
+        assert len(result) == 1
+        assert len(result.errors) == 1
+        assert result.errors[0].args == [[3, 4]]
+        assert result.errors[0].kwargs == [{"first": 1.0, "second": 2.0}]
+        assert len(responses.calls) == 2
+        reference_ids = {
+            json.loads(call.request.body)["reference_id"] for call in responses.calls
+        }
+        assert len(reference_ids) == 2
 
     @responses.activate
     def test_map_deprecated(self):
@@ -673,7 +757,9 @@ class TestFunction(FunctionTestCase):
             iterargs=[{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
         )
         request = responses.calls[-1].request
-        assert json.loads(request.body) == {
+        request_json: dict = json.loads(request.body)
+        assert request_json.pop("reference_id") is not None
+        assert request_json == {
             "bulk_args": [[1, 2], [3, 4]],
             "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
             "function_id": "some-id",
@@ -706,7 +792,9 @@ class TestFunction(FunctionTestCase):
             kwgenerator(),
         )
         request = responses.calls[-1].request
-        assert json.loads(request.body) == {
+        request_json: dict = json.loads(request.body)
+        assert request_json.pop("reference_id") is not None
+        assert request_json == {
             "bulk_args": [[1, 2], [3, 4]],
             "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
             "function_id": "some-id",
@@ -727,7 +815,9 @@ class TestFunction(FunctionTestCase):
             tags=["tag1", "tag2"],
         )
         request = responses.calls[-1].request
-        assert json.loads(request.body) == {
+        request_json: dict = json.loads(request.body)
+        assert request_json.pop("reference_id") is not None
+        assert request_json == {
             "bulk_args": [[1, 2], [3, 4]],
             "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
             "function_id": "some-id",
