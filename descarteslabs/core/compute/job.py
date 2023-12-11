@@ -16,7 +16,7 @@ import json
 import time
 import warnings
 from datetime import datetime
-from typing import TYPE_CHECKING, Dict, List, Optional, Type
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type
 
 from strenum import StrEnum
 
@@ -119,7 +119,12 @@ class Job(Document):
         sortable=True,
         doc="The exit code of the Job.",
     )
-    kwargs: Optional[Dict] = Attribute(dict, doc="The parameters provided to the Job.")
+    kwargs: Optional[Dict[str, Any]] = Attribute(
+        dict, doc="The parameters provided to the Job."
+    )
+    environment: Optional[Dict[str, str]] = Attribute(
+        dict, doc="The environment variables provided to the Job."
+    )
     last_completion_date: Optional[datetime] = DatetimeAttribute(
         filterable=True,
         readonly=True,
@@ -187,6 +192,7 @@ class Job(Document):
         args: Optional[List] = None,
         kwargs: Optional[Dict] = None,
         client: ComputeClient = None,
+        environment: Optional[Dict[str, str]] = None,
         **extra,
     ):
         """
@@ -198,12 +204,22 @@ class Job(Document):
             A list of positional arguments to pass to the function.
         kwargs : Dict, optional
             A dictionary of named arguments to pass to the function.
+        environment : Dict[str, str], optional
+            Environment variables to be set in the environment of the running Job.
+            Will be merged with environment variables set on the Function, with
+            the Job environment variables taking precedence.
         client: ComputeClient, optional
             The compute client to use for requests.
             If not set, the default client will be used.
         """
         self._client = client or ComputeClient.get_default_client()
-        super().__init__(function_id=function_id, args=args, kwargs=kwargs, **extra)
+        super().__init__(
+            function_id=function_id,
+            args=args,
+            kwargs=kwargs,
+            environment=environment,
+            **extra,
+        )
 
     # support use of jobs in sets
     def __hash__(self):

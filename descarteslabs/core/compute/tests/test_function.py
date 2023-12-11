@@ -83,6 +83,7 @@ class FunctionTestCase(BaseTestCase):
             "retry_count": random.randint(1, 10),
             "status": str(FunctionStatus.READY),
         }
+        function.update(**params)
         return function
 
 
@@ -653,6 +654,7 @@ class TestFunction(FunctionTestCase):
         result = fn.map(
             [[1, 2], [3, 4]],
             kwargs=[{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+            environments=[{"FOO": "BAR"}, {"FOO": "BAZ"}],
         )
         assert result.is_success
         assert len(result) == 2
@@ -665,6 +667,7 @@ class TestFunction(FunctionTestCase):
         assert request_json == {
             "bulk_args": [[1, 2], [3, 4]],
             "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+            "bulk_environments": [{"FOO": "BAR"}, {"FOO": "BAZ"}],
             "function_id": "some-id",
         }
 
@@ -676,9 +679,10 @@ class TestFunction(FunctionTestCase):
 
             args = payload["bulk_args"] or []
             kwargs = payload["bulk_kwargs"] or []
+            environments = payload["bulk_environments"] or []
 
-            for args, kwargs in itertools.zip_longest(args, kwargs):
-                jobs.append(self.make_job(args=args, kwargs=kwargs))
+            for args, kwargs, envs in itertools.zip_longest(args, kwargs, environments):
+                jobs.append(self.make_job(args=args, kwargs=kwargs, environments=envs))
 
             return (200, {}, json.dumps(jobs))
 
@@ -762,6 +766,7 @@ class TestFunction(FunctionTestCase):
         assert request_json == {
             "bulk_args": [[1, 2], [3, 4]],
             "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+            "bulk_environments": None,
             "function_id": "some-id",
         }
 
@@ -787,9 +792,14 @@ class TestFunction(FunctionTestCase):
             yield inner(int)
             yield inner(float)
 
+        def envgenerator():
+            for i in range(2):
+                yield {"FOO": str(i)}
+
         fn.map(
             generator(),
             kwgenerator(),
+            environments=envgenerator(),
         )
         request = responses.calls[-1].request
         request_json: dict = json.loads(request.body)
@@ -797,6 +807,7 @@ class TestFunction(FunctionTestCase):
         assert request_json == {
             "bulk_args": [[1, 2], [3, 4]],
             "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+            "bulk_environments": [{"FOO": "0"}, {"FOO": "1"}],
             "function_id": "some-id",
         }
 
@@ -820,6 +831,7 @@ class TestFunction(FunctionTestCase):
         assert request_json == {
             "bulk_args": [[1, 2], [3, 4]],
             "bulk_kwargs": [{"first": 1, "second": 2}, {"first": 1.0, "second": 2.0}],
+            "bulk_environments": None,
             "function_id": "some-id",
             "tags": ["tag1", "tag2"],
         }

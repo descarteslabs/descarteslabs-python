@@ -13,7 +13,12 @@ from .base import BaseTestCase
 class TestCreateJob(BaseTestCase):
     @responses.activate
     def test_create(self):
-        params = dict(function_id="some-fn", args=[1, 2], kwargs={"key": "blah"})
+        params = dict(
+            function_id="some-fn",
+            args=[1, 2],
+            kwargs={"key": "blah"},
+            environment={"FOO": "BAR"},
+        )
         self.mock_job_create(params)
 
         job = Job(**params)
@@ -108,6 +113,7 @@ class TestJob(BaseTestCase):
                 function_id="function-id",
                 args=[1, 2],
                 kwargs={"first": "blah", "second": "blah"},
+                environment={"FOO": "BAR"},
             ),
         )
         job = Job.get("some-id")
@@ -121,6 +127,7 @@ class TestJob(BaseTestCase):
             "function_id": "function-id",
             "id": "some-id",
             "kwargs": {"first": "blah", "second": "blah"},
+            "environment": {"FOO": "BAR"},
             "last_completion_date": None,
             "last_execution_date": None,
             "runtime": None,

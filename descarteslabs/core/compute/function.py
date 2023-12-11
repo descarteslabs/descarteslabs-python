@@ -124,12 +124,14 @@ class JobBulkCreateError:
         function: "Function",
         args,
         kwargs,
+        environments,
         exception: Exception,
         reference_id: str,
     ):
         self.function = function
         self.args = args
         self.kwargs = kwargs
+        self.environments = environments
         self.exception = exception
         self.reference_id = reference_id
 
@@ -250,6 +252,10 @@ class Function(Document):
         filterable=True,
         sortable=True,
         doc="Whether the Function will be placed into READY status once building is complete.",
+    )
+    environment: Dict[str, str] = Attribute(
+        dict,
+        doc="The environment variables to set for Jobs run by the Function.",
     )
     modified_date: datetime = DatetimeAttribute(
         filterable=True,
@@ -376,7 +382,13 @@ class Function(Document):
             **extra,
         )
 
-    def __call__(self, *args, tags: List[str] = None, **kwargs):
+    def __call__(
+        self,
+        *args,
+        tags: List[str] = None,
+        environment: Dict[str, str] = None,
+        **kwargs,
+    ):
         """Execute the function with the given arguments.
 
         This call will return a Job object that can be used to monitor the state
@@ -395,9 +407,19 @@ class Function(Document):
             A list of tags to apply to the Job.
         kwargs : Any, optional
             Keyword arguments to pass to the function.
+        environment : Dict[str, str], optional
+            Environment variables to be set in the environment of the running Job.
+            Will be merged with environment variables set on the Function, with
+            the Job environment variables taking precedence.
         """
         self.save()
-        job = Job(function_id=self.id, args=args, kwargs=kwargs, tags=tags)
+        job = Job(
+            function_id=self.id,
+            args=args,
+            kwargs=kwargs,
+            environment=environment,
+            tags=tags,
+        )
         job.save()
         return job
 
@@ -1050,6 +1072,7 @@ class Function(Document):
         kwargs: Iterable[Mapping[str, Any]] = None,
         tags: List[str] = None,
         batch_size: int = 1000,
+        environments: Iterable[Mapping[str, str]] = None,
     ) -> JobBulkCreateResult:
         """Submits multiple jobs efficiently with positional args to each function call.
 
@@ -1088,6 +1111,10 @@ class Function(Document):
         kwargs : Iterable[Mapping[str, Any]], optional
             An iterable of Mappings with keyword arguments. For each outer element, the Mapping will
             be expanded into keyword arguments for the function.
+        environments : Iterable[Mapping[str, str]], optional
+            AN iterable of Mappings of Environment variables to be set in the environment of the
+            running Jobs. The values for each job will be merged with environment variables set
+            on the Function, with the Job environment variables taking precedence.
         tags : List[str], optional
             A list of tags to apply to all jobs submitted.
         batch_size : int, default=1000
@@ -1124,19 +1151,29 @@ class Function(Document):
                     "The number of kwargs must match the number of args. "
                     f"Got {len(args)} args and {len(kwargs)} kwargs."
                 )
+        if environments is not None:
+            environments = [dict(mapping) for mapping in environments]
+            if len(environments) != len(args):
+                raise ValueError(
+                    "The number of environments must match the number of args. "
+                    f"Got {len(args)} args and {len(environments)} environments."
+                )
 
         result = JobBulkCreateResult()
 
         # Send the jobs in batches of batch_size
-        for index, (positional, named) in enumerate(
+        for index, (positional, named, env) in enumerate(
             itertools.zip_longest(
-                batched(args, batch_size), batched(kwargs or [], batch_size)
+                batched(args, batch_size),
+                batched(kwargs or [], batch_size),
+                batched(environments or [], batch_size),
             )
         ):
             payload = {
                 "function_id": self.id,
                 "bulk_args": positional,
                 "bulk_kwargs": named,
+                "bulk_environments": env,
                 "reference_id": str(uuid.uuid4()),
             }
 
@@ -1162,6 +1199,7 @@ class Function(Document):
                         function=self,
                         args=payload["bulk_args"],
                         kwargs=payload["bulk_kwargs"],
+                        environments=payload["bulk_environments"],
                         reference_id=payload["reference_id"],
                         exception=exc,
                     )

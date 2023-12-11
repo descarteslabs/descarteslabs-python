@@ -17,10 +17,36 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
+## Unreleased
 
+### Catalog
+
+- The `tags` attributes on Catalog objects can now contain up to 32 elements, each up to 1000 characters long.
+  But why would you even want to go there?
+
+### Compute
+
+- `Function` and `Job` objects now have a new `environment` attribute which can be used to define environment
+  variables for the jobs when they are run.
+- Breaking Change: The `Function.map` method previously had no bound on how many jobs could be created at one time.
+  This led to operational problems with very large numbers of jobs. Now it submits jobs in batches (up to 1000
+  jobs per batch) to avoid request timeouts, and is more robust on retryable errors so that duplicate jobs are not
+  submitted accidently. There is still no bound on how many jobs you may create with a single call to `Function.map`.
+  Additionally, since it is possible that some jobs may be successfully submitted, and others not, the return
+  value, while still behaving as a list of `Job`s, is now a `JobBulkCreateResult` object which has a `is_success`
+  and an `error` property which can be used to determine if all submissions were successful, what errors may
+  have occurred, and what jobs have actually been created. Only if the first batch fails hard will the method
+  raise an exception.
+
+### General
+
+- The minimum required version of `urllib3` has been bumped to 1.26.18 to address a security vulnerability.
+- The old client version v1.12.1 is reaching end of life and will no longer be supported as of February 2024.
+  You can expect the version to stop working at any point after that as legacy backend support is turned off.
+  
 ## [2.1.2] - 2023-10-31
 
-## Compute
+### Compute
 
 - `Function.delete_jobs` was failing to implement the `delete_results` parameter, so job result blobs
   were not being deleted. This has been fixed.
@@ -31,24 +57,24 @@ Changelog
 
 ## [2.1.1] - 2023-10-16
 
-## Compute
+### Compute
 
 - Filtering on datetime attributes (such as `Function.created_at`) didn't previously work with anything
   but `datetime` instances. Now it also handles iso format strings and unix timestamps (int or float).
 
 ## [2.1.0] - 2023-10-04
 
-## General
+### General
 
 - Following our lifecycle policy, client versions v1.11.0 and earlier are no longer supported. They may
   cease to work with the Platform at any time.
   
-## Catalog
+### Catalog
 
 - The Catalog `Blob` class now has a `get_data()` method which can be used to retrieve the blob
   data directly given the id, without having to first retrieve the `Blob` metadata.
 
-## Compute
+### Compute
 
 - *Breaking Change* The status values for `Function` and `Job` objects have changed, to provide a
   better experience managing the flow of jobs. Please see the updated Compute guide for a full explanation.
@@ -125,7 +151,7 @@ Changelog
 
 - The compute package was restructured to make all the useful and relevant classes available at the top level.
 
-## Utils
+### Utils
 
 - Property filters can now be deserialized as well as serialized.
 
