@@ -36,13 +36,19 @@ if sys.version_info >= (3, 12):
 
 def clear_client_state():
     """Clear all cached client state."""
-    from .auth import Auth
+    from descarteslabs.auth import Auth
     from ..common.http.service import DefaultClientMixin
-    from ..scenes.helpers import BANDS_BY_PRODUCT_CACHE
+    from descarteslabs.catalog.helpers import (
+        BANDS_BY_PRODUCT_CACHE as catalog_bands_by_product_cache,
+    )
+    from descarteslabs.scenes.helpers import (
+        BANDS_BY_PRODUCT_CACHE as scenes_bands_by_product_cache,
+    )
 
     Auth.set_default_auth(None)
     DefaultClientMixin.clear_all_default_clients()
-    BANDS_BY_PRODUCT_CACHE.clear()
+    catalog_bands_by_product_cache.clear()
+    scenes_bands_by_product_cache.clear()
 
 
 __all__ = ["clear_client_state"]

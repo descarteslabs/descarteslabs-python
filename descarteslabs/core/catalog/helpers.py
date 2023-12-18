@@ -25,7 +25,10 @@ from .search import Search
 from .image_types import DownloadFileFormat, ResampleAlgorithm
 
 
-@cachetools.cached(cachetools.TTLCache(maxsize=256, ttl=600), key=lambda p, c: p)
+BANDS_BY_PRODUCT_CACHE = cachetools.TTLCache(maxsize=256, ttl=600)
+
+
+@cachetools.cached(BANDS_BY_PRODUCT_CACHE, key=lambda p, c: p)
 def cached_bands_by_product(product_id, client):
     bands = {
         band.name: band
