@@ -243,7 +243,7 @@ class ImageCollection(Collection):
             Whether to also return a list of dicts about the rasterization of
             each image, including the coordinate system WKT and geotransform matrix.
             Generally only useful if you plan to upload data derived from this
-            image back to the Descartes catalog, or use it with GDAL.
+            image back to the Descartes Labs catalog, or use it with GDAL.
         resampler : `ResampleAlgorithm`, default `ResampleAlgorithm.NEAR`
             Algorithm used to interpolate pixel values when scaling and transforming
             each image to its new resolution or SRS.
@@ -491,7 +491,7 @@ class ImageCollection(Collection):
             Whether to also return a dict of information about the rasterization
             of the images, including the coordinate system WKT and geotransform matrix.
             Generally only useful if you plan to upload data derived
-            from this image back to the Descartes catalog, or use it with GDAL.
+            from this image back to the Descartes Labs catalog, or use it with GDAL.
         resampler : `ResampleAlgorithm`, default `ResampleAlgorithm.NEAR`
             Algorithm used to interpolate pixel values when scaling and transforming
             the image to its new resolution or SRS.
@@ -595,7 +595,7 @@ class ImageCollection(Collection):
             arr, info = Raster.get_default_client().ndarray(**full_raster_args)
         except NotFoundError:
             raise NotFoundError(
-                "Some or all of these IDs don't exist in the Descartes catalog: {}".format(
+                "Some or all of these IDs don't exist in the Descartes Labs catalog: {}".format(
                     full_raster_args["inputs"]
                 )
             )
