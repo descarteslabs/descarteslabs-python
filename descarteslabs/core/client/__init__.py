@@ -41,14 +41,10 @@ def clear_client_state():
     from descarteslabs.catalog.helpers import (
         BANDS_BY_PRODUCT_CACHE as catalog_bands_by_product_cache,
     )
-    from descarteslabs.scenes.helpers import (
-        BANDS_BY_PRODUCT_CACHE as scenes_bands_by_product_cache,
-    )
 
     Auth.set_default_auth(None)
     DefaultClientMixin.clear_all_default_clients()
     catalog_bands_by_product_cache.clear()
-    scenes_bands_by_product_cache.clear()
 
 
 __all__ = ["clear_client_state"]

@@ -18,7 +18,6 @@
 
 import argparse
 from ..auth.cli import auth_handler
-from ..services.metadata.cli import metadata_handler
 from ..services.raster.cli import scales, raster_handler
 from ..version import __version__
 
@@ -32,35 +31,6 @@ auth_parser.add_argument(
     "command",
     choices=["login", "token", "name", "groups", "payload", "env", "version"],
     help="The action to take (e.g. login, etc.)",
-)
-
-# Metadata Group
-metadata_parser = subparsers.add_parser("metadata")
-metadata_parser.add_argument(
-    "command", choices=["summary", "search", "keys", "get"], help="The action to take"
-)
-metadata_parser.add_argument("argument", nargs="?")
-metadata_parser.add_argument("-url", help="The url of the service")
-metadata_parser.add_argument("-place", help="A slug for a named place")
-metadata_parser.add_argument(
-    "-start_datetime", help="Start of valid date/time range (inclusive)"
-)
-metadata_parser.add_argument(
-    "-end_datetime", help="End of valid date/time range (inclusive)"
-)
-metadata_parser.add_argument("-geom", help="Region of interest as GeoJSON or WKT")
-metadata_parser.add_argument(
-    "-params",
-    help="JSON String of additional key/value pairs for searching properties: tile_id, cloud_fraction, etc.",
-)  # NOQA
-metadata_parser.add_argument(
-    "-limit", default=100, help="Number of items to return (default 100)", type=int
-)
-metadata_parser.add_argument("-offset", help="Number of items to skip (default 0)")
-metadata_parser.add_argument(
-    "-bbox",
-    help="Whether or not to use a bounding box filter (default: false)",
-    action="store_true",
 )
 
 # Raster Group
@@ -82,14 +52,12 @@ auth_parser = subparsers.add_parser("version")
 def handle(args):
     if args.group == "auth":
         auth_handler(args)
-    elif args.group == "metadata":
-        metadata_handler(args)
     elif args.group == "raster":
         raster_handler(args)
     elif args.group == "version":
         print(__version__)
     else:
-        print("invalid command: choose from 'auth', 'metadata', 'raster', 'version'")
+        print("invalid command: choose from 'auth', 'raster', 'version'")
 
 
 if __name__ == "__main__":

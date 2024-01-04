@@ -114,18 +114,6 @@ class TestImage(ClientTestCase):
                 },
             },
         )
-        # product derived bands request
-        self.mock_response(
-            responses.PUT,
-            {
-                "meta": {"count": 0},
-                "data": [],
-                "jsonapi": {"version": "1.0"},
-                "links": {
-                    "self": "https://example.com/catalog/v2/derived_bands",
-                },
-            },
-        )
 
         i = Image.get("p1:myimage", client=self.client)
         assert "p1" == i.product.id

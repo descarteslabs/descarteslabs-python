@@ -26,7 +26,6 @@ from ..common.geo import GeoContext, AOI
 from ..client.services.raster import Raster
 
 from .attributes import ResolutionUnit
-from .band import DerivedBand
 from .image_types import ResampleAlgorithm, DownloadFileFormat
 from .helpers import bands_to_list, cached_bands_by_product, download, is_path_like
 from .scaling import multiproduct_scaling_parameters, append_alpha_scaling
@@ -75,9 +74,7 @@ class ImageCollection(Collection):
                     band.resolution
                     for product_id in product_bands
                     for band in product_bands[product_id].values()
-                    if not isinstance(band, DerivedBand)
-                    and band.resolution is not None
-                    and band.resolution.value
+                    if band.resolution is not None and band.resolution.value
                 ]
 
                 if resolutions:

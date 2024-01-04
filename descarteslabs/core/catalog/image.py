@@ -1000,8 +1000,8 @@ class Image(NamedCatalogObject):
         ----------
         bands : str or Sequence[str]
             Band names to load. Can be a single string of band names
-            separated by spaces (``"red green blue derived:ndvi"``),
-            or a sequence of band names (``["red", "green", "blue", "derived:ndvi"]``).
+            separated by spaces (``"red green blue"``),
+            or a sequence of band names (``["red", "green", "blue"]``).
             Names must be keys in ``self.properties.bands``.
             If the alpha band is requested, it must be last in the list
             to reduce rasterization errors.
@@ -1249,8 +1249,8 @@ class Image(NamedCatalogObject):
         ----------
         bands : str or Sequence[str]
             Band names to load. Can be a single string of band names
-            separated by spaces (``"red green blue derived:ndvi"``),
-            or a sequence of band names (``["red", "green", "blue", "derived:ndvi"]``).
+            separated by spaces (``"red green blue"``),
+            or a sequence of band names (``["red", "green", "blue"]``).
             Names must be keys in ``self.properties.bands``.
         geocontext : :class:`~descarteslabs.common.geo.geocontext.GeoContext`, default None
             A :class:`~descarteslabs.common.geo.geocontext.GeoContext` to use when loading this image.

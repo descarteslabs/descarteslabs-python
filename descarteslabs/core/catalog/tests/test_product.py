@@ -22,9 +22,7 @@ from datetime import datetime
 
 from descarteslabs.exceptions import BadRequestError
 
-from .. import properties
 from ..attributes import AttributeValidationError
-from ..band import DerivedBand
 from ..catalog_base import DocumentState, DeletedObjectError
 from ..image_upload import ImageUploadStatus
 from ..product import (
@@ -502,110 +500,6 @@ class TestProduct(ClientTestCase):
         assert failed_upload.id == "2"
         assert failed_upload.image_id == product_id + ":image2"
         assert failed_upload.status == ImageUploadStatus.FAILURE
-
-    @responses.activate
-    def test_derived_bands(self):
-        self.mock_response(
-            responses.PUT,
-            {
-                "data": [
-                    {
-                        "type": "derived_band",
-                        "attributes": {
-                            "owners": ["org:descarteslabs"],
-                            "writers": None,
-                            "data_range": [0.0, 255.0],
-                            "name": "derived:ndvi",
-                            "data_type": "Byte",
-                            "tags": None,
-                            "readers": ["group:descarteslabs:engineering"],
-                            "function_name": "test",
-                            "extra_properties": {},
-                            "description": None,
-                            "physical_range": None,
-                            "bands": ["red", "nir"],
-                        },
-                        "id": "derived:ndvi",
-                    },
-                    {
-                        "type": "derived_band",
-                        "attributes": {
-                            "owners": ["org:descarteslabs"],
-                            "writers": None,
-                            "data_range": [0.0, 255.0],
-                            "name": "green",
-                            "data_type": "Byte",
-                            "tags": None,
-                            "readers": ["group:descarteslabs:engineering"],
-                            "function_name": "test",
-                            "extra_properties": {},
-                            "description": None,
-                            "physical_range": None,
-                            "bands": ["blue"],
-                        },
-                        "id": "derived:rsqrt",
-                    },
-                ],
-                "links": {
-                    "self": "https://www.example.com/catalog/v2/products/p1/relationships/derived_bands",
-                    "related": None,
-                    "first": "https://www.example.com/catalog/v2/products/p1/relationships/derived_bands",
-                },
-                "jsonapi": {"version": "1.0"},
-            },
-        )
-        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
-        derived_bands = list(p.derived_bands())
-        assert responses.calls[
-            0
-        ].request.url == "{}/products/{}/relationships/derived_bands".format(
-            self.url, p.id
-        )
-        assert len(derived_bands) == 2
-        assert isinstance(derived_bands[0], DerivedBand)
-
-    @responses.activate
-    def test_derived_bands_filters(self):
-        p = Product(id="p1", name="Test Product", client=self.client, _saved=True)
-        self.mock_response(
-            responses.PUT,
-            {
-                "data": [
-                    {
-                        "type": "derived_band",
-                        "attributes": {
-                            "owners": ["org:descarteslabs"],
-                            "writers": None,
-                            "data_range": [0.0, 255.0],
-                            "name": "green",
-                            "data_type": "Byte",
-                            "tags": None,
-                            "readers": ["group:descarteslabs:engineering"],
-                            "function_name": "test",
-                            "extra_properties": {},
-                            "description": None,
-                            "physical_range": None,
-                            "bands": ["blue"],
-                        },
-                        "id": "derived:rsqrt",
-                    }
-                ],
-                "links": {
-                    "self": "https://www.example.com/catalog/v2/products/p1/relationships/derived_bands",
-                    "related": None,
-                    "first": "https://www.example.com/catalog/v2/products/p1/relationships/derived_bands",
-                },
-                "jsonapi": {"version": "1.0"},
-            },
-        )
-        s = p.derived_bands().filter(properties.name == "green")
-        filtered_derived_bands = list(s)
-        req = responses.calls[0].request
-        assert req.url == "{}/products/{}/relationships/derived_bands".format(
-            self.url, p.id
-        )
-        assert s._serialize_filters() == [{"op": "eq", "name": "name", "val": "green"}]
-        assert len(filtered_derived_bands) == 1
 
     @responses.activate
     def test_core_product(self):

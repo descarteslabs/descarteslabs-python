@@ -23,12 +23,14 @@ Changelog
 
 - The `tags` attributes on Catalog objects can now contain up to 32 elements, each up to 1000 characters long.
   But why would you even want to go there?
+- *Breaking Change*: Derived bands, never supported in the AWS environment and catalog products, have been
+  removed.
 
 ### Compute
 
 - `Function` and `Job` objects now have a new `environment` attribute which can be used to define environment
   variables for the jobs when they are run.
-- Breaking Change: The `Function.map` method previously had no bound on how many jobs could be created at one time.
+- *Breaking Change*: The `Function.map` method previously had no bound on how many jobs could be created at one time.
   This led to operational problems with very large numbers of jobs. Now it submits jobs in batches (up to 1000
   jobs per batch) to avoid request timeouts, and is more robust on retryable errors so that duplicate jobs are not
   submitted accidently. There is still no bound on how many jobs you may create with a single call to `Function.map`.
@@ -40,9 +42,11 @@ Changelog
 
 ### General
 
-- The minimum required version of `urllib3` has been bumped to 1.26.18 to address a security vulnerability.
-- The old client version v1.12.1 is reaching end of life and will no longer be supported as of February 2024.
+- The old client version v1.12.1 is reaching end of life and will longer be supported as of February 2024.
   You can expect the version to stop working at any point after that as legacy backend support is turned off.
+- *Breaking Change*: The deprecated `Scenes` client API has been removed.
+- *Breaking Change*: The deprecated `Metadata` client API has been removed.
+- The minimum required version of `urllib3` has been bumped to 1.26.18 to address a security vulnerability.
   
 ## [2.1.2] - 2023-10-31
 

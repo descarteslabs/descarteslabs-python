@@ -4,9 +4,9 @@ Compositing Imagery with Catalog
 ================================
 
 Most often, our area of interest (AOI) does not conform to the arbitrary boundaries
-of an image as collected by the satellite. The Scenes API enables us to
-retrieve imagery mosaicked across our AOI. This example illustrates how Scenes
-mosaics imagery, and how we can format our call to Scenes to group images
+of an image as collected by the satellite. The Catalog API enables us to
+retrieve imagery mosaicked across our AOI. This example illustrates how Catalog
+mosaics imagery, and how we can format our call to Catalog to group images
 by acquisition date (and/or any other metadata property).
 
 

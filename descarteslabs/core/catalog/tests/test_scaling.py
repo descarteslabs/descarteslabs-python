@@ -19,7 +19,6 @@ from .. import (
     SpectralBand,
     ClassBand,
     MaskBand,
-    DerivedBand,
     ProcessingStepAttribute,
 )
 from ..scaling import scaling_parameters, multiproduct_scaling_parameters
@@ -175,12 +174,6 @@ class TestScaling(unittest.TestCase):
         bands = {
             "one": SpectralBand(id="foo:one", data_type="UInt16"),
             "two": SpectralBand(id="foo:two", data_type="UInt16"),
-            "derived:three": DerivedBand(
-                id="derived:three", data_type="UInt16", _saved=True
-            ),
-            "derived:one": DerivedBand(
-                id="derived:one", data_type="UInt16", _saved=True
-            ),
             "its_a_byte": ClassBand(id="foo:its_a_byte", data_type="Byte"),
             "signed": SpectralBand(id="foo:signed", data_type="Int16"),
             "alpha": MaskBand(id="foo:alpha", data_type="Byte"),
@@ -202,7 +195,7 @@ class TestScaling(unittest.TestCase):
         assert (
             scaling_parameters(
                 bands,
-                ["one", "two", "derived:three", "derived:one"],
+                ["one", "two"],
                 None,
                 None,
                 None,
@@ -223,14 +216,6 @@ class TestScaling(unittest.TestCase):
 
         with pytest.raises(ValueError, match="is not available"):
             scaling_parameters(bands, ["one", "woohoo"], None, None, None)
-        with pytest.raises(ValueError, match="did you mean"):
-            scaling_parameters(
-                bands,
-                ["one", "three"],
-                None,
-                None,
-                None,
-            )  # should hint that derived:three exists
 
     def test_scaling_parameters_none(self):
         scales, data_type = scaling_parameters(

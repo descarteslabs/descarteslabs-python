@@ -20,8 +20,7 @@ from descarteslabs.exceptions import NotFoundError, BadRequestError
 from ..client.services.raster import Raster
 from ..common.property_filtering import Properties
 
-from .band import Band, DerivedBand
-from .search import Search
+from .band import Band
 from .image_types import DownloadFileFormat, ResampleAlgorithm
 
 
@@ -36,17 +35,6 @@ def cached_bands_by_product(product_id, client):
             Properties().product_id == product_id
         )
     }
-    bands.update(
-        {
-            band.id: band
-            for band in Search(
-                DerivedBand,
-                url="/products/{}/relationships/derived_bands".format(product_id),
-                client=client,
-                includes=False,
-            )
-        }
-    )
     return bands
 
 

@@ -16,10 +16,9 @@ from collections.abc import Iterable, Mapping, MutableMapping
 
 from strenum import StrEnum
 
-from ..client.deprecation import deprecate
 from ..common.collection import Collection
 from ..common.property_filtering import Properties
-from .catalog_base import CatalogObject, _new_abstract_class
+from .catalog_base import _new_abstract_class
 from .named_catalog_base import NamedCatalogObject
 from .attributes import (
     Attribute,
@@ -900,115 +899,3 @@ class GenericBand(Band):
     physical_range_unit = Attribute(doc="str, optional: Unit of the physical range.")
     colormap_name = EnumAttribute(Colormap, doc=Band._DOC_COLORMAPNAME)
     colormap = Attribute(doc=Band._DOC_COLORMAP)
-
-
-class DerivedBand(CatalogObject):
-    """A band with pixel values computed from the data in other bands.
-
-    A type of band that is the result of a pixel function applied to one or more
-    existing bands. This object type only supports read operations;
-    they cannot be created, updated, or deleted using this client.
-
-    Instantiating a derived band can only be done through `Band.get()
-    <descarteslabs.catalog.Band.get>`, or `Band.search()
-    <descarteslabs.catalog.Band.search>`.
-
-    Parameters
-    ----------
-    client : CatalogClient, optional
-        A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
-        The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
-        be used if not set.
-    kwargs : dict, optional
-        You cannot set any additional keyword arguments as a derived band is readonly.
-    """
-
-    _doc_type = "derived_band"
-    _url = "/derived_bands"
-    # _collection_type set below due to circular problems
-
-    name = Attribute(
-        readonly=True,
-        doc="""str, readonly: The name of the derived band, globally unique.
-
-        *Filterable, sortable*.
-        """,
-    )
-    description = Attribute(
-        readonly=True, doc="str, readonly: " + Band._DOC_DESCRIPTION
-    )
-    data_type = EnumAttribute(
-        DataType, readonly=True, doc="str or DataType, readonly: " + Band._DOC_DATATYPE
-    )
-    data_range = Attribute(
-        readonly=True, doc="tuple(float, float), readonly: " + Band._DOC_DATARANGE
-    )
-    physical_range = TupleAttribute(
-        readonly=True,
-        min_length=2,
-        max_length=2,
-        coerce=True,
-        attribute_type=float,
-        doc=Band._DOC_PHYSICALRANGE,
-    )
-    bands = Attribute(
-        readonly=True,
-        doc="""list(str), readonly: List of bands used in the derived band pixel function.
-
-        *Filterable*
-        """,
-    )
-    function_name = Attribute(
-        readonly=True,
-        doc="str, readonly: Name of the function applied to create this derived band.",
-    )
-
-    def update(self, **kwargs):
-        """You cannot update a derived band.
-
-        Raises
-        ------
-        NotImplementedError
-            This method is not supported for DerivedBands.
-        """
-        raise NotImplementedError("Updating DerivedBands is not permitted")
-
-    @deprecate(renamed={"extra_attributes": "request_params"})
-    def save(self, request_params=None):
-        """You cannot save a derived band.
-
-        Raises
-        ------
-        NotImplementedError
-            This method is not supported for DerivedBands.
-        """
-        raise NotImplementedError("Saving DerivedBands is not permitted")
-
-    @classmethod
-    def delete(cls, id, client=None):
-        """You cannot delete a derived band.
-
-        Raises
-        ------
-        NotImplementedError
-            This method is not supported for DerivedBands.
-        """
-        raise NotImplementedError("Deleting DerivedBands is not permitted")
-
-    def _instance_delete(self):
-        """You cannot delete a derived band.
-
-        Raises
-        ------
-        NotImplementedError
-            This method is not supported for DerivedBands.
-        """
-        raise NotImplementedError("Deleting DerivedBands is not permitted")
-
-
-class DerivedBandCollection(Collection):
-    _item_type = DerivedBand
-
-
-# set here due to circular references
-DerivedBand._collection_type = DerivedBandCollection

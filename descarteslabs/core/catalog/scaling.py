@@ -419,8 +419,7 @@ def properties_for_band(name, band, processing_level):
     """
     Gather up relevant properties for the band, applying processing level and defaults.
     """
-    # DerivedBand has no type field but treat as generic
-    band_type = getattr(band, "type", BandType.GENERIC)
+    band_type = band.type
 
     # defaults on band base properties are real legacy
     data_type = band.data_type or "UInt16"
@@ -552,8 +551,6 @@ def scaling_parameters(properties, bands, processing_level, scaling, data_type):
     for band in bands:
         if band not in properties:
             message = "Invalid bands: band '{}' is not available".format(band)
-            if "derived:{}".format(band) in properties:
-                message += ", did you mean 'derived:{}'?".format(band)
             raise ValueError(message)
         band_properties[band] = properties_for_band(
             band, properties[band], processing_level
@@ -642,8 +639,6 @@ def multiproduct_scaling_parameters(
                         band, product
                     )
                 )
-                if "derived:{}".format(band) in properties[product]:
-                    message += ", did you mean 'derived:{}'?".format(band)
                 raise ValueError(message)
             product_band_properties.setdefault(product, {})[band] = properties_for_band(
                 band, properties[product][band], processing_level

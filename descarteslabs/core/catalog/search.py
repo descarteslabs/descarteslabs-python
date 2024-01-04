@@ -26,9 +26,6 @@ from ..common.property_filtering.filtering import Expression  # noqa: F401
 from .attributes import serialize_datetime
 
 
-V1_COMPATIBILITY = "v1_compatibility"
-
-
 class Search(object):
     """A search request that iterates over its search results.
 
@@ -227,10 +224,9 @@ class Search(object):
 
     def _require_product_ids(self, filters):
         from .product import Product
-        from .band import DerivedBand
         from .blob import Blob
 
-        if self._model_cls in (Product, DerivedBand, Blob):
+        if self._model_cls in (Product, Blob):
             return
         if filters:
             for filter in filters:

@@ -32,7 +32,6 @@ from .catalog_base import (
     _new_abstract_class,
     check_deleted,
 )
-from .search import Search
 
 
 properties = Properties()
@@ -393,32 +392,6 @@ class Product(CatalogObject):
             Band.search(client=self._client, request_params=request_params)
             .filter(properties.product_id == self.id)
             .sort("sort_order")
-        )
-
-    @check_deleted
-    def derived_bands(self, request_params=None):
-        """A search query for all derived bands associated with this product.
-
-        Returns
-        -------
-        :py:class:`~descarteslabs.catalog.Search`
-            A :py:class:`~descarteslabs.catalog.Search` instance configured to
-            find all derived bands for this product.
-
-        Raises
-        ------
-        DeletedObjectError
-            If this product was deleted.
-
-        """
-        from .band import DerivedBand
-
-        return Search(
-            DerivedBand,
-            url="{}/{}/relationships/{}".format(self._url, self.id, "derived_bands"),
-            client=self._client,
-            includes=False,
-            request_params=request_params,
         )
 
     @check_deleted
