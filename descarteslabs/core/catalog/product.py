@@ -341,6 +341,8 @@ class Product(CatalogObject):
             return DeletionTaskStatus(
                 id=self.id, _client=self._client, **response["data"]["attributes"]
             )
+        else:
+            return None
 
     @check_deleted
     def get_delete_status(self):

@@ -25,6 +25,7 @@ Changelog
   But why would you even want to go there?
 - *Breaking Change*: Derived bands, never supported in the AWS environment and catalog products, have been
   removed.
+- The new `Blob.delete_many` method may be used to delete large numbers of blobs efficiently.
 
 ### Compute
 

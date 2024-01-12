@@ -31,6 +31,7 @@ from .attributes import (
     TypedAttribute,
     parse_iso_datetime,
 )
+from .blob_delete import BlobDelete
 from .blob_download import BlobDownload
 from .catalog_base import CatalogClient, CatalogObject, check_deleted
 from .search import AggregateDateField, GeoSearch, SummarySearchMixin
@@ -780,6 +781,8 @@ class Blob(CatalogObject):
         name=None,
         client=None,
         range=None,
+        stream=False,
+        chunk_size=None,
     ):
         """Downloads storage blob data.
 
@@ -808,11 +811,17 @@ class Blob(CatalogObject):
             (e.g. ``((0, 99), (200-299))``). A list or tuple of one integer implies
             no upper bound; in this case the integer can be negative, indicating the
             count back from the end of the blob.
+        stream : bool, optional
+            If True, return a generator that will yield the data in chunks. Defaults to False.
+        chunk_size : int, optional
+            If stream is True, the size of chunks over which to stream. Default is whatever
+            chunks are received on the wire.
 
         Returns
         -------
-        bytes
-            The data retrieved from the Blob.
+        bytes or generator
+            The data retrieved from the Blob. If stream is True, returned as an iterator
+            (generator) which will yeild the data in chunks.
 
         Raises
         ------
@@ -827,7 +836,59 @@ class Blob(CatalogObject):
             raise TypeError("Must specify exactly one of id or name parameters")
         if not id:
             id = f"{storage_type}/{cls.namespace_id(namespace)}/{name}"
-        return cls(id=id, client=client)._do_download(range=range)
+
+        dest = None
+        if stream:
+
+            def generator(response):
+                try:
+                    yield from response.iter_content(chunk_size)
+                finally:
+                    response.close()
+
+            dest = generator
+
+        return cls(id=id, client=client)._do_download(dest=dest, range=range)
+
+    @classmethod
+    def delete_many(cls, ids, client=None):
+        """Delete many blobs from the Descartes Labs catalog.
+
+        Only those blobs that exist and are owned by the user will be deleted.
+        No errors will be raised for blobs that do not exist or are not owned by
+        the user. If you need to know, compare the supplied list of ids with the
+        returned list of delete ids.
+
+        All blobs to be deleted must belong to the same purchase.
+
+        Parameters
+        ----------
+        ids : list(str)
+            A list of blob ids to delete.
+        client : CatalogClient, optional
+            A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
+            The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+            be used if not set.
+
+        Returns
+        -------
+        list(str)
+            A list of the ids of the blobs that were successfully deleted.
+
+        Raises
+        ------
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
+        """
+        if client is None:
+            client = CatalogClient.get_default_client()
+
+        blob_delete = BlobDelete(ids=ids, client=client)
+
+        blob_delete.save()
+
+        return blob_delete.ids
 
     def _do_download(self, dest=None, range=None):
         download = BlobDownload.get(id=self.id, client=self._client)
