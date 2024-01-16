@@ -83,6 +83,17 @@ raster_url = "@format {this.PLATFORM_URL}/raster/v2"
 usage_url = "@format {this.PLATFORM_URL}/usage/v1"
 yaas_url = "@format {this.PLATFORM_URL}/yaas/v1"
 
+[aws-freemium]
+aws_client = true
+default_domain = "@format freemium.aws.{this.DOMAIN}"
+platform_url = "@format https://platform.{this.DEFAULT_DOMAIN}"
+
+catalog_v2_url = "@format {this.PLATFORM_URL}/metadata/v1/catalog/v2"
+iam_url = "@format https://iam.{this.DEFAULT_DOMAIN}"
+metadata_url = "@format {this.PLATFORM_URL}/metadata/v1"
+raster_url = "@format {this.PLATFORM_URL}/raster/v2"
+usage_url = "@format {this.PLATFORM_URL}/usage/v1"
+
 [testing]
 aws_client = true
 default_domain = "@format dev.aws.{this.DOMAIN}"
