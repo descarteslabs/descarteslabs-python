@@ -40,6 +40,9 @@ Changelog
   and an `error` property which can be used to determine if all submissions were successful, what errors may
   have occurred, and what jobs have actually been created. Only if the first batch fails hard will the method
   raise an exception.
+- The efficiency of deleting many jobs at once has been significantly improved using `Function.delete` and
+  `Function.delete_jobs`. It is still possible to encounter request timeouts with very large numbers of jobs;
+  workarounds are now documented in the API documentation for the `Function.delete_jobs` method.
 
 ### General
 

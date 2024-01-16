@@ -447,22 +447,7 @@ class TestFunction(FunctionTestCase):
 
     @responses.activate
     def test_delete(self):
-        self.mock_response(
-            responses.GET,
-            "/jobs",
-            json=self.make_page(
-                [
-                    self.make_job(id="1", status=JobStatus.SUCCESS),
-                    self.make_job(id="2", status=JobStatus.SUCCESS),
-                    self.make_job(id="3", status=JobStatus.RUNNING),
-                    self.make_job(id="4", status=JobStatus.FAILURE),
-                ]
-            ),
-        )
-        self.mock_response(responses.DELETE, "/jobs/1", status=204)
-        self.mock_response(responses.DELETE, "/jobs/2", status=204)
-        self.mock_response(responses.DELETE, "/jobs/3", status=204)
-        self.mock_response(responses.DELETE, "/jobs/4", status=204)
+        self.mock_response(responses.POST, "/jobs/delete", json=["1", "2", "3"])
         self.mock_response(responses.DELETE, "/functions/some-id", status=204)
 
         fn = Function(id="some-id", saved=True)
@@ -488,7 +473,7 @@ class TestFunction(FunctionTestCase):
 
     @responses.activate
     def test_delete_no_jobs(self):
-        self.mock_response(responses.GET, "/jobs", json=self.make_page([]))
+        self.mock_response(responses.POST, "/jobs/delete", json=[])
         self.mock_response(responses.DELETE, "/functions/some-id", status=204)
 
         fn = Function(id="some-id", saved=True)
@@ -504,22 +489,17 @@ class TestFunction(FunctionTestCase):
     @responses.activate
     def test_delete_failed(self):
         self.mock_response(
-            responses.GET,
-            "/jobs",
-            json=self.make_page(
-                [
-                    self.make_job(id="1", status=JobStatus.SUCCESS),
-                ]
-            ),
+            responses.DELETE,
+            "/functions/some-id",
+            status=400,
         )
-        self.mock_response(responses.DELETE, "/jobs/1", status=400)
+        self.mock_response(responses.POST, "/jobs/delete", json=[])
 
         fn = Function(id="some-id", saved=True)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(exceptions.BadRequestError):
             fn.delete()
 
-        self.assert_url_called("/jobs/1")
         assert fn._deleted is False
         assert fn.state == "saved"
         assert fn.id == "some-id"

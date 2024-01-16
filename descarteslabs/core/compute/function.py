@@ -945,6 +945,9 @@ class Function(Document):
 
         If any jobs are in a running state, the deletion will fail.
 
+        Please see the `:meth:~descarteslabs.compute.Function.delete_jobs` method for more
+        information on deleting large numbers of jobs.
+
         Parameters
         ----------
         delete_results : bool, default=False
@@ -953,11 +956,7 @@ class Function(Document):
         if self.state == DocumentState.NEW:
             raise ValueError("Cannot delete a Function that has not been saved")
 
-        for job in self.jobs:
-            try:
-                job.delete(delete_result=delete_results)
-            except exceptions.ConflictError:
-                pass
+        self.delete_jobs(delete_results=delete_results)
 
         self._client.session.delete(f"/functions/{self.id}")
         self._deleted = True
@@ -1120,8 +1119,8 @@ class Function(Document):
         batch_size : int, default=1000
             The number of jobs to submit in each batch. The maximum batch size is 1000.
 
-        Return
-        ------
+        Returns
+        ------_
         JobBulkCreateResult
             An object containing the jobs that were submitted and any errors that occurred.
             This object is compatible with a list of Job objects for backwards compatibility.
@@ -1267,7 +1266,7 @@ class Function(Document):
         query: Optional[JobSearch] = None,
         job_ids: List[str] = None,
         delete_results: bool = False,
-    ):
+    ) -> List[str]:
         """Deletes all non-running jobs for the Function matching the given query.
 
         If both `query` and `job_ids` are None, all jobs for the Function will be deleted.
@@ -1277,6 +1276,12 @@ class Function(Document):
         Also deletes any job log blobs for the jobs. Use `delete_results=True` to delete the
         job result blobs as well.
 
+        There is a limit to how many jobs can be deleted in a single request before the request
+        times out. If you need to delete a large number of jobs and experience timeouts, consider
+        using a loop to delete batches, using the `query` parameter with a limit (e.g.
+        ``async_func.delete_jobs(async_func.jobs.limit(10000))``, or use the `job_ids`
+        parameter to limit the number of jobs to delete.
+
         Parameters
         ----------
         query : JobSearch, optional
@@ -1285,6 +1290,11 @@ class Function(Document):
             List of job ids to delete.
         delete_results : bool, default=False
             If True, deletes the job result blobs as well.
+
+        Returns
+        -------
+        List[str]
+            List of job ids that were deleted.
         """
         if self.state != DocumentState.SAVED:
             raise ValueError(
