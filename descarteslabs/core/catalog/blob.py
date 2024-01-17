@@ -397,6 +397,67 @@ class Blob(CatalogObject):
         return super(cls, Blob).get(id)
 
     @classmethod
+    def get_or_create(
+        cls,
+        id=None,
+        storage_type=StorageType.DATA,
+        namespace=None,
+        name=None,
+        client=None,
+        **kwargs,
+    ):
+        """Get an existing object from the Descartes Labs catalog or create a new object.
+
+        If the Descartes Labs catalog object is found, and the remainder of the
+        arguments do not differ from the values in the retrieved instance, it will be
+        returned in the `~descarteslabs.catalog.DocumentState.SAVED` state.
+
+        If the Descartes Labs catalog object is found, and the remainder of the
+        arguments update one or more values in the instance, it will be returned in
+        the `~descarteslabs.catalog.DocumentState.MODIFIED` state.
+
+        If the Descartes Labs catalog object is not found, it will be created and the
+        state will be `~descarteslabs.catalog.DocumentState.UNSAVED`.  Also see the
+        example for :py:meth:`save`.
+
+        Parameters
+        ----------
+        id : str, optional
+            The id of the object you are requesting. Required unless ``name`` is supplied.
+            May not be specified if ``name`` is specified.
+        storage_type : StorageType, optional
+            The storage type of the Blob you wish to retrieve. Defaults to ``data``. Ignored
+            unless ``name`` is specified.
+        namespace : str, optional
+            The namespace of the Blob you wish to retrieve. Defaults to the user's org name
+            (if any) plus the unique user hash. Ignored unless ``name`` is specified.
+        name : str, optional
+            The name of the Blob you wish to retrieve. Required if ``id`` is not specified.
+            May not be specified if ``id`` is specified.
+        client : CatalogClient, optional
+            A `CatalogClient` instance to use for requests to the Descartes Labs
+            catalog.  The
+            :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+            be used if not set.
+        kwargs : dict, optional
+            With the exception of readonly attributes (`created`, `modified`), any
+            attribute of a catalog object can be set as a keyword argument (Also see
+            `ATTRIBUTES`).
+
+        Returns
+        -------
+        :py:class:`~descarteslabs.catalog.CatalogObject`
+            The requested catalog object that was retrieved or created.
+
+        """
+        if (not id and not name) or (id and name):
+            raise TypeError("Must specify exactly one of id or name parameters")
+        if not id:
+            id = f"{storage_type}/{Blob.namespace_id(namespace)}/{name}"
+
+        return super(cls, Blob).get_or_create(id, client=client, **kwargs)
+
+    @classmethod
     def search(cls, client=None, request_params=None):
         """A search query for all blobs.
 

@@ -26,6 +26,9 @@ Changelog
 - *Breaking Change*: Derived bands, never supported in the AWS environment and catalog products, have been
   removed.
 - The new `Blob.delete_many` method may be used to delete large numbers of blobs efficiently.
+- The `Blob.get_or_create` method didn't allow supplying `storage_type`, `namespace`, or `name` parameters.
+  Now it works as expected, either returning a saved Blob from the Catalog, or an unsaved blob that
+  you can use to upload and save its data.
 
 ### Compute
 
