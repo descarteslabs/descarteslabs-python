@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import datetime
+import functools
 import json
 import os.path
 import textwrap
@@ -977,6 +978,23 @@ class TestImage(ClientTestCase):
         "cached_bands_by_product",
         _cached_bands_by_product,
     )
+    @patch.object(image_module.Raster, "ndarray")
+    def test_ndarray_geocontext(self, mock_raster):
+        mock_raster.side_effect = functools.partial(_raster_ndarray, None)
+        image = Image.get("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
+        arr, info = image.ndarray("red", resolution=1000, raster_info=True)
+
+        assert mock_raster.called_once()
+        assert image.geocontext.geometry is not None
+        print(mock_raster.call_args)
+        assert mock_raster.call_args[1]["cutline"] is None
+
+    @patch.object(Image, "get", _image_get)
+    @patch.object(
+        image_module,
+        "cached_bands_by_product",
+        _cached_bands_by_product,
+    )
     def test_nonexistent_band_fails(self):
         image = Image.get("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         with pytest.raises(ValueError):
@@ -1197,6 +1215,9 @@ class TestImage(ClientTestCase):
         image = Image.get("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         image.download("red green blue", resolution=120.0)
         mock_download.assert_called_once()
+        # verify we nulled out the cutline
+        assert image.geocontext.geometry is not None
+        assert mock_download.call_args[1]["geocontext"].geometry is None
 
     @patch.object(Image, "get", _image_get)
     @patch.object(

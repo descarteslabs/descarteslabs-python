@@ -110,7 +110,7 @@ def do_setup():
             "requests>=2.28.1,<3",
             # It is not obvious but dynaconf requires pkg_resources from setuptools.
             "setuptools>=65.6.3",
-            "shapely>=1.8.1",
+            "shapely>=2.0.0",
             "strenum>=0.4.8",
             "tifffile==2023.4.12;python_version=='3.8'",
             "tifffile>=2023.9.26;python_version>='3.9'",

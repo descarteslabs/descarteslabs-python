@@ -14,7 +14,6 @@
 
 
 import copy
-import threading
 import warnings
 import math
 
@@ -55,10 +54,7 @@ class GeoContext(object):
     GeoContexts are immutable.
     """
 
-    __slots__ = (
-        "_geometry_lock_",
-        "_all_touched",
-    )
+    __slots__ = ("_all_touched",)
     # slots *suffixed* with an underscore will be ignored by `__eq__` and `__repr__`.
     # a double-underscore prefix would be more conventional, but that actually breaks as a slot name.
 
@@ -74,27 +70,18 @@ class GeoContext(object):
             situations will return no result at all (i.e. entirely masked).
         """
 
-        # Shapely objects are not thread-safe, due to the way the underlying GEOS library is used.
-        # Specifically, accessing `__geo_interface__` on the same geometry across threads
-        # can cause bizzare exceptions. This makes `raster_params` and `__geo_interface__` thread-unsafe.
-        # Subclasses of GeoContext can use this lock to ensure `self._geometry.__geo_interface__`
-        # is accessed from at most 1 thread at a time.
-        self._geometry_lock_ = threading.Lock()
         self._all_touched = bool(all_touched)
 
     def __getstate__(self):
-        # Lock objects shouldn't be pickled or deepcopied, but recursively get all the other slots
         return {
             attr: getattr(self, attr)
             for s in self.__class__.__mro__
-            for attr in getattr(s, "__slots__", [])
-            if not attr.endswith("_")
+            for attr in getattr(s, "__slots__", tuple())
         }
 
     def __setstate__(self, state):
         for attr, val in state.items():
             setattr(self, attr, val)
-        self._geometry_lock_ = threading.Lock()
 
     @property
     def all_touched(self):
@@ -130,8 +117,6 @@ class GeoContext(object):
         if not isinstance(other, self.__class__):
             return False
         for attr in self.__slots__:
-            if attr.endswith("_"):
-                continue
             if getattr(self, attr) != getattr(other, attr):
                 return False
         return True
@@ -142,8 +127,7 @@ class GeoContext(object):
         props = delim.join(
             "{}={}".format(attr.lstrip("_"), reprlib.repr(getattr(self, attr)))
             for s in self.__class__.__mro__
-            for attr in getattr(s, "__slots__", [])
-            if not attr.endswith("_")
+            for attr in getattr(s, "__slots__", tuple())
         )
         return "{}({})".format(classname, props)
 
@@ -251,10 +235,10 @@ class AOI(GeoContext):
 
         super(AOI, self).__init__(all_touched=all_touched)
 
+        # If no bounds were given, use the bounds of the geometry
         if bounds is None and geometry is not None:
             bounds = "update"
 
-        # If no bounds were given, use the bounds of the geometry
         self._assign(
             geometry,
             resolution,
@@ -380,12 +364,9 @@ class AOI(GeoContext):
         # align_pixels will always be True or False based on resolution
         # all_touched doesn't affect the spatial equivalence
 
-        with self._geometry_lock_:
-            # see comment in `GeoContext.__init__` for why we need to prevent
-            # parallel access to `self._geometry.__geo_interface__`
-            cutline = (
-                self._geometry.__geo_interface__ if self._geometry is not None else None
-            )
+        cutline = (
+            self._geometry.__geo_interface__ if self._geometry is not None else None
+        )
 
         dimensions = (
             (self._shape[1], self._shape[0]) if self._shape is not None else None
@@ -417,10 +398,7 @@ class AOI(GeoContext):
         """
 
         if self._geometry is not None:
-            with self._geometry_lock_:
-                # see comment in `GeoContext.__init__` for why we need to prevent
-                # parallel access to `self._geometry.__geo_interface__`
-                return self._geometry.__geo_interface__
+            return self._geometry.__geo_interface__
         elif self._bounds is not None and is_wgs84_crs(self._bounds_crs):
             return polygon_from_bounds(self._bounds)
         else:
@@ -1315,10 +1293,7 @@ class DLTile(GeoContext):
     def __geo_interface__(self):
         """dict: :py:attr:`~descarteslabs.common.geo.geocontext.DLTile.geometry` as a GeoJSON Polygon"""
 
-        with self._geometry_lock_:
-            # see comment in `GeoContext.__init__` for why we need to prevent
-            # parallel access to `self._geometry.__geo_interface__`
-            return self._geometry.__geo_interface__
+        return self._geometry.__geo_interface__
 
 
 class XYZTile(GeoContext):

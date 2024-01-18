@@ -1089,7 +1089,10 @@ class Image(NamedCatalogObject):
             If the Descartes Labs Platform is given invalid parameters
         """
         if geocontext is None:
-            geocontext = self.geocontext
+            # Lose the image's geometry (which is only used as a cutline),
+            # as it might cause some unexpected clipping when rasterizing, due
+            # to imperfect simplified geometries used when native image CRS is not WGS84.
+            geocontext = self.geocontext.assign(geometry=None)
         if crs is not None or resolution is not None:
             try:
                 params = {}
@@ -1334,7 +1337,10 @@ class Image(NamedCatalogObject):
             If the Descartes Labs Platform is given invalid parameters
         """
         if geocontext is None:
-            geocontext = self.geocontext
+            # Lose the image's geometry (which is only used as a cutline),
+            # as it might cause some unexpected clipping when rasterizing, due
+            # to imperfect simplified geometries used when native image CRS is not WGS84.
+            geocontext = self.geocontext.assign(geometry=None)
         if crs is not None or resolution is not None:
             try:
                 params = {}

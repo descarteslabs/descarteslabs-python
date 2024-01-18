@@ -29,6 +29,11 @@ Changelog
 - The `Blob.get_or_create` method didn't allow supplying `storage_type`, `namespace`, or `name` parameters.
   Now it works as expected, either returning a saved Blob from the Catalog, or an unsaved blob that
   you can use to upload and save its data.
+- Image methods `ndarray` and `download` no longer pass the image's default context geometry as a cutline.
+  This is to avoid problems when trying to raster a complete single image in its native CRS and resolution
+  where imperfect geometries (due to a simplistic projection to EPSG:4326) can cause some boundary pixels
+  to be masked. When passing in an explicit `GeoContext` to these methods, consider whether any cutline
+  geometry is required or not, to avoid these issues.
 
 ### Compute
 
@@ -54,6 +59,7 @@ Changelog
 - *Breaking Change*: The deprecated `Scenes` client API has been removed.
 - *Breaking Change*: The deprecated `Metadata` client API has been removed.
 - The minimum required version of `urllib3` has been bumped to 1.26.18 to address a security vulnerability.
+- The minimum required version of `shapely` has been bumped to 2.0.0 to address thread safety issues.
   
 ## [2.1.2] - 2023-10-31
 

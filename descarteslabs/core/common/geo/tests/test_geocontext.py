@@ -14,9 +14,6 @@
 
 import pytest
 import unittest
-import multiprocessing
-import platform
-import concurrent.futures
 import copy
 import warnings
 
@@ -31,10 +28,6 @@ except ImportError:
 
 from .. import geocontext
 from ..geocontext import EARTH_CIRCUMFERENCE_WGS84
-
-
-if platform.system() == "Darwin":
-    multiprocessing.set_start_method("fork")
 
 
 class SimpleContext(geocontext.GeoContext):
@@ -68,7 +61,6 @@ class TestGeoContext(unittest.TestCase):
     def test_deepcopy(self):
         simple = SimpleContext(1, False)
         simple_copy = copy.deepcopy(simple)
-        assert simple._geometry_lock_ is not simple_copy._geometry_lock_
         assert simple == simple_copy
 
 
@@ -483,108 +475,3 @@ class TestXYZTile(unittest.TestCase):
     def test_children_parent(self):
         tile = geocontext.XYZTile(1, 1, 2)
         assert tile == tile.children()[0].parent()
-
-
-# can't use the word `test` in the function name otherwise nose tries to run it...
-def run_threadsafe_experiment(geoctx_factory, property, n=80000):
-    "In a subprocess, test whether parallel access to a property on a GeoContext fails (due to Shapely thread-unsafety)"
-    conn_ours, conn_theirs = multiprocessing.Pipe(duplex=False)
-
-    # Run actual test in a separate process, because unsafe use of Shapely objects
-    # across threads can occasionally cause segfaults, so we want to check the exit
-    # code of the process doing the testing.
-    def threadsafe_test(geoctx_factory, property, conn, n):
-        ctx = geoctx_factory()
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=multiprocessing.cpu_count()
-        ) as executor:
-            futures = [
-                executor.submit(lambda: getattr(ctx, property)) for i in range(n)
-            ]
-
-        errors = []
-        for future in concurrent.futures.as_completed(futures):
-            if future.exception() is not None:
-                errors.append("exception: {}".format(future.exception()))
-        conn.send(errors)
-
-    p = multiprocessing.Process(
-        target=threadsafe_test, args=(geoctx_factory, property, conn_theirs, n)
-    )
-    p.start()
-    p.join()
-    if p.exitcode < 0:
-        errors = ["failed with exit code {}".format(p.exitcode)]
-    else:
-        errors = conn_ours.recv()
-    return errors
-
-
-@unittest.skip(
-    "Slow test. Un-skip this and run manually if touching any code related to `_geometry_lock_`!"
-)
-class TestShapelyThreadSafe(unittest.TestCase):
-    @staticmethod
-    def aoi_factory():
-        return geocontext.AOI(
-            {
-                "coordinates": [
-                    [
-                        [-93.52300099792355, 41.241436141055345],
-                        [-93.7138666, 40.703737],
-                        [-94.37053769704536, 40.83098709945576],
-                        [-94.2036617, 41.3717716],
-                        [-93.52300099792355, 41.241436141055345],
-                    ]
-                ],
-                "type": "Polygon",
-            },
-            crs="EPSG:3857",
-            resolution=10,
-        )
-
-    @staticmethod
-    def dltile_factory():
-        return geocontext.DLTile(
-            {
-                "geometry": {
-                    "coordinates": [
-                        [
-                            [-94.64171754779824, 40.9202359006794],
-                            [-92.81755164322226, 40.93177944075989],
-                            [-92.81360932958779, 42.31528732533928],
-                            [-94.6771717075502, 42.303172487087394],
-                            [-94.64171754779824, 40.9202359006794],
-                        ]
-                    ],
-                    "type": "Polygon",
-                },
-                "properties": {
-                    "cs_code": "EPSG:32615",
-                    "key": "128:16:960.0:15:-1:37",
-                    "outputBounds": [361760.0, 4531200.0, 515360.0, 4684800.0],
-                    "pad": 16,
-                    "resolution": 960.0,
-                    "ti": -1,
-                    "tilesize": 128,
-                    "tj": 37,
-                    "zone": 15,
-                    "geotrans": [361760.0, 960.0, 0, 4684800.0, 0, -960.0],
-                    "proj4": "+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs ",
-                    "wkt": 'PROJCS["WGS 84 / UTM zone 15N",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-93],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","32615"]]',  # noqa
-                },
-                "type": "Feature",
-            }
-        )
-
-    def test_aoi_raster_params_threadsafe(self):
-        errors = run_threadsafe_experiment(self.aoi_factory, "raster_params")
-        assert errors == []
-
-    def test_aoi_geo_interface_threadsafe(self):
-        errors = run_threadsafe_experiment(self.aoi_factory, "__geo_interface__")
-        assert errors == []
-
-    def test_dltile_geo_interface_threadsafe(self):
-        errors = run_threadsafe_experiment(self.dltile_factory, "__geo_interface__")
-        assert errors == []
