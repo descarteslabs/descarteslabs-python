@@ -61,7 +61,8 @@ Changelog
 - The minimum required version of `urllib3` has been bumped to 1.26.18 to address a security vulnerability.
 - The minimum required version of `shapely` has been bumped to 2.0.0 to address thread safety issues.
 - Python 3.7, formerly deprecated, is no longer supported.
-- Python 3.12 is now supported.
+- Python 3.12 is not officially supported yet due to the lack of support from `blosc`. However, if you
+  are able to provide a functional `blosc` on your own, then 3.12 should work.
 - Urllib3 2.X is now supported.
   
 ## [2.1.2] - 2023-10-31
