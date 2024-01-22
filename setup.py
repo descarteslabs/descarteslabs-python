@@ -66,11 +66,11 @@ def do_setup():
         classifiers=[
             "Programming Language :: Python",
             "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
             "Programming Language :: Python :: 3.11",
+            "Programming Language :: Python :: 3.12",
         ],
         license="Apache 2.0",
         download_url=(
@@ -91,7 +91,7 @@ def do_setup():
                 "descarteslabs = descarteslabs.core.client.scripts.__main__:main"
             ]
         },
-        python_requires="~=3.7",
+        python_requires="~=3.8",
         install_requires=[
             "affine>=2.2.2",
             "blosc>=1.10.6",
@@ -115,7 +115,7 @@ def do_setup():
             "tifffile==2023.4.12;python_version=='3.8'",
             "tifffile>=2023.9.26;python_version>='3.9'",
             "tqdm>=4.32.1",
-            "urllib3>=1.26.18,<2",
+            "urllib3>=1.26.18",
         ],
         extras_require={
             "visualization": viz_requires,

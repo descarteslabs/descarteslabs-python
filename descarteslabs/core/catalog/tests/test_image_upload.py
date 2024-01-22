@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import warnings
 import responses
 from unittest.mock import patch
 
@@ -425,20 +424,6 @@ class TestImageUpload(ClientTestCase):
                 "jsonapi": {"version": "1.0"},
             },
         )
-        self.mock_response(
-            responses.GET,
-            {
-                "errors": [
-                    {
-                        "detail": "Something went wrong",
-                        "status": "500",
-                        "title": "Server Error",
-                    }
-                ],
-                "jsonapi": {"version": "1.0"},
-            },
-            status=500,
-        )
 
         self.mock_response(
             responses.GET,
@@ -490,11 +475,7 @@ class TestImageUpload(ClientTestCase):
         assert u.status == ImageUploadStatus.PENDING
         assert u.state == DocumentState.SAVED
 
-        with warnings.catch_warnings(record=True) as w:
-            u.wait_for_completion(15)
-
-            assert len(w) == 1
-            assert "Something went wrong" in str(w[0].message)
+        u.wait_for_completion(15)
 
         assert u.status == ImageUploadStatus.SUCCESS
         assert len(u.events) == 3

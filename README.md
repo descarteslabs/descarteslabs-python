@@ -60,6 +60,9 @@ Changelog
 - *Breaking Change*: The deprecated `Metadata` client API has been removed.
 - The minimum required version of `urllib3` has been bumped to 1.26.18 to address a security vulnerability.
 - The minimum required version of `shapely` has been bumped to 2.0.0 to address thread safety issues.
+- Python 3.7, formerly deprecated, is no longer supported.
+- Python 3.12 is now supported.
+- Urllib3 2.X is now supported.
   
 ## [2.1.2] - 2023-10-31
 

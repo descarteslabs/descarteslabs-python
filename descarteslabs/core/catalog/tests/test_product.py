@@ -376,16 +376,10 @@ class TestProduct(ClientTestCase):
         p = Product(id="p1", name="Test Product", client=self.client)
         self.mock_response(
             responses.POST,
-            {
-                "errors": [
-                    {
-                        "status": "204",
-                        "detail": "A 'delete related objects' operation is not needed: p1",
-                        "title": "No related objects found",
-                    }
-                ],
-                "jsonapi": {"version": "1.0"},
-            },
+            # For some reason, responses doesn't like returning a 204 with a body
+            # (it forcibly sets a content-length of 0, which then blows up requests/urllib3)
+            # The body returned by the actual service doesn't matter for this test.
+            None,
             status=204,
         )
         r = p.delete_related_objects()

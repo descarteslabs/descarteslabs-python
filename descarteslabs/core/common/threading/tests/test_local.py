@@ -14,11 +14,15 @@
 
 import multiprocessing
 import os
+import platform
 import sys
 import unittest
 import threading
 
 from ..local import ThreadLocalWrapper
+
+if platform.system() == "Darwin":
+    multiprocessing.set_start_method("fork")
 
 
 class ThreadLocalWrapperTest(unittest.TestCase):

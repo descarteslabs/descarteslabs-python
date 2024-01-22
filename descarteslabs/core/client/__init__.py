@@ -15,19 +15,13 @@
 import sys
 import warnings
 
-if sys.version_info < (3, 7):
+if sys.version_info < (3, 8):
     msg = "Python version {}.{} not supported by the descarteslabs client".format(
         sys.version_info.major, sys.version_info.minor
     )
     raise ImportError(msg)
 
-if sys.version_info < (3, 8):
-    msg = "Support for Python version {}.{} has been deprecated and will be removed in a future version.".format(
-        sys.version_info.major, sys.version_info.minor
-    )
-    warnings.warn(msg, FutureWarning)
-
-if sys.version_info >= (3, 12):
+if sys.version_info >= (3, 13):
     msg = "Python version {}.{} is not supported yet. You may encounter unexpected errors.".format(
         sys.version_info.major, sys.version_info.minor
     )

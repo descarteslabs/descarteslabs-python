@@ -16,7 +16,7 @@ from urllib3.util.retry import Retry as Urllib3Retry
 
 
 class Retry(Urllib3Retry):
-    """Retry configuration that extends `urllib3.util.retry` to support retry-after.
+    """Retry configuration that allows configuration of retry-after support.
 
     This retry configuration class derives from
     `urllib3.util.retry.Retry
@@ -27,12 +27,12 @@ class Retry(Urllib3Retry):
     retry_after_status_codes : list
         The http status codes that should support the
         `Retry-After <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After>`_
-        header.
+        header. This is in lieu of the hardwired urllib3 Retry.RETRY_AFTER_STATUS_CODES.
     """
 
     DEFAULT_RETRY_AFTER_STATUS_CODES = frozenset([403, 413, 429, 503])
 
-    def __init__(self, retry_after_status_codes=None, *args, **kwargs):
+    def __init__(self, *args, retry_after_status_codes=None, **kwargs):
         super().__init__(*args, **kwargs)
 
         if retry_after_status_codes is None:
@@ -41,22 +41,6 @@ class Retry(Urllib3Retry):
         if not isinstance(retry_after_status_codes, frozenset):
             retry_after_status_codes = frozenset(retry_after_status_codes)
 
-        self.retry_after_status_codes = retry_after_status_codes
-
-    def is_retry(self, method, status_code, has_retry_after=True):
-        if not self._is_method_retryable(method):
-            return False
-
-        if self.status_forcelist and status_code in self.status_forcelist:
-            return True
-
-        return (
-            self.total
-            and self.respect_retry_after_header
-            and has_retry_after
-            and (status_code in self.retry_after_status_codes)
-        )
-
-    @classmethod
-    def parse_retry_after_header(cls, retry_after):
-        return Retry.parse_retry_after(cls, retry_after)
+        # Overrides the urllib3.util.retry.Retry.RETRY_AFTER_STATUS_CODES
+        # class variable.
+        self.RETRY_AFTER_STATUS_CODES = retry_after_status_codes

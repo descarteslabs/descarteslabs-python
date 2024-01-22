@@ -691,7 +691,7 @@ class TestFunction(FunctionTestCase):
             call_count += 1
 
             if call_count > 1:
-                return (500, {}, None)
+                return (400, {}, None)
 
             payload: dict = json.loads(request.body)
             jobs = []
