@@ -23,7 +23,6 @@ from .features import join as features_join
 from .features import query as features_query
 from .features import sjoin as features_sjoin
 from .features import update as features_update
-from .layers import DLVectorTileLayer
 from .products import create as products_create
 from .products import delete as products_delete
 from .products import get as products_get
@@ -930,7 +929,7 @@ class Table:
         map,  # No type hint because we don't want to require ipyleaflet
         vector_tile_layer_styles: Optional[dict] = None,
         override_options: TableOptions = None,
-    ) -> DLVectorTileLayer:
+    ) -> None:
         """
         Visualize this Vector Table as an `ipyleaflet` VectorTileLayer.
         The property_filter and the columns specified with the Table
@@ -979,7 +978,6 @@ class Table:
                 map.remove_layer(layer)
                 break
         map.add_layer(lyr)
-        return lyr
 
     def collect(
         self, override_options: TableOptions = None
