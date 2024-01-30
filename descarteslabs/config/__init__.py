@@ -241,7 +241,8 @@ class Settings(dynaconf.Dynaconf):
         try:
             # Make sure we selected an environment!
             assert settings.env_for_dynaconf
-            assert settings.gcp_client or settings.aws_client
+            # default_domain must have been set
+            assert settings.default_domain
         except (AttributeError, KeyError, AssertionError):
             message = f"Client configuration '{os.environ[selector]}' doesn't exist!"
             restore_env()

@@ -50,6 +50,7 @@ def check_setuptools():
 def do_setup():
     viz_requires = [
         "matplotlib>=3.1.2",
+        "ipyleaflet>=0.17.2",
     ]
     tests_requires = [
         "pytest==6.0.0",
@@ -98,6 +99,7 @@ def do_setup():
             "dill>=0.3.6",
             "dynaconf>=3.1.11",
             "geojson>=2.5.0",
+            "geopandas>=0.13.2",
             "imagecodecs>=2021.5.20",
             "lazy_object_proxy>=1.7.1",
             "mercantile>=1.1.3",
@@ -105,6 +107,7 @@ def do_setup():
             "numpy>=1.21.6;python_version>='3.8' and python_version<'3.11'",
             "numpy>=1.23.2;python_version>='3.11'",
             "Pillow>=9.2.0",
+            "pyarrow>=13.0.0",
             "pytz>=2021.1",
             "requests>=2.28.1,<3",
             # It is not obvious but dynaconf requires pkg_resources from setuptools.

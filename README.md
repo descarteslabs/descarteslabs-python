@@ -52,6 +52,31 @@ Changelog
   `Function.delete_jobs`. It is still possible to encounter request timeouts with very large numbers of jobs;
   workarounds are now documented in the API documentation for the `Function.delete_jobs` method.
 
+### Vector
+
+- The Vector client library, previously available as the `descarteslabs-vector` package on PyPI, has
+  now been integrated into the Descartes Labs Python Client (this package). It should no longer be
+  installed separately.
+- Visualization support (`ipyleaflet.Map`) is enabled when `ipyleaflet` is available. It is not
+  installed by default, but can be installed manually, or by installing the `descarteslabs` python
+  client with the `viz` extra (e.g. `pip install descarteslabs[viz]`).
+- The Vector package now has a `VectorClient` API client, with the usual support for `get_default_client()`
+  and `set_default_client()`. Most constructors and methods now accept an optional `client=` parameter
+  if you need to use something other than the default client.
+- Configuration is now accomplished using the standard `descarteslabs.config` package. In particular,
+  the `vector_url` setting is used to specify the default Vector host. The `VECTOR_API_HOST` environment
+  variable is no longer consulted.
+- Vector client methods now raise standard `descarteslabs.exceptions` Exception classes rather than
+  the `descarteslabs.vector.vector_exceptions` classes of the old client.
+- The `is_spatial=` parameter previously accepted by many methods and functions is now deprecated
+  and ignored. It is not required because existing type information always determines if an operation
+  is spatial or not. Warnings will be generated if it is used.
+- Be advised that feature upload and download (query) do not currently support or impose any limits,
+  and thus allow operations so large and slow that timeouts or other failures may occur. A future
+  version will implement limits and batching, so that large operations can be supported reliably.
+  Until then, the user may wish to implement their own batching were possible to avoid encountering
+  network limits and timeouts.
+
 ### General
 
 - The old client version v1.12.1 is reaching end of life and will longer be supported as of February 2024.

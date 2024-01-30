@@ -67,12 +67,6 @@ class TestSettings(unittest.TestCase):
         )
         self.assertEqual(settings.current_env, os.environ.get("DESCARTESLABS_ENV"))
         self.assertEqual(settings.testing, "hello")
-        self.assertEqual(
-            settings.aws_client, os.environ.get("DESCARTESLABS_ENV") == "testing"
-        )
-        self.assertEqual(
-            settings.gcp_client, os.environ.get("DESCARTESLABS_ENV") == "gcp-testing"
-        )
 
     @patch.dict(os.environ, {"DESCARTESLABS_TESTING": "hello"})
     def test_select_env_override_from_env(self):
@@ -142,60 +136,48 @@ class TestSettings(unittest.TestCase):
         assert s1.env == peek1_env
         assert Settings.env == env
 
-        peek2_env = "gcp-stage"
-        s3 = Settings.peek_settings(peek2_env)
-        assert s3.env == peek2_env
-        assert s2.env == env
-        assert s1.env == peek1_env
-        assert Settings.env == env
-
 
 class VerifyValues(unittest.TestCase):
     configs = {
         "aws-dev": {
-            "AWS_CLIENT": True,
             "CATALOG_V2_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1/catalog/v2",
             "COMPUTE_URL": "https://platform.dev.aws.descarteslabs.com/compute/v1",
-            "GCP_CLIENT": False,
             "IAM_URL": "https://iam.dev.aws.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
             "METADATA_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1",
             "PLATFORM_URL": "https://platform.dev.aws.descarteslabs.com",
             "RASTER_URL": "https://platform.dev.aws.descarteslabs.com/raster/v2",
             "USAGE_URL": "https://platform.dev.aws.descarteslabs.com/usage/v1",
+            "VECTOR_URL": "https://platform.dev.aws.descarteslabs.com/vector/v1",
             "YAAS_URL": "https://platform.dev.aws.descarteslabs.com/yaas/v1",
         },
         "aws-production": {
-            "AWS_CLIENT": True,
             "CATALOG_V2_URL": "https://platform.production.aws.descarteslabs.com/metadata/v1/catalog/v2",
             "COMPUTE_URL": "https://platform.production.aws.descarteslabs.com/compute/v1",
-            "GCP_CLIENT": False,
             "IAM_URL": "https://iam.production.aws.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
             "METADATA_URL": "https://platform.production.aws.descarteslabs.com/metadata/v1",
             "PLATFORM_URL": "https://platform.production.aws.descarteslabs.com",
             "RASTER_URL": "https://platform.production.aws.descarteslabs.com/raster/v2",
             "USAGE_URL": "https://platform.production.aws.descarteslabs.com/usage/v1",
+            "VECTOR_URL": "https://platform.production.aws.descarteslabs.com/vector/v1",
             "YAAS_URL": "https://platform.production.aws.descarteslabs.com/yaas/v1",
         },
         "aws-staging": {
-            "AWS_CLIENT": True,
             "CATALOG_V2_URL": "https://platform.staging.aws.descarteslabs.com/metadata/v1/catalog/v2",
             "COMPUTE_URL": "https://platform.staging.aws.descarteslabs.com/compute/v1",
-            "GCP_CLIENT": False,
             "IAM_URL": "https://iam.staging.aws.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
             "METADATA_URL": "https://platform.staging.aws.descarteslabs.com/metadata/v1",
             "PLATFORM_URL": "https://platform.staging.aws.descarteslabs.com",
             "RASTER_URL": "https://platform.staging.aws.descarteslabs.com/raster/v2",
             "USAGE_URL": "https://platform.staging.aws.descarteslabs.com/usage/v1",
+            "VECTOR_URL": "https://platform.staging.aws.descarteslabs.com/vector/v1",
             "YAAS_URL": "https://platform.staging.aws.descarteslabs.com/yaas/v1",
         },
         "aws-testing": {
-            "AWS_CLIENT": True,
             "CATALOG_V2_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1/catalog/v2",
             "COMPUTE_URL": "https://platform.dev.aws.descarteslabs.com/compute/v1",
-            "GCP_CLIENT": False,
             "IAM_URL": "https://iam.dev.aws.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
             "METADATA_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1",
@@ -203,52 +185,12 @@ class VerifyValues(unittest.TestCase):
             "RASTER_URL": "https://platform.dev.aws.descarteslabs.com/raster/v2",
             "TESTING": True,
             "USAGE_URL": "https://platform.dev.aws.descarteslabs.com/usage/v1",
+            "VECTOR_URL": "https://platform.dev.aws.descarteslabs.com/vector/v1",
             "YAAS_URL": "https://platform.dev.aws.descarteslabs.com/yaas/v1",
         },
-        "gcp-prerelease": {
-            "AWS_CLIENT": False,
-            "CATALOG_V2_URL": "https://platform-prerelease.descarteslabs.com/metadata/v1/catalog/v2",
-            "GCP_CLIENT": True,
-            "GRPC_HOST": "platform-prerelease.descarteslabs.com",
-            "GRPC_PORT": "443",
-            "IAM_URL": "https://iam-prerelease.descarteslabs.com",
-            "LOG_LEVEL": "WARNING",
-            "METADATA_URL": "https://platform-prerelease.descarteslabs.com/metadata/v1",
-            "PLATFORM_URL": "https://platform-prerelease.descarteslabs.com",
-            "RASTER_URL": "https://platform-prerelease.descarteslabs.com/raster/v2",
-            "YAAS_URL": "https://platform-prerelease.descarteslabs.com/yaas/v1",
-        },
-        "gcp-production": {
-            "AWS_CLIENT": False,
-            "CATALOG_V2_URL": "https://platform.descarteslabs.com/metadata/v1/catalog/v2",
-            "GCP_CLIENT": True,
-            "GRPC_HOST": "platform.descarteslabs.com",
-            "GRPC_PORT": "443",
-            "IAM_URL": "https://iam.descarteslabs.com",
-            "LOG_LEVEL": "WARNING",
-            "METADATA_URL": "https://platform.descarteslabs.com/metadata/v1",
-            "PLATFORM_URL": "https://platform.descarteslabs.com",
-            "RASTER_URL": "https://platform.descarteslabs.com/raster/v2",
-            "YAAS_URL": "https://platform.descarteslabs.com/yaas/v1",
-        },
-        "gcp-stage": {
-            "AWS_CLIENT": False,
-            "CATALOG_V2_URL": "https://platform.stage.descarteslabs.com/metadata/v1/catalog/v2",
-            "GCP_CLIENT": True,
-            "GRPC_HOST": "platform.stage.descarteslabs.com",
-            "GRPC_PORT": "443",
-            "IAM_URL": "https://iam.stage.descarteslabs.com",
-            "LOG_LEVEL": "WARNING",
-            "METADATA_URL": "https://platform.stage.descarteslabs.com/metadata/v1",
-            "PLATFORM_URL": "https://platform.stage.descarteslabs.com",
-            "RASTER_URL": "https://platform.stage.descarteslabs.com/raster/v2",
-            "YAAS_URL": "https://platform.stage.descarteslabs.com/yaas/v1",
-        },
         "testing": {
-            "AWS_CLIENT": True,
             "CATALOG_V2_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1/catalog/v2",
             "COMPUTE_URL": "https://platform.dev.aws.descarteslabs.com/compute/v1",
-            "GCP_CLIENT": False,
             "IAM_URL": "https://iam.dev.aws.descarteslabs.com",
             "LOG_LEVEL": "WARNING",
             "METADATA_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1",
@@ -256,6 +198,7 @@ class VerifyValues(unittest.TestCase):
             "RASTER_URL": "https://platform.dev.aws.descarteslabs.com/raster/v2",
             "TESTING": True,
             "USAGE_URL": "https://platform.dev.aws.descarteslabs.com/usage/v1",
+            "VECTOR_URL": "https://platform.dev.aws.descarteslabs.com/vector/v1",
             "YAAS_URL": "https://platform.dev.aws.descarteslabs.com/yaas/v1",
         },
     }
