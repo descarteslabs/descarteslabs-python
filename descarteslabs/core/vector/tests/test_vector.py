@@ -212,7 +212,7 @@ class TableTestCase(BaseTestCase):
             [
                 {
                     "geometry": f["geometry"],
-                    "properties": f["properties"] | {"uuid": str(uuid4())},
+                    "properties": {**f["properties"], "uuid": str(uuid4())},
                     "type": "Feature",
                 }
                 for f in fc["features"]
