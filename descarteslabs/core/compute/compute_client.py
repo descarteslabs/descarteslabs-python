@@ -58,14 +58,25 @@ class ComputeClient(ApiService, DefaultClientMixin):
 
             yield log
 
+    def check_credentials(self):
+        """Determine if valid credentials are already set for the user."""
+        _ = self.session.get("/credentials")
+
     def set_credentials(self):
-        self.session.post(
-            "/credentials",
-            json={
-                "client_id": self.auth.client_id,
-                "client_secret": self.auth.client_secret,
-            },
-        )
+        if self.auth.client_id and self.auth.client_secret:
+            self.session.post(
+                "/credentials",
+                json={
+                    "client_id": self.auth.client_id,
+                    "client_secret": self.auth.client_secret,
+                },
+            )
+        else:
+            # We only have a JWT and no client id/secret, so validate
+            # that there are already valid credentials set for the user.
+            # This situation will generally only arise when used from
+            # some backend process.
+            self.check_credentials()
 
     def get_namespace(self, function_id: str) -> Optional[str]:
         if function_id in self._namespace_cache:

@@ -51,6 +51,8 @@ Changelog
 - The efficiency of deleting many jobs at once has been significantly improved using `Function.delete` and
   `Function.delete_jobs`. It is still possible to encounter request timeouts with very large numbers of jobs;
   workarounds are now documented in the API documentation for the `Function.delete_jobs` method.
+- The `ComputeClient.check_credentials` method has been added, so that the client can determine if valid
+  user credentials have already been registered with the Compute service.
 
 ### Vector
 
