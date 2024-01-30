@@ -28,7 +28,7 @@ jobs:
           DESCARTESLABS_ENV: testing
         run: |
           mkdir tempdir
-          pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/core/third_party" --ignore="descarteslabs/core/client/services/metadata" descarteslabs
+          pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/core/third_party" descarteslabs
           rm -r tempdir
 
   slack:

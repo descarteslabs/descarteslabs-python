@@ -1,6 +1,7 @@
 import base64
 import json
 import json as jsonlib
+import os
 import time
 import urllib.parse
 import uuid
@@ -24,6 +25,18 @@ class BaseTestCase(TestCase):
     compute_url = "https://platform.dev.aws.descarteslabs.com/compute/v1"
 
     def setUp(self):
+        # make sure all of these are gone, so our Auth is only a JWT
+        for envvar in (
+            "CLIENT_ID",
+            "DESCARTESLABS_CLIENT_ID",
+            "CLIENT_SECRET",
+            "DESCARTESLABS_CLIENT_SECRET",
+            "DESCARTESLABS_REFRESH_TOKEN",
+            "DESCARTESLABS_TOKEN",
+        ):
+            if envvar in os.environ:
+                del os.environ[envvar]
+
         responses.mock.assert_all_requests_are_fired = True
         self.now = datetime.utcnow()
 
@@ -47,7 +60,7 @@ class BaseTestCase(TestCase):
         responses.mock.assert_all_requests_are_fired = False
 
     def mock_credentials(self):
-        responses.add(responses.POST, f"{self.compute_url}/credentials")
+        responses.add(responses.GET, f"{self.compute_url}/credentials")
 
     def mock_response(self, method, uri, json=None, status=200, **kwargs):
         if json is not None:

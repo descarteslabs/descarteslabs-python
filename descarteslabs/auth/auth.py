@@ -395,7 +395,7 @@ class Auth:
                         and self.refresh_token == token_info.get(self.KEY_REFRESH_TOKEN)
                     ):
                         self._token = token_info.get(self.KEY_JWT_TOKEN)
-            elif self.refresh_token:
+            elif self.refresh_token and self.token_info_path is not None:
                 # Make the saved JWT token file unique to the refresh token
                 token = self.refresh_token
                 token_sha1 = sha1(token.encode("utf-8")).hexdigest()
