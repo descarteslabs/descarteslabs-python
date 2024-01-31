@@ -17,7 +17,11 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
-## Unreleased
+## [3.0.0rc0] - 2024-01-30
+
+Due to a number of breaking changes, the version has been bumped to 3.0.0. However, the vast majority
+of typical use patterns in typical user code will not require changes. Please review the specifics
+below.
 
 ### Catalog
 
@@ -29,7 +33,7 @@ Changelog
 - The `Blob.get_or_create` method didn't allow supplying `storage_type`, `namespace`, or `name` parameters.
   Now it works as expected, either returning a saved Blob from the Catalog, or an unsaved blob that
   you can use to upload and save its data.
-- Image methods `ndarray` and `download` no longer pass the image's default context geometry as a cutline.
+- Image methods `ndarray` and `download` no longer pass the image's default geocontext geometry as a cutline.
   This is to avoid problems when trying to raster a complete single image in its native CRS and resolution
   where imperfect geometries (due to a simplistic projection to EPSG:4326) can cause some boundary pixels
   to be masked. When passing in an explicit `GeoContext` to these methods, consider whether any cutline
@@ -48,6 +52,7 @@ Changelog
   and an `error` property which can be used to determine if all submissions were successful, what errors may
   have occurred, and what jobs have actually been created. Only if the first batch fails hard will the method
   raise an exception.
+- The `Job.statistics` member is now typed as a `JobStatistics` object.
 - The efficiency of deleting many jobs at once has been significantly improved using `Function.delete` and
   `Function.delete_jobs`. It is still possible to encounter request timeouts with very large numbers of jobs;
   workarounds are now documented in the API documentation for the `Function.delete_jobs` method.
@@ -61,7 +66,9 @@ Changelog
   installed separately.
 - Visualization support (`ipyleaflet.Map`) is enabled when `ipyleaflet` is available. It is not
   installed by default, but can be installed manually, or by installing the `descarteslabs` python
-  client with the `viz` extra (e.g. `pip install descarteslabs[viz]`).
+  client with the `viz` extra (e.g. `pip install descarteslabs[viz]`). Note that in order to be
+  compatible with jupyterlab notebooks, the `visualize()` method no longer returns the layer, it
+  just adds it to the supplied map.
 - The Vector package now has a `VectorClient` API client, with the usual support for `get_default_client()`
   and `set_default_client()`. Most constructors and methods now accept an optional `client=` parameter
   if you need to use something other than the default client.
@@ -88,9 +95,12 @@ Changelog
 - The minimum required version of `urllib3` has been bumped to 1.26.18 to address a security vulnerability.
 - The minimum required version of `shapely` has been bumped to 2.0.0 to address thread safety issues.
 - Python 3.7, formerly deprecated, is no longer supported.
-- Python 3.12 is not officially supported yet due to the lack of support from `blosc`. However, if you
+- Python 3.12 is not yet officially supported due to the lack of support from `blosc`. However, if you
   are able to provide a functional `blosc` on your own, then 3.12 should work.
 - Urllib3 2.X is now supported.
+- Geopandas, Pydantic, and PyArrow have been added as core dependencies to support the Vector client.
+- For those users of the `clear_client_state` function (not common), the bands cache for the Catalog client
+  is now cleared also.
   
 ## [2.1.2] - 2023-10-31
 
