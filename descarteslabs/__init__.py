@@ -46,6 +46,8 @@ from descarteslabs.core.client.version import __version__
 from descarteslabs import geo
 from descarteslabs import utils
 from descarteslabs import catalog
+from descarteslabs import compute
+from descarteslabs import vector
 
 select_env = config.select_env
 get_settings = config.get_settings
@@ -60,10 +62,12 @@ __all__ = [
     "GCP_ENVIRONMENT",
     "auth",
     "catalog",
+    "compute",
     "config",
     "exceptions",
     "geo",
     "get_settings",
     "select_env",
     "utils",
+    "vector",
 ]
