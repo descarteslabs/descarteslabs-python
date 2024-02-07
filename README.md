@@ -17,6 +17,12 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
+## [3.0.1] - 2024-02-07
+
+### Vector
+
+- Fixed a bug in `Table.visualize()` that was causing it to fail.
+
 ## [3.0.0] - 2024-02-01
 
 Due to a number of breaking changes, the version has been bumped to 3.0.0. However, the vast majority
