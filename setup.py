@@ -107,7 +107,7 @@ def do_setup():
             "numpy>=1.21.6;python_version>='3.8' and python_version<'3.11'",
             "numpy>=1.23.2;python_version>='3.11'",
             "Pillow>=9.2.0",
-            "pyarrow>=13.0.0",
+            "pyarrow>=14.0.1",
             "pydantic>=2.1.0",
             "pytz>=2021.1",
             "requests>=2.28.1,<3",
