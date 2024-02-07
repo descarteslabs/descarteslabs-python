@@ -968,7 +968,6 @@ class Table:
         lyr = create_layer(
             product_id=self.id,
             name=name,
-            is_spatial=self.is_spatial,
             property_filter=options.property_filter,
             columns=options.columns,
             vector_tile_layer_styles={self.id: vector_tile_layer_styles},
