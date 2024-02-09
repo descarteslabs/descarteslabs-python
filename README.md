@@ -17,6 +17,16 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
+## [3.0.2] - 2024-02-09
+
+### Vector
+
+- Fixed a bug in `Table.visualize()` which could cause Authorization (401) errors when rendering tiles into an `ipyleaflet.Map`.
+
+### General
+
+- Bumped some minimum dependency version constraints to avoid security vulnerabilities.
+
 ## [3.0.1] - 2024-02-07
 
 ### Vector
