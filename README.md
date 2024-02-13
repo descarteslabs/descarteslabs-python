@@ -17,6 +17,12 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
+## [3.0.3] - 2024-02-13
+
+### General
+
+- Fixed a bug in seldom-used code to clear client state causing an import failure.
+
 ## [3.0.2] - 2024-02-09
 
 ### Vector

@@ -32,7 +32,7 @@ def clear_client_state():
     """Clear all cached client state."""
     from descarteslabs.auth import Auth
     from ..common.http.service import DefaultClientMixin
-    from descarteslabs.catalog.helpers import (
+    from ..catalog.helpers import (
         BANDS_BY_PRODUCT_CACHE as catalog_bands_by_product_cache,
     )
 
