@@ -1,64 +1,45 @@
-#!/usr/bin/env python
-# Copyright 2018-2023 Descartes Labs.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+from descarteslabs.config import get_settings, select_env
+from ..auth.cli import cli as auth_cli
+from .. import version as version_module
+from .lazy_group import LazyGroup
 
-# flake8: noqa
+import click
+
+# Hack to determine where the client root is installed
+MODULE_PREFIX = version_module.__package__.rsplit(".", 1)[0]
 
 
-import argparse
-from ..auth.cli import auth_handler
-from ..services.raster.cli import scales, raster_handler
-from ..version import __version__
-
-
-parser = argparse.ArgumentParser()
-subparsers = parser.add_subparsers(dest="group")
-
-# Auth Group
-auth_parser = subparsers.add_parser("auth")
-auth_parser.add_argument(
-    "command",
-    choices=["login", "token", "name", "groups", "payload", "env", "version"],
-    help="The action to take (e.g. login, etc.)",
+# Use a lazy group to avoid loading these large packages until they are needed
+@click.group(
+    cls=LazyGroup,
+    lazy_subcommands={
+        "catalog": f"{MODULE_PREFIX}.catalog.cli.cli",
+        # "compute": f"{MODULE_PREFIX}.compute.scripts.cli",
+        # "vector": f"{MODULE_PREFIX}.vector.scripts.cli",
+    },
+    help="Descartes Labs command-line interface",
 )
-
-# Raster Group
-raster_parser = subparsers.add_parser("raster")
-raster_parser.add_argument("inputs", type=str, nargs="+")
-raster_parser.add_argument("-bands", nargs="+", default=None, type=str)
-raster_parser.add_argument("-scales", default=None, type=scales, nargs="+")
-raster_parser.add_argument("-resolution", default=240, type=float)
-raster_parser.add_argument("-output_format", default="GTiff", type=str)
-raster_parser.add_argument("-data_type", default="UInt16", type=str)
-raster_parser.add_argument("-srs", default=None, type=str)
-raster_parser.add_argument("-place", default=None, type=str)
-raster_parser.add_argument("-outfile_basename", default=None, type=str)
-
-# Version
-auth_parser = subparsers.add_parser("version")
+@click.option(
+    "--env", help="The environment to use", envvar="DESCARTESLABS_ENV", default=None
+)
+@click.pass_context
+def cli(ctx, env):
+    if env:
+        select_env(env)
+    ctx.obj = get_settings()
 
 
-def handle(args):
-    if args.group == "auth":
-        auth_handler(args)
-    elif args.group == "raster":
-        raster_handler(args)
-    elif args.group == "version":
-        print(__version__)
-    else:
-        print("invalid command: choose from 'auth', 'raster', 'version'")
+cli.add_command(auth_cli, name="auth")
 
 
-if __name__ == "__main__":
-    handle(parser.parse_args())
+@cli.command()
+def version():
+    """Print the version of the CLI"""
+    click.echo(version_module.__version__)
+
+
+@cli.command()
+@click.pass_context
+def env(ctx):
+    """Print the version of the CLI"""
+    click.echo(ctx.obj.env)

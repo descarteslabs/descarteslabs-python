@@ -1,4 +1,4 @@
-# this is a convenience import to avoid updating lots of files
+# this is a convenience import for backwards compatibility with external existing code
 from descarteslabs.auth import Auth
 
 

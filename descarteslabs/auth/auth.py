@@ -582,9 +582,6 @@ class Auth:
         if isinstance(token, str):
             token = token.encode("utf-8")
 
-        if isinstance(token, str):
-            token = token.encode("utf-8")
-
         try:
             # Anything that goes wrong here means it's a bad token
             claims = token.split(b".")[1]

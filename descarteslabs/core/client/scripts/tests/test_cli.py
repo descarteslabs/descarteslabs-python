@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2018-2023 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,20 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+import unittest
 
-import click
+import click.testing
 
-try:
-    from descarteslabs.core.client.scripts.cli import cli
-except ImportError:
-    # run from monorepo, somewhat unusual
-    from descarteslabs.client.scripts.cli import cli
+from ...version import __version__
+from ..cli import cli
 
 
-if __name__ == "__main__":
-    try:
-        cli()
-    except Exception as e:
-        click.echo(f"{e.__class__.__name__}: {e}", err=True)
-        sys.exit(1)
+class TestCli(unittest.TestCase):
+    def setUp(self):
+        self.runner = click.testing.CliRunner()
+
+    def test_version(self):
+        result = self.runner.invoke(cli, ["version"])
+        assert result.exit_code == 0
+        assert result.output == f"{__version__}\n"
+
+    def test_env(self):
+        result = self.runner.invoke(cli, ["env"])
+        assert result.exit_code == 0
+        assert result.output == "testing\n"
