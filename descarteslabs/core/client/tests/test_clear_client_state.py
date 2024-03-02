@@ -1,7 +1,7 @@
 import unittest
 
 from .. import clear_client_state
-from ...auth import Auth
+from descarteslabs.auth import Auth
 from ..services.raster import Raster
 
 

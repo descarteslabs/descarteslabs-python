@@ -26,12 +26,10 @@ from .. import cli
 
 REFRESH = {
     "id": "some id",
-    "client_id": "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+    "client_id": "some_client_id",
     "name": "API token",
     "revoke_url": "https://iam.descarteslabs.com/auth/credentials/revoke/revoke.me",
-    "client_secret": os.environ.get(
-        "CLIENT_SECRET", os.environ.get("DESCARTESLABS_CLIENT_SECRET")
-    ),
+    "client_secret": "some_client_secret",
 }
 REFRESH_TOKEN = base64.urlsafe_b64encode(
     json.dumps(REFRESH, separators=(",", ":")).encode("utf-8")
@@ -45,10 +43,10 @@ PAYLOAD = {
     "email_verified": True,
     "iss": "https://descarteslabs.auth0.com/",
     "sub": "google-oauth2|202801449858648638555",
-    "aud": "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+    "aud": "some_client_id",
     "exp": 1610770917,
     "iat": 1610734917,
-    "azp": "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+    "azp": "some_client_id",
 }
 PAYLOAD_JSON = json.dumps(PAYLOAD, separators=(",", ":"))
 
@@ -104,6 +102,13 @@ class TestAuth(unittest.TestCase):
 
     @responses.activate
     @patch("builtins.open", Open(PAYLOAD_JSON))
+    @patch.dict(
+        os.environ,
+        {
+            "DESCARTESLABS_CLIENT_ID": "some_client_id",
+            "DESCARTESLABS_CLIENT_SECRET": "some_client_secret",
+        },
+    )
     def test_login(self, *mocks):
         payload = base64.urlsafe_b64encode(PAYLOAD_JSON.encode("utf-8")).decode("utf-8")
         responses.add(
@@ -120,6 +125,13 @@ class TestAuth(unittest.TestCase):
 
     @responses.activate
     @patch("builtins.open", Open(PAYLOAD_JSON))
+    @patch.dict(
+        os.environ,
+        {
+            "DESCARTESLABS_CLIENT_ID": "some_client_id",
+            "DESCARTESLABS_CLIENT_SECRET": "some_client_secret",
+        },
+    )
     def test_payload(self, *mocks):
         payload = base64.urlsafe_b64encode(PAYLOAD_JSON.encode("utf-8")).decode("utf-8")
         responses.add(
