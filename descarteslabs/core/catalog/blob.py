@@ -394,7 +394,7 @@ class Blob(CatalogObject):
             raise TypeError("Must specify exactly one of id or name parameters")
         if not id:
             id = f"{storage_type}/{Blob.namespace_id(namespace)}/{name}"
-        return super(cls, Blob).get(id)
+        return super(cls, Blob).get(id, client=client)
 
     @classmethod
     def get_or_create(
@@ -660,7 +660,7 @@ class Blob(CatalogObject):
         Parameters
         ----------
         file : str or io.IOBase
-            File or files to be uploaded.  Can be string with path to the file in the
+            Where to write the downloaded blob. Can be string with path to the file in the
             local filesystem, or an file opened for writing (``io.IOBase``). If a file like
             object and already open, must be binary mode and writable. Open file-like
             objects remain open on return and must be closed by the caller.
@@ -689,7 +689,6 @@ class Blob(CatalogObject):
 
         if isinstance(file, str):
             file = io.open(file, "wb")
-            close = True
         elif isinstance(file, io.IOBase):
             close = file.closed
             if close:
@@ -942,9 +941,6 @@ class Blob(CatalogObject):
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
-        if client is None:
-            client = CatalogClient.get_default_client()
-
         blob_delete = BlobDelete(ids=ids, client=client)
 
         blob_delete.save()
@@ -973,9 +969,9 @@ class Blob(CatalogObject):
                 elif len(range) == 2:
                     range_str = f"bytes={range[0]}-{range[1]}"
                 else:
-                    ValueError("invalid range value")
+                    raise ValueError("invalid range value")
             else:
-                ValueError("invalid range value")
+                raise ValueError("invalid range value")
 
             headers["range"] = range_str
 
