@@ -698,7 +698,10 @@ class Auth:
             )
 
         if self.client_id in [
+            # production tenant
             "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+            # descarteslabs-dev tenant
+            "DK0fmkWyfgBaLzhvhhKXUeu3BkwROIkX",
         ]:  # TODO(justin) remove legacy handling
             # TODO (justin) insert deprecation warning
             if self.scope is None:
