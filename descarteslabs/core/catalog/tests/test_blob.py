@@ -15,6 +15,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import json
+import os
 import pytest
 import responses
 
@@ -781,32 +782,45 @@ class TestBlob(ClientTestCase):
             client=self.client,
         )
 
-        with NamedTemporaryFile(delete=True) as temp:
-            result = b.download(temp.name)
-            assert result == temp.name
+        with NamedTemporaryFile(delete=False) as f1:
+            with NamedTemporaryFile(delete=False) as f2:
+                try:
+                    f1.close()
+                    f2.close()
 
-            with open(temp.name, "r") as handle:
-                line = handle.readlines()[0]
+                    result = b.download(f1.name)
 
-            assert line == "This is mock download data. It can be any binary data."
+                    assert result == f1.name
 
-        with NamedTemporaryFile(delete=True) as temp:
-            with open(temp.name, "wb") as temp:
-                result = b.download(temp)
+                    with open(f1.name, "r") as handle:
+                        line = handle.readlines()[0]
 
-            assert result == temp.name
+                    assert (
+                        line == "This is mock download data. It can be any binary data."
+                    )
 
-            with open(temp.name, "r") as handle:
-                line = handle.readlines()[0]
+                    with open(f2.name, "wb") as temp:
+                        result = b.download(temp)
 
-            assert line == "This is mock download data. It can be any binary data."
+                    assert result == f2.name
 
-        with pytest.raises(ValueError):
-            b.download(1)
+                    with open(f2.name, "r") as handle:
+                        line = handle.readlines()[0]
 
-        b._saved = False
-        with pytest.raises(ValueError):
-            b.download("wrong")
+                    assert (
+                        line == "This is mock download data. It can be any binary data."
+                    )
+
+                    with pytest.raises(ValueError):
+                        b.download(1)
+
+                    b._saved = False
+                    with pytest.raises(ValueError):
+                        b.download("wrong")
+
+                finally:
+                    os.unlink(f1.name)
+                    os.unlink(f2.name)
 
     @patch.object(Blob, "namespace_id", _namespace_id)
     def test_invalid_upload_data(self):
@@ -845,12 +859,19 @@ class TestBlob(ClientTestCase):
             client=self.client,
         )
 
-        with pytest.raises(ValueError):
-            with NamedTemporaryFile(delete=True) as temp:
-                _ = b.upload(temp.name)
+        with NamedTemporaryFile(delete=False) as f1:
+            try:
+                f1.close()
 
-        b.name = None
-        b._save = False
-        with pytest.raises(ValueError):
-            with NamedTemporaryFile(delete=True) as temp:
-                _ = b.upload(temp)
+                with pytest.raises(ValueError):
+                    _ = b.upload(f1.name)
+
+                b.name = None
+                b._save = False
+
+                with pytest.raises(ValueError):
+                    with open(f1.name, "wb") as temp:
+                        _ = b.upload(temp)
+
+            finally:
+                os.unlink(f1.name)
