@@ -35,6 +35,10 @@ from ..catalog_base import DocumentState, DeletedObjectError
 from ...common.property_filtering import Properties
 
 
+def _namespace_id(namespace_id, client=None):
+    return "descarteslabs:test-namespace"
+
+
 def _blob_do_download(_, dest=None, range=None):
     mock_data = b"This is mock download data. It can be any binary data."
 
@@ -804,6 +808,7 @@ class TestBlob(ClientTestCase):
         with pytest.raises(ValueError):
             b.download("wrong")
 
+    @patch.object(Blob, "namespace_id", _namespace_id)
     def test_invalid_upload_data(self):
         b = Blob(
             name="test-blob",
@@ -826,6 +831,7 @@ class TestBlob(ClientTestCase):
         with pytest.raises(DeletedObjectError):
             b.upload_data(data="")
 
+    @patch.object(Blob, "namespace_id", _namespace_id)
     def test_invalid_upload(self):
         b = Blob(
             name="test-blob",
