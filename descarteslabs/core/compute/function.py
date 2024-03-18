@@ -98,8 +98,8 @@ class Cpus(float):
 class Memory(int):
     """Validates Memory for a Function"""
 
-    MEMORY_MB = re.compile(r"[\s]*mb|mi$", flags=re.IGNORECASE)
-    MEMORY_GB = re.compile(r"[\s]*gb|gi$", flags=re.IGNORECASE)
+    MEMORY_MB = re.compile(r"[\s]*(?:mb|mi)$", flags=re.IGNORECASE)
+    MEMORY_GB = re.compile(r"[\s]*(?:gb|gi)$", flags=re.IGNORECASE)
 
     def __new__(cls, memory: Union[str, int, float]) -> None:
         if isinstance(memory, str):
@@ -310,10 +310,22 @@ class Function(Document):
             The location of a docker image to be used for the environment where the function
             will be executed.
         cpus : Cpus
-            The number of CPUs requested for a single Job.
+            The number of CPUs requested for a single Job. CPUs can be specified as an integer,
+            float, or string. Supported CPU options include: ``0.25, 0.5, 1, 2, 4, 8, 16,
+            '0.25vCPU', '0.5vCPU', '1vCPU', '2vCPU', '4vCPU', '8vCPU', '16vCPU'``.
         memory : Memory
-            The maximum memory requirement for a single Job.
-        maximum_concurrency : str
+            The maximum memory requirement for a single Job. Memory can be specified as an
+            integer or string. If an integer is provided, it is assumed that the units are
+            megabytes. For instance, ``1024`` is equivalent to one ``1GB`` or ``1024MB`` of
+            memory. Alternatively, memory can be specified as a case-insensitive memory string,
+            such as ``'1GB'``, ``'1Gi'``, ``'1024MB'``, or ``'1024Mi'``, all of which are
+            equivalent. The allowable memory for a `Function` is determined by the number of
+            CPUs requested. Supported memory options per CPUs requested include: ``0.25vCPU:
+            0.5GB, 1GB, or 2GB``, ``0.5vCPU: 1 - 4GB in 1GB increments``, ``1vCPU: 2 - 8GB in
+            1GB increments``, ``2vCPU: 4 - 16GB in 1GB increments``, ``4vCPU: 8 - 30GB in 1GB
+            increments``, ``8vCPU: 16 - 60GB in 4GB increments``, ``16vCPU: 32 - 120GB in 8GB
+            increments``.
+        maximum_concurrency : int
             The maximum number of jobs to run in parallel.
         timeout : int, optional
             Maximum runtime for a single job in seconds. Job will be killed if it exceeds
