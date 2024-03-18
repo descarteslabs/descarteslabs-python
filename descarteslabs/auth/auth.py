@@ -594,7 +594,11 @@ class Auth:
         return self._session.get()
 
     def build_session(self):
-        return Session(self.domain, retries=self._retry_config)
+        session = Session(self.domain, retries=self._retry_config)
+        # local testing will not have necessary certs
+        if self.domain.startswith("https://dev.localhost"):
+            session.verify = False
+        return session
 
     @staticmethod
     def get_default_auth():
@@ -700,8 +704,6 @@ class Auth:
         if self.client_id in [
             # production tenant
             "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
-            # descarteslabs-dev tenant
-            "DK0fmkWyfgBaLzhvhhKXUeu3BkwROIkX",
         ]:  # TODO(justin) remove legacy handling
             # TODO (justin) insert deprecation warning
             if self.scope is None:
