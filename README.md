@@ -17,6 +17,26 @@ The documentation for the latest release can be found at [https://docs.descartes
 
 Changelog
 =========
+
+## [3.0.4] - 2024-03-20
+
+A very minor release with some obscure bug fixes.
+
+### General
+
+- The `descarteslabs` client CLI has had an overhaul. Gone is the obsolete support for the Raster client, and added is support for querying Catalog Products, Bands, and Blobs and managing sharing for the same.
+- Minor fixes to the authorization flow on login.
+
+### Catalog
+
+- Add testing of Blobs.
+
+### Compute
+
+- Corrected regular expressions used to parse the `memory` argument to the `Function` constructor.
+- Improved documentation of the the `cpus` and `memory` arguments to the `Function` constructor.
+
+
 ## [3.0.3] - 2024-02-13
 
 ### General
