@@ -24,9 +24,13 @@ except ImportError:
     from descarteslabs.client.scripts.cli import cli
 
 
-if __name__ == "__main__":
+def main():
     try:
         cli()
     except Exception as e:
         click.echo(f"{e.__class__.__name__}: {e}", err=True)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
