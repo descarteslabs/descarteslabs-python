@@ -811,14 +811,14 @@ class Function(Document):
                             )
                         )
                     else:
-                        data_files.append(
-                            (
-                                path,
-                                self._archive_path(
-                                    path, None, sys_path=self._sys_path_prefix(path)
-                                ),
-                            ),
+                        archive_path = self._archive_path(
+                            path, None, sys_path=self._sys_path_prefix(path)
                         )
+                        if archive_path == "__main__.py":
+                            raise ValueError(
+                                f"{pattern} includes a file with the forbidden relative path `__main__.py`"
+                            )
+                        data_files.append((path, archive_path))
                 else:
                     raise ValueError(f"Data file does not exist: {path}")
 
