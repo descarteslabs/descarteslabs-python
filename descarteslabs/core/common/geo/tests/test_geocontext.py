@@ -391,8 +391,8 @@ class TestDLTIle(unittest.TestCase):
         }
         dltiles1 = [tile for tile in geocontext.DLTile.iter_from_shape(shape, **params)]
         dltiles2 = geocontext.DLTile.from_shape(shape, **params)
-        assert type(dltiles1[0]) == str
-        assert type(dltiles1[1]) == str
+        assert type(dltiles1[0]) is str
+        assert type(dltiles1[1]) is str
         assert len(dltiles1) == len(dltiles2)
 
     def test_iter_from_shape_multi(self):
@@ -426,15 +426,15 @@ class TestDLTIle(unittest.TestCase):
         }
         dltiles1 = [tile for tile in geocontext.DLTile.iter_from_shape(shape, **params)]
         dltiles2 = geocontext.DLTile.from_shape(shape, **params)
-        assert type(dltiles1[0]) == str
-        assert type(dltiles1[1]) == str
+        assert type(dltiles1[0]) is str
+        assert type(dltiles1[1]) is str
         assert len(dltiles1) == len(dltiles2)
 
     def test_subtile(self):
         tile = geocontext.DLTile.from_key("2048:0:30.0:15:3:80")
         tiles = [t for t in tile.subtile(8, keys_only=True)]
         assert len(tiles) == 64
-        assert type(tiles[0]) == str
+        assert type(tiles[0]) is str
 
 
 class TestXYZTile(unittest.TestCase):

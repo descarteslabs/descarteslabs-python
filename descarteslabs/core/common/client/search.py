@@ -274,7 +274,7 @@ class Search(Generic[T]):
             filters = []
             filter = self._filters.jsonapi_serialize(self._document)
 
-            if type(self._filters) == AndExpression:
+            if type(self._filters) is AndExpression:
                 for f in filter["and"]:
                     filters.append(f)
             else:

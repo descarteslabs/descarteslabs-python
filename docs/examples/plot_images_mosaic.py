@@ -11,6 +11,7 @@ by acquisition date (and/or any other metadata property).
 
 
 """
+
 from descarteslabs.catalog import Product, properties as p
 from descarteslabs.geo import DLTile
 from descarteslabs.utils import display

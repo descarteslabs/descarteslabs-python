@@ -300,9 +300,11 @@ class ProcessingLevelsAttribute(ModelAttribute, MutableMapping):
 
         # Shallow copy for strings, deserialize ListAttributes
         return {
-            k: v
-            if isinstance(v, str)
-            else v.serialize(v, jsonapi_format=jsonapi_format)
+            k: (
+                v
+                if isinstance(v, str)
+                else v.serialize(v, jsonapi_format=jsonapi_format)
+            )
             for k, v in value.items()
         }
 

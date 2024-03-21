@@ -476,7 +476,7 @@ class Tile:
         lat: Union[float, Sequence[float]],
     ):
         """Convert lonlat coordinates to pixel coordinates"""
-        if type(lon) != type(lat):
+        if type(lon) is not type(lat):
             raise InvalidLatLonError("lat and lon should have compatible types")
 
         if isinstance(lon, (collections.abc.Sequence, np.ndarray)):
@@ -497,7 +497,7 @@ class Tile:
         col: Union[int, Sequence[int]],
     ):
         """Convert pixel coordinates to lonlat coordinates"""
-        if type(row) != type(col):
+        if type(row) is not type(col):
             raise InvalidRowColError("row and col should have compatible types")
 
         if isinstance(row, (collections.abc.Sequence, np.ndarray)):

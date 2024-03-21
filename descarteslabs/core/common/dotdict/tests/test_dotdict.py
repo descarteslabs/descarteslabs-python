@@ -246,16 +246,16 @@ class TestUnbox(unittest.TestCase):
         d = DotDict({"a": 1, "b": 2})
 
         unboxed = d.asdict()
-        assert type(unboxed) == dict
+        assert type(unboxed) is dict
         assert unboxed == d
 
         obj = DotDict(a=d)
         unboxed = obj.asdict()
-        assert type(unboxed["a"]) == dict
+        assert type(unboxed["a"]) is dict
 
         obj = DotList(DotDict(i=i) for i in range(10))
         unboxed = obj.aslist()
-        assert type(unboxed) == list
+        assert type(unboxed) is list
         assert all(type(x) is dict for x in unboxed)
 
         obj = DotDict({i: DotList(range(i)) for i in range(10)})
@@ -289,7 +289,7 @@ class TestUnbox(unittest.TestCase):
 
         d.loop = d
         unboxed = d.asdict()
-        assert type(unboxed["loop"]) == dict
+        assert type(unboxed["loop"]) is dict
 
 
 class TestDotList(unittest.TestCase):

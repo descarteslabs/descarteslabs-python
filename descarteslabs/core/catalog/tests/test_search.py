@@ -38,7 +38,7 @@ class TestSearch(ClientTestCase):
         Sort all lists in filter definitions in a more or less stable way
         in place for comparison.
         """
-        if type(filters) == list:
+        if type(filters) is list:
             filters.sort(
                 key=lambda i: (
                     len(i.get("and", [])),
@@ -99,7 +99,7 @@ class TestSearch(ClientTestCase):
         )
         results = list(self.search)
         assert len(results) == 1
-        assert type(results[0]) == Product
+        assert type(results[0]) is Product
         # followed continuation token
         assert responses.calls[0].request.url == self.url + "/products"
         assert (

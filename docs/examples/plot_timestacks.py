@@ -5,6 +5,7 @@ Create time stacks of images
 
 This example demonstrates how to aggregate the images returned from a Catalog image search by date.
 """
+
 from descarteslabs.catalog import Product, properties as p
 from descarteslabs.utils import display
 

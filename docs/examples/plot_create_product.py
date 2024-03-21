@@ -6,6 +6,7 @@ Upload ndarray to new product
 This example demonstrates how to create a product
 in our Catalog and upload an example image.
 """
+
 from descarteslabs.catalog import Product, SpectralBand, Image, properties as p
 import uuid
 

@@ -170,7 +170,7 @@ class Search(object):
             serialized = self._filter_properties.jsonapi_serialize(self._model_cls)
             # Flatten top-level "and" expressions since they are fairly common, e.g.
             # if you call filter() multiple times.
-            if type(self._filter_properties) == AndExpression:
+            if type(self._filter_properties) is AndExpression:
                 for f in serialized["and"]:
                     filters.append(f)
             else:
