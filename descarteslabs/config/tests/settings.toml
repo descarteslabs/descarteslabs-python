@@ -1,11 +1,3 @@
 ["testing"]
 testing = "hello"
-iam_url = "https://aws_url"
-
-["aws-testing"]
-testing = "hello"
-iam_url = "https://aws_url"
-
-["gcp-testing"]
-testing = "hello"
-iam_url = "https://gcp_url"
+iam_url = "https://test_url"

@@ -88,7 +88,7 @@ class TestSettings(unittest.TestCase):
 
     def test_peek_settings(self):
         current_env = os.environ["DESCARTESLABS_ENV"]
-        env = "aws-testing"
+        env = "aws-production"
         settings = Settings.peek_settings(env)
         assert os.environ["DESCARTESLABS_ENV"] == current_env
         assert settings.env == env
@@ -105,22 +105,17 @@ class TestSettings(unittest.TestCase):
 
     def test_default_auth(self):
         a = Auth()
-        a.domain == "http://gcp_url"
+        assert a.domain == "https://iam.dev.aws.descarteslabs.com"
 
     def test_auth_with_env(self):
-        with patch.dict(os.environ, {"DESCARTESLABS_ENV": "aws-testing"}):
+        with patch.dict(os.environ, {"DESCARTESLABS_ENV": "aws-production"}):
             a = Auth()
-            a.domain == "http://aws_url"
+            assert a.domain == "https://iam.production.aws.descarteslabs.com"
 
-    def test_auth_with_aws_config(self):
-        Settings.select_env("aws-testing")
+    def test_auth_with_test_config(self):
+        Settings.select_env("aws-production")
         a = Auth()
-        a.domain == "http://aws_url"
-
-    def test_auth_with_gcp_config(self):
-        Settings.select_env("testing")
-        a = Auth()
-        a.domain == "http://gcp_url"
+        assert a.domain == "https://iam.production.aws.descarteslabs.com"
 
     def test_env(self):
         peek1_env = "aws-dev"
@@ -174,19 +169,6 @@ class VerifyValues(unittest.TestCase):
             "USAGE_URL": "https://platform.staging.aws.descarteslabs.com/usage/v1",
             "VECTOR_URL": "https://platform.staging.aws.descarteslabs.com/vector/v1",
             "YAAS_URL": "https://platform.staging.aws.descarteslabs.com/yaas/v1",
-        },
-        "aws-testing": {
-            "CATALOG_V2_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1/catalog/v2",
-            "COMPUTE_URL": "https://platform.dev.aws.descarteslabs.com/compute/v1",
-            "IAM_URL": "https://iam.dev.aws.descarteslabs.com",
-            "LOG_LEVEL": "WARNING",
-            "METADATA_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1",
-            "PLATFORM_URL": "https://platform.dev.aws.descarteslabs.com",
-            "RASTER_URL": "https://platform.dev.aws.descarteslabs.com/raster/v2",
-            "TESTING": True,
-            "USAGE_URL": "https://platform.dev.aws.descarteslabs.com/usage/v1",
-            "VECTOR_URL": "https://platform.dev.aws.descarteslabs.com/vector/v1",
-            "YAAS_URL": "https://platform.dev.aws.descarteslabs.com/yaas/v1",
         },
         "testing": {
             "CATALOG_V2_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1/catalog/v2",
