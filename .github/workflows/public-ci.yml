@@ -22,13 +22,22 @@ jobs:
         run: |
           pip wheel --no-deps --wheel-dir wheels -e .
           pip install -e .[complete,tests]
-      - name: Test AWS
+      - name: Test Client
         env:
           TMPDIR: tempdir
           DESCARTESLABS_ENV: testing
         run: |
           mkdir tempdir
           pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/core/third_party" descarteslabs
+          rm -r tempdir
+      - name: Test CLI
+        env:
+          TMPDIR: tempdir
+          DESCARTESLABS_ENV: testing
+        run: |
+          mkdir tempdir
+          # this just needs to run without error
+          descarteslabs version
           rm -r tempdir
 
   slack:
