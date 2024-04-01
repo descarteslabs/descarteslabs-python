@@ -26,7 +26,7 @@ taos = {
 ################################################
 # Create an ImageCollection.
 search = (
-    Product.get("usgs:landsat:oli-tirs:c2:l1:v0")
+    Product.get("usgs:landsat:oli-tirs:c2:l2:v0")
     .images()
     .intersects(taos)
     .filter("2018-01-01" <= p.acquired < "2018-12-31")

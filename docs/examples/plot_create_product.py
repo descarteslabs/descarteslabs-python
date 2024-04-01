@@ -73,7 +73,7 @@ paris = {
 }
 
 search = (
-    Product.get("esa:sentinel-2:l1c:v1")
+    Product.get("esa:sentinel-2:l2a:v1")
     .images()
     .intersects(paris)
     .filter("2020-06-24" < p.acquired < "2020-06-30")
