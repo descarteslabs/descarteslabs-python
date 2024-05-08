@@ -28,10 +28,9 @@ from ..image_upload import ImageUploadStatus
 from ..product import (
     Product,
     Resolution,
-    TaskState,
-    TaskStatus,
     DeletionTaskStatus,
 )
+from ..task import TaskState, TaskStatus
 from .base import ClientTestCase
 
 

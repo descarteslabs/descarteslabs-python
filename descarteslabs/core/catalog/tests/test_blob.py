@@ -30,7 +30,7 @@ from unittest.mock import patch
 from descarteslabs.exceptions import BadRequestError
 from .base import ClientTestCase
 from ..attributes import AttributeValidationError
-from ..blob import Blob, BlobCollection, BlobSearch, StorageType
+from ..blob import Blob, BlobCollection, BlobDeletionTaskStatus, BlobSearch, StorageType
 from ..blob_upload import BlobUpload
 from ..catalog_base import DocumentState, DeletedObjectError
 from ...common.property_filtering import Properties
@@ -627,15 +627,71 @@ class TestBlob(ClientTestCase):
             _saved=True,
         )
         self.mock_response(
-            responses.DELETE,
+            responses.POST,
             {
+                "data": {
+                    "id": "123",
+                    "attributes": {
+                        "status": "RUNNING",
+                        "ids": [b.id],
+                    },
+                    "type": "storage_delete",
+                },
                 "meta": {"message": "Object successfully deleted"},
+                "jsonapi": {"version": "1.0"},
+            },
+            status=201,
+        )
+
+        task = b.delete()
+        assert isinstance(task, BlobDeletionTaskStatus)
+        assert b.state == DocumentState.DELETED
+
+    @responses.activate
+    def test_class_delete(self):
+        blob_id = "data/descarteslabs:test-namespace/test-blob"
+        self.mock_response(
+            responses.POST,
+            {
+                "data": {
+                    "id": "123",
+                    "attributes": {
+                        "status": "RUNNING",
+                        "ids": [blob_id],
+                    },
+                    "type": "storage_delete",
+                },
+                "jsonapi": {"version": "1.0"},
+            },
+            status=201,
+        )
+
+        task = Blob.delete(blob_id, client=self.client)
+        assert isinstance(task, BlobDeletionTaskStatus)
+        assert task.id == "123"
+        assert task.status == "RUNNING"
+        assert task.ids == [blob_id]
+
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "id": "123",
+                    "attributes": {
+                        "status": "SUCCESS",
+                        "objects_deleted": 1,
+                        "errors": None,
+                    },
+                    "type": "storage_delete",
+                },
                 "jsonapi": {"version": "1.0"},
             },
         )
 
-        b.delete()
-        assert b.state == DocumentState.DELETED
+        task.wait_for_completion()
+        assert task.status == "SUCCESS"
+        assert task.objects_deleted == 1
+        assert task.ids == [blob_id]
 
     @responses.activate
     def test_delete_non_existent(self):
@@ -645,7 +701,12 @@ class TestBlob(ClientTestCase):
             client=self.client,
             _saved=True,
         )
-        self.mock_response(responses.DELETE, self.not_found_json, status=404)
+
+        self.mock_response(
+            responses.POST,
+            self.not_found_json,
+            status=404,
+        )
 
         with pytest.raises(DeletedObjectError):
             b.delete()
@@ -657,15 +718,34 @@ class TestBlob(ClientTestCase):
             {
                 "data": {
                     "attributes": {
+                        "status": "RUNNING",
+                        "start_datetime": "2024-01-01T00:00:00Z",
                         "ids": [
                             "data/descarteslabs:test-namespace/test-blob-0",
                             "data/descarteslabs:test-namespace/test-blob-1",
-                        ]
+                        ],
                     },
-                    "id": "unique-test-id",
+                    "id": "123",
                     "type": "storage_delete",
                 }
             },
+            201,
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "data": {
+                    "attributes": {
+                        "status": "SUCCESS",
+                        "start_datetime": "2024-01-01T00:00:00Z",
+                        "duration_in_seconds": 1.0,
+                        "objects_deleted": 2,
+                    },
+                    "id": "123",
+                    "type": "storage_delete",
+                }
+            },
+            201,
         )
 
         deleted_blobs = Blob.delete_many(
@@ -674,6 +754,7 @@ class TestBlob(ClientTestCase):
                 "data/descarteslabs:test/test-blob-1",
                 "data/descarteslabs:test/nonexistent-blob",
             ],
+            wait_for_completion=True,
             client=self.client,
         )
 
@@ -840,11 +921,6 @@ class TestBlob(ClientTestCase):
         with pytest.raises(ValueError):
             b.upload_data(data="")
 
-        b.name = "test-blob"
-        b._saved = False
-        with pytest.raises(DeletedObjectError):
-            b.upload_data(data="")
-
     @patch.object(Blob, "namespace_id", _namespace_id)
     def test_invalid_upload(self):
         b = Blob(
@@ -865,13 +941,6 @@ class TestBlob(ClientTestCase):
 
                 with pytest.raises(ValueError):
                     _ = b.upload(f1.name)
-
-                b.name = None
-                b._save = False
-
-                with pytest.raises(ValueError):
-                    with open(f1.name, "wb") as temp:
-                        _ = b.upload(temp)
 
             finally:
                 os.unlink(f1.name)

@@ -18,6 +18,12 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## Unreleased
+
+### Catalog
+
+- The Catalog Storage Blob deletion methods have been enhanced to support waiting for completion of the operation. When a blob is deleted, it is removed immediately from the catalog and a background asynchronous task is launched to clean up the contents of the blob from the backing storage. If a blob is deleted and then a new blob with the identical id is immediately created and uploaded before this background task completes, it is possible for the background task to end up deleting the new blob contents. As of this release the `Blob` instance and class delete methods return a `BlobDeletionTaskStatus` object which provides a `wait_for_completion` method which can be used to wait until the background task completes and it is safe to create a new blob with the same id. For the `Blob.delete_many` method, the `wait_for_completion=True` parameter can be used to wait for all the supplied blobs to be completely deleted. Note that in the case of the `Blob.delete` class method, this is a very slight breaking change, as it used to return True or False, and now instead returns a `BlobDeletionTaskStatus` or `None`, which have the same truthiness and hence are very likely to behave identically in practical use.
+
 ## [3.0.5] - 2024-03-21
 
 Bugfix only

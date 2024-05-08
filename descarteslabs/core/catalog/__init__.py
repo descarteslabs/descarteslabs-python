@@ -17,11 +17,11 @@ available from Descartes Labs.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .task import TaskState
 from .product import (
     DeletionTaskStatus,
     Product,
     ProductCollection,
-    TaskState,
 )
 from .band import (
     Band,
@@ -38,7 +38,14 @@ from .band import (
     ProcessingStepAttribute,
     SpectralBand,
 )
-from .blob import Blob, BlobCollection, BlobSearch, BlobSummaryResult, StorageType
+from .blob import (
+    Blob,
+    BlobCollection,
+    BlobDeletionTaskStatus,
+    BlobSearch,
+    BlobSummaryResult,
+    StorageType,
+)
 from .image import Image, ImageSearch, ImageSummaryResult
 from .image_types import ResampleAlgorithm, DownloadFileFormat
 from .image_upload import (
@@ -87,6 +94,7 @@ __all__ = [
     "BandType",
     "Blob",
     "BlobCollection",
+    "BlobDeletionTaskStatus",
     "BlobSearch",
     "BlobSummaryResult",
     "CatalogClient",

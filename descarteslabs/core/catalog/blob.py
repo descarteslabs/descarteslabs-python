@@ -31,10 +31,16 @@ from .attributes import (
     TypedAttribute,
     parse_iso_datetime,
 )
-from .blob_delete import BlobDelete
 from .blob_download import BlobDownload
-from .catalog_base import CatalogClient, CatalogObject, check_deleted
+from .catalog_base import (
+    CatalogClient,
+    CatalogObject,
+    check_deleted,
+    check_derived,
+    UnsavedObjectError,
+)
 from .search import AggregateDateField, GeoSearch, SummarySearchMixin
+from .task import TaskStatus
 
 properties = Properties()
 
@@ -911,13 +917,15 @@ class Blob(CatalogObject):
         return cls(id=id, client=client)._do_download(dest=dest, range=range)
 
     @classmethod
-    def delete_many(cls, ids, client=None):
+    def delete_many(
+        cls, ids, raise_on_missing=False, wait_for_completion=False, client=None
+    ):
         """Delete many blobs from the Descartes Labs catalog.
 
         Only those blobs that exist and are owned by the user will be deleted.
-        No errors will be raised for blobs that do not exist or are not owned by
-        the user. If you need to know, compare the supplied list of ids with the
-        returned list of delete ids.
+        No errors will be raised for blobs that do not exist or are visible but
+        not owned by the user. If you need to know, compare the supplied list of
+        ids with the returned list of deleted ids.
 
         All blobs to be deleted must belong to the same purchase.
 
@@ -925,6 +933,11 @@ class Blob(CatalogObject):
         ----------
         ids : list(str)
             A list of blob ids to delete.
+        raise_on_missing : bool, optional
+            If True, raise an exception if any of the blobs are not found, otherwise ignore
+            missing blobs. Defaults to False.
+        wait_for_completion : bool, optional
+            If True, wait for the deletion to complete before returning. Defaults to False.
         client : CatalogClient, optional
             A `CatalogClient` instance to use for requests to the Descartes Labs catalog.
             The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
@@ -941,11 +954,17 @@ class Blob(CatalogObject):
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
-        blob_delete = BlobDelete(ids=ids, client=client)
+        if client is None:
+            client = CatalogClient.get_default_client()
 
-        blob_delete.save()
+        task_status = BlobDeletionTaskStatus.create(
+            ids=ids, raise_on_missing=raise_on_missing, client=client
+        )
 
-        return blob_delete.ids
+        if wait_for_completion:
+            task_status.wait_for_completion()
+
+        return task_status.ids
 
     def _do_download(self, dest=None, range=None):
         download = BlobDownload.get(id=self.id, client=self._client)
@@ -993,6 +1012,80 @@ class Blob(CatalogObject):
             finally:
                 r.close()
 
+    @classmethod
+    @check_derived
+    def delete(cls, id, client=None):
+        """Delete the catalog object with the given `id`.
+
+        Parameters
+        ----------
+        id : str
+            The id of the object to be deleted.
+        client : CatalogClient, optional
+            A `CatalogClient` instance to use for requests to the Descartes Labs
+            catalog.  The
+            :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
+            be used if not set.
+
+        Returns
+        -------
+        BlobDeletionTaskStatus
+            The status of the deletion task which can be used to wait for completion. ``None`` if the
+            object was not found.
+
+        Raises
+        ------
+        ConflictError
+            If the object has related objects (bands, images) that exist.
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
+
+        Example
+        -------
+        >>> Image.delete('my-image-id') # doctest: +SKIP
+        """
+        if client is None:
+            client = CatalogClient.get_default_client()
+
+        try:
+            return BlobDeletionTaskStatus.create(
+                ids=[id], raise_on_missing=True, client=client
+            )
+        except NotFoundError:
+            return None
+
+    @check_deleted
+    def _instance_delete(self):
+        """Delete this catalog object from the Descartes Labs catalog.
+
+        Once deleted, you cannot use the catalog object and should release any
+        references.
+
+        Returns
+        -------
+        BlobDeletionTaskStatus
+            The status of the deletion task which can be used to wait for completion.
+
+        Raises
+        ------
+        DeletedObjectError
+            If this catalog object was already deleted.
+        UnsavedObjectError
+            If this catalog object is being deleted without having been saved.
+        ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
+            :ref:`Spurious exception <network_exceptions>` that can occur during a
+            network request.
+        """
+        if self.state == DocumentState.UNSAVED:
+            raise UnsavedObjectError("You cannot delete an unsaved object.")
+
+        task_status = BlobDeletionTaskStatus.create(
+            ids=[self.id], raise_on_missing=True, client=self._client
+        )
+        self._deleted = True  # non-200 will raise an exception
+        return task_status
+
 
 class BlobCollection(Collection):
     _item_type = Blob
@@ -1000,3 +1093,66 @@ class BlobCollection(Collection):
 
 # handle circular references
 Blob._collection_type = BlobCollection
+
+
+class BlobDeletionTaskStatus(TaskStatus):
+    """The asynchronous deletion task's status
+
+    Attributes
+    ----------
+    id : str
+        The id of the object for which this task is running.
+    status : TaskState
+        The state of the task as explained in `TaskState`.
+    start_datetime : datetime
+        The date and time at which the task started running.
+    duration_in_seconds : float
+        The duration of the task.
+    objects_deleted : int
+        The number of objects (a combination of bands or images) that were deleted.
+    errors : list
+        In case the status is ``FAILED`` this will contain a list of errors
+        that were encountered.  In all other states this will not be set.
+    ids : list
+        The ids of the objects that were deleted.
+    """
+
+    _task_name = "delete task"
+    _url = "/storage/delete/{}"
+
+    def __init__(self, objects_deleted=None, ids=None, **kwargs):
+        super(BlobDeletionTaskStatus, self).__init__(**kwargs)
+        self.objects_deleted = objects_deleted
+        self.ids = ids
+
+    @classmethod
+    def create(cls, ids, raise_on_missing, client):
+        # TaskStatus objects are not catalog objects so we need to do this manually
+        response = client.session.post(
+            "/storage/delete",
+            json={
+                "data": {
+                    "attributes": {
+                        "ids": ids,
+                        "raise_on_missing": raise_on_missing,
+                    },
+                    "type": "storage_delete",
+                }
+            },
+        )
+
+        if response.status_code == 201:
+            data = response.json()["data"]
+            return BlobDeletionTaskStatus(
+                id=data["id"], _client=client, **data["attributes"]
+            )
+        else:
+            return None
+
+    def __repr__(self):
+        text = super(BlobDeletionTaskStatus, self).__repr__()
+
+        if self.objects_deleted:
+            text += "\n  - {:,} objects deleted".format(self.objects_deleted)
+
+        return text
