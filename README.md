@@ -18,7 +18,11 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## Unreleased
+## [3.1.0] - 2024-05-09
+
+### General
+
+- Due to declining support for Python 3.8 across the ecosystem, we have discontinued our support for Python 3.8. It is expected that the client will continue to function until Python 3.8 is End of Life (October 2024), but we can no longer test new releases against this version.
 
 ### Catalog
 

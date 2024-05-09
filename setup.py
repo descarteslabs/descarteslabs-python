@@ -67,7 +67,6 @@ def do_setup():
         classifiers=[
             "Programming Language :: Python",
             "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
             "Programming Language :: Python :: 3.11",
@@ -91,7 +90,7 @@ def do_setup():
                 "descarteslabs = descarteslabs.core.client.scripts.__main__:main"
             ]
         },
-        python_requires="~=3.8",
+        python_requires="~=3.9",
         install_requires=[
             "affine>=2.2.2",
             "blosc>=1.10.6",
@@ -100,7 +99,8 @@ def do_setup():
             "dynaconf>=3.1.11",
             "geojson>=2.5.0",
             "geopandas>=0.13.2",
-            "imagecodecs>=2021.5.20",
+            "imagecodecs>=2021.6.8,<=2023.3.16;python_version=='3.8'",
+            "imagecodecs>=2023.3.16;python_version>='3.9'",
             "lazy_object_proxy>=1.7.1",
             "mercantile>=1.1.3",
             "numpy>=1.22.0;python_version>='3.8' and python_version<'3.11'",
