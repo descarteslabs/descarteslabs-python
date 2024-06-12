@@ -15,6 +15,7 @@
 import logging
 import uuid
 from http import HTTPStatus
+import warnings
 
 import requests
 import requests.adapters
@@ -22,6 +23,16 @@ import requests.compat
 import requests.utils
 import urllib3
 import urllib3.exceptions
+
+try:
+    from urllib3.contrib.socks import SOCKSProxyManager
+except ImportError:
+
+    def SOCKSProxyManager(*args, **kwargs):
+        raise requests.exceptions.InvalidSchema(
+            "Missing dependencies for SOCKS support."
+        )
+
 
 from descarteslabs.exceptions import (
     BadRequestError,
@@ -145,6 +156,17 @@ class HTTPAdapter(requests.adapters.HTTPAdapter):
 
         if proxy in self.proxy_manager:
             manager = self.proxy_manager[proxy]
+        elif proxy.lower().startswith("socks"):
+            username, password = requests.utils.get_auth_from_url(proxy)
+            manager = self.proxy_manager[proxy] = SOCKSProxyManager(
+                proxy,
+                username=username,
+                password=password,
+                num_pools=self._pool_connections,
+                maxsize=self._pool_maxsize,
+                block=self._pool_block,
+                **proxy_kwargs,
+            )
         else:
             proxy_headers = self.proxy_headers(proxy, url)
             manager = self.proxy_manager[proxy] = urllib3.poolmanager.proxy_from_url(
@@ -158,6 +180,55 @@ class HTTPAdapter(requests.adapters.HTTPAdapter):
 
         return manager
 
+    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+        """Returns a urllib3 connection for the given request and TLS settings.
+        This should not be called from user code, and is only exposed for use
+        when subclassing the :class:`HTTPAdapter <requests.adapters.HTTPAdapter>`.
+
+        :param request:
+            The :class:`PreparedRequest <PreparedRequest>` object to be sent
+            over the connection.
+        :param verify:
+            Either a boolean, in which case it controls whether we verify the
+            server's TLS certificate, or a string, in which case it must be a
+            path to a CA bundle to use.
+        :param proxies:
+            (optional) The proxies dictionary to apply to the request.
+        :param cert:
+            (optional) Any user-provided SSL certificate to be used for client
+            authentication (a.k.a., mTLS).
+        :rtype:
+            urllib3.ConnectionPool
+        """
+        proxy = requests.utils.select_proxy(request.url, proxies)
+        try:
+            host_params, pool_kwargs = self.build_connection_pool_key_attributes(
+                request,
+                verify,
+                cert,
+            )
+        except ValueError as e:
+            raise requests.exceptions.InvalidURL(e, request=request)
+        if proxy:
+            proxy = requests.utils.prepend_scheme_if_needed(proxy, "http")
+            proxy_url = urllib3.util.parse_url(proxy)
+            if not proxy_url.host:
+                raise requests.exceptions.InvalidProxyURL(
+                    "Please check proxy URL. It is malformed "
+                    "and could be missing the host."
+                )
+            proxy_manager = self.proxy_manager_for(proxy, request.url)
+            conn = proxy_manager.connection_from_host(
+                **host_params, pool_kwargs=pool_kwargs
+            )
+        else:
+            # Only scheme should be lower case
+            conn = self.poolmanager.connection_from_host(
+                **host_params, pool_kwargs=pool_kwargs
+            )
+
+        return conn
+
     def get_connection(self, url, proxies=None):
         """Copied from requests.adapters.HTTPAdapter to pass request url to proxy_manager_for()
 
@@ -169,6 +240,15 @@ class HTTPAdapter(requests.adapters.HTTPAdapter):
             The proxies configured for this request.
         """
 
+        warnings.warn(
+            (
+                "`get_connection` has been deprecated in favor of "
+                "`get_connection_with_tls_context`. Custom HTTPAdapter subclasses "
+                "will need to migrate for Requests>=2.32.2. Please see "
+                "https://github.com/psf/requests/pull/6710 for more details."
+            ),
+            DeprecationWarning,
+        )
         proxy = requests.utils.select_proxy(url, proxies)
 
         if proxy:

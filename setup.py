@@ -109,7 +109,7 @@ def do_setup():
             "pyarrow>=14.0.1",
             "pydantic>=2.1.0",
             "pytz>=2021.1",
-            "requests>=2.31.0,<3",
+            "requests>=2.32.3,<3",
             # It is not obvious but dynaconf requires pkg_resources from setuptools.
             "setuptools>=65.6.3",
             "shapely>=2.0.0",
