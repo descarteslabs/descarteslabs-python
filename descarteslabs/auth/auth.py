@@ -119,6 +119,15 @@ def get_default_domain():
     return peek_settings().iam_url
 
 
+def get_app_domain():
+    from descarteslabs.config import peek_settings
+
+    class DummyAuth:
+        payload = {}
+
+    return peek_settings().app_url
+
+
 class Auth:
     """Client used to authenticate with all Descartes Labs service APIs."""
 

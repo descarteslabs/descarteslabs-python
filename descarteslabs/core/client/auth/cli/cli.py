@@ -27,11 +27,11 @@ from descarteslabs.auth.auth import (
     DESCARTESLABS_TOKEN_INFO_PATH,
     Auth,
     base64url_decode,
-    get_default_domain as get_auth_domain,
+    get_app_domain as get_auth_refresh_domain,
 )
 
 
-LOGIN_URL = f"{get_auth_domain()}/auth/refresh_token"
+LOGIN_URL = f"{get_auth_refresh_domain()}/refresh_token"
 
 
 # this is defined this way to support mocking in the tests

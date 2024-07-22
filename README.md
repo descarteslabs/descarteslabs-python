@@ -563,7 +563,7 @@ below.
 - The `Config` exceptions `RuntimeError` and `KeyError` were changed to `ConfigError` exceptions
   from `descarteslabs.exceptions`.
 - `Auth` now retrieves its URL from the `Config` settings. If no valid configuration can be found,
-  it reverts to the commercial service (`https://iam.descarteslabs.com`).
+  it reverts to the commercial service (`https://app.descarteslabs.com`).
 
 ### General
 - Dependencies for the descarteslabs library have been updated, but remain constrained to continue to support Python 3.7.

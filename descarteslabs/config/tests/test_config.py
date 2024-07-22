@@ -135,6 +135,7 @@ class TestSettings(unittest.TestCase):
 class VerifyValues(unittest.TestCase):
     configs = {
         "aws-dev": {
+            "APP_URL": "https://packaged-analytics.production.aws.descarteslabs.com",
             "CATALOG_V2_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1/catalog/v2",
             "COMPUTE_URL": "https://platform.dev.aws.descarteslabs.com/compute/v1",
             "IAM_URL": "https://iam.dev.aws.descarteslabs.com",
@@ -146,7 +147,18 @@ class VerifyValues(unittest.TestCase):
             "VECTOR_URL": "https://platform.dev.aws.descarteslabs.com/vector/v1",
             "YAAS_URL": "https://platform.dev.aws.descarteslabs.com/yaas/v1",
         },
+        "aws-freemium": {
+            "APP_URL": "https://packaged-analytics.production.aws.descarteslabs.com",
+            "CATALOG_V2_URL": "https://platform.freemium.aws.descarteslabs.com/metadata/v1/catalog/v2",
+            "IAM_URL": "https://iam.freemium.aws.descarteslabs.com",
+            "LOG_LEVEL": "WARNING",
+            "METADATA_URL": "https://platform.freemium.aws.descarteslabs.com/metadata/v1",
+            "PLATFORM_URL": "https://platform.freemium.aws.descarteslabs.com",
+            "RASTER_URL": "https://platform.freemium.aws.descarteslabs.com/raster/v2",
+            "USAGE_URL": "https://platform.freemium.aws.descarteslabs.com/usage/v1",
+        },
         "aws-production": {
+            "APP_URL": "https://packaged-analytics.production.aws.descarteslabs.com",
             "CATALOG_V2_URL": "https://platform.production.aws.descarteslabs.com/metadata/v1/catalog/v2",
             "COMPUTE_URL": "https://platform.production.aws.descarteslabs.com/compute/v1",
             "IAM_URL": "https://iam.production.aws.descarteslabs.com",
@@ -159,6 +171,7 @@ class VerifyValues(unittest.TestCase):
             "YAAS_URL": "https://platform.production.aws.descarteslabs.com/yaas/v1",
         },
         "aws-staging": {
+            "APP_URL": "https://packaged-analytics.production.aws.descarteslabs.com",
             "CATALOG_V2_URL": "https://platform.staging.aws.descarteslabs.com/metadata/v1/catalog/v2",
             "COMPUTE_URL": "https://platform.staging.aws.descarteslabs.com/compute/v1",
             "IAM_URL": "https://iam.staging.aws.descarteslabs.com",
@@ -171,6 +184,7 @@ class VerifyValues(unittest.TestCase):
             "YAAS_URL": "https://platform.staging.aws.descarteslabs.com/yaas/v1",
         },
         "testing": {
+            "APP_URL": "https://packaged-analytics.production.aws.descarteslabs.com",
             "CATALOG_V2_URL": "https://platform.dev.aws.descarteslabs.com/metadata/v1/catalog/v2",
             "COMPUTE_URL": "https://platform.dev.aws.descarteslabs.com/compute/v1",
             "IAM_URL": "https://iam.dev.aws.descarteslabs.com",
