@@ -36,14 +36,18 @@ except ImportError:
 
 from descarteslabs.exceptions import (
     BadRequestError,
+    ClientError,
     ConflictError,
+    ForbiddenError,
     GatewayTimeoutError,
     GoneError,
+    MethodNotAllowedError,
     NotFoundError,
     ProxyAuthenticationRequiredError,
     RateLimitError,
     RequestCancellationError,
     ServerError,
+    UnauthorizedError,
     ValidationError,
 )
 
@@ -396,11 +400,17 @@ class Session(requests.Session):
             return resp
         elif resp.status_code == HTTPStatus.BAD_REQUEST:
             raise BadRequestError(resp.text)
+        elif resp.status_code == HTTPStatus.UNAUTHORIZED:
+            raise UnauthorizedError(resp.text)
+        elif resp.status_code == HTTPStatus.FORBIDDEN:
+            raise ForbiddenError(resp.text)
         elif resp.status_code == HTTPStatus.NOT_FOUND:
             text = resp.text
             if not text:
                 text = "{} {} {}".format(HTTPStatus.NOT_FOUND, method, url)
             raise NotFoundError(text)
+        elif resp.status_code == HTTPStatus.METHOD_NOT_ALLOWED:
+            raise MethodNotAllowedError(resp.text)
         elif resp.status_code == HTTPStatus.PROXY_AUTHENTICATION_REQUIRED:
             raise ProxyAuthenticationRequiredError(
                 resp.text,
@@ -417,6 +427,10 @@ class Session(requests.Session):
             raise RateLimitError(
                 resp.text, retry_after=resp.headers.get(HttpHeaderKeys.RetryAfter)
             )
+        elif resp.status_code < HTTPStatus.INTERNAL_SERVER_ERROR:
+            ex = ClientError(resp.text)
+            ex.status = resp.status_code.value
+            raise ex
         elif resp.status_code == HTTPStatus.GATEWAY_TIMEOUT:
             raise GatewayTimeoutError(
                 "Your request timed out on the server. "

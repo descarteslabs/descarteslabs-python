@@ -52,16 +52,28 @@ class BadRequestError(ClientError):
     status = 400
 
 
-class ValidationError(BadRequestError):
-    """Client request with invalid parameters."""
+class UnauthorizedError(ClientError):
+    """Client request lacking authentication."""
 
-    status = 422
+    status = 401
+
+
+class ForbiddenError(ClientError):
+    """Client request lacks necessary permissions."""
+
+    status = 403
 
 
 class NotFoundError(ClientError):
     """Resource not found."""
 
     status = 404
+
+
+class MethodNotAllowedError(ClientError):
+    """Requested nethod not supported by the resource."""
+
+    status = 405
 
 
 class ProxyAuthenticationRequiredError(ClientError):
@@ -94,6 +106,12 @@ class GoneError(ClientError):
     """Client request to a URL which has been permanently removed."""
 
     status = 410
+
+
+class ValidationError(BadRequestError):
+    """Client request with invalid parameters."""
+
+    status = 422
 
 
 class RateLimitError(ClientError):
