@@ -634,7 +634,7 @@ class Band(NamedCatalogObject):
         super(Band, self).__init__(**kwargs)
 
     @classmethod
-    def search(cls, client=None, request_params=None):
+    def search(cls, client=None, request_params=None, headers=None):
         """A search query for all bands.
 
         Returns an instance of the
@@ -656,7 +656,9 @@ class Band(NamedCatalogObject):
         :py:class:`~descarteslabs.catalog.Search`
             An instance of the :py:class:`~descarteslabs.catalog.Search` class
         """
-        search = super(Band, cls).search(client, request_params=request_params)
+        search = super(Band, cls).search(
+            client, request_params=request_params, headers=headers
+        )
         if cls._derived_type:
             search = search.filter(properties.type == cls._derived_type)
         return search

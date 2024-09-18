@@ -494,7 +494,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             return DocumentState.SAVED
 
     @classmethod
-    def get(cls, id, client=None, request_params=None):
+    def get(cls, id, client=None, request_params=None, headers=None):
         """Get an existing object from the Descartes Labs catalog.
 
         If the Descartes Labs catalog object is found, it will be returned in the
@@ -535,6 +535,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
                 id=id,
                 client=client,
                 request_params=request_params,
+                headers=headers,
             )
         except NotFoundError:
             return None
@@ -553,7 +554,9 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         )
 
     @classmethod
-    def get_or_create(cls, id, client=None, **kwargs):
+    def get_or_create(
+        cls, id, client=None, request_params=None, headers=None, **kwargs
+    ):
         """Get an existing object from the Descartes Labs catalog or create a new object.
 
         If the Descartes Labs catalog object is found, and the remainder of the
@@ -588,7 +591,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             The requested catalog object that was retrieved or created.
 
         """
-        obj = cls.get(id, client=client)
+        obj = cls.get(id, client=client, request_params=request_params, headers=headers)
 
         if obj is None:
             obj = cls(id=id, client=client, **kwargs)
@@ -598,7 +601,9 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         return obj
 
     @classmethod
-    def get_many(cls, ids, ignore_missing=False, client=None, request_params=None):
+    def get_many(
+        cls, ids, ignore_missing=False, client=None, request_params=None, headers=None
+    ):
         """Get existing objects from the Descartes Labs catalog.
 
         All returned Descartes Labs catalog objects will be in the
@@ -647,6 +652,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             client=client,
             json={"filter": json.dumps([id_filter], separators=(",", ":"))},
             request_params=request_params,
+            headers=headers,
         )
 
         if not ignore_missing:
@@ -676,7 +682,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
 
     @classmethod
     @check_derived
-    def exists(cls, id, client=None):
+    def exists(cls, id, client=None, headers=None):
         """Checks if an object exists in the Descartes Labs catalog.
 
         Parameters
@@ -704,7 +710,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         client = client or CatalogClient.get_default_client()
         r = None
         try:
-            r = client.session.head(cls._url + "/" + id)
+            r = client.session.head(cls._url + "/" + id, headers=headers)
         except NotFoundError:
             return False
 
@@ -712,7 +718,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
 
     @classmethod
     @check_derived
-    def search(cls, client=None, request_params=None):
+    def search(cls, client=None, request_params=None, headers=None):
         """A search query for all objects of the type this class represents.
 
         Parameters
@@ -736,11 +742,13 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
                 print(result.name) # doctest: +SKIP
 
         """
-        return Search(cls, client=client, request_params=request_params)
+        return Search(
+            cls, client=client, request_params=request_params, headers=headers
+        )
 
     @check_deleted
     @deprecate(renamed={"extra_attributes": "request_params"})
-    def save(self, request_params=None):
+    def save(self, request_params=None, headers=None):
         """Saves this object to the Descartes Labs catalog.
 
         If this instance was created using the constructor, it will be in the
@@ -769,6 +777,8 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             and the object is in the `~descarteslabs.catalog.DocumentState.SAVED`
             state, it is updated in the Descartes Labs catalog even though no attributes
             were modified.
+        headers : dict, optional
+            A dictionary of header keys and values to be sent with the request.
 
         Raises
         ------
@@ -830,7 +840,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             json["data"]["attributes"].update(request_params)
 
         data, related_objects = self._send_data(
-            method=method, id=self.id, json=json, client=self._client
+            method=method, id=self.id, json=json, client=self._client, headers=headers
         )
 
         self._initialize(
@@ -842,7 +852,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         )
 
     @check_deleted
-    def reload(self, request_params=None):
+    def reload(self, request_params=None, headers=None):
         """Reload all attributes from the Descartes Labs catalog.
 
         Refresh the state of this catalog object from the object in the Descartes Labs
@@ -896,6 +906,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             id=self.id,
             client=self._client,
             request_params=request_params,
+            headers=headers,
         )
 
         # this will effectively wipe all current state & caching
@@ -974,7 +985,9 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
 
     @classmethod
     @check_derived
-    def _send_data(cls, method, id=None, json=None, client=None, request_params=None):
+    def _send_data(
+        cls, method, id=None, json=None, client=None, request_params=None, headers=None
+    ):
         client = client or CatalogClient.get_default_client()
         session_method = getattr(client.session, method.lower())
         url = cls._url
@@ -996,7 +1009,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         if query_params:
             url += "?" + urllib.parse.urlencode(query_params)
 
-        r = session_method(url, json=json).json()
+        r = session_method(url, json=json, headers=headers).json()
         data = r["data"]
         related_objects = cls._load_related_objects(r, client)
 

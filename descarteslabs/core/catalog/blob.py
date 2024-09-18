@@ -351,6 +351,7 @@ class Blob(CatalogObject):
         name=None,
         client=None,
         request_params=None,
+        headers=None,
     ):
         """Get an existing Blob from the Descartes Labs catalog.
 
@@ -400,7 +401,9 @@ class Blob(CatalogObject):
             raise TypeError("Must specify exactly one of id or name parameters")
         if not id:
             id = f"{storage_type}/{Blob.namespace_id(namespace)}/{name}"
-        return super(cls, Blob).get(id, client=client)
+        return super(cls, Blob).get(
+            id, client=client, request_params=request_params, headers=headers
+        )
 
     @classmethod
     def get_or_create(
@@ -464,7 +467,7 @@ class Blob(CatalogObject):
         return super(cls, Blob).get_or_create(id, client=client, **kwargs)
 
     @classmethod
-    def search(cls, client=None, request_params=None):
+    def search(cls, client=None, request_params=None, headers=None):
         """A search query for all blobs.
 
         Return an `~descarteslabs.catalog.BlobSearch` instance for searching
@@ -493,7 +496,9 @@ class Blob(CatalogObject):
         ...     print(result.name) # doctest: +SKIP
 
         """
-        return BlobSearch(cls, client=client, request_params=request_params)
+        return BlobSearch(
+            cls, client=client, request_params=request_params, headers=headers
+        )
 
     @check_deleted
     def upload(self, file):

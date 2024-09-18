@@ -53,13 +53,22 @@ class Search(object):
     """
 
     def __init__(
-        self, model, client=None, url=None, includes=True, request_params=None
+        self,
+        model,
+        client=None,
+        url=None,
+        includes=True,
+        request_params=None,
+        headers=None,
     ):
         self._url = url or model._url
         self._model_cls = model
         self._request_params = {}
         if request_params:
             self._request_params.update(request_params)
+        self._headers = {}
+        if headers:
+            self._headers.update(headers)
 
         self._filter_properties = None
         self._client = client or CatalogClient.get_default_client()
@@ -281,7 +290,7 @@ class Search(object):
         # modify query to return 0 results, and just get the object count
         s = self.limit(0)
         url, params = s._to_request()
-        r = self._client.session.put(url, json=params)
+        r = self._client.session.put(url, json=params, headers=s._headers)
         response = r.json()
         return response["meta"]["count"]
 
@@ -330,7 +339,7 @@ class Search(object):
         """
         url_next, params = self._to_request()
         while url_next is not None:
-            r = self._client.session.put(url_next, json=params)
+            r = self._client.session.put(url_next, json=params, headers=self._headers)
             response = r.json()
             if not response["data"]:
                 break
@@ -433,10 +442,16 @@ class GeoSearch(Search):
     geometries."""
 
     def __init__(
-        self, model, client=None, url=None, includes=True, request_params=None
+        self,
+        model,
+        client=None,
+        url=None,
+        includes=True,
+        request_params=None,
+        headers=None,
     ):
         super(GeoSearch, self).__init__(
-            model, client, url, includes, request_params=request_params
+            model, client, url, includes, request_params=request_params, headers=headers
         )
         self._intersects = None
 
@@ -603,7 +618,9 @@ class SummarySearchMixin(Search):
             else:
                 s._request_params["_end"] = ""  # Unbounded
 
-        r = self._client.session.put(summary_url, json=s._summary_request())
+        r = self._client.session.put(
+            summary_url, json=s._summary_request(), headers=s._headers
+        )
         response = r.json()
 
         return [self.SummaryResult(**d["attributes"]) for d in response["data"]]

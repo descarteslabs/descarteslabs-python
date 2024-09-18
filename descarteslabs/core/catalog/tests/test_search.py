@@ -107,6 +107,61 @@ class TestSearch(ClientTestCase):
         )
 
     @responses.activate
+    def test_search_on_behalf_of(self):
+        assert self.search._to_request() == ("/products", {})
+        self.mock_response(
+            responses.PUT,
+            {
+                "meta": {"count": 1},
+                "data": [
+                    {
+                        "attributes": {
+                            "owners": ["org:descarteslabs"],
+                            "name": "My Product",
+                            "readers": [],
+                            "modified": "2019-06-12T20:31:48.542725Z",
+                            "created": "2019-06-12T20:31:48.542725Z",
+                            "start_datetime": None,
+                            "writers": [],
+                            "end_datetime": None,
+                            "description": "This is a test product",
+                        },
+                        "type": "product",
+                        "id": "descarteslabs:my-product",
+                    }
+                ],
+                "jsonapi": {"version": "1.0"},
+                "links": {
+                    "self": "https://example.com/catalog/v2/products",
+                    "next": "https://example.com/catalog/v2/products?continuation=.xxx",
+                },
+            },
+        )
+
+        self.mock_response(
+            responses.PUT,
+            {
+                "meta": {"count": 0},
+                "data": [],
+                "jsonapi": {"version": "1.0"},
+                "links": {"self": "https://example.com/catalog/v2/products"},
+            },
+        )
+        results = list(
+            Search(Product, client=self.client, headers={"X-On-Behalf-Of": "user"})
+        )
+        assert len(results) == 1
+        assert type(results[0]) is Product
+        # followed continuation token
+        assert responses.calls[0].request.url == self.url + "/products"
+        assert (
+            responses.calls[1].request.url == self.url + "/products?continuation=.xxx"
+        )
+        # and supplied headers
+        assert responses.calls[0].request.headers["X-On-Behalf-Of"] == "user"
+        assert responses.calls[1].request.headers["X-On-Behalf-Of"] == "user"
+
+    @responses.activate
     def test_search_collect(self):
         assert self.search._to_request() == ("/products", {})
         self.mock_response(

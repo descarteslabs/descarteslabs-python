@@ -250,7 +250,7 @@ class Product(CatalogObject):
         return "{}:{}".format(self.id, name)
 
     @check_deleted
-    def get_band(self, name, client=None, request_params=None):
+    def get_band(self, name, client=None, request_params=None, headers=None):
         """Retrieve the request band associated with this product by name.
 
         Parameters
@@ -273,11 +273,14 @@ class Product(CatalogObject):
         from .band import Band
 
         return Band.get(
-            self.named_id(name), request_params=request_params, client=client
+            self.named_id(name),
+            client=client,
+            request_params=request_params,
+            headers=headers,
         )
 
     @check_deleted
-    def get_image(self, name, client=None, request_params=None):
+    def get_image(self, name, client=None, request_params=None, headers=None):
         """Retrieve the request image associated with this product by name.
 
         Parameters
@@ -299,7 +302,10 @@ class Product(CatalogObject):
         from .image import Image
 
         return Image.get(
-            self.named_id(name), request_params=request_params, client=client
+            self.named_id(name),
+            client=client,
+            request_params=request_params,
+            headers=headers,
         )
 
     @check_deleted
@@ -367,7 +373,7 @@ class Product(CatalogObject):
         )
 
     @check_deleted
-    def bands(self, request_params=None):
+    def bands(self, request_params=None, headers=None):
         """A search query for all bands for this product, sorted by default band
         ``sort_order``.
 
@@ -386,13 +392,15 @@ class Product(CatalogObject):
         from .band import Band
 
         return (
-            Band.search(client=self._client, request_params=request_params)
+            Band.search(
+                client=self._client, request_params=request_params, headers=headers
+            )
             .filter(properties.product_id == self.id)
             .sort("sort_order")
         )
 
     @check_deleted
-    def images(self, request_params=None):
+    def images(self, request_params=None, headers=None):
         """A search query for all images in this product.
 
         Returns
@@ -409,9 +417,9 @@ class Product(CatalogObject):
         """
         from .image import Image
 
-        return Image.search(client=self._client, request_params=request_params).filter(
-            properties.product_id == self.id
-        )
+        return Image.search(
+            client=self._client, request_params=request_params, headers=headers
+        ).filter(properties.product_id == self.id)
 
     @check_deleted
     def image_uploads(self):

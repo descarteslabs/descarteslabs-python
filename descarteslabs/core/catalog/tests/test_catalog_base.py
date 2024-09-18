@@ -184,6 +184,32 @@ class TestCatalogObject(ClientTestCase):
         assert foo._client is not None
 
     @responses.activate
+    def test_get_on_behalf_of(self):
+        self.mock_response(
+            responses.GET,
+            {
+                "jsonapi": {"version": "1.0"},
+                "data": {
+                    "type": Foo._doc_type,
+                    "id": "foo1",
+                    "attributes": {"bar": "baz"},
+                },
+            },
+        )
+
+        foo = Foo.get("foo1", client=self.client, headers={"X-On-Behalf-Of": "user"})
+        assert foo is not None
+        assert foo.id == "foo1"
+        assert foo.bar == "baz"
+        assert foo.state == DocumentState.SAVED
+        assert responses.calls[0].request.headers["X-On-Behalf-Of"] == "user"
+
+        CatalogClient.set_default_client(self.client)
+        foo = Foo.get("foo1", headers={"X-On-Behalf-Of": "user"})
+        assert foo._client is not None
+        assert responses.calls[1].request.headers["X-On-Behalf-Of"] == "user"
+
+    @responses.activate
     def test_get_many(self):
         self.mock_response(
             responses.PUT,
@@ -212,6 +238,45 @@ class TestCatalogObject(ClientTestCase):
         )
         assert ["p1:foo", "p1:bar"] == [f.id for f in foos]
         assert ["baz", "qux"] == [f.bar for f in foos]
+
+    @responses.activate
+    def test_get_many_on_behalf_of(self):
+        self.mock_response(
+            responses.PUT,
+            {
+                "data": [
+                    {
+                        "attributes": {"bar": "baz"},
+                        "id": "p1:foo",
+                        "type": Foo._doc_type,
+                    },
+                    {
+                        "attributes": {"bar": "qux"},
+                        "id": "p1:bar",
+                        "type": Foo._doc_type,
+                    },
+                ],
+                "jsonapi": {"version": "1.0"},
+            },
+        )
+
+        with pytest.raises(NotFoundError):
+            foos = Foo.get_many(
+                ["p1:foo", "p1:bar", "p1:missing"],
+                client=self.client,
+                headers={"X-On-Behalf-Of": "user"},
+            )
+        assert responses.calls[0].request.headers["X-On-Behalf-Of"] == "user"
+
+        foos = Foo.get_many(
+            ["p1:foo", "p1:bar", "p1:missing"],
+            ignore_missing=True,
+            client=self.client,
+            headers={"X-On-Behalf-Of": "user"},
+        )
+        assert ["p1:foo", "p1:bar"] == [f.id for f in foos]
+        assert ["baz", "qux"] == [f.bar for f in foos]
+        assert responses.calls[1].request.headers["X-On-Behalf-Of"] == "user"
 
     @responses.activate
     def test_reload(self):
@@ -250,6 +315,43 @@ class TestCatalogObject(ClientTestCase):
         assert foo.state == DocumentState.SAVED
 
     @responses.activate
+    def test_reload_on_behalf_of(self):
+        self.mock_response(
+            responses.GET,
+            {
+                "jsonapi": {"version": "1.0"},
+                "data": {
+                    "type": Foo._doc_type,
+                    "id": "foo1",
+                    "attributes": {"bar": "baz"},
+                },
+            },
+        )
+        self.mock_response(
+            responses.GET,
+            {
+                "jsonapi": {"version": "1.0"},
+                "data": {
+                    "type": Foo._doc_type,
+                    "id": "foo1",
+                    "attributes": {"bar": "qux"},
+                },
+            },
+        )
+
+        foo = Foo.get("foo1", client=self.client)
+        assert foo is not None
+        assert foo.id == "foo1"
+        assert foo.bar == "baz"
+        assert foo.state == DocumentState.SAVED
+
+        foo.reload(headers={"X-On-Behalf-Of": "user"})
+        assert foo.id == "foo1"
+        assert foo.bar == "qux"
+        assert foo.state == DocumentState.SAVED
+        assert responses.calls[1].request.headers["X-On-Behalf-Of"] == "user"
+
+    @responses.activate
     def test_save_request_params(self):
         self.mock_response(
             responses.POST,
@@ -270,6 +372,26 @@ class TestCatalogObject(ClientTestCase):
 
         body = self.get_request_body(0)
         assert {"bar": "baz", "foo": "bar"} == body["data"]["attributes"]
+
+    @responses.activate
+    def test_save_on_behalf_of(self):
+        self.mock_response(
+            responses.POST,
+            {
+                "jsonapi": {"version": "1.0"},
+                "data": {
+                    "type": Foo._doc_type,
+                    "id": "foo1",
+                    "attributes": {"bar": "baz", "foo": "bar"},
+                },
+            },
+        )
+
+        foo = Foo(id="foo1", client=self.client)
+        foo.bar = "baz"
+        foo.save(headers={"X-On-Behalf-Of": "user"})
+        assert foo.state == DocumentState.SAVED
+        assert responses.calls[0].request.headers["X-On-Behalf-Of"] == "user"
 
     @responses.activate
     def test_save_update_request_params(self):
@@ -523,6 +645,22 @@ class TestCatalogObject(ClientTestCase):
         assert foo.id == "foo1"
         assert foo.bar == "baz"
         assert foo.state == DocumentState.UNSAVED
+
+    @responses.activate
+    def test_get_or_create_on_behalf_of(self):
+        self.mock_response(responses.GET, self.not_found_json, status=404)
+
+        foo = Foo.get("foo1", client=self.client)
+        assert foo is None
+
+        foo = Foo.get_or_create(
+            "foo1", bar="baz", client=self.client, headers={"X-On-Behalf-Of": "user"}
+        )
+        assert foo is not None
+        assert foo.id == "foo1"
+        assert foo.bar == "baz"
+        assert foo.state == DocumentState.UNSAVED
+        assert responses.calls[1].request.headers["X-On-Behalf-Of"] == "user"
 
     @responses.activate
     def test_deleted_notfound(self):
