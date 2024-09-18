@@ -108,7 +108,7 @@ def do_setup():
             "Pillow>=9.2.0",
             "pyarrow>=14.0.1",
             "pydantic>=2.4.0",
-            "pytz>=2021.1",
+            "pytz>=2021.1,<2024.2",
             "requests>=2.32.3,<3",
             # It is not obvious but dynaconf requires pkg_resources from setuptools.
             "setuptools>=70.0.0",
