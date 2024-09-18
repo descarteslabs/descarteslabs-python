@@ -167,6 +167,10 @@ class TestDatetimeAttribute(unittest.TestCase):
 
         now = datetime.utcnow()
         doc = TzTest(date=now.isoformat())
+        print(f"doc {type(doc)} {doc}")
+        print(f"doc.date {type(doc.date)} {doc.date}")
+        print(f"doc.date.tzinfo {type(doc.date.tzinfo)} {doc.date.tzinfo}")
+        print(f"pytz.timezone(MST)" {type(pytz.timezone('MST'))} {pytz.timezone('MST')}")
         assert doc.date.tzinfo == pytz.timezone("MST")
         assert doc.date.astimezone(tz=timezone.utc) == now.replace(tzinfo=timezone.utc)
 
