@@ -31,7 +31,11 @@ from warnings import warn
 from descarteslabs.auth import Auth
 from descarteslabs.exceptions import ClientError, ServerError
 
-from ....common.http import Retry, Session
+from ....common.http import (
+    HttpHeaderKeys as CommonHttpHeaderKeys,
+    Retry,
+    Session,
+)
 from ....common.http.authorization import add_bearer
 from ....common.threading.local import ThreadLocalWrapper
 from ...version import __version__
@@ -53,17 +57,17 @@ class HttpRequestMethod:
     TRACE = "TRACE"
 
 
-class HttpHeaderKeys:
+class HttpHeaderKeys(CommonHttpHeaderKeys):
     Accept = "Accept"
     Authorization = "Authorization"
     ClientSession = "X-Client-Session"
     Conda = "X-Conda"
     ContentType = "Content-Type"
     Notebook = "X-Notebook"
+    OnBehalfOf = "X-On-Behalf-Of"
     Platform = "X-Platform"
     Python = "X-Python"
     RequestGroup = "X-Request-Group"
-    RetryAfter = "Retry-After"
     UserAgent = "User-Agent"
 
 

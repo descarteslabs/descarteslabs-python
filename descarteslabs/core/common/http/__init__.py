@@ -13,11 +13,12 @@
 # limitations under the License.
 
 from .retry import Retry
-from .session import HTTPAdapter, ProxyAuthentication, Session
+from .session import HTTPAdapter, HttpHeaderKeys, ProxyAuthentication, Session
 
 __all__ = [
     "ProxyAuthentication",
     "Session",
     "HTTPAdapter",
+    "HttpHeaderKeys",
     "Retry",
 ]
