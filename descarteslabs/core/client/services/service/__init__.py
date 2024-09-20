@@ -15,11 +15,21 @@
 from descarteslabs.exceptions import NotFoundError
 
 from .api_service import ApiService, ApiSession
-from .service import JsonApiService, JsonApiSession, Service, Session, ThirdPartyService
+from .service import (
+    HttpHeaderKeys,
+    HttpRequestMethod,
+    JsonApiService,
+    JsonApiSession,
+    Service,
+    Session,
+    ThirdPartyService,
+)
 
 __all__ = [
     "ApiService",
     "ApiSession",
+    "HttpHeaderKeys",
+    "HttpRequestMethod",
     "JsonApiService",
     "JsonApiSession",
     "NotFoundError",
