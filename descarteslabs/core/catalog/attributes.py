@@ -16,11 +16,10 @@ import numbers
 import re
 
 from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from strenum import StrEnum
-from pytz import utc
 
 from ..common.shapely_support import (
     geometry_like_to_shapely,
@@ -35,12 +34,12 @@ def parse_iso_datetime(date_str):
         if len(date_str) > 27:  # len(YYYY-MM-DDTHH:MM:SS.mmmmmmZ) == 27
             date_str = date_str[0:26] + date_str[-1]
         date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
-        return date.replace(tzinfo=utc)
+        return date.replace(tzinfo=timezone.utc)
     except ValueError:
         # it's possible that a utc formatted time string from the server won't have
         # a fractional seconds component
         date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")
-        return date.replace(tzinfo=utc)
+        return date.replace(tzinfo=timezone.utc)
 
 
 def serialize_datetime(value):
@@ -585,7 +584,7 @@ class Timestamp(Attribute):
             return value
         elif isinstance(value, datetime):
             if value.tzinfo is None:
-                return value.replace(tzinfo=utc)
+                return value.replace(tzinfo=timezone.utc)
             else:
                 return value
         else:

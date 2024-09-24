@@ -25,7 +25,6 @@ import pytest
 import responses
 import shapely.geometry
 from unittest.mock import patch
-from pytz import utc
 
 from ...common.geo import AOI
 from ...common.property_filtering import Properties
@@ -256,7 +255,7 @@ class TestImage(ClientTestCase):
         assert (
             datetime.datetime.strptime(
                 "2019-08-20T08:08:16.123456Z", "%Y-%m-%dT%H:%M:%S.%fZ"
-            ).replace(tzinfo=utc)
+            ).replace(tzinfo=datetime.timezone.utc)
             == i.acquired
         )
 

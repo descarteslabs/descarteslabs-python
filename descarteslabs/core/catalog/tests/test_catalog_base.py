@@ -14,8 +14,8 @@
 
 import pytest
 import responses
-from datetime import datetime
-from pytz import utc
+from datetime import datetime, timezone
+
 
 from descarteslabs.exceptions import (
     NotFoundError,
@@ -537,7 +537,7 @@ class TestCatalogObject(ClientTestCase):
         assert c.is_modified
 
     def test_update_immutable_attr(self):
-        timestamp = datetime.now(utc)
+        timestamp = datetime.now(timezone.utc)
         c = CatalogObject(id="id", created=timestamp, _saved=True)
         assert not c.is_modified
         assert c.state == DocumentState.SAVED

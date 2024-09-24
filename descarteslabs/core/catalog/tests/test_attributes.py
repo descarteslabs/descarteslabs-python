@@ -16,7 +16,7 @@ import pytest
 import unittest
 import textwrap
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from strenum import StrEnum
@@ -27,7 +27,6 @@ from ..attributes import (
     TypedAttribute,
     Timestamp,
     EnumAttribute,
-    utc,
     MappingAttribute,
     ListAttribute,
     DocumentState,
@@ -76,16 +75,17 @@ class TestAttributes(unittest.TestCase):
         assert date.deserialize(None) is None
 
         assert (
-            date.deserialize("2019-02-01T00:00:00.0000Z", validate=False).tzinfo == utc
+            date.deserialize("2019-02-01T00:00:00.0000Z", validate=False).tzinfo
+            == timezone.utc
         )
         assert date.deserialize(
             "2019-02-01T00:00:00.0000Z", validate=False
-        ) == datetime(2019, 2, 1, tzinfo=utc)
+        ) == datetime(2019, 2, 1, tzinfo=timezone.utc)
 
         date = Timestamp(readonly=True)
         assert date.deserialize(
             datetime(2013, 12, 31, 23, 59, 59), validate=False
-        ) == datetime(2013, 12, 31, 23, 59, 59, tzinfo=utc)
+        ) == datetime(2013, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
         value = date.deserialize(datetime(2013, 12, 31, 23, 59, 59), validate=False)
         assert date.serialize(value) == "2013-12-31T23:59:59+00:00"
 
@@ -94,7 +94,7 @@ class TestAttributes(unittest.TestCase):
         assert mutable_date.deserialize(None) is None
         assert (
             mutable_date.deserialize("2019-02-01T00:00:00.0000Z", validate=False).tzinfo
-            == utc
+            == timezone.utc
         )
 
         class TimeObj(CatalogObject):
@@ -154,7 +154,9 @@ class TestAttributes(unittest.TestCase):
         model_object = FakeCatalogObject(id="id", mapping=mapping)
 
         assert model_object.mapping.nested.foo == "foo"
-        assert model_object.mapping.nested.dt == datetime(2019, 2, 1, tzinfo=utc)
+        assert model_object.mapping.nested.dt == datetime(
+            2019, 2, 1, tzinfo=timezone.utc
+        )
         assert model_object.mapping is mapping
         assert model_object.mapping.nested is nested
 
@@ -183,12 +185,14 @@ class TestAttributes(unittest.TestCase):
 
         # assigning a new attribute value to the model does propagate state changes
         new_mapping = Mapping(
-            nested=Nested(foo="bar", dt=datetime(2019, 3, 1, tzinfo=utc))
+            nested=Nested(foo="bar", dt=datetime(2019, 3, 1, tzinfo=timezone.utc))
         )
         model_object.mapping = new_mapping
         assert model_object.is_modified
         assert model_object.mapping.nested.foo == "bar"
-        assert model_object.mapping.nested.dt == datetime(2019, 3, 1, tzinfo=utc)
+        assert model_object.mapping.nested.dt == datetime(
+            2019, 3, 1, tzinfo=timezone.utc
+        )
         assert model_object.mapping is new_mapping
         assert len(mapping._model_objects) == 0
 
@@ -306,8 +310,12 @@ class TestAttributes(unittest.TestCase):
 
         assert model_object.listmapping[0].nested.foo == "zap"
         assert model_object.listmapping[1].nested.foo == "zip"
-        assert model_object.listmapping[0].nested.dt == datetime(2019, 2, 1, tzinfo=utc)
-        assert model_object.listmapping[1].nested.dt == datetime(2019, 2, 2, tzinfo=utc)
+        assert model_object.listmapping[0].nested.dt == datetime(
+            2019, 2, 1, tzinfo=timezone.utc
+        )
+        assert model_object.listmapping[1].nested.dt == datetime(
+            2019, 2, 2, tzinfo=timezone.utc
+        )
         assert model_object.listmapping is not [mapping1, mapping2]
         assert model_object.listmapping[0] is mapping1
         assert model_object.listattribute[0] == 12
@@ -356,12 +364,14 @@ class TestAttributes(unittest.TestCase):
 
         # assigning a new attribute value to the model does propagate state changes
         new_mapping = Mapping(
-            nested=Nested(foo="meep", dt=datetime(2019, 3, 1, tzinfo=utc))
+            nested=Nested(foo="meep", dt=datetime(2019, 3, 1, tzinfo=timezone.utc))
         )
         model_object.listmapping = [new_mapping]
         assert model_object.is_modified
         assert model_object.listmapping[0].nested.foo == "meep"
-        assert model_object.listmapping[0].nested.dt == datetime(2019, 3, 1, tzinfo=utc)
+        assert model_object.listmapping[0].nested.dt == datetime(
+            2019, 3, 1, tzinfo=timezone.utc
+        )
 
     def test_listattribute_deserialization(self):
         # Creation with valid enum should be fine

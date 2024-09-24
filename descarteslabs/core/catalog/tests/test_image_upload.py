@@ -15,7 +15,7 @@
 import responses
 from unittest.mock import patch
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .base import ClientTestCase
 from ..catalog_base import DocumentState
@@ -29,7 +29,6 @@ from ..image_upload import (
     ImageUploadEventSeverity,
 )
 from ..image import Image
-from ..attributes import utc
 
 
 class TestImageUpload(ClientTestCase):
@@ -222,8 +221,8 @@ class TestImageUpload(ClientTestCase):
         u.save()
 
         assert u.id == "1"
-        assert u.created == datetime(2020, 1, 1, 0, 0, 0, tzinfo=utc)
-        assert u.modified == datetime(2020, 1, 1, 0, 0, 0, tzinfo=utc)
+        assert u.created == datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        assert u.modified == datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
         assert u.product_id == "product_id"
         assert u.image_id == "product_id:image_name"
         assert u.image_upload_options.upload_type == ImageUploadType.FILE
@@ -239,7 +238,9 @@ class TestImageUpload(ClientTestCase):
         assert u.status == ImageUploadStatus.PENDING
         assert u.state == DocumentState.SAVED
         assert len(u.events) == 1
-        assert u.events[0].event_datetime == datetime(2020, 1, 1, 0, 0, 0, tzinfo=utc)
+        assert u.events[0].event_datetime == datetime(
+            2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc
+        )
         assert u.events[0].event_type == ImageUploadEventType.QUEUE
         assert u.events[0].severity == ImageUploadEventSeverity.INFO
 
@@ -248,7 +249,9 @@ class TestImageUpload(ClientTestCase):
         assert u.status == ImageUploadStatus.CANCELED
         assert u.state == DocumentState.SAVED
         assert len(u.events) == 2
-        assert u.events[1].event_datetime == datetime(2020, 1, 1, 0, 0, 0, tzinfo=utc)
+        assert u.events[1].event_datetime == datetime(
+            2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc
+        )
         assert u.events[1].event_type == ImageUploadEventType.CANCEL
         assert u.events[1].severity == ImageUploadEventSeverity.INFO
 

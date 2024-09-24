@@ -15,7 +15,7 @@
 import unittest
 from datetime import datetime, timezone
 
-import pytz
+from zoneinfo import ZoneInfo
 
 from .. import Attribute, DatetimeAttribute, Document, DocumentState, ListAttribute
 
@@ -163,11 +163,11 @@ class TestDocument(unittest.TestCase):
 class TestDatetimeAttribute(unittest.TestCase):
     def test_local_time(self):
         class TzTest(Document):
-            date: datetime = DatetimeAttribute(timezone=pytz.timezone("MST"))
+            date: datetime = DatetimeAttribute(timezone=ZoneInfo("MST"))
 
         now = datetime.utcnow()
         doc = TzTest(date=now.isoformat())
-        assert doc.date.tzinfo == pytz.timezone("MST")
+        assert doc.date.tzinfo == ZoneInfo("MST")
         assert doc.date.astimezone(tz=timezone.utc) == now.replace(tzinfo=timezone.utc)
 
         assert doc.to_dict()["date"] == now.replace(tzinfo=timezone.utc).isoformat()
@@ -181,7 +181,7 @@ class TestDatetimeAttribute(unittest.TestCase):
         doc.date == now.replace(tzinfo=timezone.utc)
 
     def test_assign_instance(self):
-        tz = pytz.timezone("MST")
+        tz = ZoneInfo("MST")
 
         class InstanceTest(Document):
             date: datetime = DatetimeAttribute(timezone=tz)
