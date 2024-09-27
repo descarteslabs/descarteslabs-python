@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 import unittest
 
 from .. import clear_client_state

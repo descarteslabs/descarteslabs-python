@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 import gzip
 import itertools
 import json

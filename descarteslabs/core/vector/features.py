@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 from __future__ import annotations
 
 from copy import deepcopy

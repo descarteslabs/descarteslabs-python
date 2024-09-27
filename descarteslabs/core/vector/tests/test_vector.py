@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 from datetime import datetime
 from io import BytesIO
 from uuid import uuid4

@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 """
 =============================
 Upload ndarray to new product

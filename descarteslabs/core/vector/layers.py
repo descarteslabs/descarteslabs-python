@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 try:
     from ipyleaflet import VectorTileLayer
     from traitlets import Dict

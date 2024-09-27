@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 from descarteslabs.config import get_settings, select_env
 from ..auth.cli import cli as auth_cli
 from .. import version as version_module

@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 from typing import Any, Dict
 from uuid import uuid4
 

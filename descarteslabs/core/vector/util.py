@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 import io
 from typing import Union
 

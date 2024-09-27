@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 import click
 
 from .products import products

@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 """
 ===============================
 Composite Multi-Product Imagery

@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 from typing import List, Optional, Union
 
 from ..common.vector.models import GenericFeatureBaseModel, VectorBaseModel

@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 """
 ============================
 Create time stacks of images

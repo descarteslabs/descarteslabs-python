@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 import json
 import urllib.parse
 from typing import List, Optional

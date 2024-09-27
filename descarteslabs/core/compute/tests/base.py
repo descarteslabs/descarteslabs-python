@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 import base64
 import json
 import json as jsonlib

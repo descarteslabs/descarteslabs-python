@@ -1,3 +1,5 @@
+# Copyright 2018-2024 Descartes Labs.
+
 import json
 from datetime import timezone
 from unittest.mock import patch
