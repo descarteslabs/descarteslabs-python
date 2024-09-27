@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Descartes Labs.
+# Copyright 2018-2024 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -232,10 +232,19 @@ class Search(object):
         return self._url, s._request_params
 
     def _require_product_ids(self, filters):
-        from .product import Product
         from .blob import Blob
+        from .event_api_destination import EventApiDestination
+        from .event_rule import EventRule
+        from .event_subscription import EventSubscription
+        from .product import Product
 
-        if self._model_cls in (Product, Blob):
+        if self._model_cls in (
+            Product,
+            Blob,
+            EventSubscription,
+            EventRule,
+            EventApiDestination,
+        ):
             return
         if filters:
             for filter in filters:
@@ -454,8 +463,9 @@ class GeoSearch(Search):
             model, client, url, includes, request_params=request_params, headers=headers
         )
         self._intersects = None
+        self._intersects_none = False
 
-    def intersects(self, geometry):
+    def intersects(self, geometry, match_null_geometry=False):
         """Filter images or blobs to those that intersect the given geometry.
 
         Successive calls to `intersects` override the previous intersection
@@ -464,6 +474,7 @@ class GeoSearch(Search):
         Parameters
         ----------
         geometry : shapely.geometry.base.BaseGeometry, ~descarteslabs.common.geo.GeoContext, geojson-like Geometry that found images must intersect.
+        match_null_geometry : bool, optional (default False) Also match images or blobs with no geometry.
 
         Returns
         -------
@@ -472,12 +483,19 @@ class GeoSearch(Search):
             class that includes geometry filter.
         """  # noqa: E501
         s = copy.deepcopy(self)
-        name, value = self._model_cls._serialize_filter_attribute("geometry", geometry)
+        _, value = self._model_cls._serialize_filter_attribute("geometry", geometry)
         s._request_params["intersects"] = json.dumps(
             value,
             separators=(",", ":"),
         )
+
+        if match_null_geometry:
+            s._request_params["intersects_none"] = True
+        else:
+            s._request_params.pop("intersects_none", None)
+
         s._intersects = copy.deepcopy(geometry)
+        s._intersects_none = match_null_geometry
         return s
 
 

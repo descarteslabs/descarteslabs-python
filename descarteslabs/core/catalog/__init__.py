@@ -3,7 +3,7 @@ The Catalog Service provides access to products, bands, and images
 available from Descartes Labs.
 """
 
-# Copyright 2018-2023 Descartes Labs.
+# Copyright 2018-2024 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,6 +45,18 @@ from .blob import (
     BlobSearch,
     BlobSummaryResult,
     StorageType,
+)
+from .event_api_destination import (
+    EventApiDestination,
+    EventApiDestinationSearch,
+    EventConnectionParameter,
+)
+from .event_rule import EventRule, EventRuleSearch, EventRuleTarget
+from .event_subscription import (
+    EventSubscription,
+    EventSubscriptionSearch,
+    EventSubscriptionTarget,
+    EventType,
 )
 from .image import Image, ImageSearch, ImageSummaryResult
 from .image_types import ResampleAlgorithm, DownloadFileFormat
@@ -107,6 +119,16 @@ __all__ = [
     "DerivedParamsAttribute",
     "DocumentState",
     "DownloadFileFormat",
+    "EventApiDestination",
+    "EventApiDestinationSearch",
+    "EventConnectionParameter",
+    "EventRule",
+    "EventRuleSearch",
+    "EventRuleTarget",
+    "EventSubscription",
+    "EventSubscriptionSearch",
+    "EventSubscriptionTarget",
+    "EventType",
     "File",
     "GenericBand",
     "GeoSearch",

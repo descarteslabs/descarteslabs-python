@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Descartes Labs.
+# Copyright 2018-2024 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ from enum import Enum
 
 from strenum import StrEnum
 
+from ..common.property_filtering import Expression
 from ..common.shapely_support import (
     geometry_like_to_shapely,
     shapely_to_geojson,
@@ -714,6 +715,47 @@ class BooleanAttribute(Attribute):
             return ``True``.
         """
         return bool(value)
+
+
+class ExpressionAttribute(Attribute):
+    """An attribute that holds a property filtering Expression."""
+
+    def serialize(self, value, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
+        """
+        if value is None:
+            return value
+        if jsonapi_format:
+            return value.jsonapi_serialize()
+        else:
+            return value.serialize()
+
+    def deserialize(self, value, validate=True):
+        """Deserialize a value to an Expression.
+
+        See :meth:`Attribute.deserialize`.
+
+        Returns
+        -------
+        common.property_filtering.Expression
+            An expression instance.
+
+        Raises
+        ------
+        AttributeValidationError
+            When the given value cannot be parsed as an Expression.
+        """
+        if value is None:
+            return value
+        elif isinstance(value, Expression):
+            return value
+        else:
+            try:
+                return Expression.parse(value)
+            except Exception as ex:
+                raise AttributeValidationError(ex)
 
 
 class AttributeEqualityMixin(object):
@@ -1551,6 +1593,157 @@ class ListAttribute(ModelAttribute, MutableSequence):
 
         # allow list __lt__ to raise/return
         return self._items < other
+
+
+class StringDictAttribute(ModelAttribute, MutableMapping):
+    """An attribute that contains properties (key/value pairs).
+
+    Can be set using a dictionary of items or any `Mapping`, or an instance of this
+    attribute.  All keys and values must be string.
+    StringDictAttribute behaves similar to dictionaries.
+
+    Example
+    -------
+    This is the recommended way to instantiate a StringDictAttribute, you don't
+    maintain a reference to the original list but the semantics are much cleaner.
+
+    >>> from descarteslabs.catalog import CatalogObject
+    >>> from descarteslabs.catalog.attributes import StringDictAttribute
+    >>> class ExampleCatalogObject(CatalogObject):
+    ...     headers = StringDictAttribute()
+    >>> headers = {
+    ...     "x-header-1": "value1",
+    ...     "x-header-2": "value2",
+    ... }
+    >>> obj = ExampleCatalogObject(headers=headers)
+    >>> assert obj.headers is not headers
+    >>> obj.headers["x-header-3"] = "value3"
+    """
+
+    # this value is ONLY used for for instances of the attribute that
+    # are attached to class definitions. It's confusing to put this
+    # instantiation into __init__, because the value is only ever set
+    # from AttributeMeta.__new__, after it's already been instantiated
+    _attribute_name = None
+
+    def __init__(self, value=None, validate=True, **kwargs):
+        self._items = {}
+
+        super(StringDictAttribute, self).__init__(**kwargs)
+
+        if value is not None:
+            if validate:
+                for key, val in value.items():
+                    self.validate_key_and_value(key, val)
+
+            self._items.update(value)
+
+    def __repr__(self):
+        return "{}{}{}".format(
+            "{",
+            ", ".join(
+                [
+                    "{}: {}".format(repr(key), repr(value))
+                    for key, value in self._items.items()
+                ]
+            ),
+            "}",
+        )
+
+    def validate_key_and_value(self, key, value):
+        """Validate the key and value.
+
+        The key must be a string, and the value either a string or a number.
+        """
+        if not isinstance(key, str):
+            raise AttributeValidationError(
+                "Keys for property {} must be strings: {}".format(
+                    self._attribute_name, key
+                )
+            )
+        elif not isinstance(value, str):
+            raise AttributeValidationError(
+                "The value for property {} with key {} must be a string: {}".format(
+                    self._attribute_name, key, value
+                )
+            )
+
+    def serialize(self, value, jsonapi_format=False):
+        """Serialize a value to a json-serializable type.
+
+        See :meth:`Attribute.serialize`.
+        """
+        if value is None:
+            return None
+
+        # Shallow copy
+        return dict(value._items)
+
+    def deserialize(self, value, validate=True):
+        """Deserialize a value to a native type.
+
+        See :meth:`Attribute.deserialize`.
+
+        Parameters
+        ----------
+        value : dict or StringDictAttribute
+            A set of values to use to initialize a new StringDictAttribute
+            instance.  All keys and values must be strings.
+
+        Returns
+        -------
+        StringDictAttribute
+            A `StringDictAttribute` with the given items.
+
+        Raises
+        ------
+        AttributeValidationError
+            If the value is not a mapping or any of the keys or values are not strings.
+        """
+        if value is None:
+            return None
+
+        if isinstance(value, StringDictAttribute):
+            return value
+
+        if validate:
+            if not isinstance(value, Mapping):
+                raise AttributeValidationError(
+                    "A StringDictAttribute expects a mapping: {}".format(
+                        self._attribute_name
+                    )
+                )
+
+            for key, val in value.items():
+                self.validate_key_and_value(key, val)
+
+        return StringDictAttribute(value, validate=validate, **self._get_attr_params())
+
+    # Mapping methods
+
+    def __getitem__(self, key):
+        return self._items[key]
+
+    def __setitem__(self, key, value):
+        self._raise_if_immutable_or_readonly("set")
+        self.validate_key_and_value(key, value)
+
+        old_value = self._items.get(key, None)
+        changed = key not in self._items or old_value != value
+        self._set_modified(changed=changed)
+        self._items[key] = value
+
+    def __delitem__(self, key):
+        self._raise_if_immutable_or_readonly("delete")
+        if key in self._items:
+            self._set_modified(changed=True)
+        del self._items[key]
+
+    def __iter__(self):
+        return iter(self._items)
+
+    def __len__(self):
+        return len(self._items)
 
 
 class ExtraPropertiesAttribute(ModelAttribute, MutableMapping):

@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Descartes Labs.
+# Copyright 2018-2024 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -125,6 +125,13 @@ class Expression(object):
     def jsonapi_serialize(self, model=None):
         raise NotImplementedError
 
+    def is_same(self, other: Any) -> bool:
+        """Determine if two expressions are the same. This is different
+        from testing for equivalence (eg `a == b` and `b == a` are equivalent,
+        bit not the same).
+        """
+        return type(self) is type(other)
+
     @classmethod
     def parse(
         cls, data: Union[str, Dict[str, Any], List[Dict[str, Any]]]
@@ -190,6 +197,12 @@ class OpExpression(Expression):
     """Base class for expressions that have an operator and a value."""
 
     __abstract__ = True
+
+    def is_same(self, other: Any) -> bool:
+        if not super().is_same(other):
+            return False
+
+        return self.name == other.name
 
     def __and__(self, other):
         return AndExpression([self]) & other
@@ -263,6 +276,15 @@ class LogicalExpression(Expression):
     def __init__(self, parts):
         self.parts = parts
 
+    def is_same(self, other: Any) -> bool:
+        if not super().is_same(other):
+            return False
+
+        return len(self.parts) == len(other.parts) and all(
+            part.is_same(other_part)
+            for part, other_part in zip(self.parts, other.parts)
+        )
+
     @classmethod
     def _parse(cls, data: List[Dict[str, Any]]) -> AnyExpression:
         parts = [Expression.parse(expr) for expr in data]
@@ -298,6 +320,12 @@ class EqExpression(OpExpression):
     def evaluate(self, obj):
         return getattr(obj, self.name) == self.value
 
+    def is_same(self, other: Any) -> bool:
+        if not super().is_same(other):
+            return False
+
+        return self.value == other.value
+
 
 class NeExpression(OpExpression):
     """Whether a property value is not equal to the given value."""
@@ -318,6 +346,12 @@ class NeExpression(OpExpression):
 
     def evaluate(self, obj):
         return getattr(obj, self.name) != self.value
+
+    def is_same(self, other: Any) -> bool:
+        if not super().is_same(other):
+            return False
+
+        return self.value == other.value
 
 
 class RangeExpression(OpExpression):
@@ -365,6 +399,15 @@ class RangeExpression(OpExpression):
                 raise ValueError("Unknown operation")
 
         return result
+
+    def is_same(self, other: Any) -> bool:
+        if not super().is_same(other):
+            return False
+
+        return len(self.parts) == len(other.parts) and all(
+            part == other_part
+            for part, other_part in zip(self.parts.items(), other.parts.items())
+        )
 
     @classmethod
     def _parse_jsonapi_filter(cls, data: Dict[str, Any]) -> AnyExpression:
@@ -451,6 +494,12 @@ class PrefixExpression(OpExpression):
     def evaluate(self, obj):
         return getattr(obj, self.name).startswith(self.value)
 
+    def is_same(self, other: Any) -> bool:
+        if not super().is_same(other):
+            return False
+
+        return self.value == other.value
+
 
 class LikeExpression(OpExpression):
     """Whether a property value matches the given wildcard expression.
@@ -481,6 +530,12 @@ class LikeExpression(OpExpression):
     def evaluate(self, obj):
         expr = re.escape(self.value).replace("_", ".").replace("%", ".*")
         return re.match(f"^{expr}$", getattr(obj, self.name)) is not None
+
+    def is_same(self, other: Any) -> bool:
+        if not super().is_same(other):
+            return False
+
+        return self.value == other.value
 
 
 class AndExpression(LogicalExpression):
@@ -517,6 +572,15 @@ class AndExpression(LogicalExpression):
 
         return True
 
+    def is_same(self, other: Any) -> bool:
+        if not super().is_same(other):
+            return False
+
+        return len(self.parts) == len(other.parts) and all(
+            part.is_same(other_part)
+            for part, other_part in zip(self.parts, other.parts)
+        )
+
 
 class OrExpression(LogicalExpression):
     """``True`` if either expression is ``True``, ``False`` otherwise."""
@@ -551,6 +615,15 @@ class OrExpression(LogicalExpression):
                 return True
 
         return False
+
+    def is_same(self, other: Any) -> bool:
+        if not super().is_same(other):
+            return False
+
+        return len(self.parts) == len(other.parts) and all(
+            part.is_same(other_part)
+            for part, other_part in zip(self.parts, other.parts)
+        )
 
 
 def range_expr(op):

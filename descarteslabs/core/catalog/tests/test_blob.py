@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Descartes Labs.
+# Copyright 2018-2024 Descartes Labs.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -163,6 +163,17 @@ class TestBlob(ClientTestCase):
         search = Blob.search().intersects(self.geometry).filter(Properties().id == "b1")
         _, request_params = search._to_request()
         assert self.geometry == json.loads(request_params["intersects"])
+        assert "intersects_none" not in request_params
+
+    def test_search_intersects_none(self):
+        search = (
+            Blob.search()
+            .intersects(self.geometry, match_null_geometry=True)
+            .filter(Properties().id == "b1")
+        )
+        _, request_params = search._to_request()
+        assert self.geometry == json.loads(request_params["intersects"])
+        assert request_params["intersects_none"] is True
 
     @responses.activate
     def test_get(self):
