@@ -52,11 +52,15 @@ from .event_api_destination import (
     EventConnectionParameter,
 )
 from .event_rule import EventRule, EventRuleSearch, EventRuleTarget
+from .event_schedule import EventSchedule, EventScheduleSearch
 from .event_subscription import (
     EventSubscription,
+    EventSubscriptionComputeTarget,
     EventSubscriptionSearch,
     EventSubscriptionTarget,
     EventType,
+    Placeholder,
+    ScheduledEventSubscription,
 )
 from .image import Image, ImageSearch, ImageSummaryResult
 from .image_types import ResampleAlgorithm, DownloadFileFormat
@@ -125,7 +129,10 @@ __all__ = [
     "EventRule",
     "EventRuleSearch",
     "EventRuleTarget",
+    "EventSchedule",
+    "EventScheduleSearch",
     "EventSubscription",
+    "EventSubscriptionComputeTarget",
     "EventSubscriptionSearch",
     "EventSubscriptionTarget",
     "EventType",
@@ -148,6 +155,7 @@ __all__ = [
     "MicrowaveBand",
     "NamedCatalogObject",
     "OverviewResampler",
+    "Placeholder",
     "ProcessingLevelsAttribute",
     "ProcessingStepAttribute",
     "Product",
@@ -156,6 +164,7 @@ __all__ = [
     "ResampleAlgorithm",
     "Resolution",
     "ResolutionUnit",
+    "ScheduledEventSubscription",
     "Search",
     "SpectralBand",
     "StorageState",

@@ -232,44 +232,31 @@ class Search(object):
         return self._url, s._request_params
 
     def _require_product_ids(self, filters):
-        from .blob import Blob
-        from .event_api_destination import EventApiDestination
-        from .event_rule import EventRule
-        from .event_subscription import EventSubscription
-        from .product import Product
-
-        if self._model_cls in (
-            Product,
-            Blob,
-            EventSubscription,
-            EventRule,
-            EventApiDestination,
-        ):
-            return
-        if filters:
-            for filter in filters:
-                # will be either a simple product_id eq filter,
-                # or an "or" of all of the same.
-                if "or" in filter:
-                    ors = filter["or"]
-                    if ors and all(
-                        map(
-                            lambda x: isinstance(x, Mapping)
-                            and x.get("name") == "product_id"
-                            and x.get("op") == "eq",
-                            ors,
-                        )
+        if hasattr(self._model_cls, "product_id"):
+            if filters:
+                for filter in filters:
+                    # will be either a simple product_id eq filter,
+                    # or an "or" of all of the same.
+                    if "or" in filter:
+                        ors = filter["or"]
+                        if ors and all(
+                            map(
+                                lambda x: isinstance(x, Mapping)
+                                and x.get("name") == "product_id"
+                                and x.get("op") == "eq",
+                                ors,
+                            )
+                        ):
+                            return
+                    elif (
+                        isinstance(filter, Mapping)
+                        and filter.get("name") == "product_id"
+                        and filter.get("op") == "eq"
                     ):
                         return
-                elif (
-                    isinstance(filter, Mapping)
-                    and filter.get("name") == "product_id"
-                    and filter.get("op") == "eq"
-                ):
-                    return
-        raise ValueError(
-            f"{self._model_cls.__name__} search requires filtering by product_id"
-        )
+            raise ValueError(
+                f"{self._model_cls.__name__} search requires filtering by product_id"
+            )
 
     def count(self):
         """Fetch the number of documents that match the search.

@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+import functools
+from typing import Dict, List
+
 from strenum import StrEnum
 
 from ..client.services.service import ThirdPartyService
@@ -48,6 +52,10 @@ class EventType(StrEnum):
         A new storage blob that has been uploaded to the Catalog.
     UPDATE_STORAGE : enum
         An existing blob in the Catalog has been updated.
+    NEW_VECTOR : enum
+        A new vector feature that has been uploaded to the Vector service.
+    UPDATE_VECTOR : enum
+        An existing vector feature in the Vector service has been updated.
     SCHEDULED : enum
         A scheduled event.
     """
@@ -56,6 +64,8 @@ class EventType(StrEnum):
     UPDATE_IMAGE = "update-image"
     NEW_STORAGE = "new-storage"
     UPDATE_STORAGE = "update-storage"
+    NEW_VECTOR = "new-vector"
+    UPDATE_VECTOR = "update-vector"
     SCHEDULED = "scheduled"
 
 
@@ -69,7 +79,10 @@ class EventSubscriptionTarget(MappingAttribute):
     detail_template : str, optional
         A Jinja2 template for the detail JSON for the target event.
         If not provided, the detail will be the same as the event
-        which the subscription matches.
+        which the subscription matches. The context for rendering
+        the template will include the event object and the subscription
+        to which this target belongs. Note that this template must
+        render to a valid JSON string: no trailing commas anywhere.
     """
 
     rule_id = TypedAttribute(
@@ -80,6 +93,124 @@ class EventSubscriptionTarget(MappingAttribute):
         str,
         doc="""str, optional: A Jinja2 template for the detail JSON for the target event.""",
     )
+
+
+class Placeholder:
+    """Placeholder class for EventSubscriptionComputeTarget.
+
+    Can be used in an EventSubscriptionComputeTarget for any value element,
+    as a mechanism to pass Jinja2 template substitutions through to the resulting
+    detail template.
+    """
+
+    def __init__(self, text: str):
+        """Create a Placeholder object.
+
+        Parameters
+        ----------
+        text : str
+            The text to be rendered into the resulting JSON detail template. Typically
+            a Jinja2 template substitution string.
+        """
+        self.text = text
+
+    @classmethod
+    def json_serialize(cls, obj, placeholders=None):
+        if not isinstance(obj, cls):
+            raise TypeError(
+                f"Object of type {obj.__class__.__name__} is not JSON serializable"
+            )
+        placeholders.append(obj.text)
+        return "__placeholder__"
+
+    @classmethod
+    def substitute_placeholders(cls, text: str, placeholders):
+        for placeholder in placeholders:
+            text = text.replace('"__placeholder__"', placeholder, 1)
+        return text
+
+
+class EventSubscriptionComputeTarget(EventSubscriptionTarget):
+    """An EventSubscriptionTarget tailored for a compute function.
+
+    Supports the use of placeholders in the detail template to be substituted
+    from the matching event and subscription.
+    """
+
+    def __init__(self, _: str, *args, **kwargs):
+        """Create an EventSubscriptionTarget tailored for a compute function.
+
+        Placeholder values can be used for any parameter value, which allows
+        for passing through Jinja2 template substitutions into the resulting
+        detail template which are otherwise not themselves JSON serializable.
+
+        Parameters
+        ----------
+        _ : str
+            The compute function id to be invoked.
+        args : Any, optional
+            Positional arguments to pass to the compute function.
+        kwargs : Any, optional
+            Keyword arguments to pass to the compute function. This includes
+            the special parameters `tags` and `environment` as used by the
+            compute function.
+        """
+        super().__init__()
+        self.rule_id = "descarteslabs:compute-job-create"
+        self.detail_template = self._make_detail_template(_, *args, **kwargs)
+
+    def _make_detail_template(
+        self,
+        _: str,
+        *args,
+        tags: List[str] = None,
+        environment: Dict[str, str] = None,
+        **kwargs,
+    ):
+        """Generate a template of a job invocation for use with a Catalog
+        EventSubscription to send events to the compute function.
+
+        This call will return a JSON template string (with placeholders for
+        Jinja2 templating) that can be used to submit a job to the function
+        via an EventSubscription.
+
+        Returns
+        -------
+        str
+            The the detail template to use for the EventSubscription target.
+
+        Parameters
+        ----------
+        _ : str
+            The compute function id to be invoked.
+        args : Any, optional
+            Positional arguments to pass to the function.
+        tags : List[str], optional
+            A list of tags to apply to the Job.
+        environment : Dict[str, str], optional
+            Environment variables to be set in the environment of the running Job.
+            Will be merged with environment variables set on the Function, with
+            the Job environment variables taking precedence.
+        kwargs : Any, optional
+            Keyword arguments to pass to the function.
+        """
+        body = {
+            "function_id": _,
+            "args": args or None,
+            "kwargs": kwargs or None,
+            "environment": environment or None,
+            "tags": tags or None,
+        }
+        placeholders = []
+        return Placeholder.substitute_placeholders(
+            json.dumps(
+                {"body": {k: v for k, v in body.items() if v is not None}},
+                default=functools.partial(
+                    Placeholder.json_serialize, placeholders=placeholders
+                ),
+            ),
+            placeholders,
+        )
 
 
 class EventSubscriptionSearch(GeoSearch):
@@ -471,3 +602,16 @@ class EventSubscriptionCollection(Collection):
 
 # handle circular references
 EventSubscription._collection_type = EventSubscriptionCollection
+
+
+class ScheduledEventSubscription(EventSubscription):
+    """A convenience class for creating an EventSubscription for a scheduled event."""
+
+    _derived_type = "scheduled_event_subscription"
+
+    def __init__(self, event_schedule_id: str, **kwargs):
+
+        kwargs["event_source"] = ["scheduler"]
+        kwargs["event_type"] = ["scheduled"]
+        kwargs["event_namespace"] = [event_schedule_id]
+        super().__init__(**kwargs)

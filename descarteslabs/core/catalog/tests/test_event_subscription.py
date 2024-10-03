@@ -29,9 +29,12 @@ from ..attributes import AttributeValidationError
 from ..event_subscription import (
     EventSubscription,
     EventSubscriptionCollection,
+    EventSubscriptionComputeTarget,
     EventSubscriptionSearch,
     EventSubscriptionTarget,
     EventType,
+    Placeholder,
+    ScheduledEventSubscription,
 )
 from ..catalog_base import DocumentState, DeletedObjectError
 from ...common.property_filtering import Properties
@@ -688,3 +691,23 @@ class TestEventSubscription(ClientTestCase):
 
         with pytest.raises(DeletedObjectError):
             s.delete()
+
+    def test_compute_target(self):
+        target = EventSubscriptionComputeTarget(
+            "some-function-id",
+            "{{ event.detail.id }}",
+            detail=Placeholder("{{ event.detail }}"),
+        )
+        assert isinstance(target, EventSubscriptionTarget)
+        assert target.rule_id == "descarteslabs:compute-job-create"
+        assert (
+            target.detail_template
+            == '{"body": {"function_id": "some-function-id", "args": ["{{ event.detail.id }}"], "kwargs": {"detail": {{ event.detail }}}}}'  # noqa: E501
+        )
+
+    def test_scheduled_event_subscription(self):
+        sub = ScheduledEventSubscription("some-schedule-id")
+        assert isinstance(sub, EventSubscription)
+        assert sub.event_source == ["scheduler"]
+        assert sub.event_type == [EventType.SCHEDULED]
+        assert sub.event_namespace == ["some-schedule-id"]
