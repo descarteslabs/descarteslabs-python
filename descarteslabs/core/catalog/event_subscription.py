@@ -103,16 +103,44 @@ class Placeholder:
     detail template.
     """
 
-    def __init__(self, text: str):
+    def __init__(self, text: str, unquoted=False, raw=False):
         """Create a Placeholder object.
+
+        By default when unquoted and raw are both False, the text will be rendered as a
+        string value with the text substituted from the event context.
+        For example, ``Placeholder("event.detail.id")`` will render as ``"some-id"``.
+
+        If unquoted is True, the text will be rendered without enclosing quotes
+        (typically for a numeric value, JSON object or array). For example,
+        ``Placeholder("event.detail.geometry", unquoted=True)`` will render as
+        ``{"type": "Polygon", "coordinates": [[[0, 0,], [1, 0], [1, 1], [0, 1], [0, 0]]]}``.
+
+        If raw is True, then the text will be rendered by Jinja2 as is, without
+        introducing any additional quotes or substitutions. For example,
+        ``Placeholder('"{{ event.detail.id }}"', raw=True)`` will render as `"some-id"`.
+
+        In all cases, the final result after all substitions must be a fragment of
+        a valid JSON string.
 
         Parameters
         ----------
         text : str
-            The text to be rendered into the resulting JSON detail template. Typically
-            a Jinja2 template substitution string.
+            The text to be rendered into the resulting JSON detail template. How it is
+            handled depends on the `unquoted` and `raw` parameters.
+        unquoted: bool, optional
+            If False, the text will be rendered as a string value. If False,
+            then the text will be rendered without enclosing quotes. Defaults to False.
+            Ignored if `raw` is True.
+        raw : bool, optional
+            If True, the text will be rendered as is, without wrapping as a substitution
+            or a string. Defaults to False.
         """
-        self.text = text
+        if raw:
+            self.text = text
+        elif unquoted:
+            self.text = f"{{{{ {text} }}}}"
+        else:
+            self.text = f'"{{{{ {text} }}}}"'
 
     @classmethod
     def json_serialize(cls, obj, placeholders=None):

@@ -695,14 +695,15 @@ class TestEventSubscription(ClientTestCase):
     def test_compute_target(self):
         target = EventSubscriptionComputeTarget(
             "some-function-id",
-            "{{ event.detail.id }}",
-            detail=Placeholder("{{ event.detail }}"),
+            Placeholder("event.detail.id"),
+            detail=Placeholder("event.detail", unquoted=True),
+            source=Placeholder('"{{ event.source }}"', raw=True),
         )
         assert isinstance(target, EventSubscriptionTarget)
         assert target.rule_id == "descarteslabs:compute-job-create"
         assert (
             target.detail_template
-            == '{"body": {"function_id": "some-function-id", "args": ["{{ event.detail.id }}"], "kwargs": {"detail": {{ event.detail }}}}}'  # noqa: E501
+            == '{"body": {"function_id": "some-function-id", "args": ["{{ event.detail.id }}"], "kwargs": {"detail": {{ event.detail }}, "source": "{{ event.source }}"}}}'  # noqa: E501
         )
 
     def test_scheduled_event_subscription(self):
