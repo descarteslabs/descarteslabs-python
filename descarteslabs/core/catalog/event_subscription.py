@@ -609,9 +609,23 @@ class ScheduledEventSubscription(EventSubscription):
 
     _derived_type = "scheduled_event_subscription"
 
-    def __init__(self, event_schedule_id: str, **kwargs):
+    def __init__(self, *event_schedule_ids, **kwargs):
+        """Create an EventSubscription for a scheduled event.
+
+        Parameters
+        ----------
+        event_schedule_ids : str
+            The ids of one or more scheduled event to subscribe to (as separate positional arguments).
+        Plus any additional keyword arguments to pass to the EventSubscription constructor.
+        """
+        if not event_schedule_ids:
+            raise TypeError(
+                "At least one EventSchedule id must be provided as a positional argument"
+            )
+        if any(not isinstance(id, str) for id in event_schedule_ids):
+            raise TypeError("All EventSchedule ids must be strings")
 
         kwargs["event_source"] = ["scheduler"]
         kwargs["event_type"] = ["scheduled"]
-        kwargs["event_namespace"] = [event_schedule_id]
+        kwargs["event_namespace"] = event_schedule_ids
         super().__init__(**kwargs)
