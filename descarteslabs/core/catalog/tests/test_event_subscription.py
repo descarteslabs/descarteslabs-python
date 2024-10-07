@@ -160,12 +160,7 @@ class TestEventSubscription(ClientTestCase):
                         "created": "2023-09-29T15:54:37.006769Z",
                         "description": "a generic description",
                         "event_filters": [
-                            {
-                                "and": [
-                                    {"name": "cloud_fraction", "op": "gt", "val": 0.5},
-                                    {"name": "cloud_fraction", "op": "lt", "val": 0.9},
-                                ]
-                            }
+                            '{"and": [{"name": "cloud_fraction", "op": "gt", "val": 0.5}, {"name": "cloud_fraction", "op": "lt", "val": 0.9}]}',  # noqa: E501
                         ],
                         "event_namespace": ["some-product-id"],
                         "event_source": ["metadata"],
@@ -233,12 +228,7 @@ class TestEventSubscription(ClientTestCase):
                         "created": "2023-09-29T15:54:37.006769Z",
                         "description": "a generic description",
                         "event_filters": [
-                            {
-                                "and": [
-                                    {"name": "cloud_fraction", "op": "gt", "val": 0.5},
-                                    {"name": "cloud_fraction", "op": "lt", "val": 0.9},
-                                ]
-                            }
+                            '{"and": [{"name": "cloud_fraction", "op": "gt", "val": 0.5}, {"name": "cloud_fraction", "op": "lt", "val": 0.9}]}',  # noqa: E501
                         ],
                         "event_namespace": ["some-product-id"],
                         "event_source": ["metadata"],

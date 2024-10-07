@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import numbers
 import re
 
@@ -728,7 +729,7 @@ class ExpressionAttribute(Attribute):
         if value is None:
             return value
         if jsonapi_format:
-            return value.jsonapi_serialize()
+            return json.dumps(value.jsonapi_serialize())
         else:
             return value.serialize()
 
@@ -753,7 +754,7 @@ class ExpressionAttribute(Attribute):
             return value
         else:
             try:
-                return Expression.parse(value)
+                return Expression.parse(json.loads(value))
             except Exception as ex:
                 raise AttributeValidationError(ex)
 
