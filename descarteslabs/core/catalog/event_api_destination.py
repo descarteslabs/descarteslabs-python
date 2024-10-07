@@ -64,7 +64,7 @@ class EventApiDestinationSearch(Search):
 
 
 class EventApiDestination(CatalogObject):
-    """An EventApiDestination.
+    """An EventBridge API destination.
 
 
     Parameters

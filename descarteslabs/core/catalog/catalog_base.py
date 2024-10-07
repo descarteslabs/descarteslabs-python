@@ -740,7 +740,6 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         >>> search = Product.search().limit(10) # doctest: +SKIP
         >>> for result in search: # doctest: +SKIP
                 print(result.name) # doctest: +SKIP
-
         """
         return Search(
             cls, client=client, request_params=request_params, headers=headers
@@ -792,38 +791,6 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
-
-        Example
-        -------
-        >>> from descarteslabs.catalog import Product
-        >>> new_product = Product(
-        ...     id="my-product",
-        ...     name="My Product",
-        ...     description="This is a test product"
-        ... )
-        >>> new_product.state
-        <DocumentState.UNSAVED: 'unsaved'>
-        >>> new_product.save() # doctest: +SKIP
-        >>> # ids will be automatically prefixed by the Descartes Labs catalog
-        >>> # with your organization id
-        >>> new_product.id # doctest: +SKIP
-        my_org_id:my-product
-        >>> # Now you can retrieve the product and update it
-        >>> existing_product = Product.get(new_product.id) # doctest: +SKIP
-        >>> existing_product.state # doctest: +SKIP
-        <DocumentState.SAVED: 'saved'>
-        >>> existing_product.name = "My Updated Product" # doctest: +SKIP
-        >>> existing_product.state # doctest: +SKIP
-        <DocumentState.MODIFIED: 'modified'>
-        >>> existing_product.save() # doctest: +SKIP
-        >>> existing_product.state # doctest: +SKIP
-        <DocumentState.SAVED: 'saved'>
-        >>> # After you delete it...
-        >>> existing_product.delete() # doctest: +SKIP
-        True
-        >>> product.state # doctest: +SKIP
-        <DocumentState.DELETED: 'deleted'>
-
         """
         if self.state == DocumentState.SAVED and not request_params:
             # Noop, already saved in the catalog
@@ -872,26 +839,6 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         ~descarteslabs.exceptions.ClientError or ~descarteslabs.exceptions.ServerError
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
-
-        Example
-        -------
-        >>> from descarteslabs.catalog import Product
-        >>> p = Product(id="my_org_id:my_product_id")
-        >>> # Some time elapses and a concurrent change was made
-        >>> p.state # doctest: +SKIP
-        <DocumentState.SAVED: 'saved'>
-        >>> p.reload() # doctest: +SKIP
-        >>> # But once you make changes, you cannot use this method any more
-        >>> p.name = "My name has changed"
-        >>> p.reload() # doctest: +SKIP
-        Traceback (most recent call last):
-          ...
-        ValueError: Product instance with id my_org_id:my_product_id has not been saved
-        >>> # But you can revert
-        >>> p = Product.get(p.id) # doctest: +SKIP
-        >>> p.state # doctest: +SKIP
-        <DocumentState.SAVED: 'saved'>
-
         """
 
         if self.state != DocumentState.SAVED:

@@ -116,8 +116,9 @@ class Placeholder:
         ``{"type": "Polygon", "coordinates": [[[0, 0,], [1, 0], [1, 1], [0, 1], [0, 0]]]}``.
 
         If raw is True, then the text will be rendered by Jinja2 as is, without
-        introducing any additional quotes or substitutions. For example,
-        ``Placeholder('"{{ event.detail.id }}"', raw=True)`` will render as `"some-id"`.
+        introducing any additional quotes or substitutions. Generally this is used
+        when you must explicitly pass through a Jinja2 template expression with
+        substitutions.
 
         In all cases, the final result after all substitions must be a fragment of
         a valid JSON string.
@@ -251,7 +252,7 @@ class EventSubscriptionSearch(GeoSearch):
 
 
 class EventSubscription(CatalogObject):
-    """An EventSubscription.
+    """A Subscription to receive event notifications.
 
 
     Parameters
@@ -633,7 +634,14 @@ EventSubscription._collection_type = EventSubscriptionCollection
 
 
 class ScheduledEventSubscription(EventSubscription):
-    """A convenience class for creating an EventSubscription for a scheduled event."""
+    """A convenience class for creating an EventSubscription for a scheduled event.
+
+    Creates an EventSubscription for a scheduled event. Based on the one or more
+    EventSchedule ids provided to the constructer, the subscription is configured
+    with the correct ``event_source``, ``event_type``, and ``event_namespace``
+    attributes, so that they need not be provided explicitly (indeed if they are
+    explicitly provided, they will be overwritten).
+    """
 
     _derived_type = "scheduled_event_subscription"
 

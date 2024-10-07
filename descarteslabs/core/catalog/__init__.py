@@ -48,13 +48,15 @@ from .blob import (
 )
 from .event_api_destination import (
     EventApiDestination,
+    EventApiDestinationCollection,
     EventApiDestinationSearch,
     EventConnectionParameter,
 )
-from .event_rule import EventRule, EventRuleSearch, EventRuleTarget
-from .event_schedule import EventSchedule, EventScheduleSearch
+from .event_rule import EventRule, EventRuleCollection, EventRuleSearch, EventRuleTarget
+from .event_schedule import EventSchedule, EventScheduleCollection, EventScheduleSearch
 from .event_subscription import (
     EventSubscription,
+    EventSubscriptionCollection,
     EventSubscriptionComputeTarget,
     EventSubscriptionSearch,
     EventSubscriptionTarget,
@@ -124,14 +126,18 @@ __all__ = [
     "DocumentState",
     "DownloadFileFormat",
     "EventApiDestination",
+    "EventApiDestinationCollection",
     "EventApiDestinationSearch",
     "EventConnectionParameter",
     "EventRule",
+    "EventRuleCollection",
     "EventRuleSearch",
     "EventRuleTarget",
     "EventSchedule",
+    "EventScheduleCollection",
     "EventScheduleSearch",
     "EventSubscription",
+    "EventSubscriptionCollection",
     "EventSubscriptionComputeTarget",
     "EventSubscriptionSearch",
     "EventSubscriptionTarget",

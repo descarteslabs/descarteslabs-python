@@ -37,7 +37,7 @@ class EventScheduleSearch(Search):
 
 
 class EventSchedule(CatalogObject):
-    """An EventSchedule.
+    """A Scheduled Event.
 
 
     Parameters

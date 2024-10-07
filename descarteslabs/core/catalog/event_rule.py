@@ -135,7 +135,7 @@ class EventRuleSearch(Search):
 
 
 class EventRule(CatalogObject):
-    """An EventRule.
+    """An EventBridge rule to match event subscription targets.
 
 
     Parameters
