@@ -588,6 +588,7 @@ class TestProduct(ClientTestCase):
         )
 
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("ignore", category=DeprecationWarning)
             warnings.simplefilter("always")
             Product.get("product_id", client=self.client)
 
@@ -646,6 +647,7 @@ class TestProduct(ClientTestCase):
         )
 
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("ignore", category=DeprecationWarning)
             warnings.simplefilter("always")
             p = Product.get("product_id", client=self.client)
             assert isinstance(p, Product)
