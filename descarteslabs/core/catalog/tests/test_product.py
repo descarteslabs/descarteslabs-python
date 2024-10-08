@@ -591,6 +591,7 @@ class TestProduct(ClientTestCase):
             warnings.simplefilter("always")
             Product.get("product_id", client=self.client)
 
+        print(f"w={w}")
         assert w[0].category is FutureWarning
         assert str(w[0].message) == "This is a test of a FutureWarning"
         assert w[1].category is UserWarning
@@ -648,6 +649,7 @@ class TestProduct(ClientTestCase):
             assert isinstance(p, Product)
             assert p.id == "product_id"
 
+        print(f"w={w}")
         assert len(w) == 0
 
     @responses.activate
