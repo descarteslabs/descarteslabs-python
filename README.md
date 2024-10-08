@@ -18,6 +18,20 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## [3.2.0] - 2024-10-08
+
+### General
+
+- Support for Python 3.8 has been removed
+- Support for Python 3.12 has been added
+- Some dependencies have been updated due to security flaws
+- The dependency on `pytz` has been removed in favor of the standard `zoneinfo` package
+- Minor changes and additions to the client exception hierarchy so that ClientErrors and ServerErrors are not conflated in the retry support.
+
+### Catalog
+
+- The Catalog now provides support for Events, essentially notifications of new or updated assets in the Catalog, including images and storage blobs. Additionally, scheduled calendar-based events can be defined. You can subscribe to these events to trigger running a Compute function of your choice. This makes it possible to set up automated processing of new imagery. See the [https://docs.descarteslabs.com/guides/catalog.html](Catalog Guide) and API documentation for more information.
+
 ## [3.1.0] - 2024-05-09
 
 ### General
