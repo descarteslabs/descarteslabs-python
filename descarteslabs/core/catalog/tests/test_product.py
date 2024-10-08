@@ -592,6 +592,8 @@ class TestProduct(ClientTestCase):
             Product.get("product_id", client=self.client)
 
         print(f"w={w}")
+        for ww in w:
+            print(f"{ww.category} {ww.message}")
         assert w[0].category is FutureWarning
         assert str(w[0].message) == "This is a test of a FutureWarning"
         assert w[1].category is UserWarning
@@ -650,6 +652,8 @@ class TestProduct(ClientTestCase):
             assert p.id == "product_id"
 
         print(f"w={w}")
+        for ww in w:
+            print(f"{ww.category} {ww.message}")
         assert len(w) == 0
 
     @responses.activate
