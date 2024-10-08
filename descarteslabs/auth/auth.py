@@ -517,7 +517,8 @@ class Auth:
 
         if exp is not None:
             now = (
-                datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)
+                datetime.datetime.now(datetime.timezone.utc)
+                - datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
             ).total_seconds()
 
             return now + leeway > exp

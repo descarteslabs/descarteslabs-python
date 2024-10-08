@@ -181,7 +181,9 @@ class Retry(object):
 
     def _check_retries(self, retries, name, deadline, previous_exceptions):
         # Raise RetryError if deadline exceeded
-        if deadline is not None and deadline <= datetime.datetime.utcnow():
+        if deadline is not None and deadline <= datetime.datetime.now(
+            datetime.timezone.utc
+        ).replace(tzinfo=None):
             raise RetryError(
                 "Deadline of {:.1f}s exceeded while calling {}".format(deadline, name),
                 previous_exceptions,
@@ -204,7 +206,9 @@ class Retry(object):
         if deadline is None:
             return None
 
-        return datetime.datetime.utcnow() + datetime.timedelta(seconds=deadline)
+        return datetime.datetime.now(datetime.timezone.utc).replace(
+            tzinfo=None
+        ) + datetime.timedelta(seconds=deadline)
 
 
 class RetryError(Exception):

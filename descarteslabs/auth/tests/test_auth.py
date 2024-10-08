@@ -241,7 +241,8 @@ class TestAuth(unittest.TestCase):
             client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
         )
         exp = (
-            datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)
+            datetime.datetime.now(datetime.timezone.utc)
+            - datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
         ).total_seconds() + auth.leeway / 2
         token = b".".join(
             (

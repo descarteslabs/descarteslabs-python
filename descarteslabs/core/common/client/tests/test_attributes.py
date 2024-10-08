@@ -25,7 +25,9 @@ class MyDocument(Document):
     name: str = Attribute(str)
     local: str = Attribute(str, default="local", sticky=True)
     once: int = Attribute(int, mutable=False)
-    default: datetime = DatetimeAttribute(default=lambda: datetime.utcnow())
+    default: datetime = DatetimeAttribute(
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+    )
     created_at: datetime = DatetimeAttribute(readonly=True)
 
 
@@ -94,7 +96,7 @@ class TestDocument(unittest.TestCase):
         assert "Unable to set readonly attribute 'id'" == str(ctx.exception)
 
     def test_init_from_server(self):
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         # 2000-01-01, if set to 0 astimezone on windows in python 3.8 will error
         timestamp = 946710000
         data = {
@@ -113,12 +115,12 @@ class TestDocument(unittest.TestCase):
         assert doc.local == "local"
         assert doc.once == 2
         assert doc.default == datetime.fromtimestamp(timestamp, tz=timezone.utc)
-        assert doc.created_at == now.replace(tzinfo=timezone.utc)
+        assert doc.created_at == now
         with self.assertRaises(AttributeError):
             doc.extra
 
     def test_set_from_server(self):
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         doc = MyDocument(name="local", once="1", default=now)
         # 2000-01-01, if set to 0 astimezone on windows in python 3.8 will error
         timestamp = 946710000
@@ -138,7 +140,7 @@ class TestDocument(unittest.TestCase):
         assert doc.local == "local"
         assert doc.once == 2
         assert doc.default == datetime.fromtimestamp(timestamp, tz=timezone.utc)
-        assert doc.created_at == now.replace(tzinfo=timezone.utc)
+        assert doc.created_at == now
 
     def test_to_dict(self):
         doc = MyDocument(name="local", once="1")
@@ -165,20 +167,20 @@ class TestDatetimeAttribute(unittest.TestCase):
         class TzTest(Document):
             date: datetime = DatetimeAttribute(timezone=ZoneInfo("MST"))
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         doc = TzTest(date=now.isoformat())
         assert doc.date.tzinfo == ZoneInfo("MST")
         assert doc.date.astimezone(tz=timezone.utc) == now.replace(tzinfo=timezone.utc)
 
-        assert doc.to_dict()["date"] == now.replace(tzinfo=timezone.utc).isoformat()
+        assert doc.to_dict()["date"] == now.isoformat()
 
     def test_trailing_z(self):
         class TrailingTest(Document):
             date: datetime = DatetimeAttribute()
 
-        now = datetime.utcnow()
-        doc = TrailingTest(date=now.isoformat() + "Z")
-        doc.date == now.replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        doc = TrailingTest(date=now.isoformat()[:-6] + "Z")
+        assert doc.date == now
 
     def test_assign_instance(self):
         tz = ZoneInfo("MST")
@@ -186,9 +188,9 @@ class TestDatetimeAttribute(unittest.TestCase):
         class InstanceTest(Document):
             date: datetime = DatetimeAttribute(timezone=tz)
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         doc = InstanceTest(date=now)
-        assert doc.date == now.replace(tzinfo=timezone.utc).astimezone(tz=tz)
+        assert doc.date == now.astimezone(tz=tz)
 
     def test_validation(self):
         class ValidationTest(Document):
@@ -200,9 +202,9 @@ class TestDatetimeAttribute(unittest.TestCase):
             ctx.exception
         )
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         doc = ValidationTest(date=now.timestamp())
-        assert doc.date == now.replace(tzinfo=timezone.utc)
+        assert doc.date == now
 
     def test_serialize_filter(self):
         with self.assertRaises(ValueError) as ctx:

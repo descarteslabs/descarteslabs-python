@@ -7,7 +7,7 @@ import os
 import time
 import urllib.parse
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest import TestCase
 
 import responses
@@ -40,7 +40,7 @@ class BaseTestCase(TestCase):
                 del os.environ[envvar]
 
         responses.mock.assert_all_requests_are_fired = True
-        self.now = datetime.utcnow()
+        self.now = datetime.now(timezone.utc).replace(tzinfo=None)
 
         payload = (
             base64.b64encode(
@@ -200,3 +200,8 @@ class BaseTestCase(TestCase):
                 msg += "\n\nParams:\n" + "\n".join(calls_with_params)
 
         assert count == times, msg
+
+    # this was removed from python 3.12 unittest.TestCase
+    def assertDictContainsSubset(self, subset, dictionary):
+        for key, value in subset.items():
+            assert key in dictionary and dictionary[key] == value

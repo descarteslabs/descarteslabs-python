@@ -6,7 +6,7 @@ import json as jsonlib
 import time
 import urllib.parse
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest import TestCase
 
 import geopandas as gpd
@@ -61,7 +61,7 @@ class BaseTestCase(TestCase):
 
     def setUp(self):
         responses.mock.assert_all_requests_are_fired = True
-        self.now = datetime.utcnow()
+        self.now = datetime.now(timezone.utc).replace(tzinfo=None)
 
         payload = (
             base64.b64encode(
