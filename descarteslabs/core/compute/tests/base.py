@@ -200,3 +200,8 @@ class BaseTestCase(TestCase):
                 msg += "\n\nParams:\n" + "\n".join(calls_with_params)
 
         assert count == times, msg
+
+    # this was removed from python 3.12 unittest.TestCase
+    def assertDictContainsSubset(self, subset, dictionary):
+        for key, value in subset.items():
+            assert key in dictionary and dictionary[key] == value

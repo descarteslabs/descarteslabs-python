@@ -983,7 +983,7 @@ class TestImage(ClientTestCase):
         image = Image.get("landsat:LC08:PRE:TOAR:meta_LC80270312016188_v1")
         arr, info = image.ndarray("red", resolution=1000, raster_info=True)
 
-        assert mock_raster.called_once()
+        mock_raster.assert_called_once()
         assert image.geocontext.geometry is not None
         print(mock_raster.call_args)
         assert mock_raster.call_args[1]["cutline"] is None
