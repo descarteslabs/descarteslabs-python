@@ -18,6 +18,12 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## Unreleased
+
+## Catalog
+
+- EventSchedule now has a read-only `expires` attribute which indicates when the schedule will be expired and deleted.
+
 ## [3.2.0] - 2024-10-08
 
 ### General

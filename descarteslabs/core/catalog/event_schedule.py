@@ -154,7 +154,7 @@ class EventSchedule(CatalogObject):
         """,
     )
     start_datetime = Timestamp(
-        doc="""str or datetime, optional: Timestamp when the schedule should be expired and deleted.
+        doc="""str or datetime, optional: Timestamp when the schedule should begin.
 
         *Filterable, sortable*.
         """
@@ -177,6 +177,13 @@ class EventSchedule(CatalogObject):
     enabled = BooleanAttribute(
         doc="""bool, optional: True if the schedule is enabled. Non-enabled schedules are ignored
         during the matching of events.
+
+        *Filterable, sortable*.
+        """,
+    )
+    expires = Timestamp(
+        doc="""str or datetime, readonly. Timestamp when the schedule will be expired and deleted.
+        Set automatically when the schedule is created or updated.
 
         *Filterable, sortable*.
         """,
