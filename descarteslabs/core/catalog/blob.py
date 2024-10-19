@@ -36,7 +36,6 @@ from .catalog_base import (
     CatalogClient,
     CatalogObject,
     check_deleted,
-    check_derived,
     UnsavedObjectError,
 )
 from .search import AggregateDateField, GeoSearch, SummarySearchMixin
@@ -1022,8 +1021,7 @@ class Blob(CatalogObject):
                 r.close()
 
     @classmethod
-    @check_derived
-    def delete(cls, id, client=None):
+    def _cls_delete(cls, id, client=None):
         """Delete the catalog object with the given `id`.
 
         Parameters
@@ -1064,7 +1062,6 @@ class Blob(CatalogObject):
         except NotFoundError:
             return None
 
-    @check_deleted
     def _instance_delete(self):
         """Delete this catalog object from the Descartes Labs catalog.
 

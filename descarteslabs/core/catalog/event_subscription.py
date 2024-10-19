@@ -755,7 +755,7 @@ class NewImageEventSubscription(EventSubscription):
 
         Parameters
         ----------
-        product_ids : str (one or more positional arguments)
+        product_ids : str, as one or more positional arguments
             The ids of one or more products to be subscribed, as separate positional arguments.
         Plus any additional keyword arguments to pass to the EventSubscription constructor.
         """
@@ -789,7 +789,7 @@ class NewStorageEventSubscription(EventSubscription):
 
         Parameters
         ----------
-        namespaces : str (one or more positional arguments)
+        namespaces : str, as one or more positional arguments
             One or more storage namespaces to be subscribed, as separate positional arguments.
         Plus any additional keyword arguments to pass to the EventSubscription constructor.
         """
@@ -823,7 +823,7 @@ class NewVectorEventSubscription(EventSubscription):
 
         Parameters
         ----------
-        product_ids : str (one or more positional arguments)
+        product_ids : str, as one or more positional arguments
             The ids of one or more vector products to be subscribed, as separate positional arguments.
         Plus any additional keyword arguments to pass to the EventSubscription constructor.
         """
@@ -859,7 +859,7 @@ class ComputeFunctionCompletedEventSubscription(EventSubscription):
 
         Parameters
         ----------
-        function_ids : str (one or more positional arguments)
+        function_ids : str, as one or more positional arguments
             One or more Function ids or Function namespaces to be subscribed,
             as separate positional arguments. A Function namespace will match
             all functions in that namespace.
@@ -895,7 +895,7 @@ class ScheduledEventSubscription(EventSubscription):
 
         Parameters
         ----------
-        event_schedule_ids : str (one or more positional arguments)
+        event_schedule_ids : str, as one or more positional arguments
             The ids of one or more scheduled event to be subscribed, as separate positional arguments.
         Plus any additional keyword arguments to pass to the EventSubscription constructor.
         """

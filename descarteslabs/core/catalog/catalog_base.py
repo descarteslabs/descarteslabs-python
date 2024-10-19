@@ -97,6 +97,30 @@ def _new_abstract_class(cls, abstract_cls):
     return super(abstract_cls, cls).__new__(cls)
 
 
+# This lets us have a class method and an instance method with the same name, but
+# different signatures and implementation.
+# see https://stackoverflow.com/questions/28237955/same-name-for-classmethod-and-instancemethod
+class hybridmethod:
+    def __init__(self, fclass, finstance=None, doc=None):
+        self.fclass = fclass
+        self.finstance = finstance
+        self.__doc__ = doc or fclass.__doc__
+        # support use on abstract base classes
+        self.__isabstractmethod__ = bool(getattr(fclass, "__isabstractmethod__", False))
+
+    def classmethod(self, fclass):
+        return type(self)(fclass, self.finstance, None)
+
+    def instancemethod(self, finstance):
+        return type(self)(self.fclass, finstance, self.__doc__)
+
+    def __get__(self, instance, cls):
+        if instance is None or self.finstance is None:
+            # either bound to the class, or no instance method available
+            return self.fclass.__get__(cls, None)
+        return self.finstance.__get__(instance, cls)
+
+
 class CatalogObjectMeta(AttributeMeta):
     def __new__(cls, name, bases, attrs):
         new_cls = super(CatalogObjectMeta, cls).__new__(cls, name, bases, attrs)
@@ -105,17 +129,6 @@ class CatalogObjectMeta(AttributeMeta):
             new_cls._model_classes_by_type_and_derived_type[
                 (new_cls._doc_type, new_cls._derived_type)
             ] = new_cls
-
-        if new_cls.__doc__ is not None and new_cls._instance_delete.__doc__ is not None:
-            # Careful with this; leading white space is very significant
-            new_cls.__doc__ += (
-                """
-    Methods
-    -------
-    delete()
-        """
-                + new_cls._instance_delete.__doc__
-            )
 
         return new_cls
 
@@ -182,7 +195,6 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         return _new_abstract_class(cls, CatalogObjectBase)
 
     def __init__(self, **kwargs):
-        self.delete = self._instance_delete
         self._client = kwargs.pop("client", None) or CatalogClient.get_default_client()
 
         self._attributes = {}
@@ -865,7 +877,7 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             **data["attributes"],
         )
 
-    @classmethod
+    @hybridmethod
     @check_derived
     def delete(cls, id, client=None):
         """Delete the catalog object with the given `id`.
@@ -898,6 +910,10 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         -------
         >>> Image.delete('my-image-id') # doctest: +SKIP
         """
+        return cls._cls_delete(id, client=client)
+
+    @classmethod
+    def _cls_delete(cls, id, client=None):
         if client is None:
             client = CatalogClient.get_default_client()
 
@@ -907,8 +923,9 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         except NotFoundError:
             return False
 
+    @delete.instancemethod
     @check_deleted
-    def _instance_delete(self):
+    def delete(self):
         """Delete this catalog object from the Descartes Labs catalog.
 
         Once deleted, you cannot use the catalog object and should release any
@@ -924,6 +941,9 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
+        return self._instance_delete()
+
+    def _instance_delete(self):
         if self.state == DocumentState.UNSAVED:
             raise UnsavedObjectError("You cannot delete an unsaved object.")
 

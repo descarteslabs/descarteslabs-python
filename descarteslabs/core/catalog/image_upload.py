@@ -542,7 +542,7 @@ class ImageUpload(CatalogObjectBase):
         return related_objects
 
     @classmethod
-    def delete(cls, id, client=None, ignore_missing=False):
+    def _cls_delete(cls, id, client=None):
         """You cannot delete an ImageUpload.
 
         Raises
@@ -552,5 +552,5 @@ class ImageUpload(CatalogObjectBase):
         """
         raise NotImplementedError("Deleting ImageUploads is not permitted")
 
-    def _instance_delete(self, ignore_missing=False):
+    def _instance_delete(self):
         raise NotImplementedError("Deleting ImageUploads is not permitted")
