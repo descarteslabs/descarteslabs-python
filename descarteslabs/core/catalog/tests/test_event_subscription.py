@@ -27,12 +27,17 @@ from descarteslabs.exceptions import ConflictError
 from .base import ClientTestCase
 from ..attributes import AttributeValidationError
 from ..event_subscription import (
+    ComputeFunctionCompletedEventSubscription,
     EventSubscription,
     EventSubscriptionCollection,
     EventSubscriptionComputeTarget,
     EventSubscriptionSearch,
+    EventSubscriptionSqsTarget,
     EventSubscriptionTarget,
     EventType,
+    NewImageEventSubscription,
+    NewStorageEventSubscription,
+    NewVectorEventSubscription,
     Placeholder,
     ScheduledEventSubscription,
 )
@@ -172,6 +177,7 @@ class TestEventSubscription(ClientTestCase):
                         "name": "test-sub",
                         "namespace": "descarteslabs:test-namespace",
                         "owner": "user:somehash",
+                        "owner_role_arn": "arn:aws:iam::123456789012:role/metadata-event-invoke-somehash",
                         "owners": ["org:descarteslabs"],
                         "readers": ["org:descarteslabs"],
                         "tags": ["TESTING"],
@@ -200,6 +206,10 @@ class TestEventSubscription(ClientTestCase):
         assert s.namespace == "descarteslabs:test-namespace"
         assert s.description == "a generic description"
         assert s.owner == "user:somehash"
+        assert (
+            s.owner_role_arn
+            == "arn:aws:iam::123456789012:role/metadata-event-invoke-somehash"
+        )
         assert s.expires is None
         assert s.geometry == shapely.geometry.shape(self.geometry)
         assert s.event_type == [EventType.NEW_IMAGE]
@@ -462,6 +472,7 @@ class TestEventSubscription(ClientTestCase):
                         "name": "test-sub",
                         "namespace": "descarteslabs:test-namespace",
                         "owner": "user:somehash",
+                        "owner_role_arn": "arn:aws:iam::123456789012:role/metadata-event-invoke-somehash",
                         "owners": ["org:descarteslabs"],
                         "readers": ["org:descarteslabs"],
                         "writers": [],
@@ -695,6 +706,69 @@ class TestEventSubscription(ClientTestCase):
             target.detail_template
             == '{"body": {"function_id": "some-function-id", "args": ["{{ event.detail.id }}"], "kwargs": {"detail": {{ event.detail }}, "source": "{{ event.source }}"}}}'  # noqa: E501
         )
+
+    def test_sqs_target_positional(self):
+        target = EventSubscriptionSqsTarget(
+            "some-sqs-queue-url",
+            Placeholder("event.detail", unquoted=True),
+        )
+        assert isinstance(target, EventSubscriptionTarget)
+        assert target.rule_id == "descarteslabs:sqs-forwarder"
+        assert (
+            target.detail_template
+            == '{"message": {{ event.detail }}, "sqs_queue_url": "some-sqs-queue-url"}'
+        )
+
+    def test_sqs_target_kwargs(self):
+        target = EventSubscriptionSqsTarget(
+            "some-sqs-queue-url",
+            id=Placeholder("event.detail.id"),
+        )
+        assert isinstance(target, EventSubscriptionTarget)
+        assert target.rule_id == "descarteslabs:sqs-forwarder"
+        assert (
+            target.detail_template
+            == '{"message": {"id": "{{ event.detail.id }}"}, "sqs_queue_url": "some-sqs-queue-url"}'
+        )
+
+    def test_sqs_target_default(self):
+        target = EventSubscriptionSqsTarget(
+            "some-sqs-queue-url",
+        )
+        assert isinstance(target, EventSubscriptionTarget)
+        assert target.rule_id == "descarteslabs:sqs-forwarder"
+        assert (
+            target.detail_template
+            == '{"message": {{ event.detail }}, "sqs_queue_url": "some-sqs-queue-url"}'
+        )
+
+    def test_new_image_event_subscription(self):
+        sub = NewImageEventSubscription("some-product-id")
+        assert isinstance(sub, EventSubscription)
+        assert sub.event_source == ["catalog"]
+        assert sub.event_type == [EventType.NEW_IMAGE]
+        assert sub.event_namespace == ["some-product-id"]
+
+    def test_new_storage_event_subscription(self):
+        sub = NewStorageEventSubscription("some-namespace")
+        assert isinstance(sub, EventSubscription)
+        assert sub.event_source == ["catalog"]
+        assert sub.event_type == [EventType.NEW_STORAGE]
+        assert sub.event_namespace == ["some-namespace"]
+
+    def test_new_vector_event_subscription(self):
+        sub = NewVectorEventSubscription("some-product-id")
+        assert isinstance(sub, EventSubscription)
+        assert sub.event_source == ["vector"]
+        assert sub.event_type == [EventType.NEW_VECTOR]
+        assert sub.event_namespace == ["some-product-id"]
+
+    def test_compute_function_completed_event_subscription(self):
+        sub = ComputeFunctionCompletedEventSubscription("some-function-id")
+        assert isinstance(sub, EventSubscription)
+        assert sub.event_source == ["compute"]
+        assert sub.event_type == [EventType.COMPUTE_FUNCTION_COMPLETED]
+        assert sub.event_namespace == ["some-function-id"]
 
     def test_scheduled_event_subscription(self):
         sub = ScheduledEventSubscription("some-schedule-id")

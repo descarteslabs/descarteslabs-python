@@ -256,6 +256,13 @@ class EventRule(CatalogObject):
         str,
         doc="""str: The ARN of the event bus to which this rule belongs.""",
     )
+    role_arn = TypedAttribute(
+        str,
+        doc="""str, optional: The ARN of the role to assume when targeting another Event Bus.
+
+        *Filterable, sortable*.
+        """,
+    )
     rule_arn = TypedAttribute(
         str,
         doc="""str: The ARN of the rule.""",
@@ -444,7 +451,10 @@ class EventRule(CatalogObject):
         if (not id and not name) or (id and name):
             raise TypeError("Must specify exactly one of id or name parameters")
         if not id:
-            id = f"{cls.namespace_id(namespace)}:{name}"
+            namespace = cls.namespace_id(namespace)
+            id = f"{namespace}:{name}"
+            kwargs["namespace"] = namespace
+            kwargs["name"] = name
 
         return super(cls, EventRule).get_or_create(id, client=client, **kwargs)
 

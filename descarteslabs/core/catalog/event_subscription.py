@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Mapping
 import json
 import functools
 from typing import Dict, List
@@ -58,6 +59,8 @@ class EventType(StrEnum):
         An existing vector feature in the Vector service has been updated.
     SCHEDULED : enum
         A scheduled event.
+    COMPUTE_FUNCTION_COMPLETED : enum
+        A compute function has completed all jobs.
     """
 
     NEW_IMAGE = "new-image"
@@ -67,6 +70,7 @@ class EventType(StrEnum):
     NEW_VECTOR = "new-vector"
     UPDATE_VECTOR = "update-vector"
     SCHEDULED = "scheduled"
+    COMPUTE_FUNCTION_COMPLETED = "compute-function-completed"
 
 
 class EventSubscriptionTarget(MappingAttribute):
@@ -242,6 +246,95 @@ class EventSubscriptionComputeTarget(EventSubscriptionTarget):
         )
 
 
+class EventSubscriptionSqsTarget(EventSubscriptionTarget):
+    """An EventSubscriptionTarget tailored for an SQS queue.
+
+    Supports the use of placeholders in the detail template to be substituted
+    from the matching event and subscription.
+    """
+
+    def __init__(self, _: str, *args, **kwargs):
+        """Create an EventSubscriptionTarget tailored for an SQS queue.
+
+        Placeholder values can be used for any parameter value, which allows
+        for passing through Jinja2 template substitutions into the resulting
+        detail template which are otherwise not themselves JSON serializable.
+
+        If no positional or keyword arguments are provided, then the message
+        defaults to being the event detail.
+
+        Parameters
+        ----------
+        _ : str
+            The SQS queue URL.
+        args : Placeholder or mapping type, optional
+            At most one positional argument which is either a Placeholder object
+            which will be rendered as a JSON object, or a mapping type which will
+            yield the same. If a value is provided, then no kwargs are permitted.
+        kwargs : Any, optional
+            Keyword parameters to pass in the message to the SQS queue. They
+            may include placeholders for Jinja2 templating.
+        """
+        super().__init__()
+        self.rule_id = "descarteslabs:sqs-forwarder"
+        if len(args) > 1:
+            raise TypeError("At most one positional argument is allowed")
+        if args:
+            if kwargs:
+                raise TypeError(
+                    "No keyword arguments allowed with a positional argument"
+                )
+            if isinstance(args[0], Placeholder):
+                message = args[0]
+            elif isinstance(args[0], Mapping):
+                message = {**args[0]}
+            else:
+                raise ValueError(
+                    "Positional argument must be a Placeholder or a mapping type"
+                )
+        elif kwargs:
+            message = kwargs
+        else:
+            message = Placeholder("event.detail", unquoted=True)
+
+        self.detail_template = self._make_detail_template(_, message)
+
+    def _make_detail_template(
+        self,
+        _,
+        message,
+    ):
+        """Generate a template of an SQS queue message for use with a Catalog
+        EventSubscription to send events to the SQS queue.
+
+        This call will return a JSON template string (with placeholders for
+        Jinja2 templating) that can be used to send a message to the SQS queue
+        via an EventSubscription.
+
+        Returns
+        -------
+        str
+            The the detail template to use for the EventSubscription target.
+
+        Parameters
+        ----------
+        _ : str
+            The SQS queue URL.
+        kwargs : Any, optional
+            Keyword parameters to compose into the message.
+        """
+        placeholders = []
+        return Placeholder.substitute_placeholders(
+            json.dumps(
+                {"message": message, "sqs_queue_url": _},
+                default=functools.partial(
+                    Placeholder.json_serialize, placeholders=placeholders
+                ),
+            ),
+            placeholders,
+        )
+
+
 class EventSubscriptionSearch(GeoSearch):
     """A search request that iterates over its search results for event subscriptions.
 
@@ -262,36 +355,36 @@ class EventSubscription(CatalogObject):
         The :py:meth:`~descarteslabs.catalog.CatalogClient.get_default_client` will
         be used if not set.
     kwargs : dict
-        With the exception of readonly attributes (`created`, `modified`, and `owner`)
-        and with the exception of properties (`ATTRIBUTES`, `is_modified`, and `state`),
-        any attribute listed below can also be used as a keyword argument.  Also see
-        `~EventSubscription.ATTRIBUTES`.
+        With the exception of readonly attributes (`created`, `modified`, `owner`, and
+        `owner_role_arn`), and with the exception of properties (`ATTRIBUTES`,
+        `is_modified`, and `state`), any attribute listed below can also be used as a
+        keyword argument.  Also see `~EventSubscription.ATTRIBUTES`.
 
 
     .. _event_subscription_note:
 
     Note
     ----
-    The ``reader`` and ``writer`` IDs must be prefixed with ``email:``, ``user:``,
-    ``group:`` or ``org:``.  The ``owner`` ID only accepts ``org:`` and ``user:``.
-    Using ``org:`` as an ``owner`` will assign those privileges only to administrators
-    for that organization; using ``org:`` as a ``reader`` or ``writer`` assigns those
+    The ``readers`` and ``writers`` IDs must be prefixed with ``email:``, ``user:``,
+    ``group:`` or ``org:``.  The ``owners`` ID only accepts ``org:`` and ``user:``.
+    Using ``org:`` as an owner will assign those privileges only to administrators
+    for that organization; using ``org:`` as a reader or writer assigns those
     privileges to everyone in that organization.  The `readers` and `writers` attributes
-    are only visible in full to the `owners`. If you are a `reader` or a `writer` those
+    are only visible in full to the `owners`. If you are a reader or a writer those
     attributes will only display the element of those lists by which you are gaining
     read or write access.
 
-    Any user with ``owner`` privileges is able to read the event subscription attributes or data,
+    Any user with owner privileges is able to read the event subscription attributes or data,
     modify the event subscription attributes, or delete the event subscription, including reading
     and modifying the ``owners``, ``writers``, and ``readers`` attributes.
 
-    Any user with ``writer`` privileges is able to read the event subscription attributes or data,
+    Any user with writer privileges is able to read the event subscription attributes or data,
     or modify the event subscription attributes, but not delete the event subscription. A ``writer``
     can read the ``owners`` and can only read the entry in the ``writers`` and/or ``readers``
     by which they gain access to the event subscription.
 
-    Any user with ``reader`` privileges is able to read the event subscription attributes or data.
-    A ``reader`` can read the ``owners`` and can only read the entry in the ``writers`` and/or
+    Any user with reader privileges is able to read the event subscription attributes or data.
+    A reader can read the ``owners`` and can only read the entry in the ``writers`` and/or
     ``readers`` by which they gain access to the event subscription.
 
     Also see :doc:`Sharing Resources </guides/sharing>`.
@@ -357,6 +450,15 @@ class EventSubscription(CatalogObject):
         str,
         doc="""str, optional: The user who created the subscription, and for whom any subsequent actions
         will be credentialed. The form is ``user:<user hash>``.
+
+        This attribute may not be set by the end user.
+
+        *Filterable, sortable*.
+        """,
+    )
+    owner_role_arn = TypedAttribute(
+        str,
+        doc="""str, readonlyl: The AWS IAM role associated with the owner for use in target invocation.
 
         This attribute may not be set by the end user.
 
@@ -590,7 +692,10 @@ class EventSubscription(CatalogObject):
         if (not id and not name) or (id and name):
             raise TypeError("Must specify exactly one of id or name parameters")
         if not id:
-            id = f"{cls.namespace_id(namespace)}:{name}"
+            namespace = cls.namespace_id(namespace)
+            id = f"{namespace}:{name}"
+            kwargs["namespace"] = namespace
+            kwargs["name"] = name
 
         return super(cls, EventSubscription).get_or_create(id, client=client, **kwargs)
 
@@ -633,6 +738,146 @@ class EventSubscriptionCollection(Collection):
 EventSubscription._collection_type = EventSubscriptionCollection
 
 
+class NewImageEventSubscription(EventSubscription):
+    """A convenience class for creating an EventSubscription for a new image event.
+
+    Creates an EventSubscription for a new image event. Based on the one or more
+    Product ids provided to the constructer, the subscription is configured
+    with the correct ``event_source``, ``event_type``, and ``event_namespace``
+    attributes, so that they need not be provided explicitly (indeed if they are
+    explicitly provided, they will be overwritten).
+    """
+
+    _derived_type = "new_image_event_subscription"
+
+    def __init__(self, *product_ids, **kwargs):
+        """Create an EventSubscription for a new image event.
+
+        Parameters
+        ----------
+        product_ids : str (one or more positional arguments)
+            The ids of one or more products to be subscribed, as separate positional arguments.
+        Plus any additional keyword arguments to pass to the EventSubscription constructor.
+        """
+        if not product_ids:
+            raise TypeError(
+                "At least one Product id must be provided as a positional argument"
+            )
+        if any(not isinstance(id, str) for id in product_ids):
+            raise TypeError("All Product ids must be strings")
+
+        kwargs["event_source"] = ["catalog"]
+        kwargs["event_type"] = [EventType.NEW_IMAGE]
+        kwargs["event_namespace"] = product_ids
+        super().__init__(**kwargs)
+
+
+class NewStorageEventSubscription(EventSubscription):
+    """A convenience class for creating an EventSubscription for a new storage event.
+
+    Creates an EventSubscription for a new storage event. Based on the one or more
+    Blob namespaces provided to the constructer, the subscription is configured
+    with the correct ``event_source``, ``event_type``, and ``event_namespace``
+    attributes, so that they need not be provided explicitly (indeed if they are
+    explicitly provided, they will be overwritten).
+    """
+
+    _derived_type = "new_storage_event_subscription"
+
+    def __init__(self, *namespaces, **kwargs):
+        """Create an EventSubscription for a new storage event.
+
+        Parameters
+        ----------
+        namespaces : str (one or more positional arguments)
+            One or more storage namespaces to be subscribed, as separate positional arguments.
+        Plus any additional keyword arguments to pass to the EventSubscription constructor.
+        """
+        if not namespaces:
+            raise TypeError(
+                "At least one storage namespace must be provided as a positional argument"
+            )
+        if any(not isinstance(id, str) for id in namespaces):
+            raise TypeError("All Product ids must be strings")
+
+        kwargs["event_source"] = ["catalog"]
+        kwargs["event_type"] = [EventType.NEW_STORAGE]
+        kwargs["event_namespace"] = namespaces
+        super().__init__(**kwargs)
+
+
+class NewVectorEventSubscription(EventSubscription):
+    """A convenience class for creating an EventSubscription for a new storage event.
+
+    Creates an EventSubscription for a new vector event. Based on the one or more
+    Vector product ids provided to the constructer, the subscription is configured
+    with the correct ``event_source``, ``event_type``, and ``event_namespace``
+    attributes, so that they need not be provided explicitly (indeed if they are
+    explicitly provided, they will be overwritten).
+    """
+
+    _derived_type = "new_vector_event_subscription"
+
+    def __init__(self, *product_ids, **kwargs):
+        """Create an EventSubscription for a new vector event.
+
+        Parameters
+        ----------
+        product_ids : str (one or more positional arguments)
+            The ids of one or more vector products to be subscribed, as separate positional arguments.
+        Plus any additional keyword arguments to pass to the EventSubscription constructor.
+        """
+        if not product_ids:
+            raise TypeError(
+                "At least one product id must be provided as a positional argument"
+            )
+        if any(not isinstance(id, str) for id in product_ids):
+            raise TypeError("All product ids must be strings")
+
+        kwargs["event_source"] = ["vector"]
+        kwargs["event_type"] = [EventType.NEW_VECTOR]
+        kwargs["event_namespace"] = product_ids
+        super().__init__(**kwargs)
+
+
+class ComputeFunctionCompletedEventSubscription(EventSubscription):
+    """A convenience class for creating an EventSubscription for a compute
+    function completion event.
+
+    Creates an EventSubscription for a compute function completion event.
+    Based on the one or more Function ids provided to the constructer,
+    the subscription is configured with the correct ``event_source``,
+    ``event_type``, and ``event_namespace`` attributes, so that they
+    need not be provided explicitly (indeed if they are explicitly provided,
+    they will be overwritten).
+    """
+
+    _derived_type = "compute_function_completed_event_subscription"
+
+    def __init__(self, *function_ids, **kwargs):
+        """Create an EventSubscription for a compute function completion event.
+
+        Parameters
+        ----------
+        function_ids : str (one or more positional arguments)
+            One or more Function ids or Function namespaces to be subscribed,
+            as separate positional arguments. A Function namespace will match
+            all functions in that namespace.
+        Plus any additional keyword arguments to pass to the EventSubscription constructor.
+        """
+        if not function_ids:
+            raise TypeError(
+                "At least one function id or namespace must be provided as a positional argument"
+            )
+        if any(not isinstance(id, str) for id in function_ids):
+            raise TypeError("All product ids must be strings")
+
+        kwargs["event_source"] = ["compute"]
+        kwargs["event_type"] = [EventType.COMPUTE_FUNCTION_COMPLETED]
+        kwargs["event_namespace"] = function_ids
+        super().__init__(**kwargs)
+
+
 class ScheduledEventSubscription(EventSubscription):
     """A convenience class for creating an EventSubscription for a scheduled event.
 
@@ -650,8 +895,8 @@ class ScheduledEventSubscription(EventSubscription):
 
         Parameters
         ----------
-        event_schedule_ids : str
-            The ids of one or more scheduled event to subscribe to (as separate positional arguments).
+        event_schedule_ids : str (one or more positional arguments)
+            The ids of one or more scheduled event to be subscribed, as separate positional arguments.
         Plus any additional keyword arguments to pass to the EventSubscription constructor.
         """
         if not event_schedule_ids:
@@ -662,6 +907,6 @@ class ScheduledEventSubscription(EventSubscription):
             raise TypeError("All EventSchedule ids must be strings")
 
         kwargs["event_source"] = ["scheduler"]
-        kwargs["event_type"] = ["scheduled"]
+        kwargs["event_type"] = [EventType.SCHEDULED]
         kwargs["event_namespace"] = event_schedule_ids
         super().__init__(**kwargs)

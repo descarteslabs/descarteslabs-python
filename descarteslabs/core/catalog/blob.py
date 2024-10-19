@@ -462,7 +462,11 @@ class Blob(CatalogObject):
         if (not id and not name) or (id and name):
             raise TypeError("Must specify exactly one of id or name parameters")
         if not id:
-            id = f"{storage_type}/{Blob.namespace_id(namespace)}/{name}"
+            namespace = cls.namespace_id(namespace)
+            id = f"{storage_type}/{namespace}/{name}"
+            kwargs["storage_type"] = storage_type
+            kwargs["namespace"] = namespace
+            kwargs["name"] = name
 
         return super(cls, Blob).get_or_create(id, client=client, **kwargs)
 

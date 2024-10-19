@@ -455,7 +455,10 @@ class EventApiDestination(CatalogObject):
         if (not id and not name) or (id and name):
             raise TypeError("Must specify exactly one of id or name parameters")
         if not id:
-            id = f"{cls.namespace_id(namespace)}:{name}"
+            namespace = cls.namespace_id(namespace)
+            id = f"{namespace}:{name}"
+            kwargs["namespace"] = namespace
+            kwargs["name"] = name
 
         return super(cls, EventApiDestination).get_or_create(
             id, client=client, **kwargs

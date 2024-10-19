@@ -55,12 +55,17 @@ from .event_api_destination import (
 from .event_rule import EventRule, EventRuleCollection, EventRuleSearch, EventRuleTarget
 from .event_schedule import EventSchedule, EventScheduleCollection, EventScheduleSearch
 from .event_subscription import (
+    ComputeFunctionCompletedEventSubscription,
     EventSubscription,
     EventSubscriptionCollection,
     EventSubscriptionComputeTarget,
     EventSubscriptionSearch,
+    EventSubscriptionSqsTarget,
     EventSubscriptionTarget,
     EventType,
+    NewImageEventSubscription,
+    NewStorageEventSubscription,
+    NewVectorEventSubscription,
     Placeholder,
     ScheduledEventSubscription,
 )
@@ -119,6 +124,7 @@ __all__ = [
     "CatalogObject",
     "ClassBand",
     "Colormap",
+    "ComputeFunctionCompletedEventSubscription",
     "DataType",
     "DeletedObjectError",
     "DeletionTaskStatus",
@@ -140,6 +146,7 @@ __all__ = [
     "EventSubscriptionCollection",
     "EventSubscriptionComputeTarget",
     "EventSubscriptionSearch",
+    "EventSubscriptionSqsTarget",
     "EventSubscriptionTarget",
     "EventType",
     "File",
@@ -160,6 +167,9 @@ __all__ = [
     "MaskBand",
     "MicrowaveBand",
     "NamedCatalogObject",
+    "NewImageEventSubscription",
+    "NewStorageEventSubscription",
+    "NewVectorEventSubscription",
     "OverviewResampler",
     "Placeholder",
     "ProcessingLevelsAttribute",
