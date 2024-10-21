@@ -490,6 +490,68 @@ class TestAuth(unittest.TestCase):
         a = Auth()
         assert a.domain == domain
 
+    def test_all_acl_subjects(self):
+        auth = Auth(
+            client_secret="client_secret",
+            client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+        )
+        token = b".".join(
+            (
+                base64.b64encode(to_bytes(p))
+                for p in [
+                    "header",
+                    json.dumps(
+                        dict(
+                            sub="some|user",
+                            groups=["public"],
+                            org="some-org",
+                            exp=9999999999,
+                            aud="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+                        )
+                    ),
+                    "sig",
+                ]
+            )
+        )
+        auth._token = token
+
+        assert {
+            Auth.ACL_PREFIX_USER + auth.namespace,
+            f"{Auth.ACL_PREFIX_GROUP}public",
+            f"{Auth.ACL_PREFIX_ORG}some-org",
+        } == set(auth.all_acl_subjects)
+
+    def test_all_acl_subjects_ignores_bad_org_groups(self):
+        auth = Auth(
+            client_secret="client_secret",
+            client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+        )
+        token = b".".join(
+            (
+                base64.b64encode(to_bytes(p))
+                for p in [
+                    "header",
+                    json.dumps(
+                        dict(
+                            sub="some|user",
+                            groups=["public", "some-org:baz", "other:baz"],
+                            org="some-org",
+                            exp=9999999999,
+                            aud="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+                        )
+                    ),
+                    "sig",
+                ]
+            )
+        )
+        auth._token = token
+        assert {
+            Auth.ACL_PREFIX_USER + auth.namespace,
+            f"{Auth.ACL_PREFIX_ORG}some-org",
+            f"{Auth.ACL_PREFIX_GROUP}public",
+            f"{Auth.ACL_PREFIX_GROUP}some-org:baz",
+        } == set(auth.all_acl_subjects)
+
 
 if __name__ == "__main__":
     unittest.main()

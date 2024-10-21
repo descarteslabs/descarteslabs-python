@@ -90,6 +90,7 @@ from .search import (
     SummarySearchMixin,
 )
 from .catalog_base import (
+    AuthCatalogObject,
     CatalogClient,
     CatalogObject,
     DeletedObjectError,
@@ -112,6 +113,7 @@ properties = Properties()
 __all__ = [
     "AggregateDateField",
     "AttributeValidationError",
+    "AuthCatalogObject",
     "Band",
     "BandCollection",
     "BandType",

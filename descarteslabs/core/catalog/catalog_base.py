@@ -909,11 +909,11 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         Example
         -------
         >>> Image.delete('my-image-id') # doctest: +SKIP
-        """
-        return cls._cls_delete(id, client=client)
 
-    @classmethod
-    def _cls_delete(cls, id, client=None):
+        There is also an instance ``delete`` method that can be used to delete an object.
+        It accepts no parameters and does not return anything. Once deleted, you cannot
+        use the catalog object and should release any references.
+        """
         if client is None:
             client = CatalogClient.get_default_client()
 
@@ -941,9 +941,6 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
             :ref:`Spurious exception <network_exceptions>` that can occur during a
             network request.
         """
-        return self._instance_delete()
-
-    def _instance_delete(self):
         if self.state == DocumentState.UNSAVED:
             raise UnsavedObjectError("You cannot delete an unsaved object.")
 
@@ -1024,3 +1021,141 @@ class CatalogObject(CatalogObjectBase):
 
     def __new__(cls, *args, **kwargs):
         return _new_abstract_class(cls, CatalogObject)
+
+
+class AuthCatalogObject(CatalogObject):
+    """A base class for all representations of objects in the Descartes Labs catalog
+    that support ACLs.
+
+    .. _auth_note:
+
+    Note
+    ----
+    The `readers` and `writers` IDs must be prefixed with ``email:``, ``user:``,
+    ``group:`` or ``org:``.  The `owners` IDs must be prefixed with ``org:`` or ``user:``.
+    Using ``org:`` as an owner will assign those privileges only to administrators
+    for that organization; using ``org:`` as a reader or writer assigns those
+    privileges to everyone in that organization.  The `readers` and `writers` attributes
+    are only visible in full to an owner. If you are a reader or a writer those
+    attributes will only display the elements of those lists by which you are gaining
+    read or write access.
+
+    Any user with owner privileges is able to read the object attributes and data,
+    modify the object attributes, and delete the object, including reading and modifying the
+    `owners`, `writers`, and `readers` attributes.
+
+    Any user with writer privileges is able to read the object attributes and data,
+    modify the object attributes except for `owners`, `writers`, and `readers`.
+    A writer cannot delete the object. A writer can read the `owners` attribute but
+    can only read the elements of `writers` and `readers` by which they gain access
+    to the object.
+
+    Any user with reader privileges is able to read the objects attributes and data.
+    A reader can read the `owners` attribute but can only read the elements of
+    `writers` and `readers` by which they gain access to the object.
+
+    Also see :doc:`Sharing Resources </guides/sharing>`.
+    """
+
+    owners = ListAttribute(
+        TypedAttribute(str),
+        doc="""list(str), optional: User, group, or organization IDs that own this object.
+
+        Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
+        delete, and change access to this object.  :ref:`See this note <auth_note>`.
+
+        *Filterable*.
+        """,
+    )
+    readers = ListAttribute(
+        TypedAttribute(str),
+        doc="""list(str), optional: User, email, group, or organization IDs that can read this object.
+
+        Will be empty by default.  This attribute is only available in full to the `owners`
+        of the object.  :ref:`See this note <auth_note>`.
+        """,
+    )
+    writers = ListAttribute(
+        TypedAttribute(str),
+        doc="""list(str), optional: User, group, or organization IDs that can edit this object.
+
+        Writers will also have read permission.  Writers will be empty by default.
+        See note below.  This attribute is only available in full to the `owners` of the object.
+        :ref:`See this note <auth_note>`.
+        """,
+    )
+
+    def __new__(cls, *args, **kwargs):
+        return _new_abstract_class(cls, AuthCatalogObject)
+
+    def user_is_owner(self, auth=None):
+        """Check if the authenticated user is an owner, and can
+        perform actions such as changing ACLs or deleting this object.
+
+        Parameters
+        ----------
+        auth : Auth, optional
+            The auth object to use for the check. If not provided, the default auth object
+            will be used.
+
+        Returns
+        -------
+        bool
+            True if the user is an owner of the object, False otherwise.
+        """
+        if auth is None:
+            auth = self._client.auth
+
+        return "descarteslabs:platform-admin" in auth.payload.get("groups", []) or bool(
+            set(self.owners) & auth.all_owner_acl_subjects_as_set
+        )
+
+    def user_can_write(self, auth=None):
+        """Check if the authenticated user is an owner or a writer and has permissions
+        to modify this object.
+
+        Parameters
+        ----------
+        auth : Auth, optional
+            The auth object to use for the check. If not provided, the default auth object
+            will be used.
+
+        Returns
+        -------
+        bool
+            True if the user can modify the object, False otherwise.
+        """
+        if auth is None:
+            auth = self._client.auth
+
+        return self.user_is_owner(auth) or bool(
+            set(self.writers) & auth.all_acl_subjects_as_set
+        )
+
+    def user_can_read(self, auth=None):
+        """Check if the authenticated user is an owner, a writer, or a reader
+        and has permissions to read this object.
+
+        Note it is kind of silly to call this method unless a non-default auth
+        object is provided, because the default authorized user must have read
+        permission in order to even retrieve this object.
+
+        Parameters
+        ----------
+        auth : Auth, optional
+            The auth object to use for the check. If not provided, the default auth object
+            will be used.
+
+        Returns
+        -------
+        bool
+            True if the user can read the object, False otherwise.
+        """
+        if auth is None:
+            auth = self._client.auth
+
+        return (
+            "descarteslabs:platform-ro" in auth.payload.get("groups", [])
+            or self.user_can_write(auth)
+            or bool(set(self.readers) & auth.all_acl_subjects_as_set)
+        )

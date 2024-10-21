@@ -23,7 +23,7 @@ from strenum import StrEnum
 
 from descarteslabs.exceptions import ServerError
 
-from .catalog_base import CatalogObjectBase, check_deleted
+from .catalog_base import CatalogObjectBase, check_deleted, check_derived, hybridmethod
 from .attributes import (
     Attribute,
     CatalogObjectReference,
@@ -541,8 +541,9 @@ class ImageUpload(CatalogObjectBase):
 
         return related_objects
 
-    @classmethod
-    def _cls_delete(cls, id, client=None):
+    @hybridmethod
+    @check_derived
+    def delete(cls, id, client=None):
         """You cannot delete an ImageUpload.
 
         Raises
@@ -552,5 +553,14 @@ class ImageUpload(CatalogObjectBase):
         """
         raise NotImplementedError("Deleting ImageUploads is not permitted")
 
-    def _instance_delete(self):
+    @delete.instancemethod
+    @check_deleted
+    def delete(self):
+        """You cannot delete an ImageUpload.
+
+        Raises
+        ------
+        NotImplementedError
+            This method is not supported for ImageUploads.
+        """
         raise NotImplementedError("Deleting ImageUploads is not permitted")

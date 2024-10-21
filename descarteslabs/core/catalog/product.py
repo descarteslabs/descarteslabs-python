@@ -22,8 +22,8 @@ from .attributes import (
     TypedAttribute,
 )
 from .catalog_base import (
+    AuthCatalogObject,
     CatalogClient,
-    CatalogObject,
     check_deleted,
 )
 from .task import TaskStatus
@@ -32,7 +32,7 @@ from .task import TaskStatus
 properties = Properties()
 
 
-class Product(CatalogObject):
+class Product(AuthCatalogObject):
     """A raster product that connects band information to imagery.
 
     Instantiating a product indicates that you want to create a *new* Descartes Labs
@@ -55,36 +55,6 @@ class Product(CatalogObject):
         (`ATTRIBUTES`, `is_modified`, and `state`), any attribute listed below can
         also be used as a keyword argument.  Also see
         `~Product.ATTRIBUTES`.
-
-
-    .. _product_note:
-
-    Note
-    ----
-    The ``reader`` and ``writer`` IDs must be prefixed with ``email:``, ``user:``,
-    ``group:`` or ``org:``.  The ``owner`` ID only accepts ``org:`` and ``user:``.
-    Using ``org:`` as an ``owner`` will assign those privileges only to administrators
-    for that organization; using ``org:`` as a ``reader`` or ``writer`` assigns those
-    privileges to everyone in that organization.  The `readers` and `writers` attributes
-    are only visible in full to the `owners`. If you are a `reader` or a `writer` those
-    attributes will only display the element of those lists by which you are gaining
-    read or write access.
-
-    Any user with ``owner`` privileges is able to read, modify, or delete the product,
-    including reading and modifying the ``owners``, ``writers``, and ``readers`` attributes.
-    Any user with ``owner`` privileges can also create, read, modify, or delete bands
-    and images for the product.
-
-    Any user with ``writer`` privileges is able to read or modify the product, but not
-    delete the product. A ``writer`` may create, read or modify bands and images for the
-    product. A ``writer`` can read the product ``owners`` and can only read the entry
-    in the ``writers`` and/or ``readers`` by which they gain access to the product.
-
-    Any user with ``reader`` privileges is able to read the product, bands, and images.
-    A ``reader`` can read the product ``owners`` and can only read the entry
-    in the ``writers`` and/or ``readers`` by which they gain access to the product.
-
-    Also see :doc:`Sharing Resources </guides/sharing>`.
     """
 
     _doc_type = "product"
@@ -112,33 +82,6 @@ class Product(CatalogObject):
         :py:meth:`Search.find_text`.
 
         *Searchable*
-        """,
-    )
-    owners = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that own this product.
-
-        Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
-        delete, and change access to this product.  :ref:`See this note <product_note>`.
-
-        *Filterable*.
-        """,
-    )
-    readers = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, email, group, or organization IDs that can read this product.
-
-        Will be empty by default.  This attribute is only available in full to the `owners`
-        of the product.  :ref:`See this note <product_note>`.
-        """,
-    )
-    writers = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that can edit this product.
-
-        Writers will also have read permission.  Writers will be empty by default.
-        See note below.  This attribute is only available in full to the `owners` of the product.
-        :ref:`See this note <product_note>`.
         """,
     )
     is_core = BooleanAttribute(

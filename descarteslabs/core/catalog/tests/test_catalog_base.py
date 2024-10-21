@@ -23,7 +23,6 @@ from descarteslabs.exceptions import (
     ConflictError,
 )
 
-from .base import ClientTestCase
 from ..attributes import (
     Attribute,
     AttributeValidationError,
@@ -31,12 +30,18 @@ from ..attributes import (
     DocumentState,
 )
 from ..catalog_base import (
+    AuthCatalogObject as OriginalAuthCatalogObject,
     CatalogClient,
     CatalogObject as OriginalCatalogObject,
     DeletedObjectError,
     UnsavedObjectError,
 )
 from ..named_catalog_base import NamedCatalogObject
+from .base import ClientTestCase
+
+
+class AuthCatalogObject(OriginalAuthCatalogObject):
+    pass
 
 
 class CatalogObject(OriginalCatalogObject):
@@ -678,3 +683,64 @@ class TestCatalogObject(ClientTestCase):
         with pytest.raises(DeletedObjectError):
             instance.reload()
         assert instance.state == DocumentState.DELETED
+
+
+class TestAuthCatalogObject(ClientTestCase):
+    def test_auth_catalog_object(self):
+        user = self.client.auth.namespace
+        org = self.client.auth.payload["org"]
+        obj = AuthCatalogObject(
+            id="id",
+            owners=[f"org:{org}", f"user:{user}"],
+            writers=["org:some-org"],
+            readers=["group:some-group"],
+            client=self.client,
+        )
+
+        assert obj.user_is_owner()
+        assert obj.user_can_write()
+        assert obj.user_can_read()
+
+        auth = self.client.auth
+        payload = auth.payload
+        auth._clear_cache()
+        assert auth._namespace is None
+        assert "_payload" not in auth.__dict__
+        payload.update(
+            {
+                "sub": "some|other-user",
+            }
+        )
+        auth.__dict__["_payload"] = payload
+
+        assert not obj.user_is_owner(auth)
+        assert obj.user_can_write(auth)
+        assert obj.user_can_read(auth)
+
+        auth._clear_cache()
+        payload.update(
+            {
+                "sub": "some|other-user",
+                "org": "some-other-org",
+                "groups": ["some-group"],
+            }
+        )
+        auth.__dict__["_payload"] = payload
+
+        assert not obj.user_is_owner(auth)
+        assert not obj.user_can_write(auth)
+        assert obj.user_can_read(auth)
+
+        auth._clear_cache()
+        payload.update(
+            {
+                "sub": "some|other-user",
+                "org": "some-other-org",
+                "groups": ["some-other-group"],
+            }
+        )
+        auth.__dict__["_payload"] = payload
+
+        assert not obj.user_is_owner(auth)
+        assert not obj.user_can_write(auth)
+        assert not obj.user_can_read(auth)

@@ -25,7 +25,6 @@ from .attributes import (
     DocumentState,
     EnumAttribute,
     GeometryAttribute,
-    ListAttribute,
     StorageState,
     Timestamp,
     TypedAttribute,
@@ -33,9 +32,11 @@ from .attributes import (
 )
 from .blob_download import BlobDownload
 from .catalog_base import (
+    AuthCatalogObject,
     CatalogClient,
-    CatalogObject,
     check_deleted,
+    check_derived,
+    hybridmethod,
     UnsavedObjectError,
 )
 from .search import AggregateDateField, GeoSearch, SummarySearchMixin
@@ -118,7 +119,7 @@ class BlobSearch(SummarySearchMixin, GeoSearch):
     DEFAULT_AGGREGATE_DATE_FIELD = AggregateDateField.CREATED
 
 
-class Blob(CatalogObject):
+class Blob(AuthCatalogObject):
     """A stored blob (arbitrary bytes) that can be searched and retrieved.
 
     Instantiating a blob indicates that you want to create a *new* Descartes Labs
@@ -139,35 +140,6 @@ class Blob(CatalogObject):
         the exception of properties (`ATTRIBUTES`, `is_modified`, and `state`), any
         attribute listed below can also be used as a keyword argument.  Also see
         `~Blob.ATTRIBUTES`.
-
-
-    .. _blob_note:
-
-    Note
-    ----
-    The ``reader`` and ``writer`` IDs must be prefixed with ``email:``, ``user:``,
-    ``group:`` or ``org:``.  The ``owner`` ID only accepts ``org:`` and ``user:``.
-    Using ``org:`` as an ``owner`` will assign those privileges only to administrators
-    for that organization; using ``org:`` as a ``reader`` or ``writer`` assigns those
-    privileges to everyone in that organization.  The `readers` and `writers` attributes
-    are only visible in full to the `owners`. If you are a `reader` or a `writer` those
-    attributes will only display the element of those lists by which you are gaining
-    read or write access.
-
-    Any user with ``owner`` privileges is able to read the blob attributes or data,
-    modify the blob attributes, or delete the blob, including reading and modifying the
-    ``owners``, ``writers``, and ``readers`` attributes.
-
-    Any user with ``writer`` privileges is able to read the blob attributes or data,
-    or modify the blob attributes, but not delete the blob. A ``writer`` can read the
-    ``owners`` and can only read the entry in the ``writers`` and/or ``readers``
-    by which they gain access to the blob.
-
-    Any user with ``reader`` privileges is able to read the blob attributes or data.
-    A ``reader`` can read the ``owners`` and can only read the entry
-    in the ``writers`` and/or ``readers`` by which they gain access to the blob.
-
-    Also see :doc:`Sharing Resources </guides/sharing>`.
     """
 
     _doc_type = "storage"
@@ -268,33 +240,6 @@ class Blob(CatalogObject):
     )
     hash = TypedAttribute(
         str, doc="""str, optional: Content hash (MD5) for the blob."""
-    )
-    owners = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that own this blob.
-
-        Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
-        delete, and change access to this blob.  :ref:`See this note <blob_note>`.
-
-        *Filterable*.
-        """,
-    )
-    readers = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, email, group, or organization IDs that can read this blob.
-
-        Will be empty by default.  This attribute is only available in full to the `owners`
-        of the blob.  :ref:`See this note <blob_note>`.
-        """,
-    )
-    writers = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that can edit this blob.
-
-        Writers will also have read permission.  Writers will be empty by default.
-        See note below.  This attribute is only available in full to the `owners` of the blob.
-        :ref:`See this note <blob_note>`.
-        """,
     )
 
     @classmethod
@@ -1020,8 +965,9 @@ class Blob(CatalogObject):
             finally:
                 r.close()
 
-    @classmethod
-    def _cls_delete(cls, id, client=None):
+    @hybridmethod
+    @check_derived
+    def delete(cls, id, client=None):
         """Delete the catalog object with the given `id`.
 
         Parameters
@@ -1051,6 +997,10 @@ class Blob(CatalogObject):
         Example
         -------
         >>> Image.delete('my-image-id') # doctest: +SKIP
+
+        There is also an instance ``delete`` method that can be used to delete a blob.
+        It accepts no parameters and also returns a ``BlobDeletionTaskStatus``. Once
+        deleted, you cannot use the blob and should release any references.
         """
         if client is None:
             client = CatalogClient.get_default_client()
@@ -1062,7 +1012,9 @@ class Blob(CatalogObject):
         except NotFoundError:
             return None
 
-    def _instance_delete(self):
+    @delete.instancemethod
+    @check_deleted
+    def delete(self):
         """Delete this catalog object from the Descartes Labs catalog.
 
         Once deleted, you cannot use the catalog object and should release any

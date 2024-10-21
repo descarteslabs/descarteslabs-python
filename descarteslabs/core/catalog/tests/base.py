@@ -43,6 +43,8 @@ class ClientTestCase(unittest.TestCase):
                     {
                         "aud": "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
                         "exp": time.time() + 3600,
+                        "sub": "some|user",
+                        "org": "some-org",
                     }
                 ).encode()
             )

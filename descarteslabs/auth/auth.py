@@ -153,6 +153,28 @@ class Auth:
     KEY_JWT_TOKEN = "jwt_token"
     KEY_ALT_JWT_TOKEN = "JWT_TOKEN"
 
+    # The various prefixes that can be used in Catalog ACLs.
+    ACL_PREFIX_USER = "user:"  # Followed by the user's sha1 hash
+    ACL_PREFIX_EMAIL = "email:"  # Followed by the user's email
+    ACL_PREFIX_GROUP = "group:"  # Followed by a lowercase group
+    ACL_PREFIX_ORG = "org:"  # Followed by a lowercase org name
+    ACL_PREFIX_ACCESS = "access-id:"  # Followed by the purchase-specific access id
+    # Note that the access-id, including the prefix `access_id:`, is matched against
+    # a group with the same name. In other words `group:access-id:<access-id>` will
+    # match against `access-id:<access-id>` (assuming the `<access_id>` is identical).
+
+    # these match the values in descarteslabs/common/services/python_auth/groups.py
+    ORG_ADMIN_SUFFIX = ":org-admin"
+    RESOURCE_ADMIN_SUFFIX = ":resource-admin"
+
+    # These are cache keys for caching various data in the object's __dict__.
+    # These are scrubbed out with `_clear_cache()` when retrieving a new token.
+    KEY_PAYLOAD = "_payload"
+    KEY_ALL_ACL_SUBJECTS = "_aas"
+    KEY_ALL_ACL_SUBJECTS_AS_SET = "_aasas"
+    KEY_ALL_OWNER_ACL_SUBJECTS = "_aoas"
+    KEY_ALL_OWNER_ACL_SUBJECTS_AS_SET = "_aoasas"
+
     __attrs__ = [
         "domain",
         "scope",
@@ -585,7 +607,13 @@ class Auth:
         OauthError
             Raised when a token cannot be obtained or refreshed.
         """
-        return self._get_payload(self.token)
+        payload = self.__dict__.get(self.KEY_PAYLOAD)
+
+        if payload is None:
+            payload = self._get_payload(self.token)
+            self.__dict__[self.KEY_PAYLOAD] = payload
+
+        return payload
 
     @staticmethod
     def _get_payload(token):
@@ -754,6 +782,9 @@ class Auth:
         else:
             raise OauthError("Could not retrieve token")
 
+        # clear out payload and subjects cache
+        self._clear_cache()
+
         token_info = {}
 
         # Read the token from the token_info_path, and save it again
@@ -796,6 +827,121 @@ class Auth:
         if self._namespace is None:
             self._namespace = sha1(self.payload["sub"].encode("utf-8")).hexdigest()
         return self._namespace
+
+    @property
+    def all_acl_subjects(self):
+        """
+        A list of all ACL subjects identifying this user (the user itself, the org, the
+        groups) which can be used in ACL queries.
+        """
+        subjects = self.__dict__.get(self.KEY_ALL_ACL_SUBJECTS)
+
+        if subjects is None:
+            subjects = [self.ACL_PREFIX_USER + self.namespace]
+
+            if email := self.payload.get("email"):
+                subjects.append(self.ACL_PREFIX_EMAIL + email.lower())
+
+            if org := self.payload.get("org"):
+                subjects.append(self.ACL_PREFIX_ORG + org)
+
+            subjects += [
+                self.ACL_PREFIX_GROUP + group for group in self._active_groups()
+            ]
+            self.__dict__[self.KEY_ALL_ACL_SUBJECTS] = subjects
+
+        return subjects
+
+    @property
+    def all_acl_subjects_as_set(self):
+        subjects_as_set = self.__dict__.get(self.KEY_ALL_ACL_SUBJECTS_AS_SET)
+
+        if subjects_as_set is None:
+            subjects_as_set = set(self.all_acl_subjects)
+            self.__dict__[self.KEY_ALL_ACL_SUBJECTS_AS_SET] = subjects_as_set
+
+        return subjects_as_set
+
+    @property
+    def all_owner_acl_subjects(self):
+        """
+        A list of ACL subjects identifying this user (the user itself, the org,
+        org admin and catalog admins) which can be used in owner ACL queries.
+        """
+        subjects = self.__dict__.get(self.KEY_ALL_OWNER_ACL_SUBJECTS)
+
+        if subjects is None:
+            subjects = [self.ACL_PREFIX_USER + self.namespace]
+
+            subjects.extend(
+                [self.ACL_PREFIX_ORG + org for org in self.get_org_admins() if org]
+            )
+            subjects.extend(
+                [
+                    self.ACL_PREFIX_ACCESS + access_id
+                    for access_id in self.get_resource_admins()
+                    if access_id
+                ]
+            )
+            self.__dict__[self.KEY_ALL_OWNER_ACL_SUBJECTS] = subjects
+
+        return subjects
+
+    @property
+    def all_owner_acl_subjects_as_set(self):
+        subjects_as_set = self.__dict__.get(self.KEY_ALL_OWNER_ACL_SUBJECTS_AS_SET)
+
+        if subjects_as_set is None:
+            subjects_as_set = set(self.all_owner_acl_subjects)
+            self.__dict__[self.KEY_ALL_OWNER_ACL_SUBJECTS_AS_SET] = subjects_as_set
+
+        return subjects_as_set
+
+    def get_org_admins(self):
+        # This retrieves the value of the org to be added if the user has one or
+        # more org-admin groups, otherwise the empty list.
+        return [
+            group[: -len(self.ORG_ADMIN_SUFFIX)]
+            for group in self.payload.get("groups", [])
+            if group.endswith(self.ORG_ADMIN_SUFFIX)
+        ]
+
+    def get_resource_admins(self):
+        # This retrieves the value of the access-id to be added if the user has one or
+        # more resource-admin groups, otherwise the empty list.
+        return [
+            group[: -len(self.RESOURCE_ADMIN_SUFFIX)]
+            for group in self.payload.get("groups", [])
+            if group.endswith(self.RESOURCE_ADMIN_SUFFIX)
+        ]
+
+    def _active_groups(self):
+        """
+        Attempts to filter groups to just the ones that are currently valid for this
+        user.  If they have a colon, the prefix leading up to the colon must be the
+        user's current org, otherwise the user should not actually have rights with
+        this group.
+        """
+        org = self.payload.get("org")
+        for group in self.payload.get("groups", []):
+            parts = group.split(":")
+
+            if len(parts) == 1:
+                yield group
+            elif org and parts[0] == org:
+                yield group
+
+    def _clear_cache(self):
+        for key in (
+            self.KEY_PAYLOAD,
+            self.KEY_ALL_ACL_SUBJECTS,
+            self.KEY_ALL_ACL_SUBJECTS_AS_SET,
+            self.KEY_ALL_OWNER_ACL_SUBJECTS,
+            self.KEY_ALL_OWNER_ACL_SUBJECTS_AS_SET,
+        ):
+            if key in self.__dict__:
+                del self.__dict__[key]
+        self._namespace = None
 
     def __getstate__(self):
         return dict((attr, getattr(self, attr)) for attr in self.__attrs__)

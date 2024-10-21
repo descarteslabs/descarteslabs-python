@@ -32,8 +32,8 @@ from .attributes import (
     TypedAttribute,
 )
 from .catalog_base import (
+    AuthCatalogObject,
     CatalogClient,
-    CatalogObject,
 )
 from .search import GeoSearch
 
@@ -344,7 +344,7 @@ class EventSubscriptionSearch(GeoSearch):
     pass
 
 
-class EventSubscription(CatalogObject):
+class EventSubscription(AuthCatalogObject):
     """A Subscription to receive event notifications.
 
 
@@ -359,35 +359,6 @@ class EventSubscription(CatalogObject):
         `owner_role_arn`), and with the exception of properties (`ATTRIBUTES`,
         `is_modified`, and `state`), any attribute listed below can also be used as a
         keyword argument.  Also see `~EventSubscription.ATTRIBUTES`.
-
-
-    .. _event_subscription_note:
-
-    Note
-    ----
-    The ``readers`` and ``writers`` IDs must be prefixed with ``email:``, ``user:``,
-    ``group:`` or ``org:``.  The ``owners`` ID only accepts ``org:`` and ``user:``.
-    Using ``org:`` as an owner will assign those privileges only to administrators
-    for that organization; using ``org:`` as a reader or writer assigns those
-    privileges to everyone in that organization.  The `readers` and `writers` attributes
-    are only visible in full to the `owners`. If you are a reader or a writer those
-    attributes will only display the element of those lists by which you are gaining
-    read or write access.
-
-    Any user with owner privileges is able to read the event subscription attributes or data,
-    modify the event subscription attributes, or delete the event subscription, including reading
-    and modifying the ``owners``, ``writers``, and ``readers`` attributes.
-
-    Any user with writer privileges is able to read the event subscription attributes or data,
-    or modify the event subscription attributes, but not delete the event subscription. A ``writer``
-    can read the ``owners`` and can only read the entry in the ``writers`` and/or ``readers``
-    by which they gain access to the event subscription.
-
-    Any user with reader privileges is able to read the event subscription attributes or data.
-    A reader can read the ``owners`` and can only read the entry in the ``writers`` and/or
-    ``readers`` by which they gain access to the event subscription.
-
-    Also see :doc:`Sharing Resources </guides/sharing>`.
     """
 
     _doc_type = "event_subscription"
@@ -506,33 +477,6 @@ class EventSubscription(CatalogObject):
         during the matching of events.
 
         *Filterable, sortable*.
-        """,
-    )
-    owners = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that own this event subscription.
-
-        Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
-        delete, and change access to this event subscription.  :ref:`See this note <event_subscription_note>`.
-
-        *Filterable*.
-        """,
-    )
-    readers = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, email, group, or organization IDs that can read this event subscription.
-
-        Will be empty by default.  This attribute is only available in full to the `owners`
-        of the event subscription.  :ref:`See this note <event_subscription_note>`.
-        """,
-    )
-    writers = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that can edit this event subscription.
-
-        Writers will also have read permission.  Writers will be empty by default.
-        See note below.  This attribute is only available in full to the `owners` of the event subscription.
-        :ref:`See this note <event_subscription_note>`.
         """,
     )
 

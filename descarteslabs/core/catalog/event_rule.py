@@ -22,8 +22,8 @@ from .attributes import (
     TypedAttribute,
 )
 from .catalog_base import (
+    AuthCatalogObject,
     CatalogClient,
-    CatalogObject,
 )
 from .search import Search
 
@@ -134,7 +134,7 @@ class EventRuleSearch(Search):
     pass
 
 
-class EventRule(CatalogObject):
+class EventRule(AuthCatalogObject):
     """An EventBridge rule to match event subscription targets.
 
 
@@ -149,35 +149,6 @@ class EventRule(CatalogObject):
         and with the exception of properties (`ATTRIBUTES`, `is_modified`, and `state`),
         any attribute listed below can also be used as a keyword argument.  Also see
         `~EventRule.ATTRIBUTES`.
-
-
-    .. _event_rule_note:
-
-    Note
-    ----
-    The ``reader`` and ``writer`` IDs must be prefixed with ``email:``, ``user:``,
-    ``group:`` or ``org:``.  The ``owner`` ID only accepts ``org:`` and ``user:``.
-    Using ``org:`` as an ``owner`` will assign those privileges only to administrators
-    for that organization; using ``org:`` as a ``reader`` or ``writer`` assigns those
-    privileges to everyone in that organization.  The `readers` and `writers` attributes
-    are only visible in full to the `owners`. If you are a `reader` or a `writer` those
-    attributes will only display the element of those lists by which you are gaining
-    read or write access.
-
-    Any user with ``owner`` privileges is able to read the event rule attributes or data,
-    modify the event rule attributes, or delete the event rule, including reading
-    and modifying the ``owners``, ``writers``, and ``readers`` attributes.
-
-    Any user with ``writer`` privileges is able to read the event rule attributes or data,
-    or modify the event rule attributes, but not delete the event rule. A ``writer``
-    can read the ``owners`` and can only read the entry in the ``writers`` and/or ``readers``
-    by which they gain access to the event rule.
-
-    Any user with ``reader`` privileges is able to read the event rule attributes or data.
-    A ``reader`` can read the ``owners`` and can only read the entry in the ``writers`` and/or
-    ``readers`` by which they gain access to the event rule.
-
-    Also see :doc:`Sharing Resources </guides/sharing>`.
     """
 
     _doc_type = "event_rule"
@@ -266,33 +237,6 @@ class EventRule(CatalogObject):
     rule_arn = TypedAttribute(
         str,
         doc="""str: The ARN of the rule.""",
-    )
-    owners = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that own this event rule.
-
-        Defaults to [``user:current_user``, ``org:current_org``].  The owner can edit,
-        delete, and change access to this event rule.  :ref:`See this note <event_rule_note>`.
-
-        *Filterable*.
-        """,
-    )
-    readers = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, email, group, or organization IDs that can read this event rule.
-
-        Will be empty by default.  This attribute is only available in full to the `owners`
-        of the event rule.  :ref:`See this note <event_rule_note>`.
-        """,
-    )
-    writers = ListAttribute(
-        TypedAttribute(str),
-        doc="""list(str), optional: User, group, or organization IDs that can edit this event rule.
-
-        Writers will also have read permission.  Writers will be empty by default.
-        See note below.  This attribute is only available in full to the `owners` of the event rule.
-        :ref:`See this note <event_rule_note>`.
-        """,
     )
 
     @classmethod
