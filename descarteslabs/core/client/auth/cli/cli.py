@@ -31,7 +31,7 @@ from descarteslabs.auth.auth import (
 )
 
 
-LOGIN_URL = f"{get_auth_refresh_domain()}/refresh_token"
+LOGIN_URL = f"{get_auth_refresh_domain()}/account/refresh-token"
 
 
 # this is defined this way to support mocking in the tests
@@ -49,7 +49,7 @@ def cli():
 @cli.command()
 def login():
     """Log in to Descartes Labs"""
-    click.echo(f"Follow this link to login:\n\n    {LOGIN_URL}\n")
+    click.echo(f"Follow this link to login and request a token:\n\n    {LOGIN_URL}\n")
 
     while True:
         try:
