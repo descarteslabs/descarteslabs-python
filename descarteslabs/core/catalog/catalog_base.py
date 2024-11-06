@@ -1106,7 +1106,7 @@ class AuthCatalogObject(CatalogObject):
         if auth is None:
             auth = self._client.auth
 
-        return "descarteslabs:platform-admin" in auth.payload.get("groups", []) or bool(
+        return "internal:platform-admin" in auth.payload.get("groups", []) or bool(
             set(self.owners) & auth.all_owner_acl_subjects_as_set
         )
 
@@ -1155,7 +1155,7 @@ class AuthCatalogObject(CatalogObject):
             auth = self._client.auth
 
         return (
-            "descarteslabs:platform-ro" in auth.payload.get("groups", [])
+            "internal:platform-ro" in auth.payload.get("groups", [])
             or self.user_can_write(auth)
             or bool(set(self.readers) & auth.all_acl_subjects_as_set)
         )

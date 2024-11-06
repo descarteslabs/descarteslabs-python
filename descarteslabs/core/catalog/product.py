@@ -89,7 +89,7 @@ class Product(AuthCatalogObject):
 
         A core product is a product that is fully supported by Descartes Labs.  By
         default this value is ``False`` and you must have a special permission
-        (``descarteslabs:core:create``) to set it to ``True``.
+        (``internal:core:create``) to set it to ``True``.
 
         *Filterable, sortable*.
         """

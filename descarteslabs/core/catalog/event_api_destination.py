@@ -125,7 +125,7 @@ class EventApiDestination(AuthCatalogObject):
 
         A core event api destination is an event api destination that is fully managed by Descartes Labs.  By
         default this value is ``False`` and you must have a special permission
-        (``descarteslabs:core:create``) to set it to ``True``.
+        (``internal:core:create``) to set it to ``True``.
 
         *Filterable, sortable*.
         """

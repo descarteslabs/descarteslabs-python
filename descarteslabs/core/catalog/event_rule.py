@@ -196,7 +196,7 @@ class EventRule(AuthCatalogObject):
 
         A core event rule is an event rule that is fully managed by Descartes Labs.  By
         default this value is ``False`` and you must have a special permission
-        (``descarteslabs:core:create``) to set it to ``True``.
+        (``internal:core:create``) to set it to ``True``.
 
         *Filterable, sortable*.
         """
