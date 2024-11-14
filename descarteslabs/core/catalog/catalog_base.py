@@ -947,6 +947,12 @@ class CatalogObjectBase(AttributeEqualityMixin, metaclass=CatalogObjectMeta):
         self._client.session.delete(self._url + "/" + self.id)
         self._deleted = True  # non-200 will raise an exception
 
+    # This unused method must remain here to support unpickling any
+    # pickled objects generated prior to v3.2.0.
+    def _instance_delete(self):
+        """Obsolete, do not use"""
+        self.delete()
+
     @classmethod
     @check_derived
     def _send_data(
