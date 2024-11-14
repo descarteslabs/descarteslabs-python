@@ -20,6 +20,12 @@ Changelog
 
 ## Unreleased
 
+## [3.2.2] - 2024-11-14
+
+## Catalog
+
+- Fixed a problem with unpickling Catalog objects pickled with an earlier version. Please be aware that we do not support the pickling of any Catalog objects, so if in doubt, don't do it!
+
 ## [3.2.1] - 2024-10-21
 
 ## Authentication
