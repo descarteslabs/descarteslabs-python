@@ -52,7 +52,7 @@ def geometry_like_to_shapely(geometry):
         )
 
     # test that geometry is in WGS84
-    check_valid_bounds(shape.bounds)
+    check_valid_bounds(shape.bounds, shape.geom_type)
     return shape
 
 
@@ -107,7 +107,7 @@ def _parse_geojson_safe(geojson_dict):
     return geoj
 
 
-def check_valid_bounds(bounds):
+def check_valid_bounds(bounds, geom_type=None):
     """
     Test given bounds are correct type and in correct order.
 
@@ -133,11 +133,22 @@ def check_valid_bounds(bounds):
             )
         ) from None
 
-    if bounds[0] >= bounds[2]:
-        raise ValueError(
-            "minx >= maxx in given bounds, should be (minx, miny, maxx, maxy)"
-        )
-    if bounds[1] >= bounds[3]:
-        raise ValueError(
-            "miny >= maxy in given bounds, should be (minx, miny, maxx, maxy)"
-        )
+    # Only check polygons and multipolygons here
+    if geom_type and geom_type.endswith("Polygon"):
+        if bounds[0] >= bounds[2]:
+            raise ValueError(
+                "minx >= maxx in given bounds, should be (minx, miny, maxx, maxy)"
+            )
+        if bounds[1] >= bounds[3]:
+            raise ValueError(
+                "miny >= maxy in given bounds, should be (minx, miny, maxx, maxy)"
+            )
+    else:
+        if bounds[0] > bounds[2]:
+            raise ValueError(
+                "minx > maxx in given bounds, should be (minx, miny, maxx, maxy)"
+            )
+        if bounds[1] > bounds[3]:
+            raise ValueError(
+                "miny > maxy in given bounds, should be (minx, miny, maxx, maxy)"
+            )

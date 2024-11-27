@@ -75,7 +75,7 @@ def _blob_do_download(_, dest=None, range=None):
 
 
 class TestBlob(ClientTestCase):
-    geometry = {
+    polygon_geometry = {
         "type": "Polygon",
         "coordinates": [
             [
@@ -87,6 +87,96 @@ class TestBlob(ClientTestCase):
             ]
         ],
     }
+    multipolygon_geometry = {
+        "type": "MultiPolygon",
+        "coordinates": [
+            [
+                [
+                    [-95.2989209, 42.7999878],
+                    [-93.1167728, 42.3858464],
+                    [-93.7138666, 40.703737],
+                    [-95.8364984, 41.1150618],
+                    [-95.2989209, 42.7999878],
+                ]
+            ],
+            [
+                [
+                    [-95.3989209, 42.7999878],
+                    [-93.4167728, 42.3858464],
+                    [-93.7138666, 40.703737],
+                    [-95.6364984, 41.1150618],
+                    [-95.3989209, 42.7999878],
+                ]
+            ],
+        ],
+    }
+    point_geometry = {
+        "type": "Point",
+        "coordinates": [-95.2989209, 42.7999878],
+    }
+    multipoint_geometry = {
+        "type": "MultiPoint",
+        "coordinates": [
+            [-95.2989209, 42.7999878],
+            [-96.2989209, 43.7999878],
+        ],
+    }
+    multipoint_all_coincident_geometry = {
+        "type": "MultiPoint",
+        "coordinates": [
+            [-95.2989209, 42.7999878],
+            [-95.2989209, 42.7999878],
+        ],
+    }
+    line_geometry = {
+        "type": "LineString",
+        "coordinates": [
+            [-122.17523623224433, 47.90651694142758],
+            [-122.13437682048007, 47.88564432387702],
+        ],
+    }
+    horizontal_line_geometry = {
+        "type": "LineString",
+        "coordinates": [
+            [-122.17523623224433, 47.88564432387702],
+            [-122.13437682048007, 47.88564432387702],
+        ],
+    }
+    vertical_line_geometry = {
+        "type": "LineString",
+        "coordinates": [
+            [-122.17523623224433, 47.90651694142758],
+            [-122.17523623224433, 47.88564432387702],
+        ],
+    }
+    multiline_geometry = {
+        "type": "MultiLineString",
+        "coordinates": [
+            [
+                [-122.13826819210863, 47.90599522815964],
+                [-122.12931803524592, 47.91303790851427],
+            ],
+            [
+                [-122.13865732936327, 47.920340416616256],
+                [-122.12892889799097, 47.912777085591244],
+            ],
+            [
+                [-122.17601450675424, 47.91277722269507],
+                [-122.1293180361663, 47.91277722269507],
+            ],
+        ],
+    }
+
+    test_geometries = [
+        polygon_geometry,
+        multipolygon_geometry,
+        point_geometry,
+        multipoint_geometry,
+        line_geometry,
+        horizontal_line_geometry,
+        vertical_line_geometry,
+        multiline_geometry,
+    ]
 
     test_combinations = [
         {"value": b"This is mock download data. It can be any binary data."},
@@ -133,13 +223,15 @@ class TestBlob(ClientTestCase):
         assert b_repr.strip("\n") == textwrap.dedent(match_str)
 
     def test_set_geometry(self):
-        shape = shapely.geometry.shape(self.geometry)
         b = Blob(id="data/descarteslabs:test/test-blob", name="test-blob")
-        b.geometry = self.geometry
-        assert shape == b.geometry
+        for test_geometry in self.test_geometries:
+            shape = shapely.geometry.shape(test_geometry)
 
-        b.geometry = shape
-        assert shape == b.geometry
+            b.geometry = test_geometry
+            assert shape == b.geometry
+
+            b.geometry = shape
+            assert shape == b.geometry
 
         with pytest.raises(AttributeValidationError):
             b.geometry = {"type": "Lollipop"}
@@ -160,19 +252,23 @@ class TestBlob(ClientTestCase):
             StorageType("nodata")
 
     def test_search_intersects(self):
-        search = Blob.search().intersects(self.geometry).filter(Properties().id == "b1")
+        search = (
+            Blob.search()
+            .intersects(self.polygon_geometry)
+            .filter(Properties().id == "b1")
+        )
         _, request_params = search._to_request()
-        assert self.geometry == json.loads(request_params["intersects"])
+        assert self.polygon_geometry == json.loads(request_params["intersects"])
         assert "intersects_none" not in request_params
 
     def test_search_intersects_none(self):
         search = (
             Blob.search()
-            .intersects(self.geometry, match_null_geometry=True)
+            .intersects(self.polygon_geometry, match_null_geometry=True)
             .filter(Properties().id == "b1")
         )
         _, request_params = search._to_request()
-        assert self.geometry == json.loads(request_params["intersects"])
+        assert self.polygon_geometry == json.loads(request_params["intersects"])
         assert request_params["intersects_none"] is True
 
     @responses.activate
@@ -186,7 +282,7 @@ class TestBlob(ClientTestCase):
                         "description": "a generic description",
                         "expires": None,
                         "extra_properties": {},
-                        "geometry": self.geometry,
+                        "geometry": self.polygon_geometry,
                         "hash": "28495fde1c101c01f2d3ae92d1af85a5",
                         "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob",
                         "modified": "2023-09-29T15:54:37.006769Z",
@@ -213,7 +309,7 @@ class TestBlob(ClientTestCase):
         assert isinstance(b.created, datetime)
         assert b.description == "a generic description"
         assert b.expires is None
-        assert b.geometry == shapely.geometry.shape(self.geometry)
+        assert b.geometry == shapely.geometry.shape(self.polygon_geometry)
         assert b.hash == "28495fde1c101c01f2d3ae92d1af85a5"
         assert (
             b.href == "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob"
@@ -239,7 +335,7 @@ class TestBlob(ClientTestCase):
                         "description": "a generic description",
                         "expires": None,
                         "extra_properties": {},
-                        "geometry": self.geometry,
+                        "geometry": self.polygon_geometry,
                         "hash": "28495fde1c101c01f2d3ae92d1af85a5",
                         "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob",
                         "modified": "2023-09-29T15:54:37.006769Z",
@@ -278,7 +374,7 @@ class TestBlob(ClientTestCase):
                             "description": "a generic description",
                             "expires": None,
                             "extra_properties": {},
-                            "geometry": self.geometry,
+                            "geometry": self.polygon_geometry,
                             "hash": "28495fde1c101c01f2d3ae92d1af85a5",
                             "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob-1",
                             "modified": "2023-09-29T15:54:37.006769Z",
@@ -301,7 +397,7 @@ class TestBlob(ClientTestCase):
                             "description": "a generic description",
                             "expires": None,
                             "extra_properties": {},
-                            "geometry": self.geometry,
+                            "geometry": self.polygon_geometry,
                             "hash": "28495fde1c101c01f2d3ae92d1af85a5",
                             "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob-2",
                             "modified": "2023-09-29T15:54:37.006769Z",
@@ -346,7 +442,7 @@ class TestBlob(ClientTestCase):
                         "description": "a generic description",
                         "expires": None,
                         "extra_properties": {},
-                        "geometry": self.geometry,
+                        "geometry": self.polygon_geometry,
                         "hash": "28495fde1c101c01f2d3ae92d1af85a5",
                         "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob",
                         "modified": "2023-09-29T15:54:37.006769Z",
@@ -386,7 +482,7 @@ class TestBlob(ClientTestCase):
                             "description": "a generic description",
                             "expires": None,
                             "extra_properties": {},
-                            "geometry": self.geometry,
+                            "geometry": self.polygon_geometry,
                             "hash": "28495fde1c101c01f2d3ae92d1af85a5",
                             "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob-1",
                             "modified": "2023-09-29T15:54:37.006769Z",
@@ -409,7 +505,7 @@ class TestBlob(ClientTestCase):
                             "description": "a generic description",
                             "expires": None,
                             "extra_properties": {},
-                            "geometry": self.geometry,
+                            "geometry": self.polygon_geometry,
                             "hash": "28495fde1c101c01f2d3ae92d1af85a5",
                             "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob-2",
                             "modified": "2023-09-29T15:54:37.006769Z",
@@ -461,7 +557,7 @@ class TestBlob(ClientTestCase):
                         "description": "a generic description",
                         "expires": None,
                         "extra_properties": {},
-                        "geometry": self.geometry,
+                        "geometry": self.polygon_geometry,
                         "hash": "28495fde1c101c01f2d3ae92d1af85a5",
                         "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob",
                         "modified": "2023-09-29T15:54:37.006769Z",
@@ -546,7 +642,7 @@ class TestBlob(ClientTestCase):
                         "owners": ["org:descarteslabs"],
                         "name": "test-blob",
                         "namespace": "descarteslabs:test-namespace",
-                        "geometry": self.geometry,
+                        "geometry": self.polygon_geometry,
                         "storage_type": "data",
                         "storage_state": "available",
                         "readers": [],
@@ -600,7 +696,7 @@ class TestBlob(ClientTestCase):
                         "owners": ["org:descarteslabs"],
                         "name": "test-blob",
                         "namespace": "descarteslabs:test-namespace",
-                        "geometry": self.geometry,
+                        "geometry": self.polygon_geometry,
                         "storage_type": "data",
                         "storage_state": "available",
                         "readers": [],

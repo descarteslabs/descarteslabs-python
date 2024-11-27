@@ -20,6 +20,10 @@ Changelog
 
 ## Unreleased
 
+## Catalog
+
+- Fixed a bug where some geometries weren't supported by blob geometry properties
+
 ## [3.2.2] - 2024-11-14
 
 ## Catalog

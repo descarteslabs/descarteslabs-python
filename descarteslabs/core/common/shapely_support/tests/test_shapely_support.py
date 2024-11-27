@@ -62,11 +62,13 @@ class ShapelySupportTest(unittest.TestCase):
         with pytest.raises(ValueError):
             check_valid_bounds(bounds_wrong_order)
         with pytest.raises(ValueError):
+            check_valid_bounds(bounds_wrong_order, "Polygon")
+        with pytest.raises(ValueError):
             check_valid_bounds(bounds_wrong_number)
         with pytest.raises(TypeError):
             check_valid_bounds(bounds_wrong_type)
         with pytest.raises(ValueError):
-            check_valid_bounds(bounds_point)
+            check_valid_bounds(bounds_point, "Polygon")
 
     def test_as_geojson_geometry(self):
         geoj = as_geojson_geometry(self.feature["geometry"])
