@@ -34,6 +34,11 @@ except ImportError:
     from ..common.http import Retry, Session
 
 
+# This is only for the existing DL production tenant, and must remain in place
+# until the tenant is completely replaced, if ever.
+LEGACY_DELEGATION_CLIENT_IDS = ["ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c"]
+
+
 # copied from descarteslabs/common/threading/local.py, but we need
 # it standalone here to avoid any dependencies on our own packages
 # for client configuration purposes
@@ -321,8 +326,8 @@ class Auth:
         >>> auth.namespace # doctest: +SKIP
         'a54d88e06612d820bc3be72877c74f257b561b19'
         >>> auth = descarteslabs.auth.Auth(
-        ...     client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
-        ...     client_secret="b70B_ozH6CaV23WQ-toFQ8CaujGHDs-eC39QEJTRnZa9Z",
+        ...     client_id="some-client-id",
+        ...     client_secret="some-client-secret",
         ... )
         >>> auth.namespace # doctest: +SKIP
         '67f21eb1040f978fe1da32e5e33501d0f4a604ac'
@@ -426,7 +431,7 @@ class Auth:
                         and self.refresh_token == token_info.get(self.KEY_REFRESH_TOKEN)
                     ):
                         self._token = token_info.get(self.KEY_JWT_TOKEN)
-            elif self.refresh_token and self.token_info_path is not None:
+            elif self.refresh_token and self.token_info_path:
                 # Make the saved JWT token file unique to the refresh token
                 token = self.refresh_token
                 token_sha1 = sha1(token.encode("utf-8")).hexdigest()
@@ -739,11 +744,7 @@ class Auth:
                 self.AUTHORIZATION_ERROR.format(" (no client_secret or refresh_token)")
             )
 
-        if self.client_id in [
-            # production tenant
-            "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
-        ]:  # TODO(justin) remove legacy handling
-            # TODO (justin) insert deprecation warning
+        if self.client_id in LEGACY_DELEGATION_CLIENT_IDS:
             if self.scope is None:
                 scope = ["openid", "name", "groups", "org", "email"]
             else:

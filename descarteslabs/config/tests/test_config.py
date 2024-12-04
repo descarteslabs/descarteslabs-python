@@ -242,9 +242,9 @@ class VerifyValues(unittest.TestCase):
             for key in config.keys():
                 settings.pop(key)
 
-            settings.pop("DEFAULT_DOMAIN", None)  # Added since 1.11.0
-            settings.pop("DEFAULT_HOST", None)  # Added since 1.11.0
-            settings.pop("DOMAIN")  # Added since 1.11.0
+            settings.pop("DEFAULT_DOMAIN", None)
+            settings.pop("DOMAIN", None)
+            settings.pop("TOKEN_INFO_PATH", None)  # picked up from test environment
 
             assert settings.pop("ENV") == config_name
             assert len(settings) == 0, f"{config_name}: {settings}"

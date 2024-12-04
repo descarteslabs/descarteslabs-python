@@ -49,7 +49,7 @@ class RasterTest(unittest.TestCase):
             base64.b64encode(
                 json.dumps(
                     {
-                        "aud": "ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+                        "aud": "client-id",
                         "exp": time.time() + 3600,
                     }
                 ).encode()

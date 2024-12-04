@@ -27,7 +27,7 @@ import responses
 from descarteslabs.exceptions import AuthError
 
 from .. import auth as auth_module
-from ..auth import Auth
+from ..auth import Auth, LEGACY_DELEGATION_CLIENT_IDS
 
 
 def token_response_callback(request):
@@ -49,16 +49,19 @@ def token_response_callback(request):
         return (
             200,
             {"Content-Type": "application/json"},
-            json.dumps(dict(id_token="id_token")),
+            json.dumps(dict(id_token="legacy-id-token")),
         )
 
     if data["grant_type"] == "refresh_token" and all(
         field not in data for field in legacy_required_fields
     ):
+        # note: this used to return both an access_token and an id_token
+        # but that isn't how IAM works anymore: it only returns an id_token.
+        # this isn't really OAuth2, but it is what it is.
         return (
             200,
             {"Content-Type": "application/json"},
-            json.dumps(dict(access_token="access_token", id_token="id_token")),
+            json.dumps(dict(id_token="id-token")),
         )
     return 400, {"Content-Type": "application/json"}, json.dumps(data)
 
@@ -78,10 +81,6 @@ class TestAuth(unittest.TestCase):
     def setUpClass(cls):
         cls.env = dict(os.environ)
         os.environ.clear()
-
-        # Make sure we're not picking up credentials from anywhere
-        auth_module.DEFAULT_TOKEN_INFO_DIR = "/tmp"
-        auth_module.DEFAULT_TOKEN_INFO_PATH = "/dev/null"
 
     @classmethod
     def tearDownClass(cls):
@@ -109,30 +108,30 @@ class TestAuth(unittest.TestCase):
         responses.add(
             responses.POST,
             f"{domain}/token",
-            json=dict(access_token="access_token"),
+            json=dict(access_token="access-token"),
             status=200,
         )
-        auth = Auth(client_secret="client_secret", client_id="client_id")
+        auth = Auth(client_secret="client-secret", client_id="client-id")
         auth._get_token()
 
-        assert "access_token" == auth._token
+        assert "access-token" == auth._token
 
     @responses.activate
     def test_get_token_legacy(self):
         responses.add(
             responses.POST,
             f"{domain}/token",
-            json=dict(id_token="id_token"),
+            json=dict(id_token="id-token"),
             status=200,
         )
-        auth = Auth(client_secret="client_secret", client_id="client_id")
+        auth = Auth(client_secret="client-secret", client_id="client-id")
         auth._get_token()
 
-        assert "id_token" == auth._token
+        assert "id-token" == auth._token
 
     @patch.object(Auth, "payload", new=dict(sub="asdf"))
     def test_get_namespace(self):
-        auth = Auth(client_secret="client_secret", client_id="client_id")
+        auth = Auth(client_secret="client-secret", client_id="client-id")
         assert auth.namespace == "3da541559918a808c2402bba5012f6c60b27661c"
 
     def test_init_token_no_path(self):
@@ -152,16 +151,17 @@ class TestAuth(unittest.TestCase):
             f"{domain}/token",
             callback=token_response_callback,
         )
-        auth = Auth(refresh_token="refresh_token", client_id="client_id")
+        auth = Auth(refresh_token="refresh-token", client_id="client-id")
         auth._get_token()
 
-        assert "access_token" == auth._token
+        assert "id-token" == auth._token
 
-        auth = Auth(client_secret="refresh_token", client_id="client_id")
+        auth = Auth(client_secret="refresh-token", client_id="client-id")
         auth._get_token()
 
-        assert "access_token" == auth._token
+        assert "id-token" == auth._token
 
+    @unittest.skipUnless(len(LEGACY_DELEGATION_CLIENT_IDS) > 0, "No legacy client IDs")
     @responses.activate
     def test_get_token_schema_legacy_internal_only(self):
         responses.add_callback(
@@ -170,26 +170,24 @@ class TestAuth(unittest.TestCase):
             callback=token_response_callback,
         )
         auth = Auth(
-            client_secret="client_secret",
-            client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+            client_secret="client-secret",
+            client_id=LEGACY_DELEGATION_CLIENT_IDS[0],
         )
         auth._get_token()
-        assert "id_token" == auth._token
+        assert "legacy-id-token" == auth._token
 
     @patch.object(Auth, "_get_token")
     def test_token(self, _get_token):
         auth = Auth(
-            client_secret="client_secret",
-            client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+            client_secret="client-secret",
+            client_id="client-id",
         )
         token = b".".join(
             (
                 base64.b64encode(to_bytes(p))
                 for p in [
                     "header",
-                    json.dumps(
-                        dict(exp=9999999999, aud="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c")
-                    ),
+                    json.dumps(dict(exp=9999999999, aud="client-id")),
                     "sig",
                 ]
             )
@@ -202,8 +200,8 @@ class TestAuth(unittest.TestCase):
     @patch.object(Auth, "_get_token")
     def test_token_expired(self, _get_token):
         auth = Auth(
-            client_secret="client_secret",
-            client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+            client_secret="client-secret",
+            client_id="client-id",
         )
         token = b".".join(
             (
@@ -219,8 +217,8 @@ class TestAuth(unittest.TestCase):
     @patch.object(Auth, "_get_token", side_effect=AuthError("error"))
     def test_token_expired_autherror(self, _get_token):
         auth = Auth(
-            client_secret="client_secret",
-            client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+            client_secret="client-secret",
+            client_id="client-id",
         )
         token = b".".join(
             (
@@ -237,8 +235,8 @@ class TestAuth(unittest.TestCase):
     @patch.object(Auth, "_get_token", side_effect=AuthError("error"))
     def test_token_in_leeway_autherror(self, _get_token):
         auth = Auth(
-            client_secret="client_secret",
-            client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+            client_secret="client-secret",
+            client_id="client-id",
         )
         exp = (
             datetime.datetime.now(datetime.timezone.utc)
@@ -269,12 +267,12 @@ class TestAuth(unittest.TestCase):
         # should work with direct var
         with patch.object(auth_module.os, "environ", environ):
             auth = Auth(
-                client_id="client_id",
-                client_secret="client_secret",
-                refresh_token="client_secret",
+                client_id="client-id",
+                client_secret="client-secret",
+                refresh_token="client-secret",
             )
-            assert auth.client_secret == "client_secret"
-            assert auth.client_id == "client_id"
+            assert auth.client_secret == "client-secret"
+            assert auth.client_id == "client-id"
 
         # should work with namespaced env vars
         with patch.object(auth_module.os, "environ", environ):
@@ -383,7 +381,7 @@ class TestAuth(unittest.TestCase):
 
     def test_no_valid_auth_info(self):
         with warnings.catch_warnings(record=True) as caught_warnings:
-            Auth(client_id="client_id")
+            Auth(client_id="client-id")
             assert len(caught_warnings) == 1
             assert caught_warnings[0].category == UserWarning
             assert "No valid authentication info found" in str(
@@ -492,8 +490,8 @@ class TestAuth(unittest.TestCase):
 
     def test_all_acl_subjects(self):
         auth = Auth(
-            client_secret="client_secret",
-            client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+            client_secret="client-secret",
+            client_id="client-id",
         )
         token = b".".join(
             (
@@ -506,7 +504,7 @@ class TestAuth(unittest.TestCase):
                             groups=["public"],
                             org="some-org",
                             exp=9999999999,
-                            aud="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+                            aud="client-id",
                         )
                     ),
                     "sig",
@@ -523,8 +521,8 @@ class TestAuth(unittest.TestCase):
 
     def test_all_acl_subjects_ignores_bad_org_groups(self):
         auth = Auth(
-            client_secret="client_secret",
-            client_id="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+            client_secret="client-secret",
+            client_id="client-id",
         )
         token = b".".join(
             (
@@ -537,7 +535,7 @@ class TestAuth(unittest.TestCase):
                             groups=["public", "some-org:baz", "other:baz"],
                             org="some-org",
                             exp=9999999999,
-                            aud="ZOBAi4UROl5gKZIpxxlwOEfx8KpqXf2c",
+                            aud="client-id",
                         )
                     ),
                     "sig",
