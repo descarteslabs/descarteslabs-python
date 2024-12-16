@@ -37,7 +37,7 @@ from ...common.property_filtering import Properties
 
 
 def _namespace_id(namespace_id, client=None):
-    return "descarteslabs:test-namespace"
+    return "someorg:test-namespace"
 
 
 def _blob_do_download(_, dest=None, range=None):
@@ -189,7 +189,7 @@ class TestBlob(ClientTestCase):
     def test_constructor(self):
         b = Blob(
             name="test-blob",
-            id="data/descarteslabs:test-namespace/test-blob",
+            id="data/someorg:test-namespace/test-blob",
             storage_type="data",
             storage_state="available",
             description="a description",
@@ -198,7 +198,7 @@ class TestBlob(ClientTestCase):
         )
 
         assert b.name == "test-blob"
-        assert b.id == "data/descarteslabs:test-namespace/test-blob"
+        assert b.id == "data/someorg:test-namespace/test-blob"
         assert b.storage_type == StorageType.DATA
         assert b.storage_state == "available"
         assert b.description == "a description"
@@ -208,7 +208,7 @@ class TestBlob(ClientTestCase):
     def test_repr(self):
         b = Blob(
             name="test-blob",
-            id="data/descarteslabs:test-namespace/test-blob",
+            id="data/someorg:test-namespace/test-blob",
             storage_type="data",
             storage_state="available",
             description="a description",
@@ -218,12 +218,12 @@ class TestBlob(ClientTestCase):
         b_repr = repr(b)
         match_str = """\
             Blob: test-blob
-              id: data/descarteslabs:test-namespace/test-blob
+              id: data/someorg:test-namespace/test-blob
             * Not up-to-date in the Descartes Labs catalog. Call `.save()` to save or update this record."""
         assert b_repr.strip("\n") == textwrap.dedent(match_str)
 
     def test_set_geometry(self):
-        b = Blob(id="data/descarteslabs:test/test-blob", name="test-blob")
+        b = Blob(id="data/someorg:test/test-blob", name="test-blob")
         for test_geometry in self.test_geometries:
             shape = shapely.geometry.shape(test_geometry)
 
@@ -240,7 +240,7 @@ class TestBlob(ClientTestCase):
 
     def test_storage_type_new(self):
         b = Blob(
-            id="data/descarteslabs:test-namespace/test-blob",
+            id="data/someorg:test-namespace/test-blob",
             name="test-blob",
             storage_type="nodata",
             _saved=True,
@@ -284,41 +284,37 @@ class TestBlob(ClientTestCase):
                         "extra_properties": {},
                         "geometry": self.polygon_geometry,
                         "hash": "28495fde1c101c01f2d3ae92d1af85a5",
-                        "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob",
+                        "href": "s3://super/long/uri/data/someorg:test-namespace/test-blob",
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-blob",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "size_bytes": 1008,
                         "storage_state": "available",
                         "storage_type": "data",
                         "tags": ["TESTING BLOB"],
                     },
-                    "id": "data/descarteslabs:test-namespace/test-blob",
+                    "id": "data/someorg:test-namespace/test-blob",
                     "type": "storage",
                 }
             },
             status=200,
         )
 
-        b = Blob.get(
-            id="data/descarteslabs:test-namespace/test-blob", client=self.client
-        )
+        b = Blob.get(id="data/someorg:test-namespace/test-blob", client=self.client)
         assert isinstance(b.created, datetime)
         assert b.description == "a generic description"
         assert b.expires is None
         assert b.geometry == shapely.geometry.shape(self.polygon_geometry)
         assert b.hash == "28495fde1c101c01f2d3ae92d1af85a5"
-        assert (
-            b.href == "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob"
-        )
+        assert b.href == "s3://super/long/uri/data/someorg:test-namespace/test-blob"
         assert isinstance(b.modified, datetime)
         assert b.name == "test-blob"
-        assert b.namespace == "descarteslabs:test-namespace"
-        assert b.owners == ["org:descarteslabs"]
-        assert b.readers == ["org:descarteslabs"]
+        assert b.namespace == "someorg:test-namespace"
+        assert b.owners == ["org:someorg"]
+        assert b.readers == ["org:someorg"]
         assert b.writers == []
         assert b.size_bytes == 1008
         assert b.storage_type == StorageType.DATA
@@ -337,12 +333,12 @@ class TestBlob(ClientTestCase):
                         "extra_properties": {},
                         "geometry": self.polygon_geometry,
                         "hash": "28495fde1c101c01f2d3ae92d1af85a5",
-                        "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob",
+                        "href": "s3://super/long/uri/data/someorg:test-namespace/test-blob",
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-blob",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "size_bytes": 1008,
                         "storage_state": "available",
@@ -350,16 +346,14 @@ class TestBlob(ClientTestCase):
                         "tags": ["TESTING BLOB"],
                         "foobar": "unknown",
                     },
-                    "id": "data/descarteslabs:test-namespace/test-blob",
+                    "id": "data/someorg:test-namespace/test-blob",
                     "type": "storage",
                 }
             },
             status=200,
         )
 
-        b = Blob.get(
-            id="data/descarteslabs:test-namespace/test-blob", client=self.client
-        )
+        b = Blob.get(id="data/someorg:test-namespace/test-blob", client=self.client)
         assert not hasattr(b, "foobar")
 
     @responses.activate
@@ -376,19 +370,19 @@ class TestBlob(ClientTestCase):
                             "extra_properties": {},
                             "geometry": self.polygon_geometry,
                             "hash": "28495fde1c101c01f2d3ae92d1af85a5",
-                            "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob-1",
+                            "href": "s3://super/long/uri/data/someorg:test-namespace/test-blob-1",
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-blob-1",
-                            "namespace": "descarteslabs:test-namespace",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "namespace": "someorg:test-namespace",
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "writers": [],
                             "size_bytes": 1008,
                             "storage_state": "available",
                             "storage_type": "data",
                             "tags": ["TESTING BLOB"],
                         },
-                        "id": "data/descarteslabs:test-namespace/test-blob-1",
+                        "id": "data/someorg:test-namespace/test-blob-1",
                         "type": "storage",
                     },
                     {
@@ -399,19 +393,19 @@ class TestBlob(ClientTestCase):
                             "extra_properties": {},
                             "geometry": self.polygon_geometry,
                             "hash": "28495fde1c101c01f2d3ae92d1af85a5",
-                            "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob-2",
+                            "href": "s3://super/long/uri/data/someorg:test-namespace/test-blob-2",
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-blob-2",
-                            "namespace": "descarteslabs:test-namespace",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "namespace": "someorg:test-namespace",
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "writers": [],
                             "size_bytes": 1008,
                             "storage_state": "available",
                             "storage_type": "data",
                             "tags": ["TESTING BLOB"],
                         },
-                        "id": "data/descarteslabs:test-namespace/test-blob-2",
+                        "id": "data/someorg:test-namespace/test-blob-2",
                         "type": "storage",
                     },
                 ],
@@ -421,15 +415,15 @@ class TestBlob(ClientTestCase):
 
         blobs = Blob.get_many(
             [
-                "data/descarteslabs:test-namespace/test-blob-1",
-                "data/descarteslabs:test-namespace/test-blob-2",
+                "data/someorg:test-namespace/test-blob-1",
+                "data/someorg:test-namespace/test-blob-2",
             ],
             client=self.client,
         )
 
         for i, b in enumerate(blobs):
             assert isinstance(b, Blob)
-            assert b.id == f"data/descarteslabs:test-namespace/test-blob-{i + 1}"
+            assert b.id == f"data/someorg:test-namespace/test-blob-{i + 1}"
 
     @responses.activate
     def test_get_or_create(self):
@@ -444,19 +438,19 @@ class TestBlob(ClientTestCase):
                         "extra_properties": {},
                         "geometry": self.polygon_geometry,
                         "hash": "28495fde1c101c01f2d3ae92d1af85a5",
-                        "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob",
+                        "href": "s3://super/long/uri/data/someorg:test-namespace/test-blob",
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-blob",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "size_bytes": 1008,
                         "storage_state": "available",
                         "storage_type": "data",
                         "tags": ["TESTING BLOB"],
                     },
-                    "id": "data/descarteslabs:test-namespace/test-blob",
+                    "id": "data/someorg:test-namespace/test-blob",
                     "type": "storage",
                 }
             },
@@ -464,9 +458,9 @@ class TestBlob(ClientTestCase):
         )
 
         b = Blob.get_or_create(
-            id="data/descarteslabs:test-namespace/test-blob", client=self.client
+            id="data/someorg:test-namespace/test-blob", client=self.client
         )
-        assert b.id == "data/descarteslabs:test-namespace/test-blob"
+        assert b.id == "data/someorg:test-namespace/test-blob"
 
     @responses.activate
     def test_list(self):
@@ -484,19 +478,19 @@ class TestBlob(ClientTestCase):
                             "extra_properties": {},
                             "geometry": self.polygon_geometry,
                             "hash": "28495fde1c101c01f2d3ae92d1af85a5",
-                            "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob-1",
+                            "href": "s3://super/long/uri/data/someorg:test-namespace/test-blob-1",
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-blob-1",
-                            "namespace": "descarteslabs:test-namespace",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "namespace": "someorg:test-namespace",
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "writers": [],
                             "size_bytes": 1008,
                             "storage_state": "available",
                             "storage_type": "data",
                             "tags": ["TESTING BLOB"],
                         },
-                        "id": "data/descarteslabs:test-namespace/test-blob-1",
+                        "id": "data/someorg:test-namespace/test-blob-1",
                         "type": "storage",
                     },
                     {
@@ -507,19 +501,19 @@ class TestBlob(ClientTestCase):
                             "extra_properties": {},
                             "geometry": self.polygon_geometry,
                             "hash": "28495fde1c101c01f2d3ae92d1af85a5",
-                            "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob-2",
+                            "href": "s3://super/long/uri/data/someorg:test-namespace/test-blob-2",
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-blob-2",
-                            "namespace": "descarteslabs:test-namespace",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "namespace": "someorg:test-namespace",
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "writers": [],
                             "size_bytes": 1008,
                             "storage_state": "available",
                             "storage_type": "data",
                             "tags": ["TESTING BLOB"],
                         },
-                        "id": "data/descarteslabs:test-namespace/test-blob-2",
+                        "id": "data/someorg:test-namespace/test-blob-2",
                         "type": "storage",
                     },
                 ],
@@ -559,19 +553,19 @@ class TestBlob(ClientTestCase):
                         "extra_properties": {},
                         "geometry": self.polygon_geometry,
                         "hash": "28495fde1c101c01f2d3ae92d1af85a5",
-                        "href": "s3://super/long/uri/data/descarteslabs:test-namespace/test-blob",
+                        "href": "s3://super/long/uri/data/someorg:test-namespace/test-blob",
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-blob",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "size_bytes": 1008,
                         "storage_state": "available",
                         "storage_type": "data",
                         "tags": ["TESTING BLOB"],
                     },
-                    "id": "data/descarteslabs:test-namespace/test-blob",
+                    "id": "data/someorg:test-namespace/test-blob",
                     "type": "storage",
                 }
             },
@@ -579,7 +573,7 @@ class TestBlob(ClientTestCase):
         )
 
         b = Blob(
-            id="data/descarteslabs:test-namespace/test-blob",
+            id="data/someorg:test-namespace/test-blob",
             name="test-blob",
             storage_state="available",
             client=self.client,
@@ -597,7 +591,7 @@ class TestBlob(ClientTestCase):
                 "errors": [
                     {
                         "status": "400",
-                        "detail": "A document with id `data/descarteslabs:test-namespace/test-blob` already exists.",
+                        "detail": "A document with id `data/someorg:test-namespace/test-blob` already exists.",
                         "title": "Bad request",
                     }
                 ],
@@ -605,30 +599,28 @@ class TestBlob(ClientTestCase):
             },
             status=400,
         )
-        b = Blob(id="data/descarteslabs:test-namespace/test-blob", client=self.client)
+        b = Blob(id="data/someorg:test-namespace/test-blob", client=self.client)
         with pytest.raises(BadRequestError):
             b.save()
 
     @responses.activate
     def test_exists(self):
         self.mock_response(responses.HEAD, {}, status=200)
-        assert Blob.exists(
-            "data/descarteslabs:test-namespace/test-blob", client=self.client
-        )
+        assert Blob.exists("data/someorg:test-namespace/test-blob", client=self.client)
         assert (
             responses.calls[0].request.url
-            == "https://example.com/catalog/v2/storage/data/descarteslabs:test-namespace/test-blob"
+            == "https://example.com/catalog/v2/storage/data/someorg:test-namespace/test-blob"
         )
 
     @responses.activate
     def test_exists_false(self):
         self.mock_response(responses.HEAD, self.not_found_json, status=404)
         assert not Blob.exists(
-            "data/descarteslabs:test-namespace/nonexistent-blob", client=self.client
+            "data/someorg:test-namespace/nonexistent-blob", client=self.client
         )
         assert (
             responses.calls[0].request.url
-            == "https://example.com/catalog/v2/storage/data/descarteslabs:test-namespace/nonexistent-blob"
+            == "https://example.com/catalog/v2/storage/data/someorg:test-namespace/nonexistent-blob"
         )
 
     @responses.activate
@@ -639,9 +631,9 @@ class TestBlob(ClientTestCase):
                 "meta": {"count": 1},
                 "data": {
                     "attributes": {
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "name": "test-blob",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "geometry": self.polygon_geometry,
                         "storage_type": "data",
                         "storage_state": "available",
@@ -652,14 +644,14 @@ class TestBlob(ClientTestCase):
                         "description": "a description",
                     },
                     "type": "storage",
-                    "id": "data/descarteslabs:test-namespace/test-blob",
+                    "id": "data/someorg:test-namespace/test-blob",
                 },
             },
             status=200,
         )
 
         b = Blob(
-            id="data/descarteslabs:test-namespace/test-blob",
+            id="data/someorg:test-namespace/test-blob",
             name="test-blob",
             storage_state="available",
             client=self.client,
@@ -677,7 +669,7 @@ class TestBlob(ClientTestCase):
                         "readers": ["org:acme-corp"],
                     },
                     "type": "storage",
-                    "id": "data/descarteslabs:test-namespace/test-blob",
+                    "id": "data/someorg:test-namespace/test-blob",
                 },
             },
             status=200,
@@ -693,9 +685,9 @@ class TestBlob(ClientTestCase):
                 "meta": {"count": 1},
                 "data": {
                     "attributes": {
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "name": "test-blob",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "geometry": self.polygon_geometry,
                         "storage_type": "data",
                         "storage_state": "available",
@@ -706,7 +698,7 @@ class TestBlob(ClientTestCase):
                         "description": "a description",
                     },
                     "type": "storage",
-                    "id": "data/descarteslabs:test/test-blob",
+                    "id": "data/someorg:test/test-blob",
                 },
                 "jsonapi": {"version": "1.0"},
                 "links": {"self": "https://example.com/catalog/v2/storage"},
@@ -714,7 +706,7 @@ class TestBlob(ClientTestCase):
         )
 
         b = Blob(
-            id="data/descarteslabs:test/test-blob",
+            id="data/someorg:test/test-blob",
             name="test-blob",
             storage_state="available",
             client=self.client,
@@ -728,7 +720,7 @@ class TestBlob(ClientTestCase):
     @responses.activate
     def test_delete(self):
         b = Blob(
-            id="data/descarteslabs:test-namespace/test-blob",
+            id="data/someorg:test-namespace/test-blob",
             name="test-blob",
             client=self.client,
             _saved=True,
@@ -756,7 +748,7 @@ class TestBlob(ClientTestCase):
 
     @responses.activate
     def test_class_delete(self):
-        blob_id = "data/descarteslabs:test-namespace/test-blob"
+        blob_id = "data/someorg:test-namespace/test-blob"
         self.mock_response(
             responses.POST,
             {
@@ -803,7 +795,7 @@ class TestBlob(ClientTestCase):
     @responses.activate
     def test_delete_non_existent(self):
         b = Blob(
-            id="data/descarteslabs:test-namespace/nonexistent-blob",
+            id="data/someorg:test-namespace/nonexistent-blob",
             name="nonexistent-blob",
             client=self.client,
             _saved=True,
@@ -828,8 +820,8 @@ class TestBlob(ClientTestCase):
                         "status": "RUNNING",
                         "start_datetime": "2024-01-01T00:00:00Z",
                         "ids": [
-                            "data/descarteslabs:test-namespace/test-blob-0",
-                            "data/descarteslabs:test-namespace/test-blob-1",
+                            "data/someorg:test-namespace/test-blob-0",
+                            "data/someorg:test-namespace/test-blob-1",
                         ],
                     },
                     "id": "123",
@@ -857,23 +849,23 @@ class TestBlob(ClientTestCase):
 
         deleted_blobs = Blob.delete_many(
             [
-                "data/descarteslabs:test-namespace/test-blob-0",
-                "data/descarteslabs:test/test-blob-1",
-                "data/descarteslabs:test/nonexistent-blob",
+                "data/someorg:test-namespace/test-blob-0",
+                "data/someorg:test/test-blob-1",
+                "data/someorg:test/nonexistent-blob",
             ],
             wait_for_completion=True,
             client=self.client,
         )
 
-        assert "data/descarteslabs:test-namespace/test-blob-0" in deleted_blobs
-        assert "data/descarteslabs:test-namespace/test-blob-1" in deleted_blobs
-        assert "data/descarteslabs:test-namespace/nonexistent-blob" not in deleted_blobs
+        assert "data/someorg:test-namespace/test-blob-0" in deleted_blobs
+        assert "data/someorg:test-namespace/test-blob-1" in deleted_blobs
+        assert "data/someorg:test-namespace/nonexistent-blob" not in deleted_blobs
 
     def test_serialize(self):
         u = BlobUpload(
             storage=Blob(
                 name="test-blob",
-                id="data/descarteslabs:test-namespace/test-blob",
+                id="data/someorg:test-namespace/test-blob",
                 storage_type="data",
                 storage_state="available",
                 description="a description",
@@ -900,7 +892,7 @@ class TestBlob(ClientTestCase):
                                     expires="2023-01-01",
                                     tags=["TESTING BLOB"],
                                 ),
-                                id="data/descarteslabs:test-namespace/test-blob",
+                                id="data/someorg:test-namespace/test-blob",
                             )
                         )
                     ),
@@ -913,7 +905,7 @@ class TestBlob(ClientTestCase):
     def test_data(self):
         b = Blob(
             name="test-blob",
-            id="data/descarteslabs:test-namespace/test-blob",
+            id="data/someorg:test-namespace/test-blob",
             storage_type="data",
             storage_state="available",
             description="a description",
@@ -939,13 +931,13 @@ class TestBlob(ClientTestCase):
 
     @patch.object(Blob, "_do_download", _blob_do_download)
     def test_get_data(self):
-        mock_data = Blob.get_data(id="data/descarteslabs:test-namespace/test-blob")
+        mock_data = Blob.get_data(id="data/someorg:test-namespace/test-blob")
 
         for test in self.test_combinations:
             test_copy = copy.deepcopy(test)
             value = test_copy.pop("value")
             mock_data = Blob.get_data(
-                id="data/descarteslabs:test-namespace/test-blob",
+                id="data/someorg:test-namespace/test-blob",
                 client=self.client,
                 **test_copy,
             )
@@ -953,14 +945,14 @@ class TestBlob(ClientTestCase):
 
         with pytest.raises(ValueError):
             mock_data = Blob.get_data(
-                id="data/descarteslabs:test-namespace/test-blob", range=(1, "a")
+                id="data/someorg:test-namespace/test-blob", range=(1, "a")
             )
 
     @patch.object(Blob, "_do_download", _blob_do_download)
     def test_download(self):
         b = Blob(
             name="test-blob",
-            id="data/descarteslabs:test-namespace/test-blob",
+            id="data/someorg:test-namespace/test-blob",
             storage_type="data",
             storage_state="available",
             description="a description",
@@ -1014,7 +1006,7 @@ class TestBlob(ClientTestCase):
     def test_invalid_upload_data(self):
         b = Blob(
             name="test-blob",
-            id="data/descarteslabs:test-namespace/test-blob",
+            id="data/someorg:test-namespace/test-blob",
             storage_type="data",
             storage_state="available",
             description="a description",
@@ -1032,7 +1024,7 @@ class TestBlob(ClientTestCase):
     def test_invalid_upload(self):
         b = Blob(
             name="test-blob",
-            id="data/descarteslabs:test-namespace/test-blob",
+            id="data/someorg:test-namespace/test-blob",
             storage_type="data",
             storage_state="available",
             description="a description",

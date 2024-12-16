@@ -66,7 +66,7 @@ class TestSearch(ClientTestCase):
                 "data": [
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
                             "name": "My Product",
                             "readers": [],
                             "modified": "2019-06-12T20:31:48.542725Z",
@@ -77,7 +77,7 @@ class TestSearch(ClientTestCase):
                             "description": "This is a test product",
                         },
                         "type": "product",
-                        "id": "descarteslabs:my-product",
+                        "id": "someorg:my-product",
                     }
                 ],
                 "jsonapi": {"version": "1.0"},
@@ -116,7 +116,7 @@ class TestSearch(ClientTestCase):
                 "data": [
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
                             "name": "My Product",
                             "readers": [],
                             "modified": "2019-06-12T20:31:48.542725Z",
@@ -127,7 +127,7 @@ class TestSearch(ClientTestCase):
                             "description": "This is a test product",
                         },
                         "type": "product",
-                        "id": "descarteslabs:my-product",
+                        "id": "someorg:my-product",
                     }
                 ],
                 "jsonapi": {"version": "1.0"},
@@ -171,7 +171,7 @@ class TestSearch(ClientTestCase):
                 "data": [
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
                             "name": "My Product",
                             "readers": [],
                             "modified": "2019-06-12T20:31:48.542725Z",
@@ -182,7 +182,7 @@ class TestSearch(ClientTestCase):
                             "description": "This is a test product",
                         },
                         "type": "product",
-                        "id": "descarteslabs:my-product",
+                        "id": "someorg:my-product",
                     }
                 ],
                 "jsonapi": {"version": "1.0"},
@@ -259,7 +259,7 @@ class TestSearch(ClientTestCase):
                 "data": [
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
                             "name": "My Product",
                             "readers": [],
                             "modified": "2019-06-12T20:31:48.542725Z",
@@ -271,7 +271,7 @@ class TestSearch(ClientTestCase):
                             "revisit_period_minutes_min": 60,
                         },
                         "type": "product",
-                        "id": "descarteslabs:my-product",
+                        "id": "someorg:my-product",
                     }
                 ],
                 "jsonapi": {"version": "1.0"},
@@ -445,7 +445,7 @@ class TestSearch(ClientTestCase):
                 "data": [
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
                             "name": "P1",
                             "readers": [],
                             "modified": "2019-06-12T20:31:48.542725Z",
@@ -453,11 +453,11 @@ class TestSearch(ClientTestCase):
                             "description": "This is a test product",
                         },
                         "type": "product",
-                        "id": "descarteslabs:p1",
+                        "id": "someorg:p1",
                     },
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
                             "name": "P2",
                             "readers": [],
                             "modified": "2019-06-12T20:31:48.542725Z",
@@ -465,7 +465,7 @@ class TestSearch(ClientTestCase):
                             "description": "This is a test product",
                         },
                         "type": "product",
-                        "id": "descarteslabs:p2",
+                        "id": "someorg:p2",
                     },
                 ],
                 "jsonapi": {"version": "1.0"},
@@ -510,7 +510,7 @@ class TestSearch(ClientTestCase):
 
     @responses.activate
     def test_search_image_collection(self):
-        my_product = Product(id="descarteslabs:my_product")
+        my_product = Product(id="someorg:my_product")
         s = ImageSearch(Image, client=self.client)
         s = s.filter(p.product == my_product)
         aoi = {
@@ -535,7 +535,7 @@ class TestSearch(ClientTestCase):
                     {
                         "attributes": {
                             "name": "my-image",
-                            "product_id": "descarteslabs:my-product",
+                            "product_id": "someorg:my-product",
                             "created": "2019-06-12T20:31:48.542725Z",
                             "acquired": "2019-06-12T20:31:48.542725Z",
                             "files": [
@@ -559,7 +559,7 @@ class TestSearch(ClientTestCase):
                             },
                         },
                         "type": "image",
-                        "id": "descarteslabs:my-product:my-image",
+                        "id": "someorg:my-product:my-image",
                     }
                 ],
                 "jsonapi": {"version": "1.0"},
@@ -577,13 +577,13 @@ class TestSearch(ClientTestCase):
                     {
                         "attributes": {
                             "name": "my-band",
-                            "product_id": "descarteslabs:my-product",
+                            "product_id": "someorg:my-product",
                             "created": "2019-06-12T20:31:48.542725Z",
                             "resolution": {"value": 30, "unit": "meters"},
                             "type": "spectral",
                         },
                         "type": "band",
-                        "id": "descarteslabs:my-product:my-band",
+                        "id": "someorg:my-product:my-band",
                     }
                 ],
                 "jsonapi": {"version": "1.0"},

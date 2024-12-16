@@ -61,9 +61,9 @@ class TestEventSubscription(ClientTestCase):
 
     def test_constructor(self):
         s = EventSubscription(
-            namespace="descarteslabs:test-namespace",
+            namespace="someorg:test-namespace",
             name="test-sub",
-            id="descarteslabs:test-namespace:test-sub",
+            id="someorg:test-namespace:test-sub",
             description="a description",
             geometry=self.geometry,
             expires="2023-01-01",
@@ -78,7 +78,7 @@ class TestEventSubscription(ClientTestCase):
             ],
             targets=[
                 EventSubscriptionTarget(
-                    rule_id="descarteslabs:some-rule",
+                    rule_id="someorg:some-rule",
                     detail_template="some-template",
                 ),
             ],
@@ -86,9 +86,9 @@ class TestEventSubscription(ClientTestCase):
             tags=["TESTING"],
         )
 
-        assert s.namespace == "descarteslabs:test-namespace"
+        assert s.namespace == "someorg:test-namespace"
         assert s.name == "test-sub"
-        assert s.id == "descarteslabs:test-namespace:test-sub"
+        assert s.id == "someorg:test-namespace:test-sub"
         assert s.description == "a description"
         assert s.geometry == shapely.geometry.shape(self.geometry)
         assert s.expires == "2023-01-01"
@@ -100,7 +100,7 @@ class TestEventSubscription(ClientTestCase):
             (Properties().cloud_fraction > 0.5) & (Properties().cloud_fraction < 0.9)
         )
         assert len(s.targets) == 1
-        assert s.targets[0].rule_id == "descarteslabs:some-rule"
+        assert s.targets[0].rule_id == "someorg:some-rule"
         assert s.targets[0].detail_template == "some-template"
         assert s.enabled is True
         assert s.tags == ["TESTING"]
@@ -109,7 +109,7 @@ class TestEventSubscription(ClientTestCase):
     def test_repr(self):
         s = EventSubscription(
             name="test-sub",
-            id="descarteslabs:test-namespace:test-sub",
+            id="someorg:test-namespace:test-sub",
             description="a description",
             expires="2023-01-01",
             tags=["TESTING BLOB"],
@@ -117,13 +117,13 @@ class TestEventSubscription(ClientTestCase):
         s_repr = repr(s)
         match_str = """\
             EventSubscription: test-sub
-              id: descarteslabs:test-namespace:test-sub
+              id: someorg:test-namespace:test-sub
             * Not up-to-date in the Descartes Labs catalog. Call `.save()` to save or update this record."""
         assert s_repr.strip("\n") == textwrap.dedent(match_str)
 
     def test_set_geometry(self):
         shape = shapely.geometry.shape(self.geometry)
-        s = EventSubscription(id="descarteslabs:test:test-sub", name="test-sub")
+        s = EventSubscription(id="someorg:test:test-sub", name="test-sub")
         s.geometry = self.geometry
         assert shape == s.geometry
 
@@ -175,21 +175,21 @@ class TestEventSubscription(ClientTestCase):
                         "geometry": self.geometry,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sub",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "owner": "user:somehash",
                         "owner_role_arn": "arn:aws:iam::123456789012:role/metadata-event-invoke-somehash",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "tags": ["TESTING"],
                         "targets": [
                             {
-                                "rule_id": "descarteslabs:some-rule",
+                                "rule_id": "someorg:some-rule",
                                 "detail_template": "some-template",
                             }
                         ],
                         "writers": [],
                     },
-                    "id": "descarteslabs:test-namespace:test-sub",
+                    "id": "someorg:test-namespace:test-sub",
                     "type": "event_subscription",
                 }
             },
@@ -197,13 +197,13 @@ class TestEventSubscription(ClientTestCase):
         )
 
         s = EventSubscription.get(
-            id="descarteslabs:test-namespace:test-sub", client=self.client
+            id="someorg:test-namespace:test-sub", client=self.client
         )
         assert isinstance(s.created, datetime)
         assert isinstance(s.modified, datetime)
-        assert s.id == "descarteslabs:test-namespace:test-sub"
+        assert s.id == "someorg:test-namespace:test-sub"
         assert s.name == "test-sub"
-        assert s.namespace == "descarteslabs:test-namespace"
+        assert s.namespace == "someorg:test-namespace"
         assert s.description == "a generic description"
         assert s.owner == "user:somehash"
         assert (
@@ -221,10 +221,10 @@ class TestEventSubscription(ClientTestCase):
         )
         assert len(s.targets) == 1
         assert type(s.targets[0]) is EventSubscriptionTarget
-        assert s.targets[0].rule_id == "descarteslabs:some-rule"
+        assert s.targets[0].rule_id == "someorg:some-rule"
         assert s.targets[0].detail_template == "some-template"
-        assert s.owners == ["org:descarteslabs"]
-        assert s.readers == ["org:descarteslabs"]
+        assert s.owners == ["org:someorg"]
+        assert s.readers == ["org:someorg"]
         assert s.writers == []
         assert s.tags == ["TESTING"]
 
@@ -248,15 +248,15 @@ class TestEventSubscription(ClientTestCase):
                         "geometry": self.geometry,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sub",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "owner": "user:somehash",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "tags": ["TESTING"],
                         "foobar": "unknown",
                     },
-                    "id": "descarteslabs:test-namespace:test-sub",
+                    "id": "someorg:test-namespace:test-sub",
                     "type": "event_subscription",
                 }
             },
@@ -264,7 +264,7 @@ class TestEventSubscription(ClientTestCase):
         )
 
         s = EventSubscription.get(
-            id="descarteslabs:test-namespace:test-sub", client=self.client
+            id="someorg:test-namespace:test-sub", client=self.client
         )
         assert not hasattr(s, "foobar")
 
@@ -287,14 +287,14 @@ class TestEventSubscription(ClientTestCase):
                             "geometry": None,
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-sub-1",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                             "owner": "user:somehash",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "writers": [],
                             "tags": ["TESTING"],
                         },
-                        "id": "descarteslabs:test-namespace:test-sub-1",
+                        "id": "someorg:test-namespace:test-sub-1",
                         "type": "event_subscription",
                     },
                     {
@@ -310,14 +310,14 @@ class TestEventSubscription(ClientTestCase):
                             "geometry": None,
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-sub-2",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                             "owner": "user:somehash",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "writers": [],
                             "tags": ["TESTING"],
                         },
-                        "id": "descarteslabs:test-namespace:test-sub-2",
+                        "id": "someorg:test-namespace:test-sub-2",
                         "type": "event_subscription",
                     },
                 ],
@@ -327,15 +327,15 @@ class TestEventSubscription(ClientTestCase):
 
         subs = EventSubscription.get_many(
             [
-                "descarteslabs:test-namespace:test-sub-1",
-                "descarteslabs:test-namespace:test-sub-2",
+                "someorg:test-namespace:test-sub-1",
+                "someorg:test-namespace:test-sub-2",
             ],
             client=self.client,
         )
 
         for i, r in enumerate(subs):
             assert isinstance(r, EventSubscription)
-            assert r.id == f"descarteslabs:test-namespace:test-sub-{i + 1}"
+            assert r.id == f"someorg:test-namespace:test-sub-{i + 1}"
 
     @responses.activate
     def test_get_or_create(self):
@@ -355,14 +355,14 @@ class TestEventSubscription(ClientTestCase):
                         "geometry": None,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sub",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "owner": "user:somehash",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "tags": ["TESTING"],
                     },
-                    "id": "descarteslabs:test-namespace:test-sub",
+                    "id": "someorg:test-namespace:test-sub",
                     "type": "event_subscription",
                 },
             },
@@ -370,9 +370,9 @@ class TestEventSubscription(ClientTestCase):
         )
 
         s = EventSubscription.get_or_create(
-            id="descarteslabs:test-namespace:test-sub", client=self.client
+            id="someorg:test-namespace:test-sub", client=self.client
         )
-        assert s.id == "descarteslabs:test-namespace:test-sub"
+        assert s.id == "someorg:test-namespace:test-sub"
 
     @responses.activate
     def test_list(self):
@@ -395,14 +395,14 @@ class TestEventSubscription(ClientTestCase):
                             "geometry": None,
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-sub-1",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                             "owner": "user:somehash",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "writers": [],
                             "tags": ["TESTING"],
                         },
-                        "id": "descarteslabs:test-namespace:test-sub-1",
+                        "id": "someorg:test-namespace:test-sub-1",
                         "type": "event_subscription",
                     },
                     {
@@ -418,14 +418,14 @@ class TestEventSubscription(ClientTestCase):
                             "geometry": None,
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-sub-2",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                             "owner": "user:somehash",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "writers": [],
                             "tags": ["TESTING"],
                         },
-                        "id": "descarteslabs:test-namespace:test-sub-2",
+                        "id": "someorg:test-namespace:test-sub-2",
                         "type": "event_subscription",
                     },
                 ],
@@ -470,15 +470,15 @@ class TestEventSubscription(ClientTestCase):
                         "geometry": None,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sub",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "owner": "user:somehash",
                         "owner_role_arn": "arn:aws:iam::123456789012:role/metadata-event-invoke-somehash",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "tags": ["TESTING"],
                     },
-                    "id": "descarteslabs:test-namespace:test-sub",
+                    "id": "someorg:test-namespace:test-sub",
                     "type": "event_subscription",
                 }
             },
@@ -486,7 +486,7 @@ class TestEventSubscription(ClientTestCase):
         )
 
         s = EventSubscription(
-            id="descarteslabs:test-namespace:test-sub",
+            id="someorg:test-namespace:test-sub",
             name="test-sub",
             client=self.client,
         )
@@ -503,7 +503,7 @@ class TestEventSubscription(ClientTestCase):
                 "errors": [
                     {
                         "status": "409",
-                        "detail": "A document with id `descarteslabs:test-namespace:test-sub` already exists.",
+                        "detail": "A document with id `someorg:test-namespace:test-sub` already exists.",
                         "title": "Conflict",
                     }
                 ],
@@ -511,9 +511,7 @@ class TestEventSubscription(ClientTestCase):
             },
             status=409,
         )
-        s = EventSubscription(
-            id="descarteslabs:test-namespace:test-sub", client=self.client
-        )
+        s = EventSubscription(id="someorg:test-namespace:test-sub", client=self.client)
         with pytest.raises(ConflictError):
             s.save()
 
@@ -521,22 +519,22 @@ class TestEventSubscription(ClientTestCase):
     def test_exists(self):
         self.mock_response(responses.HEAD, {}, status=200)
         assert EventSubscription.exists(
-            "descarteslabs:test-namespace:test-sub", client=self.client
+            "someorg:test-namespace:test-sub", client=self.client
         )
         assert (
             responses.calls[0].request.url
-            == "https://example.com/catalog/v2/event_subscriptions/descarteslabs:test-namespace:test-sub"
+            == "https://example.com/catalog/v2/event_subscriptions/someorg:test-namespace:test-sub"
         )
 
     @responses.activate
     def test_exists_false(self):
         self.mock_response(responses.HEAD, self.not_found_json, status=404)
         assert not EventSubscription.exists(
-            "descarteslabs:test-namespace:nonexistent-sub", client=self.client
+            "someorg:test-namespace:nonexistent-sub", client=self.client
         )
         assert (
             responses.calls[0].request.url
-            == "https://example.com/catalog/v2/event_subscriptions/descarteslabs:test-namespace:nonexistent-sub"
+            == "https://example.com/catalog/v2/event_subscriptions/someorg:test-namespace:nonexistent-sub"
         )
 
     @responses.activate
@@ -558,14 +556,14 @@ class TestEventSubscription(ClientTestCase):
                         "geometry": None,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sub",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "owner": "user:somehash",
-                        "owners": ["org:descarteslabs", "user:somehash"],
+                        "owners": ["org:someorg", "user:somehash"],
                         "readers": [],
                         "writers": [],
                         "tags": [],
                     },
-                    "id": "descarteslabs:test-namespace:test-sub",
+                    "id": "someorg:test-namespace:test-sub",
                     "type": "event_subscription",
                 },
             },
@@ -573,7 +571,7 @@ class TestEventSubscription(ClientTestCase):
         )
 
         s = EventSubscription(
-            id="descarteslabs:test-namespace:test-sub",
+            id="someorg:test-namespace:test-sub",
             name="test-sub",
             client=self.client,
         )
@@ -590,7 +588,7 @@ class TestEventSubscription(ClientTestCase):
                         "readers": ["org:acme-corp"],
                     },
                     "type": "event_subscription",
-                    "id": "descarteslabs:test-namespace:test-sub",
+                    "id": "someorg:test-namespace:test-sub",
                 },
             },
             status=200,
@@ -617,14 +615,14 @@ class TestEventSubscription(ClientTestCase):
                         "geometry": None,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sub",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "owner": "user:somehash",
-                        "owners": ["org:descarteslabs", "user:somehash"],
+                        "owners": ["org:someorg", "user:somehash"],
                         "readers": [],
                         "writers": [],
                         "tags": [],
                     },
-                    "id": "descarteslabs:test-namespace:test-sub",
+                    "id": "someorg:test-namespace:test-sub",
                     "type": "event_subscription",
                 },
                 "jsonapi": {"version": "1.0"},
@@ -633,7 +631,7 @@ class TestEventSubscription(ClientTestCase):
         )
 
         s = EventSubscription(
-            id="descarteslabs:test-namespace:test-sub",
+            id="someorg:test-namespace:test-sub",
             name="test-sub",
             client=self.client,
         )
@@ -646,7 +644,7 @@ class TestEventSubscription(ClientTestCase):
     @responses.activate
     def test_delete(self):
         s = EventSubscription(
-            id="descarteslabs:test-namespace:test-sub",
+            id="someorg:test-namespace:test-sub",
             name="test-sub",
             client=self.client,
             _saved=True,
@@ -664,7 +662,7 @@ class TestEventSubscription(ClientTestCase):
 
     @responses.activate
     def test_class_delete(self):
-        sub_id = "descarteslabs:test-namespace:test-sub"
+        sub_id = "someorg:test-namespace:test-sub"
         self.mock_response(
             responses.DELETE,
             {
@@ -678,7 +676,7 @@ class TestEventSubscription(ClientTestCase):
     @responses.activate
     def test_delete_non_existent(self):
         s = EventSubscription(
-            id="descarteslabs:test-namespace:nonexistent-sub",
+            id="someorg:test-namespace:nonexistent-sub",
             name="nonexistent-sub",
             client=self.client,
             _saved=True,
@@ -701,7 +699,7 @@ class TestEventSubscription(ClientTestCase):
             source=Placeholder('"{{ event.source }}"', raw=True),
         )
         assert isinstance(target, EventSubscriptionTarget)
-        assert target.rule_id == "descarteslabs:compute-job-create"
+        assert target.rule_id == "internal:compute-job-create"
         assert (
             target.detail_template
             == '{"body": {"function_id": "some-function-id", "args": ["{{ event.detail.id }}"], "kwargs": {"detail": {{ event.detail }}, "source": "{{ event.source }}"}}}'  # noqa: E501
@@ -713,7 +711,7 @@ class TestEventSubscription(ClientTestCase):
             Placeholder("event.detail", unquoted=True),
         )
         assert isinstance(target, EventSubscriptionTarget)
-        assert target.rule_id == "descarteslabs:sqs-forwarder"
+        assert target.rule_id == "internal:sqs-forwarder"
         assert (
             target.detail_template
             == '{"message": {{ event.detail }}, "sqs_queue_url": "some-sqs-queue-url"}'
@@ -725,7 +723,7 @@ class TestEventSubscription(ClientTestCase):
             id=Placeholder("event.detail.id"),
         )
         assert isinstance(target, EventSubscriptionTarget)
-        assert target.rule_id == "descarteslabs:sqs-forwarder"
+        assert target.rule_id == "internal:sqs-forwarder"
         assert (
             target.detail_template
             == '{"message": {"id": "{{ event.detail.id }}"}, "sqs_queue_url": "some-sqs-queue-url"}'
@@ -736,7 +734,7 @@ class TestEventSubscription(ClientTestCase):
             "some-sqs-queue-url",
         )
         assert isinstance(target, EventSubscriptionTarget)
-        assert target.rule_id == "descarteslabs:sqs-forwarder"
+        assert target.rule_id == "internal:sqs-forwarder"
         assert (
             target.detail_template
             == '{"message": {{ event.detail }}, "sqs_queue_url": "some-sqs-queue-url"}'

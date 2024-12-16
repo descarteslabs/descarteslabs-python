@@ -88,7 +88,7 @@ class TestProduct(ClientTestCase):
                 "data": [
                     {
                         "attributes": {
-                            "owners": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
                             "name": "My Test Product",
                             "readers": [],
                             "revisit_period_minutes_min": None,
@@ -102,7 +102,7 @@ class TestProduct(ClientTestCase):
                             "resolution_min": {"value": 10.0, "unit": "meters"},
                         },
                         "type": "product",
-                        "id": "descarteslabs:test",
+                        "id": "someorg:test",
                     }
                 ],
                 "jsonapi": {"version": "1.0"},
@@ -114,7 +114,7 @@ class TestProduct(ClientTestCase):
         assert len(r) == 1
         product = r[0]
         assert responses.calls[0].request.url == self.url + "/products"
-        assert product.id == "descarteslabs:test"
+        assert product.id == "someorg:test"
         assert isinstance(product.created, datetime)
         assert isinstance(product.resolution_min, Resolution)
 
@@ -145,7 +145,7 @@ class TestProduct(ClientTestCase):
             {
                 "data": {
                     "attributes": {
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "name": "My Test Product",
                         "readers": [],
                         "revisit_period_minutes_min": None,
@@ -159,7 +159,7 @@ class TestProduct(ClientTestCase):
                         "resolution_min": {"value": 10.0, "unit": "meters"},
                     },
                     "type": "product",
-                    "id": "descarteslabs:test",
+                    "id": "someorg:test",
                 },
                 "jsonapi": {"version": "1.0"},
             },
@@ -182,7 +182,7 @@ class TestProduct(ClientTestCase):
                 "errors": [
                     {
                         "status": "400",
-                        "detail": "A document with id `descarteslabs:p1` already exists.",
+                        "detail": "A document with id `someorg:p1` already exists.",
                         "title": "Bad request",
                     }
                 ],
@@ -201,7 +201,7 @@ class TestProduct(ClientTestCase):
             {
                 "data": {
                     "attributes": {
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "name": "My Product",
                         "readers": [],
                         "modified": "2019-06-11T23:59:46.800792Z",
@@ -212,19 +212,19 @@ class TestProduct(ClientTestCase):
                         "description": "A descriptive description",
                     },
                     "type": "product",
-                    "id": "descarteslabs:my-product",
+                    "id": "someorg:my-product",
                 },
                 "jsonapi": {"version": "1.0"},
             },
         )
 
-        p1 = Product.get("descarteslabs:my-product", client=self.client)
+        p1 = Product.get("someorg:my-product", client=self.client)
         assert p1.state == DocumentState.SAVED
 
         p1_repr = repr(p1)
         match_str = """\
             Product: My Product
-              id: descarteslabs:my-product
+              id: someorg:my-product
               created: Tue Jun 11 23:52:35 2019"""
         assert p1_repr.strip("\n") == textwrap.dedent(match_str)
 
@@ -235,7 +235,7 @@ class TestProduct(ClientTestCase):
             {
                 "data": {
                     "attributes": {
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "name": "My Product",
                         "readers": [],
                         "modified": "2019-06-11T23:59:46.800792Z",
@@ -246,7 +246,7 @@ class TestProduct(ClientTestCase):
                         "description": "An updated description",
                     },
                     "type": "product",
-                    "id": "descarteslabs:my-product",
+                    "id": "someorg:my-product",
                 },
                 "jsonapi": {"version": "1.0"},
             },
@@ -255,7 +255,7 @@ class TestProduct(ClientTestCase):
         p1_repr = repr(p1)
         match_str = """\
             Product: My Product
-              id: descarteslabs:my-product
+              id: someorg:my-product
               created: Tue Jun 11 23:52:35 2019
             * Not up-to-date in the Descartes Labs catalog. Call `.save()` to save or update this record."""
 
@@ -265,7 +265,7 @@ class TestProduct(ClientTestCase):
         assert self.get_request_body(1) == {
             "data": {
                 "type": "product",
-                "id": "descarteslabs:my-product",
+                "id": "someorg:my-product",
                 "attributes": {"description": "An updated description"},
             }
         }
@@ -273,7 +273,7 @@ class TestProduct(ClientTestCase):
     @responses.activate
     def test_delete(self):
         p = Product(
-            id="descarteslabs:my-product",
+            id="someorg:my-product",
             name="My Product",
             client=self.client,
             _saved=True,
@@ -325,7 +325,7 @@ class TestProduct(ClientTestCase):
             {
                 "data": {
                     "attributes": {
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "name": "My Product",
                         "readers": [],
                         "modified": "2019-06-11T23:59:46.800792Z",
@@ -337,13 +337,13 @@ class TestProduct(ClientTestCase):
                         "foobar": "unkown",
                     },
                     "type": "product",
-                    "id": "descarteslabs:my-product",
+                    "id": "someorg:my-product",
                 },
                 "jsonapi": {"version": "1.0"},
             },
         )
 
-        p = Product.get("descarteslabs:my-product", client=self.client)
+        p = Product.get("someorg:my-product", client=self.client)
         assert not hasattr(p, "foobar")
 
     @responses.activate
@@ -355,7 +355,7 @@ class TestProduct(ClientTestCase):
                 "data": {
                     "attributes": {"status": "RUNNING"},
                     "type": "product_delete_task",
-                    "id": "descarteslabs:test-product",
+                    "id": "someorg:test-product",
                 },
                 "jsonapi": {"version": "1.0"},
             },
@@ -432,7 +432,7 @@ class TestProduct(ClientTestCase):
                     "attributes": {
                         "readers": [],
                         "writers": [],
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                     },
@@ -505,7 +505,7 @@ class TestProduct(ClientTestCase):
                     "attributes": {
                         "readers": [],
                         "writers": [],
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                         "is_core": True,
@@ -534,16 +534,13 @@ class TestProduct(ClientTestCase):
         class Client(object):
             class auth(object):
                 namespace = "mynamespace"
-                payload = {"org": "descarteslabs"}
+                payload = {"org": "someorg"}
 
-        assert Product.namespace_id("foo", client=Client) == "descarteslabs:foo"
+        assert Product.namespace_id("foo", client=Client) == "someorg:foo"
+        assert Product.namespace_id("someorg:foo", client=Client) == "someorg:foo"
         assert (
-            Product.namespace_id("descarteslabs:foo", client=Client)
-            == "descarteslabs:foo"
-        )
-        assert (
-            Product.namespace_id("descarteslabs:foo:bar:baz", client=Client)
-            == "descarteslabs:foo:bar:baz"
+            Product.namespace_id("someorg:foo:bar:baz", client=Client)
+            == "someorg:foo:bar:baz"
         )
 
         del Client.auth.payload["org"]
@@ -563,7 +560,7 @@ class TestProduct(ClientTestCase):
                     "attributes": {
                         "readers": [],
                         "writers": [],
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                         "is_core": False,
@@ -621,7 +618,7 @@ class TestProduct(ClientTestCase):
                     "attributes": {
                         "readers": [],
                         "writers": [],
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                         "is_core": False,

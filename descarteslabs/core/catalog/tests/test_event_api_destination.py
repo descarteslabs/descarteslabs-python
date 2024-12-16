@@ -34,9 +34,9 @@ from ..catalog_base import DocumentState, DeletedObjectError
 class TestEventApiDestination(ClientTestCase):
     def test_constructor(self):
         d = EventApiDestination(
-            namespace="descarteslabs:test-namespace",
+            namespace="someorg:test-namespace",
             name="test-api-destination",
-            id="descarteslabs:test-namespace:test-api-destination",
+            id="someorg:test-namespace:test-api-destination",
             description="a description",
             endpoint="https://some.endpoint",
             method="POST",
@@ -87,9 +87,9 @@ class TestEventApiDestination(ClientTestCase):
             tags=["TESTING"],
         )
 
-        assert d.namespace == "descarteslabs:test-namespace"
+        assert d.namespace == "someorg:test-namespace"
         assert d.name == "test-api-destination"
-        assert d.id == "descarteslabs:test-namespace:test-api-destination"
+        assert d.id == "someorg:test-namespace:test-api-destination"
         assert d.description == "a description"
         assert d.endpoint == "https://some.endpoint"
         assert d.method == "POST"
@@ -139,12 +139,12 @@ class TestEventApiDestination(ClientTestCase):
     def test_repr(self):
         d = EventApiDestination(
             name="test-api-destination",
-            id="descarteslabs:test-namespace:test-api-destination",
+            id="someorg:test-namespace:test-api-destination",
         )
         d_repr = repr(d)
         match_str = """\
             EventApiDestination: test-api-destination
-              id: descarteslabs:test-namespace:test-api-destination
+              id: someorg:test-namespace:test-api-destination
             * Not up-to-date in the Descartes Labs catalog. Call `.save()` to save or update this record."""
         assert d_repr.strip("\n") == textwrap.dedent(match_str)
 
@@ -213,13 +213,13 @@ class TestEventApiDestination(ClientTestCase):
                         "method": "POST",
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-api-destination",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "tags": ["TESTING"],
                     },
-                    "id": "descarteslabs:test-namespace:test-api-destination",
+                    "id": "someorg:test-namespace:test-api-destination",
                     "type": "event_api_destination",
                 }
             },
@@ -227,13 +227,13 @@ class TestEventApiDestination(ClientTestCase):
         )
 
         d = EventApiDestination.get(
-            id="descarteslabs:test-namespace:test-api-destination", client=self.client
+            id="someorg:test-namespace:test-api-destination", client=self.client
         )
         assert isinstance(d.created, datetime)
         assert isinstance(d.modified, datetime)
-        assert d.id == "descarteslabs:test-namespace:test-api-destination"
+        assert d.id == "someorg:test-namespace:test-api-destination"
         assert d.name == "test-api-destination"
-        assert d.namespace == "descarteslabs:test-namespace"
+        assert d.namespace == "someorg:test-namespace"
         assert d.description == "a generic description"
         assert d.endpoint == "https://some.endpoint"
         assert d.method == "POST"
@@ -277,8 +277,8 @@ class TestEventApiDestination(ClientTestCase):
             )
         ]
         assert d.connection_arn == "some-connection-arn"
-        assert d.owners == ["org:descarteslabs"]
-        assert d.readers == ["org:descarteslabs"]
+        assert d.owners == ["org:someorg"]
+        assert d.readers == ["org:someorg"]
         assert d.writers == []
         assert d.tags == ["TESTING"]
 
@@ -292,14 +292,14 @@ class TestEventApiDestination(ClientTestCase):
                         "created": "2023-09-29T15:54:37.006769Z",
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-api-destination",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "tags": ["TESTING"],
                         "foobar": "baz",
                     },
-                    "id": "descarteslabs:test-namespace:test-api-destination",
+                    "id": "someorg:test-namespace:test-api-destination",
                     "type": "event_api_destination",
                 },
             },
@@ -307,7 +307,7 @@ class TestEventApiDestination(ClientTestCase):
         )
 
         d = EventApiDestination.get(
-            id="descarteslabs:test-namespace:test-api-destination", client=self.client
+            id="someorg:test-namespace:test-api-destination", client=self.client
         )
         assert not hasattr(d, "foobar")
 
@@ -323,9 +323,9 @@ class TestEventApiDestination(ClientTestCase):
                             "description": "a generic description",
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-api-destination-1",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                         },
-                        "id": "descarteslabs:test-namespace:test-api-destination-1",
+                        "id": "someorg:test-namespace:test-api-destination-1",
                         "type": "event_api_destination",
                     },
                     {
@@ -334,9 +334,9 @@ class TestEventApiDestination(ClientTestCase):
                             "description": "a generic description",
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-api-destination-2",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                         },
-                        "id": "descarteslabs:test-namespace:test-api-destination-2",
+                        "id": "someorg:test-namespace:test-api-destination-2",
                         "type": "event_api_destination",
                     },
                 ],
@@ -346,15 +346,15 @@ class TestEventApiDestination(ClientTestCase):
 
         api_destinations = EventApiDestination.get_many(
             [
-                "descarteslabs:test-namespace:test-api-destination-1",
-                "descarteslabs:test-namespace:test-api-destination-2",
+                "someorg:test-namespace:test-api-destination-1",
+                "someorg:test-namespace:test-api-destination-2",
             ],
             client=self.client,
         )
 
         for i, d in enumerate(api_destinations):
             assert isinstance(d, EventApiDestination)
-            assert d.id == f"descarteslabs:test-namespace:test-api-destination-{i + 1}"
+            assert d.id == f"someorg:test-namespace:test-api-destination-{i + 1}"
 
     @responses.activate
     def test_get_or_create(self):
@@ -366,13 +366,13 @@ class TestEventApiDestination(ClientTestCase):
                         "created": "2023-09-29T15:54:37.006769Z",
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-api-destination",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "tags": ["TESTING"],
                     },
-                    "id": "descarteslabs:test-namespace:test-api-destination",
+                    "id": "someorg:test-namespace:test-api-destination",
                     "type": "event_api_destination",
                 },
             },
@@ -380,9 +380,9 @@ class TestEventApiDestination(ClientTestCase):
         )
 
         d = EventApiDestination.get_or_create(
-            id="descarteslabs:test-namespace:test-api-destination", client=self.client
+            id="someorg:test-namespace:test-api-destination", client=self.client
         )
-        assert d.id == "descarteslabs:test-namespace:test-api-destination"
+        assert d.id == "someorg:test-namespace:test-api-destination"
 
     @responses.activate
     def test_list(self):
@@ -398,9 +398,9 @@ class TestEventApiDestination(ClientTestCase):
                             "description": "a generic description",
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-api-destination-1",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                         },
-                        "id": "descarteslabs:test-namespace:test-api-destination-1",
+                        "id": "someorg:test-namespace:test-api-destination-1",
                         "type": "event_api_destination",
                     },
                     {
@@ -409,9 +409,9 @@ class TestEventApiDestination(ClientTestCase):
                             "description": "a generic description",
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-api-destination-2",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                         },
-                        "id": "descarteslabs:test-namespace:test-api-destination-2",
+                        "id": "someorg:test-namespace:test-api-destination-2",
                         "type": "event_api_destination",
                     },
                 ],
@@ -448,13 +448,13 @@ class TestEventApiDestination(ClientTestCase):
                         "created": "2023-09-29T15:54:37.006769Z",
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-api-destination",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "tags": ["TESTING"],
                     },
-                    "id": "descarteslabs:test-namespace:test-api-destination",
+                    "id": "someorg:test-namespace:test-api-destination",
                     "type": "event_api_destination",
                 }
             },
@@ -462,7 +462,7 @@ class TestEventApiDestination(ClientTestCase):
         )
 
         d = EventApiDestination(
-            id="descarteslabs:test-namespace:test-api-destination",
+            id="someorg:test-namespace:test-api-destination",
             name="test-api-destination",
             client=self.client,
         )
@@ -479,7 +479,7 @@ class TestEventApiDestination(ClientTestCase):
                 "errors": [
                     {
                         "status": "409",
-                        "detail": "A document with id `descarteslabs:test-namespace:test-api-destination` already exists.",  # noqa: E501
+                        "detail": "A document with id `someorg:test-namespace:test-api-destination` already exists.",  # noqa: E501
                         "title": "Conflict",
                     }
                 ],
@@ -488,7 +488,7 @@ class TestEventApiDestination(ClientTestCase):
             status=409,
         )
         d = EventApiDestination(
-            id="descarteslabs:test-namespace:test-api-destination", client=self.client
+            id="someorg:test-namespace:test-api-destination", client=self.client
         )
         with pytest.raises(ConflictError):
             d.save()
@@ -497,23 +497,23 @@ class TestEventApiDestination(ClientTestCase):
     def test_exists(self):
         self.mock_response(responses.HEAD, {}, status=200)
         assert EventApiDestination.exists(
-            "descarteslabs:test-namespace:test-api-destination", client=self.client
+            "someorg:test-namespace:test-api-destination", client=self.client
         )
         assert (
             responses.calls[0].request.url
-            == "https://example.com/catalog/v2/event_api_destinations/descarteslabs:test-namespace:test-api-destination"
+            == "https://example.com/catalog/v2/event_api_destinations/someorg:test-namespace:test-api-destination"
         )
 
     @responses.activate
     def test_exists_false(self):
         self.mock_response(responses.HEAD, self.not_found_json, status=404)
         assert not EventApiDestination.exists(
-            "descarteslabs:test-namespace:nonexistent-api_destination",
+            "someorg:test-namespace:nonexistent-api_destination",
             client=self.client,
         )
         assert (
             responses.calls[0].request.url
-            == "https://example.com/catalog/v2/event_api_destinations/descarteslabs:test-namespace:nonexistent-api_destination"  # noqa: E501
+            == "https://example.com/catalog/v2/event_api_destinations/someorg:test-namespace:nonexistent-api_destination"  # noqa: E501
         )
 
     @responses.activate
@@ -527,13 +527,13 @@ class TestEventApiDestination(ClientTestCase):
                         "created": "2023-09-29T15:54:37.006769Z",
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-api-destination",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "tags": ["TESTING"],
                     },
-                    "id": "descarteslabs:test-namespace:test-api-destination",
+                    "id": "someorg:test-namespace:test-api-destination",
                     "type": "event_api_destination",
                 },
             },
@@ -541,7 +541,7 @@ class TestEventApiDestination(ClientTestCase):
         )
 
         d = EventApiDestination(
-            id="descarteslabs:test-namespace:test-api-destination",
+            id="someorg:test-namespace:test-api-destination",
             name="test-api-destination",
             client=self.client,
         )
@@ -558,7 +558,7 @@ class TestEventApiDestination(ClientTestCase):
                         "readers": ["org:acme-corp"],
                     },
                     "type": "event_api_destination",
-                    "id": "descarteslabs:test-namespace:test-api-destination",
+                    "id": "someorg:test-namespace:test-api-destination",
                 },
             },
             status=200,
@@ -569,7 +569,7 @@ class TestEventApiDestination(ClientTestCase):
     @responses.activate
     def test_delete(self):
         d = EventApiDestination(
-            id="descarteslabs:test-namespace:test-api-destination",
+            id="someorg:test-namespace:test-api-destination",
             name="test-api-destination",
             client=self.client,
             _saved=True,
@@ -587,7 +587,7 @@ class TestEventApiDestination(ClientTestCase):
 
     @responses.activate
     def test_class_delete(self):
-        api_destination_id = "descarteslabs:test-namespace:test-api-destination"
+        api_destination_id = "someorg:test-namespace:test-api-destination"
         self.mock_response(
             responses.DELETE,
             {
@@ -601,7 +601,7 @@ class TestEventApiDestination(ClientTestCase):
     @responses.activate
     def test_delete_non_existent(self):
         d = EventApiDestination(
-            id="descarteslabs:test-namespace:nonexistent-api_destination",
+            id="someorg:test-namespace:nonexistent-api_destination",
             name="nonexistent-api_destination",
             client=self.client,
             _saved=True,

@@ -33,9 +33,9 @@ from ..catalog_base import DocumentState, DeletedObjectError
 class TestEventSchedule(ClientTestCase):
     def test_constructor(self):
         s = EventSchedule(
-            namespace="descarteslabs:test-namespace",
+            namespace="someorg:test-namespace",
             name="test-sched",
-            id="descarteslabs:test-namespace:test-sched",
+            id="someorg:test-namespace:test-sched",
             description="a description",
             schedule="cron(* * * * * *)",
             schedule_timezone="America/New_York",
@@ -46,9 +46,9 @@ class TestEventSchedule(ClientTestCase):
             tags=["TESTING"],
         )
 
-        assert s.namespace == "descarteslabs:test-namespace"
+        assert s.namespace == "someorg:test-namespace"
         assert s.name == "test-sched"
-        assert s.id == "descarteslabs:test-namespace:test-sched"
+        assert s.id == "someorg:test-namespace:test-sched"
         assert s.description == "a description"
         assert s.schedule == "cron(* * * * * *)"
         assert s.schedule_timezone == "America/New_York"
@@ -62,13 +62,13 @@ class TestEventSchedule(ClientTestCase):
     def test_repr(self):
         s = EventSchedule(
             name="test-sched",
-            id="descarteslabs:test-namespace:test-sched",
+            id="someorg:test-namespace:test-sched",
             schedule="rate(1 days)",
         )
         s_repr = repr(s)
         match_str = """\
             EventSchedule: test-sched
-              id: descarteslabs:test-namespace:test-sched
+              id: someorg:test-namespace:test-sched
             * Not up-to-date in the Descartes Labs catalog. Call `.save()` to save or update this record."""
         assert s_repr.strip("\n") == textwrap.dedent(match_str)
 
@@ -87,16 +87,16 @@ class TestEventSchedule(ClientTestCase):
                         "flexible_time_window": 10,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sched",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "schedule": "cron(* * * * * *)",
                         "schedule_timezone": "America/New_York",
                         "start_datetime": "2023-01-01T00:00:00Z",
                         "tags": ["TESTING"],
                         "writers": [],
                     },
-                    "id": "descarteslabs:test-namespace:test-sched",
+                    "id": "someorg:test-namespace:test-sched",
                     "type": "event_schedule",
                 }
             },
@@ -104,13 +104,13 @@ class TestEventSchedule(ClientTestCase):
         )
 
         s = EventSchedule.get(
-            id="descarteslabs:test-namespace:test-sched", client=self.client
+            id="someorg:test-namespace:test-sched", client=self.client
         )
         assert isinstance(s.created, datetime)
         assert isinstance(s.modified, datetime)
-        assert s.id == "descarteslabs:test-namespace:test-sched"
+        assert s.id == "someorg:test-namespace:test-sched"
         assert s.name == "test-sched"
-        assert s.namespace == "descarteslabs:test-namespace"
+        assert s.namespace == "someorg:test-namespace"
         assert s.description == "a generic description"
         assert s.schedule == "cron(* * * * * *)"
         assert s.schedule_timezone == "America/New_York"
@@ -118,8 +118,8 @@ class TestEventSchedule(ClientTestCase):
         assert s.end_datetime == datetime(2024, 1, 1, tzinfo=timezone.utc)
         assert s.flexible_time_window == 10
         assert s.enabled is True
-        assert s.owners == ["org:descarteslabs"]
-        assert s.readers == ["org:descarteslabs"]
+        assert s.owners == ["org:someorg"]
+        assert s.readers == ["org:someorg"]
         assert s.writers == []
         assert s.tags == ["TESTING"]
 
@@ -138,9 +138,9 @@ class TestEventSchedule(ClientTestCase):
                         "flexible_time_window": 10,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sched",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "schedule": "cron(* * * * * *)",
                         "schedule_timezone": "America/New_York",
                         "start_datetime": "2024-01-01T00:00:00Z",
@@ -148,7 +148,7 @@ class TestEventSchedule(ClientTestCase):
                         "writers": [],
                         "foobar": "unknown",
                     },
-                    "id": "descarteslabs:test-namespace:test-sched",
+                    "id": "someorg:test-namespace:test-sched",
                     "type": "event_schedule",
                 }
             },
@@ -156,7 +156,7 @@ class TestEventSchedule(ClientTestCase):
         )
 
         s = EventSchedule.get(
-            id="descarteslabs:test-namespace:test-sched", client=self.client
+            id="someorg:test-namespace:test-sched", client=self.client
         )
         assert not hasattr(s, "foobar")
 
@@ -176,16 +176,16 @@ class TestEventSchedule(ClientTestCase):
                             "flexible_time_window": 10,
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-sched",
-                            "namespace": "descarteslabs:test-namespace",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "namespace": "someorg:test-namespace",
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "schedule": "cron(* * * * * *)",
                             "schedule_timezone": "America/New_York",
                             "start_datetime": "2024-01-01T00:00:00Z",
                             "tags": ["TESTING"],
                             "writers": [],
                         },
-                        "id": "descarteslabs:test-namespace:test-sched-1",
+                        "id": "someorg:test-namespace:test-sched-1",
                         "type": "event_schedule",
                     },
                     {
@@ -198,16 +198,16 @@ class TestEventSchedule(ClientTestCase):
                             "flexible_time_window": 10,
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-sched",
-                            "namespace": "descarteslabs:test-namespace",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "namespace": "someorg:test-namespace",
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "schedule": "cron(* * * * * *)",
                             "schedule_timezone": "America/New_York",
                             "start_datetime": "2024-01-01T00:00:00Z",
                             "tags": ["TESTING"],
                             "writers": [],
                         },
-                        "id": "descarteslabs:test-namespace:test-sched-2",
+                        "id": "someorg:test-namespace:test-sched-2",
                         "type": "event_schedule",
                     },
                 ],
@@ -217,15 +217,15 @@ class TestEventSchedule(ClientTestCase):
 
         scheds = EventSchedule.get_many(
             [
-                "descarteslabs:test-namespace:test-sched-1",
-                "descarteslabs:test-namespace:test-sched-2",
+                "someorg:test-namespace:test-sched-1",
+                "someorg:test-namespace:test-sched-2",
             ],
             client=self.client,
         )
 
         for i, r in enumerate(scheds):
             assert isinstance(r, EventSchedule)
-            assert r.id == f"descarteslabs:test-namespace:test-sched-{i + 1}"
+            assert r.id == f"someorg:test-namespace:test-sched-{i + 1}"
 
     @responses.activate
     def test_get_or_create(self):
@@ -242,16 +242,16 @@ class TestEventSchedule(ClientTestCase):
                         "flexible_time_window": 10,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sched",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "schedule": "cron(* * * * * *)",
                         "schedule_timezone": "America/New_York",
                         "start_datetime": "2024-01-01T00:00:00Z",
                         "tags": ["TESTING"],
                         "writers": [],
                     },
-                    "id": "descarteslabs:test-namespace:test-sched",
+                    "id": "someorg:test-namespace:test-sched",
                     "type": "event_schedule",
                 },
             },
@@ -259,9 +259,9 @@ class TestEventSchedule(ClientTestCase):
         )
 
         s = EventSchedule.get_or_create(
-            id="descarteslabs:test-namespace:test-sched", client=self.client
+            id="someorg:test-namespace:test-sched", client=self.client
         )
-        assert s.id == "descarteslabs:test-namespace:test-sched"
+        assert s.id == "someorg:test-namespace:test-sched"
 
     @responses.activate
     def test_list(self):
@@ -281,16 +281,16 @@ class TestEventSchedule(ClientTestCase):
                             "flexible_time_window": 10,
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-sched",
-                            "namespace": "descarteslabs:test-namespace",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "namespace": "someorg:test-namespace",
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "schedule": "cron(* * * * * *)",
                             "schedule_timezone": "America/New_York",
                             "start_datetime": "2024-01-01T00:00:00Z",
                             "tags": ["TESTING"],
                             "writers": [],
                         },
-                        "id": "descarteslabs:test-namespace:test-sched-1",
+                        "id": "someorg:test-namespace:test-sched-1",
                         "type": "event_schedule",
                     },
                     {
@@ -303,16 +303,16 @@ class TestEventSchedule(ClientTestCase):
                             "flexible_time_window": 10,
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-sched",
-                            "namespace": "descarteslabs:test-namespace",
-                            "owners": ["org:descarteslabs"],
-                            "readers": ["org:descarteslabs"],
+                            "namespace": "someorg:test-namespace",
+                            "owners": ["org:someorg"],
+                            "readers": ["org:someorg"],
                             "schedule": "cron(* * * * * *)",
                             "schedule_timezone": "America/New_York",
                             "start_datetime": "2024-01-01T00:00:00Z",
                             "tags": ["TESTING"],
                             "writers": [],
                         },
-                        "id": "descarteslabs:test-namespace:test-sched-2",
+                        "id": "someorg:test-namespace:test-sched-2",
                         "type": "event_schedule",
                     },
                 ],
@@ -354,8 +354,8 @@ class TestEventSchedule(ClientTestCase):
                         "flexible_time_window": 0,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sched",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
                         "readers": [],
                         "schedule": "rate(1 days)",
                         "schedule_timezone": None,
@@ -363,7 +363,7 @@ class TestEventSchedule(ClientTestCase):
                         "tags": [],
                         "writers": [],
                     },
-                    "id": "descarteslabs:test-namespace:test-sched",
+                    "id": "someorg:test-namespace:test-sched",
                     "type": "event_schedule",
                 }
             },
@@ -371,7 +371,7 @@ class TestEventSchedule(ClientTestCase):
         )
 
         s = EventSchedule(
-            id="descarteslabs:test-namespace:test-sched",
+            id="someorg:test-namespace:test-sched",
             name="test-sched",
             schedule="rate(1 days)",
             client=self.client,
@@ -389,7 +389,7 @@ class TestEventSchedule(ClientTestCase):
                 "errors": [
                     {
                         "status": "409",
-                        "detail": "A document with id `descarteslabs:test-namespace:test-sched` already exists.",
+                        "detail": "A document with id `someorg:test-namespace:test-sched` already exists.",
                         "title": "Conflict",
                     }
                 ],
@@ -397,9 +397,7 @@ class TestEventSchedule(ClientTestCase):
             },
             status=409,
         )
-        s = EventSchedule(
-            id="descarteslabs:test-namespace:test-sched", client=self.client
-        )
+        s = EventSchedule(id="someorg:test-namespace:test-sched", client=self.client)
         with pytest.raises(ConflictError):
             s.save()
 
@@ -407,22 +405,22 @@ class TestEventSchedule(ClientTestCase):
     def test_exists(self):
         self.mock_response(responses.HEAD, {}, status=200)
         assert EventSchedule.exists(
-            "descarteslabs:test-namespace:test-sched", client=self.client
+            "someorg:test-namespace:test-sched", client=self.client
         )
         assert (
             responses.calls[0].request.url
-            == "https://example.com/catalog/v2/event_schedules/descarteslabs:test-namespace:test-sched"
+            == "https://example.com/catalog/v2/event_schedules/someorg:test-namespace:test-sched"
         )
 
     @responses.activate
     def test_exists_false(self):
         self.mock_response(responses.HEAD, self.not_found_json, status=404)
         assert not EventSchedule.exists(
-            "descarteslabs:test-namespace:nonexistent-sched", client=self.client
+            "someorg:test-namespace:nonexistent-sched", client=self.client
         )
         assert (
             responses.calls[0].request.url
-            == "https://example.com/catalog/v2/event_schedules/descarteslabs:test-namespace:nonexistent-sched"
+            == "https://example.com/catalog/v2/event_schedules/someorg:test-namespace:nonexistent-sched"
         )
 
     @responses.activate
@@ -441,8 +439,8 @@ class TestEventSchedule(ClientTestCase):
                         "flexible_time_window": 0,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sched",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
                         "readers": [],
                         "schedule": "rate(1 days)",
                         "schedule_timezone": None,
@@ -450,7 +448,7 @@ class TestEventSchedule(ClientTestCase):
                         "tags": [],
                         "writers": [],
                     },
-                    "id": "descarteslabs:test-namespace:test-sched",
+                    "id": "someorg:test-namespace:test-sched",
                     "type": "event_schedule",
                 },
             },
@@ -458,7 +456,7 @@ class TestEventSchedule(ClientTestCase):
         )
 
         s = EventSchedule(
-            id="descarteslabs:test-namespace:test-sched",
+            id="someorg:test-namespace:test-sched",
             name="test-sched",
             schedule="rate(1 days)",
             client=self.client,
@@ -476,7 +474,7 @@ class TestEventSchedule(ClientTestCase):
                         "readers": ["org:acme-corp"],
                     },
                     "type": "event_schedule",
-                    "id": "descarteslabs:test-namespace:test-sched",
+                    "id": "someorg:test-namespace:test-sched",
                 },
             },
             status=200,
@@ -500,8 +498,8 @@ class TestEventSchedule(ClientTestCase):
                         "flexible_time_window": 0,
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-sched",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
                         "readers": [],
                         "schedule": "rate(1 days)",
                         "schedule_timezone": None,
@@ -509,7 +507,7 @@ class TestEventSchedule(ClientTestCase):
                         "tags": [],
                         "writers": [],
                     },
-                    "id": "descarteslabs:test-namespace:test-sched",
+                    "id": "someorg:test-namespace:test-sched",
                     "type": "event_schedule",
                 },
                 "jsonapi": {"version": "1.0"},
@@ -518,7 +516,7 @@ class TestEventSchedule(ClientTestCase):
         )
 
         s = EventSchedule(
-            id="descarteslabs:test-namespace:test-sched",
+            id="someorg:test-namespace:test-sched",
             name="test-sched",
             schedule="rate(1 days)",
             client=self.client,
@@ -532,7 +530,7 @@ class TestEventSchedule(ClientTestCase):
     @responses.activate
     def test_delete(self):
         s = EventSchedule(
-            id="descarteslabs:test-namespace:test-sched",
+            id="someorg:test-namespace:test-sched",
             name="test-sched",
             schedule="rate(1 days)",
             client=self.client,
@@ -551,7 +549,7 @@ class TestEventSchedule(ClientTestCase):
 
     @responses.activate
     def test_class_delete(self):
-        sched_id = "descarteslabs:test-namespace:test-sched"
+        sched_id = "someorg:test-namespace:test-sched"
         self.mock_response(
             responses.DELETE,
             {
@@ -565,7 +563,7 @@ class TestEventSchedule(ClientTestCase):
     @responses.activate
     def test_delete_non_existent(self):
         s = EventSchedule(
-            id="descarteslabs:test-namespace:nonexistent-sched",
+            id="someorg:test-namespace:nonexistent-sched",
             name="nonexistent-sched",
             schedule="rate(1 days)",
             client=self.client,

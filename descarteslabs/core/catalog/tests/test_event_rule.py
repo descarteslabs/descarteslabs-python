@@ -34,9 +34,9 @@ from ..catalog_base import DocumentState, DeletedObjectError
 class TestEventRule(ClientTestCase):
     def test_constructor(self):
         r = EventRule(
-            namespace="descarteslabs:test-namespace",
+            namespace="someorg:test-namespace",
             name="test-rule",
-            id="descarteslabs:test-namespace:test-rule",
+            id="someorg:test-namespace:test-rule",
             description="a description",
             event_pattern="""{"some": "pattern"}""",
             targets=[
@@ -55,7 +55,7 @@ class TestEventRule(ClientTestCase):
                     query_string_parameters={
                         "some-query": "some-value",
                     },
-                    event_api_destination_id="descarteslabs:test-namespace:test-destination",
+                    event_api_destination_id="someorg:test-namespace:test-destination",
                 ),
             ],
             event_bus_arn="some-event-bus-arn",
@@ -63,9 +63,9 @@ class TestEventRule(ClientTestCase):
             tags=["TESTING"],
         )
 
-        assert r.namespace == "descarteslabs:test-namespace"
+        assert r.namespace == "someorg:test-namespace"
         assert r.name == "test-rule"
-        assert r.id == "descarteslabs:test-namespace:test-rule"
+        assert r.id == "someorg:test-namespace:test-rule"
         assert r.description == "a description"
         assert r.event_pattern == """{"some": "pattern"}"""
         assert len(r.targets) == 1
@@ -81,7 +81,7 @@ class TestEventRule(ClientTestCase):
         assert r.targets[0].query_string_parameters == {"some-query": "some-value"}
         assert (
             r.targets[0].event_api_destination_id
-            == "descarteslabs:test-namespace:test-destination"
+            == "someorg:test-namespace:test-destination"
         )
         assert r.event_bus_arn == "some-event-bus-arn"
         assert r.rule_arn == "some-rule-arn"
@@ -91,12 +91,12 @@ class TestEventRule(ClientTestCase):
     def test_repr(self):
         r = EventRule(
             name="test-rule",
-            id="descarteslabs:test-namespace:test-rule",
+            id="someorg:test-namespace:test-rule",
         )
         r_repr = repr(r)
         match_str = """\
             EventRule: test-rule
-              id: descarteslabs:test-namespace:test-rule
+              id: someorg:test-namespace:test-rule
             * Not up-to-date in the Descartes Labs catalog. Call `.save()` to save or update this record."""
         assert r_repr.strip("\n") == textwrap.dedent(match_str)
 
@@ -113,16 +113,16 @@ class TestEventRule(ClientTestCase):
                         "extra_properties": {},
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-rule",
-                        "namespace": "descarteslabs:test-namespace",
-                        "owners": ["org:descarteslabs"],
-                        "readers": ["org:descarteslabs"],
+                        "namespace": "someorg:test-namespace",
+                        "owners": ["org:someorg"],
+                        "readers": ["org:someorg"],
                         "writers": [],
                         "tags": ["TESTING"],
                         "targets": [
                             {
                                 "arn": "some-destination-arn",
                                 "dead_letter_arn": "some-dead-letter-arn",
-                                "event_api_destination_id": "descarteslabs:test-namespace:test-destination",
+                                "event_api_destination_id": "someorg:test-namespace:test-destination",
                                 "header_parameters": {
                                     "some-header": "some-value",
                                 },
@@ -138,21 +138,19 @@ class TestEventRule(ClientTestCase):
                             },
                         ],
                     },
-                    "id": "descarteslabs:test-namespace:test-rule",
+                    "id": "someorg:test-namespace:test-rule",
                     "type": "event_rule",
                 }
             },
             status=200,
         )
 
-        r = EventRule.get(
-            id="descarteslabs:test-namespace:test-rule", client=self.client
-        )
+        r = EventRule.get(id="someorg:test-namespace:test-rule", client=self.client)
         assert isinstance(r.created, datetime)
         assert isinstance(r.modified, datetime)
-        assert r.id == "descarteslabs:test-namespace:test-rule"
+        assert r.id == "someorg:test-namespace:test-rule"
         assert r.name == "test-rule"
-        assert r.namespace == "descarteslabs:test-namespace"
+        assert r.namespace == "someorg:test-namespace"
         assert r.description == "a generic description"
         assert r.event_pattern == """{"some": "pattern"}"""
         assert len(r.targets) == 1
@@ -169,10 +167,10 @@ class TestEventRule(ClientTestCase):
         assert r.targets[0].query_string_parameters == {"some-query": "some-value"}
         assert (
             r.targets[0].event_api_destination_id
-            == "descarteslabs:test-namespace:test-destination"
+            == "someorg:test-namespace:test-destination"
         )
-        assert r.owners == ["org:descarteslabs"]
-        assert r.readers == ["org:descarteslabs"]
+        assert r.owners == ["org:someorg"]
+        assert r.readers == ["org:someorg"]
         assert r.writers == []
         assert r.tags == ["TESTING"]
 
@@ -189,20 +187,18 @@ class TestEventRule(ClientTestCase):
                         "extra_properties": {},
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-rule",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "targets": [],
                         "foobar": "baz",
                     },
-                    "id": "descarteslabs:test-namespace:test-rule",
+                    "id": "someorg:test-namespace:test-rule",
                     "type": "event_rule",
                 },
             },
             status=200,
         )
 
-        r = EventRule.get(
-            id="descarteslabs:test-namespace:test-rule", client=self.client
-        )
+        r = EventRule.get(id="someorg:test-namespace:test-rule", client=self.client)
         assert not hasattr(r, "foobar")
 
     @responses.activate
@@ -219,10 +215,10 @@ class TestEventRule(ClientTestCase):
                             "extra_properties": {},
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-rule-1",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                             "targets": [],
                         },
-                        "id": "descarteslabs:test-namespace:test-rule-1",
+                        "id": "someorg:test-namespace:test-rule-1",
                         "type": "event_rule",
                     },
                     {
@@ -233,10 +229,10 @@ class TestEventRule(ClientTestCase):
                             "extra_properties": {},
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-rule-2",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                             "targets": [],
                         },
-                        "id": "descarteslabs:test-namespace:test-rule-2",
+                        "id": "someorg:test-namespace:test-rule-2",
                         "type": "event_rule",
                     },
                 ],
@@ -246,15 +242,15 @@ class TestEventRule(ClientTestCase):
 
         rules = EventRule.get_many(
             [
-                "descarteslabs:test-namespace:test-rule-1",
-                "descarteslabs:test-namespace:test-rule-2",
+                "someorg:test-namespace:test-rule-1",
+                "someorg:test-namespace:test-rule-2",
             ],
             client=self.client,
         )
 
         for i, r in enumerate(rules):
             assert isinstance(r, EventRule)
-            assert r.id == f"descarteslabs:test-namespace:test-rule-{i + 1}"
+            assert r.id == f"someorg:test-namespace:test-rule-{i + 1}"
 
     @responses.activate
     def test_get_or_create(self):
@@ -269,10 +265,10 @@ class TestEventRule(ClientTestCase):
                         "extra_properties": {},
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-rule",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "targets": [],
                     },
-                    "id": "descarteslabs:test-namespace:test-rule",
+                    "id": "someorg:test-namespace:test-rule",
                     "type": "event_rule",
                 },
             },
@@ -280,9 +276,9 @@ class TestEventRule(ClientTestCase):
         )
 
         r = EventRule.get_or_create(
-            id="descarteslabs:test-namespace:test-rule", client=self.client
+            id="someorg:test-namespace:test-rule", client=self.client
         )
-        assert r.id == "descarteslabs:test-namespace:test-rule"
+        assert r.id == "someorg:test-namespace:test-rule"
 
     @responses.activate
     def test_list(self):
@@ -300,10 +296,10 @@ class TestEventRule(ClientTestCase):
                             "extra_properties": {},
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-rule-1",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                             "targets": [],
                         },
-                        "id": "descarteslabs:test-namespace:test-rule-1",
+                        "id": "someorg:test-namespace:test-rule-1",
                         "type": "event_rule",
                     },
                     {
@@ -314,10 +310,10 @@ class TestEventRule(ClientTestCase):
                             "extra_properties": {},
                             "modified": "2023-09-29T15:54:37.006769Z",
                             "name": "test-rule-2",
-                            "namespace": "descarteslabs:test-namespace",
+                            "namespace": "someorg:test-namespace",
                             "targets": [],
                         },
-                        "id": "descarteslabs:test-namespace:test-rule-2",
+                        "id": "someorg:test-namespace:test-rule-2",
                         "type": "event_rule",
                     },
                 ],
@@ -357,10 +353,10 @@ class TestEventRule(ClientTestCase):
                         "extra_properties": {},
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-rule",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "targets": [],
                     },
-                    "id": "descarteslabs:test-namespace:test-rule",
+                    "id": "someorg:test-namespace:test-rule",
                     "type": "event_rule",
                 }
             },
@@ -368,7 +364,7 @@ class TestEventRule(ClientTestCase):
         )
 
         r = EventRule(
-            id="descarteslabs:test-namespace:test-rule",
+            id="someorg:test-namespace:test-rule",
             name="test-rule",
             client=self.client,
         )
@@ -385,7 +381,7 @@ class TestEventRule(ClientTestCase):
                 "errors": [
                     {
                         "status": "409",
-                        "detail": "A document with id `descarteslabs:test-namespace:test-rule` already exists.",
+                        "detail": "A document with id `someorg:test-namespace:test-rule` already exists.",
                         "title": "Conflict",
                     }
                 ],
@@ -393,30 +389,28 @@ class TestEventRule(ClientTestCase):
             },
             status=409,
         )
-        r = EventRule(id="descarteslabs:test-namespace:test-rule", client=self.client)
+        r = EventRule(id="someorg:test-namespace:test-rule", client=self.client)
         with pytest.raises(ConflictError):
             r.save()
 
     @responses.activate
     def test_exists(self):
         self.mock_response(responses.HEAD, {}, status=200)
-        assert EventRule.exists(
-            "descarteslabs:test-namespace:test-rule", client=self.client
-        )
+        assert EventRule.exists("someorg:test-namespace:test-rule", client=self.client)
         assert (
             responses.calls[0].request.url
-            == "https://example.com/catalog/v2/event_rules/descarteslabs:test-namespace:test-rule"
+            == "https://example.com/catalog/v2/event_rules/someorg:test-namespace:test-rule"
         )
 
     @responses.activate
     def test_exists_false(self):
         self.mock_response(responses.HEAD, self.not_found_json, status=404)
         assert not EventRule.exists(
-            "descarteslabs:test-namespace:nonexistent-rule", client=self.client
+            "someorg:test-namespace:nonexistent-rule", client=self.client
         )
         assert (
             responses.calls[0].request.url
-            == "https://example.com/catalog/v2/event_rules/descarteslabs:test-namespace:nonexistent-rule"
+            == "https://example.com/catalog/v2/event_rules/someorg:test-namespace:nonexistent-rule"
         )
 
     @responses.activate
@@ -433,10 +427,10 @@ class TestEventRule(ClientTestCase):
                         "extra_properties": {},
                         "modified": "2023-09-29T15:54:37.006769Z",
                         "name": "test-rule",
-                        "namespace": "descarteslabs:test-namespace",
+                        "namespace": "someorg:test-namespace",
                         "targets": [],
                     },
-                    "id": "descarteslabs:test-namespace:test-rule",
+                    "id": "someorg:test-namespace:test-rule",
                     "type": "event_rule",
                 },
             },
@@ -444,7 +438,7 @@ class TestEventRule(ClientTestCase):
         )
 
         r = EventRule(
-            id="descarteslabs:test-namespace:test-rule",
+            id="someorg:test-namespace:test-rule",
             name="test-rule",
             client=self.client,
         )
@@ -461,7 +455,7 @@ class TestEventRule(ClientTestCase):
                         "readers": ["org:acme-corp"],
                     },
                     "type": "event_rule",
-                    "id": "descarteslabs:test-namespace:test-rule",
+                    "id": "someorg:test-namespace:test-rule",
                 },
             },
             status=200,
@@ -472,7 +466,7 @@ class TestEventRule(ClientTestCase):
     @responses.activate
     def test_delete(self):
         r = EventRule(
-            id="descarteslabs:test-namespace:test-rule",
+            id="someorg:test-namespace:test-rule",
             name="test-rule",
             client=self.client,
             _saved=True,
@@ -490,7 +484,7 @@ class TestEventRule(ClientTestCase):
 
     @responses.activate
     def test_class_delete(self):
-        rule_id = "descarteslabs:test-namespace:test-rule"
+        rule_id = "someorg:test-namespace:test-rule"
         self.mock_response(
             responses.DELETE,
             {
@@ -504,7 +498,7 @@ class TestEventRule(ClientTestCase):
     @responses.activate
     def test_delete_non_existent(self):
         r = EventRule(
-            id="descarteslabs:test-namespace:nonexistent-rule",
+            id="someorg:test-namespace:nonexistent-rule",
             name="nonexistent-rule",
             client=self.client,
             _saved=True,

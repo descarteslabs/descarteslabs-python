@@ -43,7 +43,7 @@ class TestImageSummary(ClientTestCase):
                     "attributes": {
                         "count": 1,
                         "bytes": 44306192,
-                        "products": ["descarteslabs:fake-product"],
+                        "products": ["someorg:fake-product"],
                     },
                     "type": "image_summary",
                     "id": "all",
@@ -52,22 +52,22 @@ class TestImageSummary(ClientTestCase):
             },
         )
 
-        s = self.search.filter(p.product_id == "descarteslabs:fake-product")
+        s = self.search.filter(p.product_id == "someorg:fake-product")
         summary = s.summary()
         parsed_url = urlparse(responses.calls[0].request.url)
         assert parsed_url.path == "/catalog/v2/images/summary/all"
         params = self.get_request_body(0)
 
         assert json.loads(params["filter"]) == [
-            {"name": "product_id", "val": "descarteslabs:fake-product", "op": "eq"}
+            {"name": "product_id", "val": "someorg:fake-product", "op": "eq"}
         ]
 
-        assert summary.products == ["descarteslabs:fake-product"]
+        assert summary.products == ["someorg:fake-product"]
         summary_repr = repr(summary)
         match_str = """\
             Summary for 1 images:
              - Total bytes: 44,306,192
-             - Products: descarteslabs:fake-product"""
+             - Products: someorg:fake-product"""
 
         assert summary_repr.strip("\n") == textwrap.dedent(match_str)
 

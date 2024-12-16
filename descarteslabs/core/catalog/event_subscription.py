@@ -189,7 +189,7 @@ class EventSubscriptionComputeTarget(EventSubscriptionTarget):
             compute function.
         """
         super().__init__()
-        self.rule_id = "descarteslabs:compute-job-create"
+        self.rule_id = "internal:compute-job-create"
         self.detail_template = self._make_detail_template(_, *args, **kwargs)
 
     def _make_detail_template(
@@ -276,7 +276,7 @@ class EventSubscriptionSqsTarget(EventSubscriptionTarget):
             may include placeholders for Jinja2 templating.
         """
         super().__init__()
-        self.rule_id = "descarteslabs:sqs-forwarder"
+        self.rule_id = "internal:sqs-forwarder"
         if len(args) > 1:
             raise TypeError("At most one positional argument is allowed")
         if args:

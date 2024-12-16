@@ -316,7 +316,7 @@ class TestImage(ClientTestCase):
                         "type": "product",
                         "attributes": {
                             "readers": ["group:beta", "group:public"],
-                            "owners": ["org:descarteslabs"],
+                            "owners": ["org:someorg"],
                             "start_datetime": "2013-01-01T00:00:00Z",
                         },
                         "id": "prod1",
@@ -377,7 +377,7 @@ class TestImage(ClientTestCase):
                             "attributes": {
                                 "readers": [],
                                 "writers": [],
-                                "owners": ["org:descarteslabs"],
+                                "owners": ["org:someorg"],
                                 "modified": "2019-06-11T23:31:33.714883Z",
                                 "created": "2019-06-11T23:31:33.714883Z",
                             },
@@ -522,7 +522,7 @@ class TestImage(ClientTestCase):
                                 "attributes": {
                                     "readers": [],
                                     "writers": [],
-                                    "owners": ["org:descarteslabs"],
+                                    "owners": ["org:someorg"],
                                     "modified": "2019-06-11T23:31:33.714883Z",
                                     "created": "2019-06-11T23:31:33.714883Z",
                                 },
@@ -675,7 +675,7 @@ class TestImage(ClientTestCase):
                     "attributes": {
                         "readers": [],
                         "writers": [],
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "modified": "2019-06-11T23:31:33.714883Z",
                         "created": "2019-06-11T23:31:33.714883Z",
                     },

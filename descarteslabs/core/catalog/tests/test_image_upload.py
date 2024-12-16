@@ -441,7 +441,7 @@ class TestImageUpload(ClientTestCase):
                         "name": "image_name",
                         "readers": [],
                         "writers": [],
-                        "owners": ["org:descarteslabs"],
+                        "owners": ["org:someorg"],
                         "acquired": "2020-01-01T00:00:00Z",
                         "geometry": {
                             "type": "Polygon",
