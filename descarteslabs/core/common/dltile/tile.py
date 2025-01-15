@@ -1,8 +1,4 @@
-"""In this file we define two classes: Grid, which describes a way to
-divide UTM zones in a grid, and Tile, which specifies a particular
-element in a grid."""
-
-# Copyright 2018-2024 Descartes Labs.
+# © 2025 EarthDaily Analytics Corp.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +11,10 @@ element in a grid."""
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""In this file we define two classes: Grid, which describes a way to
+divide UTM zones in a grid, and Tile, which specifies a particular
+element in a grid."""
 
 import collections.abc
 import numpy as np

@@ -1,6 +1,6 @@
 """Implementation details for tile.Grid.tiles_from_shape"""
 
-# Copyright 2018-2024 Descartes Labs.
+# © 2025 EarthDaily Analytics Corp.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

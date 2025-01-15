@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Descartes Labs.
+# © 2025 EarthDaily Analytics Corp.
 
 """
 ===============================

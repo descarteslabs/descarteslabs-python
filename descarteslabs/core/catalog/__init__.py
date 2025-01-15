@@ -1,9 +1,4 @@
-"""
-The Catalog Service provides access to products, bands, and images
-available from Descartes Labs.
-"""
-
-# Copyright 2018-2024 Descartes Labs.
+# © 2025 EarthDaily Analytics Corp.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +11,11 @@ available from Descartes Labs.
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""
+The Catalog Service provides access to products, bands, and images
+available from Descartes Labs.
+"""
 
 from .task import TaskState
 from .product import (
