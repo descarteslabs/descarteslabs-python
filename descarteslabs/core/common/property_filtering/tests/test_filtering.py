@@ -456,6 +456,7 @@ def test_parse_expression():
     assert expression.parts[13].name == "field"
     assert expression.parts[13].value == "value"
 
+
 def test_parse_nested():
     filters = [
         {
