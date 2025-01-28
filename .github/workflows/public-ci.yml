@@ -28,7 +28,8 @@ jobs:
           DESCARTESLABS_ENV: testing
         run: |
           mkdir tempdir
-          python -c "import sys; print(sys.path)"
+          python -m pip freeze
+          ls C:\\hostedtoolcache\\windows\\Python\3.11.9\x64\Lib\site-packages
           python -m pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/core/third_party" descarteslabs
           rm -r tempdir
       - name: Test CLI
