@@ -22,6 +22,7 @@ from ..filtering import (
     AndExpression,
     EqExpression,
     Expression,
+    ILikeExpression,
     IsNotNullExpression,
     IsNullExpression,
     LikeExpression,
@@ -378,6 +379,9 @@ def test_parse_expression():
         {"op": "prefix", "name": "field", "val": "value"},
         # Like
         {"like": {"field": "value"}},
+        {"op": "like", "name": "field", "val": "value"},
+        # ILike
+        {"ilike": {"field": "value"}},
         {"op": "ilike", "name": "field", "val": "value"},
     ]
     expression = Expression.parse(filters)
@@ -443,6 +447,14 @@ def test_parse_expression():
     assert expression.parts[13].name == "field"
     assert expression.parts[13].value == "value"
 
+    # ILike
+    assert isinstance(expression.parts[14], ILikeExpression)
+    assert expression.parts[12].name == "field"
+    assert expression.parts[12].value == "value"
+
+    assert isinstance(expression.parts[15], ILikeExpression)
+    assert expression.parts[13].name == "field"
+    assert expression.parts[13].value == "value"
 
 def test_parse_nested():
     filters = [

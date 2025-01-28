@@ -15,6 +15,7 @@
 from .filtering import (
     EqExpression,
     Expression,
+    ILikeExpression,
     LikeExpression,
     NeExpression,
     Properties,
@@ -29,6 +30,7 @@ __all__ = [
     "EqExpression",
     "Expression",
     "GenericProperties",
+    "ILikeExpression",
     "LikeExpression",
     "NeExpression",
     "Properties",

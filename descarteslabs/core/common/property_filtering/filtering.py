@@ -510,8 +510,6 @@ class LikeExpression(OpExpression):
     This expression is not supported by the `Catalog` service.
     """
 
-    _aliases = ["ilike"]
-
     def __init__(self, name, value):
         self.name = name
         self.value = value
@@ -525,11 +523,46 @@ class LikeExpression(OpExpression):
             if model
             else (self.name, self.value)
         )
-        return {"name": name, "op": "ilike", "val": value}
+        return {"name": name, "op": "like", "val": value}
 
     def evaluate(self, obj):
         expr = re.escape(self.value).replace("_", ".").replace("%", ".*")
         return re.match(f"^{expr}$", getattr(obj, self.name)) is not None
+
+    def is_same(self, other: Any) -> bool:
+        if not super().is_same(other):
+            return False
+
+        return self.value == other.value
+
+
+class ILikeExpression(OpExpression):
+    """Whether a property value matches the given case insensitive wildcard expression.
+
+    The wildcard expression can contain ``%`` for zero or more characters and
+    ``_`` for a single character.
+
+    This expression is not supported by the `Catalog` service.
+    """
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def serialize(self):
+        return {"ilike": {self.name: self.value}}
+
+    def jsonapi_serialize(self, model=None):
+        name, value = (
+            model._serialize_filter_attribute(self.name, self.value)
+            if model
+            else (self.name, self.value)
+        )
+        return {"name": name, "op": "ilike", "val": value}
+
+    def evaluate(self, obj):
+        expr = re.escape(self.value).replace("_", ".").replace("%", ".*")
+        return re.match(f"^{expr}$", getattr(obj, self.name), re.IGNORECASE) is not None
 
     def is_same(self, other: Any) -> bool:
         if not super().is_same(other):
@@ -718,6 +751,25 @@ class Property(object):
         ``'bar%foo'``.
         """
         return LikeExpression(self.name, wildcard)
+
+    @check_can_filter
+    def ilike(self, wildcard):
+        """Compare against a case insensitive wildcard string.
+
+        This can only be used in expressions for the ``Vector`` service.
+        This allows for wildcards, e.g. ``ilike("bar%foo")`` where any
+        string that starts with ``'bar'`` and ends with ``'foo'`` will be
+        matched.
+
+        This uses the SQL ``LIKE`` syntax with single character
+        wildcard ``'_'`` and arbitrary character wildcard ``'%'``.
+
+        To escape either of these wilcard characters prepend it
+        with a backslash, which becomes a double backslash in the
+        python string, i.e. use ``like("bar\\\\%foo")`` to match exactly
+        ``'bar%foo'``.
+        """
+        return ILikeExpression(self.name, wildcard)
 
     @check_can_filter
     def any_of(self, iterable):
