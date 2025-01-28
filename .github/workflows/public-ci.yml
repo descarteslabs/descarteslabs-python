@@ -16,21 +16,19 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install CI deps
         run: |
-          python -m pip install --upgrade pip setuptools wheel pytest==6.0.0
+          python -m pip install --upgrade pip setuptools wheel
           python -m pip install shapely -f ${{ secrets.CI_PIP_INDEX_URL }}/simple/shapely/index.html
-          python -m pip freeze
       - name: Build wheel
         run: |
           python -m pip wheel --no-deps --wheel-dir wheels -e .
           python -m pip install -e .[complete,tests]
-          python -m pip freeze
       - name: Test Client
         env:
           TMPDIR: tempdir
           DESCARTESLABS_ENV: testing
         run: |
           mkdir tempdir
-          python -m pip freeze
+          python --version
           python -m pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/core/third_party" descarteslabs
           rm -r tempdir
       - name: Test CLI
