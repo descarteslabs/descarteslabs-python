@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-2022, macos-latest]
         python-version: ['3.9', '3.10', '3.11', '3.12']
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +28,7 @@ jobs:
           DESCARTESLABS_ENV: testing
         run: |
           mkdir tempdir
+          python -c "import sys; print(sys.path)"
           python -m pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/core/third_party" descarteslabs
           rm -r tempdir
       - name: Test CLI
