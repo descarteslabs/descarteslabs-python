@@ -10,25 +10,25 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.9', '3.10', '3.11', '3.12']
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install CI deps
         run: |
-          pip install --upgrade pip setuptools wheel
-          pip install shapely -f ${{ secrets.CI_PIP_INDEX_URL }}/simple/shapely/index.html
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install shapely -f ${{ secrets.CI_PIP_INDEX_URL }}/simple/shapely/index.html
       - name: Build wheel
         run: |
-          pip wheel --no-deps --wheel-dir wheels -e .
-          pip install -e .[complete,tests]
+          python -m pip wheel --no-deps --wheel-dir wheels -e .
+          python -m pip install -e .[complete,tests]
       - name: Test Client
         env:
           TMPDIR: tempdir
           DESCARTESLABS_ENV: testing
         run: |
           mkdir tempdir
-          pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/core/third_party" descarteslabs
+          python -m pytest -rfExXP --assert=plain --ignore-glob="*/smoke_tests" --ignore-glob="*/e2e" --ignore="descarteslabs/core/third_party" descarteslabs
           rm -r tempdir
       - name: Test CLI
         env:
