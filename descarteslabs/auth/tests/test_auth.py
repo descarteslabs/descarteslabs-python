@@ -27,7 +27,7 @@ import responses
 from descarteslabs.exceptions import AuthError
 
 from .. import auth as auth_module
-from ..auth import Auth, LEGACY_DELEGATION_CLIENT_IDS
+from ..auth import Auth, DESCARTESLABS_CUSTOM_CLAIM_PREFIX, LEGACY_DELEGATION_CLIENT_IDS
 
 
 def token_response_callback(request):
@@ -129,8 +129,46 @@ class TestAuth(unittest.TestCase):
 
         assert "id-token" == auth._token
 
-    @patch.object(Auth, "payload", new=dict(sub="asdf"))
+    def test_payload(self):
+        auth = Auth()
+
+        token_payload = {
+            "sub": "asdf",
+            f"{DESCARTESLABS_CUSTOM_CLAIM_PREFIX}groups": ["public"],
+            f"{DESCARTESLABS_CUSTOM_CLAIM_PREFIX}name": "some name",
+            f"{DESCARTESLABS_CUSTOM_CLAIM_PREFIX}org": "some-org",
+            f"{DESCARTESLABS_CUSTOM_CLAIM_PREFIX}userid": "1234",
+            "exp": 9999999999,
+            "aud": "client-id",
+        }
+        payload = {
+            "sub": "asdf",
+            "groups": ["public"],
+            "name": "some name",
+            "org": "some-org",
+            "userid": "1234",
+            "exp": 9999999999,
+            "aud": "client-id",
+        }
+
+        token = b".".join(
+            [
+                b"",
+                base64.urlsafe_b64encode(json.dumps(token_payload).encode("utf-8")),
+                b"",
+            ]
+        )
+        with patch.object(Auth, "token", new=token):
+            auth = Auth()
+            assert payload == auth.payload
+
+    @patch.object(Auth, "payload", new=dict(sub="asdf", userid="1234"))
     def test_get_namespace(self):
+        auth = Auth(client_secret="client-secret", client_id="client-id")
+        assert auth.namespace == "1234"
+
+    @patch.object(Auth, "payload", new=dict(sub="asdf"))
+    def test_get_legacy_namespace(self):
         auth = Auth(client_secret="client-secret", client_id="client-id")
         assert auth.namespace == "3da541559918a808c2402bba5012f6c60b27661c"
 

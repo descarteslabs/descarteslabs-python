@@ -24,6 +24,10 @@ Changelog
 
 - Updated copyright message everywhere
 
+## Auth
+
+- To prepare for multi-audience support in the clients, support for new custom claims in tokens has been added so that the user's unique namespace, which serves as a global id for the user, can be determined without resort to computing it on the fly.
+
 ## Catalog
 
 - Fixed a bug where some geometries weren't supported by blob geometry properties

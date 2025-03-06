@@ -85,6 +85,8 @@ DESCARTESLABS_TOKEN = "DESCARTESLABS_TOKEN"
 
 DESCARTESLABS_TOKEN_INFO_PATH = "DESCARTESLABS_TOKEN_INFO_PATH"
 
+DESCARTESLABS_CUSTOM_CLAIM_PREFIX = "earthdaily__dl__"
+
 
 def base64url_decode(input):
     """Helper method to base64url_decode a string.
@@ -616,6 +618,15 @@ class Auth:
 
         if payload is None:
             payload = self._get_payload(self.token)
+
+            # doctor custom claims
+            if DESCARTESLABS_CUSTOM_CLAIM_PREFIX:
+                for key in list(payload.keys()):
+                    if key.startswith(DESCARTESLABS_CUSTOM_CLAIM_PREFIX):
+                        payload[key[len(DESCARTESLABS_CUSTOM_CLAIM_PREFIX) :]] = (
+                            payload.pop(key)
+                        )
+
             self.__dict__[self.KEY_PAYLOAD] = payload
 
         return payload
@@ -811,7 +822,7 @@ class Auth:
 
     @property
     def namespace(self):
-        """Gets the user namespace (the Descartes Labs used id).
+        """Gets the user namespace (the Descartes Labs user id).
 
         Returns
         -------
@@ -825,9 +836,14 @@ class Auth:
         OauthError
             Raised when a token cannot be obtained or refreshed.
         """
-        if self._namespace is None:
-            self._namespace = sha1(self.payload["sub"].encode("utf-8")).hexdigest()
-        return self._namespace
+        namespace = self._namespace
+        if namespace is None:
+            namespace = self.payload.get("userid")
+            if not namespace:
+                # legacy, compute it on the fly
+                namespace = sha1(self.payload["sub"].encode("utf-8")).hexdigest()
+            self._namespace = namespace
+        return namespace
 
     @property
     def all_acl_subjects(self):
