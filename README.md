@@ -18,11 +18,11 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
-## Unreleased
+## [4.0.0] - 2025-03-13
 
 ## General
 
-- Updated copyright message everywhere
+- Updated copyright message everywhere.
 
 ## Auth
 
@@ -30,11 +30,12 @@ Changelog
 
 ## Catalog
 
-- Fixed a bug where some geometries weren't supported by blob geometry properties
+- Fixed a bug where some geometries weren't supported by blob geometry properties.
 
 ## Vector
 
 - *Breaking change* in the past, regardless of the ordering of columns when a `Table` was created, or the ordering of columns in the `TableOptions`, the result of a feature query would always place the `uuid` column last. As of this version, the behavior has been modified to preserve the ordering of columns, so that if no column list is provided in the options, the `uuid` column will appear in the position it has in the underlying table, as per the `Table.columns` property. Similarly if a query specifies an explicit list of columns in the `TableOptions`, `uuid` will appear in the same position in the result as it does in the supplied list of columns. However in keeping with prior behavior, if an explicit list of columns does not include `uuid`, it will always be added automatically at the end and will appear in the last column of the result.
+- The `ilike` `property_filtering` expression type has been added to support case-insensitive wildcard matching of Vector Table column values.
 
 ## [3.2.2] - 2024-11-14
 
