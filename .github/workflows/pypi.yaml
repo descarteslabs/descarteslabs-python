@@ -36,9 +36,11 @@ jobs:
         uses: actions/setup-python@v4
 
       # Build the Python wheel packages
+      # https://github.com/pypa/twine/issues/1216
       - name: Build Python Packages
         run: |
           pip install twine
+          pip install -U packaging
 
           python3 setup.py bdist_wheel
           python3 setup.py sdist
