@@ -15,6 +15,7 @@
 from collections.abc import Mapping
 import copy
 import json
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 import warnings
 
 from strenum import StrEnum
@@ -229,7 +230,16 @@ class Search(object):
         if self._use_includes and self._model_cls._default_includes:
             s._request_params["include"] = ",".join(self._model_cls._default_includes)
 
-        return self._url, s._request_params
+        url = s._url
+        continuation = s._request_params.pop("continuation", None)
+        if continuation:
+            url_parts = list(urlparse(url))
+            query_params = parse_qs(url_parts[4])
+            query_params["continuation"] = continuation
+            url_parts[4] = urlencode(query_params, doseq=True)
+            url = urlunparse(url_parts)
+
+        return url, s._request_params
 
     def _require_product_ids(self, filters):
         if hasattr(self._model_cls, "product_id"):
@@ -316,7 +326,10 @@ class Search(object):
         Returns
         -------
         generator
-            Generator of objects that match the type of document being searched. Empty if no matching documents found.
+            Generator of objects that match the type of document being searched. Empty if no
+            matching documents found. If per_item_continuations was set to True in the
+            request_params, then the generator will return a tuple of the object and the
+            continuation token for that object.
 
         Raises
         ------
@@ -334,6 +347,9 @@ class Search(object):
 
         """
         url_next, params = self._to_request()
+        per_item_continuations = (
+            str(params.get("per_item_continuations", False)).lower() == "true"
+        )
         while url_next is not None:
             r = self._client.session.put(url_next, json=params, headers=self._headers)
             response = r.json()
@@ -344,9 +360,11 @@ class Search(object):
                 response, self._client
             )
 
-            for doc in response["data"]:
+            if per_item_continuations:
+                continuations = response["meta"]["per_item_continuations"]
+            for i, doc in enumerate(response["data"]):
                 model_class = self._model_cls._get_model_class(doc)
-                yield model_class(
+                model_obj = model_class(
                     id=doc["id"],
                     client=self._client,
                     _saved=True,
@@ -354,6 +372,10 @@ class Search(object):
                     _related_objects=related_objects,
                     **doc["attributes"],
                 )
+                if per_item_continuations:
+                    yield (model_obj, continuations[i])
+                else:
+                    yield model_obj
 
             next_link = response["links"].get("next")
             if next_link is not None:
