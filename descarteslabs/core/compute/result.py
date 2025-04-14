@@ -61,11 +61,11 @@ class ComputeResult:
         Examples
         --------
         Result with raw binary data:
-        >>> from descarteslabs.services.compute import ComputeResult
+        >>> from descarteslabs.compute import ComputeResult
         >>> result = ComputeResult(value=b"result", description="result description")
 
         Null result with attributes:
-        >>> from descarteslabs.services.compute import ComputeResult
+        >>> from descarteslabs.compute import ComputeResult
         >>> result = ComputeResult(None, geometry=geometry, tags=["tag1", "tag2"])
 
         Parameters
