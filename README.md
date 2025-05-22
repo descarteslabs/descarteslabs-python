@@ -1147,7 +1147,7 @@ You should _NOT_ install version 1.1.0; 1.1.1 should be used instead in all circ
 
 ## [1.0.0] - 2020-01-20
 
-| As of January 1st, 2020, the client library no longer supports Python 2. For more information, please contact support@descarteslabs.com. For help with porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html. |
+| As of January 1st, 2020, the client library no longer supports Python 2. For more information, please contact dl.support@earthdaily.com. For help with porting to Python 3, please visit https://docs.python.org/3/howto/pyporting.html. |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
 ### Catalog client
