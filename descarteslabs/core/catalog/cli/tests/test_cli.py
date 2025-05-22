@@ -25,7 +25,7 @@ class TestCli(unittest.TestCase):
 
     def test_help(self):
         result = self.runner.invoke(cli, [])
-        assert result.exit_code == 0
+        assert result.exit_code == 2
         assert result.output.startswith("Usage: ")
 
     # at present, I don't want to test individual commands,
@@ -33,15 +33,15 @@ class TestCli(unittest.TestCase):
     # testing catalog itself.
     def test_products(self):
         result = self.runner.invoke(cli, ["products"])
-        assert result.exit_code == 0
+        assert result.exit_code == 2
         assert result.output.startswith("Usage: ")
 
     def test_bands(self):
         result = self.runner.invoke(cli, ["bands"])
-        assert result.exit_code == 0
+        assert result.exit_code == 2
         assert result.output.startswith("Usage: ")
 
     def test_blobs(self):
         result = self.runner.invoke(cli, ["blobs"])
-        assert result.exit_code == 0
+        assert result.exit_code == 2
         assert result.output.startswith("Usage: ")

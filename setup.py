@@ -83,6 +83,7 @@ def do_setup():
             "affine>=2.2.2",
             "blosc>=1.11.2",
             "cachetools>=3.1.1",
+            "click>=8.2.0",
             "dill>=0.3.6",
             "dynaconf>=3.2.1",
             "geojson>=2.5.0",
