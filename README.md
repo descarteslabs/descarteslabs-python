@@ -18,6 +18,10 @@ The documentation for the latest release can be found at [https://docs.descartes
 Changelog
 =========
 
+## General
+
+- Support for Python 3.9 has been dropped, as it is reaching end of life an many dependencies no longer support it.
+
 ## [4.0.0] - 2025-03-13
 
 ## General
