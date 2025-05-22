@@ -25,6 +25,8 @@ class TestCli(unittest.TestCase):
 
     def test_help(self):
         result = self.runner.invoke(cli, [])
+        print(f"result.exit_code: {result.exit_code}")
+        print(f"result.output: {result.output}")
         assert result.exit_code == 0
         assert result.output.startswith("Usage: ")
 
@@ -33,15 +35,21 @@ class TestCli(unittest.TestCase):
     # testing catalog itself.
     def test_products(self):
         result = self.runner.invoke(cli, ["products"])
+        print(f"result.exit_code: {result.exit_code}")
+        print(f"result.output: {result.output}")
         assert result.exit_code == 0
         assert result.output.startswith("Usage: ")
 
     def test_bands(self):
         result = self.runner.invoke(cli, ["bands"])
+        print(f"result.exit_code: {result.exit_code}")
+        print(f"result.output: {result.output}")
         assert result.exit_code == 0
         assert result.output.startswith("Usage: ")
 
     def test_blobs(self):
         result = self.runner.invoke(cli, ["blobs"])
+        print(f"result.exit_code: {result.exit_code}")
+        print(f"result.output: {result.output}")
         assert result.exit_code == 0
         assert result.output.startswith("Usage: ")
