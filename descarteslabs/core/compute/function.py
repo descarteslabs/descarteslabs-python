@@ -42,7 +42,7 @@ from typing import (
     Union,
 )
 
-import pkg_resources
+from packaging.requirements import InvalidRequirement, Requirement
 from strenum import StrEnum
 
 import descarteslabs.exceptions as exceptions
@@ -711,11 +711,6 @@ class Function(Document):
     def _bundle_requirements(self, requirements):
         """Bundle the requirements into the archive."""
 
-        if not pkg_resources:
-            warnings.warn(
-                "Your Python does not have a recent version of `setuptools`. "
-                "For a better experience update your environment by running `pip install -U setuptools`."
-            )
         if isinstance(requirements, str):
             return self._requirements_file(requirements)
         else:
@@ -735,29 +730,29 @@ class Function(Document):
     def _requirements_list(self, requirements):
         """Validate the requirements list."""
 
-        if pkg_resources:
-            bad_requirements = []
-            for requirement in requirements:
-                try:
-                    pkg_resources.Requirement.parse(requirement)
-                except ValueError:
-                    # comment or pip-specific option not understood by pkg_resources
-                    if requirement.startswith("#") or requirement.startswith("-"):
+        bad_requirements = []
+        for requirement in requirements:
+            try:
+                Requirement(requirement)
+            except InvalidRequirement:
+                # comment or pip-specific option not understood by packaging
+                if requirement.startswith("#") or requirement.startswith("-"):
+                    continue
+                if requirement.startswith("https://"):
+                    continue
+                # e.g. torch-2.0.1+cpu which packaging doesn't understand
+                if "+" in requirement:
+                    try:
+                        Requirement(requirement.rsplit("+")[0])
                         continue
-                    if requirement.startswith("https://"):
-                        continue
-                    # e.g. torch-2.0.1+cpu which pkg_resource doesn't understand
-                    if "+" in requirement:
-                        try:
-                            pkg_resources.Requirement.parse(requirement.rsplit("+")[0])
-                            continue
-                        except ValueError:
-                            pass
-                    bad_requirements.append(requirement)
-            if bad_requirements:
-                raise ValueError(
-                    "Invalid Python requirements: {}".format(",".join(bad_requirements))
-                )
+                    except InvalidRequirement:
+                        pass
+                bad_requirements.append(requirement)
+        if bad_requirements:
+            raise ValueError(
+                "Invalid Python requirements: {}".format(",".join(bad_requirements))
+            )
+
         return "\n".join(requirements)
 
     def _sys_path_prefix(self, path):

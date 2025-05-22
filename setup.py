@@ -16,7 +16,6 @@
 
 import ast
 import re
-import sys
 
 from setuptools import find_packages, setup
 
@@ -33,18 +32,6 @@ with open("descarteslabs/core/client/version.py", "rb") as f:
     version = str(
         ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
     )
-
-
-def check_setuptools():
-    import pkg_resources
-
-    try:
-        list(pkg_resources.parse_requirements('foo;platform_system!="Windows"'))
-    except pkg_resources.RequirementParseError:
-        sys.exit(
-            "Your Python is using an outdated version of `setuptools`. Please "
-            "run `pip install -U setuptools` and try again."
-        )
 
 
 def do_setup():
@@ -97,7 +84,7 @@ def do_setup():
             "blosc>=1.11.2",
             "cachetools>=3.1.1",
             "dill>=0.3.6",
-            "dynaconf>=3.1.11",
+            "dynaconf>=3.2.1",
             "geojson>=2.5.0",
             "geopandas>=0.13.2",
             "imagecodecs>=2023.3.16",
@@ -105,12 +92,11 @@ def do_setup():
             "mercantile>=1.1.3",
             "numpy>=1.22.0;python_version>='3.9' and python_version<'3.11'",
             "numpy>=1.23.2;python_version>='3.11'",
+            "packaging>=25.0",
             "Pillow>=9.2.0",
             "pyarrow>=14.0.1",
             "pydantic>=2.4.0",
             "requests>=2.32.3,<3",
-            # It is not obvious but dynaconf requires pkg_resources from setuptools.
-            "setuptools>=70.0.0",
             "shapely>=2.0.0",
             "strenum>=0.4.8",
             "tifffile>=2023.9.26",
@@ -127,5 +113,4 @@ def do_setup():
 
 
 if __name__ == "__main__":
-    check_setuptools()
     do_setup()
